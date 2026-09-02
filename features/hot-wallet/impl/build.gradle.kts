@@ -18,7 +18,6 @@ dependencies {
 
     /** Core modules */
     api(projects.core.analytics)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
@@ -28,6 +27,7 @@ dependencies {
 
     /** Domain */
     api(projects.domain.assetsdiscovery)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.card)
     api(projects.domain.common)
     api(projects.domain.feedback)

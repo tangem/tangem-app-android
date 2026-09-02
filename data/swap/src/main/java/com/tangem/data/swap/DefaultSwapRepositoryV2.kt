@@ -8,22 +8,11 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
 import com.tangem.data.swap.converter.TokenInfoConverter
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.grow.datasource.express.TangemExpressApi
-import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
-import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
-import com.tangem.grow.datasource.express.models.request.PairsRequestBody
-import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
-import com.tangem.grow.datasource.express.models.response.RateType
-import com.tangem.grow.datasource.express.models.response.SwapPairProvider
-import com.tangem.grow.datasource.express.models.response.TxDetails
-import com.tangem.grow.datasource.crypto.DataSignatureVerifier
-import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.exchangeservice.swap.ExpressUtils
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -38,6 +27,16 @@ import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
 import com.tangem.domain.tokens.operations.BalanceContributionsInput
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.express.ExpressUtils
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
+import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
+import com.tangem.grow.datasource.express.models.request.PairsRequestBody
+import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
+import com.tangem.grow.datasource.express.models.response.RateType
+import com.tangem.grow.datasource.express.models.response.SwapPairProvider
+import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -56,7 +55,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val tangemExpressApi: TangemExpressApi,
     private val expressRepository: ExpressRepository,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val expressUtils: ExpressUtils,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
@@ -282,10 +281,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             providerId = provider.providerId,
             rateType = rateType.name.lowercase(),
             userWalletId = userWallet.walletId.stringValue,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
+            refCode = expressUtils.getRefCode(userWallet = userWallet),
         ).getOrThrow()
 
         val toTokenAmount = requireNotNull(response.toAmount.toBigDecimalOrNull()?.movePointLeft(response.toDecimals))
@@ -354,10 +350,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             refundExtraId = refundData?.refundExtraId,
             userWalletId = userWallet.walletId.stringValue,
             partnerOperationType = expressOperationType.value,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
+            refCode = expressUtils.getRefCode(userWallet = userWallet),
             toExtraId = toExtraId?.ifEmpty { null },
             quoteId = quoteId,
         ).getOrThrow()
@@ -394,10 +387,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         withContext(coroutineDispatcher.io) {
             tangemExpressApi.exchangeSent(
                 userWalletId = userWallet.walletId.stringValue,
-                refCode = ExpressUtils.getRefCode(
-                    userWallet = userWallet,
-                    appPreferencesStore = appPreferencesStore,
-                ),
+                refCode = expressUtils.getRefCode(userWallet = userWallet),
                 body = ExchangeSentRequestBody(
                     txId = txId,
                     fromNetwork = currency.network.rawId,
@@ -452,10 +442,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             call = {
                 tangemExpressApi.getPairs(
                     userWalletId = userWallet.walletId.stringValue,
-                    refCode = ExpressUtils.getRefCode(
-                        userWallet = userWallet,
-                        appPreferencesStore = appPreferencesStore,
-                    ),
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
                     body = PairsRequestBody(
                         from = tokenInfoConverter.convertList(from),
                         to = tokenInfoConverter.convertList(to),
@@ -546,7 +533,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val isYieldSupplyActive = cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
         if (!isYieldSupplyActive) return this
 
-        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16636_YIELD_DEX_TRANSFER_ENABLED)) {
+        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_DEX_TRANSFER_ENABLED)) {
             filterNot { it.type == ExpressProviderType.ONRAMP }
         } else {
             filter { provider ->
@@ -575,7 +562,6 @@ private val MEMO_RESTRICTED_NETWORKS = setOf(
 @RemoveWithToggle("TWI_1326_YIELD_MODE_SWAP_ENABLED")
 private val YIELD_ALLOWED_DEX_PROVIDER_IDS = setOf(
     "1inch",
-    "li-fi",
     "okx-cross-chain",
     "okx-on-chain",
 )

@@ -1355,7 +1355,11 @@ internal class DefaultInitialCurrenciesResolverTest {
             val btc = mockCryptoCurrency()
 
             // Account's own currency in the wallet has zero balance; BTC is the most-funded wallet token.
-            val usdcPolygonStatus = createCurrencyStatus(usdcPolygonInWallet, fiatAmount = BigDecimal.ZERO)
+            val usdcPolygonStatus = createCurrencyStatus(
+                currency = usdcPolygonInWallet,
+                fiatAmount = BigDecimal.ZERO,
+                amount = BigDecimal.ZERO,
+            )
             val btcStatus = createCurrencyStatus(btc, fiatAmount = BigDecimal("1000"))
             val accountStatus = createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, btcStatus))
             setupSupplier(listOf(accountStatus))
@@ -1374,6 +1378,161 @@ internal class DefaultInitialCurrenciesResolverTest {
 
             assertThat(from?.status).isSameInstanceAs(btcStatus)
         }
+
+    @Test
+    fun `GIVEN topup and account currency funded without quote WHEN resolve THEN that token is FROM`() = runTest {
+        // Arrange
+        val usdcPolygonId = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC")
+        val usdcPolygonInWallet = mockCryptoCurrency(id = usdcPolygonId)
+        val usdcPolygonInAccount = mockCryptoCurrency(
+            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+        )
+        val btc = mockCryptoCurrency()
+
+        // The quote for the account's own currency has not arrived, so it reports no fiat value at all.
+        val usdcPolygonStatus = createCurrencyStatus(
+            currency = usdcPolygonInWallet,
+            fiatAmount = null,
+            amount = BigDecimal("3"),
+        )
+        val btcStatus = createCurrencyStatus(btc, fiatAmount = BigDecimal("1000"))
+        val accountStatus = createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, btcStatus))
+        setupSupplier(listOf(accountStatus))
+        setupAvailability(linkedMapOf(usdcPolygonInWallet to true, btc to true))
+
+        val accountUnderlyingStatus = createCurrencyStatus(usdcPolygonInAccount, fiatAmount = BigDecimal.ZERO)
+        coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(accountUnderlyingStatus)
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = null,
+            swapCurrencyPosition = CurrencyPosition.ANY,
+            accountFlow = AccountFlow.TopUp,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(usdcPolygonStatus)
+    }
+
+    @Test
+    fun `GIVEN topup and two account currencies WHEN resolve THEN fiat value outranks a larger unquoted amount`() =
+        runTest {
+            // Arrange
+            val usdcPolygonInWallet = mockCryptoCurrency(
+                id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+            )
+            val usdtPolygonInWallet = mockCryptoCurrency(
+                id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDT"),
+            )
+            val usdcPolygonInAccount = mockCryptoCurrency(
+                id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+            )
+            val usdtPolygonInAccount = mockCryptoCurrency(
+                id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDT"),
+            )
+
+            val usdcPolygonStatus = createCurrencyStatus(
+                currency = usdcPolygonInWallet,
+                fiatAmount = BigDecimal("5"),
+                amount = BigDecimal("5"),
+            )
+            val usdtPolygonStatus = createCurrencyStatus(
+                currency = usdtPolygonInWallet,
+                fiatAmount = null,
+                amount = BigDecimal("100"),
+            )
+            val accountStatus = createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, usdtPolygonStatus))
+            setupSupplier(listOf(accountStatus))
+            setupAvailability(linkedMapOf(usdcPolygonInWallet to true, usdtPolygonInWallet to true))
+
+            coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(
+                createCurrencyStatus(usdcPolygonInAccount, fiatAmount = BigDecimal.ZERO),
+                createCurrencyStatus(usdtPolygonInAccount, fiatAmount = BigDecimal.ZERO),
+            )
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                accountFlow = AccountFlow.TopUp,
+                isAccountFlowEnabled = true,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(usdcPolygonStatus)
+        }
+
+    @Test
+    fun `GIVEN topup and account currency worth zero fiat WHEN resolve THEN that token is FROM`() = runTest {
+        // Arrange
+        val usdcPolygonInWallet = mockCryptoCurrency(
+            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+        )
+        val usdcPolygonInAccount = mockCryptoCurrency(
+            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+        )
+        val btc = mockCryptoCurrency()
+
+        val usdcPolygonStatus = createCurrencyStatus(
+            currency = usdcPolygonInWallet,
+            fiatAmount = BigDecimal.ZERO,
+            amount = BigDecimal("5"),
+        )
+        val btcStatus = createCurrencyStatus(btc, fiatAmount = BigDecimal("1000"))
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, btcStatus))))
+        setupAvailability(linkedMapOf(usdcPolygonInWallet to true, btc to true))
+
+        val accountUnderlyingStatus = createCurrencyStatus(usdcPolygonInAccount, fiatAmount = BigDecimal.ZERO)
+        coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(accountUnderlyingStatus)
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = null,
+            swapCurrencyPosition = CurrencyPosition.ANY,
+            accountFlow = AccountFlow.TopUp,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(usdcPolygonStatus)
+    }
+
+    @Test
+    fun `GIVEN topup and account currency is not swappable WHEN resolve THEN it is still FROM`() = runTest {
+        // Arrange — a hood match becomes a same-wallet transfer, which needs neither a quote nor swap
+        // availability, so an unavailable account currency still outranks a richer swappable token.
+        val usdcPolygonInWallet = mockCryptoCurrency(
+            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+        )
+        val usdcPolygonInAccount = mockCryptoCurrency(
+            id = mockCurrencyId(rawNetworkId = "polygon", contractAddress = "0xUSDC"),
+        )
+        val btc = mockCryptoCurrency()
+
+        val usdcPolygonStatus = createCurrencyStatus(usdcPolygonInWallet, fiatAmount = BigDecimal("5"))
+        val btcStatus = createCurrencyStatus(btc, fiatAmount = BigDecimal("1000"))
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(usdcPolygonStatus, btcStatus))))
+        setupAvailability(linkedMapOf(usdcPolygonInWallet to false, btc to true))
+
+        val accountUnderlyingStatus = createCurrencyStatus(usdcPolygonInAccount, fiatAmount = BigDecimal.ZERO)
+        coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(accountUnderlyingStatus)
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = null,
+            swapCurrencyPosition = CurrencyPosition.ANY,
+            accountFlow = AccountFlow.TopUp,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(usdcPolygonStatus)
+    }
 
     @Test
     fun `GIVEN toggle off WHEN topup resolve THEN priority is not applied`() = runTest {
@@ -1438,6 +1597,37 @@ internal class DefaultInitialCurrenciesResolverTest {
     // endregion
 
     // region helpers
+
+    @Test
+    fun `GIVEN top up and the account currency is not an issued network WHEN resolve THEN TO is an account token`() =
+        runTest {
+            // Arrange — Add funds passes the account's legacy currency into the TO slot; a multichain account
+            // may not hold it at all.
+            val legacyCurrency = mockCryptoCurrency()
+            val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal.ZERO)
+            val issuedStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("40"))
+            val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+            setupSupplier(
+                listOf(
+                    createPaymentAccountStatus(legacyStatus, listOf(issuedStatus)),
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+            coEvery { accountUnderlyingCurrencies.get(userWalletId) } returns listOf(issuedStatus)
+
+            // Act
+            val (_, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = legacyCurrency,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.TopUp,
+                isAccountFlowEnabled = true,
+            )
+
+            // Assert
+            assertThat(to?.status).isSameInstanceAs(issuedStatus)
+        }
 
     @Test
     fun `GIVEN withdraw and account issued on several networks WHEN resolve THEN most funded account token is FROM`() =
@@ -1623,7 +1813,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         currencies: List<CryptoCurrencyStatus>,
     ): AccountStatus.CryptoPortfolio {
         val account = Account.Personal.createMainAccount(userWalletId = userWalletId)
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(
@@ -1661,7 +1851,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
         )
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(

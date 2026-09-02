@@ -237,7 +237,7 @@ private val DonutStartAngle = -90f
 private fun ColumnScope.TopHoldingBlock(assetCount: Int, topHoldingPercent: TextReference) {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp),
-        text = pluralStringResourceSafe(R.plurals.market_chart_assets_android, assetCount, assetCount),
+        text = pluralStringResourceSafe(R.plurals.top_assets_count, assetCount, assetCount),
         color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography3.heading.small,
     )
@@ -291,7 +291,8 @@ private fun MarketChart_Preview(
 @Composable
 private fun previewMarketChartState(scenario: MarketChartPreviewScenario): MarketChartUM = when (scenario) {
     MarketChartPreviewScenario.DISPLAYED -> MarketChartUM.Loaded(
-        topHoldingPercent = stringReference("Top holding 41%"),
+        assetCount = 4,
+        topHoldingPercent = resourceReference(R.string.market_chart_top_holding, wrappedList("41%")),
         aiInsight = AiInsightUM.Displayed(
             "Your portfolio leans on a single asset – BTC is 42% of holdings. Stablecoins add 23% " +
                 "buffer. Consider trimming concentration for a smoother ride",
@@ -299,12 +300,14 @@ private fun previewMarketChartState(scenario: MarketChartPreviewScenario): Marke
         donutChart = previewLoadedDonut(),
     )
     MarketChartPreviewScenario.ASK_AI -> MarketChartUM.Loaded(
-        topHoldingPercent = stringReference("Top holding 41%"),
+        assetCount = 4,
+        topHoldingPercent = resourceReference(R.string.market_chart_top_holding, wrappedList("41%")),
         aiInsight = AiInsightUM.AskAiInsight(askAiInsightClick = {}),
         donutChart = previewLoadedDonut(),
     )
     MarketChartPreviewScenario.NO_AI -> MarketChartUM.Loaded(
-        topHoldingPercent = stringReference("Top holding 41%"),
+        assetCount = 2,
+        topHoldingPercent = resourceReference(R.string.market_chart_top_holding, wrappedList("41%")),
         aiInsight = AiInsightUM.Hide,
         donutChart = DonutChartUM.Loaded(
             totalAmount = "$10,12345678912.1333",
@@ -359,6 +362,13 @@ private fun previewLoadedDonut(): DonutChartUM.Loaded = DonutChartUM.Loaded(
             color = DonutSegmentColor.Green,
             title = stringReference("Tether"),
             fiatValue = stringReference("$520.18"),
+        ),
+        // Closes the ring at the complement of the four assets — the collapsed "Other" bucket.
+        DonutSegmentUM(
+            weight = BigDecimal(0.02),
+            color = DonutSegmentColor.Grey,
+            title = stringReference("Other"),
+            fiatValue = stringReference("$202.47"),
         ),
     ),
     onSegmentTap = {},

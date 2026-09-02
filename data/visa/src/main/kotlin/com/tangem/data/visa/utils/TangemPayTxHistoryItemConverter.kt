@@ -11,18 +11,21 @@ import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import java.math.BigDecimal
 import java.util.Currency
 
 internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
     Converter<TangemPayTxHistoryResponse.Transaction, TangemPayTxHistoryItem?> {
 
     private val spendAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Spend::class.java) }
+    private val refundAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Refund::class.java) }
     private val paymentAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Payment::class.java) }
     private val feeAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Fee::class.java) }
     private val collateralAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Collateral::class.java) }
 
     override fun convert(value: TangemPayTxHistoryResponse.Transaction): TangemPayTxHistoryItem? {
         return value.spend?.let { convertSpend(id = value.id, spend = it) }
+            ?: value.refund?.let { convertRefund(id = value.id, refund = it) }
             ?: value.payment?.let { convertPayment(id = value.id, payment = it) }
             ?: value.fee?.let { convertFee(id = value.id, fee = it) }
             ?: value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
@@ -61,6 +64,39 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
                 status = spend.cashbackStatus,
                 amount = spend.cashback,
                 currencyCode = spend.cashbackCurrencyCode,
+            ),
+        )
+    }
+
+    /**
+     * A refund goes through the spend pipeline, where incoming money and clawed-back cashback carry
+     * a negative sign (the convention of refund push notifications and the spend UI), so the signs
+     * are forced to negative regardless of what the backend sends.
+     */
+    private fun convertRefund(id: String, refund: TangemPayTxHistoryResponse.Refund): TangemPayTxHistoryItem.Spend {
+        return TangemPayTxHistoryItem.Spend(
+            id = id,
+            jsonRepresentation = refundAdapter.toJson(refund),
+            date = (refund.postedAt ?: refund.authorizedAt).withLocalZone(),
+            amount = refund.amount.abs().negate(),
+            currency = Currency.getInstance(refund.currency),
+            authorizedAmount = BigDecimal.ZERO,
+            localAmount = refund.localAmount?.abs()?.negate(),
+            localCurrency = refund.localCurrency?.let(Currency::getInstance),
+            enrichedMerchantName = refund.enrichedMerchantName,
+            merchantName = refund.merchantName,
+            enrichedMerchantCategory = refund.enrichedMerchantCategory,
+            merchantCategoryCode = refund.merchantCategoryCode,
+            merchantCategory = refund.merchantCategory,
+            status = TangemPayTxHistoryItemStatusConverter.convert(refund.status),
+            enrichedMerchantIconUrl = refund.enrichedMerchantIcon,
+            declinedReason = null,
+            cardName = refund.cardDisplayName,
+            cardNumberLast4 = refund.cardNumberEnd,
+            cashback = PayTransactionCashbackConverter.convertSpendCashback(
+                status = refund.cashbackStatus,
+                amount = refund.cashback?.abs()?.negate(),
+                currencyCode = refund.cashbackCurrencyCode,
             ),
         )
     }

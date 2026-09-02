@@ -864,12 +864,6 @@ class AppTransfersTest : BaseTestCase() {
             step("Click on 'Withdraw' button") {
                 onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
             }
-            step("Acknowledge withdrawal note sheet") {
-                onTangemPayWithdrawNoteSheet {
-                    title.assertIsDisplayed()
-                    gotItButton.clickWithAssertion()
-                }
-            }
             step("Choose identical receive token '$token' from '$receiveAccountName'") {
                 chooseIdenticalReceiveToken(tokenName = token, receiveAccountName = receiveAccountName)
             }

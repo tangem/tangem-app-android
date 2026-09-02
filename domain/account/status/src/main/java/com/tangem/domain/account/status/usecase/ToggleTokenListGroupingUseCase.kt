@@ -7,6 +7,7 @@ import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.operations.TokenListFactory
@@ -46,10 +47,11 @@ class ToggleTokenListGroupingUseCase(
         val updatedAccountList = accountStatusList.accountStatuses.map { account ->
             if (account !is AccountStatus.CryptoPortfolio) return@map account
 
-            account.copy(tokenList = account.tokenList.reverseGroupType())
+            account.copySealed(tokenList = account.tokenList.reverseGroupType())
         }
-        val updatedCryptoAccount =
-            updatedAccountList.firstOrNull { it is AccountStatus.CryptoPortfolio } as? AccountStatus.CryptoPortfolio
+        val updatedCryptoAccount = updatedAccountList
+            .filterCryptoPortfolio()
+            .firstOrNull { it.tokenList !is TokenList.Empty }
 
         accountStatusList.copy(
             accountStatuses = updatedAccountList,

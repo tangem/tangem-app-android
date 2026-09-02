@@ -88,7 +88,7 @@ class SetTokenListTransformerTest {
             clickIntents = mockk<WalletClickIntents>(relaxed = true),
             shouldShowMainPromo = false,
             isAccountsModeEnabled = false,
-            isMultipleCardsEnabled = false,
+            isAccountMultichainEnabled = false,
         )
     }
 
@@ -121,7 +121,7 @@ class SetTokenListTransformerTest {
     }
 
     private fun mainCryptoPortfolioStatus(tokenList: TokenList): AccountStatus.CryptoPortfolio =
-        AccountStatus.CryptoPortfolio(
+        AccountStatus.Personal(
             account = createMainAccount(userWalletId),
             tokenList = tokenList,
             priceChangeLce = Unit.lceError(),

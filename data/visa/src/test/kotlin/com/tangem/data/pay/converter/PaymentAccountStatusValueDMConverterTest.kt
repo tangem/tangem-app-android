@@ -33,6 +33,15 @@ internal class PaymentAccountStatusValueDMConverterTest {
 
     private val converter = PaymentAccountStatusValueDMConverter(tangemPayCurrencyFactory)
 
+    private fun accountBalance() = PaymentAccountStatusValue.Balance(
+        fiatBalance = PaymentAccountStatusValue.FiatBalance(
+            availableBalance = BigDecimal("12.34"),
+            currency = "USD",
+        ),
+        cryptoBalance = cryptoBalance(),
+        availableForWithdrawal = BigDecimal("10.00"),
+    )
+
     private fun cryptoBalance() = PaymentAccountStatusValue.CryptoBalance(
         id = "usd-coin",
         chainId = 137,
@@ -201,6 +210,47 @@ internal class PaymentAccountStatusValueDMConverterTest {
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ConvertBack {
+
+        @Test
+        fun `GIVEN card issue failed with a balance WHEN round tripped THEN the account payload survives`() {
+            // Arrange
+            val domain = PaymentAccountStatusValue.Error.CardIssueFailed(
+                customerId = "customer-id",
+                tariffPlan = null,
+                balance = accountBalance(),
+                fiatRate = BigDecimal("1.5"),
+            )
+
+            // Act
+            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+
+            // Assert
+            assertThat(restored).isEqualTo(
+                PaymentAccountStatusValue.Error.CardIssueFailed(
+                    customerId = "customer-id",
+                    source = StatusSource.CACHE,
+                    balance = accountBalance(),
+                    fiatRate = BigDecimal("1.5"),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN card issue failed without a balance WHEN round tripped THEN it restores from cache`() {
+            // Arrange
+            val domain = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer-id")
+
+            // Act
+            val restored = converter.convertBack(userWalletId, converter.convert(domain))
+
+            // Assert
+            assertThat(restored).isEqualTo(
+                PaymentAccountStatusValue.Error.CardIssueFailed(
+                    customerId = "customer-id",
+                    source = StatusSource.CACHE,
+                ),
+            )
+        }
 
         @Test
         fun `GIVEN DM Empty WHEN convertBack THEN returns domain Empty`() {

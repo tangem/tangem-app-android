@@ -10,15 +10,27 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-/** 'Add Wallet' scans a card immediately (no type chooser), so [mockContent] must be set before the click. */
+/** The details 'Add Wallet' opens a hardware/mobile chooser sheet; pick hardware when it appears. */
+private fun BaseTestCase.chooseAddHardwareWalletIfSheetShown() {
+    step("Choose 'Add hardware wallet' when the add-wallet sheet is shown") {
+        onAddWalletBottomSheet {
+            if (addHardwareWalletButton.isDisplayedSafely()) {
+                addHardwareWalletButton.performClick()
+            }
+        }
+    }
+}
+
+/** [mockContent] must be set before the 'Add Wallet' click so the mocked card scan is used. */
 fun BaseTestCase.addNewCardWallet(mockContent: MockContent) {
     step("Click 'More' button on TopBar") {
         onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
     MockProvider.setMocks(mockContent)
-    step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
+    step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
     }
+    chooseAddHardwareWalletIfSheetShown()
     // Gate on the top-bar More button, not the container — the bottom Markets sheet can leave the container un-"displayed".
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
@@ -50,9 +62,10 @@ fun BaseTestCase.addNewCardWalletWithoutSync(mockContent: MockContent) {
         onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
     MockProvider.setMocks(mockContent)
-    step("Click on 'Add Wallet' button (scans a new hardware wallet)") {
+    step("Click on 'Add Wallet' button") {
         onDetailsScreen { addWalletButton.clickWithAssertion() }
     }
+    chooseAddHardwareWalletIfSheetShown()
     step("Assert 'Main' screen is displayed with the new wallet") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
             runCatching { onMainScreenTopBar { moreButton.assertIsDisplayed() } }.isSuccess

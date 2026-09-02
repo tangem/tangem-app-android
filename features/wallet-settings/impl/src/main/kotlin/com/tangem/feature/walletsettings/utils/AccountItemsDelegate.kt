@@ -22,7 +22,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -102,7 +101,7 @@ internal class AccountItemsDelegate @Inject constructor(
             return WalletSettingsAccountsUM.JointAccount(state = accountItemUM)
         }
 
-        val accounts = accountStatusList.accountStatuses.filterCryptoPortfolio()
+        val accounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Personal>()
         val jointAccounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Joint>()
 
         val header = WalletSettingsAccountsUM.Header(

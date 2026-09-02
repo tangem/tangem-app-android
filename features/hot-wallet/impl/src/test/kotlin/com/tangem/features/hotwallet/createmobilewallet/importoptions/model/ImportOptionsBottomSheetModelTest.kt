@@ -70,13 +70,13 @@ internal class ImportOptionsBottomSheetModelTest {
 
         // Assert
         verify(exactly = 1) { onRecoveryPhrase() }
-        coVerify(exactly = 0) { cloudBackupRepository.findBackups(any()) }
+        coVerify(exactly = 0) { cloudBackupRepository.findBackups(any(), any()) }
     }
 
     @Test
     fun `GIVEN backups found WHEN cloud backup clicked THEN result is held and reported`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns listOf(backupInfo).right()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns listOf(backupInfo).right()
         val holder = CloudRestoreResultHolder()
         val model = createModel(this, holder)
 
@@ -93,7 +93,7 @@ internal class ImportOptionsBottomSheetModelTest {
     @Test
     fun `GIVEN authorized account WHEN cloud backup clicked THEN signs out before listing backups`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns listOf(backupInfo).right()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns listOf(backupInfo).right()
         val model = createModel(this, CloudRestoreResultHolder())
 
         // Act
@@ -103,14 +103,31 @@ internal class ImportOptionsBottomSheetModelTest {
         // Assert
         coVerifyOrder {
             cloudBackupRepository.signOut()
-            cloudBackupRepository.findBackups(interactive = true)
+            cloudBackupRepository.findBackups(interactive = true, validateContent = true)
         }
+    }
+
+    @Test
+    fun `GIVEN cloud backup option WHEN clicked THEN backups are listed with content validation`() = runTest {
+        // Arrange
+        coEvery {
+            cloudBackupRepository.findBackups(interactive = true, validateContent = true)
+        } returns listOf(backupInfo).right()
+        val model = createModel(this, CloudRestoreResultHolder())
+
+        // Act
+        model.options().onCloudBackupClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { cloudBackupRepository.findBackups(interactive = true, validateContent = true) }
+        coVerify(exactly = 0) { cloudBackupRepository.findBackups(interactive = any(), validateContent = false) }
     }
 
     @Test
     fun `GIVEN account info unavailable WHEN cloud backup clicked THEN result has no email`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns listOf(backupInfo).right()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns listOf(backupInfo).right()
         coEvery { cloudBackupRepository.getAccountInfo(any()) } returns CloudBackupError.AuthRequired.left()
         val holder = CloudRestoreResultHolder()
         val model = createModel(this, holder)
@@ -127,7 +144,7 @@ internal class ImportOptionsBottomSheetModelTest {
     @Test
     fun `GIVEN no backups WHEN cloud backup clicked THEN warning error shown`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns emptyList<CloudBackupInfo>().right()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns emptyList<CloudBackupInfo>().right()
         val model = createModel(this, CloudRestoreResultHolder())
 
         // Act
@@ -142,7 +159,7 @@ internal class ImportOptionsBottomSheetModelTest {
     @Test
     fun `GIVEN missing permissions WHEN cloud backup clicked THEN non-warning error shown`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns
             CloudBackupError.AuthPermissionsMissing.left()
         val model = createModel(this, CloudRestoreResultHolder())
 
@@ -157,7 +174,7 @@ internal class ImportOptionsBottomSheetModelTest {
     @Test
     fun `GIVEN read error WHEN cloud backup clicked THEN non-warning error shown`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns CloudBackupError.ReadError().left()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns CloudBackupError.ReadError().left()
         val model = createModel(this, CloudRestoreResultHolder())
 
         // Act
@@ -171,7 +188,7 @@ internal class ImportOptionsBottomSheetModelTest {
     @Test
     fun `GIVEN authorization cancelled WHEN cloud backup clicked THEN options shown without loading`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns CloudBackupError.AuthCanceled.left()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns CloudBackupError.AuthCanceled.left()
         val model = createModel(this, CloudRestoreResultHolder())
 
         // Act
@@ -186,7 +203,7 @@ internal class ImportOptionsBottomSheetModelTest {
     @Test
     fun `GIVEN backups are loading WHEN options clicked again THEN clicks are ignored`() = runTest {
         // Arrange
-        coEvery { cloudBackupRepository.findBackups(interactive = true) } returns listOf(backupInfo).right()
+        coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns listOf(backupInfo).right()
         val model = createModel(this, CloudRestoreResultHolder())
         model.options().onCloudBackupClick()
 
@@ -198,7 +215,7 @@ internal class ImportOptionsBottomSheetModelTest {
         // Assert
         assertThat(model.options().isCloudLoading).isTrue()
         verify(exactly = 0) { onRecoveryPhrase() }
-        coVerify(exactly = 1) { cloudBackupRepository.findBackups(interactive = true) }
+        coVerify(exactly = 1) { cloudBackupRepository.findBackups(interactive = true, validateContent = true) }
     }
 
     private fun ImportOptionsBottomSheetModel.options(): ImportOptionsBottomSheetUM.Content.Options =

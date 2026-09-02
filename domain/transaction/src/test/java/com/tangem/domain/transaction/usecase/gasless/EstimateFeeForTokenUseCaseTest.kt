@@ -235,7 +235,7 @@ internal class EstimateFeeForTokenUseCaseTest {
     private fun accountStatusList() = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = listOf(
-            AccountStatus.CryptoPortfolio(
+            AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,

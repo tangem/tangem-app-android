@@ -3,8 +3,8 @@ package com.tangem.datasource.di
 import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.utils.AuthenticationHeader
-import com.tangem.datasource.utils.TangemApiKeyHeader
+import com.tangem.datasource.remote.header.AuthenticationHeader
+import com.tangem.datasource.remote.header.TangemApiKeyHeader
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

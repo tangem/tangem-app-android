@@ -163,6 +163,9 @@ internal class SwapNotificationsModelTest {
             swapNotificationsUpdateTrigger = updateTrigger,
             swapAmountUpdateTrigger = mockk(relaxed = true),
             isMemoRequiredUseCase = mockk(relaxed = true),
+            getBackupProblematicWalletForAddressUseCase = mockk(relaxed = true),
+            sendBackupProblemEmailUseCase = mockk(relaxed = true),
+            backupErrorFeatureToggles = mockk { every { isTopUpWarningEnabled } returns true },
             analyticsEventHandler = analyticsEventHandler,
             paramsContainer = MutableParamsContainer(value = params),
         )

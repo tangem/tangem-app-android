@@ -13,7 +13,6 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -139,7 +138,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
         state.update { it.copy(isLoading = true, isError = false) }
 
         modelScope.launch {
-            val offers = getCustomerOffers(params.userWalletId).getOrNull()
+            val offers = getCustomerOffers.cardIssueOffers(params.userWalletId).getOrNull()
             if (offers == null) {
                 state.update { it.copy(isLoading = false, isError = true) }
                 return@launch
@@ -151,7 +150,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                     state.update { it.copy(isLoading = false, isError = true) }
                     return@launch
                 }
-                offers.plasticOffer()?.toPlasticContent(customerInfo)
+                offers.plastic?.toPlasticContent(customerInfo)
                     ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(
                         country = CountryNames.getDisplayName(customerInfo.country),
                     )
@@ -159,12 +158,20 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 null
             }
 
-            val virtualOffer = offers.firstOrNull { it.type == Offer.Type.CARD_ISSUE_VIRTUAL_RAIN }
+            val virtualOffer = offers.virtual
+            val availableTypes = availableTypesOf(
+                isPlasticEnabled = featureToggles.isPlasticCardOrderEnabled,
+                isVirtualAvailable = virtualOffer != null,
+            )
+            if (OrderCardType.Virtual !in availableTypes) {
+                displayedType = OrderCardType.Plastic
+            }
 
             state.update { current ->
                 current.copy(
                     isLoading = false,
                     isError = false,
+                    availableTypes = availableTypes,
                     virtual = TangemPayOrderCardTypeUM.Virtual(
                         issueFee = virtualOffer?.fee?.let { fee -> fee.amount.formatFiat(fee.currency) }.orEmpty(),
                         offerImageUrl = virtualOffer?.mainImageUrl,

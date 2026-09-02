@@ -2,6 +2,7 @@ package com.tangem.feature.swap.model
 
 import arrow.core.right
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -12,16 +13,18 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -102,7 +105,7 @@ internal abstract class SwapModelTestBase {
     protected val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk(relaxed = true)
     protected val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     protected val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase = mockk(relaxed = true)
-    protected val appsFlyerStore: AppsFlyerStore = mockk(relaxed = true)
+    protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
     protected val messageSender: UiMessageSender = mockk(relaxed = true)
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
@@ -115,6 +118,11 @@ internal abstract class SwapModelTestBase {
     protected val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase = mockk(relaxed = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
+    }
+    protected val isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase = mockk(relaxed = true)
+    protected val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
+    protected val backupErrorFeatureToggles: BackupErrorFeatureToggles = mockk {
+        every { isTopUpWarningEnabled } returns true
     }
 
     private val chooseTokenBridgeFactory: ChooseTokenBridge.Factory = mockk(relaxed = true)
@@ -223,7 +231,7 @@ internal abstract class SwapModelTestBase {
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
         getTangemPayCustomerIdUseCase = getTangemPayCustomerIdUseCase,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         messageSender = messageSender,
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
@@ -235,6 +243,9 @@ internal abstract class SwapModelTestBase {
         isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
         getCurrencyUSDQuoteUseCase = getCurrencyUSDQuoteUseCase,
         backupErrorWarningSender = backupErrorWarningSender,
+        backupErrorFeatureToggles = backupErrorFeatureToggles,
+        isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
     )
 
     // region builders
