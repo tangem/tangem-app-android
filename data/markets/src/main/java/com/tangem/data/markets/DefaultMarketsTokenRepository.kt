@@ -20,7 +20,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
@@ -252,26 +253,28 @@ internal class DefaultMarketsTokenRepository(
         userWalletId: UserWalletId,
         token: RawMarketToken,
         network: TokenMarketInfo.Network,
-        accountIndex: DerivationIndex?,
+        account: Account.CryptoPortfolio,
     ): CryptoCurrency? {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
 
-        return if (network.contractAddress == null) {
-            cryptoCurrencyFactory.createCoin(
+        val currencyNetwork = when (account) {
+            is Account.Personal -> networkFactory.create(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountIndex = account.derivationIndex,
             )
-        } else {
-            val currencyNetwork = networkFactory.create(
+            is Account.Joint -> networkFactory.create(
                 blockchain = blockchain,
-                extraDerivationPath = null,
+                derivationPath = account.ownerKeyIndex.toNetworkDerivationPath(),
                 userWallet = userWallet,
-                accountIndex = accountIndex,
-            ) ?: return null
+            )
+        } ?: return null
 
+        return if (network.contractAddress == null) {
+            cryptoCurrencyFactory.createCoin(currencyNetwork)
+        } else {
             cryptoCurrencyFactory.createToken(
                 network = currencyNetwork,
                 rawId = token.id,

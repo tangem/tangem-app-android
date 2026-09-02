@@ -1,5 +1,6 @@
 package com.tangem.domain.models.wallet
 
+import com.squareup.moshi.JsonClass
 import com.tangem.utils.extensions.hexToBytes
 import com.tangem.utils.extensions.toHexString
 
@@ -9,6 +10,7 @@ import com.tangem.utils.extensions.toHexString
  * @property stringValue the string representation of the wallet ID in hexadecimal format
  * @property value       the byte array representation of the wallet ID, derived from the hexadecimal string
  */
+@JsonClass(generateAdapter = true)
 @kotlinx.serialization.Serializable
 data class UserWalletId(
     val stringValue: String,
