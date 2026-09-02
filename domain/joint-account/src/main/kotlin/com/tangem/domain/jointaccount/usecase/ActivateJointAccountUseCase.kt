@@ -63,10 +63,8 @@ class ActivateJointAccountUseCase(
             .mapLeft(::toActivationError)
             .bind()
 
-        Either
-            .catch {
-                repository.activate(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
-            }
+        repository
+            .activate(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
             .mapLeft(JointAccountActivationError::Failed)
             .bind()
 
