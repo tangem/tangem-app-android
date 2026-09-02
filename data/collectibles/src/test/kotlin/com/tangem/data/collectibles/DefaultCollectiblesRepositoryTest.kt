@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchAction
-import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.domain.collectibles.models.CollectibleTransaction
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.GenerateTxParams
@@ -123,13 +122,14 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN turbo mode WHEN generateTx THEN body carries turbo params`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.generateTx(any()) } returns ApiResponse.Success(
+            coEvery { collectiblesApi.generateTx(any(), any()) } returns ApiResponse.Success(
                 GenerateTxResponse(id = "tx-id", txData = "base64"),
             )
 
             // Act
             val actual = repository.generateTx(
-                GenerateTxParams(
+                userWalletId = userWalletId,
+                params = GenerateTxParams(
                     fromAddress = "from",
                     collectibleType = "pokemon_50",
                     toAddress = "to",
@@ -141,7 +141,8 @@ internal class DefaultCollectiblesRepositoryTest {
             assertThat(actual).isEqualTo(CollectibleTransaction(id = "tx-id", txData = "base64"))
             coVerify(exactly = 1) {
                 collectiblesApi.generateTx(
-                    GenerateTxRequestBody(
+                    userWalletId = userWalletId.stringValue,
+                    body = GenerateTxRequestBody(
                         fromAddress = "from",
                         collectibleType = "pokemon_50",
                         toAddress = "to",
@@ -157,19 +158,21 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN no turbo mode WHEN generateTx THEN body omits it`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.generateTx(any()) } returns ApiResponse.Success(
+            coEvery { collectiblesApi.generateTx(any(), any()) } returns ApiResponse.Success(
                 GenerateTxResponse(id = "tx-id", txData = "base64"),
             )
 
             // Act
             repository.generateTx(
-                GenerateTxParams(fromAddress = "from", collectibleType = "pokemon_50", toAddress = "to"),
+                userWalletId = userWalletId,
+                params = GenerateTxParams(fromAddress = "from", collectibleType = "pokemon_50", toAddress = "to"),
             )
 
             // Assert
             coVerify(exactly = 1) {
                 collectiblesApi.generateTx(
-                    GenerateTxRequestBody(
+                    userWalletId = userWalletId.stringValue,
+                    body = GenerateTxRequestBody(
                         fromAddress = "from",
                         collectibleType = "pokemon_50",
                         toAddress = "to",
@@ -182,12 +185,13 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN api fails WHEN generateTx THEN the api error is thrown`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.generateTx(any()) } returns timeoutError<GenerateTxResponse>()
+            coEvery { collectiblesApi.generateTx(any(), any()) } returns timeoutError<GenerateTxResponse>()
 
             // Act
             val actual = runCatching {
                 repository.generateTx(
-                    GenerateTxParams(fromAddress = "from", collectibleType = "pokemon_50", toAddress = "to"),
+                    userWalletId = userWalletId,
+                    params = GenerateTxParams(fromAddress = "from", collectibleType = "pokemon_50", toAddress = "to"),
                 )
             }.exceptionOrNull()
 
@@ -203,23 +207,32 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN signed tx WHEN submitTx THEN returns submitted id`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.submitTx(any()) } returns ApiResponse.Success(SubmitTxResponse(id = "tx-id"))
+            coEvery {
+                collectiblesApi.submitTx(any(), any())
+            } returns ApiResponse.Success(SubmitTxResponse(id = "tx-id"))
 
             // Act
-            val actual = repository.submitTx(signedTxData = "signed")
+            val actual = repository.submitTx(userWalletId = userWalletId, signedTxData = "signed")
 
             // Assert
             assertThat(actual).isEqualTo(SubmittedCollectibleTransaction(id = "tx-id"))
-            coVerify(exactly = 1) { collectiblesApi.submitTx(SubmitTxRequestBody(signedTxData = "signed")) }
+            coVerify(exactly = 1) {
+                collectiblesApi.submitTx(
+                    userWalletId = userWalletId.stringValue,
+                    body = SubmitTxRequestBody(signedTxData = "signed"),
+                )
+            }
         }
 
         @Test
         fun `GIVEN api fails WHEN submitTx THEN the api error is thrown`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.submitTx(any()) } returns networkError<SubmitTxResponse>()
+            coEvery { collectiblesApi.submitTx(any(), any()) } returns networkError<SubmitTxResponse>()
 
             // Act
-            val actual = runCatching { repository.submitTx(signedTxData = "signed") }.exceptionOrNull()
+            val actual = runCatching {
+                repository.submitTx(userWalletId = userWalletId, signedTxData = "signed")
+            }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
@@ -293,7 +306,7 @@ internal class DefaultCollectiblesRepositoryTest {
             // Act
             actions.emit(
                 BatchAction.Reload(
-                    requestParams = CollectibleGachaMachinesListConfig(categoryId = null, search = "pikachu"),
+                    requestParams = MachineFactory.createListConfig(categoryId = null, search = "pikachu"),
                 ),
             )
             advanceUntilIdle()
@@ -372,6 +385,7 @@ internal class DefaultCollectiblesRepositoryTest {
         ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<T>
 
     private companion object {
-        val pokemonsConfig = CollectibleGachaMachinesListConfig(categoryId = "pokemons")
+        val userWalletId = MachineFactory.userWalletId
+        val pokemonsConfig = MachineFactory.createListConfig(categoryId = "pokemons")
     }
 }
