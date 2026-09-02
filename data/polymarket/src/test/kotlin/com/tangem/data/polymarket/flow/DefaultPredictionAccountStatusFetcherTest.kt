@@ -161,7 +161,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN an unreadable collateral WHEN invoke THEN the wallet total is not given a zero`() = runTest {
+    fun `GIVEN an unreadable collateral WHEN invoke THEN the wallet total is not blanked`() = runTest {
         // Arrange — the resolver answers KeyNotFound for any 404, so this is not only the missing-key case
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
@@ -172,7 +172,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
-        assertThat(store.getSyncOrNull(WALLET)?.totalFiatBalance).isEqualTo(TotalFiatBalance.Failed)
+        assertThat(store.getSyncOrNull(WALLET)?.totalFiatBalance)
+            .isEqualTo(TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL))
     }
 
     @Test

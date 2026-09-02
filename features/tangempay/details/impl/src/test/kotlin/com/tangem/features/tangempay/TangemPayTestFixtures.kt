@@ -129,6 +129,7 @@ internal fun tangemPayCard(
     state: TangemPayCardState = TangemPayCardState.Active,
     embossName: String? = null,
     images: List<TangemPayImage> = emptyList(),
+    isPlaceholder: Boolean = false,
 ): TangemPayCard = TangemPayCard(
     id = id,
     productInstanceId = productInstanceId,
@@ -142,4 +143,5 @@ internal fun tangemPayCard(
     state = state,
     embossName = embossName,
     cardType = TangemPayCardType.VIRTUAL,
+    isPlaceholder = isPlaceholder,
 )

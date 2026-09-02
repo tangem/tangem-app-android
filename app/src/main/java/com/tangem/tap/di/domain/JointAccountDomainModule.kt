@@ -5,7 +5,9 @@ import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.tap.domain.jointaccount.DefaultJointAccountSigner
 import dagger.Module
@@ -39,6 +41,30 @@ internal object JointAccountDomainModule {
         supplier: SingleJointAccountListSupplier,
     ): CreateJointAccountUseCase {
         return CreateJointAccountUseCase(
+            repository = repository,
+            signer = signer,
+            fetcher = fetcher,
+            supplier = supplier,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetJointAccountInvitePreviewUseCase(
+        repository: JointAccountRepository,
+    ): GetJointAccountInvitePreviewUseCase {
+        return GetJointAccountInvitePreviewUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideActivateJointAccountUseCase(
+        repository: JointAccountRepository,
+        signer: JointAccountSigner,
+        fetcher: SingleJointAccountListFetcher,
+        supplier: SingleJointAccountListSupplier,
+    ): ActivateJointAccountUseCase {
+        return ActivateJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,
