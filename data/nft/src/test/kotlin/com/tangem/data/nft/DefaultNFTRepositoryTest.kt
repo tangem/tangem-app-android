@@ -5,11 +5,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.datasource.local.nft.NFTPersistenceStore
-import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
-import com.tangem.datasource.local.nft.NFTRuntimeStore
-import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
-import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
+import com.tangem.data.nft.store.NFTPersistenceStore
+import com.tangem.data.nft.store.NFTPersistenceStoreFactory
+import com.tangem.data.nft.store.NFTRuntimeStore
+import com.tangem.data.nft.store.NFTRuntimeStoreFactory
+import com.tangem.data.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
