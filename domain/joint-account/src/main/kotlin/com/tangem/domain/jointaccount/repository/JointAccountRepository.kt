@@ -54,10 +54,14 @@ interface JointAccountRepository {
      * [payload] is the object the card signed and [signature] the EIP-191 signature over its RFC 8785 canonical
      * form — the same wire rules as in [create]. The endpoint is idempotent — activating an already `active`
      * account succeeds — so a request whose response was lost to a timeout is retried once here instead of
-     * reporting an error for a likely-activated account. Everything else is thrown as it arrives from the API.
+     * reporting an error for a likely-activated account. Every other error comes back as a `Left` as it arrives
+     * from the API — the function never throws.
      */
-    @Throws
-    suspend fun activate(userWalletId: UserWalletId, payload: JointAccountActivationPayload, signature: String)
+    suspend fun activate(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ): Either<Throwable, Unit>
 
     /**
      * Previews the invite [inviteId] for wallet [walletId] — the configuration and who is inviting.
