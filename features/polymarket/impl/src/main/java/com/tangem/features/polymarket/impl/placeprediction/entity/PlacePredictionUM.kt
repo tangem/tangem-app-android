@@ -148,6 +148,9 @@ internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecima
 internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
     ?.let { PayoutUM(expected = it.expectedShares, guaranteed = it.guaranteedShares) }
 
+internal fun QuoteUM.isMarketClosed(): Boolean =
+    (this as? QuoteUM.Unavailable)?.status == PredictionQuoteStatus.MARKET_CLOSED
+
 @Immutable
 internal sealed interface SubmitUM {
 

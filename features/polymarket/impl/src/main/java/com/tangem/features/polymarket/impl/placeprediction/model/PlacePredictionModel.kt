@@ -41,6 +41,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
@@ -421,6 +422,7 @@ internal class PlacePredictionModel @Inject constructor(
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
+                if (uiState.value.quote.isMarketClosed()) break
                 delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
