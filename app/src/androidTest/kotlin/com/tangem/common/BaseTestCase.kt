@@ -25,7 +25,7 @@ import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.datasource.utils.WireMockRedirectInterceptor
+import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
