@@ -11,6 +11,7 @@ internal sealed class TangemPayOrderCardIntent {
     @Serializable
     data class ReissuePlastic(
         val sourceProductInstanceId: String,
+        val sourceCardId: String,
         val deliveryEtaMaxBusinessDays: Int,
     ) : TangemPayOrderCardIntent()
 }
