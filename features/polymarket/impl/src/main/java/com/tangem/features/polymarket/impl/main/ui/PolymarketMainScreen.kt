@@ -44,12 +44,10 @@ import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
@@ -69,7 +67,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import java.math.BigDecimal
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -246,13 +243,14 @@ private fun FeedList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = KEY_HEADER) {
-            PolymarketMainHeader(
-                balance = placeholderBalance(),
-                isWithdrawEnabled = false,
-                onBalanceClick = {},
-                onAddFundsClick = {},
-                onWithdrawClick = {},
-            )
+            state.balance?.let { balance ->
+                PolymarketMainHeader(
+                    balance = balance.balance,
+                    addFunds = balance.addFunds,
+                    withdraw = balance.withdraw,
+                    onBalanceClick = {},
+                )
+            }
         }
 
         // The tabs outlive the events they filter: they stay put while a category reloads or fails.
@@ -387,10 +385,6 @@ private fun LazyListState.isTabBandPinned(): Boolean {
     return firstVisibleIndex > TAB_BAND_INDEX
 }
 
-private fun placeholderBalance(): TextReference = BigDecimal.ZERO.formatPolymarketMoneyStyled(
-    fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
-)
-
 @Composable
 private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
@@ -450,6 +444,7 @@ private fun PolymarketMainScreenContentPreview() {
     TangemThemePreviewRedesign {
         PolymarketMainScreen(
             state = PolymarketMainUM(
+                balance = null,
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Content(
                     events = previewEvents(),
