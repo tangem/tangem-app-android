@@ -40,9 +40,15 @@ interface CollectiblesApi {
 
     @RequiresSessionAuth
     @POST("api/v1/collectible/generateTx")
-    suspend fun generateTx(@Body body: GenerateTxRequestBody): ApiResponse<GenerateTxResponse>
+    suspend fun generateTx(
+        @Header("user-id") userWalletId: String,
+        @Body body: GenerateTxRequestBody,
+    ): ApiResponse<GenerateTxResponse>
 
     @RequiresSessionAuth
     @POST("api/v1/collectible/submitTx")
-    suspend fun submitTx(@Body body: SubmitTxRequestBody): ApiResponse<SubmitTxResponse>
+    suspend fun submitTx(
+        @Header("user-id") userWalletId: String,
+        @Body body: SubmitTxRequestBody,
+    ): ApiResponse<SubmitTxResponse>
 }

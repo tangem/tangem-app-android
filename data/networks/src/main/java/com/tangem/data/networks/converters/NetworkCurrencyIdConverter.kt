@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId.Companion.CONTRACT_ADDRESS_DELIMITER
+import com.tangem.data.networks.entity.NetworkStatusDM.CurrencyId
+import com.tangem.data.networks.entity.NetworkStatusDM.CurrencyId.Companion.CONTRACT_ADDRESS_DELIMITER
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.utils.converter.TwoWayConverter
