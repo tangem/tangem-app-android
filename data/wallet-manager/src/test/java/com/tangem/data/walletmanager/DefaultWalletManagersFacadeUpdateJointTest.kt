@@ -9,7 +9,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.data.walletmanager.store.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId

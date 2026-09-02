@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.walletmanager
+package com.tangem.data.walletmanager.store
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
