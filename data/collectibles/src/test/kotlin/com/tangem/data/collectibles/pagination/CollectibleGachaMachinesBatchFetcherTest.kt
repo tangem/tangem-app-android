@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 internal class CollectibleGachaMachinesBatchFetcherTest {
 
-    private val config = CollectibleGachaMachinesListConfig(categoryId = "pokemons")
+    private val config = MachineFactory.createListConfig(categoryId = "pokemons")
 
     @Test
     fun `GIVEN page has next WHEN fetchFirst THEN result is not last`() = runTest {
@@ -202,7 +202,7 @@ internal class CollectibleGachaMachinesBatchFetcherTest {
             requestedConfigs += requestConfig
             page(cursor = "c1", hasNext = true)
         }
-        val override = CollectibleGachaMachinesListConfig(search = "pikachu")
+        val override = MachineFactory.createListConfig(search = "pikachu")
 
         // Act
         val first = fetcher.fetchFirst(config)
