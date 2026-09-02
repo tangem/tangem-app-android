@@ -22,6 +22,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -197,24 +200,40 @@ internal class JointAccountMembersModelTest {
         source = StatusSource.ACTUAL,
     )
 
-    private fun createModel(
+    private fun TestScope.createModel(
         mode: JointAccountMembersComponent.Mode = JointAccountMembersComponent.Mode.Invite,
-    ) = JointAccountMembersModel(
-        paramsContainer = MutableParamsContainer(
-            JointAccountMembersComponent.Params(
-                userWalletId = USER_WALLET_ID,
-                cryptoAccountId = ACCOUNT_ID,
-                mode = mode,
+    ): JointAccountMembersModel {
+        val model = JointAccountMembersModel(
+            paramsContainer = MutableParamsContainer(
+                JointAccountMembersComponent.Params(
+                    userWalletId = USER_WALLET_ID,
+                    cryptoAccountId = ACCOUNT_ID,
+                    mode = mode,
+                ),
             ),
-        ),
-        dispatchers = TestingCoroutineDispatcherProvider(),
-        router = router,
-        clipboardManager = clipboardManager,
-        uiMessageSender = uiMessageSender,
-        shareManager = shareManager,
-        jointAccountListSupplier = supplier,
-        getJointAccountInvitesUseCase = getInvitesUseCase,
-    )
+            dispatchers = createTestingCoroutineDispatcherProvider(),
+            router = router,
+            clipboardManager = clipboardManager,
+            uiMessageSender = uiMessageSender,
+            shareManager = shareManager,
+            jointAccountListSupplier = supplier,
+            getJointAccountInvitesUseCase = getInvitesUseCase,
+        )
+        advanceUntilIdle()
+
+        return model
+    }
+
+    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        return TestingCoroutineDispatcherProvider(
+            main = testDispatcher,
+            mainImmediate = testDispatcher,
+            io = testDispatcher,
+            default = testDispatcher,
+            single = testDispatcher,
+        )
+    }
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
