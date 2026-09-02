@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.CoinIndicators
@@ -110,6 +111,9 @@ internal class ForYouPortfolioReviewConverter(
         // regroup them by network); the remaining assets are collapsed into a single "Other" row.
         val topAssets = rankedAssets.take(TOP_HOLDINGS_COUNT)
         val otherAssets = rankedAssets.drop(TOP_HOLDINGS_COUNT)
+        // Summed here rather than inside createOtherItem so the "Other" row and the donut's grey "Other"
+        // slice can never disagree on the amount.
+        val otherAssetsBalance = otherAssets.sumOf { (_, assetBalance) -> assetBalance }
         val topCurrencies = topAssets.flatMap { (networks, _) -> networks }
 
         val assetItems = topCurrencies
@@ -126,7 +130,11 @@ internal class ForYouPortfolioReviewConverter(
 
         // Assets beyond the top ones are collapsed into a single non-expandable "Other" row at the bottom.
         val tokenList = if (otherAssets.count() > 0) {
-            assetItems + createOtherItem(otherAssets, totalFiatBalanceAmount)
+            assetItems + createOtherItem(
+                otherAssetsCount = otherAssets.count(),
+                otherAssetsBalance = otherAssetsBalance,
+                totalFiatBalance = totalFiatBalanceAmount,
+            )
         } else {
             assetItems
         }.toPersistentList()
@@ -134,6 +142,7 @@ internal class ForYouPortfolioReviewConverter(
         val marketChartUM = ForYouPortfolioReviewMarketChartConverter(
             appCurrency = appCurrency,
             topAssets = topAssets.map { (networks, assetBalance) -> networks.map { it.status } to assetBalance },
+            otherAssetsBalance = otherAssetsBalance,
             onSegmentTap = onDiagramTap,
             isBalanceHidden = isBalanceHidden,
         ).convert(totalFiatBalance)
@@ -240,9 +249,26 @@ internal class ForYouPortfolioReviewConverter(
             else -> stringReference(onlyCryptoCurrency.network.name)
         }
 
+        val headIcon = iconConverter.convert(
+            when (val cryptoCurrency = asset.currency) {
+                is CryptoCurrency.Coin -> cryptoCurrency.copy(
+                    iconUrl = getTokenIconUrlFromDefaultHost(CryptoCurrency.RawID(asset.forYouGroupKey())),
+                )
+                is CryptoCurrency.Token -> cryptoCurrency.copy(
+                    iconUrl = getTokenIconUrlFromDefaultHost(CryptoCurrency.RawID(asset.forYouGroupKey())),
+                )
+            },
+        )
+
         return TangemTokenRowUM.Content(
             id = assetId,
-            headIconUM = TangemIconUM.Currency(iconConverter.convert(asset)),
+            headIconUM = TangemIconUM.Currency(
+                if (networkCount > 1) {
+                    headIcon.copySealed(topBadgeIconResId = null)
+                } else {
+                    headIcon
+                },
+            ),
             titleUM = TangemTokenRowUM.TitleUM.Content(
                 text = stringReference(asset.currency.symbol),
                 badge = badge,
@@ -267,10 +293,10 @@ internal class ForYouPortfolioReviewConverter(
     }
 
     private fun createOtherItem(
-        otherAssets: List<Pair<List<AccountCryptoCurrencyStatus>, BigDecimal>>,
+        otherAssetsCount: Int,
+        otherAssetsBalance: BigDecimal,
         totalFiatBalance: BigDecimal,
     ): ForYouTokenListItemUM {
-        val otherAssetsBalance = otherAssets.sumOf { (_, assetBalance) -> assetBalance }
         return ForYouTokenListItemUM(
             tokenRowUM = TangemTokenRowUM.Content(
                 id = OTHER_ROW_ID,
@@ -279,8 +305,8 @@ internal class ForYouPortfolioReviewConverter(
                 subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
                     text = pluralReference(
                         id = R.plurals.common_assets_count,
-                        count = otherAssets.count(),
-                        formatArgs = wrappedList(otherAssets.count()),
+                        count = otherAssetsCount,
+                        formatArgs = wrappedList(otherAssetsCount),
                     ),
                 ),
                 topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
@@ -308,6 +334,6 @@ internal class ForYouPortfolioReviewConverter(
 
     private companion object {
         const val OTHER_ROW_ID = "for_you_other_assets"
-        const val TOP_HOLDINGS_COUNT = 4
+        const val TOP_HOLDINGS_COUNT = 10
     }
 }
