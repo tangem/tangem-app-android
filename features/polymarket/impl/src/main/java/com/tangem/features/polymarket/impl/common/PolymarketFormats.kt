@@ -1,9 +1,12 @@
 package com.tangem.features.polymarket.impl.common
 
+import com.tangem.core.ui.extensions.SpanStyleReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
 import java.math.BigDecimal
@@ -19,6 +22,15 @@ internal fun BigDecimal.formatPolymarketVolume(): String = format {
 /** Formats a collateral amount the way the trade screens state it: plain USD, never the app's fiat. */
 internal fun BigDecimal.formatPolymarketMoney(): String = format {
     fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL)
+}
+
+/** [formatPolymarketMoney] with the cents set apart in [fractionStyle], as the balance header states them. */
+internal fun BigDecimal.formatPolymarketMoneyStyled(fractionStyle: SpanStyleReference): TextReference = formatStyled {
+    fiat(
+        fiatCurrencyCode = PolymarketConst.USD_CODE,
+        fiatCurrencySymbol = PolymarketConst.USD_SYMBOL,
+        spanStyleReference = fractionStyle,
+    )
 }
 
 /** Formats the sum the user entered, keeping cents only when they were typed: "$4,000", but "$25.50". */
