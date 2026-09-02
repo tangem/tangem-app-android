@@ -54,7 +54,7 @@ internal class PaymentAccountStatusValueMultichainTest {
     fun `GIVEN only non-Available networks WHEN read statuses THEN falls back to single legacy status`() {
         val loaded = loaded(
             networks = listOf(
-                PaymentNetworkStatus.NotIssued(network = mockk(), cryptoCurrencies = listOf(mockk())),
+                PaymentNetworkStatus.NotIssued(network = mockk()),
                 PaymentNetworkStatus.Disabled(network = mockk(), cryptoCurrencies = listOf(mockk())),
             ),
         )
@@ -75,7 +75,7 @@ internal class PaymentAccountStatusValueMultichainTest {
                     chainId = 137L,
                     cryptoCurrencyStatuses = listOf(s1, s2),
                 ),
-                PaymentNetworkStatus.NotIssued(network = mockk(), cryptoCurrencies = listOf(mockk())),
+                PaymentNetworkStatus.NotIssued(network = mockk()),
                 PaymentNetworkStatus.Available(
                     network = mockk(),
                     depositAddress = "0xDEPOSIT",
