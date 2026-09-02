@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.nft
+package com.tangem.data.nft.store
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
