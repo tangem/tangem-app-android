@@ -202,6 +202,7 @@ private fun Footer(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = 16.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,

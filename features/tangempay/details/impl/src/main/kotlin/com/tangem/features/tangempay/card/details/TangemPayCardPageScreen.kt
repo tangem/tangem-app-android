@@ -37,6 +37,7 @@ import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletBlock
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
@@ -51,6 +52,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import com.tangem.core.ui.R as CoreUiR
 
 private const val CONTENT_FADE_DURATION_MS = 300
+private val CardHorizontalPadding = 16.dp
+private val CardTopSpacing = 12.dp
 
 @Composable
 internal fun TangemPayCardPageScreen(
@@ -121,7 +124,7 @@ private fun TangemPayCardPageScreen(
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 item(key = "Card") {
-                    Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+                    Box(modifier = Modifier.padding(top = CardTopSpacing)) {
                         cardSection()
                     }
                 }
@@ -180,7 +183,7 @@ private fun ReissueCardLayout(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+        Box(modifier = Modifier.padding(top = CardTopSpacing)) {
             cardSection()
         }
         Box(
@@ -204,7 +207,7 @@ private fun CardDeliveryLayout(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {
+        Box(modifier = Modifier.padding(top = CardTopSpacing)) {
             cardSection()
         }
         Box(
@@ -281,7 +284,7 @@ private fun TangemPayCardSwipePager(
         controllers.isEmpty() -> Unit
         controllers.size == 1 -> CardDetailsPage(
             controller = controllers.first(),
-            modifier = modifier.padding(horizontal = 16.dp),
+            modifier = modifier.padding(horizontal = CardHorizontalPadding),
         )
         else -> {
             val initialPage = controllers.indexOfFirst { it.cardId == selectedCardId }.coerceAtLeast(0)
@@ -301,8 +304,8 @@ private fun TangemPayCardSwipePager(
                     state = pagerState,
                     modifier = Modifier.fillMaxWidth(),
                     // Side padding keeps the current card centered while the neighbours peek at the edges.
-                    contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing32),
-                    pageSpacing = TangemTheme.dimens.spacing8,
+                    contentPadding = PaddingValues(horizontal = CardHorizontalPadding),
+                    pageSpacing = 8.dp,
                     beyondViewportPageCount = 1,
                     key = { controllers[it].cardId },
                 ) { page ->
@@ -311,7 +314,7 @@ private fun TangemPayCardSwipePager(
 
                 TangemPagerIndicator(
                     pagerState = pagerState,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                    modifier = Modifier.padding(top = 12.dp),
                 )
             }
         }
@@ -427,13 +430,51 @@ private fun previewDeliveryState(email: String) = TangemPayCardDeliveryUM(
     onActivateCardClick = {},
 )
 
+private fun previewCardPageState(
+    cardState: TangemPayCardState = TangemPayCardState.Active,
+    addToWalletBlockState: AddToWalletBlockState? = AddToWalletBlockState(onClick = {}, onClickClose = {}),
+    settings: ImmutableList<TangemPayCardPageSetting> = previewSettings(),
+    delivery: TangemPayCardDeliveryUM? = null,
+) = TangemPayCardPageUM(
+    settings = settings,
+    onBackClick = {},
+    dailyLimitState = TangemPayDailyLimitBlockState.Content(limit = "$5,000", onChangeClick = {}),
+    addToWalletBlockState = addToWalletBlockState,
+    cardState = cardState,
+    menuItems = persistentListOf(),
+    delivery = delivery,
+)
+
+private fun previewSettings(): ImmutableList<TangemPayCardPageSetting> = persistentListOf(
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.Details,
+        title = resourceReference(R.string.details_title),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+    ),
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.Freeze,
+        title = resourceReference(R.string.tangem_pay_freeze_card_freeze),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_freeze_24,
+        isLoading = true,
+    ),
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.ChangePin,
+        title = resourceReference(R.string.tangem_pay_pin_code_title),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_card_pin_24,
+        isEnabled = false,
+    ),
+)
+
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TangemPayCardPageScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(),
+            state = previewCardPageState(),
             cardSection = {
                 TangemPayCard(
                     state = previewCardDetailsState(),
@@ -452,11 +493,11 @@ private fun TangemPayCardPageScreenDeliveryPreview(
 ) {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(
+            state = previewCardPageState(
                 cardState = TangemPayCardState.Delivering,
-                delivery = delivery,
                 addToWalletBlockState = null,
                 settings = persistentListOf(),
+                delivery = delivery,
             ),
             cardSection = {
                 TangemPayCard(
@@ -477,7 +518,7 @@ private fun TangemPayCardPageScreenDeliveryPreview(
 private fun TangemPayCardPageScreenActivatingPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
-            state = TangemPayCardPageUM.stub(
+            state = previewCardPageState(
                 cardState = TangemPayCardState.Activating,
                 addToWalletBlockState = null,
                 settings = persistentListOf(),

@@ -4,18 +4,14 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.data.cloudbackup.CloudBackupJson
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
-import com.tangem.data.cloudbackup.datasource.DefaultGoogleDriveTokenProvider
-import com.tangem.data.cloudbackup.datasource.GoogleDriveApi
-import com.tangem.data.cloudbackup.datasource.GoogleDriveAuthorizer
-import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.repository.DefaultCloudBackupRepository
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.data.cloudbackup.store.DefaultCloudBackupStore
-import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
-import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
+import com.tangem.google.drive.GoogleDriveApi
+import com.tangem.google.drive.GoogleDriveTokenProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -25,53 +21,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.builtins.serializer
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal object CloudBackupDataModule {
-
-    private const val MIME_TYPE_JSON = "application/json"
-    private const val TIMEOUT_SECONDS = 30L
-
-    @Provides
-    @Singleton
-    fun provideGoogleDriveApi(): GoogleDriveApi {
-        // no logging interceptor on purpose: requests carry the OAuth bearer token and the encrypted backup
-        val client = OkHttpClient.Builder()
-            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .build()
-
-        return Retrofit.Builder()
-            .baseUrl(GoogleDriveApi.BASE_URL)
-            .client(client)
-            .addConverterFactory(CloudBackupJson.asConverterFactory(MIME_TYPE_JSON.toMediaType()))
-            .build()
-            .create(GoogleDriveApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGoogleDriveTokenProvider(
-        authorizer: GoogleDriveAuthorizer,
-        api: GoogleDriveApi,
-        @ApplicationContext context: Context,
-        networkConnectionManager: NetworkConnectionManager,
-    ): GoogleDriveTokenProvider {
-        return DefaultGoogleDriveTokenProvider(
-            authorizer = authorizer,
-            api = api,
-            context = context,
-            networkConnectionManager = networkConnectionManager,
-        )
-    }
 
     @Provides
     @Singleton
