@@ -27,11 +27,11 @@ internal data class PolymarketMainUM(
 
         /**
          * @property events events of the selected category, accumulated over the loaded pages
-         * @property isLoadingNextPage whether the next page is on its way, shown as a footer loader
+         * @property footer what the end of the list shows about the next page
          */
         data class Content(
             val events: ImmutableList<PolymarketEventUM>,
-            val isLoadingNextPage: Boolean,
+            val footer: PolymarketFeedFooterUM,
         ) : ContentUM
 
         /**
@@ -42,6 +42,23 @@ internal data class PolymarketMainUM(
          */
         data class Error(val onReloadClick: () -> Unit) : ContentUM
     }
+}
+
+/** The end of the feed's list: nothing, the next page on its way, or the page that failed to arrive. */
+@Immutable
+internal sealed interface PolymarketFeedFooterUM {
+
+    data object None : PolymarketFeedFooterUM
+
+    data object Loading : PolymarketFeedFooterUM
+
+    /**
+     * The next page could not be loaded. Scrolling on asks for it again, but a list already at its end has nowhere
+     * to scroll to, so the footer takes a tap as well.
+     *
+     * @property onRetryClick asks for the failed page again
+     */
+    data class Error(val onRetryClick: () -> Unit) : PolymarketFeedFooterUM
 }
 
 /** A place in the feed's list: which item is first on screen and how far it is scrolled past. */
