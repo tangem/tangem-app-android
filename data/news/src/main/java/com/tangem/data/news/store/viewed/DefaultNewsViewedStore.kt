@@ -1,14 +1,14 @@
-package com.tangem.datasource.local.news.liked
+package com.tangem.data.news.store.viewed
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onStart
 
-private typealias NewsLikedCache = Map<Int, Boolean>
+private typealias NewsViewedCache = Map<Int, Boolean>
 
-internal class DefaultNewsLikedStore(
-    private val store: RuntimeSharedStore<NewsLikedCache>,
-) : NewsLikedStore {
+internal class DefaultNewsViewedStore(
+    private val store: RuntimeSharedStore<NewsViewedCache>,
+) : NewsViewedStore {
 
     override fun getAll(): Flow<Map<Int, Boolean>> {
         return store.get().onStart { emit(emptyMap()) }
@@ -18,13 +18,13 @@ internal class DefaultNewsLikedStore(
         return store.getSyncOrNull().orEmpty()
     }
 
-    override suspend fun updateLiked(articleIds: Collection<Int>, liked: Boolean) {
+    override suspend fun updateViewed(articleIds: Collection<Int>, viewed: Boolean) {
         if (articleIds.isEmpty()) return
 
         store.update(emptyMap()) { current ->
             val updated = current.toMutableMap()
             articleIds.forEach { id ->
-                updated[id] = liked
+                updated[id] = viewed
             }
             updated
         }

@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.card
+package com.tangem.data.card.model
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonDataException
