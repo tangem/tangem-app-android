@@ -6,14 +6,12 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
 import javax.inject.Singleton
 
 @Module
@@ -32,11 +30,6 @@ class MoshiModule {
             .add(DateTimeAdapter())
             // .add(VisaActivationRemoteState.jsonAdapter)
             // .add(VisaCardActivationStatus.jsonAdapter)
-            .add(
-                NamePolymorphicAdapterFactory.of(NetworkStatusDM::class.java)
-                    .withSubtype(NetworkStatusDM.Verified::class.java, "amounts")
-                    .withSubtype(NetworkStatusDM.NoAccount::class.java, "amount_to_create_account"),
-            )
             .addLast(KotlinJsonAdapterFactory())
 
         // Enum-fallback (and future) adapters are contributed via @IntoSet so stream modules can register
