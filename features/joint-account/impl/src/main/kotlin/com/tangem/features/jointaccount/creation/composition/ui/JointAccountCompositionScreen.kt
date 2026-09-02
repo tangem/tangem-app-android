@@ -45,6 +45,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_sign_minus_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
 import com.tangem.core.ui.res.generated.icons.ic_user_24
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
 import com.tangem.features.jointaccount.impl.R
 
@@ -340,8 +341,8 @@ private fun createPreviewState(totalMembers: Int, requiredToSign: Int): JointAcc
     return JointAccountCompositionUM(
         totalMembers = JointAccountCompositionUM.StepperUM(
             value = totalMembers,
-            isDecrementEnabled = totalMembers > JointAccountCompositionUM.MIN_MEMBERS,
-            isIncrementEnabled = totalMembers < JointAccountCompositionUM.MAX_MEMBERS,
+            isDecrementEnabled = totalMembers > JointAccountConfig.MIN_MEMBERS_COUNT,
+            isIncrementEnabled = totalMembers < JointAccountConfig.MAX_MEMBERS_COUNT,
             onDecrement = {},
             onIncrement = {},
         ),
@@ -352,7 +353,7 @@ private fun createPreviewState(totalMembers: Int, requiredToSign: Int): JointAcc
             onDecrement = {},
             onIncrement = {},
         ),
-        maxMembers = JointAccountCompositionUM.MAX_MEMBERS,
+        maxMembers = JointAccountConfig.MAX_MEMBERS_COUNT,
         onContinueClick = {},
         onBackClick = {},
     )
