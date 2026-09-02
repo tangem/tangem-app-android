@@ -16,6 +16,7 @@ import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
@@ -645,3 +646,22 @@ internal data class TangemTabNavigationStory(
         Dark("dark"),
     }
 }
+
+internal data class TangemStatusScreenStory(
+    val variant: TangemStatusScreen.Variant,
+    val hasDescription: Boolean,
+    val hasAsset: Boolean,
+    val hasExtraBottom: Boolean,
+    val hasDetails: Boolean,
+    val hasFooter: Boolean,
+    val isFullscreen: Boolean,
+    val replayKey: Int,
+    val onVariantChange: (TangemStatusScreen.Variant) -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onAssetToggle: () -> Unit,
+    val onExtraBottomToggle: () -> Unit,
+    val onDetailsToggle: () -> Unit,
+    val onFooterToggle: () -> Unit,
+    val onFullscreenToggle: () -> Unit,
+    val onReplayClick: () -> Unit,
+) : DsStoryBookPage

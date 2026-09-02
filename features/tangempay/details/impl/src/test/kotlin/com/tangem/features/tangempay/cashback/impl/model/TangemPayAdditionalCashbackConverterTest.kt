@@ -23,7 +23,11 @@ private const val FORMATTED_DATE = "26.09.2026"
 internal class TangemPayAdditionalCashbackConverterTest {
 
     private val dateFormatter: TangemPayCashbackDateFormatter = mockk()
-    private val converter = TangemPayAdditionalCashbackConverter(dateFormatter)
+    private val onLinkClick: (String) -> Unit = {}
+    private val converter = TangemPayAdditionalCashbackConverter(
+        onLinkClick = onLinkClick,
+        dateFormatter = dateFormatter,
+    )
 
     @BeforeEach
     fun setup() {
@@ -57,6 +61,15 @@ internal class TangemPayAdditionalCashbackConverterTest {
                 badge = TangemPayAdditionalCashbackUM.Badge.Permanent,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN converter WHEN convert THEN link click handler is passed through`() {
+        // Act
+        val result = converter.convert(emptyList())
+
+        // Assert
+        assertThat(result.onLinkClick).isSameInstanceAs(onLinkClick)
     }
 
     @Test
