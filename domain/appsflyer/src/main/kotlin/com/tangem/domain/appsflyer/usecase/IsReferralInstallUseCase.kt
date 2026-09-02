@@ -10,6 +10,6 @@ class IsReferralInstallUseCase(
     private val appsFlyerRepository: AppsFlyerRepository,
 ) {
     suspend operator fun invoke(): Boolean {
-        return AppsFlyerDeeplink.from(appsFlyerRepository.getDeeplink()) == AppsFlyerDeeplink.Referral
+        return AppsFlyerDeeplink.from(appsFlyerRepository.getNavigationDeeplink()) == AppsFlyerDeeplink.Referral
     }
 }

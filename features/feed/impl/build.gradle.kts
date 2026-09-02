@@ -25,6 +25,7 @@ dependencies {
     api(projects.features.promoBanners.api)
     api(projects.features.marketing.api)
     implementation(projects.features.polymarket.api)
+    implementation(projects.features.collectibles.api)
 
     /* Data */
     implementation(projects.data.common)
