@@ -23,4 +23,9 @@ internal object ConfigModule {
     @Singleton
     @Named("authServiceKey")
     fun provideAuthServiceKey(environmentConfig: EnvironmentConfig): String? = environmentConfig.authServiceKey
+
+    @Provides
+    @Singleton
+    @Named("googleWebClientId")
+    fun provideGoogleWebClientId(environmentConfig: EnvironmentConfig): String? = environmentConfig.googleWebClientId
 }
