@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.network.entity
+package com.tangem.data.networks.entity
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
