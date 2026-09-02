@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.walletconnect
+package com.tangem.data.walletconnect.store
 
 import androidx.datastore.core.DataStore
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
