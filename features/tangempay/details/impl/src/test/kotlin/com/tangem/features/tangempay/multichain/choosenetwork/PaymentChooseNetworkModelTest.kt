@@ -52,10 +52,7 @@ internal class PaymentChooseNetworkModelTest {
     fun setUp() {
         mockkStatic("com.tangem.common.ui.extensions.NetworkIconExtKt")
         polygon = network(networkName = "Polygon", networkRawId = "polygon")
-        notIssued = PaymentNetworkStatus.NotIssued(
-            network = polygon,
-            cryptoCurrencies = listOf(currency("USDC")),
-        )
+        notIssued = PaymentNetworkStatus.NotIssued(network = polygon)
         every { supplier.invoke(WALLET_ID) } returns statusFlow
     }
 
