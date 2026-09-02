@@ -53,10 +53,9 @@ import java.math.BigDecimal
 @Composable
 internal fun PolymarketMainHeader(
     balance: TextReference,
-    isWithdrawEnabled: Boolean,
+    addFunds: TangemButtonUM,
+    withdraw: TangemButtonUM,
     onBalanceClick: () -> Unit,
-    onAddFundsClick: () -> Unit,
-    onWithdrawClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -70,9 +69,8 @@ internal fun PolymarketMainHeader(
         )
 
         ActionsRow(
-            isWithdrawEnabled = isWithdrawEnabled,
-            onAddFundsClick = onAddFundsClick,
-            onWithdrawClick = onWithdrawClick,
+            addFunds = addFunds,
+            withdraw = withdraw,
             modifier = Modifier.padding(top = 32.dp),
         )
 
@@ -131,12 +129,7 @@ private fun BalanceBlock(balance: TextReference, onClick: () -> Unit, modifier: 
 }
 
 @Composable
-private fun ActionsRow(
-    isWithdrawEnabled: Boolean,
-    onAddFundsClick: () -> Unit,
-    onWithdrawClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun ActionsRow(addFunds: TangemButtonUM, withdraw: TangemButtonUM, modifier: Modifier = Modifier) {
     // The buttons are material, but they sit inside the scaffold's own haze source, where haze has no area
     // left to sample and the material paints no fill. Their own state, sourced from the plate behind them,
     // gives it one.
@@ -151,37 +144,10 @@ private fun ActionsRow(
         )
 
         CompositionLocalProvider(LocalHazeState provides backdropHazeState) {
-            ActionButtons(
-                buttons = persistentListOf(
-                    actionButton(
-                        text = resourceReference(R.string.common_add_funds),
-                        icon = Icons.ic_arrow_down_24,
-                        onClick = onAddFundsClick,
-                    ),
-                    actionButton(
-                        text = resourceReference(R.string.prediction_main_withdraw),
-                        icon = Icons.ic_arrow_up_24,
-                        onClick = onWithdrawClick,
-                        isEnabled = isWithdrawEnabled,
-                    ),
-                ),
-            )
+            ActionButtons(buttons = persistentListOf(addFunds, withdraw))
         }
     }
 }
-
-private fun actionButton(text: TextReference, icon: ImageVector, onClick: () -> Unit, isEnabled: Boolean = true) =
-    TangemButtonUM(
-        text = text,
-        tangemIconUM = TangemIconUM.Icon(
-            imageVector = icon,
-            tintReference = { TangemTheme.colors3.icon.primary },
-        ),
-        type = TangemButtonType.Secondary,
-        shape = TangemButtonShape.Rounded,
-        isEnabled = isEnabled,
-        onClick = onClick,
-    )
 
 @Preview(name = "Header Light", showBackground = true, widthDp = 360)
 @Preview(
@@ -199,10 +165,17 @@ private fun PolymarketMainHeaderPreview(
             balance = balance.formatPolymarketMoneyStyled(
                 fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
             ),
-            isWithdrawEnabled = balance.signum() > 0,
+            addFunds = previewButton(
+                text = resourceReference(R.string.common_add_funds),
+                icon = Icons.ic_arrow_down_24,
+                isEnabled = true,
+            ),
+            withdraw = previewButton(
+                text = resourceReference(R.string.prediction_main_withdraw),
+                icon = Icons.ic_arrow_up_24,
+                isEnabled = balance.signum() > 0,
+            ),
             onBalanceClick = {},
-            onAddFundsClick = {},
-            onWithdrawClick = {},
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
@@ -210,4 +183,13 @@ private fun PolymarketMainHeaderPreview(
 
 private class PolymarketMainHeaderPreviewProvider : CollectionPreviewParameterProvider<BigDecimal>(
     collection = listOf(BigDecimal.ZERO, BigDecimal("1234.56")),
+)
+
+private fun previewButton(text: TextReference, icon: ImageVector, isEnabled: Boolean) = TangemButtonUM(
+    text = text,
+    tangemIconUM = TangemIconUM.Icon(imageVector = icon),
+    type = TangemButtonType.Secondary,
+    shape = TangemButtonShape.Rounded,
+    isEnabled = isEnabled,
+    onClick = {},
 )
