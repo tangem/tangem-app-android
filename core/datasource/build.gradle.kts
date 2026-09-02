@@ -118,14 +118,11 @@ dependencies {
     api(projects.core.local)
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
-    implementation(projects.core.res)
     api(projects.core.remote)
     // endregion
 
     // region Domain models
     api(projects.domain.models)
-    api(projects.domain.nft.models)
-    api(projects.domain.walletConnect.models)
     // endregion
 
     // region Tests
