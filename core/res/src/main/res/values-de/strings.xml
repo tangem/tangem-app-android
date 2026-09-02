@@ -1056,7 +1056,6 @@
   <string name="joint_account_name_hint">Geben Sie Ihren Vor- und Nachnamen oder eine Unterzeichnertypangabe ein, damit die anderen Mitglieder Sie identifizieren können</string>
   <string name="joint_account_name_subtitle">Andere Mitglieder sehen diesen Namen auf dem gemeinsamen Konto</string>
   <string name="joint_account_name_title">Wie heißt du?</string>
-  <string name="joint_account_onboarding_subtitle">Ein gemeinsames Konto, das mehreren Personen gemeinsam gehört. Geldtransfers sind nur möglich, wenn genügend Kontoinhaber unterschreiben</string>
   <string name="joint_account_waiting_activation">Warten auf die Aktivierung</string>
   <string name="key_invalidated_warning_description">Du hast deine biometrischen Daten aktualisiert, scanne deine Karte oder Ring, um einzutreten</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Dein Guthaben sollte höher sein als der Gebührenwert, um eine Überweisung zu tätigen</string>

@@ -119,6 +119,7 @@ data class AccountList private constructor(
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
                 is Account.Prediction -> emptyList()
+                is Account.Collectibles -> emptyList()
                 // A joint account is a Safe contract, not an EOA: its currencies must never reach the regular
                 // send/swap/staking flows, which sign a plain transfer from the participant's own key
                 is Account.Joint -> emptyList()
@@ -188,6 +189,12 @@ data class AccountList private constructor(
         }
 
         @Serializable
+        data object ExceedsMaxCollectiblesAccountsCount : Error {
+            override fun toString(): String =
+                "$tag: The number of collectibles accounts must not exceed $MAX_COLLECTIBLES_ACCOUNTS_COUNT"
+        }
+
+        @Serializable
         data object DuplicateAccountIds : Error {
             override fun toString(): String = "$tag: Account list contains duplicate account IDs"
         }
@@ -213,6 +220,7 @@ data class AccountList private constructor(
         const val MAX_PAYMENT_ACCOUNTS_COUNT = 1
         const val MAX_VIRTUAL_ACCOUNTS_COUNT = 1
         const val MAX_PREDICTION_ACCOUNTS_COUNT = 1
+        const val MAX_COLLECTIBLES_ACCOUNTS_COUNT = 1
         const val MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT = 20
         const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
@@ -246,6 +254,11 @@ data class AccountList private constructor(
             val predictionAccounts = accounts.filterIsInstance<Account.Prediction>()
             ensure(predictionAccounts.size <= MAX_PREDICTION_ACCOUNTS_COUNT) {
                 Error.ExceedsMaxPredictionAccountsCount
+            }
+
+            val collectiblesAccounts = accounts.filterIsInstance<Account.Collectibles>()
+            ensure(collectiblesAccounts.size <= MAX_COLLECTIBLES_ACCOUNTS_COUNT) {
+                Error.ExceedsMaxCollectiblesAccountsCount
             }
 
             val personalAccounts = accounts.filterIsInstance<Account.Personal>()
