@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import io.mockk.every
 
 /**
 [REDACTED_AUTHOR]
@@ -203,6 +204,27 @@ internal class AccountListTest {
 
         // Assert
         Truth.assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN joint account with currencies WHEN flattenMapCurrencies THEN joint currencies are keyed by its account`() {
+        // Arrange
+        val jointCurrency = mockk<CryptoCurrency> { every { id } returns mockk() }
+        val joint = MockAccounts.createJointAccount(ownerKeyIndex = 0, cryptoCurrencies = listOf(jointCurrency))
+        val accounts = listOf(Account.Personal.createMainAccount(userWalletId), joint)
+        val accountList = AccountList(
+            userWalletId = userWalletId,
+            accounts = accounts,
+            totalAccounts = accounts.size,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = 1,
+        ).getOrNull()!!
+
+        // Act
+        val actual = accountList.flattenMapCurrencies()
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(joint.accountId to jointCurrency.id, jointCurrency)
     }
 
     @Test
