@@ -4,6 +4,7 @@ object TangemPayTestTags {
     // Main wallet screen tile (entry point into Tangem Pay)
     const val MAIN_SCREEN_TILE = "TANGEM_PAY_MAIN_SCREEN_TILE"
     const val MAIN_SCREEN_TILE_BALANCE = "TANGEM_PAY_MAIN_SCREEN_TILE_BALANCE"
+    const val MAIN_SCREEN_TILE_CACHE_ICON = "TANGEM_PAY_MAIN_SCREEN_TILE_CACHE_ICON"
 
     // Payment account details screen
     const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
