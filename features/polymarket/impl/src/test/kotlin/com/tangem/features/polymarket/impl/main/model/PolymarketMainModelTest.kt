@@ -21,6 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -140,7 +141,7 @@ internal class PolymarketMainModelTest {
         // Assert
         val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
         assertThat(content.events.map { it.id }).containsExactly("event-1", "event-2").inOrder()
-        assertThat(content.isLoadingNextPage).isFalse()
+        assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.None)
     }
 
     @Test
@@ -159,7 +160,29 @@ internal class PolymarketMainModelTest {
 
         // Assert
         val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
-        assertThat(content.isLoadingNextPage).isTrue()
+        assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN the next page failed WHEN the footer retry is tapped THEN the page is requested again`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = BatchFetchResult.Error(IllegalStateException("boom"))),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        val footer = (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).footer
+        (footer as PolymarketFeedFooterUM.Error).onRetryClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).containsExactly(BatchAction.LoadMore<PolymarketEventsListConfig>())
     }
 
     @Test
