@@ -74,6 +74,7 @@ dependencies {
 
     /** Domain modules */
     api(projects.domain.account)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.account.status)
     api(projects.domain.addressBook)
     api(projects.domain.analytics)

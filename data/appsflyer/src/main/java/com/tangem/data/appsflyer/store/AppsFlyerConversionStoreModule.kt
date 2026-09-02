@@ -1,7 +1,5 @@
-package com.tangem.datasource.di
+package com.tangem.data.appsflyer.store
 
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.datasource.local.appsflyer.DefaultAppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides

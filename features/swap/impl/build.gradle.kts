@@ -24,7 +24,6 @@ dependencies {
     api(projects.core.analytics)
     api(projects.core.analytics.models)
     api(projects.core.configToggles)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
@@ -38,6 +37,7 @@ dependencies {
 
     /** Domain modules **/
     api(projects.domain.account.status)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.appCurrency)
     api(projects.domain.appCurrency.models)
     api(projects.domain.balanceHiding)

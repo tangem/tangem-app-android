@@ -38,6 +38,7 @@ dependencies {
 
     /** Domain */
     api(projects.domain.account)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.card)
     implementation(projects.domain.cloudBackup)
     api(projects.domain.common)
