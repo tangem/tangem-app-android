@@ -11,6 +11,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -90,7 +91,7 @@ internal class TangemPayOrderCardModelTest {
     }
 
     @Test
-    fun `GIVEN a successful order WHEN onShowOrderedCard THEN status refreshed and flow closed`() = runTest {
+    fun `GIVEN a successful order WHEN onShowOrderedCard THEN status refreshed and account screen shown`() = runTest {
         // Act
         val model = createModel(testScope = this)
         model.onShowOrderedCard()
@@ -98,7 +99,8 @@ internal class TangemPayOrderCardModelTest {
 
         // Assert
         coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) }
+        verify(exactly = 0) { router.pop() }
     }
 
     @Test
@@ -112,7 +114,7 @@ internal class TangemPayOrderCardModelTest {
 
             // Assert
             coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
-            verify(exactly = 1) { router.pop() }
+            verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) }
         }
 
     private fun createModel(testScope: TestScope) = TangemPayOrderCardModel(
