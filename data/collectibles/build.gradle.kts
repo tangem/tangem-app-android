@@ -13,6 +13,7 @@ android {
 dependencies {
 
     // region Kotlin
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     // endregion
 
@@ -33,10 +34,6 @@ dependencies {
     // region Tangem SDK
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
-    // endregion
-
-    // region Libs
-    implementation(projects.libs.blockchainSdk)
     // endregion
 
     // region Domain
