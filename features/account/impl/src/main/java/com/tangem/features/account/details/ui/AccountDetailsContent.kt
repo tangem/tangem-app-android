@@ -75,6 +75,14 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
                 color = TangemTheme.colors3.text.primary,
             )
             AccountRow(state)
+            if (state.isPendingActivation) {
+                Text(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    text = stringResourceSafe(R.string.account_details_joint_pending_description),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.tertiary,
+                )
+            }
             if (state.members != null || state.isManageTokensAvailable) {
                 AccountActionsBlock(state)
             }
@@ -321,6 +329,13 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
                     linkText = stringReference("More info"),
                     onLinkClick = {},
                 ),
+            ),
+        )
+        add(
+            first.copy(
+                onAccountEditClick = null,
+                isManageTokensAvailable = false,
+                isPendingActivation = true,
             ),
         )
     },

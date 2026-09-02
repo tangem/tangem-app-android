@@ -41,6 +41,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
 /** Special accounts — payment, virtual, prediction — joined into the producer's `combine` from their suppliers. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -170,6 +171,9 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             flowProducerTools = mockk(),
             userWalletsListRepository = mockk<UserWalletsListRepository> {
                 every { userWallets } returns MutableStateFlow(listOf(wallet))
+            },
+            singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
+                every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
             },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(walletId) } returns flowOf(accounts)
