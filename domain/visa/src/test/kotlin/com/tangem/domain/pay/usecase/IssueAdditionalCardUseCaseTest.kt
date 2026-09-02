@@ -58,6 +58,25 @@ internal class IssueAdditionalCardUseCaseTest {
     }
 
     @Test
+    fun `GIVEN an offer without a spec name WHEN invoked THEN no order is created`() = runTest {
+        // Arrange
+        coEvery { offersRepository.getOffers(userWalletId) } returns
+            listOf(offer.copy(data = offer.data.copy(specificationName = null))).right()
+        coEvery {
+            orderRepository.findOrders(userWalletId, types = any(), statuses = any())
+        } returns emptyList<Order>().right()
+
+        // Act
+        val result = useCase(userWalletId)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+        coVerify(exactly = 0) {
+            orderRepository.createOrder(any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `WHEN active issue order exists THEN reuses it without calling createOrder`() = runTest {
         val existing = order(
             id = "existing",
