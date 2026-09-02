@@ -49,20 +49,24 @@ internal class PaymentNetworkPresentationTest {
     }
 
     @Test
-    fun `GIVEN NotIssued status WHEN toRowData THEN maps identity from network and tokens from currencies`() {
+    fun `GIVEN NotIssued status WHEN toRowData THEN keeps the row with the fixed stablecoin label`() {
         // Arrange
         val status = PaymentNetworkStatus.NotIssued(
             network = network(networkName = "Ethereum", networkRawId = "ethereum"),
-            cryptoCurrencies = listOf(currency("USDC")),
         )
 
         // Act
         val result = status.toRowData()
 
         // Assert
-        assertThat(result?.name).isEqualTo("Ethereum")
-        assertThat(result?.tokensLabel).isEqualTo("USDC")
-        assertThat(result?.iconResId).isEqualTo(ICON_RES_ID)
+        assertThat(result).isEqualTo(
+            PaymentNetworkRowData(
+                id = "ethereum",
+                name = "Ethereum",
+                tokensLabel = "USDC, USDT",
+                iconResId = ICON_RES_ID,
+            ),
+        )
     }
 
     @Test
@@ -136,23 +140,6 @@ internal class PaymentNetworkPresentationTest {
 
         // Assert
         assertThat(result).isNull()
-    }
-
-    @Test
-    fun `GIVEN NotIssued status with no currencies WHEN toRowData THEN keeps the row with an empty label`() {
-        // Arrange
-        val status = PaymentNetworkStatus.NotIssued(
-            network = network(networkName = "Base", networkRawId = "base"),
-            cryptoCurrencies = emptyList(),
-        )
-
-        // Act
-        val result = status.toRowData()
-
-        // Assert
-        assertThat(result).isEqualTo(
-            PaymentNetworkRowData(id = "base", name = "Base", tokensLabel = "", iconResId = ICON_RES_ID),
-        )
     }
 
     @Test

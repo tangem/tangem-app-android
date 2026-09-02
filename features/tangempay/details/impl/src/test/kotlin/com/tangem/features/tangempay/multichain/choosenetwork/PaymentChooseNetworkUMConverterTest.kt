@@ -49,22 +49,21 @@ internal class PaymentChooseNetworkUMConverterTest {
     }
 
     @Test
-    fun `GIVEN NotIssued status with no currencies WHEN convert THEN it still appears in Fast way`() {
+    fun `GIVEN NotIssued status WHEN convert THEN it appears in Fast way with the fixed stablecoin label`() {
         // Arrange
-        // The backend need not list the tokens of a network whose contract is not issued yet; the row is what
-        // lets the user issue it, so dropping it would make the network unreachable.
-        val empty = PaymentNetworkStatus.NotIssued(
+        // A network whose contract is not issued yet carries no tokens; the row is what lets the user issue it,
+        // so it is kept and labeled with the fixed set of payment stablecoins.
+        val base = PaymentNetworkStatus.NotIssued(
             network = network(networkName = "Base", networkRawId = "base"),
-            cryptoCurrencies = emptyList(),
         )
         val polygon = available(networkName = "Polygon", networkRawId = "polygon", address = "0xPOLY")
 
         // Act
-        val result = converter.convert(listOf(polygon, empty))
+        val result = converter.convert(listOf(polygon, base))
 
         // Assert
         assertThat(result.fastWay.map { it.name }).containsExactly("Polygon", "Base").inOrder()
-        assertThat(result.fastWay.last().tokensLabel).isEmpty()
+        assertThat(result.fastWay.last().tokensLabel).isEqualTo("USDC, USDT")
     }
 
     @Test
@@ -185,10 +184,7 @@ internal class PaymentChooseNetworkUMConverterTest {
     }
 
     private fun notIssued(networkName: String, networkRawId: String): PaymentNetworkStatus.NotIssued {
-        return PaymentNetworkStatus.NotIssued(
-            network = network(networkName, networkRawId),
-            cryptoCurrencies = listOf(currency("USDC")),
-        )
+        return PaymentNetworkStatus.NotIssued(network = network(networkName, networkRawId))
     }
 
     private fun disabled(networkName: String, networkRawId: String): PaymentNetworkStatus.Disabled {
