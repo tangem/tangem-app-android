@@ -49,8 +49,8 @@ internal fun CryptoSearchContent(
     // legacy behaviour: a new query is a different result set, so start reading it from the top. Keyed
     // on the query and not on the market state, which deliberately stays Content while the query is
     // refined and so would never re-trigger this
-    LaunchedEffect(state.query) {
-        listState.scrollToItem(0)
+    LaunchedEffect(state.query, hasPortfolio) {
+        listState.requestScrollToItem(0)
     }
 
     LazyColumn(

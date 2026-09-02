@@ -20,7 +20,7 @@ dependencies {
     // endregion
 
     // region Core modules
-    implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.utils)
     implementation(deps.jodatime)
     // endregion

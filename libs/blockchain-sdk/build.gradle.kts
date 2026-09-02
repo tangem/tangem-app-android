@@ -54,11 +54,9 @@ dependencies {
     implementation(projects.core.analytics.models)
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
+    implementation(projects.core.remote)
     implementation(projects.core.utils)
-    // endregion
-
-    // region Store modules
-    implementation(projects.store.datasource.api)
     // endregion
 
     // region Domain models
