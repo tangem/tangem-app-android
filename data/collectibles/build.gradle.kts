@@ -31,6 +31,7 @@ dependencies {
     // endregion
 
     // region Domain
+    implementation(projects.domain.models)
     api(projects.domain.collectibles)
     implementation(projects.domain.collectibles.models)
     // endregion

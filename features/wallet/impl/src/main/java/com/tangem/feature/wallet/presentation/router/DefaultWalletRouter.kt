@@ -70,8 +70,8 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route)
     }
 
-    override fun openJointAccountMembers(userWalletId: UserWalletId) {
-        router.push(AppRoute.JointAccountMembers(userWalletId = userWalletId))
+    override fun openJointAccountMembers(userWalletId: UserWalletId, cryptoAccountId: String) {
+        router.push(AppRoute.JointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId))
     }
 
     override fun openAddAndManageBottomSheet(userWalletId: UserWalletId) {

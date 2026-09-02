@@ -32,6 +32,20 @@ class AccountTest {
     }
 
     @Test
+    fun `GIVEN user wallet id WHEN Collectibles created THEN id and name are derived from it`() {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+
+        // Act
+        val actual = Account.Collectibles(userWalletId = userWalletId)
+
+        // Assert
+        Truth.assertThat(actual.accountId).isEqualTo(AccountId.forCollectiblesAccount(userWalletId))
+        Truth.assertThat(actual.userWalletId).isEqualTo(userWalletId)
+        Truth.assertThat(actual.accountName).isEqualTo(AccountName.Custom("Collectibles").getOrNull())
+    }
+
+    @Test
     fun `Personal isMainAccount`() {
         // Arrange
         val derivationIndex0 = 0

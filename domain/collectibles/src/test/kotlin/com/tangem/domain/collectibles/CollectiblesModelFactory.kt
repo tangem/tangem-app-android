@@ -2,9 +2,12 @@ package com.tangem.domain.collectibles
 
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
+import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
 internal object CollectiblesModelFactory {
+
+    val userWalletId = UserWalletId("011")
 
     fun createMachine(
         id: String = "uid",
