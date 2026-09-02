@@ -309,7 +309,7 @@ private fun previewContent(): PolymarketEventDetailsUM.Content {
         title = stringReference("Who will win FIFA World Cup 2026 in the USA?"),
         iconUrl = null,
         totalVolume = stringReference("\$6.3M"),
-        change24h = stringReference("2.08%"),
+        change24h = stringReference("▲ 2.08%"),
         subcategories = persistentListOf(
             PolymarketSubcategoryTabUM(id = "lines", label = "Game lines", isSelected = true, onClick = {}),
             PolymarketSubcategoryTabUM(id = "score", label = "Exact score", isSelected = false, onClick = {}),

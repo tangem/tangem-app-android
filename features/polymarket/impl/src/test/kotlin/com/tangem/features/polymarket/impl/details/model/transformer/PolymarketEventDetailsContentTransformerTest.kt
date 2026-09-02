@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -177,8 +178,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
             OutcomeLabelModel(title = "Yes", probability = BigDecimal("0.25"), expected = "Yes • 25¢"),
             // Half-up rounding to a whole cent.
             OutcomeLabelModel(title = "No", probability = BigDecimal("0.746"), expected = "No • 75¢"),
-            // Without a probability the label is the bare outcome title.
-            OutcomeLabelModel(title = "Yes", probability = null, expected = "Yes"),
+            OutcomeLabelModel(title = "Yes", probability = null, expected = "Yes • $DASH_SIGN"),
         )
     }
 
@@ -193,7 +193,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
             val actual = transform(createEvent(endDate = model.endDate))
 
             // Assert
-            Truth.assertThat(actual.resolutionDate).isEqualTo(model.expected?.let(::stringReference))
+            Truth.assertThat(actual.resolutionDate).isEqualTo(stringReference(model.expected))
         }
 
         @Test
@@ -210,9 +210,9 @@ internal class PolymarketEventDetailsContentTransformerTest {
             ResolutionDateModel(endDate = "2026-07-11T22:00:00Z", expected = "Jul 11, 2026, 6:00 PM ET"),
             // A winter instant renders in EST (UTC-5).
             ResolutionDateModel(endDate = "2026-01-15T23:00:00Z", expected = "Jan 15, 2026, 6:00 PM ET"),
-            // The upstream date format is not confirmed, so an unparseable value hides the row instead of crashing.
-            ResolutionDateModel(endDate = "tomorrow", expected = null),
-            ResolutionDateModel(endDate = null, expected = null),
+            // The upstream date format is not confirmed, so an unparseable value shows a dash instead of crashing.
+            ResolutionDateModel(endDate = "tomorrow", expected = DASH_SIGN),
+            ResolutionDateModel(endDate = null, expected = DASH_SIGN),
         )
     }
 
@@ -333,7 +333,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
 
     internal data class ResolutionDateModel(
         val endDate: String?,
-        val expected: String?,
+        val expected: String,
     )
 
     internal data class Change24hModel(

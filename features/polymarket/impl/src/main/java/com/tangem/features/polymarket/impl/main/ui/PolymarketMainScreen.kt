@@ -541,7 +541,7 @@ private fun previewEvents() = persistentListOf(
         id = "plain",
         title = stringReference("Will Ethereum reach $5,000 before the end of the year?"),
         iconUrl = null,
-        volume = null,
+        volume = stringReference("—"),
         rows = persistentListOf(
             PolymarketEventRowUM(
                 marketId = "probability",
