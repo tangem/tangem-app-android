@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.news.details
+package com.tangem.data.news.store.details
 
 import com.tangem.domain.models.news.DetailedArticle
 import kotlinx.coroutines.flow.Flow
 
-interface NewsDetailsStore {
+internal interface NewsDetailsStore {
 
     fun getAll(): Flow<List<DetailedArticle>>
 
