@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.R
@@ -52,6 +53,7 @@ internal class IntroductionModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
     private val trackingContextProxy: TrackingContextProxy,
     private val cardScanner: IntroductionCardScanner,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
@@ -80,6 +82,7 @@ internal class IntroductionModel @Inject constructor(
         host = this,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
+        socialLoginFeatureToggles = socialLoginFeatureToggles,
         trackingContextProxy = trackingContextProxy,
         uiMessageSender = uiMessageSender,
     )
