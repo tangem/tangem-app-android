@@ -305,6 +305,46 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.LoadFailed(cause = expectedCause)))
     }
 
+    @Test
+    fun `GIVEN stored invites WHEN getInvites THEN they are returned`() = runTest {
+        // Arrange
+        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } returns listOf("invite-a", "invite-b")
+
+        // Act
+        val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
+
+        // Assert
+        assertThat(actual).containsExactly("invite-a", "invite-b").inOrder()
+    }
+
+    @Test
+    fun `GIVEN unreadable store WHEN getInvites THEN empty instead of throwing`() = runTest {
+        // Arrange
+        // The members are worth showing even when the invite actions cannot be offered
+        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } throws
+            IllegalStateException("keystore unavailable")
+
+        // Act
+        val actual = runCatching {
+            repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
+        }
+
+        // Assert
+        assertThat(actual.getOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN nothing stored WHEN getInvites THEN empty - this device is not the creator's`() = runTest {
+        // Arrange
+        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } returns null
+
+        // Act
+        val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
+
+        // Assert
+        assertThat(actual).isEmpty()
+    }
+
     private fun activationPayload() = JointAccountActivationPayload(
         walletId = WALLET_ID.stringValue,
         cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
