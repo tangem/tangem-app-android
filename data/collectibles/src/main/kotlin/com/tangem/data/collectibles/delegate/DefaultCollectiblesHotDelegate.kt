@@ -52,18 +52,24 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
 
             runSuspendCatching {
                 val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, MnemonicType.Words12)
-                val publicKey = derivePublicKey(hotWalletId)
 
-                store.put(
-                    accountId = accountId,
-                    record = CollectiblesHotDelegateRecord(
-                        hotWalletId = hotWalletId.value,
-                        authType = hotWalletId.authType.name,
-                        publicKeyBase58 = publicKey.base58,
-                    ),
-                )
+                runSuspendCatching {
+                    val publicKey = derivePublicKey(hotWalletId)
 
-                publicKey
+                    store.put(
+                        accountId = accountId,
+                        record = CollectiblesHotDelegateRecord(
+                            hotWalletId = hotWalletId.value,
+                            authType = hotWalletId.authType.name,
+                            publicKeyBase58 = publicKey.base58,
+                        ),
+                    )
+
+                    publicKey
+                }
+                    // A keystore entry no record points at is unreachable: drop it before reporting the failure.
+                    .onFailure { deleteQuietly(hotWalletId) }
+                    .getOrThrow()
             }.fold(
                 onSuccess = { it.right() },
                 onFailure = { CollectiblesHotDelegateError.KeyCreationFailed(it).left() },
@@ -102,12 +108,16 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
         withContext(dispatchers.io) {
             val record = store.get(accountId) ?: return@withContext
 
-            store.remove(accountId)
-
-            // A keystore entry outliving the record is a leak, not a failure to report.
+            // Keystore entry goes first: while the record survives, a failed delete stays retryable.
             runSuspendCatching { tangemHotSdk.delete(record.toHotWalletId()) }
+                .onSuccess { store.remove(accountId) }
                 .onFailure { TangemLogger.e("Failed to delete collectibles hot delegate", it) }
         }
+    }
+
+    private suspend fun deleteQuietly(hotWalletId: HotWalletId) {
+        runSuspendCatching { tangemHotSdk.delete(hotWalletId) }
+            .onFailure { TangemLogger.e("Failed to delete collectibles hot delegate", it) }
     }
 
     private suspend fun derivePublicKey(hotWalletId: HotWalletId): HotDelegatePublicKey {
