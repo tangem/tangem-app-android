@@ -106,6 +106,7 @@ internal class TangemPayCardPageScreenComponent(
                     onReplaceConfirmed = { deliveryEtaMaxBusinessDays ->
                         model.onReplacePlasticCardConfirmed(
                             sourceProductInstanceId = navigation.sourceProductInstanceId,
+                            sourceCardId = navigation.sourceCardId,
                             deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
                         )
                     },

@@ -11,6 +11,7 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.pay.util.OrderResolver
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -19,12 +20,15 @@ import kotlinx.coroutines.launch
 
 class ReissuePlasticCardUseCase(
     private val customerOrderRepository: CustomerOrderRepository,
+    private val reissueCardRepository: TangemPayReissueCardRepository,
     private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
     private val appCoroutineScope: AppCoroutineScope,
 ) {
+    @Suppress("LongParameterList")
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         sourceProductInstanceId: String,
+        sourceCardId: String,
         plasticCardOrder: PlasticCardOrder,
         idempotencyKey: String,
     ): Either<VisaApiError, Order> = either {
@@ -62,10 +66,17 @@ class ReissuePlasticCardUseCase(
             catch = { handleError(it) },
         )
 
+        reissueCardRepository.storeReissueOrderId(sourceCardId, order.id)
+
         appCoroutineScope.launch {
             startTangemPayOrderPollingUseCase(
                 order = TangemPayOrderInfo.fromOrder(order),
                 userWalletId = userWalletId,
+                onOrderStateChange = { newOrder ->
+                    if (newOrder.orderStatus.isTerminal) {
+                        reissueCardRepository.removeReissueOrderId(sourceCardId)
+                    }
+                },
             )
         }
 

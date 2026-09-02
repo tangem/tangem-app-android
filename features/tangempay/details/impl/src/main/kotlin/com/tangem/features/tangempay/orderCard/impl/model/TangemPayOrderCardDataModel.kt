@@ -102,17 +102,10 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     )
 
     private fun embossNameField(info: CustomerInfo?): FieldUM {
-        val intent = params.intent
-        if (intent !is TangemPayOrderCardIntent.ReissuePlastic) return emptyField(OrderFormField.EmbossName)
+        val intent = params.intent as? TangemPayOrderCardIntent.ReissuePlastic
+        val prefill = intent?.let { info?.sourceCardEmbossName(it.sourceProductInstanceId) }.orEmpty()
 
-        return FieldUM(
-            value = info?.sourceCardEmbossName(intent.sourceProductInstanceId).orEmpty(),
-            error = null,
-            isRequired = OrderFormField.EmbossName.isRequired,
-            isEditable = false,
-            onValueChange = {},
-            onFocusChange = {},
-        )
+        return emptyField(OrderFormField.EmbossName).copy(value = prefill)
     }
 
     private fun emptyField(field: OrderFormField) = FieldUM(
@@ -203,6 +196,7 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
         is TangemPayOrderCardIntent.ReissuePlastic -> reissuePlasticCard(
             userWalletId = params.userWalletId,
             sourceProductInstanceId = intent.sourceProductInstanceId,
+            sourceCardId = intent.sourceCardId,
             plasticCardOrder = order,
             idempotencyKey = idempotencyKey,
         )
@@ -214,6 +208,11 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
             VisaApiError.CardReissuePlasticInvalidShippingAddress,
             -> TangemPayMessagesFactory.createSubmitRejectedMessage(
                 title = resourceReference(R.string.tangempay_order_card_error_invalid_address),
+            )
+            VisaApiError.CardIssueInvalidEmbossName,
+            VisaApiError.CardReissuePlasticInvalidEmbossName,
+            -> TangemPayMessagesFactory.createSubmitRejectedMessage(
+                title = resourceReference(R.string.tangempay_order_card_error_invalid_emboss_name),
             )
             VisaApiError.CardIssueInsufficientBalance,
             VisaApiError.CardReissuePlasticInsufficientBalance,

@@ -34,7 +34,12 @@
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
+  <string name="account_details_archive_joint_description">This only hides the account for you and turns off notifications for it. Other members keep their access, and you can always get it back.</string>
   <string name="account_details_archiving">Archiving...</string>
+  <plurals name="account_details_joint_members_count">
+    <item quantity="one">%d person</item>
+    <item quantity="other">%d people</item>
+  </plurals>
   <string name="account_details_joint_pending_description">The account is still being populated with members</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
@@ -1073,7 +1078,13 @@
   <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you</string>
   <string name="joint_account_name_subtitle">Other members will see this name in the joint account</string>
   <string name="joint_account_name_title">What is your name?</string>
-  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign</string>
+  <string name="joint_account_onboarding_approvals_description">Choose how many members must approve each transaction.</string>
+  <string name="joint_account_onboarding_approvals_title">Required approvals.</string>
+  <string name="joint_account_onboarding_members_description">Each joins with their own wallet.</string>
+  <string name="joint_account_onboarding_members_title">Up to %1$s members.</string>
+  <string name="joint_account_onboarding_shared_description">Use it with your friends, family, or partners.</string>
+  <string name="joint_account_onboarding_shared_title">Shared account.</string>
+  <string name="joint_account_onboarding_subtitle">A simple way to manage crypto together — for personal or business needs.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
@@ -1118,7 +1129,7 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
-  <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
+  <string name="market_chart_bubble_no_amount">No amount \non tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
@@ -1527,6 +1538,8 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
   <string name="prediction_account_title">Prediction account</string>
+  <string name="prediction_balance_total">Total Balance</string>
+  <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_details_24h_change">24h change:</string>
   <string name="prediction_details_closed_markets">Closed Markets</string>
   <string name="prediction_details_market_opened">Market Opened</string>
@@ -1542,8 +1555,11 @@
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
+  <string name="prediction_main_explore_events">Explore Events</string>
   <string name="prediction_main_subtitle">USDC on Polygon network</string>
   <string name="prediction_main_title">Predictions</string>
+  <string name="prediction_main_total_balance">Total Balance</string>
+  <string name="prediction_main_withdraw">Withdraw</string>
   <string name="prediction_onboarding_benefit_custody_subtitle">Only your card can move money</string>
   <string name="prediction_onboarding_benefit_custody_title">Your keys, your funds</string>
   <string name="prediction_onboarding_benefit_fund_subtitle">USDC or swap any coin</string>
@@ -2072,7 +2088,7 @@
   <string name="swap_story_second_title">Unbeatable Rates</string>
   <string name="swap_story_second_title_v2">Best Available Rate</string>
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
-  <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
+  <string name="swap_story_third_subtitle_v2">Swap across major networks\nand thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
   <string name="swap_token_selector_empty_filtered_message">You don\'t have any funded tokens on this wallet. Explore other wallets or change the filter</string>
@@ -2188,7 +2204,7 @@
   <string name="tangempay_card_activation_error">Invalid last digits. Try again</string>
   <string name="tangempay_card_activation_error_already_active">This card is already active.</string>
   <string name="tangempay_card_activation_error_in_progress">Activation is already in progress. Please wait.</string>
-  <string name="tangempay_card_activation_error_not_physical">This isn\'t a physical card.</string>
+  <string name="tangempay_card_activation_error_not_physical">This isn\'t a physical card</string>
   <string name="tangempay_card_activation_error_not_ready">This card isn\'t ready to activate yet. Try again after you receive it.</string>
   <string name="tangempay_card_activation_in_progress">Activating your card</string>
   <string name="tangempay_card_default_name">Tangem Pay Card 1</string>
@@ -2424,6 +2440,7 @@
   <string name="tangempay_order_card_error_active_order">A card order is already in progress.</string>
   <string name="tangempay_order_card_error_insufficient_balance">Not enough money for delivery. Add funds and try again.</string>
   <string name="tangempay_order_card_error_invalid_address">Check the delivery address and try again.</string>
+  <string name="tangempay_order_card_error_invalid_emboss_name">Check the name on the card and try again.</string>
   <string name="tangempay_order_card_error_invalid_source_card">This card can’t be replaced.</string>
   <string name="tangempay_order_card_error_offer_unavailable">This card is no longer available.</string>
   <string name="tangempay_order_data_address_line1">Address line 1</string>
@@ -2471,7 +2488,7 @@
   <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_order_type_unavailable">Unavailable</string>
   <string name="tangempay_other_networks_header">Other networks</string>
-  <string name="tangempay_other_networks_subtitle">And then swap it to payment account zero fees</string>
+  <string name="tangempay_other_networks_subtitle">and then swap it to payment account with zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
   <string name="tangempay_pay_support">Support</string>
   <string name="tangempay_payment_account">Payment account</string>
