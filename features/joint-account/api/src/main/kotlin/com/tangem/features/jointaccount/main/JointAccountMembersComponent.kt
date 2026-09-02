@@ -16,7 +16,8 @@ interface JointAccountMembersComponent : ComposableContentComponent {
 
     /**
      * @property userWalletId wallet the joint account belongs to.
-     * @property cryptoAccountId backend id of the joint account's own row in the wallet's accounts.
+     * @property cryptoAccountId backend id of the joint account's own row in the wallet's accounts. `null` only
+     * in navigation state saved before the field existed: the screen falls back to the wallet's first joint account.
      * @property mode         [Mode.Invite] for the working invite view, [Mode.Reference] for the settings view.
      */
     data class Params(
