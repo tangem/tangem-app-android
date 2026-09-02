@@ -2466,6 +2466,8 @@ internal class SwapModel @Inject constructor(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = fromToken.isCustom,
+                isCustomFeeToken = getFeeToken().isCustom,
             ),
         )
     }
