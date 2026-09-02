@@ -1,7 +1,7 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
+import com.tangem.data.networks.entity.NetworkStatusDM.CurrencyId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.test.core.ProvideTestModels
@@ -248,16 +248,32 @@ class NetworkCurrencyIdConverterTest {
         )
 
         @Test
-        fun `GIVEN joint derivation path WHEN convert coin id THEN id carries the owner path hash`() {
+        fun `GIVEN joint derivation path WHEN convert coin id THEN id carries the salted owner path hash`() {
             // Act
             val actual = jointConverter.convert(CurrencyId.createCoinId("ethereum"))
 
             // Assert
             val expected = CryptoCurrency.ID.fromValue(
-                value = "coin⟨$canonicalNetworkRawId→${jointDerivationPath.value.hashCode()}⟩ethereum",
+                value = "coin⟨$canonicalNetworkRawId→${"joint:${jointDerivationPath.value}".hashCode()}⟩ethereum",
             )
             Truth.assertThat(actual).isEqualTo(expected)
             Truth.assertThat(actual).isNotEqualTo(converter.convert(CurrencyId.createCoinId("ethereum")))
+        }
+
+        @Test
+        fun `GIVEN custom path with the same raw value WHEN convert coin id THEN ids differ`() {
+            // Arrange
+            val customConverter = NetworkCurrencyIdConverter(
+                blockchainId = blockchainId,
+                derivationPath = Network.DerivationPath.Custom(value = jointDerivationPath.value),
+            )
+
+            // Act
+            val jointId = jointConverter.convert(CurrencyId.createCoinId("ethereum"))
+            val customId = customConverter.convert(CurrencyId.createCoinId("ethereum"))
+
+            // Assert
+            Truth.assertThat(jointId).isNotEqualTo(customId)
         }
     }
 
