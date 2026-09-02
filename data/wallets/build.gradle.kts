@@ -48,6 +48,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.common)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.dynamicAddresses)
     api(projects.domain.models)
     api(projects.domain.settings)

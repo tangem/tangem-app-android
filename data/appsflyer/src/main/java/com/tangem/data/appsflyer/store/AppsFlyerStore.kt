@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.appsflyer
+package com.tangem.data.appsflyer.store
 
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import kotlinx.coroutines.flow.Flow
 
-interface AppsFlyerStore {
+internal interface AppsFlyerStore {
 
     suspend fun get(): AppsFlyerConversionData?
 
