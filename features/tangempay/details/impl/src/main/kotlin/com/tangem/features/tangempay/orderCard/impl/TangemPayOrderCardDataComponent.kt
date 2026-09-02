@@ -31,7 +31,7 @@ internal class TangemPayOrderCardDataComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val intent: TangemPayOrderCardIntent,
-        val onOrderAccepted: (email: String, orderedProductInstanceId: String?) -> Unit,
+        val onOrderAccepted: (email: String) -> Unit,
         val onClose: () -> Unit,
     )
 }

@@ -416,6 +416,53 @@ internal class TangemPayOrderCardTypeModelTest {
     }
 
     @Test
+    fun `GIVEN no virtual offer WHEN loaded THEN the virtual tab is hidden`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(plasticOffer()).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.state.value.availableTypes).containsExactly(OrderCardType.Plastic)
+    }
+
+    @Test
+    fun `GIVEN an empty offer list WHEN loaded THEN it is not an error and plastic is unavailable`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns emptyList<Offer>().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.state.value
+        assertThat(state.isError).isFalse()
+        assertThat(state.availableTypes).containsExactly(OrderCardType.Plastic)
+        assertThat(state.plastic).isInstanceOf(TangemPayOrderCardTypeUM.Plastic.Unavailable::class.java)
+        assertThat(state.virtual.issueFee).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN no virtual offer and insufficient balance WHEN loaded THEN not-enough-money event is sent`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(plasticOffer()).right()
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+            customerInfo(availableBalance = BigDecimal("1.00")).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(ofType<TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed>())
+        }
+    }
+
+    @Test
     fun `GIVEN the type pills WHEN each is tapped THEN the matching type clicked event is sent`() = runTest {
         // Arrange
         val model = createModel(testScope = this)

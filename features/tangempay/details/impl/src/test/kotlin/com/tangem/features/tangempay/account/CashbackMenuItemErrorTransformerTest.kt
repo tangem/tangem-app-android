@@ -29,8 +29,6 @@ internal class CashbackMenuItemErrorTransformerTest {
         assertThat(menuTitleIds).containsExactly(
             R.string.tangempay_current_plan_title,
             R.string.tangempay_cashback_title,
-            R.string.tangempay_visa_benefits,
-            R.string.tangem_pay_terms_limits,
             R.string.tangempay_pay_support,
         ).inOrder()
         val errorEntry = items.first { it.isTitledWith(R.string.tangempay_cashback_title) }
@@ -76,8 +74,6 @@ internal class CashbackMenuItemErrorTransformerTest {
             items = buildList {
                 add(menuItem(R.string.tangempay_current_plan_title))
                 add(menuItem(R.string.tangempay_cashback_menu_item_title))
-                add(menuItem(R.string.tangempay_visa_benefits))
-                add(menuItem(R.string.tangem_pay_terms_limits))
                 add(menuItem(R.string.tangempay_pay_support))
             }.toImmutableList(),
             subtitle = TextReference.EMPTY,
@@ -93,7 +89,7 @@ internal class CashbackMenuItemErrorTransformerTest {
         ),
         isBalanceHidden = false,
         errorNotificationConfig = null,
-        accountDeactivatedBannerState = null,
+        statusBannerState = null,
     )
 
     private fun menuItem(titleRes: Int): TangemPayDropDownItemUM = TangemPayDropDownItemUM(

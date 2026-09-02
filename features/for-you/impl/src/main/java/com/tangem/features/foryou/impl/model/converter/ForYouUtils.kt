@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter
 
+import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
@@ -7,10 +8,11 @@ import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.markets.CoinIndicators
-import com.tangem.domain.markets.totalSentimentScore
+import com.tangem.domain.markets.SentimentOutlook
+import com.tangem.domain.markets.sentimentOutlook
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -38,7 +40,8 @@ internal val PERCENT_BASE = BigDecimal("100")
  * on Solana and Ethereum) shares its `rawCurrencyId`, so they group under a single item. Custom tokens
  * have no raw id and fall back to their unique currency id, staying in their own group.
  */
-internal fun CryptoCurrencyStatus.forYouGroupKey(): String = currency.id.rawCurrencyId?.value ?: currency.id.value
+internal fun CryptoCurrencyStatus.forYouGroupKey(): String =
+    getTokenIdIfL2Network(currency.id.rawCurrencyId?.value ?: currency.id.value)
 
 /**
  * Matching key between a portfolio currency and a top-earn suggestion: the same asset
@@ -58,10 +61,11 @@ internal fun BigDecimal?.toForYouPercent(totalFiatBalance: BigDecimal): BigDecim
 
 /**
  * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
- * [timeframe]. The sign of [totalSentimentScore] — the exact score shown on the token summary
- * sentiment section — picks the badge, so the row badge always agrees with that screen's overall
- * outlook. Returns `null` (no badge) when there is no data for the asset at all, and when the asset
- * has data but nothing interpretable in it — see [CoinIndicators.shouldHideBadge].
+ * [timeframe]. The badge is the [SentimentOutlook] resolved by [sentimentOutlook] — the same aggregate
+ * the token summary headline shows, neutral dead-band included — so the row badge always agrees with
+ * that screen's overall outlook rather than with the bare sign of the score. Returns `null` (no badge)
+ * when there is no data for the asset at all, and when the asset has data but nothing interpretable in
+ * it — see [CoinIndicators.shouldHideBadge].
  */
 internal fun forYouSentimentBadge(
     coinIndicators: CoinIndicators?,
@@ -69,12 +73,10 @@ internal fun forYouSentimentBadge(
 ): TangemBadgeUM? {
     if (coinIndicators == null || coinIndicators.shouldHideBadge()) return null
 
-    val totalScore = coinIndicators.totalSentimentScore(timeframe)
-
-    val (text, color) = when {
-        totalScore > 0 -> resourceReference(R.string.common_positive) to TangemBadgeColor.Green
-        totalScore < 0 -> resourceReference(R.string.common_negative) to TangemBadgeColor.Red
-        else -> resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue
+    val (text, color) = when (coinIndicators.sentimentOutlook(timeframe)) {
+        SentimentOutlook.POSITIVE -> resourceReference(R.string.common_positive) to TangemBadgeColor.Green
+        SentimentOutlook.NEGATIVE -> resourceReference(R.string.common_negative) to TangemBadgeColor.Red
+        SentimentOutlook.NEUTRAL -> resourceReference(R.string.common_neutral) to TangemBadgeColor.Blue
     }
 
     return TangemBadgeUM(
@@ -94,7 +96,9 @@ internal fun forYouSentimentBadge(
  * disable.
  */
 internal fun Map<UserWalletId, AccountStatusList>.availableAccountIds(): Set<AccountId> = values
-    .flatMap { statusList -> statusList.accountStatuses.filterCryptoPortfolio().map { it.accountId } }
+    .flatMap { statusList ->
+        statusList.accountStatuses.filterIsInstance<AccountStatus.Personal>().map { it.accountId }
+    }
     .toSet()
 
 /**
