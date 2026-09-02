@@ -25,7 +25,7 @@ import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.local.datastore.RuntimeStateStore
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.core.local.assets.AssetLoader
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
@@ -147,7 +147,7 @@ internal object BlockchainSDKFactoryModule {
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
                 isXrpTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.AND_14786_XRP_TX_HISTORY_ENABLED,
+                    FeatureToggles.TWI_1749_XRP_TX_HISTORY_ENABLED,
                 ),
             ),
         )
