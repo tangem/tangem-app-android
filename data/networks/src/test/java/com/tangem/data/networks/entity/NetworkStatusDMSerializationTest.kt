@@ -1,10 +1,11 @@
-package com.tangem.datasource.local.network.entity
+package com.tangem.data.networks.entity
 
 import com.google.common.truth.Truth
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -13,6 +14,12 @@ import java.math.BigDecimal
 [REDACTED_AUTHOR]
  */
 class NetworkStatusDMSerializationTest {
+
+    private class BigDecimalAdapter {
+        @ToJson fun toJson(value: BigDecimal): String = value.toPlainString()
+
+        @FromJson fun fromJson(value: String): BigDecimal = BigDecimal(value)
+    }
 
     private val moshi = Moshi.Builder()
         .add(
