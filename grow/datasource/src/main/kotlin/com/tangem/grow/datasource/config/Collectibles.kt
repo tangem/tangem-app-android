@@ -23,11 +23,14 @@ class Collectibles(
 
     override val environmentConfigs = listOf(
         createDevEnvironment(),
+        createMockedEnvironment(),
         createProdEnvironment(),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK
             DEBUG_BUILD_TYPE,
             INTERNAL_BUILD_TYPE,
             -> ApiEnvironment.DEV
@@ -40,6 +43,12 @@ class Collectibles(
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(),
+    )
+
+    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.MOCK,
         baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(),
     )
