@@ -3,6 +3,7 @@ package com.tangem.data.jointaccount.repository
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
@@ -88,7 +89,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
             try {
                 activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
             } catch (e: ApiResponseError.TimeoutException) {
-                logger.w(messageString = "Activation timed out, retrying once — the endpoint is idempotent", e)
+                logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", e)
                 activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
             }
         }
@@ -99,15 +100,12 @@ internal class DefaultJointAccountRepository @Inject constructor(
         payload: JointAccountActivationPayload,
         signature: String,
     ) {
-        safeApiCall(
-            call = {
-                jointAccountApi.activateJointAccount(
-                    walletId = userWalletId.stringValue,
-                    body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
-                ).bind()
-            },
-            onError = { error -> throw error },
+        val response = jointAccountApi.activateJointAccount(
+            walletId = userWalletId.stringValue,
+            body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
         )
+
+        if (response is ApiResponse.Error) throw response.cause
     }
 
     override suspend fun getInvitePreview(
