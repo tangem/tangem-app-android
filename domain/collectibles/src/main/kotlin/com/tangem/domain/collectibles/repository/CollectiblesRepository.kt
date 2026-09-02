@@ -3,6 +3,7 @@ package com.tangem.domain.collectibles.repository
 import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchFlow
 import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.*
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface CollectiblesRepository {
 
@@ -15,7 +16,7 @@ interface CollectiblesRepository {
         batchSize: Int,
     ): CollectibleGachaMachinesBatchFlow
 
-    suspend fun generateTx(params: GenerateTxParams): CollectibleTransaction
+    suspend fun generateTx(userWalletId: UserWalletId, params: GenerateTxParams): CollectibleTransaction
 
-    suspend fun submitTx(signedTxData: String): SubmittedCollectibleTransaction
+    suspend fun submitTx(userWalletId: UserWalletId, signedTxData: String): SubmittedCollectibleTransaction
 }
