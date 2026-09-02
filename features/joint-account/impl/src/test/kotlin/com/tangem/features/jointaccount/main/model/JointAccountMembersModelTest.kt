@@ -203,7 +203,7 @@ internal class JointAccountMembersModelTest {
         paramsContainer = MutableParamsContainer(
             JointAccountMembersComponent.Params(
                 userWalletId = USER_WALLET_ID,
-                accountId = ACCOUNT_ID,
+                cryptoAccountId = ACCOUNT_ID,
                 mode = mode,
             ),
         ),

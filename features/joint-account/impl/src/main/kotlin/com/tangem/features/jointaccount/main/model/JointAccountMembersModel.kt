@@ -70,7 +70,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun observeAccount() {
         jointAccountListSupplier(userWalletId = params.userWalletId)
             .map { accounts ->
-                accounts.firstOrNull { params.accountId == null || it.cryptoAccountId == params.accountId }
+                accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
             }
             .distinctUntilChanged()
             .map { account ->
@@ -98,7 +98,7 @@ internal class JointAccountMembersModel @Inject constructor(
         shareSafely = shareSafelyBlock(),
         members = persistentListOf(),
         otherMembersLabel = null,
-        canArchive = isInviteMode,
+        canArchive = false,
         activation = null,
         onArchiveClick = ::onArchiveClick,
         onCloseClick = ::onCloseClick,
