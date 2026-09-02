@@ -471,7 +471,7 @@ StyleDictionary.registerFormat({
       '/**',
       ' * Auto-generated from design tokens. Do not edit manually.',
       ' */',
-      'internal object TangemColorPalette {',
+      'object TangemColorPalette {',
       body.join('\n'),
       '}',
       '',
