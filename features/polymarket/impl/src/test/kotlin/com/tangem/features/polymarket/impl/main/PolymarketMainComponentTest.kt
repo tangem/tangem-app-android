@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -49,6 +50,7 @@ internal class PolymarketMainComponentTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
 
@@ -118,5 +120,6 @@ internal class PolymarketMainComponentTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         getPolymarketEventsBatchFlowUseCase = getPolymarketEventsBatchFlowUseCase,
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
+        predictionAccountStatusSupplier = predictionAccountStatusSupplier,
     )
 }
