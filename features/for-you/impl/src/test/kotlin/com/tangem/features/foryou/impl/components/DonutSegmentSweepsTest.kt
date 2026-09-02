@@ -25,7 +25,7 @@ internal class DonutSegmentSweepsTest {
 
     @Test
     fun `GIVEN all segments above floor WHEN visualSweepAngles THEN sweeps stay proportional to weight`() {
-        // Arrange — 0.5 / 0.3 / 0.2, none below 5%.
+        // Arrange — 0.5 / 0.3 / 0.2, none below the floor.
         val weights = listOf(0.5f, 0.3f, 0.2f)
 
         // Act
@@ -40,8 +40,9 @@ internal class DonutSegmentSweepsTest {
 
     @Test
     fun `GIVEN a segment below floor WHEN visualSweepAngles THEN it is raised to the floor and larger ones shrink`() {
-        // Arrange — only 0.05 is below the floor; filled sum is the whole circle.
-        val weights = listOf(0.8f, 0.15f, 0.05f)
+        // Arrange — one below-floor slice; the other two split the rest 4:1 and stay above the floor.
+        val rest = 1f - BELOW_FLOOR
+        val weights = listOf(rest * 0.8f, rest * 0.2f, BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = 0f)
@@ -49,14 +50,14 @@ internal class DonutSegmentSweepsTest {
         // Assert — the tiny slice is floored, the rest shrink to keep the sum at 360°.
         assertThat(actual[2]).isWithin(TOLERANCE).of(FLOOR_DEG)
         assertThat(actual.sum()).isWithin(TOLERANCE).of(360f)
-        // Proportion between the two large slices is preserved (288 / 54 == actual[0] / actual[1]).
-        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(288f / 54f)
+        // Proportion between the two large slices is preserved.
+        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.8f / 0.2f)
     }
 
     @Test
     fun `GIVEN zero-weight slices among real ones WHEN visualSweepAngles THEN zeros stay zero`() {
-        // Arrange — a 0f slice sits between real ones.
-        val weights = listOf(0.9f, 0f, 0.08f, 0.02f)
+        // Arrange — a 0f slice sits between real ones; the last is below the floor.
+        val weights = listOf(1f - ABOVE_FLOOR - BELOW_FLOOR, 0f, ABOVE_FLOOR, BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = 0f)
@@ -69,8 +70,8 @@ internal class DonutSegmentSweepsTest {
 
     @Test
     fun `GIVEN a single tiny segment WHEN visualSweepAngles THEN it grows into the track up to the floor`() {
-        // Arrange — 2% with no larger slice to borrow from; it must grow into the unfilled track.
-        val weights = listOf(0.02f)
+        // Arrange — a below-floor slice with none larger to borrow from: it grows into the unfilled track.
+        val weights = listOf(BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = 0f)
@@ -81,9 +82,9 @@ internal class DonutSegmentSweepsTest {
 
     @Test
     fun `GIVEN filled sum below the full circle and floors fit WHEN visualSweepAngles THEN filled sum preserved`() {
-        // Arrange — segments sum to 0.5 of the circle; the 0.03 slice is below the floor.
-        val weights = listOf(0.4f, 0.07f, 0.03f)
-        val filledSum = (0.4f + 0.07f + 0.03f) * 360f
+        // Arrange — segments leave a wide grey gap; only the last is below the floor.
+        val weights = listOf(ABOVE_FLOOR * 2f, ABOVE_FLOOR, BELOW_FLOOR)
+        val filledSum = weights.sum() * 360f
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = 0f)
@@ -108,8 +109,8 @@ internal class DonutSegmentSweepsTest {
 
     @Test
     fun `GIVEN a grey gap thinner than the floor WHEN visualSweepAngles THEN it is grown to the floor`() {
-        // Arrange — segments sum to 0.99, leaving a 3.6° grey sliver below the 7% floor.
-        val weights = listOf(0.6f, 0.39f)
+        // Arrange — segments leave a grey sliver thinner than the floor.
+        val weights = listOf(0.6f, 1f - 0.6f - BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = 0f)
@@ -117,7 +118,7 @@ internal class DonutSegmentSweepsTest {
         // Assert — segments shrink to 360° − floor so the grey gap reads at exactly the floor,
         // and the two segments keep their 0.6 : 0.39 proportion.
         assertThat(actual.sum()).isWithin(TOLERANCE).of(360f - FLOOR_DEG)
-        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / 0.39f)
+        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / (1f - 0.6f - BELOW_FLOOR))
     }
 
     @Test
@@ -128,7 +129,7 @@ internal class DonutSegmentSweepsTest {
         // Act
         val actual = visualSweepAngles(weights, capDeg = 0f)
 
-        // Assert — full ring: segments still occupy the whole circle, no 7% grey gap carved out.
+        // Assert — full ring: segments still occupy the whole circle, no grey gap carved out.
         assertThat(actual.sum()).isWithin(TOLERANCE).of(360f)
     }
 
@@ -149,9 +150,9 @@ internal class DonutSegmentSweepsTest {
 
     @Test
     fun `GIVEN a grey gap and capDeg WHEN visualSweepAngles THEN grey floor is padded by the cap overlap`() {
-        // Arrange — a thin grey gap grown to the floor. With a round-cap width, both neighbouring caps eat
-        // into the gap, so the reserved grey sweep is padded by capDeg to keep the *visible* grey at 7%.
-        val weights = listOf(0.6f, 0.39f)
+        // Arrange — a thin grey gap grown to the floor. With a cap width, both neighbouring caps eat into
+        // the gap, so the reserved grey sweep is padded by capDeg to keep the *visible* grey at the floor.
+        val weights = listOf(0.6f, 1f - 0.6f - BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
@@ -159,13 +160,13 @@ internal class DonutSegmentSweepsTest {
         // Assert — segments give up FLOOR_DEG + CAP_DEG so the visible grey reads as the floor; the last
         // slice itself is not bumped (free end), so the two keep their 0.6 : 0.39 proportion.
         assertThat(actual.sum()).isWithin(TOLERANCE).of(360f - (FLOOR_DEG + CAP_DEG))
-        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / 0.39f)
+        assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / (1f - 0.6f - BELOW_FLOOR))
     }
 
     @Test
     fun `GIVEN a full ring and capDeg WHEN visualSweepAngles THEN only the last floored slice is bumped`() {
-        // Arrange — two tiny slices below the floor on a full ring; index 2 is the last active.
-        val weights = listOf(0.9f, 0.05f, 0.05f)
+        // Arrange — two below-floor slices on a full ring; index 2 is the last active.
+        val weights = listOf(1f - 2f * BELOW_FLOOR, BELOW_FLOOR, BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
@@ -179,7 +180,7 @@ internal class DonutSegmentSweepsTest {
     @Test
     fun `GIVEN a gap wider than capDeg WHEN visualSweepAngles THEN the last slice is not bumped`() {
         // Arrange — filled sum well below the circle, so the gap far exceeds capDeg.
-        val weights = listOf(0.4f, 0.05f)
+        val weights = listOf(ABOVE_FLOOR * 2f, BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
@@ -194,5 +195,11 @@ internal class DonutSegmentSweepsTest {
 
         // Derived from the production constant so these tests track it instead of hardcoding the angle.
         const val FLOOR_DEG = MIN_VISUAL_SWEEP_FRACTION * 360f
+
+        /** A share safely below the floor, so the floor branch is exercised whatever the constant is. */
+        const val BELOW_FLOOR = MIN_VISUAL_SWEEP_FRACTION / 2f
+
+        /** A share safely above the floor, so it is never floored — nor squeezed below it by a neighbour. */
+        const val ABOVE_FLOOR = MIN_VISUAL_SWEEP_FRACTION * 4f
     }
 }
