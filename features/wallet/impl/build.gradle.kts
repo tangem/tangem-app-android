@@ -62,7 +62,6 @@ dependencies {
     /** Core modules */
     api(projects.core.analytics)
     api(projects.core.analytics.models)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
