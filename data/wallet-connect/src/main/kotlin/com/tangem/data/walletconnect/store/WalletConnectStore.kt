@@ -1,11 +1,11 @@
-package com.tangem.datasource.local.walletconnect
+package com.tangem.data.walletconnect.store
 
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
-interface WalletConnectStore {
+internal interface WalletConnectStore {
 
     val sessions: Flow<WcSessionCollection>
     val pendingApproval: Flow<Set<WcPendingApprovalSessionDTO>>
