@@ -1,6 +1,7 @@
 package com.tangem.data.jointaccount.repository
 
 import arrow.core.Either
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
@@ -13,10 +14,12 @@ import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.createJointAccountInvitePreview
 import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
@@ -178,6 +181,75 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
+    fun `GIVEN payload WHEN activate THEN it is sent verbatim and Right returned`() = runTest {
+        // Arrange
+        val bodySlot = slot<ActivateJointAccountRequest>()
+        coEvery {
+            jointAccountApi.activateJointAccount(walletId = WALLET_ID.stringValue, body = capture(bodySlot))
+        } returns ApiResponse.Success(createJointAccountDto())
+
+        // Act
+        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        // The signature covers the canonical form of exactly these values — trimming any of them breaks it
+        val body = bodySlot.captured
+        assertThat(body.signature).isEqualTo(SIGNATURE)
+        assertThat(body.payload.walletId).isEqualTo(WALLET_ID.stringValue)
+        assertThat(body.payload.cryptoAccountId).isEqualTo(FIXTURE_CRYPTO_ACCOUNT_ID)
+        assertThat(body.payload.config.name).isEqualTo(" Family ")
+        assertThat(body.payload.config.safeAddress).isEqualTo(SAFE_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN timeout then success WHEN activate THEN retried once and Right returned`() = runTest {
+        // Arrange — the endpoint is idempotent, a lost response must not surface as an error
+        coEvery { jointAccountApi.activateJointAccount(any(), any()) } returnsMany listOf(
+            timeoutResponse(),
+            ApiResponse.Success(createJointAccountDto()),
+        )
+
+        // Act
+        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 2) { jointAccountApi.activateJointAccount(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN timeout twice WHEN activate THEN Left with the retry error`() = runTest {
+        // Arrange
+        val retryResponse = timeoutResponse()
+        coEvery { jointAccountApi.activateJointAccount(any(), any()) } returnsMany listOf(
+            timeoutResponse(),
+            retryResponse,
+        )
+
+        // Act
+        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left((retryResponse as ApiResponse.Error).cause))
+        coVerify(exactly = 2) { jointAccountApi.activateJointAccount(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN server error WHEN activate THEN Left without a retry`() = runTest {
+        // Arrange
+        val response = errorResponse(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
+        coEvery { jointAccountApi.activateJointAccount(any(), any()) } returns response
+
+        // Act
+        val actual = repository.activate(userWalletId = WALLET_ID, payload = activationPayload(), signature = SIGNATURE)
+
+        // Assert
+        assertThat(actual).isEqualTo(Either.Left((response as ApiResponse.Error).cause))
+        coVerify(exactly = 1) { jointAccountApi.activateJointAccount(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN successful response WHEN getInvitePreview THEN the converted preview is returned`() = runTest {
         // Arrange
         val dto = createJointAccountInvitePreviewDto()
@@ -233,6 +305,26 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.LoadFailed(cause = expectedCause)))
     }
 
+    private fun activationPayload() = JointAccountActivationPayload(
+        walletId = WALLET_ID.stringValue,
+        cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
+        config = JointAccountActivationPayload.ConfirmedConfig(
+            base = JointAccountConfig(
+                name = " Family ",
+                icon = "Family",
+                iconColor = "Azure",
+                membersCount = 3,
+                threshold = 2,
+            ),
+            safeAddress = SAFE_ADDRESS,
+        ),
+    )
+
+    @Suppress("UNCHECKED_CAST")
+    private fun timeoutResponse(): ApiResponse<JointAccountDto> {
+        return ApiResponse.Error(cause = ApiResponseError.TimeoutException()) as ApiResponse<JointAccountDto>
+    }
+
     private fun createPayload() = JointAccountCreationPayload(
         config = JointAccountConfig(
             name = " Family ",
@@ -284,6 +376,7 @@ internal class DefaultJointAccountRepositoryTest {
     private companion object {
         val WALLET_ID = UserWalletId("011121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0E0F")
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
+        const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
         const val SIGNATURE = "0xdeadbeef"
         const val INVITE_A = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
         const val INVITE_B = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
