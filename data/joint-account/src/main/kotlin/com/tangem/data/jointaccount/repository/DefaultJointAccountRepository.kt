@@ -3,10 +3,10 @@ package com.tangem.data.jointaccount.repository
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.data.common.api.ApiResponseRaise
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.jointaccount.converter.ActivateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
@@ -84,28 +84,38 @@ internal class DefaultJointAccountRepository @Inject constructor(
         userWalletId: UserWalletId,
         payload: JointAccountActivationPayload,
         signature: String,
-    ) {
-        withContext(dispatchers.io) {
-            try {
+    ): Either<Throwable, Unit> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
                 activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
-            } catch (e: ApiResponseError.TimeoutException) {
-                logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", e)
-                activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
-            }
-        }
+                Unit.right()
+            },
+            onError = { error ->
+                if (error is ApiResponseError.TimeoutException) {
+                    logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", error)
+                    safeApiCall(
+                        call = {
+                            activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+                            Unit.right()
+                        },
+                        onError = { retryError -> retryError.left() },
+                    )
+                } else {
+                    error.left()
+                }
+            },
+        )
     }
 
-    private suspend fun activateOnce(
+    private suspend fun ApiResponseRaise.activateOnce(
         userWalletId: UserWalletId,
         payload: JointAccountActivationPayload,
         signature: String,
     ) {
-        val response = jointAccountApi.activateJointAccount(
+        jointAccountApi.activateJointAccount(
             walletId = userWalletId.stringValue,
             body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
-        )
-
-        if (response is ApiResponse.Error) throw response.cause
+        ).bind()
     }
 
     override suspend fun getInvitePreview(
