@@ -397,6 +397,14 @@
   </plurals>
   <string name="common_month">月</string>
   <string-array name="common_month_in">
+    <item>1月</item>
+    <item>2月</item>
+    <item>3月</item>
+    <item>4月</item>
+    <item>5月</item>
+    <item>6月</item>
+    <item>7月</item>
+    <item>8月</item>
     <item>9月</item>
     <item>10月</item>
     <item>11月</item>
@@ -1971,10 +1979,16 @@
   <string name="tangempay_card_activation_attempts_exceeded_title">カードの有効化を試行できる回数を超えました</string>
   <string name="tangempay_card_activation_description">カード番号の下4桁を入力してください</string>
   <string name="tangempay_card_activation_error">末尾の数字が正しくありません。もう一度お試しください。</string>
+  <string name="tangempay_card_activation_error_already_active">このカードはすでに有効です。</string>
+  <string name="tangempay_card_activation_error_in_progress">有効化はすでに進行中です。しばらくお待ちください。</string>
+  <string name="tangempay_card_activation_error_not_physical">これはプラスチックカードではありません</string>
+  <string name="tangempay_card_activation_error_not_ready">このカードはまだ有効化できません。カードを受け取ってから、もう一度お試しください。</string>
   <string name="tangempay_card_activation_in_progress">カードを有効化しています</string>
   <string name="tangempay_card_default_name">Tangem Payカード 1</string>
   <string name="tangempay_card_delivery_banner_description">届いたら有効化してください</string>
+  <string name="tangempay_card_delivery_banner_description_many">受け取り後に有効化してください</string>
   <string name="tangempay_card_delivery_banner_title">カードを配送中です</string>
+  <string name="tangempay_card_delivery_banner_title_many">カードは配送中です</string>
   <string name="tangempay_card_details_activate">カードを有効化</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
@@ -2035,6 +2049,7 @@
   <string name="tangempay_card_edit_name_placeholder">カード名</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">%s以上の金額を設定してください</string>
   <string name="tangempay_card_limit_setup_error_message">限度額を設定できませんでした。もう一度お試しください</string>
+  <string name="tangempay_card_page_activating_banner_title">プラスチックカードを有効化しています</string>
   <string name="tangempay_card_page_closing_banner_description">通常、最大5分ほどかかります。</string>
   <string name="tangempay_card_page_closing_banner_title">カードを解約しています</string>
   <string name="tangempay_card_page_daily_limit_change">変更</string>
@@ -2080,6 +2095,8 @@
   <string name="tangempay_cashback_refund_banner">以前キャッシュバックが付与された購入について返金を受け取りました</string>
   <string name="tangempay_cashback_title">キャッシュバック</string>
   <string name="tangempay_cashback_total_earned">合計 %1$s 獲得</string>
+  <string name="tangempay_cashback_widget_empty_description">利用を始めてキャッシュバックを獲得しましょう</string>
+  <string name="tangempay_cashback_widget_error_description">タップして再読み込み</string>
   <string name="tangempay_cashback_widget_error_title">キャッシュバックを利用できません</string>
   <string name="tangempay_cashback_widget_refund_description">購入代金の返金により減額</string>
   <string name="tangempay_cashback_widget_title">%2$s で %1$s のキャッシュバック</string>
@@ -2093,8 +2110,10 @@
   <string name="tangempay_common_card">カード</string>
   <string name="tangempay_common_error_loading">読み込みエラー</string>
   <string name="tangempay_current_plan_active_till_notification">%1$s プランは %2$s まで有効です。その後は %3$s に移行されます。%4$s は請求されません。</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">%sプランへの切り替え手続き中です。プラン料金のお支払いをお待ちしています</string>
   <string name="tangempay_current_plan_change">プランを変更</string>
   <string name="tangempay_current_plan_fee_charged_notification">%1$s の月額料金は %2$s に請求されます</string>
+  <string name="tangempay_current_plan_full_terms">利用条件の全文</string>
   <string name="tangempay_current_plan_section_card">カード関連</string>
   <string name="tangempay_current_plan_section_plan">プラン関連</string>
   <string name="tangempay_current_plan_stay_button">%1$s のまま利用する</string>
@@ -2162,6 +2181,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">このプランのカード発行枚数の上限に達しました</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">プランをアップグレード</string>
   <string name="tangempay_maximum_cards_issued_title">カード発行枚数の上限に達しました</string>
+  <string name="tangempay_multichain_show_qr">QRコードを表示</string>
   <string name="tangempay_multinetwork">複数ネットワーク対応</string>
   <string name="tangempay_newonboard_Q1_body">はい。規制対象の Visa カードを利用するには、本人確認が必須です。KYC は  のコンプライアンスパートナーである Sumsub が担当します。</string>
   <string name="tangempay_newonboard_Q1_title">本人確認書類の提出は必要ですか？</string>
@@ -2193,11 +2213,53 @@
   <string name="tangempay_onboarding_setup_wallet_description">Tangem Payをこのウォレットに紐づけます</string>
   <string name="tangempay_onboarding_setup_wallet_title">新しいウォレットを作成します</string>
   <string name="tangempay_onboarding_title">Tangem Pay カードをすぐに手に入れよう</string>
+  <string name="tangempay_order_card_error_active_order">カードの注文はすでに処理中です。</string>
+  <string name="tangempay_order_card_error_insufficient_balance">配送料の残高が不足しています。資金を追加して、もう一度お試しください。</string>
+  <string name="tangempay_order_card_error_invalid_address">配送先住所を確認して、もう一度お試しください。</string>
+  <string name="tangempay_order_card_error_invalid_source_card">このカードは交換できません。</string>
+  <string name="tangempay_order_card_error_offer_unavailable">このカードはご利用いただけなくなりました。</string>
+  <string name="tangempay_order_data_address_line1">住所1</string>
+  <string name="tangempay_order_data_address_line2">住所2</string>
+  <string name="tangempay_order_data_city">市区町村</string>
+  <string name="tangempay_order_data_clear_field">フィールドをクリア</string>
+  <string name="tangempay_order_data_country">国</string>
+  <string name="tangempay_order_data_email">メールアドレス</string>
+  <string name="tangempay_order_data_field_invalid">使用できない文字が含まれています</string>
+  <string name="tangempay_order_data_field_latin_only">ローマ字（ラテン文字）のみ使用できます</string>
+  <string name="tangempay_order_data_field_optional">任意</string>
+  <string name="tangempay_order_data_field_required">必須項目</string>
+  <string name="tangempay_order_data_first_name">名</string>
+  <string name="tangempay_order_data_last_name">姓</string>
+  <string name="tangempay_order_data_name_on_card">カード名義</string>
+  <string name="tangempay_order_data_order_button">カードを注文</string>
+  <string name="tangempay_order_data_phone">電話番号</string>
+  <string name="tangempay_order_data_postal_code">郵便番号</string>
+  <string name="tangempay_order_data_region">都道府県 / 州</string>
+  <string name="tangempay_order_data_subtitle">入力内容を確認</string>
+  <string name="tangempay_order_data_success_title">カードを注文しました</string>
   <plurals name="tangempay_order_success_delivery_eta">
-    <item quantity="other">お届けまで最大%d営業日かかります。</item>
+    <item quantity="other">お届けまで最大%d営業日かかります</item>
   </plurals>
-  <string name="tangempay_order_success_email_note">3営業日以内に、物流会社から%s宛にメールが届きます。</string>
+  <string name="tangempay_order_success_email_note">3営業日以内に、物流会社から%s宛にメールが届きます</string>
   <string name="tangempay_order_success_show_card">カードを表示</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">居住国</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="other">最長%d営業日</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d 営業日</string>
+  <string name="tangempay_order_type_delivery_fee">配送料</string>
+  <string name="tangempay_order_type_delivery_time">配送期間</string>
+  <string name="tangempay_order_type_delivery_time_instant">即時</string>
+  <string name="tangempay_order_type_delivery_to">配送先</string>
+  <string name="tangempay_order_type_first_delivery_free">初回配送は無料</string>
+  <string name="tangempay_order_type_issue_fee">発行手数料</string>
+  <string name="tangempay_order_type_not_enough_money">残高不足</string>
+  <string name="tangempay_order_type_segment_plastic">プラスチック</string>
+  <string name="tangempay_order_type_segment_virtual">バーチャル</string>
+  <string name="tangempay_order_type_select">選択</string>
+  <string name="tangempay_order_type_title">新しいカードを注文</string>
+  <string name="tangempay_order_type_unavailable">利用不可</string>
   <string name="tangempay_other_networks_header">その他のネットワーク</string>
   <string name="tangempay_other_networks_subtitle">その後、1:1のレートかつ手数料無料で決済口座に交換できます</string>
   <string name="tangempay_other_networks_title">任意のチェーンでUSDT / USDCをTangem Walletに送金してください</string>
@@ -2215,6 +2277,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">発行手数料を支払うため、決済口座にUSDCを入金してください</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">手数料を支払えません</string>
   <string name="tangempay_reissue_card_title">カードを交換しますか？</string>
+  <string name="tangempay_reissue_plastic_description">現在のプラスチックカードは直ちに解約されます。新しいカード情報のプラスチックカードをお届けします。</string>
+  <string name="tangempay_reissue_plastic_title">プラスチックカードを交換しますか？</string>
   <string name="tangempay_remove_account">アカウントを削除する</string>
   <string name="tangempay_remove_account_alert_description">Tangem Payはメイン画面から削除され、アプリを再インストールしても再表示されません。</string>
   <string name="tangempay_remove_account_alert_title">アカウントを削除しますか？</string>

@@ -1,7 +1,6 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
-import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
@@ -49,27 +48,6 @@ internal class DefaultReissueCardRepository @Inject constructor(
             fee
         }
 
-    override suspend fun getPlasticReissueCardFee(
-        userWalletId: UserWalletId,
-    ): Either<VisaApiError, TangemPayReissueCardFee> = either {
-        val response = requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getFee(
-                authHeader = authHeader,
-                type = CARD_REPLACEMENT_PLASTIC_FEE_TYPE,
-            )
-        }.bind()
-
-        val amount = catch(
-            block = { response.result.amount.toBigDecimal() },
-            catch = { raise(VisaApiError.Unspecified) },
-        )
-
-        TangemPayReissueCardFee(
-            amount = amount,
-            currencyCode = response.result.currency,
-        )
-    }
-
     override suspend fun reissueCard(
         userWalletId: UserWalletId,
         cardId: String,
@@ -110,6 +88,5 @@ internal class DefaultReissueCardRepository @Inject constructor(
 
     private companion object {
         const val CARD_REPLACEMENT_FEE_TYPE = "CARD_REPLACEMENT"
-        const val CARD_REPLACEMENT_PLASTIC_FEE_TYPE = "CARD_REPLACEMENT_PLASTIC"
     }
 }

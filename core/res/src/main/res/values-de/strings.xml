@@ -1056,7 +1056,6 @@
   <string name="joint_account_name_hint">Geben Sie Ihren Vor- und Nachnamen oder eine Unterzeichnertypangabe ein, damit die anderen Mitglieder Sie identifizieren können</string>
   <string name="joint_account_name_subtitle">Andere Mitglieder sehen diesen Namen auf dem gemeinsamen Konto</string>
   <string name="joint_account_name_title">Wie heißt du?</string>
-  <string name="joint_account_onboarding_subtitle">Ein gemeinsames Konto, das mehreren Personen gemeinsam gehört. Geldtransfers sind nur möglich, wenn genügend Kontoinhaber unterschreiben</string>
   <string name="joint_account_waiting_activation">Warten auf die Aktivierung</string>
   <string name="key_invalidated_warning_description">Du hast deine biometrischen Daten aktualisiert, scanne deine Karte oder Ring, um einzutreten</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Dein Guthaben sollte höher sein als der Gebührenwert, um eine Überweisung zu tätigen</string>
@@ -2159,13 +2158,13 @@
   <string name="tangempay_card_activation_error">Ungültige letzte Ziffern. Bitte versuchen Sie es erneut.</string>
   <string name="tangempay_card_activation_error_already_active">Diese Karte ist bereits aktiv.</string>
   <string name="tangempay_card_activation_error_in_progress">Die Aktivierung läuft bereits. Bitte warten.</string>
-  <string name="tangempay_card_activation_error_not_physical">Dies ist keine physische Karte.</string>
+  <string name="tangempay_card_activation_error_not_physical">Dies ist keine physische Karte</string>
   <string name="tangempay_card_activation_error_not_ready">Diese Karte kann noch nicht aktiviert werden. Versuchen Sie es erneut, sobald Sie sie erhalten haben.</string>
   <string name="tangempay_card_activation_in_progress">Aktivierung Ihrer Karte</string>
   <string name="tangempay_card_default_name">Tangem Pay Karte 1</string>
   <string name="tangempay_card_delivery_banner_description">Aktivieren Sie es nach Erhalt.</string>
   <string name="tangempay_card_delivery_banner_description_many">Aktivieren Sie sie bei Ihrer Ankunft</string>
-  <string name="tangempay_card_delivery_banner_title">Ihre Karte ist auf dem Weg zur Zustellung.</string>
+  <string name="tangempay_card_delivery_banner_title">Ihre Karte ist auf dem Weg zur Zustellung</string>
   <string name="tangempay_card_delivery_banner_title_many">Ihre Karten sind auf dem Weg zur Zustellung</string>
   <string name="tangempay_card_details_activate">Karte aktivieren</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
@@ -2289,9 +2288,10 @@
   <string name="tangempay_common_card">Karte</string>
   <string name="tangempay_common_error_loading">Fehler beim Laden</string>
   <string name="tangempay_current_plan_active_till_notification">Ihr „ %1$s “-Tarif ist bis zum %2$sgültig; danach werden wir Sie auf %3$sumstellen. Für %4$s fallen keine Kosten an.</string>
-  <string name="tangempay_current_plan_awaiting_deposit_notification">Wir sind gerade dabei, Sie auf den Tarif „ %s “ umzustellen, und warten auf die Zahlung der Tarifgebühr.</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">Wir sind gerade dabei, Sie auf den Tarif „ %s “ umzustellen, und warten auf die Zahlung der Tarifgebühr</string>
   <string name="tangempay_current_plan_change">Tarif wechseln</string>
   <string name="tangempay_current_plan_fee_charged_notification">%1$s Die monatliche Gebühr wird am %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Vollständige Bedingungen</string>
   <string name="tangempay_current_plan_section_card">Kartenbezogen</string>
   <string name="tangempay_current_plan_section_plan">Planbezogen</string>
   <string name="tangempay_current_plan_stay_button">Bleib dran %1$s</string>
@@ -2416,18 +2416,18 @@
   <string name="tangempay_order_data_subtitle">Daten prüfen</string>
   <string name="tangempay_order_data_success_title">Karte bestellt</string>
   <plurals name="tangempay_order_success_delivery_eta">
-    <item quantity="one">Die Lieferung dauert bis zu %d Werktage.</item>
-    <item quantity="other">Die Lieferung dauert bis zu %d Werktage.</item>
+    <item quantity="one">Die Lieferung dauert bis zu %d Werktage</item>
+    <item quantity="other">Die Lieferung dauert bis zu %d Werktage</item>
   </plurals>
   <string name="tangempay_order_success_email_note">Innerhalb von 3 Werktagen erhalten Sie eine E-Mail vom Logistikunternehmen am %s</string>
   <string name="tangempay_order_success_show_card">Karte anzeigen</string>
   <string name="tangempay_order_type_beta">Beta</string>
   <string name="tangempay_order_type_country_of_residence">Aufenthaltsland</string>
   <plurals name="tangempay_order_type_delivery_eta">
-    <item quantity="one">Bis zu %d Werktage</item>
+    <item quantity="one">Bis zu %d Werktag</item>
     <item quantity="other">Bis zu %d Werktage</item>
   </plurals>
-  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d Werktage</string>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d Werktagen</string>
   <string name="tangempay_order_type_delivery_fee">Liefergebühr</string>
   <string name="tangempay_order_type_delivery_time">Lieferzeiten</string>
   <string name="tangempay_order_type_delivery_time_instant">Sofort</string>
