@@ -1,11 +1,11 @@
-package com.tangem.datasource.local.news.liked
+package com.tangem.data.news.store.liked
 
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Store for news liked flags (runtime only).
  */
-interface NewsLikedStore {
+internal interface NewsLikedStore {
 
     /**
      * Observes all liked flags.

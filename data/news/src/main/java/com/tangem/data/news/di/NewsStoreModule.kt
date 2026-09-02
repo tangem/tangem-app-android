@@ -1,14 +1,14 @@
-package com.tangem.datasource.di
+package com.tangem.data.news.di
 
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.news.details.DefaultNewsDetailsStore
-import com.tangem.datasource.local.news.details.NewsDetailsStore
-import com.tangem.datasource.local.news.liked.DefaultNewsLikedStore
-import com.tangem.datasource.local.news.liked.NewsLikedStore
-import com.tangem.datasource.local.news.trending.DefaultTrendingNewsStore
-import com.tangem.datasource.local.news.trending.TrendingNewsStore
-import com.tangem.datasource.local.news.viewed.DefaultNewsViewedStore
-import com.tangem.datasource.local.news.viewed.NewsViewedStore
+import com.tangem.data.news.store.details.DefaultNewsDetailsStore
+import com.tangem.data.news.store.details.NewsDetailsStore
+import com.tangem.data.news.store.liked.DefaultNewsLikedStore
+import com.tangem.data.news.store.liked.NewsLikedStore
+import com.tangem.data.news.store.trending.DefaultTrendingNewsStore
+import com.tangem.data.news.store.trending.TrendingNewsStore
+import com.tangem.data.news.store.viewed.DefaultNewsViewedStore
+import com.tangem.data.news.store.viewed.NewsViewedStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
