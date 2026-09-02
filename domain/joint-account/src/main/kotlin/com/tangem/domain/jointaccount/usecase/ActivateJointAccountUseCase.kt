@@ -63,6 +63,15 @@ class ActivateJointAccountUseCase(
             .mapLeft(::toActivationError)
             .bind()
 
+        // The owner address is known only after the tap, so the creator check is post-sign: the backend would
+        // reject a non-creator signature with 403 anyway, this only fails fast with a domain error instead
+        val creatorAddress = jointAccount.members
+            .firstOrNull { it.role == JointAccount.Role.CREATOR }
+            ?.address
+        ensure(signResult.ownerAddress.equals(creatorAddress, ignoreCase = true)) {
+            JointAccountActivationError.NotCreator
+        }
+
         repository
             .activate(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
             .mapLeft(JointAccountActivationError::Failed)
@@ -95,9 +104,11 @@ class ActivateJointAccountUseCase(
 
         val owners = jointAccount.members.map(JointAccount.Member::address)
         val match = SafeSingleton.entries
-            .mapNotNull { singleton ->
+            .map { singleton ->
+                // A composition no Safe can be deployed from is a distinct failure, not a mismatch
                 SafeAddress.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
-                    .getOrNull()
+                    .mapLeft { JointAccountActivationError.Failed(cause = IllegalStateException(it.toString())) }
+                    .bind()
             }
             .firstOrNull { computed -> computed.equals(backendAddress, ignoreCase = true) }
 
