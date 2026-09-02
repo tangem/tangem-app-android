@@ -125,7 +125,6 @@ dependencies {
     // region Domain models
     api(projects.domain.models)
     api(projects.domain.nft.models)
-    api(projects.domain.staking.models)
     api(projects.domain.walletConnect.models)
     // endregion
 
