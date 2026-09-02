@@ -3,8 +3,8 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.collectibles.models.CollectiblesError
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
+import com.tangem.domain.collectibles.models.CollectiblesError
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.utils.coroutines.runSuspendCatching
 
