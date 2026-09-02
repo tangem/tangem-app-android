@@ -15,6 +15,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.pagination.exception.OperationWIthTheSameIdInProgress
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,6 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -250,7 +250,7 @@ internal class PolymarketFeedPollerTest {
     }
 
     @Test
-    fun `GIVEN failures reported once WHEN they go on within the cooldown THEN nothing is reported again`() = runTest {
+    fun `GIVEN failures going on past the third WHEN each fails THEN every one is handed to the reporter`() = runTest {
         // Arrange
         pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
 
@@ -261,25 +261,23 @@ internal class PolymarketFeedPollerTest {
         }
 
         // Assert
-        assertThat(staleDataReports).isEqualTo(1)
+        assertThat(staleDataReports).isEqualTo(4)
     }
 
     @Test
-    fun `GIVEN failures reported once WHEN they go on past the cooldown THEN the user is told again`() = runTest {
+    fun `GIVEN a refresh cancelled by the pagination WHEN its result arrives THEN it is not a failure`() = runTest {
         // Arrange
         pollFeed(pages = arrayOf(page(key = 0, eventIds = arrayOf("event-1"))))
-        repeat(times = 3) {
-            passPollInterval()
-            failRefresh(batchKey = 0)
-        }
 
         // Act
-        advanceTimeBy(REPORT_COOLDOWN)
-        passPollInterval()
-        failRefresh(batchKey = 0)
+        repeat(times = 3) {
+            passPollInterval()
+            cancelRefresh(batchKey = 0)
+        }
 
         // Assert
-        assertThat(staleDataReports).isEqualTo(2)
+        assertThat(staleDataReports).isEqualTo(0)
+        assertThat(refreshedKeys()).containsExactly(0, 0, 0)
     }
 
     @Test
@@ -384,6 +382,14 @@ internal class PolymarketFeedPollerTest {
         runCurrent()
     }
 
+    private fun TestScope.cancelRefresh(batchKey: Int) {
+        refreshResults.tryEmit(
+            PolymarketEventsUpdateRequest(batchKey = batchKey, config = CONFIG) to
+                BatchUpdateResult.Error(CancellationException("reloaded")),
+        )
+        runCurrent()
+    }
+
     private fun TestScope.succeedRefresh(batchKey: Int) {
         refreshResults.tryEmit(
             PolymarketEventsUpdateRequest(batchKey = batchKey, config = CONFIG) to
@@ -428,7 +434,6 @@ internal class PolymarketFeedPollerTest {
 
         val POLL_INTERVAL: Duration = 20.seconds
         val STALE_AFTER: Duration = 20.seconds
-        val REPORT_COOLDOWN: Duration = 5.minutes
 
         const val REPLAY_CAPACITY = 32
     }
