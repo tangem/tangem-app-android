@@ -9,7 +9,6 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.datasource.utils.SerializeNullsFactory
@@ -37,11 +36,6 @@ class MoshiModule {
             .add(DateTimeAdapter())
             // .add(VisaActivationRemoteState.jsonAdapter)
             // .add(VisaCardActivationStatus.jsonAdapter)
-            .add(
-                NamePolymorphicAdapterFactory.of(NetworkStatusDM::class.java)
-                    .withSubtype(NetworkStatusDM.Verified::class.java, "amounts")
-                    .withSubtype(NetworkStatusDM.NoAccount::class.java, "amount_to_create_account"),
-            )
             .add(
                 NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
                     .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
