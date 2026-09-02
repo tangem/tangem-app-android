@@ -34,7 +34,13 @@
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
+  <string name="account_details_archive_joint_description">This only hides the account for you and turns off notifications for it. Other members keep their access, and you can always get it back.</string>
   <string name="account_details_archiving">Archiving...</string>
+  <plurals name="account_details_joint_members_count">
+    <item quantity="one">%d person</item>
+    <item quantity="other">%d people</item>
+  </plurals>
+  <string name="account_details_joint_members_progress">%1$s/%2$s people</string>
   <string name="account_details_joint_pending_description">The account is still being populated with members</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
