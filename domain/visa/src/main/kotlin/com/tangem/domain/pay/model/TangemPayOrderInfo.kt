@@ -5,6 +5,7 @@ data class TangemPayOrderInfo(
     val orderStatus: OrderStatus,
     val orderStep: OrderStep = OrderStep.UNKNOWN,
     val orderType: OrderType = OrderType.UNKNOWN,
+    val productInstanceId: String? = null,
 ) {
     companion object {
         fun fromOrder(order: Order) = TangemPayOrderInfo(
@@ -12,6 +13,7 @@ data class TangemPayOrderInfo(
             orderStatus = order.status,
             orderStep = order.step,
             orderType = order.type,
+            productInstanceId = order.productInstanceId,
         )
     }
 }

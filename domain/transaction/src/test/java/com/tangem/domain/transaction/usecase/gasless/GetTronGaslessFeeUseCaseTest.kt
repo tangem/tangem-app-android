@@ -40,6 +40,7 @@ internal class GetTronGaslessFeeUseCaseTest {
 
     private val quote = TronGaslessQuote(
         quoteId = "q_1",
+        quotedAmountRaw = BigInteger("50000000"),
         feeRecipient = "TFee",
         compensationToken = usdtContract,
         // Raw matches the mock fee token's 8 decimals (MockCryptoCurrencyFactory): 2.75 * 10^8.
@@ -69,7 +70,7 @@ internal class GetTronGaslessFeeUseCaseTest {
         // The 50 USDT send amount must reach the backend as raw base units (50 * 10^6).
         coVerify {
             repository.estimate(
-                match { it.amount == "50000000" && it.feeTokenContract == usdtContract },
+                match { it.amount == BigInteger("50000000") && it.feeTokenContract == usdtContract },
             )
         }
     }

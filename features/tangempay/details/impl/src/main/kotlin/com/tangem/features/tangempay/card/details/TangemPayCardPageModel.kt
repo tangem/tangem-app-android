@@ -44,6 +44,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.pay.isAwaitingActivation
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -126,6 +127,9 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private var isDeliveryDetailsShown = false
 
+    private var isPendingActivationOpen = params.shouldOpenActivation &&
+        params.initialStatus.ifLoadedOrNull { it.findCardWithId(params.cardId) } == null
+
     val selectedCardId: StateFlow<String>
         field = MutableStateFlow(params.cardId)
 
@@ -148,6 +152,10 @@ internal class TangemPayCardPageModel @Inject constructor(
                 settings = persistentListOf(),
                 menuItems = buildMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
+                    isReissueAvailable = params.initialStatus
+                        .ifLoadedOrNull { it.findCardWithId(params.cardId) }
+                        ?.state
+                        ?.isAwaitingActivation != true,
                 ),
             ),
         )
@@ -177,8 +185,15 @@ internal class TangemPayCardPageModel @Inject constructor(
             flow2 = selectedCardId,
             flow3 = deliveryEmail,
             flow4 = isDetailsShown,
-            transform = ::updateSelectedCardUi,
-        ).launchIn(modelScope)
+        ) { status, selectedId, email, isDetailsShown ->
+            updateSelectedCardUi(
+                state = status,
+                selectedId = selectedId,
+                email = email,
+                isDetailsShown = isDetailsShown,
+            )
+            openPendingActivation(status)
+        }.launchIn(modelScope)
     }
 
     override fun onDestroy() {
@@ -268,7 +283,10 @@ internal class TangemPayCardPageModel @Inject constructor(
                 uiState.copy(
                     dailyLimitState = buildDailyLimitState(state),
                     settings = status.buildSettings(card.frozenState, isDetailsShown),
-                    menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
+                    menuItems = buildMenuItems(
+                        isLastCard = status.cards.isLastCard(),
+                        isReissueAvailable = !card.state.isAwaitingActivation,
+                    ),
                     cardState = card.state,
                     delivery = buildDeliveryState(cardState = card.state, email = email),
                 )
@@ -302,6 +320,13 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun onClickActivateCard() {
         analytics.send(TangemPayAnalyticsEvents.Plastic.ActivateCardManagementButtonClicked())
         val card = selectedCard() ?: return
+        router.push(TangemPayCardDetailsInnerRoute.ActivateCard(card = card))
+    }
+
+    private fun openPendingActivation(status: AccountStatus.Payment) {
+        if (!isPendingActivationOpen) return
+        val card = (status.value as? PaymentAccountStatusValue.Loaded)?.findCardWithId(params.cardId) ?: return
+        isPendingActivationOpen = false
         router.push(TangemPayCardDetailsInnerRoute.ActivateCard(card = card))
     }
 
@@ -391,20 +416,25 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    private fun buildMenuItems(isLastCard: Boolean): ImmutableList<TangemPayDropDownItemUM> {
+    private fun buildMenuItems(
+        isLastCard: Boolean,
+        isReissueAvailable: Boolean,
+    ): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
-            add(
-                TangemPayDropDownItemUM(
-                    title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
-                    onClick = ::onClickReissueCard,
-                    icon = TangemIconUM.Icon(
-                        imageVector = Icons.ic_arrow_refresh_20,
-                        tintReference = {
-                            TangemTheme.colors3.icon.primary
-                        },
+            if (isReissueAvailable) {
+                add(
+                    TangemPayDropDownItemUM(
+                        title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
+                        onClick = ::onClickReissueCard,
+                        icon = TangemIconUM.Icon(
+                            imageVector = Icons.ic_arrow_refresh_20,
+                            tintReference = {
+                                TangemTheme.colors3.icon.primary
+                            },
+                        ),
                     ),
-                ),
-            )
+                )
+            }
             add(
                 TangemPayDropDownItemUM(
                     title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
