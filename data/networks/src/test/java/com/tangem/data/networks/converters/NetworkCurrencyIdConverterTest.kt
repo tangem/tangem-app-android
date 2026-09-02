@@ -248,16 +248,32 @@ class NetworkCurrencyIdConverterTest {
         )
 
         @Test
-        fun `GIVEN joint derivation path WHEN convert coin id THEN id carries the owner path hash`() {
+        fun `GIVEN joint derivation path WHEN convert coin id THEN id carries the salted owner path hash`() {
             // Act
             val actual = jointConverter.convert(CurrencyId.createCoinId("ethereum"))
 
             // Assert
             val expected = CryptoCurrency.ID.fromValue(
-                value = "coin⟨$canonicalNetworkRawId→${jointDerivationPath.value.hashCode()}⟩ethereum",
+                value = "coin⟨$canonicalNetworkRawId→${"joint:${jointDerivationPath.value}".hashCode()}⟩ethereum",
             )
             Truth.assertThat(actual).isEqualTo(expected)
             Truth.assertThat(actual).isNotEqualTo(converter.convert(CurrencyId.createCoinId("ethereum")))
+        }
+
+        @Test
+        fun `GIVEN custom path with the same raw value WHEN convert coin id THEN ids differ`() {
+            // Arrange
+            val customConverter = NetworkCurrencyIdConverter(
+                blockchainId = blockchainId,
+                derivationPath = Network.DerivationPath.Custom(value = jointDerivationPath.value),
+            )
+
+            // Act
+            val jointId = jointConverter.convert(CurrencyId.createCoinId("ethereum"))
+            val customId = customConverter.convert(CurrencyId.createCoinId("ethereum"))
+
+            // Assert
+            Truth.assertThat(jointId).isNotEqualTo(customId)
         }
     }
 
