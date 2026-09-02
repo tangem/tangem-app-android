@@ -35,9 +35,6 @@ import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetai
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketSubcategoryTabUM
 import kotlinx.collections.immutable.ImmutableList
 
-/** The volume delta is a growth by construction, so the indicator always points up. */
-private const val GROWTH_GLYPH = "▲"
-
 private val SubcategoryShape = RoundedCornerShape(percent = 50)
 
 /** The first item of the screen: the event's icon, its question and the volume figures. */
@@ -55,10 +52,8 @@ internal fun EventHeader(state: PolymarketEventDetailsUM.Content) {
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.heading.medium,
         )
-        if (state.totalVolume != null || state.change24h != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            MetaRow(state = state)
-        }
+        Spacer(modifier = Modifier.height(8.dp))
+        MetaRow(state = state)
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
@@ -70,20 +65,16 @@ private fun MetaRow(state: PolymarketEventDetailsUM.Content) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        state.totalVolume?.let { totalVolume ->
-            MetaEntry(
-                label = stringResourceSafe(R.string.prediction_event_total_volume),
-                value = totalVolume.resolveReference(),
-                valueColor = TangemTheme.colors3.text.accent.yellow,
-            )
-        }
-        state.change24h?.let { change24h ->
-            MetaEntry(
-                label = stringResourceSafe(R.string.prediction_details_24h_change),
-                value = "$GROWTH_GLYPH ${change24h.resolveReference()}",
-                valueColor = TangemTheme.colors3.text.accent.blue,
-            )
-        }
+        MetaEntry(
+            label = stringResourceSafe(R.string.prediction_event_total_volume),
+            value = state.totalVolume.resolveReference(),
+            valueColor = TangemTheme.colors3.text.accent.yellow,
+        )
+        MetaEntry(
+            label = stringResourceSafe(R.string.prediction_details_24h_change),
+            value = state.change24h.resolveReference(),
+            valueColor = TangemTheme.colors3.text.accent.blue,
+        )
     }
 }
 

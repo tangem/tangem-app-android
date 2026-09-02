@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.common
 
 import com.tangem.core.ui.extensions.SpanStyleReference
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -9,7 +10,10 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
+
+internal fun TextReference?.orDash(): TextReference = this ?: stringReference(DASH_SIGN)
 
 /**
  * Formats a traded volume as Polymarket states it: in USD, regardless of the currency selected in the app,

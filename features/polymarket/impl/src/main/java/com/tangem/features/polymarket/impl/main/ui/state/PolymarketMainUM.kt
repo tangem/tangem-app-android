@@ -57,7 +57,7 @@ internal data class PolymarketEventUM(
     val id: String,
     val title: TextReference,
     val iconUrl: String?,
-    val volume: TextReference?,
+    val volume: TextReference,
     val rows: ImmutableList<PolymarketEventRowUM>,
     val hiddenMarketsCount: Int,
     val onClick: () -> Unit,
@@ -68,7 +68,7 @@ internal data class PolymarketEventUM(
 internal data class PolymarketEventRowUM(
     val marketId: String,
     val title: TextReference,
-    val probability: TextReference?,
+    val probability: TextReference,
     val outcomes: ImmutableList<PolymarketOutcomeUM>,
 )
 
