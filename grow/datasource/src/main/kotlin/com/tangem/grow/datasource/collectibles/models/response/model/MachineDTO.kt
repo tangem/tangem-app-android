@@ -51,12 +51,12 @@ data class MachineDTO(
     data class MachineStockDTO(
         @Json(name = "common")
         val common: Int,
-        @Json(name = "uncommon")
-        val uncommon: Int,
         @Json(name = "rare")
         val rare: Int,
         @Json(name = "epic")
         val epic: Int,
+        @Json(name = "legendary")
+        val legendary: Int?,
     )
 
     /** Drop chance per rarity tier, in percent. */
@@ -64,12 +64,12 @@ data class MachineDTO(
     data class MachineOddsDTO(
         @Json(name = "common")
         val common: Int,
-        @Json(name = "uncommon")
-        val uncommon: Int,
         @Json(name = "rare")
         val rare: Int,
         @Json(name = "epic")
         val epic: Int,
+        @Json(name = "legendary")
+        val legendary: Int?,
     )
 
     /** Card value range per rarity tier. */
@@ -77,12 +77,12 @@ data class MachineDTO(
     data class MachineTierRangesDTO(
         @Json(name = "common")
         val common: MachineTierRangeDTO,
-        @Json(name = "uncommon")
-        val uncommon: MachineTierRangeDTO,
         @Json(name = "rare")
         val rare: MachineTierRangeDTO,
         @Json(name = "epic")
         val epic: MachineTierRangeDTO,
+        @Json(name = "legendary")
+        val legendary: MachineTierRangeDTO?,
     ) {
         @JsonClass(generateAdapter = true)
         data class MachineTierRangeDTO(
