@@ -16,7 +16,7 @@ internal data class HaveWalletUM(
 
         data class Options(
             val cardOrRing: WalletOptionUM,
-            val signIn: WalletOptionUM,
+            val socialLogin: WalletOptionUM?,
             val importWallet: WalletOptionUM,
         ) : Step
 
