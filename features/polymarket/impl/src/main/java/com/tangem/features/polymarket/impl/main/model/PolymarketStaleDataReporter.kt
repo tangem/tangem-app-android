@@ -5,12 +5,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-/**
- * Tells the user that the feed may be showing stale data, then keeps quiet for [cooldown].
- *
- * One per screen, not per category: every category polls on its own, and without a shared gate a stretch without
- * network would raise the message again on every tab the user tries.
- */
+/** One per screen: a shared cooldown keeps a stretch without network from repeating the message on every tab. */
 internal class PolymarketStaleDataReporter(
     private val onReport: () -> Unit,
     private val timeSource: TimeSource = TimeSource.Monotonic,

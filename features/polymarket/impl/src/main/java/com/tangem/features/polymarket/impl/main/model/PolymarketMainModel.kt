@@ -41,13 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/**
- * Model of the Discovery feed screen.
- *
- * Loads the category tabs once, then serves the events of the selected category page by page. Categories are a
- * filtering convenience rather than content: when they fail, the tabs stay hidden and the feed runs unfiltered
- * instead of failing with them.
- */
+/** Model of the Discovery feed screen. */
 @OptIn(ExperimentalCoroutinesApi::class)
 @ModelScoped
 internal class PolymarketMainModel @Inject constructor(
@@ -78,7 +72,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val staleDataReporter = PolymarketStaleDataReporter(onReport = ::reportStaleData)
 
-    // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
     private val feeds = mutableMapOf<Int?, PolymarketCategoryFeed>()
 
     private val activeFeed = MutableStateFlow<PolymarketCategoryFeed?>(value = null)
@@ -102,10 +95,6 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(PolymarketRoute.Search(userWalletId = params.userWalletId))
     }
 
-    /**
-     * Requests the next page once the feed is scrolled close enough to its end. Ignored while a page is already
-     * on its way, and while the feed is empty or broken — those are driven by [reload] instead.
-     */
     fun onLoadMore() {
         val feed = activeFeed.value ?: return
 
@@ -113,7 +102,6 @@ internal class PolymarketMainModel @Inject constructor(
             when (val status = feed.batchFlow.state.value.status) {
                 is PaginationStatus.Paginating -> {
                     val lastResult = status.lastResult
-                    // A failed page is worth another attempt as the user keeps scrolling; a last one is not.
                     val canLoadMore = lastResult !is BatchFetchResult.Success || !lastResult.last
                     if (canLoadMore) feed.actionsFlow.emit(BatchAction.LoadMore())
                 }
@@ -147,7 +135,6 @@ internal class PolymarketMainModel @Inject constructor(
         activeFeed.value?.poller?.pause()
     }
 
-    /** Categories first: without them the feed does not know which category to ask for. */
     private fun loadCategories() {
         modelScope.launch {
             val result = withContext(dispatchers.default) { getPolymarketCategoriesUseCase() }
@@ -164,15 +151,10 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onCategorySelected(categoryId: Int) {
         if (categoryId == selectedCategoryId) return
         selectedCategoryId = categoryId
-        // Highlight the tapped tab immediately; the feed catches up once its own pages are on screen.
         uiState.update { it.copy(categories = buildTabs()) }
         selectFeed(categoryId = categoryId)
     }
 
-    /**
-     * @param reloadVisited request the first page even for a feed that was visited — the retry path arrives here
-     *  with the very feed that failed, and that is what it is asking for.
-     */
     private fun selectFeed(categoryId: Int?, reloadVisited: Boolean = false) {
         activeFeed.value?.poller?.pause()
 
@@ -188,8 +170,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun createFeed(config: PolymarketEventsListConfig): PolymarketCategoryFeed {
-        // Replays the latest action: the first Reload is dispatched while the pagination is still subscribing, and
-        // a shared flow without a replay cache drops what it cannot deliver yet.
+        // replay = 1: the first Reload is emitted before the pagination subscribes.
         val actionsFlow = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 1)
         val batchFlow = getPolymarketEventsBatchFlowUseCase(
             context = PolymarketEventsBatchingContext(actionsFlow = actionsFlow, coroutineScope = modelScope),
@@ -210,7 +191,6 @@ internal class PolymarketMainModel @Inject constructor(
         )
     }
 
-    /** Retries the feed and, when the categories were lost too, the tabs along with it. */
     private fun reload() {
         if (categories.isEmpty()) loadCategories() else activeFeed.value?.let(::reloadEvents)
     }
