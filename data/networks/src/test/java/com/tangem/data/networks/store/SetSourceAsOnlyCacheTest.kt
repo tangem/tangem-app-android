@@ -7,7 +7,7 @@ import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.networks.toSimple
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
