@@ -2,9 +2,8 @@ package com.tangem.features.collectibles.impl.main.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.collectibles.impl.CollectiblesRoute
-import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
@@ -28,117 +27,29 @@ internal class CollectiblesMainModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class Tabs {
+    inner class Chrome {
 
         @Test
-        fun `GIVEN model created WHEN category clicked THEN only its packs are left`() = runTest {
-            // Arrange
+        fun `GIVEN model created WHEN state read THEN balance comes from the stub data`() = runTest {
+            // Act
             val model = createModel(testScope = this)
 
-            // Act
-            model.uiState.value.tabs.selectedContent(id = "sports").onClick()
-
             // Assert
-            val content = model.uiState.value.content as CollectiblesMainUM.ContentUM.Content
-            assertThat(content.packs.map { it.id }).containsExactly("elite_1", "legendary_2")
+            assertThat(model.uiState.value.balance.crypto)
+                .isEqualTo(stringReference(CollectiblesMainStubData.BALANCE.crypto))
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN category selected WHEN state read THEN that tab is the selected one`() = runTest {
+        fun `GIVEN model created WHEN back clicked THEN the feature is popped`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
 
             // Act
-            model.uiState.value.tabs.selectedContent(id = "anime").onClick()
+            model.uiState.value.onBackClick()
 
             // Assert
-            val selected = model.uiState.value.tabs.filterIsInstance<TangemTabItemUM.Content>().single { it.isSelected }
-            assertThat(selected.id).isEqualTo("anime")
-            model.onDestroy()
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class Search {
-
-        @Test
-        fun `GIVEN search active WHEN query typed THEN packs are filtered by title`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            model.uiState.value.search.onActiveChange(true)
-
-            // Act
-            model.uiState.value.search.onQueryChange("water")
-
-            // Assert
-            val content = model.uiState.value.content as CollectiblesMainUM.ContentUM.Content
-            assertThat(content.packs.map { it.id }).containsExactly("water_1", "water_2")
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN search active WHEN query matches nothing THEN content is empty`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            model.uiState.value.search.onActiveChange(true)
-
-            // Act
-            model.uiState.value.search.onQueryChange("Serhii")
-
-            // Assert
-            assertThat(model.uiState.value.content).isInstanceOf(CollectiblesMainUM.ContentUM.Empty::class.java)
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN query typed WHEN search closed THEN query is reset and packs are unfiltered`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            model.uiState.value.search.onActiveChange(true)
-            model.uiState.value.search.onQueryChange("water")
-
-            // Act
-            model.uiState.value.search.onCloseClick?.invoke()
-
-            // Assert
-            val state = model.uiState.value
-            assertThat(state.search.query).isEmpty()
-            assertThat(state.search.isActive).isFalse()
-            val content = state.content as CollectiblesMainUM.ContentUM.Content
-            assertThat(content.packs).hasSize(CollectiblesMainStubData.PACKS.size)
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN query typed WHEN cleared THEN search stays active`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            model.uiState.value.search.onActiveChange(true)
-            model.uiState.value.search.onQueryChange("water")
-
-            // Act
-            model.uiState.value.search.onClearClick()
-
-            // Assert
-            val state = model.uiState.value
-            assertThat(state.search.query).isEmpty()
-            assertThat(state.search.isActive).isTrue()
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN search active WHEN state read THEN tabs are kept for the screen to hide`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            val tabs = model.uiState.value.tabs
-
-            // Act
-            model.uiState.value.search.onActiveChange(true)
-
-            // Assert
-            assertThat(model.uiState.value.tabs).isEqualTo(tabs)
+            verify(exactly = 1) { router.pop(onComplete = any()) }
             model.onDestroy()
         }
     }
@@ -189,9 +100,6 @@ internal class CollectiblesMainModelTest {
             model.onDestroy()
         }
     }
-
-    private fun List<TangemTabItemUM>.selectedContent(id: String): TangemTabItemUM.Content =
-        filterIsInstance<TangemTabItemUM.Content>().single { it.id == id }
 
     private fun createModel(testScope: TestScope): CollectiblesMainModel {
         return CollectiblesMainModel(
