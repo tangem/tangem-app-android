@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.txhistory.db.entity
+package com.tangem.grow.datasource.txhistory.db.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
