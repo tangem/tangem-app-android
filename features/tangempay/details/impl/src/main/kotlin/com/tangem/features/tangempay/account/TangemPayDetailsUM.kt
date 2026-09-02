@@ -15,8 +15,14 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val isBalanceHidden: Boolean,
     val errorNotificationConfig: NotificationConfig?,
-    val accountDeactivatedBannerState: TangemMessageBanner.State?,
+    val statusBannerState: MessageBannerUM?,
     val cashbackBlockState: CashbackBlockUM? = null,
+)
+
+@Immutable
+internal data class MessageBannerUM(
+    val state: TangemMessageBanner.State,
+    val onClose: (() -> Unit)? = null,
 )
 
 @Immutable

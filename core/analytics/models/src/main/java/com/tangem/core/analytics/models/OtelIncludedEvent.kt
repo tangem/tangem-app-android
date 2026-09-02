@@ -9,6 +9,17 @@ package com.tangem.core.analytics.models
 interface OtelIncludedEvent {
 
     val otelMetric: OtelMetric
+
+    /**
+     * OTel-only attribute value replacements, keyed by event param name. Lets an event export a
+     * bounded stand-in where the raw param value has unbounded cardinality (e.g. [CUSTOM_TOKEN]
+     * instead of a user-defined token symbol), while the analytics services keep the raw value.
+     */
+    val otelParamOverrides: Map<String, String> get() = emptyMap()
+
+    companion object {
+        const val CUSTOM_TOKEN = "Custom"
+    }
 }
 
 /**
