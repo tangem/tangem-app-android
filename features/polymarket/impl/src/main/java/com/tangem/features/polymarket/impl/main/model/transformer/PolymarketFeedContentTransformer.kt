@@ -10,20 +10,7 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * Applies the pagination state of the Discovery feed to the events area of the screen; the tabs and the access
- * mode of the previous state stay as they are.
- *
- * Pages accumulate: every loaded batch stays on the screen, so a status carrying pages renders them all and only
- * the footer tells about the next one — on its way, or failed. A first page that never arrived takes the whole
- * events area instead — the design shows the same reload prompt for a failed request and for an empty category
- * alike.
- *
- * @property batchListState pagination state to render
- * @property eventUMConverter converts the events of the loaded pages into cards
- * @property onReloadClick retries the feed from its first page
- * @property onNextPageRetryClick asks for the next page again after it failed
- */
+/** Renders the pagination state of the Discovery feed into the events area of the screen. */
 internal class PolymarketFeedContentTransformer(
     private val batchListState: PolymarketEventsBatchListState,
     private val eventUMConverter: PolymarketEventUMConverter,
@@ -54,8 +41,7 @@ internal class PolymarketFeedContentTransformer(
     }
 
     private fun toContent(footer: PolymarketFeedFooterUM): PolymarketMainUM.ContentUM.Content {
-        // The BFF pages with a keyset cursor over a shifting order, so an event that moved between two
-        // page requests arrives twice; the copies would collide as LazyColumn keys and crash the feed.
+        // The keyset cursor can serve an event twice; duplicate keys would crash the list.
         val events = batchListState.data
             .flatMap { batch -> batch.data.events }
             .distinctBy(PolymarketEvent::id)

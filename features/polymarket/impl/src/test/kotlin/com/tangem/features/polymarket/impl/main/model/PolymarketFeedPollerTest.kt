@@ -39,7 +39,6 @@ internal class PolymarketFeedPollerTest {
             extraBufferCapacity = REPLAY_CAPACITY,
         )
 
-    // Replaying rather than collected: the actions the poller dispatches are the assertion subject.
     private val actionsFlow = MutableSharedFlow<PolymarketEventsBatchAction>(replay = REPLAY_CAPACITY)
 
     private val batchFlow = object : PolymarketEventsBatchFlow {
@@ -350,7 +349,6 @@ internal class PolymarketFeedPollerTest {
         return poller
     }
 
-    /** Brings the poller to the state the tests care about: a loaded feed, on screen, with cards in view. */
     private fun TestScope.pollFeed(
         pages: Array<Batch<Int, PolymarketEventsBatch>>,
         visibleEventIds: Set<String> = pages.flatMap { it.data.events.map(PolymarketEvent::id) }.toSet(),

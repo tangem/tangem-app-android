@@ -82,10 +82,8 @@ private const val KEY_HEADER = "header"
 private const val KEY_TAB_BAND = "tab_band"
 private const val KEY_STATUS = "status"
 
-/** How long the feed has to stand still before it counts as "the user stopped scrolling". */
 private val ScrollIdleDebounce = 500.milliseconds
 
-/** How long a scroll restoration waits for the feed to lay out the item it is going back to. */
 private val ScrollRestoreTimeout = 2.seconds
 
 /** Fixed height of the category tab band: 40dp pills + 8dp vertical padding. */
@@ -112,14 +110,11 @@ internal fun PolymarketMainScreen(
 ) {
     val listState = rememberLazyListState()
 
-    // Shared by the inline and the pinned instances of the tab band (only one exists at a time), so the
-    // band's horizontal scroll survives docking and undocking.
+    // Shared by the inline and the pinned band, so its horizontal scroll survives docking.
     val tabRowState = rememberLazyListState()
 
     val hasCategories = state.categories.isNotEmpty()
 
-    // The band is a real feed item while it travels — so overscroll stretches it together with the content —
-    // and docks under the bar once its item reaches the toolbar (or scrolls past the viewport).
     val isTabBandPinned by remember(listState, hasCategories) {
         derivedStateOf { hasCategories && listState.isTabBandPinned() }
     }
@@ -141,9 +136,7 @@ internal fun PolymarketMainScreen(
         onScrollPositionRestore = onScrollPositionRestore,
     )
 
-    // The feature lives inside a modal — a separate window whose LocalHazeState belongs to the root
-    // window, where haze cannot sample from here. A local provider keeps the source and the glass of
-    // this screen in one window.
+    // The feature lives in its own window: a local haze provider keeps the source and the glass together.
     ProvideHaze {
         Box(modifier = modifier.fillMaxSize()) {
             PolymarketMainScaffold(
@@ -154,8 +147,7 @@ internal fun PolymarketMainScreen(
                 onBackClick = onBackClick,
             )
 
-            // A sibling of the whole scaffold: the scaffold marks its content as the haze source, and
-            // glass inside its own source has nothing to sample.
+            // Outside the scaffold: glass inside its own haze source has nothing to sample.
             PolymarketSearchBar(
                 placeholder = resourceReference(R.string.common_search),
                 onClick = onSearchClick,
@@ -181,8 +173,7 @@ private fun PolymarketMainScaffold(
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = {
-            // The scaffold overlay draws one frost shared by the bar and the pinned tabs, so the bar's own
-            // fade is off — two stacked fades would compound their tints.
+            // The overlay frosts the bar and the pinned tabs together; a second fade would compound the tint.
             TangemTopNavigation(
                 title = resourceReference(R.string.prediction_main_title),
                 subtitle = resourceReference(R.string.prediction_main_subtitle),
@@ -194,9 +185,6 @@ private fun PolymarketMainScaffold(
         overlay = { contentPadding ->
             val topPadding = contentPadding.calculateTopPadding()
 
-            // The united header's frost: a single DS fade over the bar alone or, once the band docks,
-            // over the bar plus the band — so the blur and tint dissolve to transparent with alpha at
-            // the header's bottom edge. The height animates to restretch the fade profile smoothly.
             val frostHeight by animateDpAsState(
                 targetValue = if (isTabBandPinned) topPadding + TabBandHeight else topPadding,
                 label = "headerFrostHeight",
@@ -243,7 +231,7 @@ private fun FeedList(
     val bottomPadding = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance
     val verticalPaddingPx = with(LocalDensity.current) { (topPadding + bottomPadding).roundToPx() }
 
-    // With nothing loaded there is nothing to scroll to: the header stays put and the status sits under it.
+    // Nothing loaded, nothing to scroll to.
     val isAtTop by remember(listState) {
         derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
     }
@@ -266,10 +254,8 @@ private fun FeedList(
             )
         }
 
-        // The tabs outlive the events they filter: they stay put while a category reloads or fails.
         if (state.categories.isNotEmpty()) {
-            // While pinned, the scaffold overlay draws the band; the item degrades to an equal-height spacer
-            // so the feed keeps its geometry and the inline copy can't catch touches from under the toolbar.
+            // While pinned the overlay draws the band; the spacer keeps the feed's geometry.
             item(key = KEY_TAB_BAND) {
                 if (isTabBandPinned) {
                     Spacer(modifier = Modifier.height(TabBandHeight))
@@ -289,12 +275,9 @@ private fun FeedList(
     }
 }
 
-/**
- * @param statusModifier positions the loader or the reload prompt inside the viewport-tall status item
- */
 private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, statusModifier: Modifier) {
     when (content) {
-        // A list shorter than the screen cannot stay scrolled, and the header pushed away would spring back.
+        // Viewport-tall: a shorter list could not stay scrolled and the header would spring back.
         is PolymarketMainUM.ContentUM.Loading -> item(key = KEY_STATUS) {
             Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.TopCenter) {
                 PolymarketLoadingState(modifier = statusModifier)
@@ -339,10 +322,8 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, sta
 }
 
 /**
- * Centres the content in the part of the viewport under the status item's top edge rather than in the item. The
- * item is a viewport tall so that a header scrolled away stays away, but with the header on screen most of the
- * item lies below the fold and the item's own centre lands at the bottom of the screen. Read in the layout pass,
- * so the content follows the header out without recomposing.
+ * Centres the content in the visible part of the viewport-tall status item, not in the item: with the header on
+ * screen the item's own centre is below the fold.
  */
 private fun Modifier.centerInVisibleFeedArea(listState: LazyListState, verticalPaddingPx: Int): Modifier {
     return layout { measurable, constraints ->
@@ -381,7 +362,7 @@ private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange:
 private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?, onScrollIdle: (Int, Int) -> Unit) {
     val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
 
-    // Keyed by the category too: a report still pending when the tab changes belongs to the tab that is gone.
+    // Keyed by the category: a pending report belongs to the tab that is gone.
     LaunchedEffect(listState, selectedCategoryId) {
         snapshotFlow { listState.isScrollInProgress }
             .collectLatest { isScrollInProgress ->
@@ -393,12 +374,7 @@ private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?,
     }
 }
 
-/**
- * A category with no place to come back to keeps the header away by docking the tab band instead of jumping to
- * the top. Waits for the items to be laid out: scrolling to an index the list does not hold yet silently clamps.
- * The wait is bounded — a feed that came back shorter than it was left would never reach that index; the scroll
- * then clamps to the end of what there is.
- */
+/** Waits for the layout before scrolling: an index the list does not hold yet silently clamps to the top. */
 @Composable
 private fun CategorySwitchEffect(
     listState: LazyListState,
@@ -427,13 +403,7 @@ private fun CategorySwitchEffect(
     }
 }
 
-/**
- * Whether the tab band has reached the toolbar and must dock under it: its feed item's top is at (or past)
- * the pin line, or the item has scrolled out above the viewport entirely.
- *
- * Item offsets are relative to the content area, which starts after the feed's top padding (the measured
- * toolbar height) — so the pin line is simply offset zero.
- */
+/** Item offsets are relative to the content area (after the top padding), so the pin line is offset zero. */
 private fun LazyListState.isTabBandPinned(): Boolean {
     val band = layoutInfo.visibleItemsInfo.firstOrNull { it.key == KEY_TAB_BAND }
     if (band != null) return band.offset <= 0
@@ -465,8 +435,7 @@ private fun CategoryTabBar(
 
 @Composable
 private fun CategoryTab(tab: PolymarketCategoryTabUM) {
-    // The selected tab reads as a light "liquid glass" pill: a subtle fill, a drop shadow, and a top rim highlight.
-    // The full backdrop-blur (haze) is intentionally deferred — it would re-blur every frame under this sticky bar.
+    // No backdrop blur on purpose: it would re-blur every frame under the sticky band.
     val background = if (tab.isSelected) {
         Modifier
             .clip(TabShape)
