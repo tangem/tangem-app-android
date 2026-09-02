@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.token
+package com.tangem.data.staking.store
 
 import com.tangem.core.local.datastore.RuntimeStateStore
 import javax.inject.Inject
@@ -9,5 +9,5 @@ import javax.inject.Singleton
  * `true` → staking is blocked in the region. Reset to `false` on a successful fetch.
  */
 @Singleton
-class P2PEthPoolRegionBlockedStore @Inject constructor() :
+internal class P2PEthPoolRegionBlockedStore @Inject constructor() :
     RuntimeStateStore<Boolean> by RuntimeStateStore(defaultValue = false)
