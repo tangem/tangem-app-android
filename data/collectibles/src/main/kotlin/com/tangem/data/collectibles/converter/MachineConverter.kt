@@ -27,23 +27,23 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
 
     private fun MachineDTO.MachineOddsDTO.toDomain() = CollectibleGachaMachine.Odds(
         common = common,
-        uncommon = uncommon,
         rare = rare,
         epic = epic,
+        legendary = legendary,
     )
 
     private fun MachineDTO.MachineStockDTO.toDomain() = CollectibleGachaMachine.Stock(
         common = common,
-        uncommon = uncommon,
         rare = rare,
         epic = epic,
+        legendary = legendary,
     )
 
     private fun MachineDTO.MachineTierRangesDTO.toDomain() = CollectibleGachaMachine.TierRanges(
         common = common.toDomain(),
-        uncommon = uncommon.toDomain(),
         rare = rare.toDomain(),
         epic = epic.toDomain(),
+        legendary = legendary?.toDomain(),
     )
 
     private fun MachineDTO.MachineTierRangesDTO.MachineTierRangeDTO.toDomain() =

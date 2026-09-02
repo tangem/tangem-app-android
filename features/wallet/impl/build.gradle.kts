@@ -74,6 +74,7 @@ dependencies {
 
     /** Domain modules */
     api(projects.domain.account)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.account.status)
     api(projects.domain.addressBook)
     api(projects.domain.analytics)
@@ -133,6 +134,7 @@ dependencies {
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
     api(projects.features.jointAccount.api)
+    implementation(projects.domain.jointAccount)
     api(projects.features.polymarket.api)
     api(projects.features.promoBanners.api)
     api(projects.features.pushNotifications.api)
@@ -158,4 +160,5 @@ dependencies {
     testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

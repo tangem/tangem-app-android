@@ -3,6 +3,7 @@ package com.tangem.domain.account.status.usecase
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
+import arrow.core.right
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -125,10 +126,11 @@ class ManageCryptoCurrenciesUseCase(
                 return@withContext
             }
 
-            val derivingResult = derivePublicKeys(
-                userWalletId = userWalletId,
-                currencies = modifiedCurrencyList.added.withoutJointNetworks(),
-            )
+            val derivingResult = if (accountStatus is AccountStatus.Joint) {
+                Unit.right()
+            } else {
+                derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+            }
 
             if (!skipDerivationErrors && derivingResult.isLeft()) {
                 modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
