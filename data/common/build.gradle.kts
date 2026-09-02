@@ -40,6 +40,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.common)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
