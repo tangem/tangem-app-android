@@ -6,16 +6,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.features.tangempay.common.TangemPaySuccessScreenWrapper
+import com.tangem.features.tangempay.common.TangemPayResultScreen
 import com.tangem.features.tangempay.details.impl.R
 
 @Composable
 internal fun TangemPayCardLimitSetupSuccessScreen(onDoneClick: () -> Unit, modifier: Modifier = Modifier) {
-    TangemPaySuccessScreenWrapper(
+    TangemPayResultScreen(
         modifier = modifier,
+        variant = TangemPayResultScreen.Variant.Success,
         title = resourceReference(R.string.tangempay_card_page_daily_limit_success_title),
         subtitle = resourceReference(R.string.tangempay_card_page_daily_limit_success_description),
-        buttonText = resourceReference(R.string.common_done),
+        buttonText = resourceReference(R.string.common_close),
         onButtonClick = onDoneClick,
         titleTestTag = TangemPayTestTags.DAILY_LIMIT_SUCCESS_TITLE,
         buttonTestTag = TangemPayTestTags.DAILY_LIMIT_DONE_BUTTON,

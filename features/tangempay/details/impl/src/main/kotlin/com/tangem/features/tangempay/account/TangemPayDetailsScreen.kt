@@ -343,13 +343,13 @@ private fun ErrorMessage(config: NotificationConfig, modifier: Modifier = Modifi
                         tangemIconUM = if (iconResId != null) {
                             TangemIconUM.Icon(
                                 iconRes = iconResId,
-                                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
                             )
                         } else {
                             null
                         },
                         size = TangemButtonSize.X9,
-                        type = TangemButtonType.PrimaryInverse,
+                        type = TangemButtonType.Secondary,
                         shape = TangemButtonShape.Rounded,
                     ),
                     modifier = Modifier.weight(1f),

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 
 /**
  * Feed content of the Shtorka 2.0
@@ -21,11 +22,11 @@ interface FeedV2Component {
      * screen's own navbar when one covers the feed (e.g. token details). The host renders it
      * next to its grabber; the composable applies its own horizontal insets.
      *
-     * @param bottomSheetState expanded/collapsed state of the hosting shtorka
+     * @param sheetExpansion position the hosting shtorka is settling towards
      * @param onExpandSheet raises the hosting shtorka to full; invoked when the search bar is focused
      */
     @Composable
-    fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier)
+    fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier)
 
     /**
      * @param bottomSheetState expanded/collapsed state of the hosting shtorka. While not expanded

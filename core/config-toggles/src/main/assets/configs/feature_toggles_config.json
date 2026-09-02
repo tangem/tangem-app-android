@@ -4,7 +4,7 @@
         "version": "6.3"
     },
     {
-        "name": "AND_16115_OTEL_METRICS_ENABLED",
+        "name": "TWI_1627_OTEL_METRICS_ENABLED",
         "version": "undefined"
     },
     {
@@ -153,6 +153,10 @@
     },
     {
         "name": "TWI_1356_INTRODUCTION_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
         "version": "undefined"
     }
 ]

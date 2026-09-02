@@ -31,6 +31,8 @@ import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
+import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
 internal class DefaultNewsDetailsComponent(
@@ -39,6 +41,8 @@ internal class DefaultNewsDetailsComponent(
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     private val newsDetailsModel = getOrCreateModel<NewsDetailsModel, Params>(params = params)
+
+    val state: StateFlow<NewsDetailsUM> = newsDetailsModel.state
 
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {

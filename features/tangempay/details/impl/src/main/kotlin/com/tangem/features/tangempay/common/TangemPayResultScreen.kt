@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -88,6 +89,9 @@ internal fun TangemPayResultScreen(
     onButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
     footnote: TextReference? = null,
+    titleTestTag: String? = null,
+    subtitleTestTag: String? = null,
+    buttonTestTag: String? = null,
 ) {
     Box(
         modifier = modifier
@@ -108,9 +112,20 @@ internal fun TangemPayResultScreen(
                     .verticalScroll(rememberScrollState()),
                 contentAlignment = Alignment.Center,
             ) {
-                ResultHeader(variant = variant, title = title, subtitle = subtitle)
+                ResultHeader(
+                    variant = variant,
+                    title = title,
+                    subtitle = subtitle,
+                    titleTestTag = titleTestTag,
+                    subtitleTestTag = subtitleTestTag,
+                )
             }
-            ResultFooter(buttonText = buttonText, onButtonClick = onButtonClick, footnote = footnote)
+            ResultFooter(
+                buttonText = buttonText,
+                onButtonClick = onButtonClick,
+                footnote = footnote,
+                buttonTestTag = buttonTestTag,
+            )
         }
     }
 }
@@ -120,6 +135,8 @@ private fun ResultHeader(
     variant: TangemPayResultScreen.Variant,
     title: TextReference,
     subtitle: TextReference,
+    titleTestTag: String?,
+    subtitleTestTag: String?,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -134,6 +151,7 @@ private fun ResultHeader(
         )
         SpacerH(20.dp)
         Text(
+            modifier = titleTestTag?.let { Modifier.testTag(it) } ?: Modifier,
             text = title.resolveReference(),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
@@ -141,6 +159,7 @@ private fun ResultHeader(
         )
         SpacerH(8.dp)
         Text(
+            modifier = subtitleTestTag?.let { Modifier.testTag(it) } ?: Modifier,
             text = subtitle.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -154,6 +173,7 @@ private fun ResultFooter(
     buttonText: TextReference,
     onButtonClick: () -> Unit,
     footnote: TextReference?,
+    buttonTestTag: String?,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth().padding(vertical = 12.dp)) {
@@ -168,7 +188,10 @@ private fun ResultFooter(
             SpacerH(12.dp)
         }
         TangemButton(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .then(buttonTestTag?.let { Modifier.testTag(it) } ?: Modifier),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = buttonText,

@@ -25,25 +25,10 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
- * Keeps the pages of the Discovery feed that the user is actually looking at up to date.
+ * Keeps the pages of the Discovery feed that the user is looking at up to date.
  *
- * Every [pollInterval] the visible pages older than [staleAfter] are re-requested and merged in place, so the feed
- * shows live probabilities and volumes without the user pulling anything. Only visible pages are refreshed: the
- * feed can hold many loaded pages, and the ones scrolled away change nothing on the screen.
- *
- * The ticker runs between [resume] and [pause] — an app in the background and an open event sheet both pause it —
- * and the first tick after it comes back is immediate rather than a period late. Scrolling to a rest ticks too:
- * staleness is checked per page, so a tick over pages loaded seconds ago requests nothing.
- *
- * A failed refresh is silent by design: the page keeps its previous data, its [PageMeta.fetchedAt] does not move,
- * and the next tick tries again. Only after [reportAfterFailures] failures in a row on a page the user is looking at
- * does [onStaleData] fire, at most once per [reportCooldown] — by then the data is about a minute old.
- *
- * @param scope the scope the observers and the ticker run in; see [start] for what it is expected to be
- * @param batchFlow pagination of the feed: the pages to refresh and the results of the refreshes
- * @param actionsFlow the flow the pagination takes its actions from
- * @param onStaleData reports that visible data has been failing to refresh for long enough to tell the user
- * @param timeSource measures page staleness and the toast cooldown
+ * Only visible pages are refreshed: the feed can hold many loaded pages, and the ones scrolled away change
+ * nothing on the screen.
  */
 @Suppress("LongParameterList")
 internal class PolymarketFeedPoller(
@@ -68,16 +53,9 @@ internal class PolymarketFeedPoller(
     private var lastStaleDataReport: TimeMark? = null
 
     /**
-     * Starts watching the pagination. The ticker itself runs only between [resume] and [pause].
-     *
-     * Everything here runs in [scope], which is expected to be **single-threaded** — the model hands over its own,
-     * running on the main dispatcher. That confinement is load-bearing rather than incidental: [pageMeta] and
-     * [refreshesInFlight] are touched both from the coroutines started here and from [onFeedReloaded] and
-     * [setVisibleEventIds], which the screen and the model call from their own, and one thread is what keeps them
-     * race-free without locks. Moving to a multi-threaded dispatcher means confining those calls as well.
-     *
-     * Nothing started here is heavy: a tick walks the events of the loaded pages — a few hundred at most — every
-     * [pollInterval] and once the feed comes to a rest.
+     * [scope] is expected to be single-threaded — the model hands over its own, on the main dispatcher. That is
+     * load-bearing: [pageMeta] and [refreshesInFlight] are touched both from the coroutines started here and from
+     * the calls the screen and the model make, and one thread is what keeps them race-free without locks.
      */
     fun start() {
         batchFlow.state
@@ -89,7 +67,6 @@ internal class PolymarketFeedPoller(
             .launchIn(scope)
     }
 
-    /** The feed is in front of the user: check at once, then keep checking every [pollInterval]. */
     fun resume() {
         scope.launch {
             tick()
@@ -101,12 +78,10 @@ internal class PolymarketFeedPoller(
         }.saveIn(tickerJob)
     }
 
-    /** Nobody is looking — the app went to the background, or an event opened on top of the feed. */
     fun pause() {
         tickerJob.cancel()
     }
 
-    /** The feed is loading its first page anew, so what was known about the previous pages no longer holds. */
     fun onFeedReloaded(config: PolymarketEventsListConfig) {
         this.config = config
         pageMeta.clear()
@@ -117,7 +92,6 @@ internal class PolymarketFeedPoller(
         this.visibleEventIds = eventIds
     }
 
-    /** The user stopped scrolling: whatever is under their eyes now is worth a check ahead of the schedule. */
     fun onScrollIdle() {
         if (!tickerJob.isActive) return
 
@@ -146,14 +120,13 @@ internal class PolymarketFeedPoller(
         val stalePages = visibleBatchKeys(state).filter { key ->
             val meta = pageMeta[key] ?: return@filter false
 
-            // A failed refresh leaves the page stale for good, so staleness alone would let every scroll-idle tick
-            // ask again. The attempt clock is what paces a page that keeps failing.
+            // A failed refresh leaves the page stale for good, so staleness alone would let every scroll-idle
+            // tick ask again.
             meta.fetchedAt.elapsedNow() >= staleAfter && meta.lastAttemptAt.elapsedNow() >= pollInterval
         }
 
         stalePages.forEach { key ->
-            // A page whose refresh is still in flight is skipped rather than queued: the tick that follows the
-            // slow one would otherwise stack a second request on the same page.
+            // Skipped rather than queued: the tick after a slow refresh would stack a second request on it.
             if (!refreshesInFlight.add(key)) return@forEach
 
             pageMeta[key] = pageMeta.getValue(key).copy(lastAttemptAt = timeSource.markNow())
@@ -207,10 +180,8 @@ internal class PolymarketFeedPoller(
     }
 
     /**
-     * Keys of the pages the visible cards come from.
-     *
-     * An event the cursor served twice is shown from the page it first appeared on — the same rule the feed
-     * renders by — so a duplicate never marks a page the user cannot see as visible.
+     * An event the cursor served twice counts towards the page it first appeared on — the rule the feed renders
+     * by — so a duplicate never marks a page the user cannot see as visible.
      */
     private fun visibleBatchKeys(state: PolymarketEventsBatchListState): Set<Int> {
         val visibleIds = visibleEventIds
@@ -227,12 +198,7 @@ internal class PolymarketFeedPoller(
         }
     }
 
-    /**
-     * @property fetchedAt when the page last arrived — by load or by refresh; a failed refresh leaves it alone
-     * @property lastAttemptAt when the page was last asked for, successfully or not; paces the retries of a page
-     *  that keeps failing, which staleness alone cannot do
-     * @property failCount refreshes of this page that failed in a row
-     */
+    /** [fetchedAt] moves only on a success; [lastAttemptAt] on every request, which is what paces the retries. */
     private data class PageMeta(val fetchedAt: TimeMark, val lastAttemptAt: TimeMark, val failCount: Int)
 
     private companion object {

@@ -26,10 +26,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
@@ -98,9 +96,7 @@ internal fun PlacePredictionSummaryContent(
                 payout = state.quote.payout(),
                 payment = state.payment,
             )
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-                PredictionMarketBlock(state = state.market)
-            }
+            PredictionMarketBlock(state = state.market)
             PredictionDetailsBlock(state = state)
             PredictionNotificationsBlock(
                 notifications = state.notifications,

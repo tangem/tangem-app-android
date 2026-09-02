@@ -75,4 +75,8 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
+
+    /* Tests */
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.truth)
 }

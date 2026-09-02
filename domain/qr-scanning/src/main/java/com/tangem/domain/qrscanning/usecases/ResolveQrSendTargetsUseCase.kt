@@ -34,7 +34,8 @@ class ResolveQrSendTargetsUseCase(
         val currencyLocations = mutableMapOf<CryptoCurrency.ID, MutableList<CurrencyLocation>>()
         val totalPerAccount = mutableMapOf<AccountId, Int>()
 
-        val allAccounts = allAccountLists.flatMap { it.accounts }.filterIsInstance<Account.CryptoPortfolio>()
+        // A joint account is a Safe contract: nothing is sent from it through this wallet's keys
+        val allAccounts = allAccountLists.flatMap { it.accounts }.filterIsInstance<Account.Personal>()
 
         for (account in allAccounts) {
             val location = CurrencyLocation(

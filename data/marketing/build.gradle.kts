@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.domain.marketing.models)
 
     implementation(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.utils)
 
     testImplementation(projects.test.core)

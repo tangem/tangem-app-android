@@ -10,7 +10,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
@@ -32,7 +32,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val appInfoProvider: AppInfoProvider,
     private val appPreferencesStore: AppPreferencesStore,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PushNotificationsRepository {
 
@@ -46,7 +46,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
                 timezone = appInfoProvider.timezone,
                 version = appInfoProvider.appVersion,
                 pushToken = pushToken,
-                appsflyerId = appsFlyerStore.getUID(),
+                appsflyerId = appsFlyerRepository.getUID(),
             ),
         ).getOrThrow().appId
 

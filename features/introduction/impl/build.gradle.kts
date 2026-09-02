@@ -27,6 +27,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.card)
+    implementation(projects.domain.hotWallet)
 
     /** Compose */
     implementation(deps.compose.foundation)

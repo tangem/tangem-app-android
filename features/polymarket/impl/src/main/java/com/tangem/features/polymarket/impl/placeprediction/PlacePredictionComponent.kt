@@ -22,6 +22,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.amount.PlacePredictionAmountComponent
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
+import com.tangem.features.polymarket.impl.placeprediction.slippage.PlacePredictionSlippageComponent
 import com.tangem.features.polymarket.impl.placeprediction.status.PlacePredictionStatusComponent
 import com.tangem.features.polymarket.impl.placeprediction.summary.PlacePredictionSummaryComponent
 
@@ -76,11 +77,14 @@ internal class PlacePredictionComponent(
         factoryContext: AppComponentContext,
     ): ComposableContentComponent = when (configuration) {
         is PlacePredictionRoute.Amount -> PlacePredictionAmountComponent(factoryContext, model)
+        is PlacePredictionRoute.Slippage -> PlacePredictionSlippageComponent(factoryContext, model)
         is PlacePredictionRoute.Summary -> PlacePredictionSummaryComponent(factoryContext, model)
         is PlacePredictionRoute.Status -> PlacePredictionStatusComponent(factoryContext, model)
     }
 
     private fun onChildBack() {
+        if (model.isSubmitting()) return
+
         if (childStack.value.backStack.isEmpty()) {
             router.pop()
         } else {

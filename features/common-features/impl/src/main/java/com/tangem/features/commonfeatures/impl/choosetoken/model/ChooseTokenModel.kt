@@ -138,7 +138,7 @@ internal class ChooseTokenModel @Inject constructor(
     }
 
     private fun AccountStatusList.toTokenKeys(): Set<Pair<String, String>> =
-        flattenCurrencies().mapNotNullTo(hashSetOf()) { status ->
+        flattenPersonalCurrencies().mapNotNullTo(hashSetOf()) { status ->
             val rawId = status.currency.id.rawCurrencyId?.value ?: return@mapNotNullTo null
             rawId to status.currency.network.rawId
         }
