@@ -46,7 +46,6 @@ internal class UpdateButtonLoadingTransformerTest {
     private fun createState(isButtonLoading: Boolean): JointAccountDisplayNameUM {
         return JointAccountDisplayNameUM(
             name = "Ivan Zolo",
-            isError = false,
             buttonText = buttonText,
             buttonIconRes = R.drawable.ic_tangem_24,
             isButtonEnabled = true,

@@ -70,6 +70,10 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route)
     }
 
+    override fun openJointAccountMembers(userWalletId: UserWalletId) {
+        router.push(AppRoute.JointAccountMembers(userWalletId = userWalletId))
+    }
+
     override fun openAddAndManageBottomSheet(userWalletId: UserWalletId) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.AddAndManage(userWalletId = userWalletId),

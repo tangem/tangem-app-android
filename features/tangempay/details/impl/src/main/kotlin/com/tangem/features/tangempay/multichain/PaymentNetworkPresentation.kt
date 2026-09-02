@@ -21,11 +21,12 @@ internal data class PaymentNetworkRowData(
 )
 
 /**
- * The currencies carried by this network status, regardless of its issuance state.
+ * The currencies carried by this network status. A [PaymentNetworkStatus.NotIssued] network carries none:
+ * its contract does not exist yet, so there are no contract addresses to build currencies from.
  */
 internal fun PaymentNetworkStatus.currencies(): List<CryptoCurrency> = when (this) {
     is PaymentNetworkStatus.Available -> cryptoCurrencyStatuses.map { it.currency }
-    is PaymentNetworkStatus.NotIssued -> cryptoCurrencies
+    is PaymentNetworkStatus.NotIssued -> emptyList()
     is PaymentNetworkStatus.Disabled -> cryptoCurrencies
 }
 
@@ -42,12 +43,12 @@ internal fun PaymentNetworkStatus.receivableCurrencies(): List<CryptoCurrency> =
 
 /**
  * Maps this status to row display data: network identity (id, name, icon) from [PaymentNetworkStatus.network],
- * token label from the contained currencies' symbols (empty when there are none).
+ * token label from the contained currencies' symbols. A [PaymentNetworkStatus.NotIssued] network carries no
+ * currencies, so its label is the fixed set of payment stablecoins the account will hold once issued.
  *
  * `null` only for a [PaymentNetworkStatus.Available] network without currencies — it is issued, yet there is
  * nothing to receive on it. [PaymentNetworkStatus.NotIssued] and [PaymentNetworkStatus.Disabled] rows are kept
- * regardless: the backend need not list the tokens of a network whose contract does not exist yet, while the
- * row itself is still actionable (issue on demand) or informational.
+ * regardless: the row itself is still actionable (issue on demand) or informational.
  */
 internal fun PaymentNetworkStatus.toRowData(): PaymentNetworkRowData? {
     val currencies = receivableCurrencies()
@@ -55,7 +56,12 @@ internal fun PaymentNetworkStatus.toRowData(): PaymentNetworkRowData? {
     return PaymentNetworkRowData(
         id = network.rawId,
         name = network.name,
-        tokensLabel = currencies.joinToString(separator = ", ") { it.symbol },
+        tokensLabel = when (this) {
+            is PaymentNetworkStatus.NotIssued -> NOT_ISSUED_TOKENS_LABEL
+            else -> currencies.joinToString(separator = ", ") { it.symbol }
+        },
         iconResId = network.iconResId,
     )
 }
+
+private const val NOT_ISSUED_TOKENS_LABEL = "USDC, USDT"
