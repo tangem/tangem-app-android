@@ -24,6 +24,11 @@ sealed class PaymentAccountStatusValue {
     /** The total fiat balance associated with this status. */
     val totalFiatBalance: TotalFiatBalance
         get() = when (this) {
+            is Error.CardIssueFailed -> if (balance != null && fiatRate != null) {
+                totalFiatBalanceOf(balance = balance, fiatRate = fiatRate, source = source)
+            } else {
+                TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
+            }
             is Error,
             is IssuingCard,
             is AwaitingPlanSelection,
@@ -44,6 +49,7 @@ sealed class PaymentAccountStatusValue {
      */
     fun copySealed(source: StatusSource, error: Error? = null): PaymentAccountStatusValue {
         return when (this) {
+            is Error.CardIssueFailed -> copy(source = source)
             is IssuingCard -> copy(source = source)
             is Loaded -> copy(source = source, error = error ?: this.error)
             is UnderReview -> copy(source = source)
@@ -260,15 +266,16 @@ sealed class PaymentAccountStatusValue {
             override val source: StatusSource = StatusSource.ACTUAL
         }
 
-        /**
-         * Error state indicating that card issuance failed.
-         *
-         * @property customerId The unique identifier of the customer.
-         */
+        /** Error state indicating that card issuance failed. */
         @Serializable
-        data class CardIssueFailed(val customerId: String) : Error() {
-            override val source: StatusSource = StatusSource.ACTUAL
-        }
+        data class CardIssueFailed(
+            val customerId: String,
+            override val source: StatusSource = StatusSource.ACTUAL,
+            val tariffPlan: TangemPayTariffPlanState? = null,
+            val balance: Balance? = null,
+            val networks: List<PaymentNetworkStatus> = emptyList(),
+            val fiatRate: SerializedBigDecimal? = null,
+        ) : Error()
     }
 
     /**
@@ -365,7 +372,8 @@ private fun buildCryptoCurrencyStatusValue(
 }
 
 val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
-    get() = when (this) {
+    get() = when (val value = this) {
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> value.tariffPlan?.tariff
         is PaymentAccountStatusValue.Error,
         is PaymentAccountStatusValue.IssuingCard,
         is PaymentAccountStatusValue.Empty,
@@ -374,19 +382,21 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.Loading,
         is PaymentAccountStatusValue.Deactivated,
         -> null
-        is PaymentAccountStatusValue.Inactive -> tariffPlan.tariff
-        is PaymentAccountStatusValue.AwaitingPlanSelection -> tariffPlan
-        is PaymentAccountStatusValue.Loaded -> tariffPlan?.tariff
+        is PaymentAccountStatusValue.Inactive -> value.tariffPlan.tariff
+        is PaymentAccountStatusValue.AwaitingPlanSelection -> value.tariffPlan
+        is PaymentAccountStatusValue.Loaded -> value.tariffPlan?.tariff
     }
 
 fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is PaymentAccountStatusValue.Loaded ||
-    this is PaymentAccountStatusValue.Deactivated
+    this is PaymentAccountStatusValue.Deactivated ||
+    this is PaymentAccountStatusValue.Error.CardIssueFailed && balance != null
 
 /** Balances of an account-bearing status, or `null` when the status has none (or they are unavailable). */
 val PaymentAccountStatusValue.balanceOrNull: PaymentAccountStatusValue.Balance?
     get() = when (this) {
         is PaymentAccountStatusValue.Loaded -> balance
         is PaymentAccountStatusValue.Deactivated -> balance
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> balance
         else -> null
     }
 
