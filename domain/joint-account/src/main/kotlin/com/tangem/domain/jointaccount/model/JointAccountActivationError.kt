@@ -21,5 +21,11 @@ sealed interface JointAccountActivationError {
      */
     data object AddressMismatch : JointAccountActivationError
 
+    /**
+     * The tapped wallet's owner key is not the creator's — only the creator activates, and the backend would
+     * reject the signature with 403 anyway, so the call is not made
+     */
+    data object NotCreator : JointAccountActivationError
+
     data class Failed(val cause: Throwable) : JointAccountActivationError
 }
