@@ -705,7 +705,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = JointAccountMembersComponent.Params(
                         userWalletId = route.userWalletId,
-                        accountId = route.accountId,
+                        cryptoAccountId = route.cryptoAccountId,
                         mode = JointAccountMembersComponent.Mode.Invite,
                     ),
                     componentFactory = jointAccountMembersComponentFactory,
