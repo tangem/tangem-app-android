@@ -209,7 +209,7 @@ object PreferencesKeys {
         stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
 
     // region Collectibles
-    /** The wallet id is in the key too: the account id alone changes once the backend starts assigning it. */
+    /** The wallet id is in the key too: it keeps entries wallet-scoped once account ids come from the backend. */
     fun getCollectiblesHotDelegateKey(accountId: AccountId) = stringPreferencesKey(
         name = "collectibles_hot_delegate_${accountId.value}_${accountId.userWalletId.stringValue}",
     )
