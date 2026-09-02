@@ -120,10 +120,7 @@ internal class DefaultTangemPayCurrencyFactory @Inject constructor(
                     },
                 )
             }
-            CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(
-                network = network,
-                cryptoCurrencies = currencies,
-            )
+            CustomerInfo.NetworkInfo.Status.NOT_ISSUED -> PaymentNetworkStatus.NotIssued(network = network)
             CustomerInfo.NetworkInfo.Status.DISABLED -> PaymentNetworkStatus.Disabled(
                 network = network,
                 cryptoCurrencies = currencies,
