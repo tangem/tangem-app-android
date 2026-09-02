@@ -1,14 +1,23 @@
 package com.tangem.data.jointaccount.repository
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.data.common.api.ApiResponseRaise
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.jointaccount.converter.ActivateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
-import com.tangem.datasource.api.jointaccount.JointAccountApi
+import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
+import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
+import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.wallet.UserWalletId
@@ -23,6 +32,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val walletAccountsFetcher: WalletAccountsFetcher,
     private val invitesStore: JointAccountInvitesStore,
     private val converter: JointAccountDtoConverter,
+    private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : JointAccountRepository {
 
@@ -68,6 +78,67 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 },
             )
         }
+    }
+
+    override suspend fun activate(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ): Either<Throwable, Unit> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+                Unit.right()
+            },
+            onError = { error ->
+                if (error is ApiResponseError.TimeoutException) {
+                    logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", error)
+                    safeApiCall(
+                        call = {
+                            activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+                            Unit.right()
+                        },
+                        onError = { retryError -> retryError.left() },
+                    )
+                } else {
+                    error.left()
+                }
+            },
+        )
+    }
+
+    private suspend fun ApiResponseRaise.activateOnce(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ) {
+        jointAccountApi.activateJointAccount(
+            walletId = userWalletId.stringValue,
+            body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
+        ).bind()
+    }
+
+    override suspend fun getInvitePreview(
+        walletId: UserWalletId,
+        inviteId: String,
+    ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val dto = jointAccountApi.getJointAccountInvite(
+                    walletId = walletId.stringValue,
+                    inviteId = inviteId,
+                ).bind()
+                previewConverter.convert(dto).right()
+            },
+            onError = { error ->
+                val isInvalidLink = error is ApiResponseError.HttpException && error.code == Code.CONFLICT
+                if (isInvalidLink) {
+                    JointAccountInvitePreviewError.InvalidLink.left()
+                } else {
+                    JointAccountInvitePreviewError.LoadFailed(cause = error).left()
+                }
+            },
+        )
     }
 
     /**
