@@ -386,6 +386,7 @@ internal class SendDestinationModel @Inject constructor(
                                 is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
                                 is AccountStatus.Virtual -> emptyList()
                                 is AccountStatus.Prediction -> emptyList()
+                                is AccountStatus.Collectibles -> emptyList()
                                 // while it is not applicable
                                 is AccountStatus.Joint -> emptyList()
                             }
