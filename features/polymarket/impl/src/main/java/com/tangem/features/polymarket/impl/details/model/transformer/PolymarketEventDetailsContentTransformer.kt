@@ -11,9 +11,11 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
+import com.tangem.features.polymarket.impl.common.orDash
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -53,8 +55,8 @@ internal class PolymarketEventDetailsContentTransformer(
         return PolymarketEventDetailsUM.Content(
             title = stringReference(event.title),
             iconUrl = event.iconUrl,
-            totalVolume = event.volume?.let { stringReference(it.formatPolymarketVolume()) },
-            change24h = formatChange24h(volume = event.volume, volume24h = event.volume24h),
+            totalVolume = event.volume?.let { stringReference(it.formatPolymarketVolume()) }.orDash(),
+            change24h = formatChange24h(volume = event.volume, volume24h = event.volume24h).orDash(),
             // The BFF does not serve subcategories yet; the UI hides the row while the list is empty.
             subcategories = persistentListOf(),
             activeMarkets = markets
@@ -68,8 +70,8 @@ internal class PolymarketEventDetailsContentTransformer(
             isClosedMarketsExpanded = isClosedMarketsExpanded,
             description = event.description.takeIf(String::isNotBlank)?.let(::stringReference),
             isDescriptionExpanded = isDescriptionExpanded,
-            resolutionDate = formatEasternDate(raw = event.endDate),
-            marketOpenedDate = formatEasternDate(raw = event.startDate),
+            resolutionDate = formatEasternDate(raw = event.endDate).orDash(),
+            marketOpenedDate = formatEasternDate(raw = event.startDate).orDash(),
             onShareClick = { onShareClick(event.slug) },
             onClosedMarketsClick = onClosedMarketsClick,
             onReadMoreClick = onReadMoreClick,
@@ -80,7 +82,7 @@ internal class PolymarketEventDetailsContentTransformer(
         return PolymarketDetailsMarketUM(
             id = market.id,
             title = transformMarketTitle(market),
-            volume = market.volume?.let { stringReference(it.formatPolymarketVolume()) },
+            volume = market.volume?.let { stringReference(it.formatPolymarketVolume()) }.orDash(),
             iconUrl = market.iconUrl ?: event.iconUrl,
             outcomes = if (isTradable) {
                 market.outcomes
@@ -104,10 +106,10 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     private fun transformOutcome(market: PolymarketMarket, outcome: PolymarketOutcome): PolymarketDetailsOutcomeUM {
-        val price = outcome.probability?.formatCents()
+        val price = outcome.probability?.formatCents() ?: DASH_SIGN
         return PolymarketDetailsOutcomeUM(
             assetId = outcome.assetId,
-            title = stringReference(if (price != null) "${outcome.title} • $price" else outcome.title),
+            title = stringReference("${outcome.title} • $price"),
             onClick = { onOutcomeClick(market.id, outcome.assetId) },
         )
     }
@@ -120,9 +122,8 @@ internal class PolymarketEventDetailsContentTransformer(
 
     private fun formatChange24h(volume: BigDecimal?, volume24h: BigDecimal?): TextReference? {
         val ratio = computeChange24hRatio(volume = volume, volume24h = volume24h) ?: return null
-        return stringReference(
-            ratio.format { percent(minFractionDigits = 0, maxFractionDigits = 2) },
-        )
+        val percent = ratio.format { percent(minFractionDigits = 0, maxFractionDigits = 2) }
+        return stringReference("$GROWTH_GLYPH $percent")
     }
 
     /**
@@ -143,6 +144,9 @@ internal class PolymarketEventDetailsContentTransformer(
 
     companion object {
         private val CENTS_IN_DOLLAR = BigDecimal(100)
+
+        /** The volume delta is a growth by construction, so the indicator always points up. */
+        private const val GROWTH_GLYPH = "▲"
         private const val EASTERN_TIME_ZONE = "America/New_York"
         private const val RESOLUTION_DATE_PATTERN = "MMM d, yyyy, h:mm a"
 

@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
+import com.tangem.features.polymarket.impl.common.orDash
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
@@ -34,7 +35,7 @@ internal class PolymarketEventUMConverter(
             id = value.id,
             title = stringReference(value.title),
             iconUrl = value.iconUrl,
-            volume = value.volume?.let { stringReference(it.formatPolymarketVolume()) },
+            volume = value.volume?.let { stringReference(it.formatPolymarketVolume()) }.orDash(),
             rows = value.markets
                 .map { convertRow(event = value, market = it) }
                 .toImmutableList(),
@@ -47,7 +48,9 @@ internal class PolymarketEventUMConverter(
         return PolymarketEventRowUM(
             marketId = market.id,
             title = convertRowTitle(event = event, market = market),
-            probability = market.outcomes.firstOrNull()?.probability?.let { stringReference(it.formatProbability()) },
+            probability = market.outcomes.firstOrNull()?.probability
+                ?.let { stringReference(it.formatProbability()) }
+                .orDash(),
             outcomes = market.outcomes
                 .map { convertOutcome(event = event, market = market, outcome = it) }
                 .toImmutableList(),
