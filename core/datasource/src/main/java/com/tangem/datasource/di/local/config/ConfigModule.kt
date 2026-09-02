@@ -1,6 +1,6 @@
 package com.tangem.datasource.di.local.config
 
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.core.local.assets.AssetLoader
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.converter.GeneratedEnvironmentConfigConverter
 import com.tangem.datasource.local.config.issuers.DefaultIssuersConfigStorage

@@ -5,6 +5,8 @@ import com.domain.blockaid.models.dapp.CheckDAppResult.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.WcAnalyticEvents.DAppVerificationStatus
 import com.tangem.domain.walletconnect.model.WcPairRequest
@@ -190,7 +192,10 @@ sealed class WcAnalyticEvents(
             put(AnalyticsParam.ERROR_DESCRIPTION, errorMessage)
             accountDerivation?.let { put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString()) }
         },
-    )
+    ), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter()
+    }
 
     class SignatureRequestReceivedFailed(
         rawRequest: WcSdkSessionRequest,

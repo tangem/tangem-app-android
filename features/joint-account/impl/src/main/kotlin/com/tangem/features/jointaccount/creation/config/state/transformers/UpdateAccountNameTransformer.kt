@@ -13,12 +13,13 @@ import com.tangem.utils.transformer.Transformer
  */
 internal class UpdateAccountNameTransformer(
     private val name: String,
+    private val isValuePasted: Boolean = false,
 ) : Transformer<JointAccountConfigUM> {
 
     override fun transform(prevState: JointAccountConfigUM): JointAccountConfigUM {
         if (name.length > AccountName.MAX_LENGTH) return prevState
 
-        return prevState.copy(name = name, isContinueEnabled = isNameValid(name))
+        return prevState.copy(name = name, isContinueEnabled = isNameValid(name), isValuePasted = isValuePasted)
     }
 
     /**
