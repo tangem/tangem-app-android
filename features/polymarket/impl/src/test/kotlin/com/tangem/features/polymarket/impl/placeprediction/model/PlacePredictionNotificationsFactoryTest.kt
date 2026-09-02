@@ -2,16 +2,22 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -93,7 +99,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.FULL),
             balance = BigDecimal("1"),
-            expectedNotifications = listOf(PredictionNotificationUM.InsufficientBalance),
+            expectedNotifications = emptyList(),
             expectedButtonEnabled = false,
         ),
         GateModel(
@@ -144,7 +150,35 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.payment.hasSufficientBalance).isFalse()
-        assertThat(actual.notifications).contains(PredictionNotificationUM.InsufficientBalance)
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
+    }
+
+    @Test
+    fun `GIVEN the bet fits but its fees do not WHEN the gate runs THEN the shortfall is blamed on the fees`() {
+        // Arrange — 10 entered against a balance of 10, and the quote charges 0.4 on top
+        val state = createState(balance = BigDecimal("10"), quote = createQuote(total = BigDecimal("10.4")))
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the balance covers the bet and its fees WHEN the gate runs THEN the payout is shown`() {
+        // Arrange
+        val state = createState(balance = BigDecimal("50"), quote = createQuote(total = BigDecimal("10.4")))
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
+        assertThat(actual.isPrimaryButtonEnabled).isTrue()
     }
 
     @Test
@@ -156,7 +190,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         val actual = state.recomputeGate()
 
         // Assert
-        assertThat(actual.notifications).doesNotContain(PredictionNotificationUM.InsufficientBalance)
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
         assertThat(actual.payment.hasSufficientBalance).isFalse()
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
@@ -173,12 +207,18 @@ internal class PlacePredictionNotificationsFactoryTest {
             outcomeTitle = "Yes",
             outcomePriceCents = 42,
         ),
-        payment = PaymentSourceUM(tokenSymbol = "USDC", balance = balance, hasSufficientBalance = false),
+        payment = PaymentSourceUM(
+            tokenSymbol = "USDC",
+            iconState = null,
+            balance = balance,
+            hasSufficientBalance = false,
+        ),
         amountValue = "10",
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
         quote = quote,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
+        slippagePicker = SlippagePickerUM.empty(),
         submit = submit,
         isPrimaryButtonEnabled = false,
     )
@@ -197,5 +237,10 @@ internal class PlacePredictionNotificationsFactoryTest {
         feeTotal = feeTotal,
         total = total,
         minOrderSize = minOrderSize,
+        signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),
     )
+
+    private companion object {
+        val QUOTE_PAYOUT = PayoutUM(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2"))
+    }
 }
