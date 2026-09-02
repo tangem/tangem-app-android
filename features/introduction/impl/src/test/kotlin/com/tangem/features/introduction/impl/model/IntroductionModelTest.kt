@@ -19,6 +19,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
@@ -57,6 +58,7 @@ internal class IntroductionModelTest {
     private val videoPlayerFactory: IntroductionVideoPlayer.Factory = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
@@ -75,12 +77,14 @@ internal class IntroductionModelTest {
             videoPlayerFactory,
             router,
             isHotWalletCreationSupported,
+            socialLoginFeatureToggles,
             trackingContextProxy,
             cardScanner,
             generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
         every { isHotWalletCreationSupported() } returns true
+        every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
         sentEvents.clear()
         every { videoPlayer.isMotionEnabled } returns true
         surfaceAttached(isAttached = false)
@@ -510,7 +514,7 @@ internal class IntroductionModelTest {
 
         private fun provideTestModels() = listOf(
             // TODO TWI-1555: the row acts once social login lands.
-            InertRowModel(name = "sign in") { options, _ -> options.signIn.onClick() },
+            InertRowModel(name = "sign in") { options, _ -> requireNotNull(options.socialLogin).onClick() },
             // A canary meant to fail once [REDACTED_TASK_KEY] wires the cloud restore.
             InertRowModel(name = "cloud backup") { options, model ->
                 options.importWallet.onClick()
@@ -681,6 +685,19 @@ internal class IntroductionModelTest {
         }
 
         @Test
+        fun `GIVEN social login disabled WHEN the options open THEN the sign in row is absent`() {
+            // Arrange
+            every { socialLoginFeatureToggles.isSocialLoginEnabled } returns false
+            val model = createModel()
+
+            // Act
+            val options = model.openHaveWallet()
+
+            // Assert
+            assertThat(options.socialLogin).isNull()
+        }
+
+        @Test
         fun `GIVEN the options step WHEN rendered THEN every row carries its own copy`() {
             // Arrange
             val model = createModel()
@@ -693,7 +710,7 @@ internal class IntroductionModelTest {
                 .isEqualTo(resourceReference(CoreResR.string.introduction_create_wallet_hardware_title))
             assertThat(options.cardOrRing.description)
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description))
-            assertThat(options.signIn.title)
+            assertThat(options.socialLogin?.title)
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title))
             assertThat(options.importWallet.title)
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
@@ -1003,6 +1020,7 @@ internal class IntroductionModelTest {
         analyticsEventHandler = analyticsEventHandler,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
+        socialLoginFeatureToggles = socialLoginFeatureToggles,
         trackingContextProxy = trackingContextProxy,
         cardScanner = cardScanner,
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
