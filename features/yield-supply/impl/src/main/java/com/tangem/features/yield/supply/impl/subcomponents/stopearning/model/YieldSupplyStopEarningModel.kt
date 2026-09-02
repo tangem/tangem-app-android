@@ -211,6 +211,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = cryptoCurrency.isCustom,
+                isCustomFeeToken = feeCryptoCurrencyStatus.currency.isCustom,
             ),
         )
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
