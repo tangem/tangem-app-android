@@ -8,6 +8,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.response.CustomerOffersResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -38,6 +39,20 @@ internal class DefaultCustomerOffersRepositoryTest {
         ),
     )
 
+    private val reissueOffersResponse = CustomerOffersResponse(
+        result = listOf(
+            CustomerOffersResponse.Offer(
+                type = "CARD_REISSUE_PLASTIC_RAIN",
+                fee = CustomerOffersResponse.Fee(amount = BigDecimal("10.00"), currency = "USD"),
+                data = CustomerOffersResponse.Data(
+                    orderType = "CARD_REISSUE_PLASTIC_RAIN",
+                    deliveryEtaMinDays = 3,
+                    deliveryEtaMaxDays = 20,
+                ),
+            ),
+        ),
+    )
+
     @BeforeEach
     fun setUp() {
         clearMocks(tangemPayApi, requestHelper)
@@ -54,6 +69,9 @@ internal class DefaultCustomerOffersRepositoryTest {
             }
         }
         coEvery { tangemPayApi.getCustomerOffers(any()) } returns ApiResponse.Success(offersResponse)
+        coEvery {
+            tangemPayApi.getProductInstanceOffers(any(), any())
+        } returns ApiResponse.Success(reissueOffersResponse)
     }
 
     @Test
@@ -90,6 +108,33 @@ internal class DefaultCustomerOffersRepositoryTest {
         coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any()) }
     }
 
+    @Test
+    fun `GIVEN a product instance WHEN getProductInstanceOffers THEN the instance offers are returned`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.single()?.type).isEqualTo(Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
+        coVerify(exactly = 1) { tangemPayApi.getProductInstanceOffers(AUTH_HEADER, PRODUCT_INSTANCE_ID) }
+    }
+
+    @Test
+    fun `GIVEN backend error WHEN getProductInstanceOffers THEN the error is returned`() = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getProductInstanceOffers(any(), any()) } returns
+            ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerOffersResponse>
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+    }
+
     private fun createRepository() = DefaultCustomerOffersRepository(
         tangemPayApi = tangemPayApi,
         requestHelper = requestHelper,
@@ -97,5 +142,6 @@ internal class DefaultCustomerOffersRepositoryTest {
 
     private companion object {
         const val AUTH_HEADER = "auth-header"
+        const val PRODUCT_INSTANCE_ID = "pi_source_0001"
     }
 }
