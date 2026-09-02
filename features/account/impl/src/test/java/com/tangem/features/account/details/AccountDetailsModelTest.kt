@@ -1,12 +1,20 @@
 package com.tangem.features.account.details
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
@@ -25,8 +33,12 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -85,7 +97,11 @@ internal class AccountDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        val expected = ActivationUM(isManageTokensAvailable = false, isPendingActivation = true)
+        val expected = ActivationUM(
+            isManageTokensAvailable = false,
+            isPendingActivation = true,
+            membersCount = testModel.expectedMembersCount,
+        )
         assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
         model.onDestroy()
@@ -104,26 +120,66 @@ internal class AccountDetailsModelTest {
             advanceUntilIdle()
 
             // Assert
-            val expected = ActivationUM(isManageTokensAvailable = true, isPendingActivation = false)
+            val expected = ActivationUM(
+                isManageTokensAvailable = true,
+                isPendingActivation = false,
+                membersCount = activeMembersCount,
+            )
             assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
 
             model.onDestroy()
         }
 
     @Test
-    fun `GIVEN joint account WHEN status is active and wallet is single-currency THEN manage tokens locked`() = runTest {
+    fun `GIVEN joint account WHEN status is active and wallet is single-currency THEN manage tokens locked`() =
+        runTest {
+            // Arrange
+            val account = MockAccounts.createJointAccount()
+            every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+            givenWallet(isMultiCurrency = false)
+
+            // Act
+            val model = createModel(account = account, testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val expected = ActivationUM(
+                isManageTokensAvailable = false,
+                isPendingActivation = false,
+                membersCount = activeMembersCount,
+            )
+            assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN joint account WHEN members row clicked THEN router pushes JointAccountMembers`() = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
-        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
-        givenWallet(isMultiCurrency = false)
+        val status = AccountStatus.Joint(
+            account = account,
+            value = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2),
+            tokenList = TokenList.Empty,
+            priceChangeLce = lceLoading(),
+        )
+        every { singleAccountStatusSupplier(any()) } returns flowOf(status)
+        givenWallet(isMultiCurrency = true)
 
         // Act
         val model = createModel(account = account, testScope = this)
         advanceUntilIdle()
+        model.uiState.value.members?.onClick?.invoke()
 
         // Assert
-        val expected = ActivationUM(isManageTokensAvailable = false, isPendingActivation = false)
-        assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
+        verify {
+            router.push(
+                AppRoute.JointAccountMembers(
+                    userWalletId = account.accountId.userWalletId,
+                    cryptoAccountId = account.accountId.value,
+                ),
+            )
+        }
 
         model.onDestroy()
     }
@@ -142,6 +198,81 @@ internal class AccountDetailsModelTest {
         // Assert
         val expected = ActivationUM(isManageTokensAvailable = false, isPendingActivation = true)
         assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN joint account WHEN model loads THEN archive mode is available`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+        givenWallet(isMultiCurrency = true)
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.archiveMode).isInstanceOf(AccountDetailsUM.ArchiveMode.Available::class.java)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN joint account WHEN archive confirmed THEN account archived and screen closed`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+        givenWallet(isMultiCurrency = true)
+        coEvery { archiveCryptoPortfolioUseCase(account.accountId) } returns Unit.right()
+        val dialogSlot = slot<DialogMessage>()
+        every { messageSender.send(capture(dialogSlot)) } returns Unit
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+        val archiveMode = model.uiState.value.archiveMode as AccountDetailsUM.ArchiveMode.Available
+        archiveMode.onArchiveAccountClick()
+
+        // Assert
+        assertThat(dialogSlot.captured.message)
+            .isEqualTo(resourceReference(R.string.account_details_archive_joint_description))
+
+        // Act
+        dialogSlot.captured.firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { archiveCryptoPortfolioUseCase(account.accountId) }
+        verify { router.pop() }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN joint account WHEN archive fails THEN generic error dialog shown`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+        givenWallet(isMultiCurrency = true)
+        coEvery { archiveCryptoPortfolioUseCase(account.accountId) } returns
+            ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed(cause = IllegalStateException()).left()
+        val dialogSlot = slot<DialogMessage>()
+        every { messageSender.send(capture(dialogSlot)) } returns Unit
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+        val archiveMode = model.uiState.value.archiveMode as AccountDetailsUM.ArchiveMode.Available
+        archiveMode.onArchiveAccountClick()
+        dialogSlot.captured.firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dialogSlot.captured.title).isEqualTo(resourceReference(R.string.common_something_went_wrong))
+        assertThat((model.uiState.value.archiveMode as AccountDetailsUM.ArchiveMode.Available).isLoading).isFalse()
+        verify(exactly = 0) { router.pop() }
 
         model.onDestroy()
     }
@@ -173,7 +304,11 @@ internal class AccountDetailsModelTest {
     private fun activeStatus(account: Account.Joint): AccountStatus.Joint {
         return AccountStatus.Joint(
             account = account,
-            value = JointAccountStatusValue.Active(source = StatusSource.ACTUAL, totalMembers = 2, safeAddress = "0x5afe"),
+            value = JointAccountStatusValue.Active(
+                source = StatusSource.ACTUAL,
+                totalMembers = 2,
+                safeAddress = "0x5afe"
+            ),
             tokenList = TokenList.Empty,
             priceChangeLce = lceLoading(),
         )
@@ -214,17 +349,48 @@ internal class AccountDetailsModelTest {
         return ActivationUM(
             isManageTokensAvailable = isManageTokensAvailable,
             isPendingActivation = isPendingActivation,
+            membersCount = members?.membersCount,
         )
     }
 
-    internal data class ActivationUM(val isManageTokensAvailable: Boolean, val isPendingActivation: Boolean)
+    private val activeMembersCount: TextReference = pluralReference(
+        id = R.plurals.account_details_joint_members_count,
+        count = 2,
+        formatArgs = wrappedList(2),
+    )
 
-    internal data class InactiveJointModel(val statusValue: JointAccountStatusValue)
+    internal data class ActivationUM(
+        val isManageTokensAvailable: Boolean,
+        val isPendingActivation: Boolean,
+        val membersCount: TextReference? = null,
+    )
+
+    internal data class InactiveJointModel(
+        val statusValue: JointAccountStatusValue,
+        val expectedMembersCount: TextReference?,
+    )
 
     private fun provideTestModels() = listOf(
-        InactiveJointModel(statusValue = JointAccountStatusValue.Loading),
-        InactiveJointModel(statusValue = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2)),
-        InactiveJointModel(statusValue = JointAccountStatusValue.Confirming(source = StatusSource.ACTUAL, totalMembers = 2)),
-        InactiveJointModel(statusValue = JointAccountStatusValue.Error.Unavailable),
+        InactiveJointModel(statusValue = JointAccountStatusValue.Loading, expectedMembersCount = null),
+        InactiveJointModel(
+            statusValue = JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 1,
+                totalMembers = 2
+            ),
+            expectedMembersCount = resourceReference(
+                id = R.string.account_details_joint_members_progress,
+                formatArgs = wrappedList(1, 2),
+            ),
+        ),
+        InactiveJointModel(
+            statusValue = JointAccountStatusValue.Confirming(source = StatusSource.ACTUAL, totalMembers = 2),
+            expectedMembersCount = pluralReference(
+                id = R.plurals.account_details_joint_members_count,
+                count = 2,
+                formatArgs = wrappedList(2),
+            ),
+        ),
+        InactiveJointModel(statusValue = JointAccountStatusValue.Error.Unavailable, expectedMembersCount = null),
     )
 }
