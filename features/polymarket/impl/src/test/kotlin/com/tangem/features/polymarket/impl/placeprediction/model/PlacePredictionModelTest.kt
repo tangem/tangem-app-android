@@ -183,6 +183,26 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN the market is closed WHEN poll interval elapses THEN quote NOT requested again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.MARKET_CLOSED).right()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Unavailable(PredictionQuoteStatus.MARKET_CLOSED))
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN submit started WHEN poll interval elapses THEN quote NOT requested`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
