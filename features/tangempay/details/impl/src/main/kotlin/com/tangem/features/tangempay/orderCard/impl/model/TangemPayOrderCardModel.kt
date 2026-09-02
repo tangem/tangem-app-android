@@ -11,6 +11,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
@@ -79,7 +80,7 @@ internal class TangemPayOrderCardModel @Inject constructor(
                 paymentAccountStatusFetcher.invoke(params.userWalletId)
             }.saveIn(showOrderedCardJobHolder)
         }
-        router.pop()
+        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 
     override fun onIssueAdditionalCardDismissed() {
