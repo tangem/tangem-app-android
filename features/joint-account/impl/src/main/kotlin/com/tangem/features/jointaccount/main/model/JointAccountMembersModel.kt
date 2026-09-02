@@ -109,9 +109,10 @@ internal class JointAccountMembersModel @Inject constructor(
         val joined = account.members.mapIndexed { index, member ->
             joinedMember(index = index, member = member, isThisDeviceCreator = isThisDeviceCreator)
         }
-        // The backend hands the invites out once and never reports which are redeemed (accepted risk, B-9),
-        // so assume they are redeemed in the order they were shared: the free slots take the remaining tail
-        val remainingInvites = invites.drop(n = (account.members.size - 1).coerceAtLeast(minimumValue = 0))
+        val redeemedInvites = account.members.mapNotNull(JointAccount.Member::inviteId)
+        val remainingInvites = invites.filterNot { invite ->
+            redeemedInvites.any { redeemed -> redeemed.equals(invite, ignoreCase = true) }
+        }
         val freeSlots = List(size = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)) {
             freeSlot(index = it, invite = remainingInvites.getOrNull(it))
         }
