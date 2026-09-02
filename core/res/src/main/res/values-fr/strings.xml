@@ -285,6 +285,10 @@
   <string name="common_apply">Appliquer</string>
   <string name="common_approval">Approbation</string>
   <string name="common_approve">Approuver</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d actif</item>
+    <item quantity="other">%d actifs</item>
+  </plurals>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Réseaux disponibles</string>
   <string name="common_backup">Sauvegarde</string>
@@ -319,13 +323,18 @@
   <string name="common_create">Créer</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Personnalisé</string>
+  <string name="common_day">jour</string>
   <plurals name="common_days">
     <item quantity="one">%d jour</item>
-    <item quantity="other">%d jours </item>
+    <item quantity="other">%d jours</item>
   </plurals>
   <plurals name="common_days_no_param">
     <item quantity="one">jour</item>
     <item quantity="other">jours</item>
+  </plurals>
+  <plurals name="common_days_time_ago">
+    <item quantity="one">Il y a %d jour</item>
+    <item quantity="other">Il y a %d jours</item>
   </plurals>
   <string name="common_delete">Supprimer</string>
   <string name="common_disable">Désactiver</string>
@@ -383,6 +392,20 @@
     <item quantity="other">Il y a %d minutes</item>
   </plurals>
   <string name="common_month">mois</string>
+  <string-array name="common_month_in">
+    <item>Janvier</item>
+    <item>Février</item>
+    <item>Mars</item>
+    <item>Avril</item>
+    <item>Mai</item>
+    <item>Juin</item>
+    <item>Juillet</item>
+    <item>Août</item>
+    <item>Septembre</item>
+    <item>Octobre</item>
+    <item>Novembre</item>
+    <item>Décembre</item>
+  </string-array>
   <string name="common_more">Plus</string>
   <string name="common_network">Réseau</string>
   <string name="common_network_fee_title">Commissions du réseau</string>
@@ -674,6 +697,8 @@
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
   <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
   <string name="feedback_token_description_error">Erreur de description de la pièce</string>
+  <string name="for_you_description">Consultez votre portefeuille et découvrez des opportunités de rendement</string>
+  <string name="for_you_title">Pour Vous</string>
   <string name="force_update_action">Mettre à jour maintenant</string>
   <string name="force_update_banner_message">Mettez l\'application à jour pour assurer son bon fonctionnement</string>
   <string name="force_update_banner_title">Mise à jour nécessaire</string>
@@ -919,6 +944,7 @@
   <string name="manage_tokens_unavailable_description">Le jeton sélectionné n\'est actuellement pas disponible pour des actions dans le portefeuille crypto. Mais ne vous inquiétez pas, vous pouvez exprimer votre intérêt en votant positivement.</string>
   <string name="manage_tokens_unavailable_vote">Vote positif</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
+  <string name="market_chart_top_holding">%s de votre portefeuille</string>
   <string name="markets_about_coin_header">À propos de la crypto</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas pris en charge dans le portefeuille</string>
@@ -1823,6 +1849,8 @@
   <string name="tangempay_account_unable_to_use_rooted">Impossible à utiliser sur un appareil rooté</string>
   <string name="tangempay_available_balance">Solde</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_error_subtitle">Appuyez pour recharger</string>
+  <string name="tangempay_bank_transfer_fee_error_title">Erreur de chargement des frais</string>
   <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
   <string name="tangempay_bank_transfer_fee_header">Frais d\'onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">USD reçus convertis en USDC au taux 1:1</string>
@@ -1832,8 +1860,23 @@
   <string name="tangempay_bank_transfer_success_subtitle">Cela peut prendre un moment</string>
   <string name="tangempay_bank_transfer_success_title">Préparation de vos coordonnées bancaires</string>
   <string name="tangempay_bank_transfer_swift_warning">Les virements SWIFT ne sont pas acceptés et seront retournés</string>
+  <string name="tangempay_bank_transfer_terms_of_use">Conditions d\'utilisation</string>
   <string name="tangempay_cancel_kyc">Masquer la vérification de l\'écran</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">Veuillez contacter le support</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">Vous avez dépassé le nombre de tentatives d\'activation</string>
+  <string name="tangempay_card_activation_description">Saisissez les 4 derniers chiffres du numéro de votre carte</string>
+  <string name="tangempay_card_activation_error">Chiffres incorrects. Réessayez</string>
+  <string name="tangempay_card_activation_error_already_active">Cette carte est déjà active.</string>
+  <string name="tangempay_card_activation_error_in_progress">L\'activation est déjà en cours. Veuillez patienter.</string>
+  <string name="tangempay_card_activation_error_not_physical">Ce n\'est pas une carte physique</string>
+  <string name="tangempay_card_activation_error_not_ready">Cette carte n\'est pas encore prête à être activée. Réessayez après l\'avoir reçue.</string>
+  <string name="tangempay_card_activation_in_progress">Activation de votre carte</string>
   <string name="tangempay_card_default_name">Carte Tangem Pay 1</string>
+  <string name="tangempay_card_delivery_banner_description">Activez-la à sa réception</string>
+  <string name="tangempay_card_delivery_banner_description_many">Activez-les à leur réception</string>
+  <string name="tangempay_card_delivery_banner_title">Votre carte est en cours de livraison</string>
+  <string name="tangempay_card_delivery_banner_title_many">Vos cartes sont en cours de livraison</string>
+  <string name="tangempay_card_details_activate">Activer la carte</string>
   <string name="tangempay_card_details_add_funds">Ajouter des fonds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Options de recharge</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Ajouter à Google Wallet</string>
@@ -1845,11 +1888,13 @@
   <string name="tangempay_card_details_change_pin_success_description">La carte est totalement prête pour les paiements.</string>
   <string name="tangempay_card_details_change_pin_success_title">Code PIN créé</string>
   <string name="tangempay_card_details_cvc">CVC</string>
+  <string name="tangempay_card_details_delivery_description">Votre carte est en cours de livraison. Vous recevrez le suivi de notre transporteur à l’adresse %s</string>
   <string name="tangempay_card_details_error_text">Échec du chargement des données. Réessayez plus tard.</string>
   <string name="tangempay_card_details_expiry">Expiration</string>
   <string name="tangempay_card_details_freeze_card">Geler la carte</string>
   <string name="tangempay_card_details_hide_details">Masquer les détails</string>
   <string name="tangempay_card_details_hide_text">Masquer</string>
+  <string name="tangempay_card_details_name_on_card">Nom du titulaire</string>
   <string name="tangempay_card_details_open_wallet_button">Ouvrir Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Configurez Tangem Pay en quelques clics et commencez à payer avec Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configurez Tangem Pay en quelques clics et commencez à payer avec Apple Pay</string>
@@ -1891,6 +1936,7 @@
   <string name="tangempay_card_edit_name_placeholder">Nom de la carte</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Définir une limite à partir de %s</string>
   <string name="tangempay_card_limit_setup_error_message">Impossible de définir la limite. Veuillez réessayer.</string>
+  <string name="tangempay_card_page_activating_banner_title">Activation de votre carte physique</string>
   <string name="tangempay_card_page_closing_banner_description">Prend généralement jusqu\'à 5 minutes</string>
   <string name="tangempay_card_page_closing_banner_title">Clôture de votre carte</string>
   <string name="tangempay_card_page_daily_limit_change">Modifier</string>
@@ -1929,12 +1975,18 @@
   <string name="tangempay_cashback_empty_subtitle">Le montant accumulé s\'affichera ici</string>
   <string name="tangempay_cashback_empty_title">Dépensez\\net gagnez du cashback</string>
   <string name="tangempay_cashback_error_title">Échec du chargement.\\nAppuyez pour recharger</string>
+  <string name="tangempay_cashback_menu_item_loading">Chargement...</string>
+  <string name="tangempay_cashback_menu_item_title">Cashback en %s</string>
   <string name="tangempay_cashback_rate_subtitle">Avec votre forfait %1$s</string>
   <string name="tangempay_cashback_rate_title">Cashback %1$s%%</string>
   <string name="tangempay_cashback_rate_title_up_to">Cashback jusqu\'à %1$s%%</string>
   <string name="tangempay_cashback_refund_banner">Remboursement reçu pour un achat déjà crédité en cashback</string>
   <string name="tangempay_cashback_title">Cashback</string>
   <string name="tangempay_cashback_total_earned">%1$s gagné au total</string>
+  <string name="tangempay_cashback_widget_empty_description">Réglez vos achats et gagnez du cashback</string>
+  <string name="tangempay_cashback_widget_error_description">Appuyez pour recharger</string>
+  <string name="tangempay_cashback_widget_error_title">Cashback indisponible</string>
+  <string name="tangempay_cashback_widget_refund_description">Réduit en raison de retours d\'achats</string>
   <string name="tangempay_cashback_widget_title">%1$s de cashback en %2$s</string>
   <string name="tangempay_change_pin_code">Modifier le code PIN</string>
   <string name="tangempay_changing_plan">Modification du forfait</string>
@@ -1946,8 +1998,10 @@
   <string name="tangempay_common_card">Carte</string>
   <string name="tangempay_common_error_loading">Erreur de chargement</string>
   <string name="tangempay_current_plan_active_till_notification">Forfait %1$s actif jusqu\'au %2$s, puis passage à %3$s. %4$s ne sera pas facturé.</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">Nous vous faisons passer à l’offre %s et attendons le paiement des frais</string>
   <string name="tangempay_current_plan_change">Changer de forfait</string>
   <string name="tangempay_current_plan_fee_charged_notification">Frais mensuels de %1$s prélevés le %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Conditions complètes</string>
   <string name="tangempay_current_plan_section_card">Carte</string>
   <string name="tangempay_current_plan_section_plan">Forfait</string>
   <string name="tangempay_current_plan_stay_button">Rester sur %1$s</string>
@@ -2015,6 +2069,8 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Limite de cartes atteinte pour ce forfait</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Forfait supérieur</string>
   <string name="tangempay_maximum_cards_issued_title">Nombre maximum de cartes émises</string>
+  <string name="tangempay_multichain_show_qr">Afficher le QR code</string>
+  <string name="tangempay_multinetwork">Multiréseau</string>
   <string name="tangempay_newonboard_Q1_body">Oui — pour utiliser une carte Visa réglementée, la vérification d’identité est obligatoire. Le KYC est géré par Sumsub, partenaire conformité.</string>
   <string name="tangempay_newonboard_Q1_title">Dois-je fournir mes documents ?</string>
   <string name="tangempay_newonboard_Q2_body">Non. Le KYC s’applique uniquement au compte Tangem Pay. Votre Tangem Wallet reste un environnement distinct, en self-custody et sans KYC.</string>
@@ -2045,6 +2101,55 @@
   <string name="tangempay_onboarding_setup_wallet_description">Et associerons Tangem Pay à ce wallet</string>
   <string name="tangempay_onboarding_setup_wallet_title">Nous allons créer un nouveau wallet</string>
   <string name="tangempay_onboarding_title">Obtenez votre carte Tangem Pay en minutes</string>
+  <string name="tangempay_order_card_error_active_order">Une commande de carte est déjà en cours.</string>
+  <string name="tangempay_order_card_error_insufficient_balance">Fonds insuffisants pour la livraison. Ajoutez des fonds et réessayez.</string>
+  <string name="tangempay_order_card_error_invalid_address">Vérifiez l\'adresse de livraison et réessayez.</string>
+  <string name="tangempay_order_card_error_invalid_source_card">Cette carte ne peut pas être remplacée.</string>
+  <string name="tangempay_order_card_error_offer_unavailable">Cette carte n\'est plus disponible.</string>
+  <string name="tangempay_order_data_address_line1">Adresse ligne 1</string>
+  <string name="tangempay_order_data_address_line2">Adresse ligne 2</string>
+  <string name="tangempay_order_data_city">Ville</string>
+  <string name="tangempay_order_data_clear_field">Effacer le champ</string>
+  <string name="tangempay_order_data_country">Pays</string>
+  <string name="tangempay_order_data_email">E-mail</string>
+  <string name="tangempay_order_data_field_invalid">Texte non valide</string>
+  <string name="tangempay_order_data_field_latin_only">Utilisez uniquement des caractères latins</string>
+  <string name="tangempay_order_data_field_optional">Facultatif</string>
+  <string name="tangempay_order_data_field_required">Champ obligatoire</string>
+  <string name="tangempay_order_data_first_name">Prénom</string>
+  <string name="tangempay_order_data_last_name">Nom</string>
+  <string name="tangempay_order_data_name_on_card">Nom sur la carte</string>
+  <string name="tangempay_order_data_order_button">Commander la carte</string>
+  <string name="tangempay_order_data_phone">Téléphone</string>
+  <string name="tangempay_order_data_postal_code">Code postal</string>
+  <string name="tangempay_order_data_region">Région</string>
+  <string name="tangempay_order_data_subtitle">Vérifiez les données</string>
+  <string name="tangempay_order_data_success_title">Carte commandée</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="one">La livraison prend jusqu’à %d jour ouvré</item>
+    <item quantity="other">La livraison prend jusqu’à %d jours ouvrés</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">Sous 3 jours ouvrés, vous recevrez un e-mail du transporteur à l’adresse %s</string>
+  <string name="tangempay_order_success_show_card">Afficher la carte</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">Pays de résidence</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="one">Jusqu’à %d jour ouvré</item>
+    <item quantity="other">Jusqu’à %d jours ouvrés</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d jours ouvrés</string>
+  <string name="tangempay_order_type_delivery_fee">Frais de livraison</string>
+  <string name="tangempay_order_type_delivery_time">Délai de livraison</string>
+  <string name="tangempay_order_type_delivery_time_instant">Instantané</string>
+  <string name="tangempay_order_type_delivery_to">Livraison vers</string>
+  <string name="tangempay_order_type_first_delivery_free">Première livraison gratuite</string>
+  <string name="tangempay_order_type_issue_fee">Frais d\'émission</string>
+  <string name="tangempay_order_type_not_enough_money">Fonds insuffisants</string>
+  <string name="tangempay_order_type_segment_plastic">Physique</string>
+  <string name="tangempay_order_type_segment_virtual">Virtuelle</string>
+  <string name="tangempay_order_type_select">Choisir</string>
+  <string name="tangempay_order_type_title">Commander une nouvelle carte</string>
+  <string name="tangempay_order_type_unavailable">Indisponible</string>
   <string name="tangempay_other_networks_header">Autres réseaux</string>
   <string name="tangempay_other_networks_subtitle">Puis échangez-le sans frais vers votre compte de paiement</string>
   <string name="tangempay_other_networks_title">Envoyez des USDT/USDC sur n\'importe quelle chaîne vers votre Tangem Wallet</string>
@@ -2062,6 +2167,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Déposez des USDC sur le compte de paiement pour couvrir les frais d’émission</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Impossible de couvrir les frais</string>
   <string name="tangempay_reissue_card_title">Réémettre votre carte ?</string>
+  <string name="tangempay_reissue_plastic_description">Votre carte physique actuelle sera immédiatement clôturée. Vous recevrez une nouvelle carte physique avec de nouvelles informations.</string>
+  <string name="tangempay_reissue_plastic_title">Remplacer la carte physique ?</string>
   <string name="tangempay_remove_account">Retirer le compte</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay sera retiré de l\'écran principal et ne réapparaîtra plus, même après une réinstallation de l\'application.</string>
   <string name="tangempay_remove_account_alert_title">Retirer le compte?</string>
