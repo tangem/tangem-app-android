@@ -76,6 +76,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
 
+    private val staleDataReporter = PolymarketStaleDataReporter(onReport = ::reportStaleData)
+
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
     private val feeds = mutableMapOf<Int?, PolymarketCategoryFeed>()
 
@@ -196,7 +198,7 @@ internal class PolymarketMainModel @Inject constructor(
             scope = modelScope,
             batchFlow = batchFlow,
             actionsFlow = actionsFlow,
-            onStaleData = ::reportStaleData,
+            onStaleData = staleDataReporter::report,
         )
         poller.start()
 
@@ -229,6 +231,7 @@ internal class PolymarketMainModel @Inject constructor(
                     batchListState = batchState,
                     eventUMConverter = eventUMConverter,
                     onReloadClick = ::reload,
+                    onNextPageRetryClick = ::onLoadMore,
                 )
                 uiState.update(transformer::transform)
             }
