@@ -1,5 +1,5 @@
 @file:Suppress("BooleanPropertyNaming")
-package com.tangem.datasource.local.visa.entity
+package com.tangem.spend.datasource.visa.entity
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
