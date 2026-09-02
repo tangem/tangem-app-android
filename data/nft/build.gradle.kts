@@ -19,6 +19,9 @@ dependencies {
 
     // region Other libraries
     implementation(deps.arrow.core)
+    api(deps.moshi)
+    implementation(deps.androidx.datastore.base)
+    implementation(deps.androidx.datastore.core)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
@@ -32,7 +35,6 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.datasource)
     api(projects.core.utils)
     implementation(projects.core.local)
     implementation(projects.core.remote)

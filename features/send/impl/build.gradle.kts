@@ -28,7 +28,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
     implementation(projects.data.nft)
     implementation(projects.core.utils)
 
