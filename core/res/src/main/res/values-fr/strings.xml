@@ -2111,8 +2111,6 @@
   <string name="tangempay_va_banking_details_error_title">Coordonnées bancaires introuvables</string>
   <string name="tangempay_va_limit_resetting_everyday">Limite réinitialisée chaque jour</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">Les fonds des achats remboursés ne seront pas retournés à votre solde sur Polygon ni disponibles pour un retrait, mais resteront sur votre solde de carte pour vos achats</string>
-  <string name="tangempay_withdrawal_note_title">Veuillez noter</string>
   <string name="tangempay_your_pin_code">Votre code PIN</string>
   <string name="this_is_my_wallet_title">C\'est mon portefeuille</string>
   <string name="toast_balances_hidden">Soldes masqués</string>
