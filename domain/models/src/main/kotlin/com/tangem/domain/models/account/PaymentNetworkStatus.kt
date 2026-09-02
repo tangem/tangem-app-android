@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
  *  - [Available] (backend `ENABLED`): contract open, deposit address exists — full [CryptoCurrencyStatus]s
  *    (currency + balance + receive address).
 
+ *    contract addresses, so such a network cannot carry currencies at all.
  *  - [Disabled] (backend `DISABLED`): info-only, no contract — currencies only.
  *
  * Every entry represents a single [network]; the contained currencies all belong to it.
@@ -39,7 +40,6 @@ sealed class PaymentNetworkStatus {
     @Serializable
     data class NotIssued(
         override val network: Network,
-        val cryptoCurrencies: List<CryptoCurrency>,
     ) : PaymentNetworkStatus()
 
     @Serializable
