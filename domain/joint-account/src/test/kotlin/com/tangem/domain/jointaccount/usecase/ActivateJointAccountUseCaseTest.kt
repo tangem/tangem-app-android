@@ -36,7 +36,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ActivateJointAccountUseCaseTest {
 
-    private val repository: JointAccountRepository = mockk(relaxUnitFun = true)
+    private val repository: JointAccountRepository = mockk()
     private val signer: JointAccountSigner = mockk()
     private val fetcher: SingleJointAccountListFetcher = mockk()
     private val supplier: SingleJointAccountListSupplier = mockk()
@@ -62,6 +62,7 @@ internal class ActivateJointAccountUseCaseTest {
         clearMocks(repository, signer, fetcher, supplier)
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
         coEvery { signer.sign(userWalletId = any(), input = any()) } returns signResult().right()
+        coEvery { repository.activate(any(), any(), any()) } returns Unit.right()
     }
 
     @Test
@@ -79,7 +80,7 @@ internal class ActivateJointAccountUseCaseTest {
                 payload = capture(payloadSlot),
                 signature = SIGNATURE,
             )
-        } returns Unit
+        } returns Unit.right()
 
         // Act
         val actual = useCase(account = account)
@@ -116,7 +117,7 @@ internal class ActivateJointAccountUseCaseTest {
         val jointAccount = jointAccount(safeAddress = computedSafeAddress(model.singleton))
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
         val payloadSlot = slot<JointAccountActivationPayload>()
-        coEvery { repository.activate(any(), capture(payloadSlot), any()) } returns Unit
+        coEvery { repository.activate(any(), capture(payloadSlot), any()) } returns Unit.right()
 
         // Act
         val actual = useCase(account = account)
@@ -219,7 +220,7 @@ internal class ActivateJointAccountUseCaseTest {
         val cause = IllegalStateException("500")
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
-        coEvery { repository.activate(any(), any(), any()) } throws cause
+        coEvery { repository.activate(any(), any(), any()) } returns cause.left()
 
         // Act
         val actual = useCase(account = account)
