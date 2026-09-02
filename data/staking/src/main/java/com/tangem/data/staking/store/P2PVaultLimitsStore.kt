@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.token
+package com.tangem.data.staking.store
 
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
@@ -11,5 +11,5 @@ import javax.inject.Singleton
  * A missing key means the vault is full (null-limit vaults are excluded at fetch time).
  */
 @Singleton
-class P2PVaultLimitsStore @Inject constructor() :
+internal class P2PVaultLimitsStore @Inject constructor() :
     RuntimeStateStore<Map<String, VaultLimitInfo>?> by RuntimeStateStore(defaultValue = null)
