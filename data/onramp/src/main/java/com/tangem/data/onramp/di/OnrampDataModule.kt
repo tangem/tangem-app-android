@@ -13,6 +13,7 @@ import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
 import com.tangem.data.onramp.legacy.MercuryoTopUpRepository
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.grow.datasource.onramp.OnrampApi
@@ -53,6 +54,7 @@ internal object OnrampDataModule {
         expressApi: TangemExpressApi,
         dispatchers: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
+        expressUtils: ExpressUtils,
         paymentMethodsStore: OnrampPaymentMethodsStore,
         pairsStore: OnrampPairsStore,
         quotesStore: OnrampQuotesStore,
@@ -72,6 +74,7 @@ internal object OnrampDataModule {
             expressApi = expressApi,
             dispatchers = dispatchers,
             appPreferencesStore = appPreferencesStore,
+            expressUtils = expressUtils,
             paymentMethodsStore = paymentMethodsStore,
             onrampCurrentCountryByIPStore = onrampCurrentCountryByIPStore,
             pairsStore = pairsStore,

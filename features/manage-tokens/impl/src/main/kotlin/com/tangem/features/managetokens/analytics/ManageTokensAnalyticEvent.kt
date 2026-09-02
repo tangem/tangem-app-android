@@ -2,6 +2,8 @@ package com.tangem.features.managetokens.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.features.managetokens.component.ManageTokensSource
 
 internal sealed class ManageTokensAnalyticEvent(
@@ -48,7 +50,11 @@ internal sealed class ManageTokensAnalyticEvent(
             AnalyticsParam.Key.COUNT to tokensCount.toString(),
             AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
-    )
+    ), OtelIncludedEvent {
+
+        // Source lets monitoring single out additions from Markets
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(AnalyticsParam.Key.SOURCE))
+    }
     class ButtonLater : ManageTokensAnalyticEvent(
         event = "Button - Later",
         params = mapOf(AnalyticsParam.SOURCE to ManageTokensSource.ONBOARDING.analyticsName),

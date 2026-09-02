@@ -101,6 +101,7 @@ internal class JointAccountConfigModel @Inject constructor(
         stateController.update(
             UpdateConfigInitialStateTransformer(
                 onNameChange = ::onNameChange,
+                onValuePastedTriggerDismiss = ::onValuePastedTriggerDismiss,
                 onColorClick = ::onColorClick,
                 onIconClick = ::onIconClick,
                 onContinueClick = ::onContinueClick,
@@ -135,8 +136,12 @@ internal class JointAccountConfigModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onNameChange(name: String) {
-        stateController.update(UpdateAccountNameTransformer(name = name))
+    private fun onNameChange(name: String, isValuePasted: Boolean) {
+        stateController.update(UpdateAccountNameTransformer(name = name, isValuePasted = isValuePasted))
+    }
+
+    private fun onValuePastedTriggerDismiss() {
+        stateController.update(DismissNamePastedTransformer)
     }
 
     private fun onColorClick(color: CryptoPortfolioIcon.Color) {

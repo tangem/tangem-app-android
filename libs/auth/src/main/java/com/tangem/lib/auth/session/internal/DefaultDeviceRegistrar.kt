@@ -20,10 +20,12 @@ import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -38,6 +40,9 @@ internal class DefaultDeviceRegistrar(
     private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
+    // Lazy to break the DeviceRegistrar ↔ SessionTokenRefresher DI cycle (the refresher depends on
+    // Lazy<DeviceRegistrar> for its "device not found" re-registration path).
+    private val sessionTokenRefresher: Lazy<SessionTokenRefresher>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DeviceRegistrar {
 
@@ -47,6 +52,14 @@ internal class DefaultDeviceRegistrar(
         // `Mutex` guards against the unlikely case of two concurrent callers passing the
         // already-registered check together and consuming the same device nonce twice.
         mutex.withLock { runRegister() }
+            // Establish a session OUTSIDE the mutex: a 409 (or a flag set on an earlier launch) leaves
+            // the device registered without tokens, and nothing else would recover it. Must run
+            // unlocked — ensureSession → refresh → (on "device not found") reregister re-takes this
+            // same non-reentrant mutex, which would deadlock if called from within runRegister.
+            .onRight {
+                sessionTokenRefresher.get().ensureSession()
+                    .onLeft { error -> TangemLogger.e("Failed to ensure a session after device registration: $error") }
+            }
     }
 
     override suspend fun reregister(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
@@ -138,9 +151,9 @@ internal class DefaultDeviceRegistrar(
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(response.cause)
                 if (authError is AuthError.Conflict) {
-                    // Device is already registered server-side (e.g. the local flag was lost on
-                    // reinstall). Persist the flag to stop retrying; session tokens will be minted
-                    // on demand via /authenticate.
+                    // Device is already registered server-side, but a 409 returns no tokens. Persist
+                    // the flag to stop retrying; the session is then minted by register()'s
+                    // ensureSession step (which runs unlocked — see register()).
                     TangemLogger.i("Device already registered server-side (409) — marking as registered")
                     markRegistered(onFailureLog = "Failed to persist device-registration flag after 409")
                     return

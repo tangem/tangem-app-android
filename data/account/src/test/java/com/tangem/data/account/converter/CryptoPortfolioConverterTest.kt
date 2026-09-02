@@ -1,20 +1,23 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.models.account.*
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -150,7 +153,10 @@ class CryptoPortfolioConverterTest {
             return listOf(
                 ConvertBackModel(
                     value = createCryptoPortfolio(userWalletId = userWallet.walletId),
-                    expected = createWalletAccountDTO(userWalletId = userWallet.walletId),
+                    expected = createWalletAccountDTO(
+                        userWalletId = userWallet.walletId,
+                        type = WalletAccountDTO.Type.CRYPTO,
+                    ),
                 ),
             )
         }
@@ -160,4 +166,111 @@ class CryptoPortfolioConverterTest {
         val value: Account.Personal,
         val expected: WalletAccountDTO,
     )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class JointRow {
+
+        private val token = UserTokensResponse.Token(
+            networkId = "ethereum",
+            derivationPath = "m/44'/60'/888888'/0/2",
+            name = "Ethereum",
+            symbol = "ETH",
+            decimals = 18,
+            contractAddress = null,
+        )
+
+        @Test
+        fun `GIVEN joint row with tokens WHEN convert THEN currencies sit on the network at the owner key path`() {
+            // Arrange
+            val currency = MockCryptoCurrencyFactory().ethereum
+            val ownerKeyPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/2")
+            every {
+                responseCryptoCurrenciesFactory.createCurrencies(
+                    tokens = listOf(token),
+                    userWallet = userWallet,
+                    derivationPath = ownerKeyPath,
+                )
+            } returns listOf(currency)
+
+            // Act
+            val actual = converter.convert(value = jointRow(derivationIndex = 2, tokens = listOf(token)))
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(Account.Joint::class.java)
+            Truth.assertThat((actual as Account.Joint).ownerKeyIndex.value).isEqualTo(2)
+            Truth.assertThat(actual.cryptoCurrencies).containsExactly(currency)
+            verify(exactly = 0) {
+                responseCryptoCurrenciesFactory.createCurrencies(
+                    tokens = any(),
+                    userWallet = any(),
+                    accountIndex = any<DerivationIndex>(),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN joint row without tokens WHEN convert THEN account is empty`() {
+            // Arrange
+            every {
+                responseCryptoCurrenciesFactory.createCurrencies(
+                    tokens = emptyList(),
+                    userWallet = userWallet,
+                    derivationPath = any<Network.DerivationPath.Joint>(),
+                )
+            } returns emptyList()
+
+            // Act
+            val actual = converter.convert(value = jointRow(derivationIndex = 0, tokens = null))
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(Account.Joint::class.java)
+            Truth.assertThat(actual.cryptoCurrencies).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN joint account WHEN convertBack THEN row carries the joint type and the owner key index`() {
+            // Arrange
+            val account = Account.Joint(
+                accountId = AccountId.forJointAccount(userWalletId = userWallet.walletId, value = JOINT_ID).getOrNull()!!,
+                accountName = AccountName.Custom(value = "Family").getOrNull()!!,
+                icon = CryptoPortfolioIcon.ofCustomAccount(
+                    value = CryptoPortfolioIcon.Icon.Star,
+                    color = CryptoPortfolioIcon.Color.Azure,
+                ),
+                ownerKeyIndex = OwnerKeyIndex(value = 2).getOrNull()!!,
+                cryptoCurrencies = emptyList(),
+            )
+
+            // Act
+            val actual = converter.convertBack(value = account)
+
+            // Assert
+            val expected = WalletAccountDTO(
+                id = JOINT_ID,
+                name = "Family",
+                derivationIndex = 2,
+                icon = CryptoPortfolioIcon.Icon.Star.name,
+                iconColor = CryptoPortfolioIcon.Color.Azure.name,
+                type = WalletAccountDTO.Type.JOINT,
+                tokens = emptyList(),
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        private fun jointRow(derivationIndex: Int, tokens: List<UserTokensResponse.Token>?): WalletAccountDTO {
+            return createWalletAccountDTO(
+                userWalletId = userWallet.walletId,
+                accountId = JOINT_ID,
+                accountName = "Family",
+                derivationIndex = derivationIndex,
+                tokens = tokens,
+                type = WalletAccountDTO.Type.JOINT,
+            )
+        }
+    }
+
+    private companion object {
+        const val JOINT_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
+    }
 }

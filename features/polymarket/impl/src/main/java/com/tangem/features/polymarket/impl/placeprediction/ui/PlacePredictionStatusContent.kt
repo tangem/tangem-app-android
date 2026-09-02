@@ -31,7 +31,6 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -45,12 +44,6 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.components.Predict
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlaceResultPreviewProvider
 
-/**
- * Terminal screen of the flow, in three variants that differ only in their glow, title and banner.
- *
- * A submission that never reached the book is deliberately not one of them: that is a dialog over the
- * summary, because the same order can still be placed.
- */
 @Composable
 internal fun PlacePredictionStatusContent(
     result: PlaceResultUM,
@@ -89,9 +82,7 @@ internal fun PlacePredictionStatusContent(
         ) {
             ResultHeadline(result = result)
             ResultBanner(result = result)
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-                PredictionMarketBlock(state = market)
-            }
+            PredictionMarketBlock(state = market)
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
         }
     }
@@ -140,6 +131,11 @@ private fun ResultBanner(result: PlaceResultUM) {
             description = resourceReference(R.string.prediction_place_result_no_fill_banner_description),
             variant = TangemMessageBanner.Variant.Error,
         )
+        is PlaceResultUM.Submitted -> TangemMessageBanner(
+            title = resourceReference(R.string.prediction_place_result_partial_banner_title),
+            description = resourceReference(R.string.prediction_place_result_partial_banner_description),
+            variant = TangemMessageBanner.Variant.Warning,
+        )
     }
 }
 
@@ -147,12 +143,14 @@ private fun PlaceResultUM.titleRes(): Int = when (this) {
     is PlaceResultUM.Filled -> R.string.prediction_place_result_success_title
     is PlaceResultUM.PartiallyFilled -> R.string.prediction_place_result_partial_title
     is PlaceResultUM.NotFilled -> R.string.prediction_place_result_no_fill_title
+    is PlaceResultUM.Submitted -> R.string.prediction_place_result_partial_title
 }
 
 private fun PlaceResultUM.glowVariant(): TangemGlowRing.Variant = when (this) {
     is PlaceResultUM.Filled -> TangemGlowRing.Variant.Success
     is PlaceResultUM.PartiallyFilled -> TangemGlowRing.Variant.Warning
     is PlaceResultUM.NotFilled -> TangemGlowRing.Variant.Error
+    is PlaceResultUM.Submitted -> TangemGlowRing.Variant.Warning
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
