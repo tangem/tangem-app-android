@@ -34,7 +34,6 @@ dependencies {
     api(projects.core.utils)
     implementation(projects.core.local)
     implementation(projects.core.remote)
-    implementation(projects.core.datasource)
     // endregion
 
     // region Project - Data
