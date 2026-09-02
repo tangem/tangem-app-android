@@ -24,6 +24,7 @@ internal class JointAccountDMConverter @Inject constructor() {
                 name = member.name,
                 address = member.address,
                 role = member.role.toRawString(),
+                inviteId = member.inviteId,
             )
         },
     )
@@ -39,6 +40,7 @@ internal class JointAccountDMConverter @Inject constructor() {
                 name = member.name,
                 address = member.address,
                 role = JointAccountFieldsConverter.convertRole(member.role),
+                inviteId = member.inviteId,
             )
         },
         source = StatusSource.CACHE,
