@@ -1073,7 +1073,13 @@
   <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you</string>
   <string name="joint_account_name_subtitle">Other members will see this name in the joint account</string>
   <string name="joint_account_name_title">What is your name?</string>
-  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign</string>
+  <string name="joint_account_onboarding_approvals_description">Choose how many members must approve each transaction.</string>
+  <string name="joint_account_onboarding_approvals_title">Required approvals.</string>
+  <string name="joint_account_onboarding_members_description">Each joins with their own wallet.</string>
+  <string name="joint_account_onboarding_members_title">Up to %1$s members.</string>
+  <string name="joint_account_onboarding_shared_description">Use it with your friends, family, or partners.</string>
+  <string name="joint_account_onboarding_shared_title">Shared account.</string>
+  <string name="joint_account_onboarding_subtitle">A simple way to manage crypto together — for personal or business needs.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
