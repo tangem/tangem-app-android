@@ -95,6 +95,37 @@ internal class DefaultCollectiblesHotDelegateTest {
     }
 
     @Test
+    fun `GIVEN derivation throws WHEN provision THEN the generated wallet is deleted`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("derivation failed")
+        coEvery { store.get(ACCOUNT_ID) } returns null
+        coEvery { tangemHotSdk.generateWallet(any(), any()) } returns HOT_WALLET_ID
+        coEvery { tangemHotSdk.derivePublicKey(any(), any()) } throws cause
+        coEvery { tangemHotSdk.delete(any()) } returns Unit
+
+        // Act
+        val actual = delegate.provision(ACCOUNT_ID)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesHotDelegateError.KeyCreationFailed(cause))
+        coVerify(exactly = 1) { tangemHotSdk.delete(HOT_WALLET_ID) }
+        coVerify(exactly = 0) { store.put(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN keystore delete fails WHEN forget THEN the record is kept for a retry`() = runTest {
+        // Arrange
+        coEvery { store.get(ACCOUNT_ID) } returns RECORD
+        coEvery { tangemHotSdk.delete(any()) } throws IllegalStateException("keystore unavailable")
+
+        // Act
+        delegate.forget(ACCOUNT_ID)
+
+        // Assert
+        coVerify(exactly = 0) { store.remove(ACCOUNT_ID) }
+    }
+
+    @Test
     fun `GIVEN another account's delegate stored WHEN provision THEN this account gets its own`() = runTest {
         // Arrange
         coEvery { store.get(ACCOUNT_ID) } returns null
