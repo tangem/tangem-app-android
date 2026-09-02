@@ -53,3 +53,30 @@ fun AppRouter.popAndPush(route: AppRoute) {
         else -> pop { isSuccess -> if (isSuccess) push(route) }
     }
 }
+
+/**
+ * Opens [route] in place of the current route when that route is of the same class, otherwise pushes it.
+ *
+ * Intended for re-entrant entry points such as deeplinks: requesting the same destination again with new
+ * params opens it in place of the already opened one instead of stacking a second copy — and instead of
+ * failing the navigation, which Decompose reports for an equal route (a no-op when it is on top, an
+ * exception when it is deeper) and which surfaces a generic error snackbar. An equal [route] is left alone
+ * when it is already the current one, and popped back to when it sits deeper in the stack.
+ *
+ * The caller must be sure that *any* same-class route on top is safe to close: routes of one class can
+ * back distinct flows (e.g. [AppRoute.Swap] also backs the account top-up / withdraw flows), and those
+ * must be pushed over rather than replaced.
+ *
+ * ***Must be removed after Decompose migration.***
+ *
+ * @param route The route to open.
+ */
+fun AppRouter.pushOrReplaceCurrent(route: AppRoute) {
+    val currentStack = stack
+    when {
+        currentStack.lastOrNull() == route -> Unit
+        currentStack.contains(route) -> popTo(route)
+        currentStack.lastOrNull()?.let { it::class } == route::class -> replaceCurrent(route)
+        else -> push(route)
+    }
+}
