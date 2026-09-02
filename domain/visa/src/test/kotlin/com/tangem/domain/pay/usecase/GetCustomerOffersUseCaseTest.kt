@@ -129,6 +129,54 @@ internal class GetCustomerOffersUseCaseTest {
         assertThat(actual).isEqualTo(null.right())
     }
 
+    @Test
+    fun `GIVEN a reissue offer for the instance WHEN plasticReissueOffer THEN it is returned`() = runTest {
+        // Arrange
+        givenProductInstanceOffers(plasticOffer(), reissueOffer())
+
+        // Act
+        val actual = useCase.plasticReissueOffer(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(reissueOffer().right())
+        coVerify(exactly = 1) {
+            customerOffersRepository.getProductInstanceOffers(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+        }
+        coVerify(exactly = 0) { customerOffersRepository.getOffers(any()) }
+    }
+
+    @Test
+    fun `GIVEN no reissue offer for the instance WHEN plasticReissueOffer THEN it returns null`() = runTest {
+        // Arrange
+        givenProductInstanceOffers(plasticOffer())
+
+        // Act
+        val actual = useCase.plasticReissueOffer(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(null.right())
+    }
+
+    @Test
+    fun `GIVEN the request fails WHEN plasticReissueOffer THEN the error is propagated`() = runTest {
+        // Arrange
+        coEvery {
+            customerOffersRepository.getProductInstanceOffers(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+        } returns VisaApiError.ServerUnavailable.left()
+
+        // Act
+        val actual = useCase.plasticReissueOffer(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+    }
+
+    private fun givenProductInstanceOffers(vararg offers: Offer) {
+        coEvery {
+            customerOffersRepository.getProductInstanceOffers(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
+        } returns offers.toList().right()
+    }
+
     private fun givenOffers(vararg offers: Offer) {
         coEvery { customerOffersRepository.getOffers(USER_WALLET_ID) } returns offers.toList().right()
     }
@@ -136,6 +184,8 @@ internal class GetCustomerOffersUseCaseTest {
     private fun plasticOffer() = offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN)
 
     private fun virtualOffer() = offer(type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
+
+    private fun reissueOffer() = offer(type = Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
 
     private fun offer(type: Offer.Type) = Offer(
         type = type,
@@ -145,5 +195,6 @@ internal class GetCustomerOffersUseCaseTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("1234567890ABCDEF")
+        const val PRODUCT_INSTANCE_ID = "pi_source_0001"
     }
 }
