@@ -1,7 +1,10 @@
 package com.tangem.features.foryou.impl.components
 
-/** 7% of the full circle — the minimum visual share any non-zero segment (and the grey gap) is drawn at. */
-internal const val MIN_VISUAL_SWEEP_FRACTION = 0.07f
+/**
+ * Minimum visual share, as a fraction of the full circle, that any non-zero segment (and the grey gap) is
+ * drawn at. A tuning knob — nothing should restate its value, in docs or in tests.
+ */
+internal const val MIN_VISUAL_SWEEP_FRACTION = 0.01f
 
 private const val FULL_CIRCLE_DEG = 360f
 
@@ -13,8 +16,8 @@ private const val GREY_GAP_EPSILON_DEG = 0.01f
 
 /**
  * Maps normalized segment [weights] (each expected in `0f..1f`) to sweep angles in degrees, guaranteeing
- * that every non-zero segment is drawn at least [MIN_VISUAL_SWEEP_FRACTION] of the full circle (7% → 25.2°),
- * so a tiny holding never collapses into an invisible sliver.
+ * that every non-zero segment is drawn at least [MIN_VISUAL_SWEEP_FRACTION] of the full circle, so a tiny
+ * holding never collapses into an invisible sliver.
  *
  * This is a purely **visual** transform: the returned angles drive the arc drawing, hit-testing, and the
  * tooltip anchor. The real share shown in the tooltip must still come from the original `weight`.
@@ -32,7 +35,7 @@ private const val GREY_GAP_EPSILON_DEG = 0.01f
  *   hairline sliver. Because both neighbouring slices' round caps bulge into the grey, the reserved floor
  *   is padded by [capDeg] so the *visible* grey lands at [MIN_VISUAL_SWEEP_FRACTION]. Segments are never
  *   squeezed below their own floors to make room for it. [GREY_GAP_EPSILON_DEG] absorbs float noise so an
- *   ≈100% portfolio still reads as a full ring instead of snapping to a 7% grey gap.
+ *   ≈100% portfolio still reads as a full ring instead of snapping to a floored grey gap.
  * - If there are so many segments that even the floor can't fit (`n * floor > 360°`), it falls back to an
  *   equal `360°/n` split.
  * - [capDeg] compensates the round-cap squeeze on the **last segment only** (see [lastSegmentOverlapDeg] for

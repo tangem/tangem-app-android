@@ -45,6 +45,22 @@ internal class InitialCurrenciesResolver @Inject constructor(
 ) {
 
     /**
+     * Orders currencies by the funds they hold: by fiat value first, then by the crypto amount — the only
+     * dimension left for a currency whose quote has not arrived, since it reports no fiat value at all.
+     */
+    private val fundsComparator = compareBy<SwapCurrencyStatus>(
+        { it.status.value.fiatAmount.orZero() },
+        { it.status.value.amount.orZero() },
+    )
+
+    /**
+     * Whether the currency holds funds. The crypto amount alone counts: a currency with a balance but without
+     * a quote yet has no fiat value, and skipping it would silently hand the slot to an unrelated token.
+     */
+    private val SwapCurrencyStatus.hasBalance: Boolean
+        get() = !status.value.fiatAmount.isNullOrZero() || !status.value.amount.isNullOrZero()
+
+    /**
      * Resolves the initial FROM/TO currency pair for the swap screen.
      *
      * @param userWalletId the wallet to resolve currencies for
@@ -140,26 +156,19 @@ internal class InitialCurrenciesResolver @Inject constructor(
     }
 
     /**
-     * The account's own token holding the most funds, preferring one the user can actually swap. Falls back to
-     * the crypto amount because a token whose quote has not arrived reports no fiat value at all. Used wherever
+     * The account's own token holding the most funds, preferring one the user can actually swap. Used wherever
      * the entry point's currency is only an intent: it is the account's hardcoded legacy currency, which a
      * multichain account may not hold at all.
      */
     private fun mostFundedAccountCurrency(
         cryptoPaymentAccounts: Map<AccountStatus, List<SwapCurrencyStatus>>,
     ): SwapCurrencyStatus? = cryptoPaymentAccounts.values.flatten()
-        .maxWithOrNull(
-            compareBy(
-                { it.isAvailableForSwap },
-                { it.status.value.fiatAmount.orZero() },
-                { it.status.value.amount.orZero() },
-            ),
-        )
+        .maxWithOrNull(compareBy<SwapCurrencyStatus> { it.isAvailableForSwap }.then(fundsComparator))
 
     /**
      * Account top-up FROM auto-fill priority: (a) the most-funded wallet token that is one of the
-     * account's own underlying currencies, if funded (the swap then becomes a same-wallet transfer);
-     * (b) otherwise the regular most-funded wallet token; (c) otherwise `null`.
+     * account's own underlying currencies, if it holds a balance (the swap then becomes a same-wallet
+     * transfer); (b) otherwise the regular most-funded wallet token; (c) otherwise `null`.
      */
     private suspend fun resolveAccountTopUpFromPriority(
         userWalletId: UserWalletId,
@@ -169,8 +178,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
         val hood = accountUnderlyingCurrencies.get(userWalletId)
         val hoodMatch = cryptoCurrencyList
             .filter { walletToken -> hood.any { it.currency.isSameTokenAs(walletToken.currency) } }
-            .filter { !it.status.value.fiatAmount.isNullOrZero() }
-            .maxByOrNull { it.status.value.fiatAmount.orZero() }
+            .filter { it.hasBalance }
+            .maxWithOrNull(fundsComparator)
 
         return hoodMatch ?: selectCryptoCurrency(
             cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
@@ -293,10 +302,10 @@ internal class InitialCurrenciesResolver @Inject constructor(
             }
             CurrencyPosition.ANY -> {
                 val isAvailable = selectedSwapCurrencyStatus.isAvailableForSwap
-                val hasBalance = !selectedSwapCurrencyStatus.status.value.fiatAmount.isNullOrZero()
-                if (isAvailable && hasBalance) {
+                val hasFiatBalance = !selectedSwapCurrencyStatus.status.value.fiatAmount.isNullOrZero()
+                if (isAvailable && hasFiatBalance) {
                     selectedSwapCurrencyStatus to null
-                } else if (isAvailable || !hasBalance) {
+                } else if (isAvailable || !hasFiatBalance) {
                     val selectedCurrency = selectedSwapCurrencyStatus.currency
                     val selectedAccountId = selectedSwapCurrencyStatus.account.accountId
                     val sameAccountEntry = cryptoPortfolioAccountsMap.entries

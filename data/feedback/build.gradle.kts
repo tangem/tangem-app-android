@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion
 

@@ -65,6 +65,7 @@ object TangemPayTestTags {
 
     // Transaction details bottom sheet
     const val TRANSACTION_DETAILS_AMOUNT = "TANGEM_PAY_TRANSACTION_DETAILS_AMOUNT"
+    const val TRANSACTION_DETAILS_CARD_ROW = "TANGEM_PAY_TRANSACTION_DETAILS_CARD_ROW"
 
     // Freeze confirmation bottom sheet
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"

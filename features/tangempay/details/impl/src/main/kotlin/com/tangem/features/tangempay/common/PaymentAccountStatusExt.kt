@@ -10,6 +10,7 @@ internal val AccountStatus.Payment.customerId: String?
     get() = when (val v = value) {
         is PaymentAccountStatusValue.Loaded -> v.customerId
         is PaymentAccountStatusValue.Deactivated -> v.customerId
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> v.customerId
         else -> null
     }
 
@@ -34,16 +35,12 @@ internal val AccountStatus.Payment.tariffPlanState: TangemPayTariffPlanState?
     get() = when (val v = value) {
         is PaymentAccountStatusValue.Inactive -> v.tariffPlan
         is PaymentAccountStatusValue.Loaded -> v.tariffPlan
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> v.tariffPlan
         else -> null
     }
 
 internal val AccountStatus.Payment.tariffPlan: TangemPayCustomerTariffPlan?
-    get() = when (val v = value) {
-        is PaymentAccountStatusValue.Inactive -> v.tariffPlan.tariff
-        is PaymentAccountStatusValue.AwaitingPlanSelection -> v.tariffPlan
-        is PaymentAccountStatusValue.Loaded -> v.tariffPlan?.tariff
-        else -> null
-    }
+    get() = value.tariffPlan
 
 internal val AccountStatus.Payment.cardMainImageUrl: String?
     get() = tariffPlan?.plan?.mainImageUrl
@@ -63,12 +60,14 @@ internal inline fun <T> AccountStatus.Payment.ifLoadedOrNull(call: (PaymentAccou
 internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Balance? = when (val v = value) {
     is PaymentAccountStatusValue.Loaded -> v.balance
     is PaymentAccountStatusValue.Deactivated -> v.balance
+    is PaymentAccountStatusValue.Error.CardIssueFailed -> v.balance
     else -> null
 }
 
 internal fun AccountStatus.Payment.networksOrNull(): List<PaymentNetworkStatus>? = when (val v = value) {
     is PaymentAccountStatusValue.Loaded -> v.networks
     is PaymentAccountStatusValue.Deactivated -> v.networks
+    is PaymentAccountStatusValue.Error.CardIssueFailed -> v.networks
     else -> null
 }
 
@@ -76,6 +75,14 @@ internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
     get() = availableForWithdrawal.signum() > 0
 
 internal fun PaymentAccountStatusValue.canAddFunds(isMultichainEnabled: Boolean): Boolean = when (this) {
+    is PaymentAccountStatusValue.Error.CardIssueFailed -> {
+        val accountBalance = balance
+        accountBalance != null && if (isMultichainEnabled) {
+            networks.hasAvailableNetwork()
+        } else {
+            accountBalance.cryptoBalance.depositAddress.isNotEmpty()
+        }
+    }
     is PaymentAccountStatusValue.Loaded -> if (isMultichainEnabled) {
         networks.hasAvailableNetwork()
     } else {

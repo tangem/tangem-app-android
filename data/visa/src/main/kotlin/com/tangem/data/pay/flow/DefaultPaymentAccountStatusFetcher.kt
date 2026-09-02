@@ -228,8 +228,22 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             return status
         }
 
-        return if (hasActiveIssuanceOrder(userWalletId)) {
-            PaymentAccountStatusValue.Inactive(
+        return resolveIssuanceStatus(
+            userWalletId = userWalletId,
+            customerId = customerInfo.customerId,
+            tariffPlan = tariffPlan,
+        )
+    }
+
+    private suspend fun resolveIssuanceStatus(
+        userWalletId: UserWalletId,
+        customerId: String?,
+        tariffPlan: TangemPayCustomerTariffPlan,
+    ): PaymentAccountStatusValue {
+        return when (resolveIssuanceOrderStatus(userWalletId)) {
+            OrderStatus.NEW,
+            OrderStatus.PROCESSING,
+            -> PaymentAccountStatusValue.Inactive(
                 source = StatusSource.ACTUAL,
                 tariffPlan = getTangemPayTariffPlanStateUseCase(
                     userWalletId = userWalletId,
@@ -240,33 +254,68 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     currency = tariffPlan.plan.feeCurrencyOrDefault(),
                 ),
             )
-        } else {
-            PaymentAccountStatusValue.AwaitingPlanSelection(
-                source = StatusSource.ACTUAL,
-                tariffPlan = tariffPlan,
-            )
+            OrderStatus.CANCELED -> if (customerId.isNullOrEmpty()) {
+                logger.e("resolveIssuanceStatus $userWalletId: canceled issuance order without a customer id")
+                awaitingPlanSelection(tariffPlan)
+            } else {
+                cardIssueFailed(userWalletId = userWalletId, customerId = customerId, tariff = tariffPlan)
+            }
+            OrderStatus.COMPLETED, null -> awaitingPlanSelection(tariffPlan)
         }
     }
 
+    private fun awaitingPlanSelection(tariffPlan: TangemPayCustomerTariffPlan) =
+        PaymentAccountStatusValue.AwaitingPlanSelection(source = StatusSource.ACTUAL, tariffPlan = tariffPlan)
+
+    private suspend fun cardIssueFailed(
+        userWalletId: UserWalletId,
+        customerId: String,
+        tariff: TangemPayCustomerTariffPlan?,
+        balance: PaymentAccountStatusValue.Balance? = null,
+        networks: List<PaymentNetworkStatus> = emptyList(),
+        fiatRate: BigDecimal? = null,
+    ) = PaymentAccountStatusValue.Error.CardIssueFailed(
+        customerId = customerId,
+        tariffPlan = tariff?.let { getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = it) },
+        balance = balance,
+        networks = networks,
+        fiatRate = fiatRate,
+    )
+
     /**
-     * Whether an issuance or a tariff-plan transition is already in flight.
+     * Status of the issuance / tariff-plan transition order to act on: an in-flight order wins over a
+     * newer canceled one, otherwise the most recent order decides. `null` when there is none.
      *
      * `findOrders` is the source of truth: a locally stored order id does not survive a fresh install or an
 
-     * selection. The local store stays as a fallback for a failed lookup.
+     * selection. A successful lookup is therefore trusted as-is — it is what lets a new order clear a past
+     * failure. Only a failed lookup falls back, first to the locally tracked order ids, then to the last
+     * persisted status.
      */
-    private suspend fun hasActiveIssuanceOrder(userWalletId: UserWalletId): Boolean {
+    private suspend fun resolveIssuanceOrderStatus(userWalletId: UserWalletId): OrderStatus? {
         return customerOrderRepository.findOrders(
             userWalletId = userWalletId,
             types = OrderType.issueCardTypes + OrderType.TARIFF_PLAN_TRANSITION,
-            statuses = OrderStatus.activeStatuses,
+            statuses = emptySet(),
         ).fold(
             ifLeft = { error ->
-                logger.e("hasActiveIssuanceOrder $userWalletId failed: $error")
-                issueCardRepository.getIssueOrderIds(userWalletId).isNotEmpty()
+                logger.e("resolveIssuanceOrderStatus $userWalletId failed: $error")
+                when {
+                    issueCardRepository.getIssueOrderIds(userWalletId).isNotEmpty() -> OrderStatus.PROCESSING
+                    hasCachedCardIssueFailure(userWalletId) -> OrderStatus.CANCELED
+                    else -> null
+                }
             },
-            ifRight = { orders -> orders.any { it.status.isActive } },
-        )
+            ifRight = { orders ->
+                orders.firstOrNull { it.status.isActive }?.status
+                    ?: orders.maxByOrNull { it.updatedAt.orEmpty() }?.status
+            },
+        ).also { logger.i("resolveIssuanceOrderStatus $userWalletId: $it") }
+    }
+
+    private suspend fun hasCachedCardIssueFailure(userWalletId: UserWalletId): Boolean {
+        return paymentAccountStatusesStore.getSyncOrNull(userWalletId)
+            ?.value is PaymentAccountStatusValue.Error.CardIssueFailed
     }
 
     private suspend fun proceedWithOrderId(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
@@ -428,6 +477,26 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
     }
 
+    private suspend fun CustomerInfo.resolveCardlessAccountStatus(
+        userWalletId: UserWalletId,
+        customerId: String,
+        balance: PaymentAccountStatusValue.Balance?,
+        networks: List<PaymentNetworkStatus>,
+        fiatRate: BigDecimal?,
+    ): PaymentAccountStatusValue {
+        if (resolveIssuanceOrderStatus(userWalletId) != OrderStatus.CANCELED) {
+            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+        }
+        return cardIssueFailed(
+            userWalletId = userWalletId,
+            customerId = customerId,
+            tariff = tariffPlan,
+            balance = balance,
+            networks = networks,
+            fiatRate = fiatRate,
+        )
+    }
+
     /**
      * Balances of the payment account, degrading to the cached ones when `customer/me` delivers none.
      *
@@ -464,23 +533,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val source: StatusSource,
     )
 
-    /**
-     * Builds the [PaymentAccountStatusValue.Loaded] content state with the full list of cards.
-     * A card is driven by its product instance; the `cards[]` payload only enriches it (last digits, PIN flag,
-     * artwork), because the backend can omit it for an operational account. Balances are
-     * payment-account-level (shared across cards) and may be absent — see [resolveBalance].
-     */
-    private suspend fun CustomerInfo.convertToContentState(
-        userWalletId: UserWalletId,
-        balance: PaymentAccountStatusValue.Balance?,
-        source: StatusSource,
-        customerId: String,
-        fiatRate: BigDecimal?,
-        networks: List<PaymentNetworkStatus>,
-    ): PaymentAccountStatusValue {
+    private suspend fun CustomerInfo.resolveCards(userWalletId: UserWalletId): List<TangemPayCard> {
         val cardsById = cards.associateBy { it.cardId }
         val activatingProductInstanceIds = resolveActivatingProductInstanceIds(userWalletId, cardsById)
-        val tangemPayCards = cardProductInstances.mapNotNull { productInstance ->
+        return cardProductInstances.mapNotNull { productInstance ->
             val cardId = productInstance.cardId.ifEmpty { return@mapNotNull null }
             val cardInfo = cardsById[cardId]
             val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
@@ -513,6 +569,23 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 cardType = cardInfo?.cardType ?: TangemPayCardType.UNDEFINED,
             )
         }
+    }
+
+    /**
+     * Builds the [PaymentAccountStatusValue.Loaded] content state with the full list of cards.
+     * A card is driven by its product instance; the `cards[]` payload only enriches it (last digits, PIN flag,
+     * artwork), because the backend can omit it for an operational account. Balances are
+     * payment-account-level (shared across cards) and may be absent — see [resolveBalance].
+     */
+    private suspend fun CustomerInfo.convertToContentState(
+        userWalletId: UserWalletId,
+        balance: PaymentAccountStatusValue.Balance?,
+        source: StatusSource,
+        customerId: String,
+        fiatRate: BigDecimal?,
+        networks: List<PaymentNetworkStatus>,
+    ): PaymentAccountStatusValue {
+        val tangemPayCards = resolveCards(userWalletId)
 
         if (!tangemPayFeatureToggles.isTiersPlusPlanEnabled && tangemPayCards.isEmpty()) {
             return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
@@ -533,7 +606,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val allCards = orderedCards + issuingCards
 
         if (allCards.isEmpty()) {
-            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+            return resolveCardlessAccountStatus(
+                userWalletId = userWalletId,
+                customerId = customerId,
+                balance = balance,
+                networks = networks,
+                fiatRate = fiatRate,
+            )
         }
 
         val virtualAccount = resolveVirtualAccountOnramp(userWalletId)

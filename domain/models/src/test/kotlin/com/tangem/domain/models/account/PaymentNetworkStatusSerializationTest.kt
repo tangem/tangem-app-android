@@ -57,7 +57,7 @@ internal class PaymentNetworkStatusSerializationTest {
                     CryptoCurrencyStatus(currency = token(), value = CryptoCurrencyStatus.Loading),
                 ),
             ),
-            PaymentNetworkStatus.NotIssued(network = network(), cryptoCurrencies = listOf(token())),
+            PaymentNetworkStatus.NotIssued(network = network()),
             PaymentNetworkStatus.Disabled(network = network(), cryptoCurrencies = listOf(token())),
         )
 
