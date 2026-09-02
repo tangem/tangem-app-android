@@ -15,6 +15,7 @@ android {
 dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.local)
+    implementation(projects.core.decompose)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
@@ -30,6 +31,10 @@ dependencies {
 
     implementation(deps.googlePlay.services.wallet)
     implementation(deps.googlePlay.services.auth)
+    implementation(deps.googlePlay.identity.googleId)
+
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.credentials)
 
     testImplementation(projects.test.core)
 }
