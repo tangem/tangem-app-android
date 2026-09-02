@@ -60,7 +60,7 @@ internal class DefaultCollectiblesOwnerDeriver @Inject constructor(
             }
 
             owner.publicKey.encodeBase58()
-                .also { log("deriveOwner: done, owner=$it") }
+                .also { log("deriveOwner: done") }
                 .right()
         }
         .getOrElse { throwable ->
@@ -102,7 +102,7 @@ internal class DefaultCollectiblesOwnerDeriver @Inject constructor(
     }
 
     private fun log(message: String) {
-        TangemLogger.d(messageString = "CollectiblesOwnerDeriver: $message", shouldSanitize = false)
+        TangemLogger.d(messageString = "CollectiblesOwnerDeriver: $message")
     }
 
     private companion object {
