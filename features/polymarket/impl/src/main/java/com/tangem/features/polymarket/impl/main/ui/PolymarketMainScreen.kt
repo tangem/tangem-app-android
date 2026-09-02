@@ -37,6 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -59,6 +61,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
@@ -235,14 +238,22 @@ private fun FeedList(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    val topPadding = contentPadding.calculateTopPadding()
+    // The feed scrolls under the floating search bar; the clearance keeps the last card visible.
+    val bottomPadding = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance
+    val verticalPaddingPx = with(LocalDensity.current) { (topPadding + bottomPadding).roundToPx() }
+
+    // With nothing loaded there is nothing to scroll to: the header stays put and the status sits under it.
+    val isAtTop by remember(listState) {
+        derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
+    }
+    val hasEvents = state.content is PolymarketMainUM.ContentUM.Content
+
     LazyColumn(
         modifier = modifier,
         state = listState,
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding(),
-            // The feed scrolls under the floating search bar; the clearance keeps the last card visible.
-            bottom = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance,
-        ),
+        contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
+        userScrollEnabled = hasEvents || !isAtTop,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = KEY_HEADER) {
@@ -268,21 +279,33 @@ private fun FeedList(
             }
         }
 
-        eventsSection(content = state.content)
+        eventsSection(
+            content = state.content,
+            statusModifier = Modifier.centerInVisibleFeedArea(
+                listState = listState,
+                verticalPaddingPx = verticalPaddingPx,
+            ),
+        )
     }
 }
 
-private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
+/**
+ * @param statusModifier positions the loader or the reload prompt inside the viewport-tall status item
+ */
+private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, statusModifier: Modifier) {
     when (content) {
         // A list shorter than the screen cannot stay scrolled, and the header pushed away would spring back.
         is PolymarketMainUM.ContentUM.Loading -> item(key = KEY_STATUS) {
-            PolymarketLoadingState(modifier = Modifier.fillParentMaxHeight())
+            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.TopCenter) {
+                PolymarketLoadingState(modifier = statusModifier)
+            }
         }
         is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillParentMaxHeight(), contentAlignment = Alignment.TopCenter) {
                 PolymarketReloadPrompt(
                     text = resourceReference(R.string.prediction_main_events_load_error),
                     onReloadClick = content.onReloadClick,
+                    modifier = statusModifier,
                 )
             }
         }
@@ -299,12 +322,43 @@ private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM) {
                 )
             }
 
-            if (content.isLoadingNextPage) {
-                item(key = KEY_STATUS) {
+            when (val footer = content.footer) {
+                is PolymarketFeedFooterUM.None -> Unit
+                is PolymarketFeedFooterUM.Loading -> item(key = KEY_STATUS) {
                     PolymarketNextPageLoader()
+                }
+                is PolymarketFeedFooterUM.Error -> item(key = KEY_STATUS) {
+                    PolymarketReloadPrompt(
+                        text = resourceReference(R.string.prediction_main_events_load_error),
+                        onReloadClick = footer.onRetryClick,
+                    )
                 }
             }
         }
+    }
+}
+
+/**
+ * Centres the content in the part of the viewport under the status item's top edge rather than in the item. The
+ * item is a viewport tall so that a header scrolled away stays away, but with the header on screen most of the
+ * item lies below the fold and the item's own centre lands at the bottom of the screen. Read in the layout pass,
+ * so the content follows the header out without recomposing.
+ */
+private fun Modifier.centerInVisibleFeedArea(listState: LazyListState, verticalPaddingPx: Int): Modifier {
+    return layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+
+        val layoutInfo = listState.layoutInfo
+        val itemTop = layoutInfo.visibleItemsInfo.firstOrNull { it.key == KEY_STATUS }?.offset ?: 0
+        val visibleHeight = layoutInfo.viewportSize.height - verticalPaddingPx - itemTop
+        val y = ((visibleHeight - placeable.height) / 2).coerceAtLeast(0)
+        val height = if (constraints.hasBoundedHeight) {
+            minOf(placeable.height + y, constraints.maxHeight)
+        } else {
+            placeable.height + y
+        }
+
+        layout(placeable.width, height) { placeable.placeRelative(x = 0, y = y) }
     }
 }
 
@@ -453,7 +507,7 @@ private fun PolymarketMainScreenContentPreview() {
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Content(
                     events = previewEvents(),
-                    isLoadingNextPage = true,
+                    footer = PolymarketFeedFooterUM.Loading,
                 ),
             ),
             onBackClick = {},
