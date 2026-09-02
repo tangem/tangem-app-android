@@ -37,6 +37,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
@@ -50,6 +51,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 
+@Suppress("LongParameterList")
 @Stable
 internal class DefaultFeedV2Component @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -58,6 +60,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val tabSet: FeedTabSet,
     private val searchBarController: DefaultFeedSearchBarController,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
 ) : FeedV2Component, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<FeedRoute>()
@@ -167,6 +170,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 context = childContext,
                 tabSet = tabSet,
                 isPredictionsEntryVisible = polymarketFeatureToggles.isPolymarketEnabled,
+                isCollectiblesVisible = collectiblesFeatureToggles.isCollectiblesEnabled,
             )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()

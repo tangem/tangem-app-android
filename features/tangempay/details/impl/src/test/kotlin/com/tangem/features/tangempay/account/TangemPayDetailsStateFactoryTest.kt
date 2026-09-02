@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.account
 import com.tangem.domain.models.pay.TangemPayImage
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -14,6 +15,9 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.awaitingDepositOrder
+import com.tangem.features.tangempay.customerTariffPlan
+import com.tangem.features.tangempay.recurringFee
+import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.tariffPlanState
@@ -256,6 +260,139 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
+    fun `GIVEN card issue failed WHEN getCardIssueFailedState THEN error banner and add card element are shown`() {
+        // Arrange
+        val status = cardIssueFailedStatus(planState = tariffPlanState())
+
+        // Act
+        val state = factory.getCardIssueFailedState(status, isBannerDismissed = false)
+
+        // Assert
+        val banner = state.statusBannerState
+        assertThat(banner?.state?.title).isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
+        assertThat(banner?.state?.variant).isEqualTo(TangemMessageBanner.Variant.Error)
+        assertThat(banner?.state?.secondaryButton?.text)
+            .isEqualTo(resourceReference(R.string.common_contact_support))
+        banner?.onClose?.invoke()
+        banner?.state?.secondaryButton?.onClick?.invoke()
+        verify(exactly = 1) { intents.onCardIssueFailedBannerDismissed() }
+        verify(exactly = 1) { intents.onCardIssueFailedSupportClick() }
+        assertThat(state.errorNotificationConfig).isNull()
+        assertThat(state.balanceBlockState.cardsBlockState?.cards).isEmpty()
+        assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isTrue()
+        assertThat(state.addFundsButton.isEnabled).isFalse()
+        assertThat(state.withdrawButton.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN card issue failed WHEN getCardIssueFailedState THEN zero balance in the plan currency is shown`() {
+        // Arrange
+        val eurPlan = tariffPlanState(
+            tariff = customerTariffPlan(plan = tariffPlan(fees = listOf(recurringFee(currency = "EUR")))),
+        )
+        val status = cardIssueFailedStatus(planState = eurPlan)
+
+        // Act
+        val balanceBlock = factory.getCardIssueFailedState(status, isBannerDismissed = false).balanceBlockState
+
+        // Assert
+        assertThat(balanceBlock).isInstanceOf(TangemPayDetailsBalanceBlockState.Content::class.java)
+        val content = balanceBlock as TangemPayDetailsBalanceBlockState.Content
+        assertThat(content.isInactive).isFalse()
+        assertThat(content.fiatBalance).isEqualTo(zeroBalanceText(currency = "EUR"))
+    }
+
+    @Test
+    fun `GIVEN card issue failed without a plan WHEN getCardIssueFailedState THEN zero balance falls back to USD`() {
+        // Arrange
+        val status = cardIssueFailedStatus(planState = null)
+
+        // Act
+        val balanceBlock = factory.getCardIssueFailedState(status, isBannerDismissed = false).balanceBlockState
+
+        // Assert
+        assertThat((balanceBlock as TangemPayDetailsBalanceBlockState.Content).fiatBalance)
+            .isEqualTo(zeroBalanceText(currency = "USD"))
+    }
+
+    private fun zeroBalanceText(currency: String) = DetailsBalanceTransformer.getFiatBalanceText(
+        PaymentAccountStatusValue.FiatBalance(availableBalance = BigDecimal.ZERO, currency = currency),
+    )
+
+    @Test
+    fun `GIVEN card issue failed with a deposit address WHEN getCardIssueFailedState THEN add funds is enabled`() {
+        // Arrange
+        val status = cardIssueFailedStatus(
+            planState = tariffPlanState(),
+            statusBalance = balance(availableForWithdrawal = BigDecimal.TEN),
+        )
+
+        // Act
+        val state = singleNetworkFactory.getCardIssueFailedState(status, isBannerDismissed = false)
+
+        // Assert
+        assertThat(state.addFundsButton.isEnabled).isTrue()
+        assertThat(state.withdrawButton.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN dismissed banner WHEN getCardIssueFailedState THEN the banner is hidden`() {
+        // Arrange
+        val status = cardIssueFailedStatus(planState = tariffPlanState())
+
+        // Act
+        val state = factory.getCardIssueFailedState(status, isBannerDismissed = true)
+
+        // Assert
+        assertThat(state.statusBannerState).isNull()
+    }
+
+    @Test
+    fun `GIVEN card issue failed with a plan WHEN getCardIssueFailedState THEN current plan menu item is present`() {
+        // Arrange
+        val planState = tariffPlanState()
+        val status = cardIssueFailedStatus(planState = planState)
+
+        // Act
+        val state = factory.getCardIssueFailedState(status, isBannerDismissed = false)
+
+        // Assert
+        val currentPlanItem = state.topBarConfig.items.first()
+        assertThat(currentPlanItem.title).isEqualTo(resourceReference(R.string.tangempay_current_plan_title))
+        currentPlanItem.onClick()
+        verify(exactly = 1) { intents.onClickCurrentPlan(planState) }
+    }
+
+    @Test
+    fun `GIVEN card issue failed WHEN add card clicked THEN the standard add card flow is requested`() {
+        // Arrange
+        val planState = tariffPlanState()
+        val state = factory.getCardIssueFailedState(
+            status = cardIssueFailedStatus(planState = planState),
+            isBannerDismissed = false,
+        )
+
+        // Act
+        state.balanceBlockState.cardsBlockState?.onAddCardClick?.invoke()
+
+        // Assert
+        verify(exactly = 1) { intents.onAddCardClick(planState) }
+    }
+
+    @Test
+    fun `GIVEN card issue failed without a plan WHEN getCardIssueFailedState THEN current plan item is absent`() {
+        // Arrange
+        val status = cardIssueFailedStatus(planState = null)
+
+        // Act
+        val state = factory.getCardIssueFailedState(status, isBannerDismissed = false)
+
+        // Assert
+        assertThat(state.topBarConfig.items.map { it.title })
+            .doesNotContain(resourceReference(R.string.tangempay_current_plan_title))
+    }
+
+    @Test
     fun `GIVEN withdraw disabled WHEN getActionButtonsConfig THEN withdraw disabled and add funds enabled`() {
         // Act
         val buttons = factory.getActionButtonsConfig(isAddFundsEnabled = true, isWithdrawEnabled = false)
@@ -420,6 +557,15 @@ internal class TangemPayDetailsStateFactoryTest {
             every { balance } returns statusBalance
             every { networks } returns statusNetworks
         }
+
+    private fun cardIssueFailedStatus(
+        planState: TangemPayTariffPlanState?,
+        statusBalance: PaymentAccountStatusValue.Balance? = null,
+    ): PaymentAccountStatusValue.Error.CardIssueFailed = PaymentAccountStatusValue.Error.CardIssueFailed(
+        customerId = "cust_1",
+        tariffPlan = planState,
+        balance = statusBalance,
+    )
 
     private fun balance(availableForWithdrawal: BigDecimal) = PaymentAccountStatusValue.Balance(
         fiatBalance = PaymentAccountStatusValue.FiatBalance(
