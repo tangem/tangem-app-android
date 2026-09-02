@@ -289,6 +289,7 @@
   <string name="common_added">Добавлен</string>
   <string name="common_address">Адрес</string>
   <string name="common_all">Все</string>
+  <string name="common_all_accounts">Все аккаунты</string>
   <string name="common_allow">Разрешить</string>
   <string name="common_amount">Сумма</string>
   <string name="common_analytics">Аналитика</string>
@@ -298,6 +299,12 @@
   <string name="common_approve">Разрешить</string>
   <string name="common_approved">Одобрено</string>
   <string name="common_approving">Одобрение</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d актив</item>
+    <item quantity="few">%d актива</item>
+    <item quantity="many">%d активов</item>
+    <item quantity="other">%d активов</item>
+  </plurals>
   <string name="common_attention">Внимание</string>
   <string name="common_available_networks">Доступные сети</string>
   <string name="common_backup">Резервная копия</string>
@@ -332,6 +339,7 @@
   <string name="common_create">Создать</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Свое</string>
+  <string name="common_day">день</string>
   <plurals name="common_days">
     <item quantity="one">%d день</item>
     <item quantity="few">%d дня</item>
@@ -418,6 +426,20 @@
     <item quantity="other">%dмин назад</item>
   </plurals>
   <string name="common_month">месяц</string>
+  <string-array name="common_month_in">
+    <item>январе</item>
+    <item>феврале</item>
+    <item>марте</item>
+    <item>апреле</item>
+    <item>мае</item>
+    <item>июне</item>
+    <item>июле</item>
+    <item>августе</item>
+    <item>сентябре</item>
+    <item>октябре</item>
+    <item>ноябре</item>
+    <item>декабре</item>
+  </string-array>
   <string name="common_more">Еще</string>
   <string name="common_network">Сеть</string>
   <string name="common_network_fee_title">Комиссия сети</string>
@@ -435,6 +457,7 @@
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
   <string name="common_no_results">Нет результатов</string>
+  <string name="common_none">Нет</string>
   <string name="common_not_added">Не добавлено</string>
   <string name="common_not_available">Не доступно</string>
   <string name="common_not_now">Не сейчас</string>
@@ -747,6 +770,13 @@
   <string name="feedback_subject_support_tangem">Обращение в поддержку Tangem</string>
   <string name="feedback_subject_tx_failed">Не могу отправить транзакцию</string>
   <string name="feedback_token_description_error">Ошибка в описании монеты</string>
+  <string name="for_you_description">Обзор портфеля и возможности для заработка</string>
+  <string name="for_you_earn_opportunities">Возможности для заработка</string>
+  <string name="for_you_earn_opportunities_explore">Посмотреть все токены</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">Максимальное возможное вознаграждение: %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/год</string>
+  <string name="for_you_portfolio_review_title">Обзор портфеля</string>
+  <string name="for_you_title">Для вас</string>
   <string name="force_update_action">Обновить сейчас</string>
   <string name="force_update_banner_message">Обновите приложение Tangem, чтобы открыть новые функции и получить последние улучшения.</string>
   <string name="force_update_banner_title">Доступна новая версия</string>
@@ -998,6 +1028,7 @@
   <string name="manage_tokens_unavailable_description">Выбранный токен недоступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="market_chart_top_holding">%s вашего портфеля</string>
   <string name="markets_about_coin_header">О монете</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив в настоящее время не поддерживается в кошельке</string>
@@ -1969,6 +2000,8 @@
   <string name="tangempay_account_unable_to_use_rooted">Запрещено использовать на root-устройствах</string>
   <string name="tangempay_available_balance">Баланс</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_error_subtitle">Нажмите, чтобы обновить</string>
+  <string name="tangempay_bank_transfer_fee_error_title">Не удалось загрузить информацию о комиссии</string>
   <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
   <string name="tangempay_bank_transfer_fee_header">Комиссия за онрамп</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Полученные USD будут конвертированы в USDC по курсу 1:1</string>
@@ -1978,8 +2011,23 @@
   <string name="tangempay_bank_transfer_success_subtitle">Это может занять некоторое время</string>
   <string name="tangempay_bank_transfer_success_title">Подготовка ваших банковских реквизитов</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT-переводы не принимаются и будут возвращены</string>
+  <string name="tangempay_bank_transfer_terms_of_use">Условия обслуживания</string>
   <string name="tangempay_cancel_kyc">Скрыть KYC с главной</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">Обратитесь в поддержку</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">Вы исчерпали попытки активации</string>
+  <string name="tangempay_card_activation_description">Введите последние 4 цифры номера карты</string>
+  <string name="tangempay_card_activation_error">Невалидные цифры. Попробуйте снова.</string>
+  <string name="tangempay_card_activation_error_already_active">Эта карта уже активирована.</string>
+  <string name="tangempay_card_activation_error_in_progress">Активация уже выполняется. Пожалуйста, подождите.</string>
+  <string name="tangempay_card_activation_error_not_physical">Это не пластиковая карта</string>
+  <string name="tangempay_card_activation_error_not_ready">Карта пока не готова к активации. Попробуйте снова после её получения.</string>
+  <string name="tangempay_card_activation_in_progress">Активируем вашу карту</string>
   <string name="tangempay_card_default_name">Карта Tangem Pay 1</string>
+  <string name="tangempay_card_delivery_banner_description">Активируйте её, как только получите</string>
+  <string name="tangempay_card_delivery_banner_description_many">Активируйте их после получения</string>
+  <string name="tangempay_card_delivery_banner_title">Ваша карта доставляется</string>
+  <string name="tangempay_card_delivery_banner_title_many">Ваши карты уже в пути</string>
+  <string name="tangempay_card_details_activate">Активировать карту</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
   <string name="tangempay_card_details_add_funds_subtitle">Способы пополнения</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Добавить в Google Wallet</string>
@@ -1991,11 +2039,13 @@
   <string name="tangempay_card_details_change_pin_success_description">Карта готова к покупкам</string>
   <string name="tangempay_card_details_change_pin_success_title">ПИН-код установлен</string>
   <string name="tangempay_card_details_cvc">CVC</string>
+  <string name="tangempay_card_details_delivery_description">Ваша карта уже в пути. Обновления статуса доставки от логистической компании будут приходить на %s</string>
   <string name="tangempay_card_details_error_text">Не удалось загрузить данные. Повторите попытку позже.</string>
   <string name="tangempay_card_details_expiry">Срок</string>
   <string name="tangempay_card_details_freeze_card">Заморозить карту</string>
   <string name="tangempay_card_details_hide_details">Скрыть</string>
   <string name="tangempay_card_details_hide_text">Скрыть</string>
+  <string name="tangempay_card_details_name_on_card">Имя держателя карты</string>
   <string name="tangempay_card_details_open_wallet_button">Открыть Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Настройте в пару кликов и начините платить</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Настройте в пару кликов и начините платить</string>
@@ -2059,7 +2109,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Как мы рассчитываем кэшбэк?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Кэшбэк не начисляется за покупки в офлайн-магазинах у продавцов из ЕС; также за снятие наличных, переводы, квази-наличные операции, оплату мобильной связи, госуслуги и некоторые другие категории</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Исключения</string>
-  <string name="tangempay_cashback_accruals_pay_description">Со 2-го по 5-е число следующего месяца</string>
+  <string name="tangempay_cashback_accruals_pay_description">Со 2 по 5 число следующего месяца</string>
   <string name="tangempay_cashback_accruals_pay_title">Как мы выплачиваем кэшбэк?</string>
   <string name="tangempay_cashback_accruals_subtitle">Лимиты и исключения</string>
   <string name="tangempay_cashback_accruals_title">Как начисляем</string>
@@ -2068,8 +2118,8 @@
   <string name="tangempay_cashback_additional_until">До %1$s</string>
   <string name="tangempay_cashback_deactivated_description">Это произошло из-за подозрительной активности. Обратитесь в поддержку</string>
   <string name="tangempay_cashback_deactivated_title">Кэшбэк деактивирован</string>
-  <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s будет зачислен до %3$s</string>
-  <string name="tangempay_cashback_deposited_on">Будет зачислен %1$s</string>
+  <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s зачислим на счёт до %3$s</string>
+  <string name="tangempay_cashback_deposited_on">Зачислим на счёт %1$s</string>
   <string name="tangempay_cashback_details_cap">Максимум %1$s в месяц</string>
   <string name="tangempay_cashback_details_eu_excluded">Кэшбэк не начисляется за офлайн-покупки у продавцов из ЕС</string>
   <string name="tangempay_cashback_details_paid_in">Платим в %1$s</string>
@@ -2078,12 +2128,18 @@
   <string name="tangempay_cashback_empty_subtitle">Накопленная сумма будет показана здесь</string>
   <string name="tangempay_cashback_empty_title">Начните тратить\nи получайте кэшбэк</string>
   <string name="tangempay_cashback_error_title">Не удалось загрузить страницу.\nНажмите, чтобы обновить</string>
+  <string name="tangempay_cashback_menu_item_loading">Загрузка...</string>
+  <string name="tangempay_cashback_menu_item_title">Кэшбэк за %s</string>
   <string name="tangempay_cashback_rate_subtitle">С вашим тарифом %1$s</string>
   <string name="tangempay_cashback_rate_title">Кэшбэк %1$s%%</string>
   <string name="tangempay_cashback_rate_title_up_to">Кэшбэк до %1$s%%</string>
   <string name="tangempay_cashback_refund_banner">Мы получили возврат за покупку, за которую ранее был начислен кэшбэк</string>
   <string name="tangempay_cashback_title">Кэшбэк</string>
   <string name="tangempay_cashback_total_earned">%1$s заработали всего</string>
+  <string name="tangempay_cashback_widget_empty_description">Оплачивайте покупки и получайте кэшбэк</string>
+  <string name="tangempay_cashback_widget_error_description">Нажмите, чтобы обновить</string>
+  <string name="tangempay_cashback_widget_error_title">Кэшбэк недоступен</string>
+  <string name="tangempay_cashback_widget_refund_description">Уменьшен из-за возврата покупок</string>
   <string name="tangempay_cashback_widget_title">%1$s кэшбэк за %2$s</string>
   <string name="tangempay_change_pin_code">Изменить PIN-код</string>
   <string name="tangempay_changing_plan">Изменение тарифа</string>
@@ -2095,8 +2151,10 @@
   <string name="tangempay_common_card">Карта</string>
   <string name="tangempay_common_error_loading">Ошибка загрузки</string>
   <string name="tangempay_current_plan_active_till_notification">Ваш тариф %1$s активен до %2$s, после чего мы переведём вас на %3$s. %4$s не будет списано.</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">Переводим вас на тариф %s, ожидается оплата</string>
   <string name="tangempay_current_plan_change">Сменить тариф</string>
   <string name="tangempay_current_plan_fee_charged_notification">Ежемесячная плата %1$s будет списана %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Полные условия</string>
   <string name="tangempay_current_plan_section_card">По карте</string>
   <string name="tangempay_current_plan_section_plan">По тарифу</string>
   <string name="tangempay_current_plan_stay_button">Остаться на %1$s</string>
@@ -2164,6 +2222,8 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Достигнут лимит карт для этого тарифа</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Улучшить тариф</string>
   <string name="tangempay_maximum_cards_issued_title">Выпущено максимальное количество карт</string>
+  <string name="tangempay_multichain_show_qr">Показать QR-код</string>
+  <string name="tangempay_multinetwork">Мультисеть</string>
   <string name="tangempay_newonboard_Q1_body">Да — для использования регулируемой карты Visa нужна обязательная проверка личности. KYC проводит Sumsub, комплаенс-партнёр.</string>
   <string name="tangempay_newonboard_Q1_title">Нужно предоставить документы?</string>
   <string name="tangempay_newonboard_Q2_body">Нет. KYC привязывается только к Tangem Pay. Сам Tangem Wallet остаётся полностью отдельной self-custodial средой без KYC.</string>
@@ -2194,8 +2254,61 @@
   <string name="tangempay_onboarding_setup_wallet_description">И привяжем Tangem Pay к нему</string>
   <string name="tangempay_onboarding_setup_wallet_title">Настроим новый кошелёк</string>
   <string name="tangempay_onboarding_title">Откройте виртуальную\nTangem Pay Card</string>
+  <string name="tangempay_order_card_error_active_order">Заказ карты уже оформляется.</string>
+  <string name="tangempay_order_card_error_insufficient_balance">Недостаточно средств для доставки. Пополните баланс и попробуйте снова.</string>
+  <string name="tangempay_order_card_error_invalid_address">Проверьте адрес доставки и попробуйте снова.</string>
+  <string name="tangempay_order_card_error_invalid_source_card">Эту карту нельзя перевыпустить.</string>
+  <string name="tangempay_order_card_error_offer_unavailable">Эта карта больше недоступна.</string>
+  <string name="tangempay_order_data_address_line1">Адрес, строка 1</string>
+  <string name="tangempay_order_data_address_line2">Адрес, строка 2</string>
+  <string name="tangempay_order_data_city">Город</string>
+  <string name="tangempay_order_data_clear_field">Очистить поле</string>
+  <string name="tangempay_order_data_country">Страна</string>
+  <string name="tangempay_order_data_email">Эл. почта</string>
+  <string name="tangempay_order_data_field_invalid">Недопустимые символы</string>
+  <string name="tangempay_order_data_field_latin_only">Используйте только латинские буквы</string>
+  <string name="tangempay_order_data_field_optional">Необязательно</string>
+  <string name="tangempay_order_data_field_required">Обязательное поле</string>
+  <string name="tangempay_order_data_first_name">Имя</string>
+  <string name="tangempay_order_data_last_name">Фамилия</string>
+  <string name="tangempay_order_data_name_on_card">Имя на карте</string>
+  <string name="tangempay_order_data_order_button">Заказать карту</string>
+  <string name="tangempay_order_data_phone">Телефон</string>
+  <string name="tangempay_order_data_postal_code">Почтовый индекс</string>
+  <string name="tangempay_order_data_region">Регион</string>
+  <string name="tangempay_order_data_subtitle">Проверьте данные</string>
+  <string name="tangempay_order_data_success_title">Карта заказана</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="one">Доставка займет до %d рабочего дня</item>
+    <item quantity="few">Доставка займет до %d рабочих дней</item>
+    <item quantity="many">Доставка займет до %d рабочих дней</item>
+    <item quantity="other">Доставка займет до %d рабочих дней</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">В течение 3 рабочих дней на адрес %s придет письмо от службы доставки</string>
+  <string name="tangempay_order_success_show_card">Показать карту</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">Страна резидентства</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="one">До %d рабочего дня</item>
+    <item quantity="few">До %d рабочих дней</item>
+    <item quantity="many">До %d рабочих дней</item>
+    <item quantity="other">До %d рабочих дней</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d рабочих дней</string>
+  <string name="tangempay_order_type_delivery_fee">Стоимость доставки</string>
+  <string name="tangempay_order_type_delivery_time">Срок доставки</string>
+  <string name="tangempay_order_type_delivery_time_instant">Мгновенно</string>
+  <string name="tangempay_order_type_delivery_to">Доставка в</string>
+  <string name="tangempay_order_type_first_delivery_free">Первая доставка бесплатно</string>
+  <string name="tangempay_order_type_issue_fee">Комиссия за выпуск</string>
+  <string name="tangempay_order_type_not_enough_money">Недостаточно средств</string>
+  <string name="tangempay_order_type_segment_plastic">Пластиковая</string>
+  <string name="tangempay_order_type_segment_virtual">Виртуальная</string>
+  <string name="tangempay_order_type_select">Выбрать</string>
+  <string name="tangempay_order_type_title">Заказ новой карты</string>
+  <string name="tangempay_order_type_unavailable">Недоступно</string>
   <string name="tangempay_other_networks_header">Другие сети</string>
-  <string name="tangempay_other_networks_subtitle">А затем переведите на платёжный счёт, без комиссии</string>
+  <string name="tangempay_other_networks_subtitle">а затем переведите на платёжный счёт, без комиссии</string>
   <string name="tangempay_other_networks_title">Отправьте USDT / USDC в любой сети на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Поддержка</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
@@ -2211,6 +2324,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Внесите USDC на счёт, чтобы покрыть комиссию</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Невозможно покрыть комиссию</string>
   <string name="tangempay_reissue_card_title">Перевыпустить карту?</string>
+  <string name="tangempay_reissue_plastic_description">Текущая пластиковая карта будет сразу закрыта. Вы получите новую пластиковую карту с новыми реквизитами.</string>
+  <string name="tangempay_reissue_plastic_title">Перевыпустить пластиковую карту?</string>
   <string name="tangempay_remove_account">Удалить аккаунт</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay будет удалён с главного экрана и больше не появится, даже после переустановки приложения.</string>
   <string name="tangempay_remove_account_alert_title">Удалить аккаунт?</string>
@@ -2300,8 +2415,10 @@
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Показать QR код</string>
   <string name="token_summary_galaxy_score_description">Galaxy Score объединяет рыночные показатели и активность в соцсетях в единую оценку от 0 до 100, которая отражает общее состояние актива. Источник: LunarCrush.</string>
+  <string name="token_summary_go_to_swap_button">Перейти к обмену</string>
   <string name="token_summary_ma_cross_description">MA Cross сравнивает средние цены за 50 и 200 дней и показывает, торгуется ли актив выше или ниже своего долгосрочного тренда. Источник: taapi.io.</string>
   <string name="token_summary_macd_description">MACD сравнивает краткосрочный и долгосрочный ценовой импульс и показывает, усиливается он или ослабевает. Источник: taapi.io.</string>
+  <string name="token_summary_outlook_is_not_available">Прогноз для этого токена недоступен</string>
   <string name="token_summary_rsi_description">RSI (индекс относительной силы) показывает, не слишком ли интенсивно покупали или продавали актив за последние 14 периодов, и сигнализирует о возможной перекупленности или перепроданности. Источник: taapi.io.</string>
   <string name="token_summary_sentiment_description">Sentiment (настроение) оценивает тональность постов об активе в соцсетях по шкале от 1 до 5: чем выше оценка, тем позитивнее обсуждение. Источник: LunarCrush.</string>
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>

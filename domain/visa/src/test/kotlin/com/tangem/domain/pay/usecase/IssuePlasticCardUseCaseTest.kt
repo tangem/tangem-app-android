@@ -66,6 +66,25 @@ internal class IssuePlasticCardUseCaseTest {
     }
 
     @Test
+    fun `GIVEN a plastic offer without a spec name WHEN invoked THEN the offer is treated as unavailable`() =
+        runTest {
+            // Arrange
+            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns
+                listOf(offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN, specificationName = null)).right()
+
+            // Act
+            val result = useCase(
+                userWalletId = USER_WALLET_ID,
+                plasticCardOrder = plasticCardOrder(),
+                idempotencyKey = IDEMPOTENCY_KEY,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(VisaApiError.CardIssueOfferNotAvailable)
+            coVerify(exactly = 0) { orderRepository.createPlasticIssueOrder(any(), any(), any(), any()) }
+        }
+
+    @Test
     fun `GIVEN a plastic offer WHEN no active order THEN creates the order with the offer id and spec`() = runTest {
         // Arrange
         givenNoActiveOrders()
@@ -277,10 +296,10 @@ internal class IssuePlasticCardUseCaseTest {
 
     private fun virtualOffer() = offer(type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
 
-    private fun offer(type: Offer.Type) = Offer(
+    private fun offer(type: Offer.Type, specificationName: String? = SPEC_NAME) = Offer(
         type = type,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
-        data = Offer.Data(specificationName = SPEC_NAME, orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN),
+        data = Offer.Data(specificationName = specificationName, orderType = OrderType.CARD_ISSUE_PLASTIC_RAIN),
     )
 
     private fun plasticCardOrder() = PlasticCardOrder(

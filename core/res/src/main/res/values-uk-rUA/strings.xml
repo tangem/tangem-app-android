@@ -289,6 +289,7 @@
   <string name="common_added">Додано</string>
   <string name="common_address">Адреса</string>
   <string name="common_all">Усе</string>
+  <string name="common_all_accounts">Усі акаунти</string>
   <string name="common_allow">Дозволити</string>
   <string name="common_amount">Сума</string>
   <string name="common_analytics">Аналітика</string>
@@ -298,6 +299,12 @@
   <string name="common_approve">Підтвердити</string>
   <string name="common_approved">Схвалено</string>
   <string name="common_approving">Схвалення</string>
+  <plurals name="common_assets_count">
+    <item quantity="one">%d актив</item>
+    <item quantity="few">%d активи</item>
+    <item quantity="many">%d активів</item>
+    <item quantity="other">%d активів</item>
+  </plurals>
   <string name="common_attention">Увага</string>
   <string name="common_available_networks">Доступні мережі</string>
   <string name="common_backup">Резервне копіювання</string>
@@ -332,6 +339,7 @@
   <string name="common_create">Створити</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Власна</string>
+  <string name="common_day">день</string>
   <plurals name="common_days">
     <item quantity="one">%d день</item>
     <item quantity="few">%d днів</item>
@@ -418,6 +426,20 @@
     <item quantity="other">%d хвилин тому</item>
   </plurals>
   <string name="common_month">місяць</string>
+  <string-array name="common_month_in">
+    <item>січні</item>
+    <item>лютому</item>
+    <item>березні</item>
+    <item>квітні</item>
+    <item>травні</item>
+    <item>червні</item>
+    <item>липні</item>
+    <item>серпні</item>
+    <item>вересні</item>
+    <item>жовтні</item>
+    <item>листопаді</item>
+    <item>грудні</item>
+  </string-array>
   <string name="common_more">Більше</string>
   <string name="common_network">Мережа</string>
   <string name="common_network_fee_title">Комісія мережі</string>
@@ -435,6 +457,7 @@
   <string name="common_no">Ні</string>
   <string name="common_no_address">Немає адреси</string>
   <string name="common_no_results">Немає результатів</string>
+  <string name="common_none">Немає</string>
   <string name="common_not_added">Не додано</string>
   <string name="common_not_available">Недоступно</string>
   <string name="common_not_now">Не зараз</string>
@@ -746,6 +769,13 @@
   <string name="feedback_subject_support_tangem">Звернення в підтримку Tangem</string>
   <string name="feedback_subject_tx_failed">Не вдається відправити транзакцію</string>
   <string name="feedback_token_description_error">Помилка в описі монети</string>
+  <string name="for_you_description">Огляд портфеля та можливості для заробітку</string>
+  <string name="for_you_earn_opportunities">Можливості для заробітку</string>
+  <string name="for_you_earn_opportunities_explore">Переглянути всі токени</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">Максимальна можлива винагорода: %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/рік</string>
+  <string name="for_you_portfolio_review_title">Огляд портфеля</string>
+  <string name="for_you_title">Для вас</string>
   <string name="force_update_action">Оновити зараз</string>
   <string name="force_update_banner_message">Оновіть застосунок Tangem, щоб відкрити нові функції та отримати останні покращення.</string>
   <string name="force_update_banner_title">Доступна нова версія</string>
@@ -843,15 +873,22 @@
   <string name="hw_cloud_backup_no_access_description">Увійдіть до облікового запису Google ще раз, щоб зберегти резервну копію гаманця.</string>
   <string name="hw_cloud_backup_no_access_sign_in">Увійти</string>
   <string name="hw_cloud_backup_no_backups_description">Будь ласка, увійдіть до іншого облікового запису або імпортуйте фразу відновлення.</string>
+  <string name="hw_cloud_backup_not_found_create">Створити копію</string>
+  <string name="hw_cloud_backup_not_found_description">Резервну копію цього гаманця вже було створено, але нам не вдалося її знайти.</string>
+  <string name="hw_cloud_backup_not_found_forget">Забути копію</string>
+  <string name="hw_cloud_backup_not_found_title">Копію не знайдено</string>
   <string name="hw_cloud_backup_password_hint">Пароль</string>
   <string name="hw_cloud_backup_password_rule_v2">Щонайменше %d символів: великі й малі літери, цифри та спеціальні символи.</string>
   <string name="hw_cloud_backup_passwords_dont_match">Паролі не збігаються</string>
   <string name="hw_cloud_backup_permissions_description">Немає необхідних дозволів. Надайте повний доступ, щоб зберегти резервну копію гаманця в Google Drive.</string>
+  <string name="hw_cloud_backup_permissions_description_v2">Немає необхідних дозволів. Надайте повний доступ, щоб зберегти резервну копію гаманця в %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Повний доступ до Google Drive</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Надайте повний доступ до %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s: резервна копія «%2$s»</string>
   <string name="hw_cloud_backup_removed">Резервну копію видалено</string>
   <string name="hw_cloud_backup_restore_error_title">Щось пішло не так</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Будь ласка, спробуйте пізніше або імпортуйте фразу відновлення.</string>
+  <string name="hw_cloud_backup_restore_navtitle_v2">Копія в %1$s</string>
   <string name="hw_cloud_backup_restore_passphrase_description">Введіть точну парольну фразу для цього гаманця. Вона чутлива до регістру: інша фраза відкриє інший набір адрес.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Введіть парольну фразу</string>
   <string name="hw_cloud_backup_restore_password_button">Відновити</string>
@@ -895,6 +932,7 @@
   <string name="hw_mobile_wallet">Мобільний гаманець</string>
   <string name="hw_remove_wallet_action_forget_title">Забути гаманець</string>
   <string name="hw_remove_wallet_attention_description">Цей гаманець буде назавжди видалено з вашого пристрою</string>
+  <string name="hw_remove_wallet_cloud_backup_description">Гаманець буде видалено з цього пристрою. Резервна копія в %s залишиться в безпеці: ви зможете будь-коли відновити цей гаманець за допомогою пароля.</string>
   <string name="hw_remove_wallet_cloud_backup_title">Забути цей гаманець?</string>
   <string name="hw_remove_wallet_confirmation_title">Ви впевнені, що хочете виконати цю операцію?</string>
   <string name="hw_remove_wallet_forget_and_delete_backup">Забути гаманець і видалити копію</string>
@@ -905,7 +943,7 @@
   <string name="hw_remove_wallet_notification_action_forget">Забути гаманець</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">Все одно забути</string>
   <string name="hw_remove_wallet_notification_description_has_backup">Резервна копія цього гаманця існує. Перевірте її перед видаленням, щоб переконатися, що зможете відновити гаманець пізніше.</string>
-  <string name="hw_remove_wallet_notification_description_has_backup_v2">Цей гаманець має резервну копію. Перевірте її перед видаленням, щоб переконатися, що зможете відновити гаманець пізніше.</string>
+  <string name="hw_remove_wallet_notification_description_has_backup_v2">Цей гаманець має резервну копію. Перевірте її, перш ніж забути гаманець, щоб переконатися, що зможете відновити його пізніше.</string>
   <string name="hw_remove_wallet_notification_description_without_backup">Якщо ви видалите цей гаманець без резервної копії, ви назавжди втратите доступ до своїх коштів.</string>
   <string name="hw_remove_wallet_notification_title">Забути цей гаманець?</string>
   <string name="hw_remove_wallet_notification_title_v2">Забути цей гаманець?</string>
@@ -989,6 +1027,7 @@
   <string name="manage_tokens_unavailable_description">Обраний токен наразі недоступний для дій у криптогаманці. Але не хвилюйтеся, ви можете висловити свою зацікавленість, проголосувавши за його інтеграцію.</string>
   <string name="manage_tokens_unavailable_vote">Проголосувати</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Гаманець не підтримує більше однієї мережі</string>
+  <string name="market_chart_top_holding">%s вашого портфеля</string>
   <string name="markets_about_coin_header">Про монету</string>
   <string name="markets_add_to_my_portfolio_description">Щоб купити, обміняти або отримати цей актив, додайте його до свого портфоліо</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Цей актив наразі не підтримується в гаманці</string>
@@ -1958,6 +1997,8 @@
   <string name="tangempay_account_unable_to_use_rooted">Заборонено використовувати на root-пристроях</string>
   <string name="tangempay_available_balance">Баланс</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_error_subtitle">Натисніть, щоб оновити</string>
+  <string name="tangempay_bank_transfer_fee_error_title">Не вдалося завантажити інформацію про комісію</string>
   <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
   <string name="tangempay_bank_transfer_fee_header">Комісія за онрамп</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Отримані USD будуть конвертовані в USDC за курсом 1:1</string>
@@ -1967,8 +2008,23 @@
   <string name="tangempay_bank_transfer_success_subtitle">Це може зайняти певний час</string>
   <string name="tangempay_bank_transfer_success_title">Підготовка ваших банківських реквізитів</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT-перекази не приймаються, кошти буде повернено</string>
+  <string name="tangempay_bank_transfer_terms_of_use">Умови обслуговування</string>
   <string name="tangempay_cancel_kyc">Приховати KYC з головного екрана</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">Зверніться до підтримки</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">Ви вичерпали спроби активації</string>
+  <string name="tangempay_card_activation_description">Введіть останні 4 цифри номера вашої картки</string>
+  <string name="tangempay_card_activation_error">Неправильні цифри. Спробуйте ще раз</string>
+  <string name="tangempay_card_activation_error_already_active">Ця картка вже активована.</string>
+  <string name="tangempay_card_activation_error_in_progress">Активація вже виконується. Будь ласка, зачекайте.</string>
+  <string name="tangempay_card_activation_error_not_physical">Це не пластикова картка</string>
+  <string name="tangempay_card_activation_error_not_ready">Картка ще не готова до активації. Спробуйте ще раз після її отримання.</string>
+  <string name="tangempay_card_activation_in_progress">Активуємо вашу картку</string>
   <string name="tangempay_card_default_name">Картка Tangem Pay 1</string>
+  <string name="tangempay_card_delivery_banner_description">Активуйте її після отримання</string>
+  <string name="tangempay_card_delivery_banner_description_many">Активуйте їх після отримання</string>
+  <string name="tangempay_card_delivery_banner_title">Ваша картка вже в дорозі</string>
+  <string name="tangempay_card_delivery_banner_title_many">Ваші картки вже в дорозі</string>
+  <string name="tangempay_card_details_activate">Активувати картку</string>
   <string name="tangempay_card_details_add_funds">Поповнити рахунок</string>
   <string name="tangempay_card_details_add_funds_subtitle">Варіанти поповнення</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Додати до Google Wallet</string>
@@ -1980,11 +2036,13 @@
   <string name="tangempay_card_details_change_pin_success_description">Картка готова до оплат.</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN-код створено</string>
   <string name="tangempay_card_details_cvc">CVC</string>
+  <string name="tangempay_card_details_delivery_description">Ваша картка вже в дорозі. Оновлення про доставку надійдуть від служби доставки на %s</string>
   <string name="tangempay_card_details_error_text">Не вдалося завантажити дані. Спробуйте пізніше.</string>
   <string name="tangempay_card_details_expiry">Термін дії</string>
   <string name="tangempay_card_details_freeze_card">Заморозити картку</string>
   <string name="tangempay_card_details_hide_details">Сховати деталі</string>
   <string name="tangempay_card_details_hide_text">Приховати</string>
+  <string name="tangempay_card_details_name_on_card">Ім\'я власника картки</string>
   <string name="tangempay_card_details_open_wallet_button">Відкрити Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Налаштуйте Tangem Pay в кілька кроків і почніть платити за допомогою Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Налаштуйте Tangem Pay в кілька кроків і почніть платити за допомогою Apple Pay.</string>
@@ -2026,6 +2084,7 @@
   <string name="tangempay_card_edit_name_placeholder">Назва картки</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Встановити ліміт від %s</string>
   <string name="tangempay_card_limit_setup_error_message">Не вдалося встановити ліміт. Будь ласка, спробуйте ще раз.</string>
+  <string name="tangempay_card_page_activating_banner_title">Активуємо вашу пластикову картку</string>
   <string name="tangempay_card_page_closing_banner_description">Зазвичай займає до 5 хвилин</string>
   <string name="tangempay_card_page_closing_banner_title">Закриття вашої картки</string>
   <string name="tangempay_card_page_daily_limit_change">Змінити</string>
@@ -2066,12 +2125,18 @@
   <string name="tangempay_cashback_empty_subtitle">Накопичена сума буде показана тут</string>
   <string name="tangempay_cashback_empty_title">Почніть витрачати\nі отримуйте кешбек</string>
   <string name="tangempay_cashback_error_title">Не вдалося завантажити сторінку.\nНатисніть, щоб оновити</string>
+  <string name="tangempay_cashback_menu_item_loading">Завантаження...</string>
+  <string name="tangempay_cashback_menu_item_title">Кешбек за %s</string>
   <string name="tangempay_cashback_rate_subtitle">З вашим тарифом %1$s</string>
   <string name="tangempay_cashback_rate_title">Кешбек %1$s%%</string>
   <string name="tangempay_cashback_rate_title_up_to">Кешбек до %1$s%%</string>
   <string name="tangempay_cashback_refund_banner">Ми отримали повернення за покупку, за яку раніше було нараховано кешбек</string>
   <string name="tangempay_cashback_title">Кешбек</string>
   <string name="tangempay_cashback_total_earned">%1$s зароблено загалом</string>
+  <string name="tangempay_cashback_widget_empty_description">Оплачуйте покупки та отримуйте кешбек</string>
+  <string name="tangempay_cashback_widget_error_description">Натисніть, щоб оновити</string>
+  <string name="tangempay_cashback_widget_error_title">Кешбек недоступний</string>
+  <string name="tangempay_cashback_widget_refund_description">Зменшено через повернення покупок</string>
   <string name="tangempay_cashback_widget_title">%1$s кешбек за %2$s</string>
   <string name="tangempay_change_pin_code">Змінити PIN-код</string>
   <string name="tangempay_changing_plan">Зміна тарифу</string>
@@ -2083,8 +2148,10 @@
   <string name="tangempay_common_card">Картка</string>
   <string name="tangempay_common_error_loading">Помилка завантаження</string>
   <string name="tangempay_current_plan_active_till_notification">Ваш тариф %1$s активний до %2$s, після чого ми переведемо вас на %3$s. %4$s не буде списано.</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">Ми переводимо вас на тариф %s і очікуємо на оплату</string>
   <string name="tangempay_current_plan_change">Змінити тариф</string>
   <string name="tangempay_current_plan_fee_charged_notification">Щомісячна плата %1$s буде списана %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Повні умови</string>
   <string name="tangempay_current_plan_section_card">Пов\'язане з карткою</string>
   <string name="tangempay_current_plan_section_plan">Пов\'язане з тарифом</string>
   <string name="tangempay_current_plan_stay_button">Залишитися на %1$s</string>
@@ -2152,6 +2219,8 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Досягнуто ліміту карток для цього тарифу</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Покращити тариф</string>
   <string name="tangempay_maximum_cards_issued_title">Випущено максимальну кількість карток</string>
+  <string name="tangempay_multichain_show_qr">Показати QR-код</string>
+  <string name="tangempay_multinetwork">Multinetwork</string>
   <string name="tangempay_newonboard_Q1_body">Так — для користування регульованою карткою Visa обов’язкова верифікація особи. KYC проводить Sumsub, compliance-партнер.</string>
   <string name="tangempay_newonboard_Q1_title">Чи потрібно надавати документи?</string>
   <string name="tangempay_newonboard_Q2_body">Ні. KYC стосується лише акаунта Tangem Pay. Сам Tangem Wallet залишається окремим self-custodial середовищем без KYC.</string>
@@ -2182,6 +2251,59 @@
   <string name="tangempay_onboarding_setup_wallet_description">І прив’яжемо Tangem Pay до нього</string>
   <string name="tangempay_onboarding_setup_wallet_title">Ми створимо новий гаманець</string>
   <string name="tangempay_onboarding_title">Отримайте картку Tangem Pay за лічені хвилини</string>
+  <string name="tangempay_order_card_error_active_order">Замовлення картки вже оформлюється.</string>
+  <string name="tangempay_order_card_error_insufficient_balance">Недостатньо коштів для доставки. Поповніть рахунок і спробуйте ще раз.</string>
+  <string name="tangempay_order_card_error_invalid_address">Перевірте адресу доставки та спробуйте ще раз.</string>
+  <string name="tangempay_order_card_error_invalid_source_card">Цю картку не можна замінити.</string>
+  <string name="tangempay_order_card_error_offer_unavailable">Ця картка більше недоступна.</string>
+  <string name="tangempay_order_data_address_line1">Адреса, рядок 1</string>
+  <string name="tangempay_order_data_address_line2">Адреса, рядок 2</string>
+  <string name="tangempay_order_data_city">Місто</string>
+  <string name="tangempay_order_data_clear_field">Очистити поле</string>
+  <string name="tangempay_order_data_country">Країна</string>
+  <string name="tangempay_order_data_email">Ел. пошта</string>
+  <string name="tangempay_order_data_field_invalid">Неприпустимі символи</string>
+  <string name="tangempay_order_data_field_latin_only">Використовуйте лише латинські літери</string>
+  <string name="tangempay_order_data_field_optional">Необов\'язково</string>
+  <string name="tangempay_order_data_field_required">Обов\'язкове поле</string>
+  <string name="tangempay_order_data_first_name">Ім\'я</string>
+  <string name="tangempay_order_data_last_name">Прізвище</string>
+  <string name="tangempay_order_data_name_on_card">Ім\'я на картці</string>
+  <string name="tangempay_order_data_order_button">Замовити картку</string>
+  <string name="tangempay_order_data_phone">Телефон</string>
+  <string name="tangempay_order_data_postal_code">Поштовий індекс</string>
+  <string name="tangempay_order_data_region">Регіон</string>
+  <string name="tangempay_order_data_subtitle">Перевірте дані</string>
+  <string name="tangempay_order_data_success_title">Картку замовлено</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="one">Доставка триватиме до %d робочого дня</item>
+    <item quantity="few">Доставка триватиме до %d робочих днів</item>
+    <item quantity="many">Доставка триватиме до %d робочих днів</item>
+    <item quantity="other">Доставка триватиме до %d робочих днів</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">Протягом 3 робочих днів на адресу %s надійде лист від служби доставки</string>
+  <string name="tangempay_order_success_show_card">Показати картку</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">Країна проживання</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="one">До %d робочого дня</item>
+    <item quantity="few">До %d робочих днів</item>
+    <item quantity="many">До %d робочих днів</item>
+    <item quantity="other">До %d робочих днів</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d робочих днів</string>
+  <string name="tangempay_order_type_delivery_fee">Вартість доставки</string>
+  <string name="tangempay_order_type_delivery_time">Термін доставки</string>
+  <string name="tangempay_order_type_delivery_time_instant">Миттєво</string>
+  <string name="tangempay_order_type_delivery_to">Доставка до</string>
+  <string name="tangempay_order_type_first_delivery_free">Перша доставка безкоштовно</string>
+  <string name="tangempay_order_type_issue_fee">Комісія за випуск</string>
+  <string name="tangempay_order_type_not_enough_money">Недостатньо коштів</string>
+  <string name="tangempay_order_type_segment_plastic">Пластикова</string>
+  <string name="tangempay_order_type_segment_virtual">Віртуальна</string>
+  <string name="tangempay_order_type_select">Вибрати</string>
+  <string name="tangempay_order_type_title">Замовлення нової картки</string>
+  <string name="tangempay_order_type_unavailable">Недоступно</string>
   <string name="tangempay_other_networks_header">Інші мережі</string>
   <string name="tangempay_other_networks_subtitle">А потім обміняйте на платіжний рахунок без комісії</string>
   <string name="tangempay_other_networks_title">Надішліть USDT / USDC у будь-якій мережі на ваш Tangem Wallet</string>
@@ -2199,6 +2321,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Поповніть платіжний рахунок в USDC, щоб покрити комісію за випуск</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Неможливо покрити комісію</string>
   <string name="tangempay_reissue_card_title">Перевипустити картку?</string>
+  <string name="tangempay_reissue_plastic_description">Поточну пластикову картку буде одразу закрито. Ви отримаєте нову пластикову картку з новими реквізитами.</string>
+  <string name="tangempay_reissue_plastic_title">Перевипустити пластикову картку?</string>
   <string name="tangempay_remove_account">Видалити аккаунт</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay буде видалено з головного екрана і більше не з\'явиться, навіть після переустановлення застосунку.</string>
   <string name="tangempay_remove_account_alert_title">Видалити аккаунт?</string>
@@ -2288,8 +2412,10 @@
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Показати QR-код</string>
   <string name="token_summary_galaxy_score_description">Galaxy Score поєднує ринкові показники й активність у соцмережах в єдину оцінку від 0 до 100, яка відображає загальний стан активу. Джерело: LunarCrush.</string>
+  <string name="token_summary_go_to_swap_button">Перейти до обміну</string>
   <string name="token_summary_ma_cross_description">MA Cross порівнює середні ціни за 50 і 200 днів та показує, чи торгується актив вище, чи нижче свого довгострокового тренду. Джерело: taapi.io.</string>
   <string name="token_summary_macd_description">MACD порівнює короткостроковий і довгостроковий ціновий імпульс та показує, посилюється він чи слабшає. Джерело: taapi.io.</string>
+  <string name="token_summary_outlook_is_not_available">Прогноз для цього токена недоступний</string>
   <string name="token_summary_rsi_description">RSI (індекс відносної сили) показує, чи не надто інтенсивно купували або продавали актив за останні 14 періодів, і сигналізує про можливу перекупленість чи перепроданість. Джерело: taapi.io.</string>
   <string name="token_summary_sentiment_description">Sentiment (настрій) оцінює тональність дописів про актив у соцмережах за шкалою від 1 до 5: що вища оцінка, то позитивніше обговорення. Джерело: LunarCrush.</string>
   <string name="token_swap_changelly_promotion_message">Обмінюйте цей токен на інші з %1$s комісією за обслуговування з %2$s по %3$s лютого.</string>
