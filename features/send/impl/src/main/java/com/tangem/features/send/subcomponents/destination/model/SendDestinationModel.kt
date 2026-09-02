@@ -22,6 +22,7 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
+import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -51,6 +52,7 @@ import com.tangem.features.send.api.subcomponents.destination.entity.Destination
 import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
 import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
+import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 import com.tangem.features.send.subcomponents.destination.model.transformers.*
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.annotations.RemoveWithToggle
@@ -66,8 +68,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
-import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
-import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 
 @Stable
 @ModelScoped
