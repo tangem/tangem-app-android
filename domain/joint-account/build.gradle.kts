@@ -26,5 +26,6 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     // endregion
 }
