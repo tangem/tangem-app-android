@@ -13,6 +13,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_K
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_APPLICATION_STOPPED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -206,6 +207,13 @@ object PreferencesKeys {
 
     fun getTangemPayVirtualAccountOrderIdKey(customerWalletAddress: String) =
         stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
+
+    // region Collectibles
+    /** The wallet id is in the key too: the account id alone changes once the backend starts assigning it. */
+    fun getCollectiblesHotDelegateKey(accountId: AccountId) = stringPreferencesKey(
+        name = "collectibles_hot_delegate_${accountId.value}_${accountId.userWalletId.stringValue}",
+    )
+    // endregion
 
     fun getTangemPayCustomerWalletAddressKey(userWalletId: UserWalletId) =
         stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")

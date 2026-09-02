@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -17,6 +18,18 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     // endregion
 
+    // region Other libraries
+    implementation(deps.arrow.core)
+    implementation(deps.moshi)
+    ksp(deps.moshi.kotlin.codegen)
+    // endregion
+
+    // region Tangem SDK
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
+    // endregion
+
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
@@ -24,6 +37,7 @@ dependencies {
 
     // region Core
     api(projects.core.utils)
+    implementation(projects.core.datasource)
     implementation(projects.core.pagination)
     // endregion
 
@@ -39,6 +53,7 @@ dependencies {
     // region Domain
     implementation(projects.domain.models)
     api(projects.domain.collectibles)
+    implementation(projects.domain.models)
     implementation(projects.domain.collectibles.models)
     implementation(projects.domain.core)
     implementation(projects.domain.common)
