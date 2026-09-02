@@ -1,17 +1,12 @@
 package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.blockchain.nft.models.NFTAsset
-import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
-import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
@@ -41,42 +36,6 @@ class MoshiModule {
                 NamePolymorphicAdapterFactory.of(NetworkStatusDM::class.java)
                     .withSubtype(NetworkStatusDM.Verified::class.java, "amounts")
                     .withSubtype(NetworkStatusDM.NoAccount::class.java, "amount_to_create_account"),
-            )
-            .add(
-                NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
-                    .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
-                    .withSubtype(PaymentAccountStatusValueDM.NotCreated::class.java, "not_created")
-                    .withSubtype(PaymentAccountStatusValueDM.UnderReview::class.java, "kyc_status")
-                    .withSubtype(PaymentAccountStatusValueDM.IssuingCard::class.java, "issuing_card")
-                    .withSubtype(PaymentAccountStatusValueDM.ActiveAccount::class.java, "active_account")
-                    .withSubtype(PaymentAccountStatusValueDM.DeactivatedAccount::class.java, "deactivated_account")
-                    .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
-            )
-            .add(
-                NamePolymorphicAdapterFactory.of(VirtualAccountStatusValueDM::class.java)
-                    .withSubtype(VirtualAccountStatusValueDM.Empty::class.java, "empty")
-                    .withSubtype(VirtualAccountStatusValueDM.NotCreated::class.java, "not_created")
-                    .withSubtype(VirtualAccountStatusValueDM.UnderReview::class.java, "kyc_status")
-                    .withSubtype(VirtualAccountStatusValueDM.Provisioning::class.java, "provisioning")
-                    .withSubtype(
-                        VirtualAccountStatusValueDM.CountryNotSupported::class.java,
-                        "country_not_supported",
-                    )
-                    .withSubtype(VirtualAccountStatusValueDM.ActiveAccount::class.java, "active_account"),
-            )
-            .add(
-                PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
-                    .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")
-                    .withSubtype(NFTCollection.Identifier.TON::class.java, "ton")
-                    .withSubtype(NFTCollection.Identifier.Solana::class.java, "sol")
-                    .withDefaultValue(NFTCollection.Identifier.Unknown),
-            )
-            .add(
-                PolymorphicJsonAdapterFactory.of(NFTAsset.Identifier::class.java, "bc")
-                    .withSubtype(NFTAsset.Identifier.EVM::class.java, "evm")
-                    .withSubtype(NFTAsset.Identifier.TON::class.java, "ton")
-                    .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
-                    .withDefaultValue(NFTAsset.Identifier.Unknown),
             )
             .addLast(KotlinJsonAdapterFactory())
 
