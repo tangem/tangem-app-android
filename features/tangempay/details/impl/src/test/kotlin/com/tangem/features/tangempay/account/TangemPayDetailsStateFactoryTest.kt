@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -268,7 +267,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getCardIssueFailedState(status, isBannerDismissed = false)
 
         // Assert
-        val banner = state.statusBannerState
+        val banner = state.messageBanner
         assertThat(banner?.state?.title).isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
         assertThat(banner?.state?.variant).isEqualTo(TangemMessageBanner.Variant.Error)
         assertThat(banner?.state?.secondaryButton?.text)
@@ -277,7 +276,6 @@ internal class TangemPayDetailsStateFactoryTest {
         banner?.state?.secondaryButton?.onClick?.invoke()
         verify(exactly = 1) { intents.onCardIssueFailedBannerDismissed() }
         verify(exactly = 1) { intents.onCardIssueFailedSupportClick() }
-        assertThat(state.errorNotificationConfig).isNull()
         assertThat(state.balanceBlockState.cardsBlockState?.cards).isEmpty()
         assertThat(state.balanceBlockState.cardsBlockState?.isAddCardEnabled).isTrue()
         assertThat(state.addFundsButton.isEnabled).isFalse()
@@ -344,7 +342,7 @@ internal class TangemPayDetailsStateFactoryTest {
         val state = factory.getCardIssueFailedState(status, isBannerDismissed = true)
 
         // Assert
-        assertThat(state.statusBannerState).isNull()
+        assertThat(state.messageBanner).isNull()
     }
 
     @Test
