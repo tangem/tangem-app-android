@@ -105,7 +105,7 @@
     },
     {
         "name": "AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "TWI_1259_TRON_GASLESS_ENABLED",
