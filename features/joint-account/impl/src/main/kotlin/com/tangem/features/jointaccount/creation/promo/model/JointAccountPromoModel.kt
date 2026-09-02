@@ -6,14 +6,16 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_lightning_24
-import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24
-import com.tangem.features.jointaccount.impl.R
+import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_20
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_20
+import com.tangem.core.ui.res.generated.icons.ic_users_20
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.features.jointaccount.creation.navigation.JointAccountCreationRoute
 import com.tangem.features.jointaccount.creation.promo.ui.state.JointAccountPromoUM
+import com.tangem.features.jointaccount.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,26 +35,42 @@ internal class JointAccountPromoModel @Inject constructor(
     private fun createState(): JointAccountPromoUM = JointAccountPromoUM(
         title = resourceReference(R.string.common_joint_account),
         subtitle = resourceReference(R.string.joint_account_onboarding_subtitle),
-        benefits = persistentListOf(
-            JointAccountPromoUM.BenefitUM(
+        points = persistentListOf(
+            JointAccountPromoUM.PointUM(
                 id = "members",
                 icon = TangemIconUM.Icon(
-                    imageVector = Icons.ic_lightning_24,
-                    tintReference = { TangemTheme.colors3.icon.status.info },
+                    imageVector = Icons.ic_user_plus_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
+                    },
                 ),
-                // TODO([REDACTED_TASK_KEY]) will be added
-                title = stringReference(value = "Up to 5 members"),
-                subtitle = stringReference(value = "Everyone shares one balance and history"),
+                lead = resourceReference(
+                    id = R.string.joint_account_onboarding_members_title,
+                    formatArgs = wrappedList(JointAccountConfig.MAX_MEMBERS_COUNT),
+                ),
+                description = resourceReference(R.string.joint_account_onboarding_members_description),
             ),
-            JointAccountPromoUM.BenefitUM(
-                id = "control",
+            JointAccountPromoUM.PointUM(
+                id = "shared",
                 icon = TangemIconUM.Icon(
-                    imageVector = Icons.ic_shield_checkmark_24,
-                    tintReference = { TangemTheme.colors3.icon.status.info },
+                    imageVector = Icons.ic_users_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
+                    },
                 ),
-                // TODO([REDACTED_TASK_KEY]) will be added
-                title = stringReference(value = "No single point of control"),
-                subtitle = stringReference(value = "Funds move only with enough signatures"),
+                lead = resourceReference(R.string.joint_account_onboarding_shared_title),
+                description = resourceReference(R.string.joint_account_onboarding_shared_description),
+            ),
+            JointAccountPromoUM.PointUM(
+                id = "approvals",
+                icon = TangemIconUM.Icon(
+                    imageVector = Icons.ic_shield_checkmark_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
+                    },
+                ),
+                lead = resourceReference(R.string.joint_account_onboarding_approvals_title),
+                description = resourceReference(R.string.joint_account_onboarding_approvals_description),
             ),
         ),
         onContinueClick = ::onContinueClick,
