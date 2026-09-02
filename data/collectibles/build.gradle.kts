@@ -19,6 +19,7 @@ dependencies {
     // endregion
 
     // region Other libraries
+    implementation(deps.androidx.datastore.core)
     implementation(deps.arrow.core)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
