@@ -66,6 +66,11 @@ internal class TangemPayErrorConverterTest {
             expected = VisaApiError.CardIssueInvalidShippingAddress,
         ),
         ConvertModel(
+            name = "400 with the issue emboss-name code -> CardIssueInvalidEmbossName",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_ISSUE_INVALID_EMBOSS_NAME)),
+            expected = VisaApiError.CardIssueInvalidEmbossName,
+        ),
+        ConvertModel(
             name = "400 with an unmodelled code -> Unknown",
             throwable = httpException(Code.BAD_REQUEST, body = coded(UNMODELLED_CODE)),
             expected = VisaApiError.Unknown(errorCode = FEATURE_CODE + UNMODELLED_CODE),
@@ -131,6 +136,11 @@ internal class TangemPayErrorConverterTest {
             expected = VisaApiError.CardReissuePlasticInvalidShippingAddress,
         ),
         ConvertModel(
+            name = "400 with the reissue emboss-name code -> CardReissuePlasticInvalidEmbossName",
+            throwable = httpException(Code.BAD_REQUEST, body = coded(CARD_REISSUE_PLASTIC_INVALID_EMBOSS_NAME)),
+            expected = VisaApiError.CardReissuePlasticInvalidEmbossName,
+        ),
+        ConvertModel(
             name = "400 with the real reissue body shape -> mapped by code, error name ignored",
             throwable = httpException(
                 Code.BAD_REQUEST,
@@ -176,6 +186,8 @@ internal class TangemPayErrorConverterTest {
         const val CARD_REISSUE_PLASTIC_INSUFFICIENT_BALANCE = 140134
         const val CARD_REISSUE_PLASTIC_NOT_AVAILABLE = 140135
         const val CARD_REISSUE_PLASTIC_INVALID_SHIPPING_ADDRESS = 140136
+        const val CARD_REISSUE_PLASTIC_INVALID_EMBOSS_NAME = 140143
+        const val CARD_ISSUE_INVALID_EMBOSS_NAME = 140144
         const val UNMODELLED_CODE = 149999
 
         fun httpException(code: Code, body: String?) = ApiResponseError.HttpException(

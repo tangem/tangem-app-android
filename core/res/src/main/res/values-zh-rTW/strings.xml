@@ -70,6 +70,20 @@
   <string name="common_import">導入</string>
   <string name="common_in">在</string>
   <string name="common_in_progress">進行中</string>
+  <string-array name="common_month_in">
+    <item>1月</item>
+    <item>2月</item>
+    <item>3月</item>
+    <item>4月</item>
+    <item>5月</item>
+    <item>6月</item>
+    <item>7月</item>
+    <item>8月</item>
+    <item>9月</item>
+    <item>10月</item>
+    <item>11月</item>
+    <item>12月</item>
+  </string-array>
   <string name="common_network_fee_title">網路費</string>
   <string name="common_no">否</string>
   <string name="common_ok">OK</string>
@@ -374,6 +388,8 @@
   <string name="tangempay_account_unable_to_use_rooted">無法在已取得 root 權限的裝置上使用</string>
   <string name="tangempay_available_balance">可用餘額</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_error_subtitle">點擊重新載入</string>
+  <string name="tangempay_bank_transfer_fee_error_title">載入手續費資訊失敗</string>
   <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
   <string name="tangempay_bank_transfer_fee_header">入金手續費</string>
   <string name="tangempay_bank_transfer_intro_subtitle">收到的美元將按 1:1 的匯率轉換為 USDC</string>
@@ -383,8 +399,23 @@
   <string name="tangempay_bank_transfer_success_subtitle">這可能需要一些時間</string>
   <string name="tangempay_bank_transfer_success_title">正在準備您的銀行資訊</string>
   <string name="tangempay_bank_transfer_swift_warning">不接受 SWIFT 轉帳，款項將退回</string>
+  <string name="tangempay_bank_transfer_terms_of_use">服務條款</string>
   <string name="tangempay_cancel_kyc">在主畫面隱藏身份驗證</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">請聯絡客服</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">您已超過啟用嘗試次數</string>
+  <string name="tangempay_card_activation_description">輸入您卡號的最後 4 位數字</string>
+  <string name="tangempay_card_activation_error">末位數字有誤，請重試</string>
+  <string name="tangempay_card_activation_error_already_active">該卡已啟用。</string>
+  <string name="tangempay_card_activation_error_in_progress">啟用正在進行中，請稍候。</string>
+  <string name="tangempay_card_activation_error_not_physical">這不是實體卡</string>
+  <string name="tangempay_card_activation_error_not_ready">該卡尚未準備好啟用。請在收到卡片後重試。</string>
+  <string name="tangempay_card_activation_in_progress">正在啟用您的卡片</string>
   <string name="tangempay_card_default_name">Tangem Pay 卡片 1</string>
+  <string name="tangempay_card_delivery_banner_description">收到後請啟用</string>
+  <string name="tangempay_card_delivery_banner_description_many">收到後請啟用</string>
+  <string name="tangempay_card_delivery_banner_title">您的卡片正在配送中</string>
+  <string name="tangempay_card_delivery_banner_title_many">您的卡片正在配送中</string>
+  <string name="tangempay_card_details_activate">啟用卡片</string>
   <string name="tangempay_card_details_add_funds">添加资金</string>
   <string name="tangempay_card_details_add_funds_subtitle">充值选项</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">新增至 Google 錢包</string>
@@ -396,11 +427,13 @@
   <string name="tangempay_card_details_change_pin_success_description">卡片已完全准备好进行支付。</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN 碼已建立</string>
   <string name="tangempay_card_details_cvc">CVC</string>
+  <string name="tangempay_card_details_delivery_description">您的卡片正在配送途中。物流公司將透過 %s 向您發送最新進度。</string>
   <string name="tangempay_card_details_error_text">無法載入資料。請稍後再試。</string>
   <string name="tangempay_card_details_expiry">有效期</string>
   <string name="tangempay_card_details_freeze_card">冻结卡片</string>
   <string name="tangempay_card_details_hide_details">隱藏詳情</string>
   <string name="tangempay_card_details_hide_text">隐藏</string>
+  <string name="tangempay_card_details_name_on_card">持卡人姓名</string>
   <string name="tangempay_card_details_open_wallet_button">打開 Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">只需幾次點擊即可設置 Tangem Pay 並開始使用 Google Pay 付款。</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">设置Tangem Pay只需几次点击，即可开始使用Apple Pay支付</string>
@@ -442,6 +475,7 @@
   <string name="tangempay_card_edit_name_placeholder">卡片名稱</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">從 %s 設定限額</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
+  <string name="tangempay_card_page_activating_banner_title">正在啟用您的實體卡</string>
   <string name="tangempay_card_page_closing_banner_description">通常需要最多 5 分鐘</string>
   <string name="tangempay_card_page_closing_banner_title">正在關閉您的卡片</string>
   <string name="tangempay_card_page_daily_limit_change">變更</string>
@@ -479,12 +513,18 @@
   <string name="tangempay_cashback_empty_subtitle">累計金額將顯示於此</string>
   <string name="tangempay_cashback_empty_title">開始消費\n即可賺取現金回饋</string>
   <string name="tangempay_cashback_error_title">頁面載入失敗。\n點選以重新載入</string>
+  <string name="tangempay_cashback_menu_item_loading">載入中...</string>
+  <string name="tangempay_cashback_menu_item_title">%s 現金回饋</string>
   <string name="tangempay_cashback_rate_subtitle">使用您的 %1$s 方案</string>
   <string name="tangempay_cashback_rate_title">現金回饋 %1$s%%</string>
   <string name="tangempay_cashback_rate_title_up_to">最高 %1$s%% 現金回饋</string>
   <string name="tangempay_cashback_refund_banner">我們收到了一筆此前已獲得現金回饋的購買退款</string>
   <string name="tangempay_cashback_title">現金回饋</string>
   <string name="tangempay_cashback_total_earned">累計賺取 %1$s</string>
+  <string name="tangempay_cashback_widget_empty_description">開始消費即可賺取現金回饋</string>
+  <string name="tangempay_cashback_widget_error_description">點擊重新載入</string>
+  <string name="tangempay_cashback_widget_error_title">現金回饋暫時無法使用</string>
+  <string name="tangempay_cashback_widget_refund_description">因退貨而減少</string>
   <string name="tangempay_cashback_widget_title">%2$s 中的 %1$s 現金回饋</string>
   <string name="tangempay_change_pin_code">修改PIN码</string>
   <string name="tangempay_changing_plan">正在變更您的方案</string>
@@ -496,8 +536,10 @@
   <string name="tangempay_common_card">卡片</string>
   <string name="tangempay_common_error_loading">載入錯誤</string>
   <string name="tangempay_current_plan_active_till_notification">您的 %1$s 方案將持續有效至 %2$s，之後我們將為您切換到 %3$s。不會向您收取 %4$s。</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">我們正在為您切換至 %s 方案，等待方案費用付款</string>
   <string name="tangempay_current_plan_change">變更方案</string>
   <string name="tangempay_current_plan_fee_charged_notification">月費 %1$s 將於 %2$s 扣除</string>
+  <string name="tangempay_current_plan_full_terms">完整條款</string>
   <string name="tangempay_current_plan_section_card">卡片相關</string>
   <string name="tangempay_current_plan_section_plan">方案相關</string>
   <string name="tangempay_current_plan_stay_button">保留 %1$s</string>
@@ -565,6 +607,8 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">該方案的卡片數量已達上限</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升級方案</string>
   <string name="tangempay_maximum_cards_issued_title">已達最大發卡數量</string>
+  <string name="tangempay_multichain_show_qr">顯示 QR 碼</string>
+  <string name="tangempay_multinetwork">多網絡</string>
   <string name="tangempay_newonboard_Q1_body">需要。使用受監管的 Visa 卡，必須完成身分驗證。KYC 由 Sumsub（的合規合作夥伴）處理。</string>
   <string name="tangempay_newonboard_Q1_title">我需要提交證件嗎？</string>
   <string name="tangempay_newonboard_Q2_body">不會。KYC 僅適用於 Tangem Pay 帳戶。你的 Tangem Wallet 仍是獨立、自我託管且無需 KYC 的環境。</string>
@@ -595,6 +639,53 @@
   <string name="tangempay_onboarding_setup_wallet_description">並將 Tangem Pay 綁定到該錢包</string>
   <string name="tangempay_onboarding_setup_wallet_title">我們將建立新錢包</string>
   <string name="tangempay_onboarding_title">立即獲取你的 Tangem Pay 卡</string>
+  <string name="tangempay_order_card_error_active_order">卡片訂單正在處理中。</string>
+  <string name="tangempay_order_card_error_insufficient_balance">餘額不足以支付配送費。請添加資金後重試。</string>
+  <string name="tangempay_order_card_error_invalid_address">請檢查配送地址後重試。</string>
+  <string name="tangempay_order_card_error_invalid_source_card">該卡無法更換。</string>
+  <string name="tangempay_order_card_error_offer_unavailable">該卡已不再提供。</string>
+  <string name="tangempay_order_data_address_line1">地址第 1 行</string>
+  <string name="tangempay_order_data_address_line2">地址第 2 行</string>
+  <string name="tangempay_order_data_city">城市</string>
+  <string name="tangempay_order_data_clear_field">清空輸入框</string>
+  <string name="tangempay_order_data_country">國家/地區</string>
+  <string name="tangempay_order_data_email">電子郵件</string>
+  <string name="tangempay_order_data_field_invalid">包含無效字元</string>
+  <string name="tangempay_order_data_field_latin_only">僅可使用拉丁字元</string>
+  <string name="tangempay_order_data_field_optional">選填</string>
+  <string name="tangempay_order_data_field_required">必填欄位</string>
+  <string name="tangempay_order_data_first_name">名字</string>
+  <string name="tangempay_order_data_last_name">姓氏</string>
+  <string name="tangempay_order_data_name_on_card">卡面姓名</string>
+  <string name="tangempay_order_data_order_button">訂購卡片</string>
+  <string name="tangempay_order_data_phone">電話</string>
+  <string name="tangempay_order_data_postal_code">郵遞區號</string>
+  <string name="tangempay_order_data_region">省/州</string>
+  <string name="tangempay_order_data_subtitle">核對資訊</string>
+  <string name="tangempay_order_data_success_title">卡片已訂購</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="other">配送最多需要 %d 個工作日</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">您將在 3 個工作日內透過 %s 收到物流公司的電子郵件</string>
+  <string name="tangempay_order_success_show_card">查看卡片</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">居住國家/地區</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="other">最多 %d 個工作日</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d 個工作日</string>
+  <string name="tangempay_order_type_delivery_fee">配送費</string>
+  <string name="tangempay_order_type_delivery_time">配送時間</string>
+  <string name="tangempay_order_type_delivery_time_instant">即時</string>
+  <string name="tangempay_order_type_delivery_to">配送至</string>
+  <string name="tangempay_order_type_first_delivery_free">首次配送免費</string>
+  <string name="tangempay_order_type_issue_fee">發卡費</string>
+  <string name="tangempay_order_type_not_enough_money">餘額不足</string>
+  <string name="tangempay_order_type_segment_plastic">實體卡</string>
+  <string name="tangempay_order_type_segment_virtual">虛擬卡</string>
+  <string name="tangempay_order_type_select">選擇</string>
+  <string name="tangempay_order_type_title">訂購新卡</string>
+  <string name="tangempay_order_type_unavailable">無法使用</string>
   <string name="tangempay_other_networks_header">其他網路</string>
   <string name="tangempay_other_networks_subtitle">然後以 1:1 匯率、零手續費兌換到支付帳戶</string>
   <string name="tangempay_other_networks_title">在任意鏈上將 USDT / USDC 傳送至您的 Tangem 錢包</string>
@@ -612,6 +703,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">將 USDC 存入支付帳戶以支付發行費用</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">無法支付費用</string>
   <string name="tangempay_reissue_card_title">要重新發行您的卡片嗎？</string>
+  <string name="tangempay_reissue_plastic_description">您目前的實體卡將立即被關閉。您將收到一張帶有新卡片資料的實體卡。</string>
+  <string name="tangempay_reissue_plastic_title">要更換實體卡嗎？</string>
   <string name="tangempay_remove_account">移除帳戶</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay 將從主畫面移除，即使重新安裝應用程式，也不會再次出現。</string>
   <string name="tangempay_remove_account_alert_title">移除帳戶？</string>
