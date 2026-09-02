@@ -13,6 +13,8 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.OtelIncludedEvent
+import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
@@ -143,7 +145,16 @@ internal sealed class SendWithSwapAnalyticEvents(
             SEND_TOKEN to fromToken.symbol,
             SEND_BLOCKCHAIN to fromToken.network.name,
         ),
-    )
+    ), OtelIncludedEvent {
+
+        override val otelMetric = OtelMetric.Counter(allowedParams = setOf(SEND_TOKEN))
+
+        override val otelParamOverrides = if (fromToken.isCustom) {
+            mapOf(SEND_TOKEN to OtelIncludedEvent.CUSTOM_TOKEN)
+        } else {
+            emptyMap()
+        }
+    }
 
     data class ErrorMinAmount(
         val fromToken: CryptoCurrency,
