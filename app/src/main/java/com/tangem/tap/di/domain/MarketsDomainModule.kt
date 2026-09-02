@@ -92,6 +92,20 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetMarketCategoriesUseCase(marketsTokenRepository: MarketsTokenRepository): GetMarketCategoriesUseCase {
+        return GetMarketCategoriesUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetMarketCategoryListFlowUseCase(
+        marketsTokenRepository: MarketsTokenRepository,
+    ): GetMarketCategoryListFlowUseCase {
+        return GetMarketCategoryListFlowUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideFetchCoinIndicatorsUseCase(
         coinIndicatorsRepository: CoinIndicatorsRepository,
     ): FetchCoinIndicatorsUseCase {
