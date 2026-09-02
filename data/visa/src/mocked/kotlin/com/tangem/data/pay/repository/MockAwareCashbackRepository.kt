@@ -92,7 +92,7 @@ internal class MockAwareCashbackRepository @Inject constructor(
                     payoutEnd = DateTime.parse("2026-07-05"),
                 ),
                 previousPayout = TangemPayCashback.PreviousPayout(
-                    endDate = DateTime.parse("2026-06-05"),
+                    endDate = DateTime.now().plusDays(3),
                     amount = BigDecimal("18.00"),
                 ),
             ),
