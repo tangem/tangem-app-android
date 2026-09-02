@@ -1,11 +1,11 @@
-package com.tangem.datasource.local.walletmanager
+package com.tangem.data.walletmanager.store
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-interface WalletManagersStore {
+internal interface WalletManagersStore {
 
     fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
 
