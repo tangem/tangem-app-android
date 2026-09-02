@@ -125,12 +125,8 @@ dependencies {
     // region Domain models
     api(projects.domain.models)
     api(projects.domain.nft.models)
-    api(projects.domain.onramp.models)
     api(projects.domain.staking.models)
-    api(projects.domain.txhistory.models)
     api(projects.domain.walletConnect.models)
-    api(projects.domain.wallets.models)
-    api(projects.domain.yieldSupply.models)
     // endregion
 
     // region Tests
