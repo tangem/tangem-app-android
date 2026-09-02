@@ -200,6 +200,39 @@ internal class ActivateJointAccountUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the tapped wallet is not the creator WHEN invoke THEN NotCreator and nothing is sent`() = runTest {
+        // Arrange — the backend would reject the signature with 403 anyway, the check only fails fast
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
+            flowOf(listOf(jointAccount()))
+        coEvery { signer.sign(any(), any()) } returns signResult(ownerAddress = MEMBER_ADDRESS).right()
+
+        // Act
+        val actual = useCase(account = account)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountActivationError.NotCreator.left())
+        coVerify(exactly = 0) { repository.activate(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a member address no Safe accepts WHEN invoke THEN Failed and the card is never asked`() = runTest {
+        // Arrange — a composition no Safe can be deployed from is a distinct failure, not a mismatch
+        val jointAccount = jointAccount().let { broken ->
+            broken.copy(
+                members = broken.members.map { it.copy(address = "not-an-address") },
+            )
+        }
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
+
+        // Act
+        val actual = useCase(account = account)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(JointAccountActivationError.Failed::class.java)
+        coVerify(exactly = 0) { signer.sign(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN card session dismissed WHEN invoke THEN UserCancelled and nothing is sent`() = runTest {
         // Arrange
         every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
@@ -268,8 +301,8 @@ internal class ActivateJointAccountUseCaseTest {
             .getOrNull()!!
     }
 
-    private fun signResult() = JointAccountSignResult(
-        ownerAddress = OWNER_ADDRESS,
+    private fun signResult(ownerAddress: String = OWNER_ADDRESS) = JointAccountSignResult(
+        ownerAddress = ownerAddress,
         canonicalPayload = byteArrayOf(1, 2, 3),
         signature = SIGNATURE,
         derivedKeys = emptyMap(),
