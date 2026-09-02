@@ -221,6 +221,7 @@ internal class PolymarketFeedContentTransformerTest {
 
     private companion object {
         val PREV_STATE = PolymarketMainUM(
+            balance = null,
             categories = persistentListOf(
                 PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
             ),
