@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.utils.annotations.RemoveWithToggle
 
 /**
 [REDACTED_AUTHOR]
@@ -101,6 +102,19 @@ object Dialogs {
                 onClick = onContactSupport,
             )
         },
+    )
+
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
+    fun backupErrorAddFundsDisabled(onContactSupport: () -> Unit): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.warning_backup_error_add_funds_title),
+        message = resourceReference(R.string.warning_backup_error_add_funds_message),
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.common_contact_support),
+                onClick = onContactSupport,
+            )
+        },
+        secondActionBuilder = { cancelAction() },
     )
 
     /**

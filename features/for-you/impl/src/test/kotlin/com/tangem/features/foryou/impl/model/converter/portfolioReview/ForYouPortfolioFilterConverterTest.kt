@@ -176,14 +176,14 @@ internal class ForYouPortfolioFilterConverterTest {
     )
 
     /** A picked account carrying a single currency, so it shows up in the portfolio's account statuses. */
-    private fun accountStatusWithCurrency(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio =
+    private fun accountStatusWithCurrency(account: Account.Personal): AccountStatus.CryptoPortfolio =
         createPortfolioStatus(
             currencies = listOf(createStatus(createEarnCurrency())),
             account = account,
         )
 
     /** A picked account holding nothing — it produces no currency status at all. */
-    private fun accountStatusWithoutCurrencies(account: Account.CryptoPortfolio): AccountStatus.CryptoPortfolio =
+    private fun accountStatusWithoutCurrencies(account: Account.Personal): AccountStatus.CryptoPortfolio =
         createPortfolioStatus(currencies = emptyList(), account = account)
 
     internal data class ConvertModel(
