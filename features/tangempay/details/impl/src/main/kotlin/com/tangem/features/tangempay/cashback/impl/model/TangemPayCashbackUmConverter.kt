@@ -12,34 +12,51 @@ import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isNegative
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
+import org.joda.time.LocalDate
 import java.util.Currency
 
 internal class TangemPayCashbackUmConverter(
     private val dateFormatter: TangemPayCashbackDateFormatter = TangemPayCashbackDateFormatter(),
+    private val today: () -> LocalDate = { LocalDate.now() },
 ) : Converter<TangemPayCashback?, TangemPayCashbackUM> {
 
     override fun convert(value: TangemPayCashback?): TangemPayCashbackUM {
-        if (value == null || value.confirmedAmount.isZero()) {
-            return TangemPayCashbackUM(
-                title = resourceReference(R.string.tangempay_cashback_empty_title),
-                subtitle = resourceReference(R.string.tangempay_cashback_empty_subtitle),
-                isEmpty = true,
-                banner = null,
-            )
-        }
+        if (value == null) return emptyState(banner = null)
         val currency = getJavaCurrencyByCode(value.currency)
+        val depositBanner = value.previousPayout
+            ?.takeIf(::isAwaitingDeposit)
+            ?.let { depositBanner(payout = it, currency = currency) }
+        return if (value.confirmedAmount.isZero()) {
+            emptyState(banner = depositBanner)
+        } else {
+            earnedState(value = value, currency = currency, depositBanner = depositBanner)
+        }
+    }
+
+    private fun emptyState(banner: TangemPayCashbackUM.Banner?): TangemPayCashbackUM = TangemPayCashbackUM(
+        title = resourceReference(R.string.tangempay_cashback_empty_title),
+        subtitle = resourceReference(R.string.tangempay_cashback_empty_subtitle),
+        isEmpty = true,
+        banner = banner,
+    )
+
+    private fun earnedState(
+        value: TangemPayCashback,
+        currency: Currency,
+        depositBanner: TangemPayCashbackUM.Banner?,
+    ): TangemPayCashbackUM {
         val earned = value.confirmedAmount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val isNegative = value.confirmedAmount.isNegative()
-        val previousPayout = value.previousPayout
-        val banner = when {
-            isNegative -> TangemPayCashbackUM.Banner(
+        val banner = if (isNegative) {
+            TangemPayCashbackUM.Banner(
                 text = resourceReference(R.string.tangempay_cashback_refund_banner),
                 type = TangemPayCashbackUM.Banner.Type.Error,
             )
-            previousPayout == null -> null
-            else -> depositBanner(payout = previousPayout, currency = currency)
+        } else {
+            depositBanner
         }
         val subtitle = if (isNegative) {
             null
@@ -54,6 +71,10 @@ internal class TangemPayCashbackUmConverter(
             banner = banner,
         )
     }
+
+    // The banner promises a deposit "till <endDate>", so it stays through that whole day and goes the day after
+    private fun isAwaitingDeposit(payout: TangemPayCashback.PreviousPayout): Boolean =
+        payout.amount.isPositive() && !payout.endDate.toLocalDate().isBefore(today())
 
     private fun depositBanner(
         payout: TangemPayCashback.PreviousPayout,
