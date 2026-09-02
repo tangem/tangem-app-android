@@ -64,6 +64,8 @@ internal class SendAnalyticHelper @Inject constructor(
                     feeAssetType = feeAssetType,
                 ),
                 memoType = getSendTransactionMemoType(destinationUM.memoTextField),
+                isCustomToken = cryptoCurrency.isCustom,
+                isCustomFeeToken = feeToken.isCustom,
             ),
         )
     }
