@@ -8,6 +8,7 @@ import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.datasource.local.preferences.PreferencesDataStore.INSTANCE
@@ -100,6 +101,9 @@ internal object PreferencesDataStore {
             ),
             SwapCurrencyIdMigration(),
             CleanupKeyMigration(key = APP_LOGS_KEY),
+            CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibility")),
+            CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityList")),
+            CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityListV2")),
         )
     }
 }
