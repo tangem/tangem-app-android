@@ -3,18 +3,7 @@ package com.tangem.core.ui.ds2.footer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -25,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
@@ -97,9 +85,6 @@ fun TangemFooter(
         animationSpec = TangemAnimationSpec.Alpha,
         label = "TangemFooter.fadeAlpha",
     )
-    // The blur only earns its cost while the fade is actually visible, so it is dropped once the
-    // alpha has animated to zero. Derived, so this recomposes when the flag flips rather than on
-    // every frame of the animation.
     val isBlurActive by remember(blurBackground) {
         derivedStateOf { blurBackground && fadeAlpha.value > 0f }
     }
@@ -108,7 +93,7 @@ fun TangemFooter(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .hazeSourceTangem(zIndex = FADE_Z_INDEX),
+                .hazeSourceTangem(zIndex = 1f),
         ) {
             TangemFade(
                 modifier = Modifier
@@ -126,13 +111,13 @@ fun TangemFooter(
                 .windowInsetsPadding(if (isKeyboardVisible) WindowInsets(0) else windowInsets)
                 .padding(
                     if (isKeyboardVisible) {
-                        contentPadding.copy(top = KeyboardVerticalPadding, bottom = KeyboardVerticalPadding)
+                        contentPadding.copy(top = 12.dp, bottom = 12.dp)
                     } else {
                         contentPadding
                     },
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(space = ItemSpacing),
+            verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
             val displayedExtraTop = rememberLastNonNull(extraTop)
             AnimatedVisibility(
@@ -194,15 +179,6 @@ fun TangemFooter(
         }
     }
 }
-
-private val ItemSpacing: Dp = 12.dp
-private val KeyboardVerticalPadding: Dp = 12.dp
-
-/**
- * Haze z-order of the fade. Above the screen content (registered at `0f` by the scaffolds), so an
- * effect that samples both draws the fade over the content.
- */
-private const val FADE_Z_INDEX = 1f
 
 object TangemFooter {
 
