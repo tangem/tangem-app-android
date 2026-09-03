@@ -213,6 +213,42 @@ class UserTokensSaverTest {
     }
 
     @Test
+    fun `GIVEN wallet rebound after 404 WHEN retry hits 412 THEN merge recovery still applies`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        stubUserWallet(userWalletId)
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns STALE_ETAG
+
+        val token = createToken()
+        val response = createResponse(tokens = listOf(token))
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { walletServerBinder.bind(any<UserWallet>()) } returns ApiResponse.Success(Unit)
+        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
+            ApiResponse.Error(
+                ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                    message = null,
+                    errorBody = null,
+                ),
+            ) as ApiResponse<Unit>,
+            preconditionFailed(),
+            ApiResponse.Success(Unit),
+        )
+        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
+            data = createAccountsV2Response(tokens = listOf(token)),
+            headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
+        )
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // Assert
+        coVerify(exactly = 1) { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) }
+        coVerify(exactly = 3) { tangemTechApi.saveTokens(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN refetched state without etag header WHEN merging after 412 THEN stored etag is kept`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("1234567890abcdef")
