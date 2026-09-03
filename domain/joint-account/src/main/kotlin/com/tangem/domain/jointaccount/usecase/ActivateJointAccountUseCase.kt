@@ -14,6 +14,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.SafeAddress
@@ -52,7 +53,7 @@ class ActivateJointAccountUseCase(
         )
 
         val derivationIndex = DerivationIndex(value = account.ownerKeyIndex.value)
-            .mapLeft { JointAccountActivationError.Failed(cause = IllegalStateException(it.toString())) }
+            .mapLeft { JointAccountFlowError.Failed(cause = IllegalStateException(it.toString())) }
             .bind()
 
         val signResult = signer
@@ -74,7 +75,7 @@ class ActivateJointAccountUseCase(
 
         repository
             .activate(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
-            .mapLeft(JointAccountActivationError::Failed)
+            .mapLeft(JointAccountFlowError::Failed)
             .bind()
 
         // The account is active on the backend, so a failed refresh must not fail the activation: the list
@@ -107,7 +108,7 @@ class ActivateJointAccountUseCase(
             .map { singleton ->
                 // A composition no Safe can be deployed from is a distinct failure, not a mismatch
                 SafeAddress.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
-                    .mapLeft { JointAccountActivationError.Failed(cause = IllegalStateException(it.toString())) }
+                    .mapLeft { JointAccountFlowError.Failed(cause = IllegalStateException(it.toString())) }
                     .bind()
             }
             .firstOrNull { computed -> computed.equals(backendAddress, ignoreCase = true) }
@@ -123,7 +124,7 @@ class ActivateJointAccountUseCase(
         val name = when (val accountName = account.accountName) {
             is AccountName.Custom -> accountName.value
             is AccountName.DefaultMain -> raise(
-                JointAccountActivationError.Failed(
+                JointAccountFlowError.Failed(
                     cause = IllegalStateException("A joint account cannot carry the default main account name"),
                 ),
             )
@@ -146,7 +147,7 @@ class ActivateJointAccountUseCase(
     }
 
     private fun toActivationError(cause: Throwable): JointAccountActivationError = when (cause) {
-        is TangemSdkError.UserCancelled -> JointAccountActivationError.UserCancelled
-        else -> JointAccountActivationError.Failed(cause = cause)
+        is TangemSdkError.UserCancelled -> JointAccountFlowError.UserCancelled
+        else -> JointAccountFlowError.Failed(cause = cause)
     }
 }

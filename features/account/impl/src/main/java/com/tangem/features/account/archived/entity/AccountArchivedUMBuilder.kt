@@ -3,7 +3,10 @@ package com.tangem.features.account.archived.entity
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.res.R
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.usecase.ArchivedAccountList
@@ -30,6 +33,11 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
             accountId = accountId.value,
             accountName = name.toUM().value,
             accountIconUM = CryptoPortfolioIconConverter.convert(icon),
+            titleBadge = if (type == ArchivedAccount.Type.JOINT) {
+                TangemBadgeUM(text = resourceReference(R.string.common_joint), size = TangemBadge.Size.X4)
+            } else {
+                null
+            },
             isLoading = false,
             tokensInfo = pluralReference(
                 R.plurals.common_tokens_count,

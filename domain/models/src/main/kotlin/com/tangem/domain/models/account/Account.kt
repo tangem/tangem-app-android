@@ -244,6 +244,28 @@ sealed interface Account {
     }
 
     /**
+     * The wallet's gacha collectibles account.
+     *
+     * Owns no crypto currencies and carries no derivation index of the backend's account space: its key lives at
+     * the fixed `COLLECTIBLES_OWNER_DERIVATION_PATH`, and the funds it operates on belong to an on-chain vault
+     * rather than to this account.
+     */
+    @Serializable
+    data class Collectibles private constructor(
+        override val accountId: AccountId,
+    ) : Account {
+        override val accountName: AccountName.Custom = AccountName.Custom("Collectibles").getOrElse {
+            error("Can not create account name for Collectibles account with userWalletId = ${accountId.userWalletId}")
+        }
+
+        companion object {
+            operator fun invoke(userWalletId: UserWalletId): Collectibles {
+                return Collectibles(accountId = AccountId.forCollectiblesAccount(userWalletId = userWalletId))
+            }
+        }
+    }
+
+    /**
      * Represents the wallet's own row of a joint (Safe multisig) account
      *
      * @property accountId        unique identifier of the account, computed and returned by the backend

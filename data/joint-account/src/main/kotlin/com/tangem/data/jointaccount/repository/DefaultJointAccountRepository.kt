@@ -10,6 +10,7 @@ import com.tangem.data.common.api.ApiResponseRaise
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.jointaccount.converter.ActivateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
+import com.tangem.data.jointaccount.converter.JoinJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
 import com.tangem.store.datasource.jointaccount.JointAccountApi
@@ -18,6 +19,8 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
+import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.wallet.UserWalletId
@@ -72,6 +75,33 @@ internal class DefaultJointAccountRepository @Inject constructor(
                     // The HTTP code stays in the data layer: the domain branches on the result, not on 409
                     if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
                         JointAccountCreationResult.CreatorAlreadyRegistered
+                    } else {
+                        throw error
+                    }
+                },
+            )
+        }
+    }
+
+    override suspend fun join(
+        userWalletId: UserWalletId,
+        payload: JointAccountJoinPayload,
+        signature: String,
+    ): JointAccountJoinResult {
+        return withContext(dispatchers.io) {
+            safeApiCall(
+                call = {
+                    val response = jointAccountApi.joinJointAccount(
+                        walletId = userWalletId.stringValue,
+                        body = JoinJointAccountRequestConverter(signature = signature).convert(value = payload),
+                    ).bind()
+
+                    JointAccountJoinResult.Joined(account = converter.convert(dto = response))
+                },
+                onError = { error ->
+                    // The HTTP code stays in the data layer: the domain branches on the result, not on 409
+                    if (error is ApiResponseError.HttpException && error.code == Code.CONFLICT) {
+                        JointAccountJoinResult.Conflict
                     } else {
                         throw error
                     }
@@ -139,6 +169,22 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 }
             },
         )
+    }
+
+    /**
+     * An unreadable store must not take the screen down with it: the members of the account are worth showing
+     * even when the invite actions cannot be offered. As in [storeInvites], the failure is logged without its
+     * content — an invite id is a secret.
+     */
+    override suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String> {
+        return withContext(dispatchers.io) {
+            runSuspendCatching {
+                invitesStore.get(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId).orEmpty()
+            }.getOrElse { throwable ->
+                logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
+                emptyList()
+            }
+        }
     }
 
     /**

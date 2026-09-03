@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import kotlin.reflect.KClass
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -246,6 +248,8 @@ internal class PolymarketFeedContentTransformerTest {
 
     private companion object {
         val PREV_STATE = PolymarketMainUM(
+            balance = PredictionBalanceUMConverter(onAddFundsClick = {}, onWithdrawClick = {})
+                .convert(PredictionAccountStatusValue.Loading),
             categories = persistentListOf(
                 PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
             ),

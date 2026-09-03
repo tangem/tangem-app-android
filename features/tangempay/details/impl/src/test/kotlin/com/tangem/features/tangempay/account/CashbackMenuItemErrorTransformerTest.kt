@@ -88,8 +88,7 @@ internal class CashbackMenuItemErrorTransformerTest {
             isInactive = false,
         ),
         isBalanceHidden = false,
-        errorNotificationConfig = null,
-        statusBannerState = null,
+        messageBanner = null,
     )
 
     private fun menuItem(titleRes: Int): TangemPayDropDownItemUM = TangemPayDropDownItemUM(
