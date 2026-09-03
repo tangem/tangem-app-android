@@ -45,6 +45,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
+import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -161,20 +162,12 @@ private fun PolymarketMainHeaderPreview(
     @PreviewParameter(PolymarketMainHeaderPreviewProvider::class) balance: BigDecimal,
 ) {
     TangemThemePreviewRedesign {
+        val state = previewPredictionBalance(balance)
+
         PolymarketMainHeader(
-            balance = balance.formatPolymarketMoneyStyled(
-                fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
-            ),
-            addFunds = previewButton(
-                text = resourceReference(R.string.common_add_funds),
-                icon = Icons.ic_arrow_down_24,
-                isEnabled = true,
-            ),
-            withdraw = previewButton(
-                text = resourceReference(R.string.prediction_main_withdraw),
-                icon = Icons.ic_arrow_up_24,
-                isEnabled = balance.signum() > 0,
-            ),
+            balance = state.balance,
+            addFunds = state.addFunds,
+            withdraw = state.withdraw,
             onBalanceClick = {},
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
@@ -185,9 +178,28 @@ private class PolymarketMainHeaderPreviewProvider : CollectionPreviewParameterPr
     collection = listOf(BigDecimal.ZERO, BigDecimal("1234.56")),
 )
 
+internal fun previewPredictionBalance(balance: BigDecimal) = PredictionBalanceUM(
+    balance = balance.formatPolymarketMoneyStyled(
+        fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
+    ),
+    addFunds = previewButton(
+        text = resourceReference(R.string.common_add_funds),
+        icon = Icons.ic_arrow_down_24,
+        isEnabled = true,
+    ),
+    withdraw = previewButton(
+        text = resourceReference(R.string.prediction_main_withdraw),
+        icon = Icons.ic_arrow_up_24,
+        isEnabled = balance.signum() > 0,
+    ),
+)
+
 private fun previewButton(text: TextReference, icon: ImageVector, isEnabled: Boolean) = TangemButtonUM(
     text = text,
-    tangemIconUM = TangemIconUM.Icon(imageVector = icon),
+    tangemIconUM = TangemIconUM.Icon(
+        imageVector = icon,
+        tintReference = { TangemTheme.colors3.icon.primary },
+    ),
     type = TangemButtonType.Secondary,
     shape = TangemButtonShape.Rounded,
     isEnabled = isEnabled,
