@@ -25,7 +25,7 @@ internal fun BigDecimal.formatPolymarketMoney(): String = format {
 }
 
 /** [formatPolymarketMoney] with the cents set apart in [fractionStyle], as the balance header states them. */
-internal fun BigDecimal.formatPolymarketMoneyStyled(fractionStyle: SpanStyleReference): TextReference = formatStyled {
+internal fun BigDecimal?.formatPolymarketMoneyStyled(fractionStyle: SpanStyleReference): TextReference = formatStyled {
     fiat(
         fiatCurrencyCode = PolymarketConst.USD_CODE,
         fiatCurrencySymbol = PolymarketConst.USD_SYMBOL,
