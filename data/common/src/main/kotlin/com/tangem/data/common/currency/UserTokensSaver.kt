@@ -76,26 +76,28 @@ class UserTokensSaver(
             call = {
                 val apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
 
-                val isWalletNotFound = apiResponse is ApiResponse.Error &&
-                    apiResponse.cause.isNetworkError(ApiResponseError.HttpException.Code.NOT_FOUND)
+                // Both codes are expected flow, not failures, so they are handled before bind() gets to log them
+                when {
+                    apiResponse.isError(code = ApiResponseError.HttpException.Code.NOT_FOUND) -> {
+                        walletServerBinder.bind(userWallet).bind()
 
-                if (isWalletNotFound) {
-                    walletServerBinder.bind(userWallet).bind()
-
-                    saveTokensWithETag(userWalletId = userWallet.walletId, response = response).bind()
-                } else {
-                    apiResponse.bind()
+                        saveTokensWithETag(userWalletId = userWallet.walletId, response = response).bind()
+                    }
+                    apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED) -> {
+                        mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
+                    }
+                    else -> apiResponse.bind()
                 }
             },
             onError = { error ->
-                if (error.isNetworkError(ApiResponseError.HttpException.Code.PRECONDITION_FAILED)) {
-                    mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
-                } else {
-                    TangemLogger.e("Failed to push ${response.tokens.size} user tokens", error)
-                    onFailSend()
-                }
+                TangemLogger.e("Failed to push ${response.tokens.size} user tokens", error)
+                onFailSend()
             },
         )
+    }
+
+    private fun ApiResponse<*>.isError(code: ApiResponseError.HttpException.Code): Boolean {
+        return this is ApiResponse.Error && cause.isNetworkError(code)
     }
 
     private suspend fun saveTokensWithETag(
@@ -109,7 +111,7 @@ class UserTokensSaver(
         )
 
         if (apiResponse is ApiResponse.Success) {
-            updateETag(userWalletId = userWalletId, apiResponse = apiResponse)
+            refreshETagAfterWrite(userWalletId = userWalletId, apiResponse = apiResponse)
         }
 
         return apiResponse
@@ -123,9 +125,7 @@ class UserTokensSaver(
         safeApiCall(
             call = {
                 val accountsResponse = tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
-                if (accountsResponse is ApiResponse.Success) {
-                    updateETag(userWalletId = userWalletId, apiResponse = accountsResponse)
-                }
+                storeETagIfPresent(userWalletId = userWalletId, apiResponse = accountsResponse)
 
                 val fresh = accountsResponse.bind().toResponse()
                 val remoteTokens = fresh.flattenTokens() + fresh.unassignedTokens
@@ -150,7 +150,12 @@ class UserTokensSaver(
         return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
     }
 
-    private suspend fun updateETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+    /**
+     * A successful write bumps the wallet's tokens version, so the stored ETag is refreshed from the response.
+     * A response without the header would leave a knowingly stale ETag behind — every next write would 412 —
+     * so the stored value is dropped instead: the next `GET /accounts` restores it.
+     */
+    private suspend fun refreshETagAfterWrite(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
         if (!jointAccountFeatureToggles.isJointAccountEnabled) return
 
         val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
@@ -160,6 +165,15 @@ class UserTokensSaver(
         } else {
             eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
         }
+    }
+
+    /** A read invalidates nothing: a response without the header keeps the stored ETag, as the accounts fetcher does */
+    private suspend fun storeETagIfPresent(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return
+
+        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull() ?: return
+
+        eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
     }
 
     private fun UserTokensResponse.Token.toIdentityKey(): List<Any?> {
