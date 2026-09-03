@@ -23,7 +23,7 @@ dependencies {
     implementation(projects.features.tangempay.commonUi)
 
     /** Domain */
-    implementation(projects.domain.models)
+    implementation(projects.domain.visa.models)
 
     /** Compose */
     api(deps.compose.coil)
@@ -35,6 +35,7 @@ dependencies {
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
 
     /** DI */
@@ -43,13 +44,13 @@ dependencies {
 
     /** Other */
     api(deps.kotlin.coroutines)
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
+    runtimeOnly(deps.room.runtime)
 
     /** Test */
     testImplementation(projects.test.core)
-    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)
 }
