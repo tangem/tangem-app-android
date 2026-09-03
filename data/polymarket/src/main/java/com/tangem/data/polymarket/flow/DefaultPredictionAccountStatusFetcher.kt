@@ -149,7 +149,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                     balance = balanceAllowance.balance,
                     fiatRate = null,
                     isTradingAllowed = isTradingAllowed(),
-                    cryptoCurrency = collateralCurrencyFactory.create(),
+                    depositCurrency = collateralCurrencyFactory.createDepositTarget(),
                     depositAddress = resolveDepositAddress(addresses = addresses),
                 )
             },
