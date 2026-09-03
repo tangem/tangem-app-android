@@ -22,6 +22,12 @@ sealed class CryptoCurrency {
     /** Number of decimal places used by the cryptocurrency */
     abstract val decimals: Int
 
+    /**
+     * Number of decimal places to show in UI. Equals [decimals] for every currency but coins whose network operates
+     * with more decimals than users expect, e.g. Arc keeps USDC balances in 18 decimals while users expect 6
+     */
+    abstract val displayDecimals: Int
+
     /** Optional URL of the cryptocurrency icon. `null` if not found. */
     abstract val iconUrl: String?
 
@@ -38,10 +44,14 @@ sealed class CryptoCurrency {
         override val decimals: Int,
         override val iconUrl: String?,
         override val isCustom: Boolean,
+        override val displayDecimals: Int = decimals,
     ) : CryptoCurrency() {
 
         init {
             checkProperties()
+            require(displayDecimals in 0..decimals) {
+                "Crypto currency display decimals must be in 0..$decimals, but it is: $displayDecimals"
+            }
         }
     }
 
@@ -61,6 +71,8 @@ sealed class CryptoCurrency {
         override val isCustom: Boolean,
         val contractAddress: String,
     ) : CryptoCurrency() {
+
+        override val displayDecimals: Int get() = decimals
 
         init {
             checkProperties()
