@@ -99,7 +99,7 @@ internal class PolymarketWalletBlockConverterTest {
         balance = BigDecimal.TEN,
         fiatRate = fiatRate,
         isTradingAllowed = true,
-        cryptoCurrency = mockk(relaxed = true),
+        depositCurrency = mockk(relaxed = true),
         depositAddress = null,
     )
 

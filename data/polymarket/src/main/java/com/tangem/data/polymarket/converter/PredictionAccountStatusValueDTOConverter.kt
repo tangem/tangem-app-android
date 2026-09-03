@@ -50,7 +50,7 @@ internal class PredictionAccountStatusValueDTOConverter(
             balance = value.balance,
             fiatRate = null,
             isTradingAllowed = value.isTradingAllowed,
-            cryptoCurrency = collateralCurrencyFactory.create(),
+            depositCurrency = collateralCurrencyFactory.createDepositTarget(),
             depositAddress = value.depositAddress,
         )
     }
