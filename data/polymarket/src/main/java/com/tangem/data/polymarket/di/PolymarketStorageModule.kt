@@ -7,11 +7,13 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -58,8 +60,12 @@ internal object PolymarketStorageModule {
         @ApplicationContext context: Context,
         scope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
+        collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     ): PredictionAccountStatusStore {
         return PredictionAccountStatusStore(
+            dtoConverter = PredictionAccountStatusValueDTOConverter(
+                collateralCurrencyFactory = collateralCurrencyFactory,
+            ),
             runtimeStore = RuntimeSharedStore(),
             persistenceDataStore = dataStoreFactory.create(
                 serializer = KotlinxDataStoreSerializer(

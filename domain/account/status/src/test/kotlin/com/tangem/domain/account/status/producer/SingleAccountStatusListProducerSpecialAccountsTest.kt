@@ -60,6 +60,8 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                 balance = BigDecimal.TEN,
                 fiatRate = BigDecimal.ONE,
                 isTradingAllowed = true,
+                cryptoCurrency = mockk(relaxed = true),
+                depositAddress = "0xbridge0000000000000000000000000000000001",
             )
             val producer = createProducer(predictionStatus = flowOf(value))
 
