@@ -27,7 +27,7 @@ import java.math.BigDecimal
 
 /**
  * A joint account enters the chooser only for the flows that never spend from the wallet's own keys, and
- * only when it is active — a pending account has nothing to receive to yet.
+ * only when it is active — a pending account has no Safe address to receive funds to yet.
  */
 internal class ChooseTokenListItemConverterJointAccountTest {
 
