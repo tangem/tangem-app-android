@@ -11,7 +11,6 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
-import com.tangem.features.polymarket.impl.common.formatOrDash
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
@@ -89,8 +88,8 @@ internal class PolymarketEventUMConverter(
         return if (length > MAX_OUTCOME_LABEL_LENGTH) take(MAX_OUTCOME_LABEL_LENGTH) + ELLIPSIS else this
     }
 
-    private fun BigDecimal?.formatProbability(): String = formatOrDash {
-        format { percent(minFractionDigits = 0, maxFractionDigits = 0) }
+    private fun BigDecimal?.formatProbability(): String = format {
+        percent(minFractionDigits = 0, maxFractionDigits = 0)
     }
 
     private companion object {
