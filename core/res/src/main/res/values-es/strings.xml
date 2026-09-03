@@ -2066,7 +2066,7 @@
   <string name="tangempay_cashback_widget_error_description">Toca para recargar</string>
   <string name="tangempay_cashback_widget_error_title">Cashback no disponible</string>
   <string name="tangempay_cashback_widget_refund_description">Reducido por devolución de compras</string>
-  <string name="tangempay_cashback_widget_title">%1$s de cashback en %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s en %2$s</string>
   <string name="tangempay_change_pin_code">Cambiar código PIN</string>
   <string name="tangempay_changing_plan">Cambiando plan</string>
   <string name="tangempay_choose_network_fast_way">Vía rápida</string>
@@ -2590,6 +2590,7 @@
   <string name="warning_approval_in_progress_message">El proceso de obtención de permisos está actualmente en marcha y se completará pronto.</string>
   <string name="warning_approval_in_progress_title">Aprobación en curso</string>
   <string name="warning_backup_error_add_funds_message">Esta billetera tiene un problema de copia de seguridad. Comuníquese con el soporte técnico para solucionarlo.</string>
+  <string name="warning_backup_error_add_funds_message_v2">La wallet que quieres depositar tiene un problema con la copia de seguridad. Transfiere tus fondos a otra wallet y restablécela.</string>
   <string name="warning_backup_error_add_funds_title">Agregar fondos está deshabilitado.</string>
   <string name="warning_backup_error_attention_message">Sus tarjetas no se han activado correctamente. Para proteger sus fondos, transfiérelos a otra billetera, restablezca las tarjetas a ajustes de fábrica y vuelva a activarlas antes de continuar.</string>
   <string name="warning_backup_error_attention_title">Acción requerida: restablezca su billetera</string>
