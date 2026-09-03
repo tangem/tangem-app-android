@@ -63,4 +63,20 @@ interface TangemTechMarketsApi {
     /** Returns the coin categories tree — each category with its sectors and coin counts */
     @GET("v1/coins/categories")
     suspend fun getCoinCategories(): ApiResponse<CoinCategoriesResponse>
+
+    /**
+     * Returns a page of market categories with their aggregated market data
+     *
+     * @param timestamp pagination snapshot token: pass the same value for every page of one listing
+     *                  so it stays stable while paging. The response does not echo it back
+     * @param featured  when `true`, only categories curated as featured are returned
+     */
+    @GET("v1/coins/gecko-categories")
+    suspend fun getMarketCategories(
+        @Query("currency") currency: String,
+        @Query("offset") offset: Int,
+        @Query("limit") limit: Int,
+        @Query("timestamp") timestamp: Long? = null,
+        @Query("featured") featured: Boolean? = null,
+    ): ApiResponse<MarketCategoriesResponse>
 }
