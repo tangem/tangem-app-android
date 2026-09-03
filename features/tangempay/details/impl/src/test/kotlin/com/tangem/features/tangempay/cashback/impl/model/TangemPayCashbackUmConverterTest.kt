@@ -53,7 +53,7 @@ internal class TangemPayCashbackUmConverterTest {
 
     @ParameterizedTest
     @MethodSource("emptyStateCashback")
-    fun `GIVEN null or zero amount without awaiting payout WHEN convert THEN empty state without banner`(
+    fun `GIVEN null or nothing earned without awaiting payout WHEN convert THEN empty state without banner`(
         cashback: TangemPayCashback?,
     ) {
         // Act
@@ -103,10 +103,45 @@ internal class TangemPayCashbackUmConverterTest {
     }
 
     @Test
-    fun `GIVEN zero amount AND awaiting previous payout WHEN convert THEN empty state with deposit banner`() {
+    fun `GIVEN zero amount AND positive total earned AND awaiting payout WHEN convert THEN zero month state with banner`() {
         // Arrange
         val cashback = createCashback(
             confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal("132.15"),
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-03"),
+                amount = BigDecimal("10.50"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        val expected = TangemPayCashbackUM(
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("$0.00", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
+            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
+            isEmpty = false,
+            banner = TangemPayCashbackUM.Banner(
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList("$10.50", "June", "July 3"),
+                ),
+                type = TangemPayCashbackUM.Banner.Type.Info,
+            ),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN nothing earned AND awaiting previous payout WHEN convert THEN empty state with deposit banner`() {
+        // Arrange
+        val cashback = createCashback(
+            confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal.ZERO,
             previousPayout = TangemPayCashback.PreviousPayout(
                 endDate = DateTime.parse("2026-07-03"),
                 amount = BigDecimal("10.50"),
@@ -316,9 +351,12 @@ internal class TangemPayCashbackUmConverterTest {
 
     private fun emptyStateCashback(): List<TangemPayCashback?> = listOf(
         null,
-        createCashback(confirmedAmount = BigDecimal.ZERO),
+        createCashback(confirmedAmount = BigDecimal.ZERO, totalEarnedAmount = BigDecimal.ZERO),
+        createCashback(confirmedAmount = BigDecimal("0.00"), totalEarnedAmount = BigDecimal("0.00")),
+        createCashback(confirmedAmount = BigDecimal.ZERO, totalEarnedAmount = null),
         createCashback(
             confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal.ZERO,
             previousPayout = TangemPayCashback.PreviousPayout(
                 endDate = DateTime.parse("2026-06-30"),
                 amount = BigDecimal("10.50"),
@@ -326,6 +364,7 @@ internal class TangemPayCashbackUmConverterTest {
         ),
         createCashback(
             confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal.ZERO,
             previousPayout = TangemPayCashback.PreviousPayout(
                 endDate = DateTime.parse("2026-07-03"),
                 amount = BigDecimal.ZERO,
@@ -337,6 +376,7 @@ internal class TangemPayCashbackUmConverterTest {
 
     private fun createCashback(
         confirmedAmount: BigDecimal = BigDecimal("22.54"),
+        totalEarnedAmount: BigDecimal? = BigDecimal("132.15"),
         currency: String = "USD",
         year: Int = 2026,
         month: Int = 6,
@@ -345,7 +385,7 @@ internal class TangemPayCashbackUmConverterTest {
         previousPayout: TangemPayCashback.PreviousPayout? = null,
     ): TangemPayCashback = TangemPayCashback(
         confirmedAmount = confirmedAmount,
-        totalEarnedAmount = BigDecimal("132.15"),
+        totalEarnedAmount = totalEarnedAmount,
         currency = currency,
         payoutCurrency = "USDC",
         period = TangemPayCashback.Period(
