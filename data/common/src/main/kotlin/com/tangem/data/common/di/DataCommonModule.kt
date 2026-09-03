@@ -11,7 +11,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.wallet.DefaultWalletServerBinder
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -99,13 +99,13 @@ internal object DataCommonModule {
     @Singleton
     fun provideWalletServerBinder(
         userWalletsListRepository: UserWalletsListRepository,
-        appsFlyerStore: AppsFlyerStore,
+        appsFlyerRepository: AppsFlyerRepository,
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletServerBinder {
         return DefaultWalletServerBinder(
             userWalletsListRepository = userWalletsListRepository,
-            appsFlyerStore = appsFlyerStore,
+            appsFlyerRepository = appsFlyerRepository,
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
         )

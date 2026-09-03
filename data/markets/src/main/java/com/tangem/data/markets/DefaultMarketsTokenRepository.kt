@@ -18,9 +18,9 @@ import com.tangem.data.markets.converters.*
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -34,7 +34,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val quotesFetcher: QuotesFetcher,
@@ -308,6 +308,68 @@ internal class DefaultMarketsTokenRepository(
 
             CoinCategoryConverter.convertList(input = coinCategoriesStore.get().value)
         }
+    }
+
+    override suspend fun getMarketCategories(
+        currency: String,
+        offset: Int,
+        limit: Int,
+        timestamp: Long?,
+        featured: Boolean?,
+    ): MarketCategoryPage {
+        return withContext(dispatcherProvider.io) {
+            val response = marketsApi.getMarketCategories(
+                currency = currency,
+                offset = offset,
+                limit = limit,
+                timestamp = timestamp,
+                featured = featured,
+            ).getOrThrow()
+
+            MarketCategoryConverter.convert(value = response)
+        }
+    }
+
+    private fun createMarketCategoriesFetcher(
+        firstBatchSize: Int,
+        nextBatchSize: Int,
+    ): LimitOffsetBatchFetcher<MarketCategoryListConfig, List<MarketCategory>> = LimitOffsetBatchFetcher(
+        prefetchDistance = firstBatchSize,
+        batchSize = nextBatchSize,
+        subFetcher = { request, _, _ ->
+            val response = marketsApi.getMarketCategories(
+                currency = request.params.fiatCurrencySymbol,
+                offset = request.offset,
+                limit = request.limit,
+                timestamp = request.params.timestamp,
+                featured = request.params.featuredFilter.isFeatured,
+            ).getOrThrow()
+
+            BatchFetchResult.Success(
+                data = MarketCategoryConverter.convert(value = response).categories,
+                empty = response.categories.isEmpty(),
+                last = response.categories.size < request.limit,
+                total = response.total,
+            )
+        },
+    )
+
+    override fun getMarketCategoryListFlow(
+        batchingContext: MarketCategoryListBatchingContext,
+        firstBatchSize: Int,
+        nextBatchSize: Int,
+    ): MarketCategoryListBatchFlow {
+        val atomicInteger = AtomicInteger(0)
+
+        return BatchListSource(
+            fetchDispatcher = dispatcherProvider.io,
+            context = batchingContext,
+            generateNewKey = { atomicInteger.getAndIncrement() },
+            batchFetcher = createMarketCategoriesFetcher(
+                firstBatchSize = firstBatchSize,
+                nextBatchSize = nextBatchSize,
+            ),
+        ).toBatchFlow()
     }
 
     inline fun <T> catchListErrorAndSendEvent(block: () -> T): T {

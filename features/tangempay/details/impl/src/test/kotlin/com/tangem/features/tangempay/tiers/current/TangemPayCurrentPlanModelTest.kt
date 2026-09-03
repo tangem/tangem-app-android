@@ -22,6 +22,7 @@ import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
@@ -236,6 +237,19 @@ internal class TangemPayCurrentPlanModelTest {
         // THEN
         assertThat(model.state.value.notification).isNull()
         assertThat(model.state.value.onChangePlanClick).isNotNull()
+    }
+
+    @Test
+    fun `GIVEN any plan WHEN full terms clicked THEN analytics sent AND terms link opened`() {
+        // GIVEN
+        val model = createModel(planState = tariffPlanState())
+
+        // WHEN
+        model.state.value.onFullTermsClick()
+
+        // THEN
+        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.TermsAndLimitsClicked>()) }
+        verify(exactly = 1) { urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK) }
     }
 
     private fun createModel(planState: TangemPayTariffPlanState): TangemPayCurrentPlanModel {
