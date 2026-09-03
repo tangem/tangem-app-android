@@ -137,9 +137,12 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onConfirmActivationClick(cryptoAccountId: String) {
+        // The loader shows even when a signing is already in flight — a re-opened sheet joins the running
+        // attempt instead of silently ignoring the tap; its completion closes the sheet either way
+        stateController.update(SetActivationConfirmingTransformer(isConfirming = true))
+
         if (activationJob?.isActive == true) return
 
-        stateController.update(SetActivationConfirmingTransformer(isConfirming = true))
         activationJob = modelScope.launch {
             val account = findAccount(cryptoAccountId = cryptoAccountId)
 
