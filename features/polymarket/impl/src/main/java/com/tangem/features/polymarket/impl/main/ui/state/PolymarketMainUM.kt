@@ -15,6 +15,7 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Immutable
 internal data class PolymarketMainUM(
+    val balance: PredictionBalanceUM,
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
