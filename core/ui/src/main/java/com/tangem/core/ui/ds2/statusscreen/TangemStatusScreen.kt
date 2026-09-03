@@ -115,11 +115,11 @@ fun TangemStatusScreen(
                 modifier = Modifier
                     .weight(weight = 1f)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
                     .graphicsLayer {
                         val settled = entrance.segment(startMs = 1000, endMs = 1300, easing = DecelerateEase)
                         translationY = bottomBlockHeight / 2f * (1f - settled)
-                    },
+                    }
+                    .verticalScroll(rememberScrollState()),
                 contentAlignment = Alignment.Center,
             ) {
                 Header(
