@@ -289,6 +289,39 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
+    fun `GIVEN signing in flight WHEN sheet reopened and confirmed again THEN loader shows without second signing`() =
+        runTest {
+            // Arrange
+            stubConfirmingAccount()
+            val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+            every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+            coEvery { activateUseCase(account = jointAccount) } coAnswers {
+                delay(timeMillis = 500)
+                Unit.right()
+            }
+
+            // Act — confirm, dismiss the sheet mid-flight, reopen it and confirm again
+            val model = createModel()
+            model.uiState.value.activation!!.onActivateClick()
+            model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+            runCurrent()
+            model.uiState.value.activation!!.confirmation!!.onCancelClick()
+            model.uiState.value.activation!!.onActivateClick()
+            model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.activation!!.confirmation!!.isConfirming).isTrue()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
+            assertThat(model.uiState.value.activation?.confirmation).isNull()
+        }
+
+    @Test
     fun `GIVEN signing dismissed WHEN activation confirmed THEN no dialog is shown`() = runTest {
         // Arrange
         stubConfirmingAccount()
