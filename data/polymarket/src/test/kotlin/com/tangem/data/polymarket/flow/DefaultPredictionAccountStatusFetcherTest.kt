@@ -171,7 +171,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 balance = BigDecimal("40"),
                 fiatRate = null,
                 isTradingAllowed = true,
-            cryptoCurrency = COLLATERAL,
+            depositCurrency = COLLATERAL,
             depositAddress = BRIDGE_ADDRESS,
             ),
         )
@@ -379,7 +379,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
-            collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
+            collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
@@ -588,7 +588,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         recordPolymarketConfirmation = recordConfirmation,
         polymarketRepository = polymarketRepository,
         polymarketBridgeRepository = polymarketBridgeRepository,
-        collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
+        collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -604,7 +604,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             balance = BigDecimal("40"),
             fiatRate = null,
             isTradingAllowed = true,
-            cryptoCurrency = COLLATERAL,
+            depositCurrency = COLLATERAL,
             depositAddress = BRIDGE_ADDRESS,
         )
 
