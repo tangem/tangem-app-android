@@ -21,7 +21,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  *
  * !!!IMPORTANT!!!
  * Before DELETING active key add a [com.tangem.datasource.local.preferences.migration.CleanupKeyMigration]
- * in [com.tangem.datasource.di.AppPreferencesStoreModule]
+ * in [com.tangem.datasource.local.preferences.di.AppPreferencesStoreModule]
  *
 [REDACTED_AUTHOR]
  */
