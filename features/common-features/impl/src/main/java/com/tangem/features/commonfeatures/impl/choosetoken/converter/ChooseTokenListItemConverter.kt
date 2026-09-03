@@ -21,6 +21,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
@@ -41,6 +42,7 @@ internal data class ConverterConfig(
     val tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean,
     val paymentAccountTokens: PaymentAccountTokens,
     val balanceFilter: BalanceFilter,
+    val isJointAccountsShown: Boolean,
 )
 
 internal class ChooseTokenListItemConverter(
@@ -131,10 +133,19 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.Virtual -> emptyList()
                     is AccountStatus.Prediction -> emptyList()
                     is AccountStatus.Collectibles -> emptyList()
-                    // Joint currencies belong to the Safe contract, never to a spendable EOA
-                    is AccountStatus.Joint -> emptyList()
+                    // Joint currencies belong to the Safe contract: only the flows that never spend from the
+                    // wallet's own keys opt in, and only an active account has anything to show
+                    is AccountStatus.Joint -> if (account.isShownInChooser()) {
+                        account.tokenList.flattenCurrencies().map { account to it }
+                    } else {
+                        emptyList()
+                    }
                 }
             }
+    }
+
+    private fun AccountStatus.Joint.isShownInChooser(): Boolean {
+        return config.isJointAccountsShown && value is JointAccountStatusValue.Active
     }
 
     private fun AccountStatus.Payment.paymentCryptoCurrencies(): List<CryptoCurrencyStatus> =
@@ -166,7 +177,8 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.Virtual -> null
                     is AccountStatus.Prediction -> null
                     is AccountStatus.Collectibles -> null
-                    is AccountStatus.Joint -> null
+                    is AccountStatus.Joint ->
+                        accountStatus.takeIf { it.isShownInChooser() }?.toPortfolioItem(params)
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }
