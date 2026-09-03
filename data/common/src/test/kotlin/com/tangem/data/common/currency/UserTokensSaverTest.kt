@@ -268,6 +268,39 @@ class UserTokensSaverTest {
     }
 
     @Test
+    fun `GIVEN backend tokens lacking account ids WHEN merging after 412 THEN they take the owning account id`() =
+        runTest {
+            // Arrange
+            val userWalletId = UserWalletId("1234567890abcdef")
+            stubUserWallet(userWalletId)
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            coEvery {
+                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+            } returnsMany listOf(STALE_ETAG, FRESH_ETAG)
+
+            val pushedToken = createToken()
+            val response = createResponse(tokens = listOf(pushedToken))
+            coEvery { enricher(userWalletId, response) } returns response
+            coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
+                preconditionFailed(),
+                ApiResponse.Success(Unit),
+            )
+            // The same token, but as GET returns it: without the accountId the owning account implies
+            coEvery {
+                tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
+            } returns ApiResponse.Success(
+                data = createAccountsV2Response(tokens = listOf(pushedToken.copy(accountId = null))),
+                headers = mapOf(ETAG_HEADER to listOf(FRESH_ETAG)),
+            )
+
+            // Act
+            userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+            // Assert
+            coVerify(exactly = 1) { tangemTechApi.saveTokens(userWalletId.stringValue, response, FRESH_ETAG) }
+        }
+
+    @Test
     fun `GIVEN refetched state without etag header WHEN merging after 412 THEN stored etag is kept`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("1234567890abcdef")
