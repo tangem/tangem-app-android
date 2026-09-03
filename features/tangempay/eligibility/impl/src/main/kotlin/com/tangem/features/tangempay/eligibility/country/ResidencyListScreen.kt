@@ -31,7 +31,6 @@ import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -238,9 +237,9 @@ private fun Preview_ResidencyListScreen_Loading() {
 }
 
 private fun previewState(content: ResidencyListUM.Content) = ResidencyListUM(
-    title = resourceReference(R.string.tangempay_order_type_country_of_residence),
+    title = stringReference("Country of residence"),
     search = TangemSearch.State(
-        placeholderText = resourceReference(R.string.common_search),
+        placeholderText = stringReference("Search"),
         query = "",
         onQueryChange = {},
         isActive = false,
