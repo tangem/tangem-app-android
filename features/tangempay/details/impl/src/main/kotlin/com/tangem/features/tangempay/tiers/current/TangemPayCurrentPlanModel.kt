@@ -20,6 +20,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.common.tariffPlanState
@@ -91,7 +92,13 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
                 !planState.isPlanTransitioningState
         },
         onLinkClick = urlOpener::openUrl,
+        onFullTermsClick = ::onFullTermsClick,
     )
+
+    private fun onFullTermsClick() {
+        analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
+        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+    }
 
     private fun onChangePlanClick() {
         analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked())

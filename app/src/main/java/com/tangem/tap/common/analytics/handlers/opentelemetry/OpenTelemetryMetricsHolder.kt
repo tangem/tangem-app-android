@@ -2,6 +2,7 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 
 import android.app.Application
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -21,6 +22,7 @@ class OpenTelemetryMetricsHolder @Inject constructor(
     private val application: Application,
     private val environmentConfig: EnvironmentConfig,
     private val featureToggles: OtelFeatureToggles,
+    private val settingsRepository: SettingsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appScope: AppCoroutineScope,
 ) {
@@ -38,6 +40,7 @@ class OpenTelemetryMetricsHolder @Inject constructor(
                 OpenTelemetryMetricsClient(
                     application = application,
                     apiKey = apiKey,
+                    settingsRepository = settingsRepository,
                     scope = appScope,
                     dispatchers = dispatchers,
                 ).apply { start(application) }
