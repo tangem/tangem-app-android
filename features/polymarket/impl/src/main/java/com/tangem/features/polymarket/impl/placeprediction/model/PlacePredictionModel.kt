@@ -41,6 +41,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
@@ -241,11 +242,12 @@ internal class PlacePredictionModel @Inject constructor(
             .map { result ->
                 PlaceResultUMConverter.convert(
                     result = result,
-                    requestedAmount = frozen.quote.notional,
+                    quotedShares = frozen.quote.shares,
+                    quotedAmount = frozen.quote.notional,
                     placedAt = System.currentTimeMillis(),
                 )
             }
-            .fold(ifLeft = ::onPlaceError, ifRight = ::showResult)
+            .fold(ifLeft = ::onPlaceError, ifRight = ::onPlaceOutcome)
     }
 
     private suspend fun spendingPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
@@ -288,6 +290,13 @@ internal class PlacePredictionModel @Inject constructor(
                 showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
             }
             else -> showPlaceFailure(reason = "Order refused: $error")
+        }
+    }
+
+    private fun onPlaceOutcome(outcome: PlaceOutcome) {
+        when (outcome) {
+            is PlaceOutcome.Reportable -> showResult(result = outcome.result)
+            is PlaceOutcome.Anomalous -> showPlaceFailure(reason = outcome.reason)
         }
     }
 
