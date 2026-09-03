@@ -9,7 +9,6 @@ import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.api.tangemTech.models.account.flattenTokens
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
@@ -131,8 +130,12 @@ class UserTokensSaver(
                 val accountsResponse = tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
                 storeETagIfPresent(userWalletId = userWalletId, apiResponse = accountsResponse)
 
+                // The raw response carries no accountId on the tokens — it is implied by the owning account,
+                // the same way DefaultWalletAccountsFetcher enriches it after every GET
                 val fresh = accountsResponse.bind().toResponse()
-                val remoteTokens = fresh.flattenTokens() + fresh.unassignedTokens
+                val remoteTokens = fresh.accounts.flatMap { account ->
+                    account.tokens.orEmpty().map { token -> token.copy(accountId = account.id) }
+                } + fresh.unassignedTokens
 
                 val pushedKeys = response.tokens.map { it.toIdentityKey() }.toSet()
                 val merged = response.copy(
