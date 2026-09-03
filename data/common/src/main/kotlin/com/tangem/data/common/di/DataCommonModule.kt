@@ -18,6 +18,7 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.retryer.RetryerPool
 import dagger.Module
@@ -70,6 +71,8 @@ internal object DataCommonModule {
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
         appScope: AppCoroutineScope,
+        eTagsStore: ETagsStore,
+        jointAccountFeatureToggles: JointAccountFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -80,6 +83,8 @@ internal object DataCommonModule {
                 coroutineScope = appScope,
             ),
             walletServerBinder = walletServerBinder,
+            eTagsStore = eTagsStore,
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
         )
     }
 
