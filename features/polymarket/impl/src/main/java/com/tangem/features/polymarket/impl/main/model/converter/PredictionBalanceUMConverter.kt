@@ -8,7 +8,6 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
@@ -18,8 +17,6 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
-
-private const val UNKNOWN_BALANCE = "—"
 
 internal class PredictionBalanceUMConverter(
     private val onAddFundsClick: () -> Unit,
@@ -31,7 +28,9 @@ internal class PredictionBalanceUMConverter(
         val isLoading = value is PredictionAccountStatusValue.Loading
 
         return PredictionBalanceUM(
-            balance = active?.balance.toBalance(),
+            balance = active?.balance.formatPolymarketMoneyStyled(
+                fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
+            ),
             addFunds = actionButton(
                 text = resourceReference(id = R.string.common_add_funds),
                 icon = Icons.ic_arrow_down_24,
@@ -48,12 +47,6 @@ internal class PredictionBalanceUMConverter(
             ),
         )
     }
-
-    private fun BigDecimal?.toBalance(): TextReference = this
-        ?.formatPolymarketMoneyStyled(
-            fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
-        )
-        ?: stringReference(value = UNKNOWN_BALANCE)
 
     private fun actionButton(
         text: TextReference,
