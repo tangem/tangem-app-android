@@ -1050,6 +1050,7 @@
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
+  <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the full link, or ask the account owner to send it again.</string>
