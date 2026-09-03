@@ -1,8 +1,8 @@
-package com.tangem.datasource.local.cache
+package com.tangem.data.common.cache
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
-import com.tangem.datasource.local.cache.model.CacheKey
+import com.tangem.data.common.cache.model.CacheKey
 import kotlinx.coroutines.test.runTest
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
