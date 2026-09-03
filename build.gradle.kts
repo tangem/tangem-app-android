@@ -321,16 +321,6 @@ dependencyAnalysis {
                 )
             }
         }
-        // :core:res carries only Android string/drawable resources — no bytecode core:datasource
-        // references directly — so DAGP reports it unused. But with non-transitive R classes off,
-        // its strings are merged into downstream R classes (e.g. com.tangem.common.R) through
-        // core:datasource; dropping it breaks resource resolution in modules that reach core:res
-        // only via this path. Keep the declaration and silence the resource-blind false positive.
-        project(":core:datasource") {
-            onUnusedDependencies {
-                exclude(":core:res")
-            }
-        }
         // Same CameraX runtime split as in :app.
         project(":features:qr-scanning:impl") {
             onUnusedDependencies {
