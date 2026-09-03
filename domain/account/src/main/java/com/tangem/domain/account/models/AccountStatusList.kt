@@ -73,5 +73,6 @@ fun AccountStatusList.hasMultiCurrencyAccount(): Boolean = accountStatuses.any {
         is AccountStatus.Payment -> false
         is AccountStatus.Virtual -> false
         is AccountStatus.Prediction -> false
+        is AccountStatus.Collectibles -> false
     }
 }

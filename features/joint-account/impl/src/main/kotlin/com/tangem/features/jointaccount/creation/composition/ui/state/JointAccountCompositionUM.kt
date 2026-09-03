@@ -20,8 +20,6 @@ internal data class JointAccountCompositionUM(
     )
 
     companion object {
-        const val MIN_MEMBERS = 2
-        const val MAX_MEMBERS = 5
         const val MIN_REQUIRED_TO_SIGN = 1
     }
 }
