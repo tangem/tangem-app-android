@@ -105,6 +105,8 @@ interface PolymarketRepository {
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
 
+    suspend fun getBuilderCode(walletId: String): Either<DataError, String>
+
     /**
      * Check whether Polymarket is geo-blocked for the caller's region (`GET polymarket.com/api/geoblock`).
      * Returns `true` when trading is blocked.

@@ -12,7 +12,6 @@ internal class CleanupKeyMigration<T>(private val key: Preferences.Key<T>) : Dat
     override suspend fun shouldMigrate(currentData: Preferences): Boolean = currentData.contains(key)
 
     override suspend fun migrate(currentData: Preferences): Preferences {
-        currentData.toMutablePreferences().remove(key)
-        return currentData
+        return currentData.toMutablePreferences().apply { remove(key) }
     }
 }

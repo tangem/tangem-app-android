@@ -4,6 +4,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -30,12 +31,14 @@ dependencies {
     // endregion
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
     // region Core modules
     api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
