@@ -22,12 +22,14 @@ internal object PlaceResultUMConverter {
             (requestedAmount - filled).abs() <= FILL_SLACK -> PlaceResultUM.Filled(
                 placedAt = placedAt,
                 amount = requestedAmount,
+                tokensBought = result.takingAmount,
             )
             filled > requestedAmount -> PlaceResultUM.Submitted(placedAt = placedAt)
             else -> PlaceResultUM.PartiallyFilled(
                 placedAt = placedAt,
                 filledAmount = filled,
                 requestedAmount = requestedAmount,
+                tokensBought = result.takingAmount,
             )
         }
     }
