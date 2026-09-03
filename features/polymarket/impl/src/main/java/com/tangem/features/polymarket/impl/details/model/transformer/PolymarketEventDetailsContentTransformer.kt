@@ -11,7 +11,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
-import com.tangem.features.polymarket.impl.common.orDash
+import com.tangem.features.polymarket.impl.common.formatOrDash
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -55,8 +55,8 @@ internal class PolymarketEventDetailsContentTransformer(
         return PolymarketEventDetailsUM.Content(
             title = stringReference(event.title),
             iconUrl = event.iconUrl,
-            totalVolume = event.volume?.let { stringReference(it.formatPolymarketVolume()) }.orDash(),
-            change24h = formatChange24h(volume = event.volume, volume24h = event.volume24h).orDash(),
+            totalVolume = stringReference(event.volume.formatPolymarketVolume()),
+            change24h = stringReference(formatChange24h(volume = event.volume, volume24h = event.volume24h)),
             // The BFF does not serve subcategories yet; the UI hides the row while the list is empty.
             subcategories = persistentListOf(),
             activeMarkets = markets
@@ -70,8 +70,8 @@ internal class PolymarketEventDetailsContentTransformer(
             isClosedMarketsExpanded = isClosedMarketsExpanded,
             description = event.description.takeIf(String::isNotBlank)?.let(::stringReference),
             isDescriptionExpanded = isDescriptionExpanded,
-            resolutionDate = formatEasternDate(raw = event.endDate).orDash(),
-            marketOpenedDate = formatEasternDate(raw = event.startDate).orDash(),
+            resolutionDate = stringReference(formatEasternDate(raw = event.endDate)),
+            marketOpenedDate = stringReference(formatEasternDate(raw = event.startDate)),
             onShareClick = { onShareClick(event.slug) },
             onClosedMarketsClick = onClosedMarketsClick,
             onReadMoreClick = onReadMoreClick,
@@ -82,7 +82,7 @@ internal class PolymarketEventDetailsContentTransformer(
         return PolymarketDetailsMarketUM(
             id = market.id,
             title = transformMarketTitle(market),
-            volume = market.volume?.let { stringReference(it.formatPolymarketVolume()) }.orDash(),
+            volume = stringReference(market.volume.formatPolymarketVolume()),
             iconUrl = market.iconUrl ?: event.iconUrl,
             outcomes = if (isTradable) {
                 market.outcomes
@@ -106,7 +106,7 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     private fun transformOutcome(market: PolymarketMarket, outcome: PolymarketOutcome): PolymarketDetailsOutcomeUM {
-        val price = outcome.probability?.formatCents() ?: DASH_SIGN
+        val price = outcome.probability.formatCents()
         return PolymarketDetailsOutcomeUM(
             assetId = outcome.assetId,
             title = stringReference("${outcome.title} • $price"),
@@ -115,31 +115,31 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     /** An implied probability doubles as the outcome share price: 0.25 → "25¢". */
-    private fun BigDecimal.formatCents(): String {
+    private fun BigDecimal?.formatCents(): String = formatOrDash {
         val cents = multiply(CENTS_IN_DOLLAR).setScale(0, RoundingMode.HALF_UP)
-        return "$cents${PolymarketConst.CENT_SIGN}"
+        "$cents${PolymarketConst.CENT_SIGN}"
     }
 
-    private fun formatChange24h(volume: BigDecimal?, volume24h: BigDecimal?): TextReference? {
-        val ratio = computeChange24hRatio(volume = volume, volume24h = volume24h) ?: return null
+    private fun formatChange24h(volume: BigDecimal?, volume24h: BigDecimal?): String {
+        val ratio = computeChange24hRatio(volume = volume, volume24h = volume24h) ?: return DASH_SIGN
         val percent = ratio.format { percent(minFractionDigits = 0, maxFractionDigits = 2) }
-        return stringReference("$GROWTH_GLYPH $percent")
+        return "$GROWTH_GLYPH $percent"
     }
 
     /**
      * Polymarket states event dates in US Eastern Time, so the raw UTC instant is rendered
      * in that zone with an explicit "ET" suffix (e.g. "Jul 11, 2026, 6:00 PM ET").
      */
-    private fun formatEasternDate(raw: String?): TextReference? {
-        raw ?: return null
-        val instant = runCatching { Instant.parse(raw) }.getOrNull() ?: return null
+    private fun formatEasternDate(raw: String?): String {
+        raw ?: return DASH_SIGN
+        val instant = runCatching { Instant.parse(raw) }.getOrNull() ?: return DASH_SIGN
         val formatted = DateTimeFormatter
             // Deliberately English regardless of the device locale: the whole string is a US-style
             // timestamp with an "ET" suffix, exactly as polymarket.com states it.
             .ofPattern(RESOLUTION_DATE_PATTERN, Locale.ENGLISH)
             .withZone(ZoneId.of(EASTERN_TIME_ZONE))
             .format(instant)
-        return stringReference("$formatted ET")
+        return "$formatted ET"
     }
 
     companion object {
