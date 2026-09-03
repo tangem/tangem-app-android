@@ -366,6 +366,9 @@ include(":features:tangempay:main:impl")
 include(":features:tangempay:details:api")
 include(":features:tangempay:details:impl")
 
+include(":features:tangempay:eligibility:api")
+include(":features:tangempay:eligibility:impl")
+
 include(":features:tangempay:onboarding")
 include(":features:tangempay:onboarding:api")
 include(":features:tangempay:onboarding:impl")
