@@ -644,6 +644,29 @@ internal class PlacePredictionModelTest {
         }
 
     @Test
+    fun `GIVEN a matched order filled no shares WHEN place clicked THEN the flow reports a failure`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+        verify { messageSender.send(any()) }
+        verify(exactly = 0) { router.replaceAll(PlacePredictionRoute.Status) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN no answer from the exchange WHEN place clicked THEN the outcome is submitted and not retried`() =
         runTest {
             // Arrange
@@ -958,12 +981,15 @@ internal class PlacePredictionModelTest {
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
 
-        fun createPlaceResult(makingAmount: BigDecimal? = BigDecimal("10")) = PredictionPlaceOrderResult(
+        fun createPlaceResult(
+            makingAmount: BigDecimal? = BigDecimal("10"),
+            takingAmount: BigDecimal? = BigDecimal("23.2"),
+        ) = PredictionPlaceOrderResult(
             isSuccess = true,
             orderId = "0x6b2e",
             status = "matched",
             makingAmount = makingAmount,
-            takingAmount = BigDecimal("23.2"),
+            takingAmount = takingAmount,
             transactionHashes = listOf("0xdead"),
             errorMessage = null,
         )
