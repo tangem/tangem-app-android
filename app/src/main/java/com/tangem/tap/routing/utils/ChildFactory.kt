@@ -29,6 +29,7 @@ import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
+import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
@@ -133,6 +134,7 @@ internal class ChildFactory @Inject constructor(
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
     private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
+    private val tangemPayEligibilityComponentFactory: TangemPayEligibilityComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
@@ -804,6 +806,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = KycComponent.Params(route.userWalletId),
                     componentFactory = kycComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayEligibility -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayEligibilityComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = tangemPayEligibilityComponentFactory,
                 )
             }
             is AppRoute.Survey -> {
