@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.config.issuers
+package com.tangem.features.onboarding.v2.twin.impl.issuers
 
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.assets.loadList
-import com.tangem.datasource.local.config.issuers.models.Issuer
 import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.features.onboarding.v2.twin.impl.issuers.models.Issuer
 
 internal class DefaultIssuersConfigStorage(
     private val assetLoader: AssetLoader,
