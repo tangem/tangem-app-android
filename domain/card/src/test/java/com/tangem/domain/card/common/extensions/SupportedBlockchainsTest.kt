@@ -46,7 +46,7 @@ internal class SupportedBlockchainsTest {
     }
 
     @Test
-    fun `GIVEN card without HD wallets WHEN supportedTokens THEN Robinhood and Igra are available`() {
+    fun `GIVEN card without HD wallets WHEN supportedTokens THEN Robinhood, Igra and Arc are available`() {
         // Arrange
         val card = createCard(firmwareVersion = MULTI_WHITE_FIRMWARE)
 
@@ -57,21 +57,21 @@ internal class SupportedBlockchainsTest {
         )
 
         // Assert
-        assertThat(actual).containsAtLeast(Blockchain.Robinhood, Blockchain.Igra)
+        assertThat(actual).containsAtLeast(Blockchain.Robinhood, Blockchain.Igra, Blockchain.Arc)
     }
 
     private fun provideTestModels() = listOf(
         TestModel(
             firmwareVersion = WALLET_V3_FIRMWARE,
             isTangemWallet = false,
-            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Robinhood, Blockchain.Igra),
+            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Robinhood, Blockchain.Igra, Blockchain.Arc),
             expectedNotContains = listOf(Blockchain.Quai, Blockchain.Adi, Blockchain.SeiEvm),
         ),
         // 4.12 Multi White: cardId FF79000000000000, batch CB79, firmware 4.12d
         TestModel(
             firmwareVersion = MULTI_WHITE_FIRMWARE,
             isTangemWallet = true,
-            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Robinhood, Blockchain.Igra),
+            expectedContains = listOf(Blockchain.Ethereum, Blockchain.Robinhood, Blockchain.Igra, Blockchain.Arc),
             expectedNotContains = listOf(Blockchain.Quai, Blockchain.Adi, Blockchain.SeiEvm),
         ),
         // Wallet 2.0: HD wallets are available, nothing is filtered out by firmware
@@ -82,11 +82,16 @@ internal class SupportedBlockchainsTest {
                 Blockchain.Ethereum,
                 Blockchain.Robinhood,
                 Blockchain.Igra,
+                Blockchain.Arc,
                 Blockchain.Quai,
                 Blockchain.Adi,
                 Blockchain.SeiEvm,
             ),
-            expectedNotContains = listOf(Blockchain.RobinhoodTestnet, Blockchain.IgraTestnet),
+            expectedNotContains = listOf(
+                Blockchain.RobinhoodTestnet,
+                Blockchain.IgraTestnet,
+                Blockchain.ArcTestnet,
+            ),
         ),
     )
 
