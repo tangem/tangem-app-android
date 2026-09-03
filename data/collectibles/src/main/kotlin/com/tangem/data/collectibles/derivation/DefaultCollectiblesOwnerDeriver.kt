@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
@@ -19,6 +20,7 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.config.curvesConfig
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -92,6 +94,22 @@ internal class DefaultCollectiblesOwnerDeriver @Inject constructor(
 
     private suspend fun storedOwnerKey(userWalletId: UserWalletId, seedKey: ByteArrayKey): ExtendedPublicKey? {
         return derivationsRepository.getExistingDerivedKeys(userWalletId = userWalletId, seedKey = seedKey)[path]
+    }
+
+    /**
+     * The seed public key the wallet derives its Solana keys from, or `null` if it has none.
+     *
+     * The curve comes from the wallet's own config rather than being hardcoded: Wallet 2 cards keep Solana on
+     * `Ed25519Slip0010`, older ones on plain `Ed25519`. `Blockchain.Solana` stands in for the devnet too — both map
+     * to the same curve.
+     */
+    private fun UserWallet.solanaSeedKey(): ByteArray? {
+        val curve = curvesConfig.primaryCurve(Blockchain.Solana) ?: return null
+
+        return when (this) {
+            is UserWallet.Cold -> scanResponse.card.wallets.firstOrNull { it.curve == curve }?.publicKey
+            is UserWallet.Hot -> wallets?.firstOrNull { it.curve == curve }?.publicKey
+        }
     }
 
     private fun Throwable.toDerivationError(): CollectiblesDerivationError = when (this) {
