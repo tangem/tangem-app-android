@@ -11,7 +11,6 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
-import com.tangem.features.polymarket.impl.common.formatOrDash
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -115,9 +114,10 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     /** An implied probability doubles as the outcome share price: 0.25 → "25¢". */
-    private fun BigDecimal?.formatCents(): String = formatOrDash {
+    private fun BigDecimal?.formatCents(): String {
+        this ?: return DASH_SIGN
         val cents = multiply(CENTS_IN_DOLLAR).setScale(0, RoundingMode.HALF_UP)
-        "$cents${PolymarketConst.CENT_SIGN}"
+        return "$cents${PolymarketConst.CENT_SIGN}"
     }
 
     private fun formatChange24h(volume: BigDecimal?, volume24h: BigDecimal?): String {
