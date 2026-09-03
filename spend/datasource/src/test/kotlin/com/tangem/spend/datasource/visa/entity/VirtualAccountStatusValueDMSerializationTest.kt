@@ -1,24 +1,39 @@
-package com.tangem.datasource.local.visa.entity
+package com.tangem.spend.datasource.visa.entity
 
 import com.google.common.truth.Truth
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
-import com.tangem.datasource.di.MoshiModule
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.spend.datasource.di.SpendDatasourceModule
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 /**
- * Verifies that the network Moshi (see [MoshiModule.provideNetworkMoshi]) resolves and round-trips the
- * polymorphic [VirtualAccountStatusValueDM] adapter.
+ * Verifies that the [SpendDatasourceModule.provideVisaMoshiConfigurer] contribution resolves and
+ * round-trips the polymorphic [VirtualAccountStatusValueDM] adapter.
  *
- * Guards against the missing `NamePolymorphicAdapterFactory` registration that caused a runtime
- * `ClassNotFoundException: ...VirtualAccountStatusValueDMJsonAdapter` (the adapter is registered manually,
- * not generated).
+ * Guards against a missing `NamePolymorphicAdapterFactory` registration that caused a runtime
+ * `ClassNotFoundException: ...VirtualAccountStatusValueDMJsonAdapter` (the adapter is registered
+ * manually, not generated).
  */
 class VirtualAccountStatusValueDMSerializationTest {
 
+    private object BigDecimalAdapter {
+        @FromJson
+        fun fromJson(value: String): BigDecimal = BigDecimal(value)
+
+        @ToJson
+        fun toJson(value: BigDecimal): String = value.toPlainString()
+    }
+
     @OptIn(ExperimentalStdlibApi::class)
-    private val adapter = MoshiModule()
-        .provideNetworkMoshi(configurers = emptySet())
+    private val adapter = SpendDatasourceModule
+        .provideVisaMoshiConfigurer()
+        .configure(Moshi.Builder().add(BigDecimalAdapter))
+        .addLast(KotlinJsonAdapterFactory())
+        .build()
         .adapter<VirtualAccountStatusValueDM>()
 
     @Test
