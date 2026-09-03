@@ -46,8 +46,8 @@ class TangemPayCardFreezeTest : BaseTestCase() {
                 awaitSuccess { onTangemPayCardPageScreen { freezeCardRowActive.assertIsDisplayed() } }
             }
             step("Retry freeze card via confirmation sheet") { freezeCardFromCardPage() }
-            step("Assert frozen badge is displayed") {
-                awaitSuccess { onTangemPayCardPageScreen { cardFrozenBadge.assertIsDisplayed() } }
+            step("Assert card is frozen (Unfreeze row is displayed)") {
+                awaitSuccess { onTangemPayCardPageScreen { unfreezeCardRow.assertIsDisplayed() } }
             }
         }
     }
