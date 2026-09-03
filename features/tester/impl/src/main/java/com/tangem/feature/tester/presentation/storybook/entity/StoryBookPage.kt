@@ -8,6 +8,7 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -211,6 +212,21 @@ internal data class TangemButtonStory(
         BgInverse("bg.inverse"),
     }
 }
+
+internal data class TangemButtonGroupStory(
+    val orientation: TangemButtonGroup.Orientation,
+    val buttonCount: Int,
+    val size: TangemButton.Size,
+    val isFillWidth: Boolean,
+    val isLongLabel: Boolean,
+    val hasIcon: Boolean,
+    val onOrientationChange: (TangemButtonGroup.Orientation) -> Unit,
+    val onButtonCountChange: (Int) -> Unit,
+    val onSizeChange: (TangemButton.Size) -> Unit,
+    val onFillWidthToggle: () -> Unit,
+    val onLongLabelToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+) : DsStoryBookPage
 
 @Suppress("BooleanPropertyNaming")
 internal data class TangemRowStory(
