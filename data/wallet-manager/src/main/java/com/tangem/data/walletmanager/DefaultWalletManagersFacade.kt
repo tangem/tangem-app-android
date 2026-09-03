@@ -32,7 +32,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.utils.*
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.assets.loadMap
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.data.walletmanager.store.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
@@ -700,6 +700,15 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     @Deprecated("Will be removed in future")
     override suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager> {
         return walletManagersStore.getAllSync(userWalletId)
+    }
+
+    @Deprecated("Will be removed in future")
+    override suspend fun getStoredWalletManager(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): WalletManager? {
+        return walletManagersStore.getSyncOrNull(userWalletId, blockchain, derivationPath)
     }
 
     override suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String? {

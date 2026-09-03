@@ -67,6 +67,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.math.BigInteger
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -83,6 +84,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
+
+    private val builderCodeCache = AtomicReference<String?>(null)
 
     override suspend fun getCategories(): Either<DataError, List<PolymarketCategory>> = withContext(dispatchers.io) {
         safeApiCall(
@@ -298,6 +301,19 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 PolymarketWalletStatus.fromRaw(response.status).right()
             },
             onError = { walletErrorResolver.resolve(it).left() },
+        )
+    }
+
+    override suspend fun getBuilderCode(walletId: String): Either<DataError, String> = withContext(dispatchers.io) {
+        builderCodeCache.get()?.let { return@withContext it.right() }
+
+        safeApiCall(
+            call = {
+                polymarketApi.getConfiguration(walletId = walletId).bind().builderCode
+                    .also(builderCodeCache::set)
+                    .right()
+            },
+            onError = { DataError.NetworkError.NoInternetConnection.left() },
         )
     }
 
