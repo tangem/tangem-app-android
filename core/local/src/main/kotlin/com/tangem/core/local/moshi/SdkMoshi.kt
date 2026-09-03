@@ -1,4 +1,4 @@
-package com.tangem.datasource.di
+package com.tangem.core.local.moshi
 
 import javax.inject.Qualifier
 
