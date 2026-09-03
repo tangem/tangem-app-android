@@ -85,7 +85,7 @@ private fun Tile(tile: TangemPayCashbackInfoTilesUM.Tile, modifier: Modifier = M
                     modifier = Modifier.size(20.dp),
                     painter = rememberVectorPainter(tile.icon),
                     contentDescription = null,
-                    tint = TangemTheme.colors3.icon.primary,
+                    tint = TangemTheme.colors3.icon.secondary,
                 )
             }
             Column(

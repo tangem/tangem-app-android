@@ -40,6 +40,13 @@ internal class PaymentAccountStatusExtTest {
         TariffPlanModel(value = PaymentAccountStatusValue.Error.NotSynced, expected = null),
         TariffPlanModel(value = PaymentAccountStatusValue.Error.ExposedDevice, expected = null),
         TariffPlanModel(value = PaymentAccountStatusValue.Error.CardIssueFailed("customer-id"), expected = null),
+        TariffPlanModel(
+            value = PaymentAccountStatusValue.Error.CardIssueFailed(
+                customerId = "customer-id",
+                tariffPlan = tariffPlanState(tariff = PLAN),
+            ),
+            expected = PLAN,
+        ),
         TariffPlanModel(value = mockk<PaymentAccountStatusValue.UnderReview>(relaxed = true), expected = null),
         TariffPlanModel(value = mockk<PaymentAccountStatusValue.IssuingCard>(relaxed = true), expected = null),
         TariffPlanModel(value = mockk<PaymentAccountStatusValue.Deactivated>(relaxed = true), expected = null),

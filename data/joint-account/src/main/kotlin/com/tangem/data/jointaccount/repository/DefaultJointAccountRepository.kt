@@ -6,11 +6,14 @@ import arrow.core.right
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.data.common.api.ApiResponseRaise
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.jointaccount.converter.ActivateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
 import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
@@ -77,6 +80,44 @@ internal class DefaultJointAccountRepository @Inject constructor(
         }
     }
 
+    override suspend fun activate(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ): Either<Throwable, Unit> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+                Unit.right()
+            },
+            onError = { error ->
+                if (error is ApiResponseError.TimeoutException) {
+                    logger.e(messageString = "Activation timed out, retrying once — the endpoint is idempotent", error)
+                    safeApiCall(
+                        call = {
+                            activateOnce(userWalletId = userWalletId, payload = payload, signature = signature)
+                            Unit.right()
+                        },
+                        onError = { retryError -> retryError.left() },
+                    )
+                } else {
+                    error.left()
+                }
+            },
+        )
+    }
+
+    private suspend fun ApiResponseRaise.activateOnce(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ) {
+        jointAccountApi.activateJointAccount(
+            walletId = userWalletId.stringValue,
+            body = ActivateJointAccountRequestConverter(signature = signature).convert(value = payload),
+        ).bind()
+    }
+
     override suspend fun getInvitePreview(
         walletId: UserWalletId,
         inviteId: String,
@@ -98,6 +139,22 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 }
             },
         )
+    }
+
+    /**
+     * An unreadable store must not take the screen down with it: the members of the account are worth showing
+     * even when the invite actions cannot be offered. As in [storeInvites], the failure is logged without its
+     * content — an invite id is a secret.
+     */
+    override suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String> {
+        return withContext(dispatchers.io) {
+            runSuspendCatching {
+                invitesStore.get(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId).orEmpty()
+            }.getOrElse { throwable ->
+                logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
+                emptyList()
+            }
+        }
     }
 
     /**
