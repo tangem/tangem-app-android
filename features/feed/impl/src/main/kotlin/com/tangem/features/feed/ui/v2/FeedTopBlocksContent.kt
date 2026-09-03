@@ -2,13 +2,7 @@ package com.tangem.features.feed.ui.v2
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +49,9 @@ private val BlockShape = RoundedCornerShape(size = BlockCornerRadius)
 internal fun FeedTopBlocksContent(
     onForYouClick: () -> Unit,
     isPredictionsVisible: Boolean,
+    isCollectiblesVisible: Boolean,
     onPredictionsClick: () -> Unit,
+    onCollectiblesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // the blocks lie on the already-elevated shtorka, where another material shadow reads as grime
@@ -79,6 +75,15 @@ internal fun FeedTopBlocksContent(
                     LargeBlockPlaceholder(
                         title = stringResourceSafe(R.string.prediction_main_title),
                         onClick = onPredictionsClick,
+                    )
+                }
+            }
+
+            if (isCollectiblesVisible) {
+                item {
+                    LargeBlockPlaceholder(
+                        title = "Collectibles",
+                        onClick = onCollectiblesClick,
                     )
                 }
             }

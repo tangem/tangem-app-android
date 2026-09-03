@@ -57,7 +57,7 @@ internal fun TangemPayCurrentPlanScreen(state: TangemPayCurrentPlanUM, modifier:
                 }
             }
 
-            ChangePlanFooter(state = state)
+            PlanFooter(state = state)
         }
     }
 }
@@ -183,21 +183,29 @@ private fun PlanInfoRow(
 }
 
 @Composable
-private fun ChangePlanFooter(state: TangemPayCurrentPlanUM, modifier: Modifier = Modifier) {
-    if (state.onChangePlanClick == null) return
-
+private fun PlanFooter(state: TangemPayCurrentPlanUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        state.onChangePlanClick?.let { onChangePlanClick ->
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.tangempay_current_plan_change),
+                onClick = onChangePlanClick,
+            )
+        }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Primary,
+            variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.tangempay_current_plan_change),
-            onClick = state.onChangePlanClick,
+            text = resourceReference(R.string.tangempay_current_plan_full_terms),
+            onClick = state.onFullTermsClick,
         )
     }
 }
@@ -250,4 +258,5 @@ private fun previewState() = TangemPayCurrentPlanUM(
     onBackClick = {},
     onChangePlanClick = {},
     onLinkClick = {},
+    onFullTermsClick = {},
 )

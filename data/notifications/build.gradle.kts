@@ -40,6 +40,7 @@ dependencies {
 
     // region Domain modules
     api(projects.domain.notifications)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
     // endregion

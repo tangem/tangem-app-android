@@ -9,7 +9,7 @@ import com.tangem.blockchain.transactionhistory.TransactionHistoryState
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.data.walletmanager.store.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.models.network.Network

@@ -17,7 +17,6 @@ dependencies {
     implementation(projects.features.marketing.api)
 
     /** Core */
-    implementation(projects.core.datasource)
     implementation(projects.core.decompose)
     implementation(projects.core.res)
     implementation(projects.core.ui)
@@ -41,6 +40,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.account.status)

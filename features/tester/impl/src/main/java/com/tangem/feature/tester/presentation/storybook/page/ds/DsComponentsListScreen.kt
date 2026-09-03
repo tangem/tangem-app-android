@@ -30,6 +30,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.search.tangemSea
 import com.tangem.feature.tester.presentation.storybook.page.ds.segmentedcontrol.tangemSegmentedControlStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shtorka.tangemShtorkaStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.tangemStatusScreenStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.tangemTabNavigationStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.textStyleStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangemTokenIconStoryFactory
@@ -56,6 +57,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
     DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
     DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
+    DsStoryItem(title = "🚥 TangemStatusScreen", factory = tangemStatusScreenStoryFactory),
     DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),
     DsStoryItem(title = "🎛️ TangemFilterGroup", factory = tangemFilterGroupStoryFactory),
     DsStoryItem(title = "📑 TangemTabNavigation", factory = tangemTabNavigationStoryFactory),

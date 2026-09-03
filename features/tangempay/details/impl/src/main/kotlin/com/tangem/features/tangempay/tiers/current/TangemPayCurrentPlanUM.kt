@@ -12,6 +12,7 @@ internal data class TangemPayCurrentPlanUM(
     val onBackClick: () -> Unit,
     val onChangePlanClick: (() -> Unit)?,
     val onLinkClick: (url: String) -> Unit,
+    val onFullTermsClick: () -> Unit,
 ) {
     @Immutable
     data class Notification(
