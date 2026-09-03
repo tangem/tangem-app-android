@@ -22,9 +22,14 @@ data class PredictionOrderQuote(
     val total: BigDecimal,
     val builderCode: String,
     val minOrderSize: BigDecimal,
+    val minOrderAmount: BigDecimal?,
     val tickSize: BigDecimal,
     val isLive: Boolean,
-)
+) {
+
+    val minAmount: BigDecimal
+        get() = maxOf(minOrderSize * worstCasePrice, minOrderAmount ?: BigDecimal.ZERO)
+}
 
 data class PredictionOrderFees(
     val market: BigDecimal,

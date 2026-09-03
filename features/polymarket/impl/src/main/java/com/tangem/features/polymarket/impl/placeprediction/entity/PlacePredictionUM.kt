@@ -24,6 +24,7 @@ internal data class PlacePredictionUM(
     val tradingPermission: TradingPermissionUM,
     val notifications: ImmutableList<PredictionNotificationUM>,
     val amountCaption: AmountCaptionUM? = null,
+    val minAmount: BigDecimal? = null,
     val slippagePicker: SlippagePickerUM,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
@@ -62,6 +63,12 @@ internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
+internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
+    val entered = enteredAmount() ?: return false
+    val minAmount = minAmount ?: return false
+    return entered < minAmount
+}
+
 @Immutable
 internal data class MarketHeaderUM(
     val title: String,
@@ -76,6 +83,8 @@ internal sealed interface AmountCaptionUM {
     data class ToWin(val payout: PayoutUM) : AmountCaptionUM
 
     data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
+
+    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM
 }
 
 internal enum class PaymentAmountErrorUM(val text: TextReference) {
@@ -128,7 +137,6 @@ internal sealed interface QuoteUM {
         val guaranteedShares: BigDecimal,
         val feeTotal: BigDecimal,
         val total: BigDecimal,
-        val minOrderSize: BigDecimal,
         val signable: SignableQuoteUM,
     ) : QuoteUM
 
