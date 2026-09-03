@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.details.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -19,8 +20,8 @@ internal sealed interface PolymarketEventDetailsUM {
      * @property iconUrl optional event icon
      * @property totalVolume formatted total traded volume, shown in the meta row under the title;
      *  a dash when unknown
-     * @property change24h formatted total-volume growth over the last 24 hours (e.g. "▲ 2.08%"),
-     *  a dash when the volumes needed to derive it are unknown
+     * @property change24h total-volume growth over the last 24 hours as a price change,
+     *  [PriceChangeState.Unknown] when the volumes needed to derive it are missing
      * @property subcategories market-filter tabs under the meta row; empty hides the row
      *  (the BFF does not serve subcategories yet)
      * @property activeMarkets markets open for trading
@@ -39,7 +40,7 @@ internal sealed interface PolymarketEventDetailsUM {
         val title: TextReference,
         val iconUrl: String?,
         val totalVolume: TextReference,
-        val change24h: TextReference,
+        val change24h: PriceChangeState,
         val subcategories: ImmutableList<PolymarketSubcategoryTabUM>,
         val activeMarkets: ImmutableList<PolymarketDetailsMarketUM>,
         val closedMarkets: ImmutableList<PolymarketDetailsMarketUM>,
