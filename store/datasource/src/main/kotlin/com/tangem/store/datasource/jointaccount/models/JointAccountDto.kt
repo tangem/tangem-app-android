@@ -38,7 +38,8 @@ data class JointAccountDto(
      * (case-insensitively), never by trusting the backend
      * @property role     `creator` | `member` — only the creator sends invites and activates the account. Raw string,
      * same reasoning as [JointAccountDto.status]
-     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had one
+     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
+     * one, and absent in pre-v1.3 responses
      */
     @JsonClass(generateAdapter = true)
     data class Member(
