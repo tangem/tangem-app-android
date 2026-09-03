@@ -134,6 +134,7 @@ class ArchivedAccountsStoreTest {
             derivationIndex = DerivationIndex.Main,
             tokensCount = 2,
             networksCount = 1,
+            type = ArchivedAccount.Type.CRYPTO,
         )
     }
 }
