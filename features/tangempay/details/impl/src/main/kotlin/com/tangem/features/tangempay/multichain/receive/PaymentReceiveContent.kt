@@ -140,7 +140,7 @@ private fun PaymentReceiveMainContent(state: PaymentReceiveUM, onShowQr: () -> U
         ) {
             TangemButton(
                 modifier = Modifier.weight(1f),
-                text = resourceReference(R.string.token_receive_show_qr_code_title),
+                text = resourceReference(R.string.tangempay_multichain_show_qr),
                 iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_qr_24),
                 onClick = onShowQr,
                 variant = TangemButton.Variant.Secondary,
