@@ -7,7 +7,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.R
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge.Settings.Companion.SwapFrom
 import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
