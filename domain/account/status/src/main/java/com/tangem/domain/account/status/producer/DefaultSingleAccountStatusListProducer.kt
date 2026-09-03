@@ -116,6 +116,10 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
     private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
         get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
+    private val Account.Collectibles.errorCollectiblesAccountStatus: AccountStatus.Collectibles
+        get() = AccountStatus.Collectibles(this, CollectiblesAccountStatusValue.Error.Unavailable)
+    private val Account.Collectibles.loadingCollectiblesAccountStatus: AccountStatus.Collectibles
+        get() = AccountStatus.Collectibles(this, CollectiblesAccountStatusValue.Loading)
     private val emptyPriceChangeLce: Lce<Unit, PriceChange>
         get() = PriceChange(value = BigDecimal.ZERO.movePointLeft(2), source = StatusSource.ACTUAL).lceContent()
     private val Account.Joint.errorJointAccountStatus: AccountStatus.Joint
@@ -220,6 +224,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
                     is Account.Prediction ->
                         specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
+                    is Account.Collectibles ->
+                        specialStatuses[account.accountId] ?: account.errorCollectiblesAccountStatus
                     is Account.Joint -> buildJointStatus(
                         account = account,
                         currencyStatusMap = currencyStatusMap,
@@ -495,6 +501,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
+                is AccountStatus.Collectibles -> accountStatus.value.totalFiatBalance
             }
         }
     }
@@ -522,6 +529,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Payment -> null
                     is Account.Virtual -> null
                     is Account.Prediction -> null
+                    is Account.Collectibles -> account.loadingCollectiblesAccountStatus
                     is Account.Joint -> account.loadingJointAccountStatus
                 }
             },
