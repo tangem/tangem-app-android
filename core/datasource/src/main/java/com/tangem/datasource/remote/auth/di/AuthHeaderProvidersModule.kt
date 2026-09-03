@@ -1,8 +1,8 @@
-package com.tangem.datasource.di
+package com.tangem.datasource.remote.auth.di
 
 import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
-import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.remote.auth.AuthProvider
 import com.tangem.datasource.remote.header.AuthenticationHeader
 import com.tangem.datasource.remote.header.TangemApiKeyHeader
 import dagger.Module
@@ -12,7 +12,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object ApiConfigsModule {
+internal object AuthHeaderProvidersModule {
 
     @Provides
     fun provideTangemApiKeyHeaderProvider(authProvider: AuthProvider): TangemApiKeyHeaderProvider {
