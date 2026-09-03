@@ -1,4 +1,4 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.features.jointaccount.deeplink
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels

@@ -6,6 +6,8 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
+import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -47,6 +49,21 @@ interface JointAccountRepository {
         payload: JointAccountCreationPayload,
         signature: String,
     ): JointAccountCreationResult
+
+    /**
+     * Redeems the invite: takes the slot and creates this wallet's own row in `accounts`.
+     *
+     * [payload] is the object the card signed and [signature] the EIP-191 signature over its RFC 8785 canonical
+     * form — the same wire rules as in [create]. A 409 comes back as [JointAccountJoinResult.Conflict] — the
+     * response does not tell a spent invite from an already-registered address, the domain resolves it by
+     * re-reading the list. Everything else is thrown as it arrives from the API.
+     */
+    @Throws
+    suspend fun join(
+        userWalletId: UserWalletId,
+        payload: JointAccountJoinPayload,
+        signature: String,
+    ): JointAccountJoinResult
 
     /**
      * Confirms the composition and activates the account.

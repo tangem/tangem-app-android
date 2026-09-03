@@ -1,8 +1,8 @@
-package com.tangem.common.routing.deeplink
+package com.tangem.features.jointaccount.deeplink
 
 import java.net.URLEncoder
 
-object JointAccountInviteLinkBuilder {
+internal object JointAccountInviteLinkBuilder {
 
     private const val BASE_URL = "https://tangem.com/joint-account/join"
 
