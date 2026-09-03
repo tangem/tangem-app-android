@@ -230,6 +230,8 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.IgraTestnet -> EllipticCurve.Secp256k1
             Blockchain.Electroneum -> EllipticCurve.Secp256k1
             Blockchain.ElectroneumTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Arc -> EllipticCurve.Secp256k1
+            Blockchain.ArcTestnet -> EllipticCurve.Secp256k1
         }
     }
 }

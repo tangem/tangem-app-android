@@ -18,6 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Reduces amount by specific value
@@ -42,7 +43,7 @@ class AmountReduceByTransformer(
         val amountValue = prevState.amountTextField.cryptoAmount.value ?: return prevState
 
         val decimalCryptoValue = amountValue.minus(value.reduceAmountByDiff)
-        val cryptoValue = decimalCryptoValue.parseBigDecimal(cryptoDecimals)
+        val cryptoValue = decimalCryptoValue.parseBigDecimal(cryptoDecimals, roundingMode = RoundingMode.DOWN)
         val (fiatValue, decimalFiatValue) = cryptoValue.getFiatValue(
             fiatRate = cryptoCurrencyStatus.value.fiatRate,
             isFiatValue = false,
