@@ -284,7 +284,7 @@
   <string name="tangempay_cashback_widget_error_description">Tocca per ricaricare</string>
   <string name="tangempay_cashback_widget_error_title">Cashback non disponibile</string>
   <string name="tangempay_cashback_widget_refund_description">Ridotto a causa del reso di acquisti</string>
-  <string name="tangempay_cashback_widget_title">%1$s di cashback in %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s in %2$s</string>
   <string name="tangempay_change_pin_code">Cambia codice PIN</string>
   <string name="tangempay_changing_plan">Modifica piano</string>
   <string name="tangempay_choose_network_fast_way">Modo rapido</string>
