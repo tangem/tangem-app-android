@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
@@ -18,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.test.mock.MockAccounts
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -32,17 +34,20 @@ internal class WalletJointAccountItemConverterTest {
     private val userWalletId = UserWalletId("011")
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 0, userWalletId = userWalletId)
 
-    private val clickedWallets = mutableListOf<UserWalletId>()
+    private val clickedAccounts = mutableListOf<Pair<UserWalletId, String>>()
 
-    @org.junit.jupiter.api.BeforeEach
+    private val converter = createConverter(accountIdsWithInvites = emptySet())
+
+    @BeforeEach
     fun resetClicks() {
-        clickedWallets.clear()
+        clickedAccounts.clear()
     }
-    private val converter = WalletJointAccountItemConverter(
+
+    private fun createConverter(accountIdsWithInvites: Set<String>) = WalletJointAccountItemConverter(
         appCurrency = AppCurrency.Default,
         userWalletId = userWalletId,
-        accountIdsWithInvites = emptySet(),
-        onAccountClick = clickedWallets::add,
+        accountIdsWithInvites = accountIdsWithInvites,
+        onAccountClick = { walletId, accountId -> clickedAccounts += walletId to accountId },
     )
 
     @Test
@@ -75,12 +80,7 @@ internal class WalletJointAccountItemConverterTest {
     @Test
     fun `GIVEN unused invites on this device WHEN convert pending THEN the invite banner is offered`() {
         // Arrange
-        val inviting = WalletJointAccountItemConverter(
-            appCurrency = AppCurrency.Default,
-            userWalletId = userWalletId,
-            accountIdsWithInvites = setOf(account.accountId.value),
-            onAccountClick = clickedWallets::add,
-        )
+        val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
         val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2))
 
         // Act
@@ -93,7 +93,7 @@ internal class WalletJointAccountItemConverterTest {
         state.onInviteClick()
 
         // Assert
-        assertThat(clickedWallets).containsExactly(userWalletId)
+        assertThat(clickedAccounts).containsExactly(userWalletId to account.accountId.value)
     }
 
     @Test
@@ -129,7 +129,7 @@ internal class WalletJointAccountItemConverterTest {
         (converter.convert(status).state as JointAccountMainUM.WaitingMembers).onClick()
 
         // Assert
-        assertThat(clickedWallets).containsExactly(userWalletId)
+        assertThat(clickedAccounts).containsExactly(userWalletId to account.accountId.value)
     }
 
     @Test
@@ -151,7 +151,7 @@ internal class WalletJointAccountItemConverterTest {
             account = account,
             value = value,
             tokenList = TokenList.Empty,
-            priceChangeLce = com.tangem.domain.core.utils.lceLoading(),
+            priceChangeLce = lceLoading(),
         )
     }
 
