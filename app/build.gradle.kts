@@ -218,6 +218,7 @@ dependencies {
     implementation(projects.data.jointAccount)
     implementation(projects.data.pushNotificationPreferences)
     implementation(projects.data.card)
+    implementation(projects.data.collectibles)
     implementation(projects.data.common)
     implementation(projects.data.settings)
     implementation(projects.data.appUpdate)
