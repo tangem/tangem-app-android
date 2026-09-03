@@ -14,8 +14,6 @@ import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
-import com.tangem.domain.visa.model.VisaActivationRemoteState
-import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
@@ -131,8 +129,6 @@ internal object UserWalletsListRepositoryModule {
             .add(TangemSdkAdapter.DateAdapter())
             .add(TangemSdkAdapter.DerivationNodeAdapter())
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
-            .add(VisaActivationRemoteState.jsonAdapter)
-            .add(VisaCardActivationStatus.jsonAdapter)
             .addLast(KotlinJsonAdapterFactory())
             .build()
     }
