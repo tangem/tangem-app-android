@@ -7,7 +7,7 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.crypto.hdWallet.DerivationNode
 import com.tangem.crypto.hdWallet.DerivationPath
 
-class DerivationPathAdapterWithMigration {
+internal class DerivationPathAdapterWithMigration {
     @ToJson
     fun toJson(src: DerivationPath): String = src.rawPath
 
