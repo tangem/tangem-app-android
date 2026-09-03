@@ -103,6 +103,7 @@ fun CurrencyIcon(
             -> {
                 ContentIconContainer(
                     icon = state,
+                    iconSize = iconSize,
                     modifier = iconModifier,
                     shouldShowTopBadge = shouldDisplayNetwork,
                     networkBadgeSize = networkBadgeSize,
@@ -157,6 +158,7 @@ private fun BoxScope.ContentIconContainer(
     networkBadgeSize: Dp,
     networkBadgeBackground: Color,
     modifier: Modifier = Modifier,
+    iconSize: Dp = 36.dp,
 ) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
@@ -166,6 +168,7 @@ private fun BoxScope.ContentIconContainer(
     ContentIcon(
         modifier = modifier,
         icon = icon,
+        iconSize = iconSize,
         alpha = alpha,
         colorFilter = colorFilter,
     )
