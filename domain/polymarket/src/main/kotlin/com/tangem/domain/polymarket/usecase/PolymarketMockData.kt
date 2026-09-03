@@ -267,6 +267,7 @@ internal object PolymarketMockData {
         imageUrl = imageUrl,
         status = status,
         isNegRisk = isNegRisk,
+        isAcceptingOrders = true,
         startDate = startDate,
         endDate = endDate,
         startDateIso = startDateIso,
