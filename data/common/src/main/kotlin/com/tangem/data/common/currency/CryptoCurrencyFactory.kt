@@ -135,6 +135,7 @@ class CryptoCurrencyFactory(
             iconUrl = getCoinIconUrl(blockchain),
             decimals = blockchain.decimals(),
             isCustom = isCustomCoin(network),
+            displayDecimals = blockchain.displayDecimals(),
         )
     }
 
