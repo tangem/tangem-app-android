@@ -109,10 +109,10 @@ internal class JointAccountMembersModel @Inject constructor(
         val joined = account.members.mapIndexed { index, member ->
             joinedMember(index = index, member = member, isThisDeviceCreator = isThisDeviceCreator)
         }
-        val redeemedInvites = account.members.mapNotNull(JointAccount.Member::inviteId)
-        val remainingInvites = invites.filterNot { invite ->
-            redeemedInvites.any { redeemed -> redeemed.equals(invite, ignoreCase = true) }
-        }
+        val redeemedInvites = account.members
+            .mapNotNull { member -> member.inviteId?.lowercase() }
+            .toSet()
+        val remainingInvites = invites.filterNot { invite -> invite.lowercase() in redeemedInvites }
         val freeSlots = List(size = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)) {
             freeSlot(index = it, invite = remainingInvites.getOrNull(it))
         }
