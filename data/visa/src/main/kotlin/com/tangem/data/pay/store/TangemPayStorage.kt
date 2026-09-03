@@ -60,7 +60,7 @@ interface TangemPayStorage {
 
     suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
     suspend fun storeTangemPayEligibility(eligibility: Set<String>)
-    suspend fun getTangemPayEligibility(): Set<String>
+    suspend fun getTangemPayEligibility(): Set<String>?
 
     /**
      * Drops every entry this storage keeps for the wallet, including the auth tokens and the
