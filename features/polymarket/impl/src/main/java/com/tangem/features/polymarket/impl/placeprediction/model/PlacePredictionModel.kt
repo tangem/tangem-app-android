@@ -399,6 +399,8 @@ internal class PlacePredictionModel @Inject constructor(
             isNegRiskMarket = market.isNegRisk
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
+
+            if (isScreenShown) restartQuoteLoop(withDebounce = false)
         }
     }
 

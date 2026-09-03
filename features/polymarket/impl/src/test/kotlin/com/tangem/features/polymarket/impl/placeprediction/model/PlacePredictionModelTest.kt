@@ -74,6 +74,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import kotlinx.coroutines.test.runCurrent
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionModelTest {
@@ -207,6 +208,25 @@ internal class PlacePredictionModelTest {
 
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN an amount typed before the market lands WHEN it takes no orders THEN no quote is requested`() =
+        runTest {
+            // Arrange
+            coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+            val model = createModel(testScope = this)
+            model.onScreenShown()
+
+            // Act
+            model.onAmountChange(value = "10")
+            runCurrent()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+            // Assert
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN the market is closed WHEN poll interval elapses THEN quote NOT requested again`() = runTest {
