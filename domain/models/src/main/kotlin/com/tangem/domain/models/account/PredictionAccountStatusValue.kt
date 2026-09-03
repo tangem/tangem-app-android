@@ -2,6 +2,9 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 
@@ -121,6 +124,9 @@ sealed class PredictionAccountStatusValue {
      *                    quote has never been available. When `null`, [totalFiatBalance] resolves to
      *                    [TotalFiatBalance.Failed].
      * @property isTradingAllowed Whether the user may trade, as opposed to only viewing and withdrawing.
+     * @property cryptoCurrency The token the collateral is denominated in.
+     * @property depositAddress Address a deposit is sent to for it to credit this account, or `null` until the
+     *                          bridge has confirmed one.
      */
     @Serializable
     data class Active(
@@ -128,7 +134,28 @@ sealed class PredictionAccountStatusValue {
         val balance: SerializedBigDecimal,
         val fiatRate: SerializedBigDecimal?,
         val isTradingAllowed: Boolean,
-    ) : PredictionAccountStatusValue()
+        val cryptoCurrency: CryptoCurrency.Token,
+        val depositAddress: String?,
+    ) : PredictionAccountStatusValue() {
+
+        /**
+         * The collateral as the funding flows read it: the swap takes its destination from
+         * [CryptoCurrencyStatus.value]'s network address, and so does the receive sheet. `null` while the
+         * deposit address is unknown, which is the only state in which neither may be offered.
+         */
+        val cryptoCurrencyStatus: CryptoCurrencyStatus?
+            get() = depositAddress?.let { address ->
+                CryptoCurrencyStatus(
+                    currency = cryptoCurrency,
+                    value = buildCollateralStatusValue(
+                        amount = balance,
+                        fiatRate = fiatRate,
+                        depositAddress = address,
+                        source = source,
+                    ),
+                )
+            }
+    }
 
     /** Represents an error state for the prediction account status. */
     @Serializable
@@ -145,5 +172,49 @@ sealed class PredictionAccountStatusValue {
         data object Unavailable : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
         }
+    }
+}
+
+private fun buildCollateralStatusValue(
+    amount: SerializedBigDecimal,
+    fiatRate: SerializedBigDecimal?,
+    depositAddress: String,
+    source: StatusSource,
+): CryptoCurrencyStatus.Value {
+    val networkAddress = NetworkAddress.Single(
+        defaultAddress = NetworkAddress.Address(
+            type = NetworkAddress.Address.Type.Primary,
+            value = depositAddress,
+        ),
+    )
+    val sources = CryptoCurrencyStatus.Sources(
+        networkSource = source,
+        quoteSource = source,
+        stakingBalanceSource = source,
+    )
+
+    return if (fiatRate != null) {
+        CryptoCurrencyStatus.Loaded(
+            amount = amount,
+            fiatAmount = amount.multiply(fiatRate),
+            fiatRate = fiatRate,
+            priceChange = SerializedBigDecimal.ZERO,
+            networkAddress = networkAddress,
+            sources = sources,
+            pendingTransactions = emptySet(),
+            stakingBalance = null,
+            yieldSupplyStatus = null,
+            hasCurrentNetworkTransactions = false,
+        )
+    } else {
+        CryptoCurrencyStatus.NoQuote(
+            amount = amount,
+            networkAddress = networkAddress,
+            stakingBalance = null,
+            yieldSupplyStatus = null,
+            sources = sources,
+            pendingTransactions = emptySet(),
+            hasCurrentNetworkTransactions = false,
+        )
     }
 }
