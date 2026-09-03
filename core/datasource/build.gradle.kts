@@ -118,6 +118,7 @@ dependencies {
     api(projects.core.local)
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
+    implementation(projects.core.res)
     api(projects.core.remote)
     // endregion
 
