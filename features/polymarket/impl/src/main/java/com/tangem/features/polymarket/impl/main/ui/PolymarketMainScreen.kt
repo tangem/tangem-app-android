@@ -46,12 +46,10 @@ import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
@@ -72,9 +70,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import java.math.BigDecimal
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import java.math.BigDecimal
 
 // Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
 private const val TAB_BAND_INDEX = 1
@@ -246,11 +244,10 @@ private fun FeedList(
     ) {
         item(key = KEY_HEADER) {
             PolymarketMainHeader(
-                balance = placeholderBalance(),
-                isWithdrawEnabled = false,
+                balance = state.balance.balance,
+                addFunds = state.balance.addFunds,
+                withdraw = state.balance.withdraw,
                 onBalanceClick = {},
-                onAddFundsClick = {},
-                onWithdrawClick = {},
             )
         }
 
@@ -411,10 +408,6 @@ private fun LazyListState.isTabBandPinned(): Boolean {
     return firstVisibleIndex > TAB_BAND_INDEX
 }
 
-private fun placeholderBalance(): TextReference = BigDecimal.ZERO.formatPolymarketMoneyStyled(
-    fractionStyle = { TangemTheme.typography3.heading.medium.toSpanStyle() },
-)
-
 @Composable
 private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
@@ -473,6 +466,7 @@ private fun PolymarketMainScreenContentPreview() {
     TangemThemePreviewRedesign {
         PolymarketMainScreen(
             state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Content(
                     events = previewEvents(),

@@ -8,26 +8,18 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
-import com.tangem.grow.datasource.config.Collectibles
-import com.tangem.grow.datasource.config.Express
-import com.tangem.grow.datasource.config.GaslessTxService
-import com.tangem.grow.datasource.config.GrowEnvironmentConfig
-import com.tangem.grow.datasource.config.MoonPay
-import com.tangem.grow.datasource.config.P2PEthPool
-import com.tangem.grow.datasource.config.PolymarketClob
-import com.tangem.grow.datasource.config.PolymarketRelayer
-import com.tangem.grow.datasource.config.PolymarketWeb
-import com.tangem.grow.datasource.config.StakeKit
-import com.tangem.grow.datasource.config.YieldSupply
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
+import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
+import com.tangem.grow.datasource.collectibles.models.response.model.DefaultCollectiblesAuthProvider
+import com.tangem.grow.datasource.config.*
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
-import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.express.DefaultExpressAuthProvider
 import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -37,15 +29,16 @@ import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
 import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
+import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
-import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
@@ -58,7 +51,7 @@ import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object GrowDatasourceModule {
@@ -71,6 +64,12 @@ internal object GrowDatasourceModule {
     @Singleton
     fun provideExpressAuthProvider(): ExpressAuthProvider {
         return DefaultExpressAuthProvider()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCollectiblesAuthProvider(): CollectiblesAuthProvider {
+        return DefaultCollectiblesAuthProvider()
     }
 
     @Provides
@@ -306,6 +305,25 @@ internal object GrowDatasourceModule {
     }
 
     @Provides
+    @IntoMap
+    @StringKey(PolymarketBridge.KEY)
+    fun providePolymarketBridgeConfig(): ApiConfig {
+        return PolymarketBridge()
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketBridgeApi(factory: RetrofitFactory): PolymarketBridgeApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = PolymarketBridge.ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
     @Singleton
     fun providePolymarketApi(factory: RetrofitFactory): PolymarketApi {
         // Polymarket BFF Discovery lives on the main Tangem gateway — reuse the TangemTech config.
@@ -358,8 +376,14 @@ internal object GrowDatasourceModule {
     @Provides
     @IntoMap
     @StringKey(Collectibles.KEY)
-    fun provideCollectiblesConfig(appInfoProvider: AppInfoProvider): ApiConfig {
-        return Collectibles(appInfoProvider = appInfoProvider)
+    fun provideCollectiblesConfig(
+        collectiblesAuthProvider: CollectiblesAuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return Collectibles(
+            collectiblesAuthProvider = collectiblesAuthProvider,
+            appInfoProvider = appInfoProvider,
+        )
     }
 
     @Provides

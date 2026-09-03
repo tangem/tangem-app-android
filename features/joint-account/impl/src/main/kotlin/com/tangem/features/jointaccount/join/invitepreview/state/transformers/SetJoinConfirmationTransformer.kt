@@ -9,7 +9,9 @@ internal class SetJoinConfirmationTransformer(
     private val confirmation: JointAccountJoinConfirmationUM?,
 ) : Transformer<JointAccountInvitePreviewUM> {
 
-    override fun transform(prevState: JointAccountInvitePreviewUM): JointAccountInvitePreviewUM = prevState.copy(
-        confirmation = confirmation,
-    )
+    override fun transform(prevState: JointAccountInvitePreviewUM): JointAccountInvitePreviewUM {
+        if (prevState !is JointAccountInvitePreviewUM.Content) return prevState
+
+        return prevState.copy(confirmation = confirmation)
+    }
 }
