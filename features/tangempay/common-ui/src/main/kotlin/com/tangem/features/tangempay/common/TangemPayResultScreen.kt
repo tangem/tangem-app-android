@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
@@ -51,6 +52,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_checkmark_24
 import com.tangem.core.ui.res.generated.icons.ic_error_28
+import com.tangem.core.ui.res.generated.icons.ic_heart_broken_24
 import dev.chrisbanes.haze.HazeStyle
 
 private val StatusIconSize = 40.dp
@@ -80,14 +82,17 @@ private val AmbientNearSpec = AmbientBlobSpec(
     blurRadius = 165.dp,
 )
 
+@Suppress("LongParameterList")
 @Composable
-internal fun TangemPayResultScreen(
+fun TangemPayResultScreen(
     variant: TangemPayResultScreen.Variant,
     title: TextReference,
     subtitle: TextReference,
     buttonText: TextReference,
     onButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
+    secondaryButtonText: TextReference? = null,
+    onSecondaryButtonClick: (() -> Unit)? = null,
     footnote: TextReference? = null,
     titleTestTag: String? = null,
     subtitleTestTag: String? = null,
@@ -123,6 +128,8 @@ internal fun TangemPayResultScreen(
             ResultFooter(
                 buttonText = buttonText,
                 onButtonClick = onButtonClick,
+                secondaryButtonText = secondaryButtonText,
+                onSecondaryButtonClick = onSecondaryButtonClick,
                 footnote = footnote,
                 buttonTestTag = buttonTestTag,
             )
@@ -160,7 +167,7 @@ private fun ResultHeader(
         SpacerH(8.dp)
         Text(
             modifier = subtitleTestTag?.let { Modifier.testTag(it) } ?: Modifier,
-            text = subtitle.resolveReference(),
+            text = subtitle.resolveAnnotatedReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
@@ -168,10 +175,13 @@ private fun ResultHeader(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun ResultFooter(
     buttonText: TextReference,
     onButtonClick: () -> Unit,
+    secondaryButtonText: TextReference?,
+    onSecondaryButtonClick: (() -> Unit)?,
     footnote: TextReference?,
     buttonTestTag: String?,
     modifier: Modifier = Modifier,
@@ -187,16 +197,23 @@ private fun ResultFooter(
             )
             SpacerH(12.dp)
         }
-        TangemButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .then(buttonTestTag?.let { Modifier.testTag(it) } ?: Modifier),
-            variant = TangemButton.Variant.Primary,
-            size = TangemButton.Size.X12,
-            text = buttonText,
-            onClick = onButtonClick,
-        )
+        TangemButtonGroup(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            if (secondaryButtonText != null && onSecondaryButtonClick != null) {
+                TangemButton(
+                    variant = TangemButton.Variant.Secondary,
+                    size = TangemButton.Size.X12,
+                    text = secondaryButtonText,
+                    onClick = onSecondaryButtonClick,
+                )
+            }
+            TangemButton(
+                modifier = buttonTestTag?.let { Modifier.testTag(it) } ?: Modifier,
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = buttonText,
+                onClick = onButtonClick,
+            )
+        }
     }
 }
 
@@ -257,7 +274,7 @@ private data class AmbientBlobSpec(
     val blurRadius: Dp,
 )
 
-internal object TangemPayResultScreen {
+object TangemPayResultScreen {
 
     enum class Variant(
         val icon: ImageVector,
@@ -277,6 +294,12 @@ internal object TangemPayResultScreen {
             ambientFarColor = AmbientErrorFarColor,
             ambientNearColor = AmbientErrorNearColor,
         ),
+        Unavailable(
+            icon = Icons.ic_heart_broken_24,
+            glowVariant = TangemGlowRing.Variant.Error,
+            ambientFarColor = AmbientErrorFarColor,
+            ambientNearColor = AmbientErrorNearColor,
+        ),
     }
 }
 
@@ -284,7 +307,9 @@ internal object TangemPayResultScreen {
 @ReadOnlyComposable
 private fun TangemPayResultScreen.Variant.iconTint(): Color = when (this) {
     TangemPayResultScreen.Variant.Success -> TangemTheme.colors3.icon.status.success
-    TangemPayResultScreen.Variant.Error -> TangemTheme.colors3.icon.status.error
+    TangemPayResultScreen.Variant.Error,
+    TangemPayResultScreen.Variant.Unavailable,
+    -> TangemTheme.colors3.icon.status.error
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, name = "Light")
@@ -304,6 +329,7 @@ private fun TangemPayResultScreenPreview(@PreviewParameter(ResultProvider::class
             subtitle = stringReference(model.subtitle),
             footnote = model.footnote?.let(::stringReference),
             buttonText = stringReference(model.buttonText),
+            secondaryButtonText = model.secondaryButtonText?.let(::stringReference),
             onButtonClick = {},
         )
     }
@@ -314,6 +340,7 @@ private data class ResultPreview(
     val title: String,
     val subtitle: String,
     val buttonText: String,
+    val secondaryButtonText: String? = null,
     val footnote: String? = null,
 )
 
@@ -332,6 +359,13 @@ private class ResultProvider : CollectionPreviewParameterProvider<ResultPreview>
             title = "You have exceeded your attempts for activation",
             subtitle = "Please contact support",
             buttonText = "Contact support",
+        ),
+        ResultPreview(
+            variant = TangemPayResultScreen.Variant.Unavailable,
+            title = "You have exceeded your attempts for activation",
+            subtitle = "Please contact support",
+            buttonText = "Main Button",
+            secondaryButtonText = "Secondary Button",
         ),
     ),
 )
