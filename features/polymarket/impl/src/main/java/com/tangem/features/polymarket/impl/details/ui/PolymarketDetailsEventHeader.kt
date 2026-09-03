@@ -28,11 +28,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.res.R
+import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
+import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketSubcategoryTabUM
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 
 private val SubcategoryShape = RoundedCornerShape(percent = 50)
@@ -65,35 +68,49 @@ private fun MetaRow(state: PolymarketEventDetailsUM.Content) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MetaEntry(
-            label = stringResourceSafe(R.string.prediction_event_total_volume),
-            value = state.totalVolume.resolveReference(),
-            valueColor = TangemTheme.colors3.text.accent.yellow,
-        )
-        MetaEntry(
-            label = stringResourceSafe(R.string.prediction_details_24h_change),
-            value = state.change24h.resolveReference(),
-            valueColor = TangemTheme.colors3.text.accent.blue,
-        )
+        MetaEntry(label = stringResourceSafe(R.string.prediction_event_total_volume)) {
+            MetaValue(value = state.totalVolume.resolveReference(), color = TangemTheme.colors3.text.accent.yellow)
+        }
+        MetaEntry(label = stringResourceSafe(R.string.prediction_details_24h_change)) {
+            when (val change = state.change24h) {
+                is PriceChangeState.Content -> PriceChangeInPercent(
+                    valueInPercent = change.valueInPercent,
+                    type = change.type,
+                    textStyle = TangemTheme.typography3.caption.medium,
+                )
+                is PriceChangeState.Unknown -> MetaValue(
+                    value = DASH_SIGN,
+                    color = TangemTheme.colors3.text.accent.blue,
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun MetaEntry(label: String, value: String, valueColor: Color) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+private fun MetaEntry(label: String, value: @Composable () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = label,
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,
             maxLines = 1,
         )
-        Text(
-            text = value,
-            color = valueColor,
-            style = TangemTheme.typography3.caption.medium,
-            maxLines = 1,
-        )
+        value()
     }
+}
+
+@Composable
+private fun MetaValue(value: String, color: Color) {
+    Text(
+        text = value,
+        color = color,
+        style = TangemTheme.typography3.caption.medium,
+        maxLines = 1,
+    )
 }
 
 @Composable
