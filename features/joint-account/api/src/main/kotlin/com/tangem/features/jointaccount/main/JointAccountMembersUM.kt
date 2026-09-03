@@ -54,7 +54,7 @@ data class JointAccountMembersUM(
         /**
          * The "You're activating a shared account" confirmation sheet.
          *
-         * @property walletIconRes  wallet-interaction icon on the confirm button; `null` for wallets
+         * @property walletInteractionIconRes  wallet-interaction icon on the confirm button; `null` for wallets
          * without one (hot).
          * @property isConfirming   the signing and the backend call are in flight — the confirm button
          * shows a loader.
@@ -63,7 +63,7 @@ data class JointAccountMembersUM(
          */
         @Immutable
         data class ConfirmationUM(
-            @DrawableRes val walletIconRes: Int?,
+            @DrawableRes val walletInteractionIconRes: Int?,
             val isConfirming: Boolean,
             val onConfirmClick: () -> Unit,
             val onCancelClick: () -> Unit,
