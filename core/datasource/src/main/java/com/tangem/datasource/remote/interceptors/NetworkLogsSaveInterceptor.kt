@@ -1,4 +1,4 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.remote.interceptors
 
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker
