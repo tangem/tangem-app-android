@@ -50,7 +50,7 @@ interface OnboardingRepository {
     suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 
     suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType>
-    suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>
+    suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>?
 
     /**
      * Fetches eligibility channels fresh via the user token (always hits the network, no cache read/write).
