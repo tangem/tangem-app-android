@@ -2,10 +2,12 @@ package com.tangem.data.polymarket.cleaner
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
@@ -15,6 +17,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -145,12 +148,17 @@ internal class PolymarketUserWalletDataCleanerTest {
     }
 
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
+        dtoConverter = PredictionAccountStatusValueDTOConverter(
+            collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
+        ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
         val WALLET_A = UserWalletId("011")
         val WALLET_B = UserWalletId("022")
 
@@ -159,6 +167,8 @@ internal class PolymarketUserWalletDataCleanerTest {
             balance = BigDecimal("12.5"),
             fiatRate = null,
             isTradingAllowed = true,
+            cryptoCurrency = COLLATERAL,
+            depositAddress = "0xbridge0000000000000000000000000000000001",
         )
 
         val CREDENTIALS = PolymarketApiCredentials(
