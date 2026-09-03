@@ -18,6 +18,7 @@ import com.tangem.features.feed.ui.v2.FeedTopBlocksContent
 internal class FeedTopBlocksComponent(
     context: AppComponentContext,
     private val isPredictionsEntryVisible: Boolean,
+    private val isCollectiblesVisible: Boolean,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     @Composable
@@ -26,7 +27,9 @@ internal class FeedTopBlocksComponent(
         FeedTopBlocksContent(
             onForYouClick = { router.push(FeedRoute.ForYou) },
             isPredictionsVisible = isPredictionsEntryVisible,
+            isCollectiblesVisible = isCollectiblesVisible,
             onPredictionsClick = { router.push(AppRoute.Polymarket()) },
+            onCollectiblesClick = { router.push(AppRoute.Collectibles) },
             modifier = modifier,
         )
     }
