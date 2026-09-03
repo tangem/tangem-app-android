@@ -1073,7 +1073,13 @@
   <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you</string>
   <string name="joint_account_name_subtitle">Other members will see this name in the joint account</string>
   <string name="joint_account_name_title">What is your name?</string>
-  <string name="joint_account_onboarding_subtitle">A shared account that several people own together. Money moves only when enough members sign</string>
+  <string name="joint_account_onboarding_approvals_description">Choose how many members must approve each transaction.</string>
+  <string name="joint_account_onboarding_approvals_title">Required approvals.</string>
+  <string name="joint_account_onboarding_members_description">Each joins with their own wallet.</string>
+  <string name="joint_account_onboarding_members_title">Up to %1$s members.</string>
+  <string name="joint_account_onboarding_shared_description">Use it with your friends, family, or partners.</string>
+  <string name="joint_account_onboarding_shared_title">Shared account.</string>
+  <string name="joint_account_onboarding_subtitle">A simple way to manage crypto together — for personal or business needs.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
@@ -1542,8 +1548,11 @@
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
+  <string name="prediction_main_explore_events">Explore Events</string>
   <string name="prediction_main_subtitle">USDC on Polygon network</string>
   <string name="prediction_main_title">Predictions</string>
+  <string name="prediction_main_total_balance">Total Balance</string>
+  <string name="prediction_main_withdraw">Withdraw</string>
   <string name="prediction_onboarding_benefit_custody_subtitle">Only your card can move money</string>
   <string name="prediction_onboarding_benefit_custody_title">Your keys, your funds</string>
   <string name="prediction_onboarding_benefit_fund_subtitle">USDC or swap any coin</string>
@@ -2188,7 +2197,7 @@
   <string name="tangempay_card_activation_error">Invalid last digits. Try again</string>
   <string name="tangempay_card_activation_error_already_active">This card is already active.</string>
   <string name="tangempay_card_activation_error_in_progress">Activation is already in progress. Please wait.</string>
-  <string name="tangempay_card_activation_error_not_physical">This isn\'t a physical card.</string>
+  <string name="tangempay_card_activation_error_not_physical">This isn\'t a physical card</string>
   <string name="tangempay_card_activation_error_not_ready">This card isn\'t ready to activate yet. Try again after you receive it.</string>
   <string name="tangempay_card_activation_in_progress">Activating your card</string>
   <string name="tangempay_card_default_name">Tangem Pay Card 1</string>
@@ -2424,6 +2433,7 @@
   <string name="tangempay_order_card_error_active_order">A card order is already in progress.</string>
   <string name="tangempay_order_card_error_insufficient_balance">Not enough money for delivery. Add funds and try again.</string>
   <string name="tangempay_order_card_error_invalid_address">Check the delivery address and try again.</string>
+  <string name="tangempay_order_card_error_invalid_emboss_name">Check the name on the card and try again.</string>
   <string name="tangempay_order_card_error_invalid_source_card">This card can’t be replaced.</string>
   <string name="tangempay_order_card_error_offer_unavailable">This card is no longer available.</string>
   <string name="tangempay_order_data_address_line1">Address line 1</string>

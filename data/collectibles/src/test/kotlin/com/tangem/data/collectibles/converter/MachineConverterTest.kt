@@ -95,14 +95,33 @@ internal class MachineConverterTest {
 
         // Assert
         assertThat(actual.odds).isEqualTo(
-            CollectibleGachaMachine.Odds(common = 80, uncommon = 15, rare = 4, epic = 1),
+            CollectibleGachaMachine.Odds(common = 80, rare = 15, epic = 4, legendary = 1),
         )
         assertThat(actual.stock).isEqualTo(
-            CollectibleGachaMachine.Stock(common = 1949, uncommon = 3225, rare = 2375, epic = 2628),
+            CollectibleGachaMachine.Stock(common = 1949, rare = 3225, epic = 2375, legendary = 2628),
         )
-        assertThat(actual.tierRanges.epic).isEqualTo(
-            CollectibleGachaMachine.TierRange(start = 250, end = 5001),
+        assertThat(actual.tierRanges).isEqualTo(
+            CollectibleGachaMachine.TierRanges(
+                common = CollectibleGachaMachine.TierRange(start = 30, end = 60),
+                rare = CollectibleGachaMachine.TierRange(start = 60, end = 110),
+                epic = CollectibleGachaMachine.TierRange(start = 110, end = 250),
+                legendary = CollectibleGachaMachine.TierRange(start = 250, end = 5001),
+            ),
         )
+    }
+
+    @Test
+    fun `GIVEN a dto without a legendary tier WHEN convert THEN the legendary fields are null`() {
+        // Arrange
+        val dto = MachineFactory.createDto(legendaryOdds = null, legendaryStock = null, legendaryRange = null)
+
+        // Act
+        val actual = MachineConverter.convert(dto)
+
+        // Assert
+        assertThat(actual.odds.legendary).isNull()
+        assertThat(actual.stock.legendary).isNull()
+        assertThat(actual.tierRanges.legendary).isNull()
     }
 
     @Test

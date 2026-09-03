@@ -1,6 +1,8 @@
 package com.tangem.features.foryou.impl.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchainsdk.compatibility.ETHEREUM_COIN_ID
+import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeType
@@ -32,23 +34,23 @@ internal class ForYouUtilsTest {
     inner class ForYouGroupKey {
 
         @Test
-        fun `GIVEN currency WHEN forYouGroupKey THEN returns the symbol`() {
+        fun `GIVEN currency WHEN forYouGroupKey THEN returns the raw currency id`() {
             // Arrange
-            val status = createStatus(createCurrency(symbol = "BTC", idValue = "coin-btc-bitcoin"))
+            val status = createStatus(createCurrency(rawCurrencyId = "bitcoin", idValue = "coin-btc-bitcoin"))
 
             // Act
             val result = status.forYouGroupKey()
 
             // Assert
-            assertThat(result).isEqualTo("BTC")
+            assertThat(result).isEqualTo("bitcoin")
         }
 
         @Test
-        fun `GIVEN the same symbol on different networks WHEN forYouGroupKey THEN keys match`() {
-            // Arrange — one asset held on two chains has two distinct currency ids, and collapsing it into
-            // a single portfolio-review row is the whole reason the key is the symbol
-            val onEthereum = createStatus(createCurrency(symbol = "USDC", idValue = "token-usdc-ethereum"))
-            val onSolana = createStatus(createCurrency(symbol = "USDC", idValue = "token-usdc-solana"))
+        fun `GIVEN the same raw currency id on different networks WHEN forYouGroupKey THEN keys match`() {
+            // Arrange — one asset held on two chains has two distinct currency ids but a shared raw id, and
+            // collapsing it into a single portfolio-review row is the whole reason the key is the raw id
+            val onEthereum = createStatus(createCurrency(rawCurrencyId = "usd-coin", idValue = "token-usdc-eth"))
+            val onSolana = createStatus(createCurrency(rawCurrencyId = "usd-coin", idValue = "token-usdc-sol"))
 
             // Act
             val ethereumKey = onEthereum.forYouGroupKey()
@@ -59,24 +61,51 @@ internal class ForYouUtilsTest {
         }
 
         @Test
-        fun `GIVEN different symbols WHEN forYouGroupKey THEN keys differ`() {
-            // Arrange
-            val btc = createStatus(createCurrency(symbol = "BTC", idValue = "coin-btc-bitcoin"))
-            val eth = createStatus(createCurrency(symbol = "ETH", idValue = "coin-eth-ethereum"))
+        fun `GIVEN different raw currency ids WHEN forYouGroupKey THEN keys differ`() {
+            // Arrange — two assets that share nothing but a ticker prefix must stay in separate groups
+            val btc = createStatus(createCurrency(rawCurrencyId = "bitcoin", idValue = "coin-btc-bitcoin"))
+            val eth = createStatus(createCurrency(rawCurrencyId = "ethereum", idValue = "coin-eth-ethereum"))
 
             // Act
             val keys = listOf(btc.forYouGroupKey(), eth.forYouGroupKey())
 
             // Assert
-            assertThat(keys).containsExactly("BTC", "ETH").inOrder()
+            assertThat(keys).containsExactly("bitcoin", "ethereum").inOrder()
         }
 
-        private fun createCurrency(symbol: String, idValue: String): CryptoCurrency {
-            val currencyId: CryptoCurrency.ID = mockk { every { value } returns idValue }
-            return mockk {
-                every { this@mockk.symbol } returns symbol
-                every { id } returns currencyId
+        @Test
+        fun `GIVEN custom token with no raw id WHEN forYouGroupKey THEN falls back to the currency id value`() {
+            // Arrange — a custom token has no backend raw id, so it can only stand for itself
+            val status = createStatus(createCurrency(rawCurrencyId = null, idValue = "custom-token-id"))
+
+            // Act
+            val result = status.forYouGroupKey()
+
+            // Assert
+            assertThat(result).isEqualTo("custom-token-id")
+        }
+
+        @Test
+        fun `GIVEN an L2 raw currency id WHEN forYouGroupKey THEN it folds onto the Ethereum coin id`() {
+            // Arrange — ETH bridged to an L2 is the same holding as mainnet ETH to the user, and the ids are
+            // taken from the production lists so this tracks the L2 roster instead of restating it
+            val onL2 = createStatus(createCurrency(rawCurrencyId = l2BlockchainsCoinIds.first(), idValue = "coin-l2"))
+            val onMainnet = createStatus(createCurrency(rawCurrencyId = ETHEREUM_COIN_ID, idValue = "coin-eth"))
+
+            // Act
+            val l2Key = onL2.forYouGroupKey()
+
+            // Assert
+            assertThat(l2Key).isEqualTo(ETHEREUM_COIN_ID)
+            assertThat(l2Key).isEqualTo(onMainnet.forYouGroupKey())
+        }
+
+        private fun createCurrency(rawCurrencyId: String?, idValue: String): CryptoCurrency {
+            val currencyId: CryptoCurrency.ID = mockk {
+                every { value } returns idValue
+                every { this@mockk.rawCurrencyId } returns rawCurrencyId?.let { CryptoCurrency.RawID(it) }
             }
+            return mockk { every { id } returns currencyId }
         }
 
         private fun createStatus(currency: CryptoCurrency): CryptoCurrencyStatus = CryptoCurrencyStatus(
