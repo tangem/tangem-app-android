@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
 import com.tangem.domain.polymarket.model.PolymarketBridgeAsset
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.polymarket.model.PolymarketDepositTarget
@@ -31,6 +32,13 @@ internal class GetPolymarketDepositTargetInteractorTest {
 
     private val userWalletId = UserWalletId(stringValue = WALLET_ID)
 
+    private val bridgeAddresses = PolymarketBridgeAddresses(
+        evm = BRIDGE_ADDRESS,
+        svm = "sol1",
+        btc = "bc1",
+        tron = null,
+    )
+
     private val polygonUsdc = PolymarketBridgeAsset(
         chainId = 137,
         chainName = "Polygon",
@@ -50,16 +58,16 @@ internal class GetPolymarketDepositTargetInteractorTest {
     fun `GIVEN polygon usdc is accepted WHEN invoked THEN the address and its minimum come back`() = runTest {
         // Arrange
         coEvery { bridgeRepository.getSupportedAssets() } returns Either.Right(listOf(polygonUsdc))
-        coEvery { bridgeRepository.createDepositAddress(any(), any()) } returns Either.Right(BRIDGE_ADDRESS)
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } returns Either.Right(bridgeAddresses)
 
         // Act
         val actual = interactor(userWalletId)
 
         // Assert
         assertThat(actual).isEqualTo(
-            Either.Right(PolymarketDepositTarget(bridgeAddress = BRIDGE_ADDRESS, asset = polygonUsdc)),
+            Either.Right(PolymarketDepositTarget(addresses = bridgeAddresses, asset = polygonUsdc)),
         )
-        coVerify(exactly = 1) { bridgeRepository.createDepositAddress(WALLET_ID, DEPOSIT_WALLET) }
+        coVerify(exactly = 1) { bridgeRepository.createDepositAddresses(WALLET_ID, DEPOSIT_WALLET) }
     }
 
     @Test
@@ -74,7 +82,7 @@ internal class GetPolymarketDepositTargetInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(Either.Left(PolymarketBridgeError.Unavailable))
-        coVerify(exactly = 0) { bridgeRepository.createDepositAddress(any(), any()) }
+        coVerify(exactly = 0) { bridgeRepository.createDepositAddresses(any(), any()) }
     }
 
     @Test
@@ -87,7 +95,7 @@ internal class GetPolymarketDepositTargetInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(Either.Left(PolymarketBridgeError.Network))
-        coVerify(exactly = 0) { bridgeRepository.createDepositAddress(any(), any()) }
+        coVerify(exactly = 0) { bridgeRepository.createDepositAddresses(any(), any()) }
     }
 
     @Test
@@ -102,7 +110,7 @@ internal class GetPolymarketDepositTargetInteractorTest {
         // Assert
         assertThat(actual).isEqualTo(Either.Left(PolymarketBridgeError.Unavailable))
         coVerify(exactly = 0) { deriveAddresses.invoke(any()) }
-        coVerify(exactly = 0) { bridgeRepository.createDepositAddress(any(), any()) }
+        coVerify(exactly = 0) { bridgeRepository.createDepositAddresses(any(), any()) }
     }
 
     private fun addresses(): PolymarketAddresses = mockk {
