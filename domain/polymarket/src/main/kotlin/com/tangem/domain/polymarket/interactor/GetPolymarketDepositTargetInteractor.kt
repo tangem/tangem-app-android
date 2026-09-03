@@ -26,12 +26,12 @@ class GetPolymarketDepositTargetInteractor(
                 PolymarketBridgeError.Unavailable
             }
 
-            val bridgeAddress = bridgeRepository.createDepositAddress(
+            val bridgeAddresses = bridgeRepository.createDepositAddresses(
                 walletId = userWalletId.stringValue,
                 depositWalletAddress = addresses.depositWalletAddress,
             ).bind()
 
-            PolymarketDepositTarget(bridgeAddress = bridgeAddress, asset = asset)
+            PolymarketDepositTarget(addresses = bridgeAddresses, asset = asset)
         }
 
     private companion object {
