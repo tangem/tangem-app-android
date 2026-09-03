@@ -51,9 +51,8 @@ class GetVirtualAccountEligibilityUseCase(
     }
 
     private suspend fun checkEligibility(entryPoint: VirtualAccountEntryPoint?): Boolean {
-        val eligibility = onboardingRepository.getCustomerEligibility().ifEmpty {
-            onboardingRepository.checkCustomerEligibility()
-        }
+        val eligibility = onboardingRepository.getCustomerEligibility()
+            ?: onboardingRepository.checkCustomerEligibility()
         return if (entryPoint == null) {
             eligibility.any { it.isVirtualAccountType }
         } else {

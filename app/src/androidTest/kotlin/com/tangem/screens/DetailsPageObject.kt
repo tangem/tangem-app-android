@@ -37,14 +37,6 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(DetailsScreenTestTags.ADD_WALLET_BUTTON)
     }
 
-    val addHardwareWalletButton: KNode = child {
-        hasTestTag(DetailsScreenTestTags.ADD_HARDWARE_WALLET_BUTTON)
-    }
-
-    val addMobileWalletButton: KNode = child {
-        hasTestTag(DetailsScreenTestTags.ADD_MOBILE_WALLET_BUTTON)
-    }
-
     val buyTangemButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
         hasText(getResourceString(R.string.details_buy_wallet))
