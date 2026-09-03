@@ -74,19 +74,19 @@ class UserTokensSaver(
     private suspend fun push(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
         safeApiCall(
             call = {
-                val apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
-
                 // Both codes are expected flow, not failures, so they are handled before bind() gets to log them
-                when {
-                    apiResponse.isError(code = ApiResponseError.HttpException.Code.NOT_FOUND) -> {
-                        walletServerBinder.bind(userWallet).bind()
+                var apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
 
-                        saveTokensWithETag(userWalletId = userWallet.walletId, response = response).bind()
-                    }
-                    apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED) -> {
-                        mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
-                    }
-                    else -> apiResponse.bind()
+                if (apiResponse.isError(code = ApiResponseError.HttpException.Code.NOT_FOUND)) {
+                    walletServerBinder.bind(userWallet).bind()
+
+                    apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
+                }
+
+                if (apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED)) {
+                    mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
+                } else {
+                    apiResponse.bind()
                 }
             },
             onError = { error ->
