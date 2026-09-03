@@ -70,7 +70,7 @@ internal fun PlacePredictionStatusContent(
                     .padding(all = 16.dp),
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.prediction_place_result_to_main),
-                onClick = intents::onCloseClick,
+                onClick = intents::onToMainClick,
             )
         },
     )

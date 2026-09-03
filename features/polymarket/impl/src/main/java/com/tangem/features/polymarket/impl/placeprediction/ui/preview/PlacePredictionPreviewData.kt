@@ -83,6 +83,7 @@ internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
     override fun onPlaceClick() = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
+    override fun onToMainClick() = Unit
 }
 
 private fun previewState(
