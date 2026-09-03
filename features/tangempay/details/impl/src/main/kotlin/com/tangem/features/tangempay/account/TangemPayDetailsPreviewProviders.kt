@@ -76,17 +76,19 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 isInactive = false,
             ),
             isBalanceHidden = false,
-            accountDeactivatedBannerState = TangemMessageBanner.State(
-                title = resourceReference(R.string.tangempay_account_deactivated_message_title),
-                variant = TangemMessageBanner.Variant.Error,
-                description = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
-                secondaryButton = TangemMessageBanner.Button(
-                    text = resourceReference(R.string.tangempay_remove_account),
-                    onClick = {},
-                ),
-                iconStart = TangemIconUM.Icon(
-                    imageVector = Icons.ic_error_20,
-                    tintReference = { TangemTheme.colors3.icon.primary },
+            statusBannerState = MessageBannerUM(
+                state = TangemMessageBanner.State(
+                    title = resourceReference(R.string.tangempay_account_deactivated_message_title),
+                    variant = TangemMessageBanner.Variant.Error,
+                    description = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
+                    secondaryButton = TangemMessageBanner.Button(
+                        text = resourceReference(R.string.tangempay_remove_account),
+                        onClick = {},
+                    ),
+                    iconStart = TangemIconUM.Icon(
+                        imageVector = Icons.ic_error_20,
+                        tintReference = { TangemTheme.colors3.icon.primary },
+                    ),
                 ),
             ),
             errorNotificationConfig = null,
@@ -118,7 +120,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 ),
             ),
             isBalanceHidden = false,
-            accountDeactivatedBannerState = null,
+            statusBannerState = null,
             errorNotificationConfig = NotificationConfig(
                 title = TextReference.Str("Error title"),
                 subtitle = TextReference.Str("Error subtitle"),

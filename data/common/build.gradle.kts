@@ -33,6 +33,7 @@ dependencies {
 
     // region Core
     api(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.grow.datasource)
     api(projects.core.utils)
@@ -40,6 +41,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.common)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
