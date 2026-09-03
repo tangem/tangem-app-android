@@ -16,6 +16,8 @@ import java.math.BigDecimal
  * @property imageUrl optional market image
  * @property status lifecycle status of the market
  * @property isNegRisk whether the market belongs to a mutually exclusive group
+ * @property isAcceptingOrders whether the book takes an order right now; a market can be [status] active and
+ *  still refuse one
  * @property startDate raw upstream start date, if known. The format is not confirmed yet, so it is kept as reported
  * @property endDate raw upstream end date, if known. The format is not confirmed yet, so it is kept as reported
  * @property startDateIso upstream start date in a separate representation, if known
@@ -37,6 +39,7 @@ data class PolymarketMarket(
     val imageUrl: String?,
     val status: PolymarketStatus,
     val isNegRisk: Boolean,
+    val isAcceptingOrders: Boolean,
     val startDate: String?,
     val endDate: String?,
     val startDateIso: String?,

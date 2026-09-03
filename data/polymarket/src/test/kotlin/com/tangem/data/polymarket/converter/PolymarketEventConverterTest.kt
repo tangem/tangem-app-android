@@ -71,6 +71,7 @@ internal class PolymarketEventConverterTest {
                         imageUrl = "https://cdn.tangem.com/market-image.png",
                         status = PolymarketStatus.ACTIVE,
                         isNegRisk = true,
+                        isAcceptingOrders = true,
                         startDate = "2026-06-11T16:00:00Z",
                         endDate = "2026-07-19T20:00:00Z",
                         startDateIso = "2026-06-11",
@@ -114,6 +115,35 @@ internal class PolymarketEventConverterTest {
             Truth.assertThat(actual.volume24h).isNull()
             Truth.assertThat(actual.liquidity).isNull()
             Truth.assertThat(actual.markets).isEmpty()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertAcceptingOrders {
+
+        @Test
+        fun `GIVEN a market that takes no orders WHEN convert THEN the flag survives`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(isAcceptingOrders = false)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().isAcceptingOrders).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the flag is absent WHEN convert THEN the market stays open`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(isAcceptingOrders = null)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().isAcceptingOrders).isTrue()
         }
     }
 
@@ -230,7 +260,10 @@ internal class PolymarketEventConverterTest {
         markets = markets,
     )
 
-    private fun createMarketDto(outcomes: List<PolymarketOutcomeDto> = emptyList()): PolymarketMarketDto =
+    private fun createMarketDto(
+        outcomes: List<PolymarketOutcomeDto> = emptyList(),
+        isAcceptingOrders: Boolean? = true,
+    ): PolymarketMarketDto =
         PolymarketMarketDto(
             id = "market-id",
             eventId = "event-id",
@@ -242,6 +275,7 @@ internal class PolymarketEventConverterTest {
             image = "https://cdn.tangem.com/market-image.png",
             status = "active",
             isNegRisk = true,
+            isAcceptingOrders = isAcceptingOrders,
             startDate = "2026-06-11T16:00:00Z",
             endDate = "2026-07-19T20:00:00Z",
             startDateIso = "2026-06-11",
