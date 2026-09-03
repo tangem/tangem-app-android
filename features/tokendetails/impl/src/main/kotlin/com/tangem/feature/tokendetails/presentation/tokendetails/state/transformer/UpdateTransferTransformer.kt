@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.common.ui.tokens.rendersActionAsEnabled
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.domain.models.StatusSource
@@ -29,7 +30,7 @@ internal class UpdateTransferTransformer(
         val sendRow = sendAction?.let { action ->
             TransferUM.Row(
                 isLoading = action.unavailabilityReason.isOutdatedLoading(),
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
                 onClick = {
                     analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSend())
                     onActionDispatched()
@@ -40,7 +41,7 @@ internal class UpdateTransferTransformer(
         val swapRow = swapAction?.let { action ->
             TransferUM.Row(
                 isLoading = action.unavailabilityReason.isLoading,
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
                 onClick = {
                     analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSwap())
                     onActionDispatched()
@@ -48,11 +49,12 @@ internal class UpdateTransferTransformer(
                 },
             )
         }
-        // Send&Swap is only meaningful when Swap itself is available, so it is shown only in that case
-        // (mirrors the main-screen Transfer quick actions, which synthesize Send&Swap only when swap is available).
-        // This prevents a disabled Send&Swap row for cards that cannot swap at all (e.g. S2C single-currency cards).
+        // Send&Swap is only meaningful while Swap itself keeps the enabled look, so it is shown only in that case
+        // (mirrors the main-screen Transfer quick actions, which synthesize Send&Swap the same way).
+        // This prevents a disabled Send&Swap row for cards that cannot swap at all (e.g. S2C single-currency cards);
+        // a joint account's row stays, and the tap explains the reason.
         val swapAndSendRow = swapAction
-            ?.takeIf { it.unavailabilityReason == ScenarioUnavailabilityReason.None }
+            ?.takeIf { it.unavailabilityReason.rendersActionAsEnabled() }
             ?.let {
                 TransferUM.Row(
                     isLoading = false,
@@ -67,7 +69,7 @@ internal class UpdateTransferTransformer(
         val sellRow = sellAction?.let { action ->
             TransferUM.Row(
                 isLoading = action.unavailabilityReason.isOutdatedLoading(),
-                isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                isEnabled = action.unavailabilityReason.rendersActionAsEnabled(),
                 onClick = {
                     analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSell())
                     onActionDispatched()
