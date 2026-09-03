@@ -5,15 +5,18 @@ import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.core.remote.header.RequestHeader
 import com.tangem.grow.datasource.BuildConfig
+import com.tangem.grow.datasource.collectibles.CollectiblesAuthProvider
+import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 
 /**
  * Collectibles (Collector Crypt) [ApiConfig].
  *
- * Carries no auth headers: the endpoints are session-protected per method via
+ * Carries no api key: the endpoints are session-protected per method via
  * `com.tangem.lib.auth.api.RequiresSessionAuth`.
  */
 class Collectibles(
+    private val collectiblesAuthProvider: CollectiblesAuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
@@ -59,7 +62,10 @@ class Collectibles(
         headers = createHeaders(),
     )
 
-    private fun createHeaders() = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values
+    private fun createHeaders() = buildMap {
+        put(key = "session-id", value = ProviderSuspend(collectiblesAuthProvider::getSessionId))
+        putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
+    }
 
     companion object {
         const val KEY = "Collectibles"
