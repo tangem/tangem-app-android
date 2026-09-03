@@ -4,6 +4,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.arrayItemReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.defaultAmount
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
@@ -15,6 +16,7 @@ import com.tangem.utils.extensions.isNegative
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import org.joda.time.LocalDate
+import java.math.BigDecimal
 import java.util.Currency
 
 internal class TangemPayCashbackUmConverter(
@@ -28,12 +30,17 @@ internal class TangemPayCashbackUmConverter(
         val depositBanner = value.previousPayout
             ?.takeIf(::isAwaitingDeposit)
             ?.let { depositBanner(payout = it, currency = currency) }
-        return if (value.confirmedAmount.isZero()) {
+        return if (value.hasNothingEarned()) {
             emptyState(banner = depositBanner)
         } else {
             earnedState(value = value, currency = currency, depositBanner = depositBanner)
         }
     }
+
+    // The onboarding state is only for a customer who has never earned cashback; a zero current month after
+    // earlier payouts is the regular "$0.00 earned in <month>" state
+    private fun TangemPayCashback.hasNothingEarned(): Boolean =
+        confirmedAmount.isZero() && (totalEarnedAmount ?: BigDecimal.ZERO).isZero()
 
     private fun emptyState(banner: TangemPayCashbackUM.Banner?): TangemPayCashbackUM = TangemPayCashbackUM(
         title = resourceReference(R.string.tangempay_cashback_empty_title),
@@ -47,7 +54,10 @@ internal class TangemPayCashbackUmConverter(
         currency: Currency,
         depositBanner: TangemPayCashbackUM.Banner?,
     ): TangemPayCashbackUM {
-        val earned = value.confirmedAmount.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
+        val earned = value.confirmedAmount.format {
+            val fiatFormat = fiat(currency.currencyCode, currency.symbol)
+            if (value.confirmedAmount.isZero()) fiatFormat.defaultAmount() else fiatFormat.optionalDecimals()
+        }
         val monthIn = arrayItemReference(R.array.common_month_in, value.period.month - 1)
         val isNegative = value.confirmedAmount.isNegative()
         val banner = if (isNegative) {
