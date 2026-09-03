@@ -4,6 +4,7 @@ object TangemPayTestTags {
     // Main wallet screen tile (entry point into Tangem Pay)
     const val MAIN_SCREEN_TILE = "TANGEM_PAY_MAIN_SCREEN_TILE"
     const val MAIN_SCREEN_TILE_BALANCE = "TANGEM_PAY_MAIN_SCREEN_TILE_BALANCE"
+    const val MAIN_SCREEN_TILE_CACHE_ICON = "TANGEM_PAY_MAIN_SCREEN_TILE_CACHE_ICON"
 
     // Payment account details screen
     const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
@@ -65,6 +66,7 @@ object TangemPayTestTags {
 
     // Transaction details bottom sheet
     const val TRANSACTION_DETAILS_AMOUNT = "TANGEM_PAY_TRANSACTION_DETAILS_AMOUNT"
+    const val TRANSACTION_DETAILS_CARD_ROW = "TANGEM_PAY_TRANSACTION_DETAILS_CARD_ROW"
 
     // Freeze confirmation bottom sheet
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"
