@@ -14,7 +14,6 @@ android {
 dependencies {
 
     // region Kotlin
-    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     // endregion
 
@@ -23,12 +22,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
-    // endregion
-
-    // region Tangem SDK
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.hot.core)
     // endregion
 
     // region DI
@@ -47,14 +40,13 @@ dependencies {
     // endregion
 
     // region Tangem SDK
+    implementation(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
     // endregion
 
     // region Domain
-    implementation(projects.domain.models)
     api(projects.domain.collectibles)
-    implementation(projects.domain.models)
     implementation(projects.domain.collectibles.models)
     implementation(projects.domain.core)
     implementation(projects.domain.common)
