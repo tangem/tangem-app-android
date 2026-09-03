@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.common
 
 import com.tangem.core.ui.extensions.SpanStyleReference
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -13,19 +12,22 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
-internal fun TextReference?.orDash(): TextReference = this ?: stringReference(DASH_SIGN)
+/** A value the backend does not serve is stated as a dash, never hidden. */
+internal fun BigDecimal?.formatOrDash(format: BigDecimal.() -> String): String = this?.format() ?: DASH_SIGN
 
 /**
  * Formats a traded volume as Polymarket states it: in USD, regardless of the currency selected in the app,
  * and compacted (e.g. "$1.2M"). Shared by the feed cards and the event-details screen.
  */
-internal fun BigDecimal.formatPolymarketVolume(): String = format {
-    fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL).compact()
+internal fun BigDecimal?.formatPolymarketVolume(): String = formatOrDash {
+    format {
+        fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL).compact()
+    }
 }
 
 /** Formats a collateral amount the way the trade screens state it: plain USD, never the app's fiat. */
-internal fun BigDecimal.formatPolymarketMoney(): String = format {
-    fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL)
+internal fun BigDecimal?.formatPolymarketMoney(): String = formatOrDash {
+    format { fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL) }
 }
 
 /** [formatPolymarketMoney] with the cents set apart in [fractionStyle], as the balance header states them. */
@@ -44,8 +46,8 @@ internal fun BigDecimal.formatPolymarketEnteredAmount(): String = format {
 }
 
 /** Formats a collateral balance as the token it is held in, e.g. "1,000.00 USDC". */
-internal fun BigDecimal.formatPolymarketBalance(tokenSymbol: String): String = format {
-    crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DECIMALS, ignoreSymbolPosition = true)
+internal fun BigDecimal?.formatPolymarketBalance(tokenSymbol: String): String = formatOrDash {
+    format { crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DECIMALS, ignoreSymbolPosition = true) }
 }
 
 /** Formats a slippage tolerance the way the screens state it, e.g. "0.25%". */
