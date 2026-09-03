@@ -149,7 +149,7 @@ internal class PolymarketUserWalletDataCleanerTest {
 
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
-            collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
+            collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
@@ -167,7 +167,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             balance = BigDecimal("12.5"),
             fiatRate = null,
             isTradingAllowed = true,
-            cryptoCurrency = COLLATERAL,
+            depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
         )
 
