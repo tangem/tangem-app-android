@@ -26,6 +26,7 @@ internal data class VirtualAccountAddFundsUM(
 
     @Immutable
     data class DetailItem(
+        val key: String,
         val label: TextReference,
         val value: String,
         val onCopyClick: () -> Unit,
