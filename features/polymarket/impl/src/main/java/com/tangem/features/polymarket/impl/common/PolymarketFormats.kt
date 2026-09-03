@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.format.bigdecimal.simple
 import java.math.BigDecimal
 
 /**
@@ -48,3 +49,6 @@ internal fun BigDecimal.formatPolymarketBalance(tokenSymbol: String): String = f
 internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).format {
     percent(minFractionDigits = 0)
 }
+
+/** Formats a share count the way the result screen states it: grouped, fraction only when present, e.g. "4,612.54". */
+internal fun BigDecimal.formatPolymarketShares(): String = format { simple(decimals = 2) }

@@ -32,7 +32,13 @@ internal data class PlacePredictionUM(
     companion object {
 
         fun initial(): PlacePredictionUM = PlacePredictionUM(
-            market = MarketHeaderUM(title = "", imageUrl = null, outcomeTitle = "", outcomePriceCents = null),
+            market = MarketHeaderUM(
+                title = "",
+                imageUrl = null,
+                outcomeTitle = "",
+                outcomePriceCents = null,
+                resolutionDateMillis = null,
+            ),
             payment = PaymentSourceUM(
                 tokenSymbol = "",
                 iconState = null,
@@ -68,6 +74,7 @@ internal data class MarketHeaderUM(
     val imageUrl: String?,
     val outcomeTitle: String,
     val outcomePriceCents: Int?,
+    val resolutionDateMillis: Long?,
 )
 
 @Immutable
