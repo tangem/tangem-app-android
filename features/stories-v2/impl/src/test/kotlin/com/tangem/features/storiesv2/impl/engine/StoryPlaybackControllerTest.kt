@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.storiesv2.StoryV2Source
@@ -28,12 +29,14 @@ internal class StoryPlaybackControllerTest {
     private val analytics: AnalyticsEventHandler = mockk()
     private val events = mutableListOf<AnalyticsEvent>()
     private val results = mutableListOf<StoriesV2Result>()
+    private val pendingActions = mutableListOf<StoriesV2PendingAction>()
     private var hapticCount = 0
 
     @BeforeEach
     fun resetRecordings() {
         events.clear()
         results.clear()
+        pendingActions.clear()
         hapticCount = 0
         every { analytics.send(capture(events)) } just runs
     }
@@ -159,7 +162,7 @@ internal class StoryPlaybackControllerTest {
         // Act
         repeat(times = 3) { controller.onPlayerEnded() }
 
-        // Assert — a story nobody touched must not report the same views twice.
+        // Assert
         assertThat(afterFirstRound).isEqualTo(3)
         assertThat(events.count { it.event == "Slide Viewed" }).isEqualTo(3)
     }
@@ -292,6 +295,19 @@ internal class StoryPlaybackControllerTest {
         controller.onActionClicked(action)
 
         // Assert
+        assertThat(results).isEmpty()
+        assertThat(events.map { it.event }).doesNotContain("Story Closed")
+        assertThat(controller.state.value.isRunning).isFalse()
+        val pending = pendingActions.single()
+        assertThat(pending.actionId).isEqualTo("scan")
+        assertThat(pending.target).isEqualTo(StoryV2ActionTarget.Screen(key = "hardware_wallet"))
+        assertThat(pending.slideId).isEqualTo("slide_0")
+        assertThat(pending.slideIndex).isEqualTo(1)
+
+        // Act
+        pending.end()
+
+        // Assert
         assertThat(results).containsExactly(
             StoriesV2Result.ActionInvoked(
                 actionId = "scan",
@@ -317,6 +333,7 @@ internal class StoryPlaybackControllerTest {
 
         // Act
         controller.onActionClicked(action)
+        pendingActions.single().end()
 
         // Assert
         assertThat(events.last { it.event == "Story Closed" }.params["Action Destination"])
@@ -338,8 +355,134 @@ internal class StoryPlaybackControllerTest {
         controller.onActionClicked(action)
 
         // Assert
+        assertThat(pendingActions).isEmpty()
         assertThat(results).containsExactly(StoriesV2Result.Dismissed)
     }
+
+    @Test
+    fun `GIVEN a suspended story WHEN resumed THEN playback continues and nothing was reported`() {
+        // Arrange
+        val action = screenAction()
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+        controller.onProgress(positionMs = 1_000L, elapsedMs = 1_000L)
+        controller.onActionClicked(action)
+
+        // Act
+        pendingActions.single().resume()
+
+        // Assert
+        assertThat(controller.state.value.isRunning).isTrue()
+        assertThat(controller.state.value.slideIndex).isEqualTo(0)
+        assertThat(results).isEmpty()
+        assertThat(events.map { it.event }).doesNotContain("Story Closed")
+    }
+
+    @Test
+    fun `GIVEN a suspended story WHEN the action is clicked again THEN the second tap is ignored`() {
+        // Arrange
+        val action = screenAction()
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+        controller.onActionClicked(action)
+
+        // Act
+        controller.onActionClicked(action)
+
+        // Assert
+        assertThat(pendingActions).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN a suspended story WHEN taps and progress arrive THEN the slide does not move`() {
+        // Arrange
+        val action = screenAction()
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+        controller.onActionClicked(action)
+
+        // Act — a poster slide parked at its full duration would otherwise auto-advance every frame.
+        controller.onProgress(positionMs = 10_000L, elapsedMs = 0L)
+        controller.onTapForward()
+        controller.onTapBack()
+        controller.onPlayerEnded()
+
+        // Assert
+        assertThat(controller.state.value.slideIndex).isEqualTo(0)
+        assertThat(events.map { it.event }).doesNotContain("Slide Viewed")
+    }
+
+    @Test
+    fun `GIVEN a suspended story WHEN the viewer closes it THEN the late settle is a no-op`() {
+        // Arrange
+        val action = screenAction()
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+        controller.onActionClicked(action)
+        val pending = pendingActions.single()
+
+        // Act
+        controller.onCloseClicked()
+        pending.resume()
+        pending.end()
+
+        // Assert
+        assertThat(results).containsExactly(StoriesV2Result.Dismissed)
+        assertThat(events.count { it.event == "Story Closed" }).isEqualTo(1)
+        assertThat(events.last { it.event == "Story Closed" }.params["Exit Reason"]).isEqualTo("close_button")
+    }
+
+    @Test
+    fun `GIVEN a suspended story WHEN the host dies THEN Story Closed is flushed without a result`() {
+        // Arrange
+        val action = screenAction()
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+        controller.onActionClicked(action)
+
+        // Act
+        controller.onHostDestroyed()
+
+        // Assert
+        assertThat(results).isEmpty()
+        val closed = events.last { it.event == "Story Closed" }
+        assertThat(closed.params["Exit Reason"]).isEqualTo("action")
+        assertThat(closed.params["Action Id"]).isEqualTo("scan")
+    }
+
+    @Test
+    fun `GIVEN no pending action WHEN the host dies THEN nothing is reported`() {
+        // Arrange
+        val controller = openController(composition = videoStory())
+
+        // Act
+        controller.onHostDestroyed()
+
+        // Assert
+        assertThat(events.map { it.event }).doesNotContain("Story Closed")
+        assertThat(results).isEmpty()
+        assertThat(controller.state.value.isFinished).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a suspended story WHEN time passes THEN watched time excludes the suspension`() {
+        // Arrange
+        val action = screenAction()
+        val controller = openController(composition = videoStory(actions = listOf(action)))
+        controller.onProgress(positionMs = 1_000L, elapsedMs = 1_000L)
+        controller.onActionClicked(action)
+
+        // Act — while suspended the model reports zero elapsed time, like any other pause.
+        pendingActions.single().resume()
+        controller.onProgress(positionMs = 2_000L, elapsedMs = 1_000L)
+        controller.onCloseClicked()
+
+        // Assert
+        val viewed = events.last { it.event == "Slide Viewed" }
+        assertThat(viewed.params["Watched Ms"]).isEqualTo("2000")
+    }
+
+    private fun screenAction() = StoryV2Action(
+        id = "scan",
+        label = stringReference(value = "Scan"),
+        style = StoryV2Action.Style.PRIMARY,
+        target = StoryV2Action.Target.Screen(key = "hardware_wallet"),
+    )
 
     @Test
     fun `GIVEN a swipe down WHEN the story closes THEN the exit reason distinguishes it from the close button`() {
@@ -587,7 +730,7 @@ internal class StoryPlaybackControllerTest {
         isReducedMotion: Boolean = false,
     ): StoryPlaybackController {
         return controller(composition)
-            .also { it.setReducedMotion(enabled = isReducedMotion) }
+            .apply { setReducedMotion(enabled = isReducedMotion) }
             .also(StoryPlaybackController::onOpened)
     }
 
@@ -596,6 +739,7 @@ internal class StoryPlaybackControllerTest {
         source = StoryV2Source.ONBOARDING,
         analytics = analytics,
         onHaptic = { hapticCount++ },
+        onAction = { pendingActions += it },
         onResult = { results += it },
     )
 
