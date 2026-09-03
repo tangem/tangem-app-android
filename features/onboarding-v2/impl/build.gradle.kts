@@ -23,6 +23,7 @@ dependencies {
     api(projects.core.analytics.models)
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.core.local)
     api(projects.core.decompose)
     implementation(projects.spend.datasource)
     api(projects.core.navigation)

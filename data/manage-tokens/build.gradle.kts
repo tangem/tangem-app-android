@@ -34,6 +34,7 @@ dependencies {
 
     // region Project - Core
     api(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
