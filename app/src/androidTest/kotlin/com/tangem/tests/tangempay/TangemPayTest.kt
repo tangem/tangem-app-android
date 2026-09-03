@@ -210,8 +210,10 @@ class TangemPayTest : BaseTestCase() {
             step("Click on 'Submit' button (confirm freeze)") {
                 onTangemPayFreezeConfirmation { submitButton.clickWithAssertion() }
             }
-            step("Assert frozen badge is displayed") {
-                onTangemPayCardPageScreen { cardFrozenBadge.assertIsDisplayed() }
+            // CARD_FROZEN_BADGE marks the Pending spinner only; a frozen card is shown by the row
+            // title flipping to 'Unfreeze card'.
+            step("Assert card is frozen (Unfreeze row is displayed)") {
+                awaitSuccess { onTangemPayCardPageScreen { unfreezeCardRow.assertIsDisplayed() } }
             }
         }
     }
