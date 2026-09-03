@@ -316,6 +316,7 @@ internal class PolymarketEventUMConverterTest {
         imageUrl = null,
         status = PolymarketStatus.ACTIVE,
         isNegRisk = false,
+        isAcceptingOrders = true,
         startDate = null,
         endDate = null,
         startDateIso = null,

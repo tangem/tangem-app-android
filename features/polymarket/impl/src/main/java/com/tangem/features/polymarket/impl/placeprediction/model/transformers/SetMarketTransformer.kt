@@ -30,6 +30,7 @@ internal class SetMarketTransformer(
             outcomePriceCents = outcome.probability?.toCents(),
             resolutionDateMillis = market.endDate?.toEpochMillisOrNull(),
         ),
+        isMarketAcceptingOrders = market.isAcceptingOrders,
     ).recomputeGate()
 
     private fun BigDecimal.toCents(): Int = movePointRight(2).toInt()

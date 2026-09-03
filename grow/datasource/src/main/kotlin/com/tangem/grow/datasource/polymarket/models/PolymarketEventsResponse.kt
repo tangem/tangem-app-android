@@ -53,6 +53,7 @@ data class PolymarketMarketDto(
     @Json(name = "image") val image: String?,
     @Json(name = "status") val status: String,
     @Json(name = "negRisk") val isNegRisk: Boolean,
+    @Json(name = "acceptingOrders") val isAcceptingOrders: Boolean?,
     @Json(name = "startDate") val startDate: String?,
     @Json(name = "endDate") val endDate: String?,
     @Json(name = "startDateIso") val startDateIso: String?,

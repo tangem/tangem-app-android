@@ -428,6 +428,8 @@ internal class PlacePredictionModel @Inject constructor(
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
+        if (!uiState.value.isMarketAcceptingOrders) return
+
         if (uiState.value.enteredAmount() == null) {
             startPriceLoop()
             return

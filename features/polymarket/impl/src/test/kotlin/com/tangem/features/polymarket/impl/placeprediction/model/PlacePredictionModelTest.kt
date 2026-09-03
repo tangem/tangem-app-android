@@ -190,6 +190,25 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN the market takes no orders WHEN an amount is typed THEN no quote is requested`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the market is closed WHEN poll interval elapses THEN quote NOT requested again`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -1042,7 +1061,7 @@ internal class PlacePredictionModelTest {
         isLive = isLive,
     )
 
-    private fun createEvent(): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(isAcceptingOrders: Boolean = true): PolymarketEvent = PolymarketEvent(
         id = EVENT_ID,
         slug = "event-slug",
         title = "Event title",
@@ -1071,6 +1090,7 @@ internal class PlacePredictionModelTest {
                 imageUrl = null,
                 status = PolymarketStatus.ACTIVE,
                 isNegRisk = false,
+                isAcceptingOrders = isAcceptingOrders,
                 startDate = null,
                 endDate = null,
                 startDateIso = null,
