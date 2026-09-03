@@ -213,6 +213,25 @@ class UserTokensSaverTest {
     }
 
     @Test
+    fun `GIVEN joint toggle off WHEN write returns 412 THEN no recovery and the push fails`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        stubUserWallet(userWalletId)
+
+        val response = createResponse(tokens = listOf(createToken()))
+        var onFailSendCalled = false
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returns preconditionFailed()
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response, onFailSend = { onFailSendCalled = true })
+
+        // Assert
+        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV2(walletId = any()) }
+        assert(onFailSendCalled) { "onFailSend callback should be called when 412 recovery is disabled" }
+    }
+
+    @Test
     fun `GIVEN wallet rebound after 404 WHEN retry hits 412 THEN merge recovery still applies`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("1234567890abcdef")
