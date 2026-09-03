@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -43,7 +44,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(status)
 
         // Assert
-        assertThat(actual.balance).isNotEqualTo(stringReference(value = "—"))
+        assertThat(actual.balance).isNotEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
     }
 
     @Test
@@ -55,7 +56,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(status)
 
         // Assert
-        assertThat(actual.balance).isEqualTo(stringReference(value = "—"))
+        assertThat(actual.balance).isEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
     }
 
     @Test
@@ -67,7 +68,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(status)
 
         // Assert
-        assertThat(actual.balance).isEqualTo(stringReference(value = "—"))
+        assertThat(actual.balance).isEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
     }
 
     internal data class GatingModel(
