@@ -1,6 +1,7 @@
 package com.tangem.domain.jointaccount.repository
 
 import arrow.core.Either
+import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
@@ -48,6 +49,21 @@ interface JointAccountRepository {
     ): JointAccountCreationResult
 
     /**
+     * Confirms the composition and activates the account.
+     *
+     * [payload] is the object the card signed and [signature] the EIP-191 signature over its RFC 8785 canonical
+     * form — the same wire rules as in [create]. The endpoint is idempotent — activating an already `active`
+     * account succeeds — so a request whose response was lost to a timeout is retried once here instead of
+     * reporting an error for a likely-activated account. Every other error comes back as a `Left` as it arrives
+     * from the API — the function never throws.
+     */
+    suspend fun activate(
+        userWalletId: UserWalletId,
+        payload: JointAccountActivationPayload,
+        signature: String,
+    ): Either<Throwable, Unit>
+
+    /**
      * Previews the invite [inviteId] for wallet [walletId] — the configuration and who is inviting.
      *
      * [JointAccountInvitePreviewError.InvalidLink] covers the invite being already redeemed or this wallet already
@@ -58,4 +74,13 @@ interface JointAccountRepository {
         walletId: UserWalletId,
         inviteId: String,
     ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview>
+
+    /**
+     * The unused invites of the joint account [cryptoAccountId] that live on this device.
+     *
+
+     * list also answers "this device is not the creator's". Never throws: a store that cannot be read is an
+     * empty list, so a screen built on this keeps rendering everything else.
+     */
+    suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String>
 }
