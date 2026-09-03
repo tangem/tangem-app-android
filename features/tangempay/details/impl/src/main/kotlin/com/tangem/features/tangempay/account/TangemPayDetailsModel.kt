@@ -751,16 +751,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRenewSession() {
-        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
+        uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = true))
         modelScope.launch {
             produceTangemPayInitialDataUseCase(userWalletId)
                 .onRight {
                     paymentAccountStatusFetcher.invoke(userWalletId)
-                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
-                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
         }
     }
