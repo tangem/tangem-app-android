@@ -8,6 +8,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
@@ -65,10 +66,15 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val params = paramsContainer.require<PolymarketMainParams>()
 
+    private val balanceConverter = PredictionBalanceUMConverter(
+        onAddFundsClick = {},
+        onWithdrawClick = {},
+    )
+
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
             PolymarketMainUM(
-                balance = null,
+                balance = balanceConverter.convert(PredictionAccountStatusValue.Loading),
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
             ),
@@ -80,11 +86,6 @@ internal class PolymarketMainModel @Inject constructor(
     )
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
-
-    private val balanceConverter = PredictionBalanceUMConverter(
-        onAddFundsClick = ::onAddFundsClick,
-        onWithdrawClick = ::onWithdrawClick,
-    )
 
     init {
         predictionAccountStatusSupplier(userWalletId = params.userWalletId)
@@ -279,13 +280,5 @@ internal class PolymarketMainModel @Inject constructor(
                 assetId = assetId,
             ),
         )
-    }
-
-    private fun onAddFundsClick() {
-        // Opens the Add funds sheet, which [REDACTED_TASK_KEY] adds.
-    }
-
-    private fun onWithdrawClick() {
-        // Opens the withdrawal flow, which [REDACTED_TASK_KEY] adds.
     }
 }
