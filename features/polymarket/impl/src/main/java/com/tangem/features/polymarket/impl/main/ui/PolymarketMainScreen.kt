@@ -69,6 +69,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import java.math.BigDecimal
 
 // Feed layout: the scrolling header is item 0, the tab band — when there are categories — is item 1.
 private const val TAB_BAND_INDEX = 1
@@ -243,14 +244,12 @@ private fun FeedList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = KEY_HEADER) {
-            state.balance?.let { balance ->
-                PolymarketMainHeader(
-                    balance = balance.balance,
-                    addFunds = balance.addFunds,
-                    withdraw = balance.withdraw,
-                    onBalanceClick = {},
-                )
-            }
+            PolymarketMainHeader(
+                balance = state.balance.balance,
+                addFunds = state.balance.addFunds,
+                withdraw = state.balance.withdraw,
+                onBalanceClick = {},
+            )
         }
 
         // The tabs outlive the events they filter: they stay put while a category reloads or fails.
@@ -444,7 +443,7 @@ private fun PolymarketMainScreenContentPreview() {
     TangemThemePreviewRedesign {
         PolymarketMainScreen(
             state = PolymarketMainUM(
-                balance = null,
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
                 categories = previewCategories(),
                 content = PolymarketMainUM.ContentUM.Content(
                     events = previewEvents(),

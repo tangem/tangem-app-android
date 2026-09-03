@@ -38,6 +38,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import javax.inject.Provider
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * The feed is reached only after the gate resolves an access mode, so a model it cannot construct crashes the
@@ -57,6 +59,8 @@ internal class PolymarketMainComponentTest {
     init {
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+        every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
+            flowOf(PredictionAccountStatusValue.Loading)
         every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
             override val state = MutableStateFlow(
                 BatchListState<Int, PolymarketEventsBatch>(
