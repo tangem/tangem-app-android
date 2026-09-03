@@ -16,7 +16,6 @@ import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.preferences.*
 import com.tangem.datasource.local.preferences.migration.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration
-import com.tangem.datasource.local.preferences.utils.SwapCurrencyIdMigration
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -100,7 +99,6 @@ internal object AppPreferencesStoreModule {
                 keyName = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY.name,
                 analyticsExceptionHandler = analyticsExceptionHandler,
             ),
-            SwapCurrencyIdMigration(),
             CleanupKeyMigration(key = PreferencesKeys.APP_LOGS_KEY),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibility")),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityList")),
