@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -22,6 +23,9 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackAccrualsUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -44,8 +48,8 @@ private fun AccrualsContent(state: TangemPayCashbackAccrualsUM) {
                 verticalAlignment = TangemRowVerticalAlignment.Top,
                 startSlot = {
                     Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = R.drawable.ic_information_24),
+                        modifier = Modifier.size(20.dp),
+                        painter = rememberVectorPainter(Icons.ic_info_20),
                         contentDescription = null,
                         tint = TangemTheme.colors3.icon.primary,
                     )
@@ -62,8 +66,8 @@ private fun AccrualsContent(state: TangemPayCashbackAccrualsUM) {
                 verticalAlignment = TangemRowVerticalAlignment.Center,
                 startSlot = {
                     Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = R.drawable.ic_doc_24),
+                        modifier = Modifier.size(20.dp),
+                        painter = rememberVectorPainter(Icons.ic_document_20),
                         contentDescription = null,
                         tint = TangemTheme.colors3.icon.primary,
                     )
