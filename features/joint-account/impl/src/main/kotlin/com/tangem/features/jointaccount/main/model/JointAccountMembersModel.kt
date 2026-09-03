@@ -19,6 +19,7 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
@@ -126,7 +127,7 @@ internal class JointAccountMembersModel @Inject constructor(
         stateController.update(
             SetActivationConfirmationTransformer(
                 confirmation = JointAccountMembersUM.ActivationUM.ConfirmationUM(
-                    walletIconRes = userWallet?.let(::walletInterationIcon),
+                    walletInteractionIconRes = userWallet?.let(::walletInterationIcon),
                     isConfirming = false,
                     onConfirmClick = { onConfirmActivationClick(cryptoAccountId = cryptoAccountId) },
                     onCancelClick = ::onCancelActivationClick,
@@ -171,7 +172,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun onActivationError(error: JointAccountActivationError) {
         when (error) {
             // Dismissing the signing is not a failure: the screen stays as it was
-            JointAccountActivationError.UserCancelled -> Unit
+            JointAccountFlowError.UserCancelled -> Unit
             JointAccountActivationError.AccountNotFound,
             JointAccountActivationError.NotReadyForActivation,
             JointAccountActivationError.AddressMismatch,
@@ -180,7 +181,7 @@ internal class JointAccountMembersModel @Inject constructor(
                 TangemLogger.e("Joint account activation failed: $error")
                 showActivationError()
             }
-            is JointAccountActivationError.Failed -> {
+            is JointAccountFlowError.Failed -> {
                 TangemLogger.e("Joint account activation failed", error.cause)
                 showActivationError()
             }
