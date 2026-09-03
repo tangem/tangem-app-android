@@ -52,6 +52,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketMainModelTest {
@@ -503,6 +505,9 @@ internal class PolymarketMainModelTest {
     private val userWalletId = UserWalletId("011")
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {
+        every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
+            flowOf(PredictionAccountStatusValue.Loading)
+
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
             val feedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig,
                 PolymarketEventsUpdateRequest>>()
