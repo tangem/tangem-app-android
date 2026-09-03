@@ -1,5 +1,7 @@
 package com.tangem.features.polymarket.impl.details.model.transformer
 
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.format
@@ -55,7 +57,7 @@ internal class PolymarketEventDetailsContentTransformer(
             title = stringReference(event.title),
             iconUrl = event.iconUrl,
             totalVolume = stringReference(event.volume.formatPolymarketVolume()),
-            change24h = stringReference(formatChange24h(volume = event.volume, volume24h = event.volume24h)),
+            change24h = transformChange24h(volume = event.volume, volume24h = event.volume24h),
             // The BFF does not serve subcategories yet; the UI hides the row while the list is empty.
             subcategories = persistentListOf(),
             activeMarkets = markets
@@ -120,10 +122,12 @@ internal class PolymarketEventDetailsContentTransformer(
         return "$cents${PolymarketConst.CENT_SIGN}"
     }
 
-    private fun formatChange24h(volume: BigDecimal?, volume24h: BigDecimal?): String {
-        val ratio = computeChange24hRatio(volume = volume, volume24h = volume24h) ?: return DASH_SIGN
-        val percent = ratio.format { percent(minFractionDigits = 0, maxFractionDigits = 2) }
-        return "$GROWTH_GLYPH $percent"
+    private fun transformChange24h(volume: BigDecimal?, volume24h: BigDecimal?): PriceChangeState {
+        val ratio = computeChange24hRatio(volume = volume, volume24h = volume24h) ?: return PriceChangeState.Unknown
+        return PriceChangeState.Content(
+            valueInPercent = ratio.format { percent(minFractionDigits = 0, maxFractionDigits = 2) },
+            type = PriceChangeConverter.fromBigDecimal(ratio),
+        )
     }
 
     /**
@@ -144,9 +148,6 @@ internal class PolymarketEventDetailsContentTransformer(
 
     companion object {
         private val CENTS_IN_DOLLAR = BigDecimal(100)
-
-        /** The volume delta is a growth by construction, so the indicator always points up. */
-        private const val GROWTH_GLYPH = "▲"
         private const val EASTERN_TIME_ZONE = "America/New_York"
         private const val RESOLUTION_DATE_PATTERN = "MMM d, yyyy, h:mm a"
 
