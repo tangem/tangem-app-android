@@ -213,6 +213,32 @@ class UserTokensSaverTest {
     }
 
     @Test
+    fun `GIVEN refetched state without etag header WHEN merging after 412 THEN stored etag is kept`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("1234567890abcdef")
+        stubUserWallet(userWalletId)
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns STALE_ETAG
+
+        val response = createResponse(tokens = listOf(createToken()))
+        coEvery { enricher(userWalletId, response) } returns response
+        coEvery { tangemTechApi.saveTokens(any(), any(), any()) } returnsMany listOf(
+            preconditionFailed(),
+            preconditionFailed(),
+        )
+        coEvery { tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue) } returns ApiResponse.Success(
+            data = createAccountsV2Response(tokens = emptyList()),
+        )
+
+        // Act
+        userTokensSaver.push(userWalletId = userWalletId, response = response)
+
+        // Assert
+        coVerify(exactly = 0) { eTagsStore.clear(any(), any()) }
+        coVerify(exactly = 0) { eTagsStore.store(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN 412 and failed refetch WHEN push THEN onFailSend is called`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("1234567890abcdef")
