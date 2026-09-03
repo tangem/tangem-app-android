@@ -13,6 +13,7 @@ android {
 dependencies {
 
     // region Kotlin
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     // endregion
 
@@ -30,14 +31,24 @@ dependencies {
     implementation(projects.grow.datasource)
     // endregion
 
+    // region Tangem SDK
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
+    // endregion
+
     // region Domain
     implementation(projects.domain.models)
     api(projects.domain.collectibles)
     implementation(projects.domain.collectibles.models)
+    implementation(projects.domain.core)
+    implementation(projects.domain.common)
+    implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
     // endregion
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(projects.libs.crypto)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
