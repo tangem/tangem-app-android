@@ -10,7 +10,7 @@ import com.tangem.data.virtualaccount.repository.DefaultVirtualAccountActivation
 import com.tangem.data.virtualaccount.store.VirtualAccountStatusesStore
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
