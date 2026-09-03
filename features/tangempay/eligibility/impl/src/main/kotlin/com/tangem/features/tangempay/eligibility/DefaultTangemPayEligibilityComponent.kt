@@ -1,30 +1,78 @@
 package com.tangem.features.tangempay.eligibility
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.tangempay.eligibility.country.ResidencyListModel
-import com.tangem.features.tangempay.eligibility.country.ResidencyListScreen
+import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.tangempay.eligibility.country.ResidencyListComponent
+import com.tangem.features.tangempay.eligibility.unavailable.RegionUnavailableComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: TangemPayEligibilityComponent.Params,
+    @Assisted private val params: TangemPayEligibilityComponent.Params,
 ) : TangemPayEligibilityComponent, AppComponentContext by context {
 
-    private val model: ResidencyListModel = getOrCreateModel(params)
+    private val stackNavigation = StackNavigation<EligibilityInnerRoute>()
+
+    private val innerRouter = InnerRouter(
+        stackNavigation = stackNavigation,
+        popCallback = { onChildBack() },
+    )
+
+    private val childStack = childStack(
+        key = "tangemPayEligibilityInnerStack",
+        source = stackNavigation,
+        serializer = EligibilityInnerRoute.serializer(),
+        initialConfiguration = EligibilityInnerRoute.Residency,
+        childFactory = ::screenChild,
+    )
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.uiState.collectAsStateWithLifecycle()
-        ResidencyListScreen(state = state, modifier = modifier)
-        BackHandler(onBack = state.onBackClick ?: state.onCloseClick)
+        val stack by childStack.subscribeAsState()
+
+        BackHandler(onBack = ::onChildBack)
+        Children(modifier = modifier, stack = stack) { child ->
+            child.instance.Content(modifier = Modifier.fillMaxSize())
+        }
+    }
+
+    private fun screenChild(
+        route: EligibilityInnerRoute,
+        componentContext: ComponentContext,
+    ): ComposableContentComponent = when (route) {
+        EligibilityInnerRoute.Residency -> ResidencyListComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = params,
+        )
+        EligibilityInnerRoute.RegionUnavailable -> RegionUnavailableComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = RegionUnavailableComponent.Params(
+                onSelectAnotherRegionClick = stackNavigation::pop,
+            ),
+        )
+    }
+
+    private fun onChildBack() {
+        if (childStack.value.backStack.isEmpty()) {
+            router.pop()
+        } else {
+            stackNavigation.pop()
+        }
     }
 
     @AssistedFactory
