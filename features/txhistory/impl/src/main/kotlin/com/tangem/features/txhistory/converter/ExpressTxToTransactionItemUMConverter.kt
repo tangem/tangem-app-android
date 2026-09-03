@@ -171,7 +171,7 @@ internal class ExpressTxToTransactionItemUMConverter(
     }
 
     private fun formatAmount(amount: BigDecimal?, prefix: String): String? =
-        amount?.let { prefix + it.format { crypto(symbol = "", decimals = currency.decimals) }.trim() }
+        amount?.let { prefix + it.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim() }
 
     private fun swapTitle(status: Status): TextReference = when (status) {
         is Status.Confirmed -> resourceReference(R.string.common_swapped)
