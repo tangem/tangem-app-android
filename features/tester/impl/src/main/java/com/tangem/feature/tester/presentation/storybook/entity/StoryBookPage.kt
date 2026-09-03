@@ -214,6 +214,31 @@ internal data class TangemButtonStory(
     }
 }
 
+internal data class TangemFooterStory(
+    val actions: Actions,
+    val fadeVariant: TangemFade.Variant,
+    val hasExtraTop: Boolean,
+    val isFadeEnabled: Boolean,
+    val isBlurEnabled: Boolean,
+    val isInModal: Boolean,
+    val onActionsChange: (Actions) -> Unit,
+    val onFadeVariantChange: (TangemFade.Variant) -> Unit,
+    val onExtraTopToggle: () -> Unit,
+    val onFadeToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onInModalToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which actions block the footer hosts — the configurations from the design. */
+    enum class Actions(val label: String) {
+        ButtonGroupVertical("2 buttons"),
+        ButtonGroupHorizontal("2 in a row"),
+        SingleButton("1 button"),
+        StartEnd("start + end"),
+        Search("search"),
+    }
+}
+
 internal data class TangemButtonStackStory(
     val variant: TangemButtonStack.Variant,
     val entryCount: Int,
