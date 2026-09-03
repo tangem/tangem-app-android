@@ -43,7 +43,8 @@ data class JointAccount(
      * @property name     the member's display name, 1..25 chars
      * @property address  the member's owner address in the Safe, lower-case hex — compare case-insensitively
      * @property role     only the creator sends invites and activates the account
-     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had one
+     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
+     * one, and for data cached before the backend started reporting it
      */
     data class Member(
         val name: String,
