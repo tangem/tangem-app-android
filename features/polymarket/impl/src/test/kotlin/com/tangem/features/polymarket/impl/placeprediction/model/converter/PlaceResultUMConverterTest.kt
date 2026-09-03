@@ -44,6 +44,7 @@ internal class PlaceResultUMConverterTest {
                 placedAt = PLACED_AT,
                 filledAmount = reported,
                 requestedAmount = REQUESTED,
+                tokensBought = TAKING,
             ),
         )
     }
@@ -53,15 +54,15 @@ internal class PlaceResultUMConverterTest {
     private fun provideTestModels() = listOf(
         ConvertModel(
             result = result(makingAmount = REQUESTED),
-            expected = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = REQUESTED),
+            expected = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = REQUESTED, tokensBought = TAKING),
         ),
         ConvertModel(
             result = result(status = " MATCHED "),
-            expected = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = REQUESTED),
+            expected = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = REQUESTED, tokensBought = TAKING),
         ),
         ConvertModel(
             result = result(makingAmount = REQUESTED - BigDecimal("0.000001")),
-            expected = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = REQUESTED),
+            expected = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = REQUESTED, tokensBought = TAKING),
         ),
         ConvertModel(
             result = result(makingAmount = REQUESTED - BigDecimal("0.000002")),
@@ -69,6 +70,7 @@ internal class PlaceResultUMConverterTest {
                 placedAt = PLACED_AT,
                 filledAmount = REQUESTED - BigDecimal("0.000002"),
                 requestedAmount = REQUESTED,
+                tokensBought = TAKING,
             ),
         ),
         ConvertModel(
@@ -77,6 +79,7 @@ internal class PlaceResultUMConverterTest {
                 placedAt = PLACED_AT,
                 filledAmount = BigDecimal("36.000000"),
                 requestedAmount = REQUESTED,
+                tokensBought = TAKING,
             ),
         ),
         ConvertModel(
@@ -107,6 +110,7 @@ internal class PlaceResultUMConverterTest {
 
     private companion object {
         val REQUESTED: BigDecimal = BigDecimal("72.000000")
+        val TAKING: BigDecimal = BigDecimal("97.959184")
         const val PLACED_AT = 1_787_300_000_000L
 
         fun result(
@@ -117,7 +121,7 @@ internal class PlaceResultUMConverterTest {
             orderId = "0x6b2e",
             status = status,
             makingAmount = makingAmount,
-            takingAmount = BigDecimal("97.959184"),
+            takingAmount = TAKING,
             transactionHashes = listOf("0xdead"),
             errorMessage = null,
         )
