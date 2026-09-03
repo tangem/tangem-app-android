@@ -1,16 +1,20 @@
 package com.tangem.data.common.currency
 
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.account.flattenTokens
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.retryer.Retryer
@@ -25,6 +29,8 @@ class UserTokensSaver(
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
     private val walletServerBinder: WalletServerBinder,
     private val pushTokensRetryerPool: RetryerPool,
+    private val eTagsStore: ETagsStore,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) {
 
     suspend fun push(
@@ -68,10 +74,7 @@ class UserTokensSaver(
     private suspend fun push(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
         safeApiCall(
             call = {
-                val apiResponse = tangemTechApi.saveTokens(
-                    userId = userWallet.walletId.stringValue,
-                    userTokens = response,
-                )
+                val apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
 
                 val isWalletNotFound = apiResponse is ApiResponse.Error &&
                     apiResponse.cause.isNetworkError(ApiResponseError.HttpException.Code.NOT_FOUND)
@@ -79,19 +82,88 @@ class UserTokensSaver(
                 if (isWalletNotFound) {
                     walletServerBinder.bind(userWallet).bind()
 
-                    tangemTechApi.saveTokens(
-                        userId = userWallet.walletId.stringValue,
-                        userTokens = response,
-                    ).bind()
+                    saveTokensWithETag(userWalletId = userWallet.walletId, response = response).bind()
                 } else {
                     apiResponse.bind()
                 }
             },
             onError = { error ->
-                TangemLogger.e("Failed to push ${response.tokens.size} user tokens", error)
+                if (error.isNetworkError(ApiResponseError.HttpException.Code.PRECONDITION_FAILED)) {
+                    mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
+                } else {
+                    TangemLogger.e("Failed to push ${response.tokens.size} user tokens", error)
+                    onFailSend()
+                }
+            },
+        )
+    }
+
+    private suspend fun saveTokensWithETag(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+    ): ApiResponse<Unit> {
+        val apiResponse = tangemTechApi.saveTokens(
+            userId = userWalletId.stringValue,
+            userTokens = response,
+            eTag = getETagOrNull(userWalletId = userWalletId),
+        )
+
+        if (apiResponse is ApiResponse.Success) {
+            updateETag(userWalletId = userWalletId, apiResponse = apiResponse)
+        }
+
+        return apiResponse
+    }
+
+    private suspend fun mergeAndRetry(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        onFailSend: () -> Unit,
+    ) {
+        safeApiCall(
+            call = {
+                val accountsResponse = tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
+                if (accountsResponse is ApiResponse.Success) {
+                    updateETag(userWalletId = userWalletId, apiResponse = accountsResponse)
+                }
+
+                val fresh = accountsResponse.bind().toResponse()
+                val remoteTokens = fresh.flattenTokens() + fresh.unassignedTokens
+
+                val pushedKeys = response.tokens.map { it.toIdentityKey() }.toSet()
+                val merged = response.copy(
+                    tokens = response.tokens + remoteTokens.filterNot { it.toIdentityKey() in pushedKeys },
+                )
+
+                saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
+            },
+            onError = { error ->
+                TangemLogger.e("Failed to merge and re-push user tokens after a 412", error)
                 onFailSend()
             },
         )
+    }
+
+    private suspend fun getETagOrNull(userWalletId: UserWalletId): String? {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return null
+
+        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+    }
+
+    private suspend fun updateETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return
+
+        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
+
+        if (eTag != null) {
+            eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
+        } else {
+            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+        }
+    }
+
+    private fun UserTokensResponse.Token.toIdentityKey(): List<Any?> {
+        return listOf(id, accountId, networkId, derivationPath, contractAddress)
     }
 
     /**
