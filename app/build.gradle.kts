@@ -358,6 +358,8 @@ dependencies {
     implementation(projects.features.introduction.impl)
     implementation(projects.features.account.api)
     implementation(projects.features.account.impl)
+    implementation(projects.features.tangempay.eligibility.api)
+    implementation(projects.features.tangempay.eligibility.impl)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tangempay.details.impl)
     implementation(projects.features.tangempay.main.api)
