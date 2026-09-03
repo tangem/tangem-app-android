@@ -76,12 +76,12 @@ internal fun createActivation(
 )
 
 internal fun createConfirmation(
-    walletIconRes: Int? = null,
+    walletInteractionIconRes: Int? = null,
     isConfirming: Boolean = false,
     onConfirmClick: () -> Unit = {},
     onCancelClick: () -> Unit = {},
 ): JointAccountMembersUM.ActivationUM.ConfirmationUM = JointAccountMembersUM.ActivationUM.ConfirmationUM(
-    walletIconRes = walletIconRes,
+    walletInteractionIconRes = walletInteractionIconRes,
     isConfirming = isConfirming,
     onConfirmClick = onConfirmClick,
     onCancelClick = onCancelClick,

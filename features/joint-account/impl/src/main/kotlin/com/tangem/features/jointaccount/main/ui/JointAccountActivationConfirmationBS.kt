@@ -113,7 +113,7 @@ private fun Content(state: ActivationUM.ConfirmationUM, modifier: Modifier = Mod
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(CoreUiR.string.common_activate),
-                iconEnd = state.walletIconRes?.let { iconRes ->
+                iconEnd = state.walletInteractionIconRes?.let { iconRes ->
                     TangemIconUM.Icon(imageVector = ImageVector.vectorResource(iconRes))
                 },
                 isLoading = state.isConfirming,
@@ -148,17 +148,20 @@ private fun Preview_JointAccountActivationConfirmation(
 private class ConfirmationStateProvider : CollectionPreviewParameterProvider<ActivationUM.ConfirmationUM>(
     collection = listOf(
         // Cold wallet: the confirm button carries the tap-the-card icon
-        createPreviewState(walletIconRes = CoreUiR.drawable.ic_tangem_24),
+        createPreviewState(walletInteractionIconRes = CoreUiR.drawable.ic_tangem_24),
         // Hot wallet: no wallet-interaction icon
-        createPreviewState(walletIconRes = null),
+        createPreviewState(walletInteractionIconRes = null),
         // The signing session is in progress
-        createPreviewState(walletIconRes = CoreUiR.drawable.ic_tangem_24, isConfirming = true),
+        createPreviewState(walletInteractionIconRes = CoreUiR.drawable.ic_tangem_24, isConfirming = true),
     ),
 )
 
-private fun createPreviewState(walletIconRes: Int?, isConfirming: Boolean = false): ActivationUM.ConfirmationUM {
+private fun createPreviewState(
+    walletInteractionIconRes: Int?,
+    isConfirming: Boolean = false,
+): ActivationUM.ConfirmationUM {
     return ActivationUM.ConfirmationUM(
-        walletIconRes = walletIconRes,
+        walletInteractionIconRes = walletInteractionIconRes,
         isConfirming = isConfirming,
         onConfirmClick = {},
         onCancelClick = {},

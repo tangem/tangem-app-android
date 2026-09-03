@@ -11,7 +11,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountActivationError
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
@@ -238,7 +238,7 @@ internal class JointAccountMembersModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(confirmation.walletIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
+        assertThat(confirmation.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
         coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
         verify(exactly = 0) { uiMessageSender.send(any()) }
         assertThat(model.uiState.value.activation?.confirmation).isNull()
@@ -258,7 +258,7 @@ internal class JointAccountMembersModelTest {
         model.uiState.value.activation!!.onActivateClick()
 
         // Assert
-        assertThat(model.uiState.value.activation!!.confirmation!!.walletIconRes).isNull()
+        assertThat(model.uiState.value.activation!!.confirmation!!.walletInteractionIconRes).isNull()
     }
 
     @Test
@@ -294,7 +294,7 @@ internal class JointAccountMembersModelTest {
         stubConfirmingAccount()
         val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
-        coEvery { activateUseCase(account = jointAccount) } returns JointAccountActivationError.UserCancelled.left()
+        coEvery { activateUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
 
         // Act
         val model = createModel()
@@ -314,7 +314,7 @@ internal class JointAccountMembersModelTest {
         every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
         coEvery {
             activateUseCase(account = jointAccount)
-        } returns JointAccountActivationError.Failed(cause = IllegalStateException("boom")).left()
+        } returns JointAccountFlowError.Failed(cause = IllegalStateException("boom")).left()
 
         // Act
         val model = createModel()
