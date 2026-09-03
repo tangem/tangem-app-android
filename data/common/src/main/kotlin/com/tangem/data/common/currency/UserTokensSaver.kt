@@ -83,7 +83,11 @@ class UserTokensSaver(
                     apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
                 }
 
-                if (apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED)) {
+                // The gate is belt and braces: without the toggle no If-Match is sent, so a 412 cannot arrive
+                val isRecoverableStaleWrite = jointAccountFeatureToggles.isJointAccountEnabled &&
+                    apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED)
+
+                if (isRecoverableStaleWrite) {
                     mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
                 } else {
                     apiResponse.bind()
