@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.cache.model
+package com.tangem.data.common.cache.model
 
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime

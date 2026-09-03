@@ -1,7 +1,7 @@
-package com.tangem.datasource.local.cache
+package com.tangem.data.common.cache
 
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
-import com.tangem.datasource.local.cache.model.CacheKey
+import com.tangem.data.common.cache.model.CacheKey
 
 internal class DefaultCacheKeysStore(
     store: RuntimeSharedMapStore<String, CacheKey>,
