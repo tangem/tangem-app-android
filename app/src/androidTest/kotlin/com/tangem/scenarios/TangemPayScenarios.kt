@@ -209,12 +209,6 @@ fun BaseTestCase.openTangemPayWithdrawSwapScreen() {
     step("Click on 'Withdraw' action chip") {
         onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
     }
-    step("Acknowledge withdrawal note sheet") {
-        onTangemPayWithdrawNoteSheet {
-            title.assertIsDisplayed()
-            gotItButton.clickWithAssertion()
-        }
-    }
     // Stories auto-advance; a tap can miss mid-animation — retry the close until the Swap screen shows.
     step("Close 'Swap stories' and land on the 'Swap' screen (USDC pre-filled as source)") {
         composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {

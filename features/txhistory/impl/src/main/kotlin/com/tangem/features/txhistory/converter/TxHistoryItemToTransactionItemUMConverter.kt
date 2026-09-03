@@ -287,7 +287,7 @@ private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
     }
-    return prefix + amount.format { crypto(symbol = "", decimals = currency.decimals) }.trim()
+    return prefix + amount.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
 }
 
 // endregion
@@ -358,7 +358,7 @@ private fun yieldSendSubtitle(): ContentSubtitle = ContentSubtitle.Provider(
 )
 
 private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): ContentSubtitle.Plain {
-    val formatted = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+    val formatted = amount.format { crypto(currency) }
     return ContentSubtitle.Plain(resourceReference(resId, wrappedList(formatted)))
 }
 
