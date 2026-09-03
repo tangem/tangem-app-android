@@ -1,6 +1,6 @@
 package com.tangem.tap.network.auth.di
 
-import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.remote.auth.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.tap.network.auth.*
