@@ -75,22 +75,15 @@ internal object BlockchainSDKFactoryModule {
 
     @Provides
     @IntoSet
-    fun provideProviderModelMoshiConfigurer(): NetworkMoshiConfigurer {
-        return NetworkMoshiConfigurer { builder ->
-            builder.add(
-                PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
-                    .withSubtype(ProviderModel.Public::class.java, "public")
-                    .withSubtype(ProviderModel.Private::class.java, "private")
-                    .withDefaultValue(ProviderModel.UnsupportedType),
-            )
-        }
-    }
-
-    @Provides
-    @IntoSet
-    fun provideNftMoshiConfigurer(): NetworkMoshiConfigurer {
+    fun provideBlockchainSdkMoshiConfigurer(): NetworkMoshiConfigurer {
         return NetworkMoshiConfigurer { builder ->
             builder
+                .add(
+                    PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
+                        .withSubtype(ProviderModel.Public::class.java, "public")
+                        .withSubtype(ProviderModel.Private::class.java, "private")
+                        .withDefaultValue(ProviderModel.UnsupportedType),
+                )
                 .add(
                     PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
                         .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")

@@ -26,8 +26,6 @@ dependencies {
     implementation(projects.store.datasource)
     implementation(projects.core.utils)
 
-    runtimeOnly(deps.room.runtime)
-
     testImplementation(projects.test.core)
     api(deps.moshi)
 }
