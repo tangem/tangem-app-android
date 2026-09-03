@@ -22,6 +22,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -140,6 +143,38 @@ internal class DefaultCollectiblesHotDelegateTest {
         assertThat(actual.getOrNull()).isEqualTo(HotDelegatePublicKey(PUBLIC_KEY.encodeBase58()))
         coVerify(exactly = 1) { store.put(accountId = ACCOUNT_ID, record = any()) }
         coVerify(exactly = 0) { store.put(accountId = OTHER_ACCOUNT_ID, record = any()) }
+    }
+
+    @Test
+    fun `GIVEN provision in flight WHEN provision again THEN the second call reuses the first key`() = runTest {
+        // Arrange
+        var stored: CollectiblesHotDelegateRecord? = null
+        val generationStarted = CompletableDeferred<Unit>()
+        val generationRelease = CompletableDeferred<Unit>()
+
+        coEvery { store.get(ACCOUNT_ID) } answers { stored }
+        coEvery { store.put(ACCOUNT_ID, any()) } answers { stored = secondArg() }
+        coEvery { tangemHotSdk.derivePublicKey(any(), any()) } returns derivedResponse()
+        coEvery { tangemHotSdk.generateWallet(any(), any()) } coAnswers {
+            generationStarted.complete(Unit)
+            generationRelease.await()
+            HOT_WALLET_ID
+        }
+
+        // Act
+        val first = async { delegate.provision(ACCOUNT_ID) }
+        generationStarted.await()
+        val second = async { delegate.provision(ACCOUNT_ID) }
+        advanceUntilIdle()
+        generationRelease.complete(Unit)
+
+        // Assert
+        val expected = HotDelegatePublicKey(PUBLIC_KEY.encodeBase58())
+        assertThat(first.await().getOrNull()).isEqualTo(expected)
+        assertThat(second.await().getOrNull()).isEqualTo(expected)
+        coVerify(exactly = 1) { tangemHotSdk.generateWallet(any(), any()) }
+        coVerify(exactly = 1) { store.put(ACCOUNT_ID, any()) }
+        coVerify(exactly = 0) { tangemHotSdk.delete(any()) }
     }
 
     @Test
