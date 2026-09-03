@@ -6,6 +6,7 @@ import arrow.core.right
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
 import com.tangem.domain.polymarket.model.PolymarketBridgeAsset
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
@@ -41,10 +42,10 @@ internal class DefaultPolymarketBridgeRepository @Inject constructor(
             )
         }
 
-    override suspend fun createDepositAddress(
+    override suspend fun createDepositAddresses(
         walletId: String,
         depositWalletAddress: String,
-    ): Either<PolymarketBridgeError, String> = withContext(dispatchers.io) {
+    ): Either<PolymarketBridgeError, PolymarketBridgeAddresses> = withContext(dispatchers.io) {
         val builderCode = polymarketRepository.getBuilderCode(walletId = walletId).getOrNull()
             ?: return@withContext PolymarketBridgeError.Unavailable.left()
 
@@ -53,7 +54,16 @@ internal class DefaultPolymarketBridgeRepository @Inject constructor(
                 bridgeApi.createDepositAddresses(
                     builderCode = builderCode,
                     body = PolymarketDepositRequest(address = depositWalletAddress),
-                ).bind().evm.right()
+                ).bind()
+                    .let { dto ->
+                        PolymarketBridgeAddresses(
+                            evm = dto.evm,
+                            svm = dto.svm,
+                            btc = dto.btc,
+                            tron = dto.tron,
+                        )
+                    }
+                    .right()
             },
             onError = { PolymarketBridgeError.Network.left() },
         )
