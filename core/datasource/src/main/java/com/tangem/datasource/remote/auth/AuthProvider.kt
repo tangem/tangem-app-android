@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common
+package com.tangem.datasource.remote.auth
 
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.utils.Provider
