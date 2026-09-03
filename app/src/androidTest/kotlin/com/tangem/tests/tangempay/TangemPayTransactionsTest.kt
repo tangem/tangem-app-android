@@ -26,7 +26,8 @@ class TangemPayTransactionsTest : BaseTestCase() {
     private val eligibilityState = "PaeraCustomer"
     private val balanceInitialState = "InitialBalance"
 
-    private val transactionsPath = "/bff-v2/v1/customer/transactions"
+    // The cashback toggle picks the endpoint: on -> /v1/transactions, off -> /v1/customer/transactions.
+    private val transactionsPath = "/bff-v2/v1/transactions"
 
     // The app pages by the last item's id, so the next-page cursor is the id of the 50th first-page item.
     private val nextPageCursor = "page1-50"
