@@ -3,6 +3,8 @@ package com.tangem.datasource.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.local.moshi.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshiConfigurer
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
@@ -24,10 +26,8 @@ class MoshiModule {
     fun provideNetworkMoshi(configurers: Set<@JvmSuppressWildcards NetworkMoshiConfigurer>): Moshi {
         val builder = Moshi.Builder()
             .add(SerializeNullsFactory)
-            .add(BigDecimalAdapter())
-            .add(BigIntegerAdapter())
+            .apply { commonAdapters().forEach(::add) }
             .add(LocalDateAdapter())
-            .add(DateTimeAdapter())
             // .add(VisaActivationRemoteState.jsonAdapter)
             // .add(VisaCardActivationStatus.jsonAdapter)
             .addLast(KotlinJsonAdapterFactory())
@@ -40,29 +40,19 @@ class MoshiModule {
     @Provides
     @Singleton
     @SdkMoshi
-    fun provideSdkMoshi(): Moshi {
-        val adapters = MoshiJsonConverter.getTangemSdkAdapters() +
-            listOf(
-                BigDecimalAdapter(),
-                BigIntegerAdapter(),
-                WalletDerivedKeysMapAdapter(),
-                ScanResponseDerivedKeysMapAdapter(),
-                ByteArrayKeyAdapter(),
-                ExtendedPublicKeysMapAdapter(),
-                CardBackupStatusAdapter(),
-                DerivationPathAdapterWithMigration(),
-                DateTimeAdapter(),
-            )
-
+    fun provideSdkMoshi(configurers: Set<@JvmSuppressWildcards SdkMoshiConfigurer>): Moshi {
+        val adapters = MoshiJsonConverter.getTangemSdkAdapters() + commonAdapters()
         val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
 
-        return Moshi.Builder().apply {
-            // add(VisaActivationRemoteState.jsonAdapter)
-            // add(VisaCardActivationStatus.jsonAdapter)
+        val builder = Moshi.Builder().apply {
             adapters.forEach { this.add(it) }
             typedAdapters.forEach { add(it.key, it.value) }
             addLast(KotlinJsonAdapterFactory())
-        }.build()
+        }
+
+        // Card model adapters (e.g. ScanResponse) are contributed via @IntoSet by the module that
+        // (de)serializes them through this Moshi, so this builder doesn't depend on domain models.
+        return configurers.fold(builder) { acc, configurer -> configurer.configure(acc) }.build()
     }
 
     @Provides
@@ -70,17 +60,16 @@ class MoshiModule {
     fun provideSdkMoshiConverter(): MoshiJsonConverter {
         return MoshiJsonConverter(
             adapters = MoshiJsonConverter.getTangemSdkAdapters() +
-                listOf(
-                    BigDecimalAdapter(),
-                    BigIntegerAdapter(),
-                    WalletDerivedKeysMapAdapter(),
-                    ScanResponseDerivedKeysMapAdapter(),
-                    ByteArrayKeyAdapter(),
-                    ExtendedPublicKeysMapAdapter(),
-                    CardBackupStatusAdapter(),
-                    DerivationPathAdapterWithMigration(),
-                ),
+                listOf(BigDecimalAdapter(), BigIntegerAdapter()) +
+                scanResponseMoshiAdapters(),
             typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
         )
     }
+
+    /** Adapters shared by both the network and the SDK [Moshi] instances. */
+    private fun commonAdapters(): List<Any> = listOf(
+        BigDecimalAdapter(),
+        BigIntegerAdapter(),
+        DateTimeAdapter(),
+    )
 }
