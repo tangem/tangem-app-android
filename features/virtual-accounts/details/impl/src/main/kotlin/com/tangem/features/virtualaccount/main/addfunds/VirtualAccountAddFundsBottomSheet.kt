@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_usd_32
+import com.tangem.core.ui.test.VirtualAccountRequisitesBottomSheetTestTags
 import com.tangem.features.virtualaccount.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
@@ -156,6 +158,7 @@ private fun CopyableRow(item: VirtualAccountAddFundsUM.DetailItem, divider: Bool
         },
         subtitleSlot = {
             TangemRowText(
+                modifier = Modifier.testTag(VirtualAccountRequisitesBottomSheetTestTags.value(item.key)),
                 text = item.value,
                 role = TangemRowTextRole.Title,
                 maxLines = Int.MAX_VALUE,
@@ -312,11 +315,13 @@ private fun VirtualAccountAddFundsDetailsPreview() {
             content = VirtualAccountAddFundsUM.Content.Details(
                 items = persistentListOf(
                     VirtualAccountAddFundsUM.DetailItem(
+                        key = "Beneficiary name",
                         label = stringReference("Beneficiary name and address"),
                         value = "Ivan Ivanov\n18, Rue Rubens 20, Paris, Ile-de-France 75013, US",
                         onCopyClick = {},
                     ),
                     VirtualAccountAddFundsUM.DetailItem(
+                        key = "Account number",
                         label = stringReference("Account number"),
                         value = "707613210122",
                         onCopyClick = {},
