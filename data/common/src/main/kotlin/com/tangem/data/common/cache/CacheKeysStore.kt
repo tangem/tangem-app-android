@@ -1,8 +1,8 @@
-package com.tangem.datasource.local.cache
+package com.tangem.data.common.cache
 
-import com.tangem.datasource.local.cache.model.CacheKey
+import com.tangem.data.common.cache.model.CacheKey
 
-interface CacheKeysStore {
+internal interface CacheKeysStore {
 
     suspend fun getSyncOrNull(key: String): CacheKey?
 
