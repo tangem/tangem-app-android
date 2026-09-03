@@ -518,6 +518,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             every { this@mockk.name } returns symbol
             every { this@mockk.network } returns network
             every { this@mockk.decimals } returns 8
+            every { this@mockk.displayDecimals } returns 8
             every { isCustom } returns false
             every { iconUrl } returns null
         }
