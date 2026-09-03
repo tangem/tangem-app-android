@@ -41,6 +41,15 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
     }
 
     @Test
+    fun `GIVEN the collateral WHEN it is created THEN its contract address is lower case`() {
+        // Act
+        val actual = factory.create().contractAddress
+
+        // Assert — Express answers with a lower-cased address and the swap matches pairs by string equality
+        assertThat(actual).isEqualTo(actual.lowercase())
+    }
+
+    @Test
     fun `GIVEN the collateral WHEN it is created THEN it matches the token the shared factory would build`() {
         // Arrange
         val expected = CryptoCurrencyFactory(excludedBlockchains).createToken(
@@ -49,7 +58,7 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
             name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
             symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,
-            contractAddress = PolymarketContracts.COLLATERAL,
+            contractAddress = PolymarketContracts.COLLATERAL.lowercase(),
         )
 
         // Act
