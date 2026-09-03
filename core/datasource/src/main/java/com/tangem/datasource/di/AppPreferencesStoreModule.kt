@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.datasource.local.preferences.*
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

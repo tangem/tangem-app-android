@@ -12,5 +12,7 @@ dependencies {
 
     api(projects.core.utils)
 
+    implementation(deps.hilt.core)
+
     testImplementation(projects.test.core)
 }
