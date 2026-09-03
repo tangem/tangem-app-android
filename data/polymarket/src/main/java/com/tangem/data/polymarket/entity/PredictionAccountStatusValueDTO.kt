@@ -42,6 +42,7 @@ internal sealed interface PredictionAccountStatusValueDTO {
     data class Active(
         @SerialName("balance") val balance: SerializedBigDecimal,
         @SerialName("is_trading_allowed") val isTradingAllowed: Boolean,
+        @SerialName("deposit_address") val depositAddress: String? = null,
     ) : PredictionAccountStatusValueDTO
 
     /** The stages a deposit wallet goes through before it is ready to trade. */
