@@ -10,7 +10,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -28,7 +27,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
-import com.tangem.core.ui.test.DetailsScreenTestTags
 import com.tangem.features.details.entity.AddWalletBS
 import com.tangem.features.details.impl.R
 
@@ -51,14 +49,12 @@ private fun Content(content: AddWalletBS) {
             title = resourceReference(R.string.user_wallet_add_hardware_title),
             subtitle = resourceReference(R.string.user_wallet_add_hardware_description),
             onClick = content.onAddHardwareWalletClick,
-            modifier = Modifier.testTag(DetailsScreenTestTags.ADD_HARDWARE_WALLET_BUTTON),
         )
         AddWalletOption(
             icon = Icons.ic_grid_plus_20,
             title = resourceReference(R.string.user_wallet_add_mobile_title),
             subtitle = resourceReference(R.string.user_wallet_add_mobile_description),
             onClick = content.onAddMobileWalletClick,
-            modifier = Modifier.testTag(DetailsScreenTestTags.ADD_MOBILE_WALLET_BUTTON),
         )
     }
 }
