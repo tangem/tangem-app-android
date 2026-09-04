@@ -1,8 +1,8 @@
-package com.tangem.datasource.local.preferences.utils
+package com.tangem.grow.datasource.preferences.migration
 
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.Preferences
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 
 /**
  * Migrates cached CryptoCurrency.ID strings from old blockchain.id format to new networkId format.
@@ -10,26 +10,25 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
  * After refactoring, Network.rawId stores backendId values (e.g. "ethereum") instead of
  * blockchain.id values (e.g. "ETH"). CryptoCurrency.ID body contains this value, so cached IDs
  * like "coin⟨ETH⟩ethereum" must become "coin⟨ethereum⟩ethereum".
- *
- * Affected DataStore keys: [PreferencesKeys.SWAP_TRANSACTIONS_KEY],
- * [PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY].
  */
-internal class SwapCurrencyIdMigration : DataMigration<Preferences> {
+internal class SwapCurrencyIdMigration(
+    private val keys: GrowPreferencesKeys,
+) : DataMigration<Preferences> {
 
     override suspend fun shouldMigrate(currentData: Preferences): Boolean {
-        return currentData.contains(PreferencesKeys.SWAP_TRANSACTIONS_KEY) ||
-            currentData.contains(PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY)
+        return currentData.contains(keys.swapTransactionsKey) ||
+            currentData.contains(keys.lastSwappedCryptoCurrencyIdKey)
     }
 
     override suspend fun migrate(currentData: Preferences): Preferences {
         val mutablePrefs = currentData.toMutablePreferences()
 
-        currentData[PreferencesKeys.SWAP_TRANSACTIONS_KEY]?.let { json ->
-            mutablePrefs[PreferencesKeys.SWAP_TRANSACTIONS_KEY] = migrateJson(json)
+        currentData[keys.swapTransactionsKey]?.let { json ->
+            mutablePrefs[keys.swapTransactionsKey] = migrateJson(json)
         }
 
-        currentData[PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY]?.let { json ->
-            mutablePrefs[PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY] = migrateJson(json)
+        currentData[keys.lastSwappedCryptoCurrencyIdKey]?.let { json ->
+            mutablePrefs[keys.lastSwappedCryptoCurrencyIdKey] = migrateJson(json)
         }
 
         return mutablePrefs.toPreferences()
