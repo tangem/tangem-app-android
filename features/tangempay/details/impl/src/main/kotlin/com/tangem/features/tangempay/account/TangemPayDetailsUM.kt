@@ -30,7 +30,6 @@ internal sealed interface CashbackBlockUM {
 
     data class Widget(
         val title: TextReference,
-        val subtitle: TextReference?,
         val isNegative: Boolean,
         val onClick: () -> Unit,
     ) : CashbackBlockUM
