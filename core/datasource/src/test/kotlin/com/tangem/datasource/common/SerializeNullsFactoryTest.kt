@@ -1,5 +1,6 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.common
 
+import com.tangem.datasource.utils.SerializeNulls
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
