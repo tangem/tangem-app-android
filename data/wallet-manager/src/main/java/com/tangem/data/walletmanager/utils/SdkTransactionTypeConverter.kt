@@ -159,18 +159,18 @@ internal class SdkTransactionTypeConverter(
         val data = callData ?: return null
         val approval = ApprovalERC20TokenCallData(data.hexToBytes()) ?: return null
         return TxInfo.TransactionType.Approve(
-            amount = approval.amount?.value?.let { rawAllowance -> toAllowance(rawAllowance, destination) },
+            amount = toAllowance(rawAllowance = approval.amount?.value, destination = destination),
             address = approval.spenderAddress,
         )
     }
 
     /**
-     * The SDK decodes the allowance as a raw `uint256` in the token's smallest units and knows nothing about the token
-     * itself (`Blockchain.Unknown`: empty symbol, zero decimals). ERC-20 `approve` is always sent to the token
-     * contract, so the tx destination identifies the approved token among the wallet's [networkTokens]; the viewed
-     * [currency] is the fallback for a contract the wallet does not track.
+     * The SDK decodes the allowance as a raw `uint256` in the token's smallest units (`null` for an unlimited one) and
+     * knows nothing about the token itself (`Blockchain.Unknown`: empty symbol, zero decimals). ERC-20 `approve` is
+     * always sent to the token contract, so the tx destination identifies the approved token among the wallet's
+     * [networkTokens]; the viewed [currency] is the fallback for a contract the wallet does not track.
      */
-    private fun toAllowance(rawAllowance: BigDecimal, destination: TransactionHistoryItem.DestinationType): SdkAmount {
+    private fun toAllowance(rawAllowance: BigDecimal?, destination: TransactionHistoryItem.DestinationType): SdkAmount {
         val contractAddress = (destination as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
         val token = contractAddress?.let { address ->
             networkTokens.find { it.contractAddress.equals(address, ignoreCase = true) }
@@ -178,14 +178,14 @@ internal class SdkTransactionTypeConverter(
         return if (token != null) {
             SdkAmount(
                 currencySymbol = token.symbol,
-                value = rawAllowance.movePointLeft(token.decimals),
+                value = rawAllowance?.movePointLeft(token.decimals),
                 decimals = token.decimals,
                 type = SdkAmountType.Token(contractAddress = token.contractAddress, id = token.id),
             )
         } else {
             SdkAmount(
                 currencySymbol = currency.symbol,
-                value = rawAllowance.movePointLeft(currency.decimals),
+                value = rawAllowance?.movePointLeft(currency.decimals),
                 decimals = currency.decimals,
                 type = when (currency) {
                     is CryptoCurrency.Coin -> SdkAmountType.Coin
