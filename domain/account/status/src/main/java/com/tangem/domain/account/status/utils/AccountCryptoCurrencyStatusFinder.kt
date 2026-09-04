@@ -285,6 +285,10 @@ internal object AccountCryptoCurrencyStatusFinder {
     private fun getAccountIndexOrNull(rawNetworkId: Network.RawID?, derivationPath: Network.DerivationPath?): Int? {
         if (rawNetworkId == null || derivationPath == null) return null
 
+        // A joint path (m/44'/60'/888888'/0/N) would be misread by the recognizer as a personal account index N;
+        // null means "search every account", which is where a joint currency is actually found — by its id
+        if (derivationPath is Network.DerivationPath.Joint) return null
+
         val blockchain = rawNetworkId.toBlockchain()
         val recognizer = AccountNodeRecognizer(blockchain)
 
