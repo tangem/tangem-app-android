@@ -39,7 +39,7 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
     fun setUpTronGasless() {
         clearMocks(getTronGaslessFeeUseCase, getFeeForGaslessUseCase, answers = false, recordedCalls = true)
         every { sendFeatureToggles.isTronGaslessEnabled } returns true
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee().right()
         coEvery { getFeeForGaslessUseCase(any(), any(), any(), any()) } returns nativeFee().right()
         stubBalances(sentBalance = BigDecimal("100"))

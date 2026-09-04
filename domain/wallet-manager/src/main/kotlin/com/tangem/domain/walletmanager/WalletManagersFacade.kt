@@ -259,6 +259,8 @@ interface WalletManagersFacade {
         signer: TransactionSigner,
     ): List<String>?
 
+    suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean
+
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 
     /**
