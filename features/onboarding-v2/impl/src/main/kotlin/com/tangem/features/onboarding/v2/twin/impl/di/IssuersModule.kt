@@ -19,7 +19,7 @@ internal object IssuersModule {
     fun provideIssuersConfigStorage(assetLoader: AssetLoader): IssuersConfigStorage {
         return DefaultIssuersConfigStorage(
             assetLoader = assetLoader,
-            runtimeStateStore = RuntimeStateStore(defaultValue = emptyList()),
+            runtimeStateStore = RuntimeStateStore(defaultValue = null),
         )
     }
 }

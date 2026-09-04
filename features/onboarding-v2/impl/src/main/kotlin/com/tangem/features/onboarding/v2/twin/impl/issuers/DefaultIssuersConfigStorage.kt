@@ -7,13 +7,11 @@ import com.tangem.features.onboarding.v2.twin.impl.issuers.models.Issuer
 
 internal class DefaultIssuersConfigStorage(
     private val assetLoader: AssetLoader,
-    private val runtimeStateStore: RuntimeStateStore<List<Issuer>>,
+    private val runtimeStateStore: RuntimeStateStore<List<Issuer>?>,
 ) : IssuersConfigStorage {
 
     override suspend fun getConfig(): List<Issuer> {
-        val cachedData = runtimeStateStore.get().value
-
-        if (cachedData.isNotEmpty()) return cachedData
+        runtimeStateStore.get().value?.let { return it }
 
         val issuers = assetLoader.loadList<Issuer>(fileName = ISSUERS_FILE_NAME)
 
