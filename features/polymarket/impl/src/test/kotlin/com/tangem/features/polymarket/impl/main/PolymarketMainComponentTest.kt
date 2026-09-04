@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -37,6 +38,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import javax.inject.Provider
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * The feed is reached only after the gate resolves an access mode, so a model it cannot construct crashes the
@@ -49,12 +52,15 @@ internal class PolymarketMainComponentTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
 
     init {
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+        every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
+            flowOf(PredictionAccountStatusValue.Loading)
         every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
             override val state = MutableStateFlow(
                 BatchListState<Int, PolymarketEventsBatch>(
@@ -118,5 +124,6 @@ internal class PolymarketMainComponentTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         getPolymarketEventsBatchFlowUseCase = getPolymarketEventsBatchFlowUseCase,
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
+        predictionAccountStatusSupplier = predictionAccountStatusSupplier,
     )
 }
