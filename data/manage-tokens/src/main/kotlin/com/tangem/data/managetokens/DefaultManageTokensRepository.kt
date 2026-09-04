@@ -18,7 +18,7 @@ import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.orDefault
-import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
+import com.tangem.data.managetokens.testnet.TestnetTokensStorage
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.extensions.*
 import com.tangem.domain.card.common.util.cardTypesResolver

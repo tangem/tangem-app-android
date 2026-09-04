@@ -1,16 +1,9 @@
-package com.tangem.datasource.local.config.testnet
+package com.tangem.data.managetokens.testnet
 
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.assets.load
-import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
+import com.tangem.data.managetokens.testnet.models.TestnetTokensConfig
 
-/**
- * Default implementation for storing testnet tokens data
- *
- * @property assetLoader asset loader
- *
-[REDACTED_AUTHOR]
- */
 internal class DefaultTestnetTokensStorage(
     private val assetLoader: AssetLoader,
 ) : TestnetTokensStorage {
