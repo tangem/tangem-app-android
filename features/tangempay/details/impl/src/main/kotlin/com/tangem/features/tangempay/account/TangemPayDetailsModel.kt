@@ -50,6 +50,7 @@ import com.tangem.features.tangempay.multichain.shouldUseChooseNetwork
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUpdateListener
+import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -230,6 +231,10 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickWithdraw() {
         analytics.send(TangemPayAnalyticsEvents.WithdrawClicked())
+        if (tangemPayFeatureToggles.isBankOfframpEnabled) {
+            openWithdrawHub()
+            return
+        }
         modelScope.launch {
             val hasActiveWithdrawal = tangemPayWithdrawRepository.hasWithdrawOrder(userWalletId)
             if (hasActiveWithdrawal) {
@@ -265,15 +270,15 @@ internal class TangemPayDetailsModel @Inject constructor(
             showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
             return
         }
-        router.push(
-            AppRoute.Swap(
-                fromCryptoCurrency = cryptoCurrency,
-                userWalletId = userWalletId,
-                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
-                accountFlow = AccountFlow.Withdraw,
-            ),
-        )
+        router.push(buildWithdrawSwapRoute(userWalletId = userWalletId, cryptoCurrency = cryptoCurrency))
+    }
+
+    private fun openWithdrawHub() {
+        if (currentStatus.value.balanceOrNull() == null) {
+            showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
+            return
+        }
+        router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub)
     }
 
     private fun fetchCashbackBlock() {
