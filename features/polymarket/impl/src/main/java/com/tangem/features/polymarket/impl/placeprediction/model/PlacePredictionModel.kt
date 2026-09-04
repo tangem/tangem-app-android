@@ -30,6 +30,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -42,6 +43,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
@@ -373,6 +375,10 @@ internal class PlacePredictionModel @Inject constructor(
         router.pop()
     }
 
+    override fun onToMainClick() {
+        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+    }
+
     fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
 
     private fun loadMarket() {
@@ -422,6 +428,7 @@ internal class PlacePredictionModel @Inject constructor(
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
+                if (uiState.value.quote.isMarketClosed()) break
                 delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)

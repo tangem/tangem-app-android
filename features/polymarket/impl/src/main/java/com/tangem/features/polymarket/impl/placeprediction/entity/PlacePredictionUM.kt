@@ -33,7 +33,13 @@ internal data class PlacePredictionUM(
     companion object {
 
         fun initial(): PlacePredictionUM = PlacePredictionUM(
-            market = MarketHeaderUM(title = "", imageUrl = null, outcomeTitle = "", outcomePriceCents = null),
+            market = MarketHeaderUM(
+                title = "",
+                imageUrl = null,
+                outcomeTitle = "",
+                outcomePriceCents = null,
+                resolutionDateMillis = null,
+            ),
             payment = PaymentSourceUM(
                 tokenSymbol = "",
                 iconState = null,
@@ -75,6 +81,7 @@ internal data class MarketHeaderUM(
     val imageUrl: String?,
     val outcomeTitle: String,
     val outcomePriceCents: Int?,
+    val resolutionDateMillis: Long?,
 )
 
 @Immutable
@@ -155,6 +162,9 @@ internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecima
 
 internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
     ?.let { PayoutUM(expected = it.expectedShares, guaranteed = it.guaranteedShares) }
+
+internal fun QuoteUM.isMarketClosed(): Boolean =
+    (this as? QuoteUM.Unavailable)?.status == PredictionQuoteStatus.MARKET_CLOSED
 
 @Immutable
 internal sealed interface SubmitUM {

@@ -1140,6 +1140,7 @@
   <string name="market_chart_can_not_load_data">Can’t load data</string>
   <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
   <string name="market_chart_top_holding">%s of your portfolio</string>
+  <string name="market_failed_to_load_filters">Failed to load filter. \nTap to reload</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
@@ -2521,8 +2522,8 @@
   <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_order_type_unavailable">Unavailable</string>
   <string name="tangempay_other_networks_header">Other networks</string>
-  <string name="tangempay_other_networks_subtitle">and then swap it to payment account with zero fees</string>
-  <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
+  <string name="tangempay_other_networks_subtitle">Then swap it to payment account with zero fees</string>
+  <string name="tangempay_other_networks_title">Send USDT/USDC on any EVM-chain to your Tangem Wallet</string>
   <string name="tangempay_pay_support">Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
@@ -2574,7 +2575,7 @@
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">From a bank account</string>
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_body_multichain">Send USDC or USDT to your account’s address</string>
