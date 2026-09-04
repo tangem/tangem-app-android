@@ -54,15 +54,16 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
         // Not on an idle entry screen yet: keep the deep link pending, re-evaluate on next route change.
         if (!isIdleEntryPoint(currentRoute)) return
 
-        if (userWalletsListRepository.userWalletsSync().isNotEmpty()) {
-            TangemLogger.i("[TangemPay][HWO] Routing AppsFlyer deep link to Tangem Pay onboarding")
-            // Authorized: push onto the wallet screen so Back returns to it.
-            appRouter.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink))
-        } else {
-            TangemLogger.i("[TangemPay][HWO] Routing AppsFlyer deep link to hot wallet onboarding")
-            // Not authorized: open onboarding as the root, skipping Home/stories (original cold-start flow).
-            appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding)
+        // No wallet yet: the user is on the intro stories, which this deep link must not skip. It stays pending
+        // and Home consumes it on "Get started", right after the stories (see HomeModel.onGetStartedClick).
+        if (userWalletsListRepository.userWalletsSync().isEmpty()) {
+            TangemLogger.i("[TangemPay][HWO] No wallets yet, keeping the deep link until the stories are over")
+            return
         }
+
+        TangemLogger.i("[TangemPay][HWO] Routing AppsFlyer deep link to Tangem Pay onboarding")
+        // Authorized: push onto the wallet screen so Back returns to it.
+        appRouter.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink))
         // One-shot: consume the deep link once routed so the user isn't forced back here on relaunch.
         clearAppsFlyerDeeplinkUseCase()
     }
@@ -70,7 +71,7 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     private suspend fun routeReferral(currentRoute: AppRoute) {
         // Referral targets fresh installs: from an idle entry screen, go straight to hot wallet creation
         // (skips stories). The deep link is NOT cleared here — it stays as referral attribution (read by
-        // IsReferralInstallUseCase, cleared on wallet creation); replaceAll keeps it off the back stack.
+        // GetAppsFlyerDeeplinkUseCase, cleared on wallet creation); replaceAll keeps it off the back stack.
         if (!isIdleEntryPoint(currentRoute)) return
         if (userWalletsListRepository.userWalletsSync().isNotEmpty()) return
 
