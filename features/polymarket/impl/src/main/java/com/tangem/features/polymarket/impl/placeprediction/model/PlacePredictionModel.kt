@@ -30,6 +30,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -370,6 +371,10 @@ internal class PlacePredictionModel @Inject constructor(
 
         router.popTo(PlacePredictionRoute.Amount)
         router.pop()
+    }
+
+    override fun onToMainClick() {
+        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
     }
 
     fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }

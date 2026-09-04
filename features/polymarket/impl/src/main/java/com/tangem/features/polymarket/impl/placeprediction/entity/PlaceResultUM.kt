@@ -8,12 +8,17 @@ internal sealed interface PlaceResultUM {
 
     val placedAt: Long
 
-    data class Filled(override val placedAt: Long, val amount: BigDecimal) : PlaceResultUM
+    data class Filled(
+        override val placedAt: Long,
+        val amount: BigDecimal,
+        val tokensBought: BigDecimal?,
+    ) : PlaceResultUM
 
     data class PartiallyFilled(
         override val placedAt: Long,
         val filledAmount: BigDecimal,
         val requestedAmount: BigDecimal,
+        val tokensBought: BigDecimal?,
     ) : PlaceResultUM
 
     data class NotFilled(override val placedAt: Long) : PlaceResultUM
