@@ -21,6 +21,11 @@ class TangemPayAddFundsSheetPageObject(semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    val bankTransferOption: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_topup_bank_transfer_title))
+        useUnmergedTree = true
+    }
+
     val title: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_card_details_add_funds))
         useUnmergedTree = true

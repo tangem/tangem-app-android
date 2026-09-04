@@ -1,7 +1,6 @@
 package com.tangem.tests.swap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R as CommonR
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
@@ -20,6 +19,7 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
+import com.tangem.core.res.R as CommonR
 
 @HiltAndroidTest
 class SwapRatingTest : BaseTestCase() {
