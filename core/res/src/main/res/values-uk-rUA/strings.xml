@@ -2137,7 +2137,7 @@
   <string name="tangempay_cashback_widget_error_description">Натисніть, щоб оновити</string>
   <string name="tangempay_cashback_widget_error_title">Кешбек недоступний</string>
   <string name="tangempay_cashback_widget_refund_description">Зменшено через повернення покупок</string>
-  <string name="tangempay_cashback_widget_title">%1$s кешбек за %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s за %2$s</string>
   <string name="tangempay_change_pin_code">Змінити PIN-код</string>
   <string name="tangempay_changing_plan">Зміна тарифу</string>
   <string name="tangempay_choose_network_fast_way">Швидкий спосіб</string>
@@ -2487,11 +2487,11 @@
   <string name="user_push_notification_agreement_header">Бажаєте використовувати Push-повідомлення?</string>
   <string name="user_push_notification_banner_subtitle">Увімкніть push-сповіщення, щоб отримувати повідомлення, коли кошти надходять на ваш гаманець.</string>
   <string name="user_push_notification_banner_title">Не пропустіть транзакцію</string>
-  <string name="user_wallet_add_hardware_description">Відскануйте картку Tangem, щоб додати його</string>
+  <string name="user_wallet_add_hardware_description">Відскануйте картку Tangem, щоб додати гаманець</string>
   <string name="user_wallet_add_hardware_title">Додати апаратний гаманець</string>
   <string name="user_wallet_add_mobile_description">Створіть новий гаманець на цьому пристрої</string>
   <string name="user_wallet_add_mobile_title">Додати мобільний гаманець</string>
-  <string name="user_wallet_coming_soon_dialog_description">Ми працюємо над можливістю створювати кілька мобільних гаманців.</string>
+  <string name="user_wallet_coming_soon_dialog_description">Ми працюємо над підтримкою кількох мобільних гаманців.</string>
   <string name="user_wallet_list_add_button">Додати гаманець</string>
   <string name="user_wallet_list_delete_hw_prompt">Якщо ви видалите цей гаманець без резервної копії, ви назавжди втратите доступ до своїх коштів.</string>
   <string name="user_wallet_list_delete_prompt">Ви впевнені, що хочете видалити цей гаманець?</string>
@@ -2619,6 +2619,7 @@
   <string name="warning_approval_in_progress_message">Процес підтвердження наразі триває і буде завершено найближчим часом</string>
   <string name="warning_approval_in_progress_title">Підтвердження в процесі</string>
   <string name="warning_backup_error_add_funds_message">У цьому гаманці виникла проблема з резервним копіюванням. Зверніться до служби підтримки для її вирішення.</string>
+  <string name="warning_backup_error_add_funds_message_v2">Гаманець, який ви хочете поповнити, має проблему з резервною копією. Переведіть кошти з нього на інший гаманець і скиньте його.</string>
   <string name="warning_backup_error_add_funds_title">Поповнення вимкнено</string>
   <string name="warning_backup_error_attention_message">Ваші картки були активовані неправильно. Щоб убезпечити кошти, переведіть їх на інший гаманець, скиньте картки до заводських налаштувань і активуйте заново.</string>
   <string name="warning_backup_error_attention_title">Потрібна дія: скиньте налаштування гаманця</string>
