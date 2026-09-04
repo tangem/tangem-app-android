@@ -66,8 +66,7 @@ internal class TangemPayDetailsStateFactory(
                 ),
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = null,
+            messageBanner = null,
             cashbackBlockState = null,
         )
     }
@@ -127,8 +126,7 @@ internal class TangemPayDetailsStateFactory(
                 isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = errorNotification ?: tiersNotification,
-            statusBannerState = null,
+            messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -206,8 +204,7 @@ internal class TangemPayDetailsStateFactory(
                 isWithdrawEnabled = hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = MessageBannerUM(state = accountDeactivatedBanner),
+            messageBanner = MessageBannerUM(state = accountDeactivatedBanner),
             cashbackBlockState = null,
         )
     }
@@ -251,8 +248,7 @@ internal class TangemPayDetailsStateFactory(
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = notification,
-            statusBannerState = null,
+            messageBanner = notification?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -290,8 +286,7 @@ internal class TangemPayDetailsStateFactory(
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = MessageBannerUM(
+            messageBanner = MessageBannerUM(
                 state = notificationFactory.createCardIssueFailedBannerState(),
                 onClose = intents::onCardIssueFailedBannerDismissed,
             ).takeUnless { isBannerDismissed },

@@ -46,6 +46,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
@@ -184,6 +185,26 @@ internal class PlacePredictionModelTest {
 
         // Assert
         coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the market is closed WHEN poll interval elapses THEN quote NOT requested again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.MARKET_CLOSED).right()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Unavailable(PredictionQuoteStatus.MARKET_CLOSED))
 
         model.onDestroy()
     }
@@ -511,6 +532,21 @@ internal class PlacePredictionModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `WHEN to main clicked THEN stack pops to the feed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onToMainClick()
+
+        // Assert
+        verify { router.popTo(route = PolymarketRoute.Main(userWalletId = USER_WALLET_ID), onComplete = any()) }
+
+        model.onDestroy()
+    }
+
 
     @Test
     fun `GIVEN a priced quote WHEN place clicked twice THEN the order is signed once`() = runTest {
@@ -632,6 +668,29 @@ internal class PlacePredictionModelTest {
 
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN a matched order filled no shares WHEN place clicked THEN the flow reports a failure`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+        verify { messageSender.send(any()) }
+        verify(exactly = 0) { router.replaceAll(PlacePredictionRoute.Status) }
+
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN no answer from the exchange WHEN place clicked THEN the outcome is submitted and not retried`() =
@@ -1037,12 +1096,15 @@ internal class PlacePredictionModelTest {
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
 
-        fun createPlaceResult(makingAmount: BigDecimal? = BigDecimal("10")) = PredictionPlaceOrderResult(
+        fun createPlaceResult(
+            makingAmount: BigDecimal? = BigDecimal("10"),
+            takingAmount: BigDecimal? = BigDecimal("23.2"),
+        ) = PredictionPlaceOrderResult(
             isSuccess = true,
             orderId = "0x6b2e",
             status = "matched",
             makingAmount = makingAmount,
-            takingAmount = BigDecimal("23.2"),
+            takingAmount = takingAmount,
             transactionHashes = listOf("0xdead"),
             errorMessage = null,
         )
