@@ -164,13 +164,21 @@ internal class SdkTransactionTypeConverterTest {
                         address = SPENDER,
                     ),
                 ),
-                // Unlimited allowance (uint256 max) has no amount
+                // Unlimited allowance (uint256 max) keeps the token identity but has no value
                 ApproveModel(
                     currency = coin,
                     networkTokens = setOf(usdt),
                     tokenContract = USDT_CONTRACT,
                     rawAllowanceHex = "f".repeat(64),
-                    expected = TxInfo.TransactionType.Approve(amount = null, address = SPENDER),
+                    expected = TxInfo.TransactionType.Approve(
+                        amount = SdkAmount(
+                            currencySymbol = "USDT",
+                            value = null,
+                            decimals = 6,
+                            type = SdkAmountType.Token(contractAddress = USDT_CONTRACT, id = "tether"),
+                        ),
+                        address = SPENDER,
+                    ),
                 ),
             )
         }
