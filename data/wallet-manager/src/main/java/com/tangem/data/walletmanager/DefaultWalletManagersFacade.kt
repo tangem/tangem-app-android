@@ -308,6 +308,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
+                    currency = currency,
+                    networkTokens = walletManager.cardTokens.toSet(),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
