@@ -11,11 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -108,6 +111,10 @@ private fun Content(state: ActivationUM.ConfirmationUM, modifier: Modifier = Mod
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(CoreUiR.string.common_activate),
+                iconEnd = state.walletInteractionIconRes?.let { iconRes ->
+                    TangemIconUM.Icon(iconRes = iconRes)
+                },
+                isLoading = state.isConfirming,
                 onClick = state.onConfirmClick,
             )
 
@@ -126,16 +133,36 @@ private fun Content(state: ActivationUM.ConfirmationUM, modifier: Modifier = Mod
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_JointAccountActivationConfirmation() {
+private fun Preview_JointAccountActivationConfirmation(
+    @PreviewParameter(ConfirmationStateProvider::class) state: ActivationUM.ConfirmationUM,
+) {
     TangemThemePreviewRedesign {
         Box(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
-            Content(
-                state = ActivationUM.ConfirmationUM(
-                    onConfirmClick = {},
-                    onCancelClick = {},
-                ),
-            )
+            Content(state = state)
         }
     }
+}
+
+private class ConfirmationStateProvider : CollectionPreviewParameterProvider<ActivationUM.ConfirmationUM>(
+    collection = listOf(
+        // Cold wallet: the confirm button carries the tap-the-card icon
+        createPreviewState(walletInteractionIconRes = CoreUiR.drawable.ic_tangem_24),
+        // Hot wallet: no wallet-interaction icon
+        createPreviewState(walletInteractionIconRes = null),
+        // The signing session is in progress
+        createPreviewState(walletInteractionIconRes = CoreUiR.drawable.ic_tangem_24, isConfirming = true),
+    ),
+)
+
+private fun createPreviewState(
+    walletInteractionIconRes: Int?,
+    isConfirming: Boolean = false,
+): ActivationUM.ConfirmationUM {
+    return ActivationUM.ConfirmationUM(
+        walletInteractionIconRes = walletInteractionIconRes,
+        isConfirming = isConfirming,
+        onConfirmClick = {},
+        onCancelClick = {},
+    )
 }
 // endregion
