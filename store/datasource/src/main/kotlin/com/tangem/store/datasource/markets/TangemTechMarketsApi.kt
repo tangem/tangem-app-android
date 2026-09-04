@@ -21,6 +21,7 @@ interface TangemTechMarketsApi {
         @Query("showNetworks") showNetworks: Boolean? = null,
         @Query("categoryId") categoryId: String? = null,
         @Query("sectorId") sectorId: String? = null,
+        @Query("geckoCategoryId") geckoCategoryId: String? = null,
     ): ApiResponse<TokenMarketListResponse>
 
     @GET("v1/coins/{coin_id}")
