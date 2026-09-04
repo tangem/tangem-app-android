@@ -1,6 +1,6 @@
 package com.tangem.data.virtualaccount.converter
 
-import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.VirtualAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
