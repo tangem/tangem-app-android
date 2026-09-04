@@ -78,15 +78,31 @@ internal class TxHistoryStatusPillConverterTest {
     }
 
     @Test
+    fun `GIVEN token Approve shown in the coin history WHEN convert THEN amount and symbol of the approved token`() {
+        // The approval is denominated in the approved token even when the row is rendered in the coin's history.
+        val tx = txInfo(
+            type = TransactionType.Approve(
+                amount = SdkAmount(currencySymbol = "USDC", value = BigDecimal("21"), decimals = 6),
+                address = USER_ADDRESS,
+            ),
+        )
+
+        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
+
+        assertThat((result.amount as TextReference.Str).value).startsWith("21")
+        assertThat(result.currencySymbol).isEqualTo("USDC")
+    }
+
+    @Test
     fun `GIVEN Approve with no allowance limit WHEN convert THEN Unlimited amount and address subtitle`() {
-        // A null TransactionType.Approve#amount means the approval is unlimited — shown as "Unlimited" in place of
-        // a number, same wording the details screen uses.
-        val tx = txInfo(type = TransactionType.Approve(amount = null, address = USER_ADDRESS))
+        // A null allowance value means the approval is unlimited — shown as "Unlimited" in place of a number, same
+        // wording the details screen uses, with the approved token's symbol.
+        val tx = txInfo(type = TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = USER_ADDRESS))
 
         val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
 
         assertThat(result.amount).isEqualTo(resRef(R.string.transaction_history_unlimited))
-        assertThat(result.currencySymbol).isEqualTo("ETH")
+        assertThat(result.currencySymbol).isEqualTo("USDT")
         val subtitle = result.subtitle as TransactionItemUM.PillSubtitle.Address
         assertThat(subtitle.rawAddress).isEqualTo(USER_ADDRESS)
     }
