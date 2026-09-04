@@ -187,9 +187,16 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
         }
     }
 
+    /**
+     * Express availability only decorates the history, so a broken express lookup must not take the on-chain source
+     * down with it: [loadSources] runs both in one scope, where an escaping exception cancels the sibling.
+     */
     private suspend fun awaitExpressAsset(): ExpressAsset? {
         val assetId = ExpressAsset.ID(currency)
-        return expressServiceFetcher.getOrFetch(userWalletId, assetId).getOrNull()
+        return runSuspendCatching { expressServiceFetcher.getOrFetch(userWalletId, assetId) }
+            .onFailure(::logError)
+            .getOrNull()
+            ?.getOrNull()
     }
 
     private fun logError(error: Throwable) {
