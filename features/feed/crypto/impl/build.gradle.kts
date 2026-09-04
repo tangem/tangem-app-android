@@ -68,4 +68,5 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
     testImplementation(tangemDeps.blockchain)
+    testImplementation(deps.kotlin.serialization)
 }

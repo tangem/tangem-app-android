@@ -10,10 +10,13 @@ import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.MarketCategory
 import com.tangem.domain.markets.MarketCategoryListConfig
 import com.tangem.domain.markets.MarketCategoryPage
+import com.tangem.domain.markets.TokenMarketListConfig
+import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.store.datasource.markets.models.response.CoinCategoriesResponse
 import com.tangem.store.datasource.markets.models.response.CoinCategoriesResponse.Category
 import com.tangem.store.datasource.markets.models.response.MarketCategoriesResponse
+import com.tangem.store.datasource.markets.models.response.TokenMarketListResponse
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchingContext
 import com.tangem.pagination.PaginationStatus
@@ -515,6 +518,117 @@ internal class DefaultMarketsTokenRepositoryTest {
             sourceScope.cancel()
         }
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetTokenListFlow {
+
+        @Test
+        fun `GIVEN a category filter WHEN the list is reloaded THEN its id reaches the api`() = runTest {
+            // Arrange
+            coEvery {
+                marketsApi.getCoinsList(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+            } returns ApiResponse.Success(tokenMarketListResponse())
+            val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
+                replay = 1,
+            )
+            val sourceScope = testSourceScope()
+            repository.getTokenListFlow(
+                batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                firstBatchSize = 1,
+                nextBatchSize = 1,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = listConfig(geckoCategoryId = "layer-1")))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                marketsApi.getCoinsList(
+                    currency = "USD",
+                    interval = any(),
+                    offset = 0,
+                    limit = 1,
+                    order = any(),
+                    search = null,
+                    timestamp = null,
+                    showNetworks = any(),
+                    categoryId = null,
+                    sectorId = null,
+                    geckoCategoryId = "layer-1",
+                )
+            }
+            sourceScope.cancel()
+        }
+
+        @Test
+        fun `GIVEN no category filter WHEN the list is reloaded THEN the api is not narrowed to a category`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    marketsApi.getCoinsList(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+                } returns ApiResponse.Success(tokenMarketListResponse())
+                val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
+                    replay = 1,
+                )
+                val sourceScope = testSourceScope()
+                repository.getTokenListFlow(
+                    batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                    firstBatchSize = 1,
+                    nextBatchSize = 1,
+                )
+
+                // Act
+                actions.emit(BatchAction.Reload(requestParams = listConfig(geckoCategoryId = null)))
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    marketsApi.getCoinsList(
+                        currency = any(),
+                        interval = any(),
+                        offset = any(),
+                        limit = any(),
+                        order = any(),
+                        search = any(),
+                        timestamp = any(),
+                        showNetworks = any(),
+                        categoryId = any(),
+                        sectorId = any(),
+                        geckoCategoryId = null,
+                    )
+                }
+                sourceScope.cancel()
+            }
+    }
+
+    private fun listConfig(
+        fiatPriceCurrency: String = "USD",
+        searchText: String? = null,
+        priceChangeInterval: TokenMarketListConfig.Interval = TokenMarketListConfig.Interval.H24,
+        order: TokenMarketListConfig.Order = TokenMarketListConfig.Order.ByRating,
+        geckoCategoryId: String? = null,
+    ) = TokenMarketListConfig(
+        fiatPriceCurrency = fiatPriceCurrency,
+        searchText = searchText,
+        priceChangeInterval = priceChangeInterval,
+        order = order,
+        geckoCategoryId = geckoCategoryId,
+    )
+
+    private fun tokenMarketListResponse(
+        tokens: List<TokenMarketListResponse.Token> = emptyList(),
+        total: Int = tokens.size,
+        limit: Int = 1,
+        offset: Int = 0,
+    ) = TokenMarketListResponse(
+        imageHost = null,
+        tokens = tokens,
+        total = total,
+        limit = limit,
+        offset = offset,
+    )
 
     /**
      * A scope for the batch source, driven by the scheduler of the test. Deliberately NOT
