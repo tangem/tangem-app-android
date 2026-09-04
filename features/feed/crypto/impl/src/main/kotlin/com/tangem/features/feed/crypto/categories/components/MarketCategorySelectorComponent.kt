@@ -16,7 +16,6 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.categories.model.MarketCategorySelectorModel
 import com.tangem.features.feed.crypto.categories.ui.MarketCategorySelectorContent
@@ -61,10 +60,6 @@ internal class MarketCategorySelectorComponent @AssistedInject constructor(
             state = state,
             modifier = modifier.padding(contentPadding),
         )
-    }
-
-    interface ModelCallback {
-        fun onCategorySelect(selection: MarketCategorySelection)
     }
 
     @AssistedFactory

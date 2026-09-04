@@ -8,6 +8,7 @@ data class TokenMarketListConfig(
     val shouldNetworks: Boolean? = null,
     val categoryId: String? = null,
     val sectorId: String? = null,
+    val geckoCategoryId: String? = null,
 ) {
 
     enum class Order {
