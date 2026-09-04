@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -41,6 +42,7 @@ internal class TronDefaultFeeLoaderTest {
     private val currencyFactory = MockCryptoCurrencyFactory()
     private val usdt = currencyFactory.createToken(blockchain = Blockchain.Tron, id = "usdt", contractAddress = "TUsdt")
     private val trx = currencyFactory.createCoin(blockchain = Blockchain.Tron)
+    private val userWalletId = UserWalletId(stringValue = "0123456789")
     private val transactionData: TransactionData = mockk()
     private val quote: TronGaslessQuote = mockk()
 
@@ -52,7 +54,7 @@ internal class TronDefaultFeeLoaderTest {
     fun setUp() {
         clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase, sendFeatureToggles)
         every { sendFeatureToggles.isTronGaslessEnabled } returns true
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
         nativeFeeStub.reset(nativeFee(value = "6.43").right())
         loader = TronDefaultFeeLoader(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase, sendFeatureToggles)
@@ -63,7 +65,7 @@ internal class TronDefaultFeeLoaderTest {
     fun decide(model: DecideModel) = runTest {
         // Arrange
         every { sendFeatureToggles.isTronGaslessEnabled } returns model.isToggleEnabled
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns model.isSupported
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns model.isSupported
         val sentCurrency = if (model.sendsCoin) trx else usdt
 
         // Act
@@ -110,7 +112,7 @@ internal class TronDefaultFeeLoaderTest {
     @Test
     fun `GIVEN support check failed once WHEN loading again THEN gasless is re-evaluated`() = runTest {
         // Arrange
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returnsMany listOf(false, true)
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returnsMany listOf(false, true)
 
         // Act
         val first = load(sentBalance = "100", nativeBalance = "50", amount = "1")
@@ -125,6 +127,7 @@ internal class TronDefaultFeeLoaderTest {
     fun `GIVEN fee status is not the network coin WHEN token is short THEN gasless fee is kept`() = runTest {
         // Arrange
         val actual = loader.load(
+            userWalletId = userWalletId,
             sentStatus = status(usdt, "2"),
             nativeStatus = status(usdt, "2"),
             transactionData = transactionData,
@@ -143,6 +146,7 @@ internal class TronDefaultFeeLoaderTest {
 
         // Act
         val actual = loader.load(
+            userWalletId = userWalletId,
             sentStatus = status(usdt, "2"),
             nativeStatus = status(trx, balance = null),
             transactionData = transactionData,
@@ -158,6 +162,7 @@ internal class TronDefaultFeeLoaderTest {
     fun `GIVEN sent token balance unknown WHEN load THEN gasless fee without native estimate`() = runTest {
         // Act
         val actual = loader.load(
+            userWalletId = userWalletId,
             sentStatus = status(usdt, balance = null),
             nativeStatus = status(trx, "50"),
             transactionData = transactionData,
@@ -248,6 +253,7 @@ internal class TronDefaultFeeLoaderTest {
         nativeBalance: String,
         amount: String?,
     ): Either<GetFeeError, TransactionFeeExtended> = loader.load(
+        userWalletId = userWalletId,
         sentStatus = status(sentCurrency, sentBalance),
         nativeStatus = status(trx, nativeBalance),
         transactionData = transactionData,
