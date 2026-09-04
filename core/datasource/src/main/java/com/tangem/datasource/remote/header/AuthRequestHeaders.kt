@@ -2,7 +2,7 @@ package com.tangem.datasource.remote.header
 
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.header.RequestHeader
-import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.remote.auth.AuthProvider
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 
