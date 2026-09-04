@@ -1,9 +1,8 @@
-package com.tangem.datasource.local.preferences.utils
+package com.tangem.datasource.local.preferences.migration
 
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.preferences.PreferencesKeys
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
