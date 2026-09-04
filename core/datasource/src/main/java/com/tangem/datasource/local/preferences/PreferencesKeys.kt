@@ -20,7 +20,8 @@ import com.tangem.domain.models.wallet.UserWalletId
  * All preferences keys that DataStore<Preferences> is stored.
  *
  * !!!IMPORTANT!!!
- * Before DELETING active key do [CleanupKeyMigration] in [PreferencesDataStore]
+ * Before DELETING active key add a [com.tangem.datasource.local.preferences.migration.CleanupKeyMigration]
+ * in [com.tangem.datasource.local.preferences.di.AppPreferencesStoreModule]
  *
 [REDACTED_AUTHOR]
  */
