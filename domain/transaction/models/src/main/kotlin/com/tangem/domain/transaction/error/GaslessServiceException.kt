@@ -7,10 +7,12 @@ package com.tangem.domain.transaction.error
  * the transport exception it replaces loses that (`Response.message()` is empty over HTTP/2, and the
  * error type is not visible from the domain layer).
  *
- * @property httpCode HTTP status of the failed call, `null` when the call itself succeeded but the service
- * reported an unsuccessful result.
+ * @property httpCode HTTP status of the failed call, `null` when there is none to report — the service
+ * answered with an unsuccessful result, the request never got a response (no connectivity, timeout), or
+ * the status was not recognised.
  */
 class GaslessServiceException(
     val httpCode: Int?,
-    override val message: String?,
-) : Exception()
+    message: String?,
+    cause: Throwable? = null,
+) : Exception(message, cause)
