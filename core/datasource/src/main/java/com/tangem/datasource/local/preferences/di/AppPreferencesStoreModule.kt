@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.preferences
+package com.tangem.datasource.local.preferences.di
 
 import android.content.Context
 import androidx.datastore.core.DataMigration
@@ -10,63 +10,72 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.datasource.local.preferences.PreferencesDataStore.INSTANCE
-import com.tangem.datasource.local.preferences.PreferencesKeys.APP_LOGS_KEY
-import com.tangem.datasource.local.preferences.utils.CleanupKeyMigration
+import com.tangem.core.local.moshi.SdkMoshi
+import com.tangem.datasource.local.preferences.*
+import com.tangem.datasource.local.preferences.migration.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration
-import com.tangem.datasource.local.preferences.utils.SwapCurrencyIdMigration
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-/**
- * Application preferences data store 'DataStore<Preferences>'.
- * Implements the singleton pattern [INSTANCE] under the hood.
- *
-[REDACTED_AUTHOR]
- */
-internal object PreferencesDataStore {
+@Module
+@InstallIn(SingletonComponent::class)
+internal object AppPreferencesStoreModule {
 
     private const val PREFERENCES_FILE_NAME = "TAP_PREFS"
     private const val LEGACY_TAP_PREFS_FILE_NAME = "tapPrefs"
     private const val LEGACY_DEFAULT_KEY_NAME = "key"
 
-    private var INSTANCE: DataStore<Preferences>? = null
-
-    fun getInstance(
-        context: Context,
+    @Provides
+    @Singleton
+    fun provideAppPreferencesStore(
+        @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
-    ): DataStore<Preferences> {
-        return INSTANCE ?: create(context, appScope, analyticsExceptionHandler).also { INSTANCE = it }
+        externalMigrations: Set<@JvmSuppressWildcards DataMigration<Preferences>>,
+        dispatchers: CoroutineDispatcherProvider,
+        @SdkMoshi moshi: Moshi,
+    ): AppPreferencesStore {
+        return DefaultAppPreferencesStore(
+            preferencesDataStore = createPreferencesDataStore(
+                context = context,
+                appScope = appScope,
+                analyticsExceptionHandler = analyticsExceptionHandler,
+                externalMigrations = externalMigrations,
+            ),
+            moshi = moshi,
+            dispatchers = dispatchers,
+        )
     }
 
-    private fun create(
+    private fun createPreferencesDataStore(
         context: Context,
         appScope: AppCoroutineScope,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
+        externalMigrations: Set<@JvmSuppressWildcards DataMigration<Preferences>>,
     ): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
-            corruptionHandler = createCorruptionHandler(),
-            migrations = createMigrations(
-                context = context,
-                analyticsExceptionHandler = analyticsExceptionHandler,
+            corruptionHandler = ReplaceFileCorruptionHandler(
+                produceNewData = { corruptionException ->
+                    TangemLogger.e("Error", corruptionException)
+                    emptyPreferences()
+                },
             ),
+            migrations = ownMigrations(context, analyticsExceptionHandler) + externalMigrations,
             scope = appScope,
             produceFile = { context.preferencesDataStoreFile(name = PREFERENCES_FILE_NAME) },
         )
     }
 
-    private fun createCorruptionHandler(): ReplaceFileCorruptionHandler<Preferences> {
-        return ReplaceFileCorruptionHandler(
-            produceNewData = { corruptionException ->
-                TangemLogger.w("Error", corruptionException)
-                emptyPreferences()
-            },
-        )
-    }
-
-    private fun createMigrations(
+    private fun ownMigrations(
         context: Context,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
     ): List<DataMigration<Preferences>> {
@@ -85,22 +94,12 @@ internal object PreferencesDataStore {
             ),
             SharedPreferencesKeyMigration(
                 context = context,
-                legacyPrefsName = "selected_app_currency",
-                legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
-                // Key now lives in store:datasource (DefaultAppCurrencyResponseStore); the legacy migration
-                // only needs the persisted key name, kept here as a literal to avoid a core→store dependency.
-                keyName = "selectedAppCurrency",
-                analyticsExceptionHandler = analyticsExceptionHandler,
-            ),
-            SharedPreferencesKeyMigration(
-                context = context,
                 legacyPrefsName = "balance_hiding_settings",
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
                 keyName = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY.name,
                 analyticsExceptionHandler = analyticsExceptionHandler,
             ),
-            SwapCurrencyIdMigration(),
-            CleanupKeyMigration(key = APP_LOGS_KEY),
+            CleanupKeyMigration(key = PreferencesKeys.APP_LOGS_KEY),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibility")),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityList")),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityListV2")),
