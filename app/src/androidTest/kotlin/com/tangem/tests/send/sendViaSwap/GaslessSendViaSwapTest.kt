@@ -1,7 +1,7 @@
 package com.tangem.tests.send.sendViaSwap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R
+import com.tangem.core.res.R
 import com.tangem.common.constants.TestConstants.BITCOIN_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.PROVIDERS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
