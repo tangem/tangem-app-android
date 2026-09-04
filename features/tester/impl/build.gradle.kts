@@ -45,7 +45,6 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.demo.models)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.manageTokens.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.offramp)
