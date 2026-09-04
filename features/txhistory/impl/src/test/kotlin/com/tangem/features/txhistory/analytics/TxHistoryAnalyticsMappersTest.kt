@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.analytics
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo.TransactionStatus
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -35,7 +36,7 @@ internal class TxHistoryAnalyticsMappersTest : TxDetailsConverterTestBase() {
         private fun provideTestModels() = listOf(
             TypeModel(onChain(TransactionType.Transfer, isOutgoing = true), expected = "Send"),
             TypeModel(onChain(TransactionType.Transfer, isOutgoing = false), expected = "Receive"),
-            TypeModel(onChain(TransactionType.Approve(amount = null, address = "0xspender")), expected = "Approve"),
+            TypeModel(onChain(TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "0xspender")), expected = "Approve"),
             TypeModel(onChain(TransactionType.Swap), expected = "Swap"),
             TypeModel(onChain(TransactionType.Staking.Stake), expected = "Staking"),
             TypeModel(onChain(TransactionType.Staking.Unstake), expected = "Staking"),

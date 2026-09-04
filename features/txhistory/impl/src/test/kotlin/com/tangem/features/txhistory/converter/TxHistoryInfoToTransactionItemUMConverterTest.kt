@@ -7,6 +7,7 @@ import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -65,7 +66,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN on-chain pill row WHEN row clicked THEN routes the incoming OnChainTx through onTransactionClick`() {
         // Arrange
-        val item = OnChainTx.BSDK(txInfo(type = TransactionType.Approve(amount = null, address = USER_ADDRESS)))
+        val item = OnChainTx.BSDK(txInfo(type = TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = USER_ADDRESS)))
 
         // Act
         val result = converter.convert(item) as TransactionItemUM.Pill

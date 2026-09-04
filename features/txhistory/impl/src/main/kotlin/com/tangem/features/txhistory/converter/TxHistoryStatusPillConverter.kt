@@ -16,7 +16,6 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
-import java.math.BigDecimal
 
 internal class TxHistoryStatusPillConverter(
     private val currency: CryptoCurrency,
@@ -28,10 +27,12 @@ internal class TxHistoryStatusPillConverter(
         val uiStatus = value.uiStatus
         val spec = value.spec
         // An Approve's amount/address are parameters of the granted allowance (TransactionType.Approve), not the
-        // tx's own amount/interaction address. A null allowance means an unlimited approval, shown as "Unlimited"
-        // in place of the number (mirrors the details screen's "Unlimited <symbol>" + risk banner treatment).
-        val approve = tx.type as? TransactionType.Approve
-        val allowance = approve?.amount
+        // tx's own amount/interaction address, and they are denominated in the approved token — which is not the
+        // viewed currency when the approval shows up in the coin history. A null allowance value means an unlimited
+        // approval, shown as "Unlimited" in place of the number (mirrors the details screen's "Unlimited <symbol>"
+        // + risk banner treatment).
+        val allowance = (tx.type as? TransactionType.Approve)?.amount
+        val allowanceValue = allowance?.value
         val hasAmount = spec.amount.show(uiStatus)
         return TransactionItemUM.Pill(
             txHash = tx.txHash,
@@ -40,18 +41,16 @@ internal class TxHistoryStatusPillConverter(
             label = spec.labels.resolve(uiStatus),
             amount = when {
                 !hasAmount -> null
-                approve == null ->
+                allowance == null ->
                     stringReference(
                         tx.amount.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim(),
                     )
-                allowance == null -> resourceReference(R.string.transaction_history_unlimited)
+                allowanceValue == null -> resourceReference(R.string.transaction_history_unlimited)
                 else -> stringReference(
-                    (allowance.value ?: BigDecimal.ZERO)
-                        .format { crypto(symbol = "", decimals = allowance.decimals) }
-                        .trim(),
+                    allowanceValue.format { crypto(symbol = "", decimals = allowance.decimals) }.trim(),
                 )
             },
-            currencySymbol = if (hasAmount) currency.symbol else null,
+            currencySymbol = if (hasAmount) allowance?.currencySymbol ?: currency.symbol else null,
             subtitle = tx.buildPillSubtitle(uiStatus),
             timestamp = tx.timestampInMillis,
             onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
