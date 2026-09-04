@@ -1,4 +1,4 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.local.datastore
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
@@ -9,6 +9,7 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.hilt.android.qualifiers.ApplicationContext
