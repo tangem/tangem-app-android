@@ -1982,7 +1982,7 @@
   <string name="tangempay_card_details_receive_error_description">检测到技术问题。请稍后再试或联系技术支持。</string>
   <string name="tangempay_card_details_receive_error_title">目前无法接收</string>
   <string name="tangempay_card_details_reissue_card">重新发行卡片</string>
-  <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字。</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字</string>
   <string name="tangempay_card_details_rename_card_invalid_title">无效字符</string>
   <string name="tangempay_card_details_rename_card_placeholder">卡片名称</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
@@ -1990,7 +1990,7 @@
   <string name="tangempay_card_details_system_downgrade_subtitle">如果余额持续为负，您的 %1$s 卡片将于 %2$s 关闭</string>
   <string name="tangempay_card_details_system_downgrade_title">请尽快为您的账户充值</string>
   <string name="tangempay_card_details_title">卡片详情</string>
-  <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试。</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试</string>
   <string name="tangempay_card_details_unfreeze_card">解冻卡片</string>
   <string name="tangempay_card_details_view_pin_code_description">如果忘记了，请返回应用查看。</string>
   <string name="tangempay_card_details_view_pin_code_title">您的PIN码</string>
@@ -2051,7 +2051,7 @@
   <string name="tangempay_cashback_widget_error_description">点击重新加载</string>
   <string name="tangempay_cashback_widget_error_title">返现不可用</string>
   <string name="tangempay_cashback_widget_refund_description">因退货而减少</string>
-  <string name="tangempay_cashback_widget_title">%2$s 中的 %1$s 返现</string>
+  <string name="tangempay_cashback_widget_title">%2$s 月获 %1$s</string>
   <string name="tangempay_change_pin_code">更改PIN码</string>
   <string name="tangempay_changing_plan">正在更改您的套餐</string>
   <string name="tangempay_choose_network_fast_way">快速方式</string>

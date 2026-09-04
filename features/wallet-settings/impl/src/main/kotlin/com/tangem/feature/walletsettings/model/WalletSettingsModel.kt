@@ -445,22 +445,35 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
-    private fun onAddAccountClick() {
+    private fun onAddAccountClick(isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) {
         if (isJointAccountEnabled) {
-            bottomSheetNavigation.activate(WalletSettingsBSConfig.AddAccountType)
+            bottomSheetNavigation.activate(
+                WalletSettingsBSConfig.AddAccountType(
+                    isCryptoAccountEnabled = isAddCryptoAccountEnabled,
+                    isJointAccountEnabled = isAddJointAccountEnabled,
+                ),
+            )
         } else {
             openCreateCryptoAccount()
         }
     }
 
-    fun onAddCryptoAccountClick() {
+    fun onAddCryptoAccountClick(isEnabled: Boolean) {
         bottomSheetNavigation.dismiss()
-        openCreateCryptoAccount()
+        if (isEnabled) {
+            openCreateCryptoAccount()
+        } else {
+            accountItemsDelegate.canNotAddAccountDialog()
+        }
     }
 
-    fun onAddJointAccountClick() {
+    fun onAddJointAccountClick(isEnabled: Boolean) {
         bottomSheetNavigation.dismiss()
-        router.push(AppRoute.JointAccountCreation(params.userWalletId))
+        if (isEnabled) {
+            router.push(AppRoute.JointAccountCreation(params.userWalletId))
+        } else {
+            accountItemsDelegate.canNotAddAccountDialog()
+        }
     }
 
     private fun openCreateCryptoAccount() {

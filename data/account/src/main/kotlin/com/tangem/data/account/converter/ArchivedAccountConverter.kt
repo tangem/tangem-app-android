@@ -24,6 +24,10 @@ internal class ArchivedAccountConverter(
             derivationIndex = value.derivationIndex.toDerivationIndex(),
             tokensCount = value.totalTokens ?: error("Total tokens should not be null"),
             networksCount = value.totalNetworks ?: error("Total networks should not be null"),
+            type = when (value.type) {
+                WalletAccountDTO.Type.JOINT -> ArchivedAccount.Type.JOINT
+                WalletAccountDTO.Type.CRYPTO, null -> ArchivedAccount.Type.CRYPTO
+            },
         )
     }
 }
