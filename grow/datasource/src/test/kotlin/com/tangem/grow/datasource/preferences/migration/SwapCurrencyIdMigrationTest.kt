@@ -1,27 +1,29 @@
-package com.tangem.datasource.local.preferences.utils
+package com.tangem.grow.datasource.preferences.migration
 
 import androidx.datastore.preferences.core.mutablePreferencesOf
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class SwapCurrencyIdMigrationTest {
 
-    private val migration = SwapCurrencyIdMigration()
+    private val keys = GrowPreferencesKeys()
+    private val migration = SwapCurrencyIdMigration(keys)
 
     // region shouldMigrate
 
     @Test
     fun `shouldMigrate returns true when swap transactions key exists`() = runTest {
-        val prefs = mutablePreferencesOf(PreferencesKeys.SWAP_TRANSACTIONS_KEY to "[]")
+        val prefs = mutablePreferencesOf(keys.swapTransactionsKey to "[]")
 
         assertThat(migration.shouldMigrate(prefs)).isTrue()
     }
 
     @Test
     fun `shouldMigrate returns true when last swapped currency key exists`() = runTest {
-        val prefs = mutablePreferencesOf(PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY to "[]")
+        val prefs = mutablePreferencesOf(keys.lastSwappedCryptoCurrencyIdKey to "[]")
 
         assertThat(migration.shouldMigrate(prefs)).isTrue()
     }
@@ -29,8 +31,8 @@ class SwapCurrencyIdMigrationTest {
     @Test
     fun `shouldMigrate returns true when both keys exist`() = runTest {
         val prefs = mutablePreferencesOf(
-            PreferencesKeys.SWAP_TRANSACTIONS_KEY to "[]",
-            PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY to "[]",
+            keys.swapTransactionsKey to "[]",
+            keys.lastSwappedCryptoCurrencyIdKey to "[]",
         )
 
         assertThat(migration.shouldMigrate(prefs)).isTrue()
@@ -181,10 +183,10 @@ class SwapCurrencyIdMigrationTest {
 
     @Test
     fun `preserves unrelated preference keys`() = runTest {
-        val unrelatedKey = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY
+        val unrelatedKey = stringPreferencesKey(name = "unrelated_key")
         val unrelatedValue = "some_value"
         val prefs = mutablePreferencesOf(
-            PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY to currencyIdJson("coin${BS}ETH${BE}ethereum"),
+            keys.lastSwappedCryptoCurrencyIdKey to currencyIdJson("coin${BS}ETH${BE}ethereum"),
             unrelatedKey to unrelatedValue,
         )
 
@@ -198,15 +200,15 @@ class SwapCurrencyIdMigrationTest {
     // region helpers
 
     private suspend fun migrateLastSwapped(json: String): String? {
-        val prefs = mutablePreferencesOf(PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY to json)
+        val prefs = mutablePreferencesOf(keys.lastSwappedCryptoCurrencyIdKey to json)
         val result = migration.migrate(prefs)
-        return result[PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY]
+        return result[keys.lastSwappedCryptoCurrencyIdKey]
     }
 
     private suspend fun migrateSwapTransactions(json: String): String? {
-        val prefs = mutablePreferencesOf(PreferencesKeys.SWAP_TRANSACTIONS_KEY to json)
+        val prefs = mutablePreferencesOf(keys.swapTransactionsKey to json)
         val result = migration.migrate(prefs)
-        return result[PreferencesKeys.SWAP_TRANSACTIONS_KEY]
+        return result[keys.swapTransactionsKey]
     }
 
     private fun currencyIdJson(id: String): String = "[${currencyIdValue(id)}]"
