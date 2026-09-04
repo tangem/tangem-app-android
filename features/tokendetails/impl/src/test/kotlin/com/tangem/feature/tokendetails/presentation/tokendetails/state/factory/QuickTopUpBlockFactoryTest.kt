@@ -50,7 +50,7 @@ internal class QuickTopUpBlockFactoryTest {
     private val notSupported: OnrampAvailability = OnrampAvailability.NotSupported(country = countryMock)
 
     @Test
-    fun `GIVEN a joint currency with zero balance WHEN build THEN returns null`() {
+    fun `GIVEN a joint currency WHEN build THEN returns null before reading the balance`() {
         // Arrange
         val jointStatus: CryptoCurrencyStatus = mockk {
             every { currency.network.derivationPath } returns
