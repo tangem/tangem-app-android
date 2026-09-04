@@ -34,7 +34,6 @@ import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.toBriefAddressFormat
-import java.math.BigDecimal
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -214,16 +213,20 @@ internal class OnChainTxToDetailsUMConverter(
 
     /**
      * Approve's amount is a parameter of the granted allowance, not the tx's own transferred value — it comes from
-     * [TransactionType.Approve.amount] instead of [signedAmount]. `null` allowance means an unlimited approval, shown
-     * as "Unlimited <symbol>" rather than a number (paired with [approveRiskBanner]). `null` return (non-Approve
-     * types) tells the caller to fall back to the regular signed amount.
+     * [TransactionType.Approve.amount] instead of [signedAmount], in the approved token's symbol (not the viewed
+     * currency's: an approval in the coin history is still denominated in the token). A `null` allowance value means
+     * an unlimited approval, shown as "Unlimited <symbol>" rather than a number (paired with [approveRiskBanner]).
+     * `null` return (non-Approve types) tells the caller to fall back to the regular signed amount.
      */
     private fun TxInfo.approveAmountText(): TextReference? {
-        val approve = type as? TransactionType.Approve ?: return null
-        val allowance = approve.amount
-            ?: return resourceReference(R.string.transaction_history_unlimited_amount, wrappedList(currency.symbol))
+        val allowance = (type as? TransactionType.Approve)?.amount ?: return null
+        val allowanceValue = allowance.value
+            ?: return resourceReference(
+                R.string.transaction_history_unlimited_amount,
+                wrappedList(allowance.currencySymbol),
+            )
         return stringReference(
-            (allowance.value ?: BigDecimal.ZERO).format {
+            allowanceValue.format {
                 crypto(symbol = allowance.currencySymbol, decimals = allowance.decimals, ignoreSymbolPosition = true)
             },
         )
@@ -265,7 +268,7 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.approveRiskBanner(): TxHistoryDetailsUM.StatusBannerUM? {
         val approve = type as? TransactionType.Approve ?: return null
-        if (approve.amount != null || status is TxInfo.TransactionStatus.Failed) return null
+        if (approve.amount.value != null || status is TxInfo.TransactionStatus.Failed) return null
         return TxHistoryDetailsUM.StatusBannerUM(
             style = TxHistoryDetailsUM.StatusBannerUM.Style.Warning,
             title = resourceReference(R.string.transaction_history_approve_high_risk_title),
