@@ -7,7 +7,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
-import com.tangem.common.R as CommonR
+import com.tangem.core.res.R as CommonR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
