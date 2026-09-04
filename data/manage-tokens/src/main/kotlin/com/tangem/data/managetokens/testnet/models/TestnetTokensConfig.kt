@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.config.testnet.models
+package com.tangem.data.managetokens.testnet.models
 
 import com.squareup.moshi.Json
 
@@ -8,7 +8,7 @@ import com.squareup.moshi.Json
  * @property tokens testnet tokens list
  */
 // TODO: use CoinsResponse
-data class TestnetTokensConfig(
+internal data class TestnetTokensConfig(
     @Json(name = "coins") val tokens: List<Token>,
 ) {
 
