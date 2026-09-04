@@ -56,7 +56,7 @@ internal class TestPushPayloadParserTest {
     }
 
     @Test
-    fun `GIVEN data and notification blocks WHEN parse THEN notification maps to gcm keys`() {
+    fun `GIVEN data and notification blocks WHEN parse THEN notification keys get the gcm prefix`() {
         // Arrange
         val rawPayload = """
             {
@@ -74,7 +74,7 @@ internal class TestPushPayloadParserTest {
             "gcm.n.e" to "1",
             "gcm.n.title" to "Card is ready",
             "gcm.n.body" to "Tap to open",
-            "gcm.n.android_channel_id" to "pay",
+            "gcm.n.channel_id" to "pay",
         )
         assertThat(actual).isEqualTo(expected.right())
     }

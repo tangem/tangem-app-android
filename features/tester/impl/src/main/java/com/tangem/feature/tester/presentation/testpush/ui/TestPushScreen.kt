@@ -153,7 +153,6 @@ private fun LazyListScope.payloadData(testPushUM: TestPushUM, testPushClickInten
                 colors = TangemTextFieldsDefault.defaultTextFieldColors,
                 isError = testPushUM.payloadError != null,
                 minLines = 6,
-                maxLines = 16,
                 modifier = Modifier
                     .padding(top = 8.dp)
                     .fillMaxWidth(),
