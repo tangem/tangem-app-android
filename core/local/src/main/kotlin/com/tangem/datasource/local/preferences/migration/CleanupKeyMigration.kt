@@ -1,9 +1,9 @@
-package com.tangem.datasource.local.preferences.utils
+package com.tangem.datasource.local.preferences.migration
 
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.Preferences
 
-internal class CleanupKeyMigration<T>(private val key: Preferences.Key<T>) : DataMigration<Preferences> {
+class CleanupKeyMigration<T>(private val key: Preferences.Key<T>) : DataMigration<Preferences> {
 
     override suspend fun cleanUp() {
         // do nothing
