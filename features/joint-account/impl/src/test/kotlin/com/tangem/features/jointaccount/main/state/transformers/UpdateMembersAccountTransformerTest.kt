@@ -59,7 +59,9 @@ internal class UpdateMembersAccountTransformerTest {
         // Arrange
         val shared = mutableListOf<String>()
         val transformer = createTransformer(
-            account = createJointAccount(members = listOf(fixtureCreator, fixtureMember)),
+            account = createJointAccount(
+                members = listOf(fixtureCreator, fixtureMember.copy(inviteId = "invite-a")),
+            ),
             invites = listOf("invite-a", "invite-b"),
             onShareInviteClick = shared::add,
         )
@@ -72,7 +74,7 @@ internal class UpdateMembersAccountTransformerTest {
 
         // Assert
         assertThat(slot.canInvite).isTrue()
-        // One member has already joined, so the first shared invite is assumed redeemed (B-9)
+        // The joined member redeemed invite-a, so the free slot offers the unredeemed one
         assertThat(shared).containsExactly("invite-b")
     }
 
