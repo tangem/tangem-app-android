@@ -18,6 +18,8 @@ import java.math.BigDecimal
 internal object PlacePredictionNotificationsFactory {
 
     fun build(state: PlacePredictionUM): ImmutableList<PredictionNotificationUM> = buildList {
+        if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
+
         addAll(state.quote.notifications())
 
         when (state.priceError) {
