@@ -356,12 +356,14 @@ internal class SendModel @Inject constructor(
 
         val feeToken = maybeToken?.currency
         return when {
-            feeToken is CryptoCurrency.Token && tronDefaultFeeLoader.isGaslessAvailable(feeToken.network, feeToken) ->
+            feeToken is CryptoCurrency.Token &&
+                tronDefaultFeeLoader.isGaslessAvailable(userWallet.walletId, feeToken.network, feeToken) ->
                 getTronGaslessFeeUseCase(
                     transactionData = transferTransaction,
                     feeToken = feeToken,
                 )
             maybeToken == null && BlockchainUtils.isTron(params.currency.network.rawId) -> tronDefaultFeeLoader.load(
+                userWalletId = userWallet.walletId,
                 sentStatus = cryptoCurrencyStatusFlow.value,
                 nativeStatus = feeCryptoCurrencyStatusFlow.value,
                 transactionData = transferTransaction,
