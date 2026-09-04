@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
@@ -372,6 +373,17 @@ object TangemTopNavigation {
         start = 16.dp,
         end = 16.dp,
     )
+
+    /**
+     * Footprint of a navigation button ([TangemButton.Back] / [TangemButton.Close], both
+     * [TangemButton.Size.X11]).
+     *
+     * The row is only as tall as its tallest slot, so a bar whose buttons come and go changes height and
+     * shifts its centered title. Size a placeholder box with this value to hold an empty slot open, or to
+     * align a non-button element (an icon, a brand mark) with the real buttons.
+     */
+    @Suppress("MagicNumber")
+    val ButtonSlotSize: Dp = 44.dp
 
     /** Horizontal alignment of the center content slot. */
     enum class ContentAlign {

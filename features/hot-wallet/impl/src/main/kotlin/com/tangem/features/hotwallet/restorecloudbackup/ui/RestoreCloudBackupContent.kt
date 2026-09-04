@@ -18,13 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -34,43 +39,106 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.features.hotwallet.common.ui.CloudBackupPasswordField
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.restorecloudbackup.entity.BackupRowUM
-import kotlinx.collections.immutable.persistentListOf
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
+import kotlinx.collections.immutable.persistentListOf
 import org.joda.time.DateTime
+
+private val ContentHorizontalPadding = 24.dp
+private val ListHorizontalPadding = 16.dp
+
+/** Height the footer overlay takes, reserved at the end of the scrollable content. */
+private val FooterHeight = 88.dp
+
+@Composable
+private fun footerInsets(): WindowInsets = WindowInsets.ime.union(WindowInsets.navigationBars)
 
 @Composable
 internal fun RestoreCloudBackupContent(state: RestoreCloudBackupUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .background(color = TangemTheme.colors3.bg.primary)
-            .fillMaxSize()
-            .imePadding(),
-    ) {
-        val isEnterPassword = state is RestoreCloudBackupUM.EnterPassword
-        TangemTopAppBar(
-            title = if (isEnterPassword) {
-                stringResourceSafe(R.string.hw_cloud_backup_restore_password_navtitle)
-            } else {
-                stringResourceSafe(
-                    R.string.hw_cloud_backup_restore_navtitle_v2,
-                    stringResourceSafe(R.string.hw_cloud_backup_service_name),
-                )
-            },
-            subtitle = if (isEnterPassword) null else state.accountEmail,
-            titleAlignment = Alignment.CenterHorizontally,
-            startButton = TopAppBarButtonUM.Back(onBackClicked = state.onBack),
-        )
+    val isEnterPassword = state is RestoreCloudBackupUM.EnterPassword
 
+    TangemTopBarScaffold(
+        modifier = modifier,
+        topBar = {
+            TangemTopNavigation(
+                title = if (isEnterPassword) {
+                    resourceReference(R.string.hw_cloud_backup_restore_password_navtitle)
+                } else {
+                    resourceReference(
+                        id = R.string.hw_cloud_backup_restore_navtitle_v2,
+                        formatArgs = wrappedList(resourceReference(R.string.hw_cloud_backup_service_name)),
+                    )
+                },
+                subtitle = state.accountEmail
+                    ?.takeUnless { isEnterPassword }
+                    ?.let(::stringReference),
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                onBack = state.onBack,
+            )
+        },
+        overlay = { _ ->
+            if (state !is RestoreCloudBackupUM.BackupList) {
+                Footer(state = state, modifier = Modifier.align(Alignment.BottomCenter))
+            }
+        },
+    ) { contentPadding ->
         when (state) {
-            is RestoreCloudBackupUM.BackupList -> BackupListScreen(state, Modifier.weight(1f))
-            is RestoreCloudBackupUM.EnterPassword -> EnterPasswordScreen(state, Modifier.weight(1f))
-            is RestoreCloudBackupUM.EnterPassphrase -> EnterPassphraseScreen(state, Modifier.weight(1f))
+            is RestoreCloudBackupUM.BackupList -> BackupListScreen(state, contentPadding)
+            is RestoreCloudBackupUM.EnterPassword -> EnterPasswordScreen(state, contentPadding)
+            is RestoreCloudBackupUM.EnterPassphrase -> EnterPassphraseScreen(state, contentPadding)
         }
     }
 }
 
 @Composable
-private fun EnterPasswordScreen(state: RestoreCloudBackupUM.EnterPassword, modifier: Modifier = Modifier) {
+private fun Footer(state: RestoreCloudBackupUM, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(footerInsets()),
+    ) {
+        TangemFade(
+            modifier = Modifier.matchParentSize(),
+            position = TangemFade.Position.Bottom,
+        )
+        when (state) {
+            is RestoreCloudBackupUM.EnterPassword -> FooterButton(
+                text = stringResourceSafe(R.string.hw_cloud_backup_restore_password_button),
+                isEnabled = state.isRestoreEnabled && !state.isLoading,
+                isLoading = state.isLoading,
+                onClick = state.onRestoreClick,
+            )
+            is RestoreCloudBackupUM.EnterPassphrase -> FooterButton(
+                text = stringResourceSafe(R.string.common_continue),
+                isEnabled = state.isContinueEnabled && !state.isLoading,
+                isLoading = state.isLoading,
+                onClick = state.onContinueClick,
+            )
+            is RestoreCloudBackupUM.BackupList -> Unit
+        }
+    }
+}
+
+@Composable
+private fun FooterButton(text: String, isEnabled: Boolean, isLoading: Boolean, onClick: () -> Unit) {
+    TangemButton(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        size = TangemButton.Size.X12,
+        text = stringReference(text),
+        isEnabled = isEnabled,
+        isLoading = isLoading,
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun EnterPasswordScreen(
+    state: RestoreCloudBackupUM.EnterPassword,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -78,105 +146,75 @@ private fun EnterPasswordScreen(state: RestoreCloudBackupUM.EnterPassword, modif
         date = DateTime(state.createdAtMillis),
         formatter = DateTimeFormatters.dateTimeMMMdYYYY,
     )
-    Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            TitleBlock(
-                title = stringResourceSafe(R.string.hw_cloud_backup_restore_password_title),
-                description = stringResourceSafe(
-                    R.string.hw_cloud_backup_restore_password_description,
-                    state.walletName,
-                    stringResourceSafe(R.string.hw_cloud_backup_service_name),
-                    createdAt,
-                ),
-                modifier = Modifier.padding(top = 20.dp),
-            )
-            CloudBackupPasswordField(
-                value = state.password,
-                onValueChange = state.onPasswordChange,
-                isVisible = state.isPasswordVisible,
-                onToggleVisibility = state.onToggleVisibility,
-                isError = state.isError,
-                enabled = !state.isLoading,
-                focusRequester = focusRequester,
-                contentType = ContentType.Password,
-            )
-            if (state.isError) {
-                Text(
-                    text = stringResourceSafe(R.string.hw_cloud_backup_restore_wrong_password),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors3.text.status.error,
-                )
-            }
-        }
-        PrimaryButton(
-            text = stringResourceSafe(R.string.hw_cloud_backup_restore_password_button),
-            onClick = state.onRestoreClick,
-            enabled = state.isRestoreEnabled && !state.isLoading,
-            showProgress = state.isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+    ScrollableContent(contentPadding = contentPadding, modifier = modifier) {
+        TitleBlock(
+            title = stringResourceSafe(R.string.hw_cloud_backup_restore_password_title),
+            description = stringResourceSafe(
+                R.string.hw_cloud_backup_restore_password_description,
+                state.walletName,
+                stringResourceSafe(R.string.hw_cloud_backup_service_name),
+                createdAt,
+            ),
+        )
+        SpacerH(24.dp)
+        CloudBackupPasswordField(
+            value = state.password,
+            onValueChange = state.onPasswordChange,
+            isVisible = state.isPasswordVisible,
+            onToggleVisibility = state.onToggleVisibility,
+            errorText = resourceReference(R.string.hw_cloud_backup_restore_wrong_password)
+                .takeIf { state.isError },
+            enabled = !state.isLoading,
+            focusRequester = focusRequester,
+            contentType = ContentType.Password,
         )
     }
 }
 
 @Composable
-private fun EnterPassphraseScreen(state: RestoreCloudBackupUM.EnterPassphrase, modifier: Modifier = Modifier) {
+private fun EnterPassphraseScreen(
+    state: RestoreCloudBackupUM.EnterPassphrase,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            TitleBlock(
-                title = stringResourceSafe(R.string.hw_cloud_backup_restore_passphrase_title),
-                description = stringResourceSafe(R.string.hw_cloud_backup_restore_passphrase_description),
-                modifier = Modifier.padding(top = 20.dp),
-            )
-            CloudBackupPasswordField(
-                value = state.passphrase,
-                onValueChange = state.onPassphraseChange,
-                isVisible = state.isPassphraseVisible,
-                onToggleVisibility = state.onToggleVisibility,
-                isError = false,
-                enabled = !state.isLoading,
-                focusRequester = focusRequester,
-                placeholder = resourceReference(R.string.common_passphrase),
-            )
-        }
-        PrimaryButton(
-            text = stringResourceSafe(R.string.common_continue),
-            onClick = state.onContinueClick,
-            enabled = state.isContinueEnabled && !state.isLoading,
-            showProgress = state.isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+    ScrollableContent(contentPadding = contentPadding, modifier = modifier) {
+        TitleBlock(
+            title = stringResourceSafe(R.string.hw_cloud_backup_restore_passphrase_title),
+            description = stringResourceSafe(R.string.hw_cloud_backup_restore_passphrase_description),
+        )
+        SpacerH(24.dp)
+        CloudBackupPasswordField(
+            value = state.passphrase,
+            onValueChange = state.onPassphraseChange,
+            isVisible = state.isPassphraseVisible,
+            onToggleVisibility = state.onToggleVisibility,
+            label = resourceReference(R.string.common_passphrase),
+            enabled = !state.isLoading,
+            focusRequester = focusRequester,
         )
     }
 }
 
 @Composable
-private fun BackupListScreen(state: RestoreCloudBackupUM.BackupList, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            state.items.forEach { row -> BackupRow(row) }
-        }
+private fun BackupListScreen(
+    state: RestoreCloudBackupUM.BackupList,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = contentPadding.calculateTopPadding())
+            .padding(horizontal = ListHorizontalPadding),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        SpacerH(12.dp)
+        state.items.forEach { row -> BackupRow(row) }
+        SpacerH(contentPadding.calculateBottomPadding())
     }
 }
 
@@ -209,7 +247,7 @@ private fun BackupRow(row: BackupRowUM, modifier: Modifier = Modifier) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = row.walletName,
-                style = TangemTheme.typography.subtitle1,
+                style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -220,7 +258,7 @@ private fun BackupRow(row: BackupRowUM, modifier: Modifier = Modifier) {
                     date = DateTime(row.createdAtMillis),
                     formatter = DateTimeFormatters.dateTimeMMMdYYYY,
                 ),
-                style = TangemTheme.typography.body2,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -236,19 +274,38 @@ private fun BackupRow(row: BackupRowUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun TitleBlock(title: String, description: String, modifier: Modifier = Modifier) {
+private fun ScrollableContent(
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+    footerHeight: Dp = FooterHeight,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .windowInsetsPadding(footerInsets())
+            .verticalScroll(rememberScrollState())
+            .padding(top = contentPadding.calculateTopPadding())
+            .padding(horizontal = ContentHorizontalPadding),
     ) {
+        SpacerH(20.dp)
+        content()
+        SpacerH(footerHeight)
+    }
+}
+
+@Composable
+private fun TitleBlock(title: String, description: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = TangemTheme.typography.h3,
+            style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
         )
+        SpacerH(8.dp)
         Text(
             text = description,
-            style = TangemTheme.typography.body2,
+            style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
         )
     }
