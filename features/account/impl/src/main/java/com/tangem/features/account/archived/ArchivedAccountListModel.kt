@@ -117,7 +117,10 @@ internal class ArchivedAccountListModel @Inject constructor(
 
     private fun handleRecoverError(error: RecoverCryptoPortfolioUseCase.Error) {
         if (error is RecoverCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
-            error.cause is AccountList.Error.ExceedsMaxAccountsCount
+            (
+                error.cause is AccountList.Error.ExceedsMaxAccountsCount ||
+                    error.cause is AccountList.Error.ExceedsMaxJointAccountsCount
+                )
         ) {
             val firstAction = EventMessageAction(
                 title = resourceReference(R.string.common_got_it),
