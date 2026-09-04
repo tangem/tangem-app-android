@@ -58,11 +58,12 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
 
     override val values: Sequence<PlaceResultUM>
         get() = sequenceOf(
-            PlaceResultUM.Filled(placedAt = PLACED_AT, amount = BigDecimal("4000")),
+            PlaceResultUM.Filled(placedAt = PLACED_AT, amount = BigDecimal("4400.1"), tokensBought = BigDecimal("500")),
             PlaceResultUM.PartiallyFilled(
                 placedAt = PLACED_AT,
                 filledAmount = BigDecimal("2000"),
                 requestedAmount = BigDecimal("4000"),
+                tokensBought = BigDecimal("250"),
             ),
             PlaceResultUM.NotFilled(placedAt = PLACED_AT),
             PlaceResultUM.Submitted(placedAt = PLACED_AT),
@@ -83,6 +84,7 @@ internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
     override fun onPlaceClick() = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
+    override fun onToMainClick() = Unit
 }
 
 private fun previewState(
@@ -97,6 +99,7 @@ private fun previewState(
         imageUrl = null,
         outcomeTitle = "No",
         outcomePriceCents = 85,
+        resolutionDateMillis = RESOLUTION_AT,
     ),
     payment = PaymentSourceUM(
         tokenSymbol = "USDC",
@@ -146,3 +149,4 @@ private fun previewSignableQuote(status: PredictionQuoteStatus): PredictionOrder
 )
 
 private const val PLACED_AT = 1_787_000_000_000L
+private const val RESOLUTION_AT = 1_774_000_000_000L
