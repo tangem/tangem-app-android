@@ -267,6 +267,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
             mnemonic = mnemonic,
             passphrase = passphrase?.takeIf { it.isNotEmpty() },
             name = name,
+            isSeedPhraseBackedUp = false,
         ).fold(
             ifLeft = { error ->
                 when (error) {
