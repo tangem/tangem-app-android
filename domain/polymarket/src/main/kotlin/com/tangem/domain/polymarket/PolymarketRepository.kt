@@ -22,7 +22,10 @@ import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import java.math.BigDecimal
 import java.math.BigInteger
 
 interface PolymarketRepository {
@@ -71,6 +74,12 @@ interface PolymarketRepository {
     suspend fun getOrderQuote(
         request: PredictionOrderQuoteRequest,
     ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
+
+    /**
+     * Best price on [side] of the asset's book (CLOB `GET /price`). Serves the empty order form, where
+     * there is no amount to quote yet; callers poll it on a timer the way they poll [getOrderQuote].
+     */
+    suspend fun getPrice(assetId: String, side: PredictionOrderSide): Either<PredictionPriceError, BigDecimal>
 
     /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
