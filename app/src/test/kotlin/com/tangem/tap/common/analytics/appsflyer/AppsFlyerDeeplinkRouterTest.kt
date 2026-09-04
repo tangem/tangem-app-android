@@ -102,7 +102,7 @@ internal class AppsFlyerDeeplinkRouterTest {
     }
 
     @Test
-    fun `GIVEN deeplink and empty wallets on Home WHEN observe THEN replaceAll hot wallet onboarding and clear`() =
+    fun `GIVEN deeplink and empty wallets on Home WHEN observe THEN stories kept and deeplink not consumed`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
@@ -112,9 +112,10 @@ internal class AppsFlyerDeeplinkRouterTest {
             router.observe(backgroundScope, currentRoute)
             advanceUntilIdle()
 
-            // Assert — unauthorized path opens onboarding as the root (skips Home) and consumes the deep link.
-            verify { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
-            coVerify { clearAppsFlyerDeeplinkUseCase() }
+            // Assert — the intro stories must not be skipped: Home consumes the deep link on "Get started".
+            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
     @Test
