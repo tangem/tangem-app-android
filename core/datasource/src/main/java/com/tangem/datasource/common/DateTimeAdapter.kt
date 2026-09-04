@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common.adapter
+package com.tangem.datasource.common
 
 import com.squareup.moshi.*
 import org.joda.time.DateTime
