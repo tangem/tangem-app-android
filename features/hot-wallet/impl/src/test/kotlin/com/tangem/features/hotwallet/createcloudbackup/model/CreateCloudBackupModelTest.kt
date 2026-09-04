@@ -362,13 +362,64 @@ internal class CreateCloudBackupModelTest {
     }
 
     @Test
-    fun `GIVEN SetPassword step WHEN back clicked THEN cancel-setup dialog shown AND not popped`() = runTest {
+    fun `GIVEN password typed WHEN back clicked on SetPassword THEN cancel-setup dialog shown AND not popped`() =
+        runTest {
+            // Arrange
+            val model = createModel(this)
+            advanceUntilIdle()
+            (model.uiState.value as CreateCloudBackupUM.SetPassword).onPasswordChange(STRONG_PASSWORD)
+
+            // Act
+            (model.uiState.value as CreateCloudBackupUM.SetPassword).onBackClick()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+            verify(exactly = 0) { router.pop() }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN password typed WHEN close clicked on SetPassword THEN cancel-setup dialog shown AND not popped`() =
+        runTest {
+            // Arrange
+            val model = createModel(this)
+            advanceUntilIdle()
+            (model.uiState.value as CreateCloudBackupUM.SetPassword).onPasswordChange("a")
+
+            // Act
+            (model.uiState.value as CreateCloudBackupUM.SetPassword).onCloseClick()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+            verify(exactly = 0) { router.pop() }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN nothing typed WHEN close clicked on SetPassword THEN pops without cancel dialog`() = runTest {
         // Arrange
         val model = createModel(this)
         advanceUntilIdle()
 
         // Act
-        (model.uiState.value as CreateCloudBackupUM.SetPassword).onBackClick()
+        (model.uiState.value as CreateCloudBackupUM.SetPassword).onCloseClick()
+
+        // Assert
+        verify(exactly = 0) { uiMessageSender.send(any<DialogMessage>()) }
+        verify(exactly = 1) { router.pop() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN ConfirmPassword step WHEN close clicked THEN cancel-setup dialog shown AND not popped`() = runTest {
+        // Arrange
+        val model = createModel(this)
+        advanceUntilIdle()
+        (model.uiState.value as CreateCloudBackupUM.SetPassword).onPasswordChange(STRONG_PASSWORD)
+        (model.uiState.value as CreateCloudBackupUM.SetPassword).onContinueClick()
+
+        // Act
+        (model.uiState.value as CreateCloudBackupUM.ConfirmPassword).onCloseClick()
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
