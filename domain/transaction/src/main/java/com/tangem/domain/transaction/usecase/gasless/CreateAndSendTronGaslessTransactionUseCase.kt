@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
@@ -95,7 +96,7 @@ class CreateAndSendTronGaslessTransactionUseCase(
                 }
                 result.originalTxHash
             },
-            catch = { raise(SendTransactionError.DataError(it.message)) },
+            catch = { raise(it.mapToGaslessSendError()) },
         )
     }
 
