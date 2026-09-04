@@ -237,12 +237,41 @@ internal class PlacePredictionNotificationsFactoryTest {
         assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
     }
 
+    @Test
+    fun `GIVEN the market takes no orders WHEN the gate runs THEN it is closed before any quote`() {
+        // Arrange
+        val state = createState(quote = QuoteUM.Empty, isMarketAcceptingOrders = false)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the quote also reports the market closed WHEN the gate runs THEN it is reported once`() {
+        // Arrange
+        val state = createState(
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.MARKET_CLOSED),
+            isMarketAcceptingOrders = false,
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+    }
+
     private fun createState(
         quote: QuoteUM = QuoteUM.Empty,
         balance: BigDecimal? = BigDecimal("100"),
         tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
         submit: SubmitUM = SubmitUM.Idle,
         priceError: PriceErrorUM? = null,
+        isMarketAcceptingOrders: Boolean = true,
     ): PlacePredictionUM = PlacePredictionUM(
         priceError = priceError,
         market = MarketHeaderUM(
@@ -261,6 +290,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         amountValue = "10",
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
         quote = quote,
+        isMarketAcceptingOrders = isMarketAcceptingOrders,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
         slippagePicker = SlippagePickerUM.empty(),

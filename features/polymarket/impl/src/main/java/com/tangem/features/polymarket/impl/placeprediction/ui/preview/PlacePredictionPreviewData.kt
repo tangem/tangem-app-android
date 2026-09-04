@@ -108,6 +108,7 @@ private fun previewState(
     amountValue = amountValue,
     slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
     quote = quote,
+    isMarketAcceptingOrders = true,
     tradingPermission = tradingPermission,
     notifications = persistentListOf(),
     slippagePicker = SlippagePickerUM.empty(),
