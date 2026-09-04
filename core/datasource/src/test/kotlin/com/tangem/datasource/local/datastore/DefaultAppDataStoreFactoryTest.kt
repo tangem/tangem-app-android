@@ -1,4 +1,4 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.local.datastore
 
 import android.content.Context
 import com.google.common.truth.Truth.assertThat
@@ -7,6 +7,9 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.create
+import com.tangem.datasource.utils.listTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.every
 import io.mockk.mockk
