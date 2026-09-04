@@ -2,14 +2,12 @@ package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.core.local.moshi.SdkMoshiConfigurer
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.utils.SerializeNullsFactory
-import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,29 +39,15 @@ class MoshiModule {
     @Singleton
     @SdkMoshi
     fun provideSdkMoshi(configurers: Set<@JvmSuppressWildcards SdkMoshiConfigurer>): Moshi {
-        val adapters = MoshiJsonConverter.getTangemSdkAdapters() + commonAdapters()
-        val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
-
         val builder = Moshi.Builder().apply {
-            adapters.forEach { this.add(it) }
-            typedAdapters.forEach { add(it.key, it.value) }
+            commonAdapters().forEach(::add)
             addLast(KotlinJsonAdapterFactory())
         }
 
-        // Card model adapters (e.g. ScanResponse) are contributed via @IntoSet by the module that
-        // (de)serializes them through this Moshi, so this builder doesn't depend on domain models.
+        // Both the card SDK adapters and the card model adapters (e.g. ScanResponse) are contributed via
+        // @IntoSet by the modules that own them, so this builder depends on neither the card SDK nor
+        // domain models.
         return configurers.fold(builder) { acc, configurer -> configurer.configure(acc) }.build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideSdkMoshiConverter(): MoshiJsonConverter {
-        return MoshiJsonConverter(
-            adapters = MoshiJsonConverter.getTangemSdkAdapters() +
-                listOf(BigDecimalAdapter(), BigIntegerAdapter()) +
-                scanResponseMoshiAdapters(),
-            typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
-        )
     }
 
     /** Adapters shared by both the network and the SDK [Moshi] instances. */
