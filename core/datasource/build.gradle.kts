@@ -108,7 +108,6 @@ dependencies {
 
     // region Tangem
     api(tangemDeps.blockchain)
-    api(tangemDeps.card.core)
     // endregion
 
     // region Core modules
