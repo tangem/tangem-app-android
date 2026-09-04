@@ -198,6 +198,51 @@ internal open class BaseActionsFactory(
         }
     }
 
+    /**
+     * Creates a swap action with the natural unavailability reason of the [userWallet] and [cryptoCurrencyStatus]
+     *
+     * @param userWallet            the user's wallet
+     * @param cryptoCurrencyStatus  the status of the cryptocurrency
+     * @param shouldShowSwapStories a flag indicating whether to show swap stories
+     */
+    protected fun createSwapAction(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        shouldShowSwapStories: Boolean,
+    ): ActionState.Swap {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val isMultiCurrency = userWallet is UserWallet.Cold && userWallet.isMultiCurrency ||
+            userWallet is UserWallet.Hot
+
+        if (!isMultiCurrency) {
+            return ActionState.Swap(
+                unavailabilityReason = ScenarioUnavailabilityReason.SingleWallet,
+                shouldShowBadge = false,
+            )
+        }
+
+        return when {
+            cryptoCurrency.isCustom -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrency.name),
+                    shouldShowBadge = false,
+                )
+            }
+            cryptoCurrencyStatus.value is CryptoCurrencyStatus.NoQuote -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.TokenNoQuotes(cryptoCurrency.name),
+                    shouldShowBadge = false,
+                )
+            }
+            else -> {
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.None,
+                    shouldShowBadge = shouldShowSwapStories,
+                )
+            }
+        }
+    }
+
     protected fun ActionAvailabilityBuilder.addYieldSupplyAction(yieldSupplyAvailability: YieldSupplyAvailability) {
         if (yieldSupplyAvailability is YieldSupplyAvailability.Available) {
             ActionState.YieldMode(
