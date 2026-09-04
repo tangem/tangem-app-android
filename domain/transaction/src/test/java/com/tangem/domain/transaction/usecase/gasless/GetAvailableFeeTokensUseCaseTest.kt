@@ -24,7 +24,9 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AvailableFeeTokens
+import com.tangem.domain.transaction.models.tron.TronGaslessToken
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase.Companion.isEligibleFeeToken
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -206,9 +208,56 @@ internal class GetAvailableFeeTokensUseCaseTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TronGasless {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(singleAccountStatusListSupplier, tronGaslessTransactionRepository, walletManagersFacade)
+
+            coEvery { tronGaslessTransactionRepository.getSupportedTokens() } returns listOf(
+                TronGaslessToken(contractAddress = USDT_TRON_CONTRACT, symbol = "USDT", decimals = 6),
+            )
+            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(
+                listOf(
+                    CryptoCurrencyStatus(currency = trx, value = loadedValue(BigDecimal.ZERO)),
+                    CryptoCurrencyStatus(currency = usdtTron, value = loadedValue(BigDecimal("20"))),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN activated tron account WHEN invoke THEN supported token is offered for the fee`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
+
+            // Act
+            val actual = createUseCase().invoke(userWallet = userWallet, network = tronNetwork)
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(trx, usdtTron).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN not activated tron account WHEN invoke THEN only native coin is offered`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns false
+
+            // Act
+            val actual = createUseCase().invoke(userWallet = userWallet, network = tronNetwork)
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(trx)
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
+        }
+    }
+
     // region Fixtures
 
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val walletManagersFacade: WalletManagersFacade = mockk()
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
@@ -218,6 +267,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
         gaslessTransactionRepository = gaslessTransactionRepository,
         tronGaslessTransactionRepository = tronGaslessTransactionRepository,
         currencyChecksRepository = currencyChecksRepository,
+        walletManagersFacade = walletManagersFacade,
         isYieldWithdrawEnabled = true,
     )
 
@@ -326,6 +376,38 @@ internal class GetAvailableFeeTokensUseCaseTest {
         contractAddress = USDC_CONTRACT,
     )
 
+    private val tronNetwork = network.copy(
+        id = Network.ID(value = "tron", derivationPath = Network.DerivationPath.None),
+        name = "Tron",
+        currencySymbol = "TRX",
+        standardType = Network.StandardType.TRC20,
+    )
+
+    private val trx = nativeCoin.copy(
+        id = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(rawId = "tron"),
+            suffix = CryptoCurrency.ID.Suffix.RawID(rawId = "tron"),
+        ),
+        network = tronNetwork,
+        name = "Tron",
+        symbol = "TRX",
+        decimals = 6,
+        displayDecimals = 6,
+    )
+
+    private val usdtTron = usdc.copy(
+        id = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(rawId = "tron"),
+            suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = USDT_TRON_CONTRACT),
+        ),
+        network = tronNetwork,
+        name = "Tether",
+        symbol = "USDT",
+        contractAddress = USDT_TRON_CONTRACT,
+    )
+
     internal data class EligibilityModel(
         val yieldSupplyStatus: YieldSupplyStatus?,
         val isYieldWithdrawEnabled: Boolean,
@@ -336,6 +418,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     private companion object {
         const val USDC_CONTRACT = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+        const val USDT_TRON_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
         const val EOA = "0xEoa"
 
         val NATIVE_FEE: BigDecimal = BigDecimal("0.000004")

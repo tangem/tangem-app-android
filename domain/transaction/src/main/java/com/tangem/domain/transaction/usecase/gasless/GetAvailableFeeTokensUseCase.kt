@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.raiseIllegalStateError
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.runSuspendCatching
 import java.math.BigDecimal
@@ -25,6 +26,7 @@ class GetAvailableFeeTokensUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val walletManagersFacade: WalletManagersFacade,
     private val isYieldWithdrawEnabled: Boolean,
 ) {
 
@@ -64,7 +66,7 @@ class GetAvailableFeeTokensUseCase(
                         return@either AvailableFeeTokens(
                             tokens = buildList {
                                 add(nativeCurrencyStatus)
-                                addAll(getTronGaslessTokens(network, userCurrenciesStatuses))
+                                addAll(getTronGaslessTokens(userWallet, network, userCurrenciesStatuses))
                             },
                         )
                     }
@@ -123,9 +125,16 @@ class GetAvailableFeeTokensUseCase(
     }
 
     private suspend fun getTronGaslessTokens(
+        userWallet: UserWallet,
         network: Network,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
     ): List<CryptoCurrencyStatus> {
+        val isAccountActivated = walletManagersFacade.isTronAccountActivated(
+            userWalletId = userWallet.walletId,
+            network = network,
+        )
+        if (!isAccountActivated) return emptyList()
+
         val supportedContracts = runSuspendCatching { tronGaslessTransactionRepository.getSupportedTokens() }
             .getOrDefault(emptyList())
             .map { it.contractAddress }
