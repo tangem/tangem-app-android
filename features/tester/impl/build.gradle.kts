@@ -98,4 +98,7 @@ dependencies {
     implementation(projects.libs.crypto)
     implementation(projects.libs.tangemSdkApi)
     implementation(projects.domain.staking)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }
