@@ -525,7 +525,7 @@
   <string name="tangempay_cashback_widget_error_description">點擊重新載入</string>
   <string name="tangempay_cashback_widget_error_title">現金回饋暫時無法使用</string>
   <string name="tangempay_cashback_widget_refund_description">因退貨而減少</string>
-  <string name="tangempay_cashback_widget_title">%2$s 中的 %1$s 現金回饋</string>
+  <string name="tangempay_cashback_widget_title">%2$s 月獲 %1$s</string>
   <string name="tangempay_change_pin_code">修改PIN码</string>
   <string name="tangempay_changing_plan">正在變更您的方案</string>
   <string name="tangempay_choose_network_fast_way">快速方式</string>
