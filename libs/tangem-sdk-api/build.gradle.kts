@@ -24,6 +24,7 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    implementation(deps.moshi)
     // endregion
 
     // region Tangem
