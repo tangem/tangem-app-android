@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -36,6 +37,7 @@ import com.tangem.feature.tester.presentation.testpush.entity.TestPushClickInten
 import com.tangem.feature.tester.presentation.testpush.entity.TestPushUM
 
 private const val SWIPE_THRESHOLD = 0.25f
+private const val PAYLOAD_HINT = "Override Data below. A payload without title / body borrows them from Content."
 
 @Composable
 internal fun TestPushScreen(testPushUM: TestPushUM, testPushClickIntents: TestPushClickIntents) {
@@ -61,6 +63,7 @@ internal fun TestPushScreen(testPushUM: TestPushUM, testPushClickIntents: TestPu
                     .fillMaxSize(),
             ) {
                 tokenData(fcmToken = testPushUM.fcmToken)
+                payloadData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
                 contentData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
                 extraData(testPushUM = testPushUM, testPushClickIntents = testPushClickIntents)
             }
@@ -114,6 +117,54 @@ private fun LazyListScope.tokenData(fcmToken: String) {
                     modifier = Modifier.size(16.dp),
                 )
             }
+        }
+    }
+}
+
+private fun LazyListScope.payloadData(testPushUM: TestPushUM, testPushClickIntents: TestPushClickIntents) {
+    item("payload_key") {
+        Column(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(TangemTheme.colors.background.action)
+                .padding(16.dp)
+                .animateItem(),
+        ) {
+            Text(
+                text = "Payload (JSON)",
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+                modifier = Modifier.weight(1f),
+            )
+            OutlinedTextField(
+                value = testPushUM.payload,
+                onValueChange = testPushClickIntents::onPayloadChange,
+                placeholder = {
+                    Text(
+                        text = "Json...",
+                        style = TangemTheme.typography.body2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                },
+                textStyle = TangemTheme.typography.body2.copy(fontFamily = FontFamily.Monospace),
+                isError = testPushUM.payloadError != null,
+                minLines = 6,
+                maxLines = 16,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth(),
+            )
+            Text(
+                text = testPushUM.payloadError ?: PAYLOAD_HINT,
+                style = TangemTheme.typography.caption2,
+                color = if (testPushUM.payloadError != null) {
+                    TangemTheme.colors.text.warning
+                } else {
+                    TangemTheme.colors.text.tertiary
+                },
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
     }
 }
@@ -295,6 +346,7 @@ private fun TestPushScreen_Preview(@PreviewParameter(TestPushScreenPreviewProvid
         TestPushScreen(
             testPushUM = params,
             testPushClickIntents = object : TestPushClickIntents {
+                override fun onPayloadChange(value: TextFieldValue) {}
                 override fun onTitleChange(value: TextFieldValue) {}
                 override fun onMessageChange(value: TextFieldValue) {}
                 override fun onDataKeyChange(index: Int, value: TextFieldValue) {}
@@ -314,6 +366,8 @@ private class TestPushScreenPreviewProvider : PreviewParameterProvider<TestPushU
         get() = sequenceOf(
             TestPushUM(
                 fcmToken = "qwertyuiopoiuytrewqwertyuiopoiuytrewqertyuiop",
+                payload = TextFieldValue(""),
+                payloadError = null,
                 title = TextFieldValue("Test push"),
                 message = TextFieldValue("Test push"),
                 data = listOf(
