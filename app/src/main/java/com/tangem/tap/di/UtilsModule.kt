@@ -18,8 +18,10 @@ import com.tangem.tap.common.settings.IntentSettingsManager
 import com.tangem.tap.common.share.IntentShareManager
 import com.tangem.tap.common.url.CustomTabsUrlOpener
 import com.tangem.tap.core.DefaultAppCoroutineScope
+import com.tangem.tap.common.pushes.DefaultTestPushEmitter
 import com.tangem.tap.data.DefaultAppInfoProvider
 import com.tangem.utils.info.AppInfoProvider
+import com.tangem.utils.notifications.TestPushEmitter
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -42,6 +44,10 @@ internal interface UtilsModule {
     @Binds
     @Singleton
     fun bindAppStoreOpener(impl: DefaultAppStoreOpener): AppStoreOpener
+
+    @Binds
+    @Singleton
+    fun bindTestPushEmitter(impl: DefaultTestPushEmitter): TestPushEmitter
 
     companion object {
 
