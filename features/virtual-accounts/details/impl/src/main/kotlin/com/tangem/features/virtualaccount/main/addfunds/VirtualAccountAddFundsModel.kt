@@ -71,6 +71,7 @@ internal class VirtualAccountAddFundsModel @Inject constructor(
         requisitesRow: VirtualAccountAddFundsBottomSheetComponent.RequisitesRow,
     ): VirtualAccountAddFundsUM.DetailItem {
         return VirtualAccountAddFundsUM.DetailItem(
+            key = requisitesRow.titleForShare,
             label = requisitesRow.title,
             value = requisitesRow.value,
             onCopyClick = {
