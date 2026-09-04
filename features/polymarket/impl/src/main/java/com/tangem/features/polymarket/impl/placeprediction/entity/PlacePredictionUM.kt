@@ -24,6 +24,7 @@ internal data class PlacePredictionUM(
     val tradingPermission: TradingPermissionUM,
     val notifications: ImmutableList<PredictionNotificationUM>,
     val amountCaption: AmountCaptionUM? = null,
+    val priceError: PriceErrorUM? = null,
     val slippagePicker: SlippagePickerUM,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
@@ -75,6 +76,7 @@ internal data class MarketHeaderUM(
     val outcomeTitle: String,
     val outcomePriceCents: Int?,
     val resolutionDateMillis: Long?,
+    val isPriceUnavailable: Boolean = false,
 )
 
 @Immutable
@@ -99,6 +101,8 @@ internal data class PaymentSourceUM(
 )
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
+
+internal enum class PriceErrorUM { MarketClosed, Unknown }
 
 @Immutable
 internal data class SlippageUM(val percent: BigDecimal, val isDefault: Boolean) {
