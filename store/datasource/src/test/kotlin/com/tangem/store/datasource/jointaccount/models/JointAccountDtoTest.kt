@@ -26,8 +26,18 @@ internal class JointAccountDtoTest {
                   "safeAddress": null,
                   "status": "pending",
                   "members": [
-                    { "name": "Alice", "address": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf", "role": "creator" },
-                    { "name": "Bob", "address": "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF", "role": "member" }
+                    {
+                      "name": "Alice",
+                      "address": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                      "role": "creator",
+                      "inviteId": null
+                    },
+                    {
+                      "name": "Bob",
+                      "address": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+                      "role": "member",
+                      "inviteId": "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
+                    }
                   ]
                 }
               ]
@@ -49,13 +59,15 @@ internal class JointAccountDtoTest {
                     members = listOf(
                         JointAccountDto.Member(
                             name = "Alice",
-                            address = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf",
+                            address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
                             role = "creator",
+                            inviteId = null,
                         ),
                         JointAccountDto.Member(
                             name = "Bob",
-                            address = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
+                            address = "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
                             role = "member",
+                            inviteId = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66",
                         ),
                     ),
                     invites = null,
