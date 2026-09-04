@@ -8,13 +8,16 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
+import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.model.transformer.PolymarketFeedContentTransformer
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
@@ -50,6 +53,7 @@ import javax.inject.Inject
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -57,13 +61,20 @@ internal class PolymarketMainModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase,
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase,
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
 
+    private val balanceConverter = PredictionBalanceUMConverter(
+        onAddFundsClick = {},
+        onWithdrawClick = {},
+    )
+
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
             PolymarketMainUM(
+                balance = balanceConverter.convert(PredictionAccountStatusValue.Loading),
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
             ),
@@ -75,6 +86,13 @@ internal class PolymarketMainModel @Inject constructor(
     )
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
+
+    init {
+        predictionAccountStatusSupplier(userWalletId = params.userWalletId)
+            .onEach { status -> uiState.update { it.copy(balance = balanceConverter.convert(status)) } }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
 
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
     private val feeds = mutableMapOf<Int?, PolymarketCategoryFeed>()

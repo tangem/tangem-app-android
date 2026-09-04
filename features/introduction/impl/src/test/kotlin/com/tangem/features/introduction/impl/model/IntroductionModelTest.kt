@@ -17,16 +17,23 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
+import com.tangem.features.storiesv2.StoriesV2PendingAction
+import com.tangem.features.storiesv2.StoriesV2Result
+import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -51,6 +58,8 @@ internal class IntroductionModelTest {
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
+    private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
+    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val surfaceView: SurfaceView = mockk(relaxed = true)
     private val otherSurfaceView: SurfaceView = mockk(relaxed = true)
@@ -67,6 +76,8 @@ internal class IntroductionModelTest {
             router,
             isHotWalletCreationSupported,
             trackingContextProxy,
+            cardScanner,
+            generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
         every { isHotWalletCreationSupported() } returns true
@@ -339,15 +350,48 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN an open sheet WHEN the card option is picked THEN it closes and leads nowhere yet`() {
+        fun `GIVEN a dismissed sheet WHEN the seed phrase row is tapped during its collapse THEN it is inert`() {
+            // Arrange
+            val model = createModel()
+            val sheet = model.openSheet()
+            model.closeCreateWalletSheet()
+
+            // Act
+            sheet.seedPhrase.onClick()
+
+            // Assert
+            verify { router wasNot Called }
+            assertThat(sentEvents.filterIsInstance<OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet>())
+                .isEmpty()
+        }
+
+        @Test
+        fun `GIVEN a dismissed sheet WHEN the card row is tapped during its collapse THEN no story opens`() {
+            // Arrange
+            val model = createModel()
+            val sheet = model.openSheet()
+            model.setVideoRunning(isRunning = true)
+            model.closeCreateWalletSheet()
+            clearMocks(videoPlayer, answers = false)
+
+            // Act
+            sheet.cardOrRing.onClick()
+
+            // Assert
+            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+        }
+
+        @Test
+        fun `GIVEN an open sheet WHEN the card option is picked THEN the story replaces it`() {
             // Arrange
             val model = createModel()
 
             // Act
             model.openSheet().cardOrRing.onClick()
 
-            // A canary meant to fail once [REDACTED_TASK_KEY] wires the Onboarding Stories to this option.
+            // Assert
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
             verify { router wasNot Called }
         }
 
@@ -545,6 +589,232 @@ internal class IntroductionModelTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnboardingStories {
+
+        @Test
+        fun `GIVEN the story shown WHEN the screen resumes THEN the background video stays paused`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            clearMocks(videoPlayer, answers = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
+            verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun sheetReturns(model: StoryReturnModel) {
+            // Arrange
+            val introductionModel = createModel()
+            introductionModel.openStory()
+            clearMocks(videoPlayer, answers = false)
+
+            // Act
+            introductionModel.onStoryResult(model.result)
+
+            // Assert
+            assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            verify(exactly = 1) { videoPlayer.setRunning(isRunning = true) }
+        }
+
+        private fun provideTestModels() = listOf(
+            StoryReturnModel(name = "dismissed", result = StoriesV2Result.Dismissed),
+            StoryReturnModel(name = "completed", result = StoriesV2Result.Completed),
+            StoryReturnModel(
+                name = "no content",
+                result = StoriesV2Result.Unavailable(StoriesV2Result.Unavailable.Reason.NO_CONTENT),
+            ),
+        )
+
+        @Test
+        fun `GIVEN the story shown WHEN the buy action is picked THEN the story ends and the link opens`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            coEvery {
+                generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Creation)
+            } returns BUY_LINK
+            val action = pendingAction(actionId = "learn_more")
+
+            // Act
+            model.onStoryAction(action)
+
+            // Assert
+            verify(exactly = 1) { action.end() }
+            verify(exactly = 0) { action.resume() }
+            verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            assertThat(sentEvents.last())
+                .isEqualTo(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
+        }
+
+        @Test
+        fun `GIVEN the story shown WHEN the scan action is picked THEN the scan starts from the intro`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+
+            // Act
+            model.onStoryAction(pendingAction(actionId = "scan_wallet"))
+
+            // Assert
+            coVerify(exactly = 1) {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = any(),
+                    onFailed = any(),
+                )
+            }
+            assertThat(sentEvents.last())
+                .isEqualTo(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the scan suspended the story WHEN the scan fails THEN the story resumes on the same slide`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            val action = pendingAction(actionId = "scan_wallet")
+            model.onStoryAction(action)
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            verify(exactly = 1) { action.resume() }
+            verify(exactly = 0) { action.end() }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the story closed during a scan WHEN the scan fails THEN the sheet returns instead`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            val action = pendingAction(actionId = "scan_wallet")
+            model.onStoryAction(action)
+            model.onStoryResult(StoriesV2Result.Dismissed)
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            verify(exactly = 0) { action.resume() }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+        }
+
+        @Test
+        fun `GIVEN the scan leaves the screen WHEN navigation covers the story THEN it ends without a teardown`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            val action = pendingAction(actionId = "scan_wallet")
+            model.onStoryAction(action)
+
+            // Act
+            model.capturedScanCallbacks().onNavigatedAway()
+
+            // Assert
+            verify(exactly = 1) { action.end() }
+        }
+
+        @Test
+        fun `GIVEN a story ended by the scan WHEN the screen resumes THEN the player goes and no sheet returns`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            model.onStoryAction(pendingAction(actionId = "scan_wallet"))
+            model.capturedScanCallbacks().onNavigatedAway()
+            // What the live player does inside end(): the terminal result arrives before the navigation lands.
+            model.onStoryResult(
+                StoriesV2Result.ActionInvoked(
+                    actionId = "scan_wallet",
+                    target = StoryV2ActionTarget.Screen(key = "scan_wallet"),
+                ),
+            )
+            clearMocks(videoPlayer, answers = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.setRunning(isRunning = true) }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+        }
+
+        private fun IntroductionModel.capturedScanCallbacks(): ScanCallbacks {
+            val onNavigatedAway = slot<() -> Unit>()
+            val onFailed = slot<() -> Unit>()
+            coVerify {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = any(),
+                    onNavigatedAway = capture(onNavigatedAway),
+                    onFailed = capture(onFailed),
+                )
+            }
+            return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
+        }
+
+        @Test
+        fun `GIVEN a paused screen WHEN the story returns THEN the background video stays paused`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            model.setVideoRunning(isRunning = false)
+            clearMocks(videoPlayer, answers = false)
+
+            // Act
+            model.onStoryResult(StoriesV2Result.Dismissed)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
+            verify(exactly = 0) { videoPlayer.setRunning(isRunning = true) }
+        }
+
+        @Test
+        fun `GIVEN the story shown WHEN an unknown action arrives THEN it resumes on the same slide`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            val action = pendingAction(actionId = "some_future_action")
+
+            // Act
+            model.onStoryAction(action)
+
+            // Assert
+            verify(exactly = 1) { action.resume() }
+            verify { router wasNot Called }
+        }
+
+        private fun pendingAction(actionId: String): StoriesV2PendingAction {
+            return mockk(relaxed = true) { every { this@mockk.actionId } returns actionId }
+        }
+
+        private fun IntroductionModel.openStory() {
+            setVideoRunning(isRunning = true)
+            openSheet().cardOrRing.onClick()
+        }
+
+        private fun IntroductionModel.openSheet(): CreateWalletUM {
+            uiState.value.onCreateWalletClick()
+            return uiState.value.bottomSheetConfig?.content as? CreateWalletUM
+                ?: error("the Create wallet sheet is not open")
+        }
+    }
+
+    internal data class ScanCallbacks(val onNavigatedAway: () -> Unit, val onFailed: () -> Unit)
+
+    internal data class StoryReturnModel(val name: String, val result: StoriesV2Result) {
+        override fun toString(): String = name
+    }
+
     internal data class InertRowModel(
         val name: String,
         val pick: (HaveWalletUM.Step.Options, IntroductionModel) -> Unit,
@@ -617,11 +887,14 @@ internal class IntroductionModelTest {
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
         trackingContextProxy = trackingContextProxy,
+        cardScanner = cardScanner,
+        generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         uiMessageSender = uiMessageSender,
     )
 
     private companion object {
         val SHUTTER_DOWN = false to true
+        const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
     }
 }

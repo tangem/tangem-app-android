@@ -119,7 +119,7 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun storeTangemPayEligibility(eligibility: Set<String>) =
         real.storeTangemPayEligibility(eligibility)
 
-    override suspend fun getTangemPayEligibility(): Set<String> = real.getTangemPayEligibility()
+    override suspend fun getTangemPayEligibility(): Set<String>? = real.getTangemPayEligibility()
 
     override suspend fun storeIsTangemPayDeactivated(userWalletId: UserWalletId) =
         real.storeIsTangemPayDeactivated(userWalletId)
