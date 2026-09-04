@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
@@ -28,10 +29,16 @@ internal class TronDefaultFeeLoader @Inject constructor(
 
     private var isPinnedToNative = false
 
-    suspend fun isGaslessAvailable(network: Network, feeToken: CryptoCurrency.Token): Boolean =
-        sendFeatureToggles.isTronGaslessEnabled && isTronGaslessSupportedUseCase(network, feeToken)
+    suspend fun isGaslessAvailable(
+        userWalletId: UserWalletId,
+        network: Network,
+        feeToken: CryptoCurrency.Token,
+    ): Boolean =
+        sendFeatureToggles.isTronGaslessEnabled && isTronGaslessSupportedUseCase(userWalletId, network, feeToken)
 
+    @Suppress("LongParameterList")
     suspend fun load(
+        userWalletId: UserWalletId,
         sentStatus: CryptoCurrencyStatus,
         nativeStatus: CryptoCurrencyStatus,
         transactionData: TransactionData,
@@ -42,7 +49,7 @@ internal class TronDefaultFeeLoader @Inject constructor(
 
         // Not cached: the supported-token check reports a transport failure as "unsupported".
         val sentToken = sentStatus.currency as? CryptoCurrency.Token
-        if (sentToken == null || !isGaslessAvailable(sentToken.network, sentToken)) {
+        if (sentToken == null || !isGaslessAvailable(userWalletId, sentToken.network, sentToken)) {
             return loadNativeFee()
         }
 
