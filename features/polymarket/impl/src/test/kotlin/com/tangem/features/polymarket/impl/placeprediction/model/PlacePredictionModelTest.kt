@@ -44,6 +44,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
@@ -501,6 +502,21 @@ internal class PlacePredictionModelTest {
         // Assert
         verify { router.popTo(route = PlacePredictionRoute.Amount, onComplete = any()) }
         verify { router.pop(onComplete = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `WHEN to main clicked THEN stack pops to the feed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onToMainClick()
+
+        // Assert
+        verify { router.popTo(route = PolymarketRoute.Main(userWalletId = USER_WALLET_ID), onComplete = any()) }
 
         model.onDestroy()
     }
