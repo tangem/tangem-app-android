@@ -1,7 +1,7 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R
+import com.tangem.core.res.R
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.account.Account
