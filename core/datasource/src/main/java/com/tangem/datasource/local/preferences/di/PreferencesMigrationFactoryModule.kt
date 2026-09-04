@@ -1,4 +1,4 @@
-package com.tangem.datasource.di
+package com.tangem.datasource.local.preferences.di
 
 import com.tangem.datasource.local.preferences.migration.SharedPreferencesKeyMigrationFactory
 import com.tangem.datasource.local.preferences.utils.DefaultSharedPreferencesKeyMigrationFactory
