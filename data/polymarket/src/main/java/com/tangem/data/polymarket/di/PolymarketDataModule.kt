@@ -7,9 +7,13 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
+import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
+import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PredictionDepositAddressWriter
+import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
@@ -57,6 +61,16 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPredictionAccountStatusFetcher(impl: DefaultPredictionAccountStatusFetcher): PredictionAccountStatusFetcher
+
+    @Binds
+    @Singleton
+    fun bindPredictionDepositRequisitesStore(
+        impl: DefaultPredictionDepositRequisitesStore,
+    ): PredictionDepositRequisitesStore
+
+    @Binds
+    @Singleton
+    fun bindPredictionDepositAddressWriter(impl: DefaultPredictionDepositAddressWriter): PredictionDepositAddressWriter
 
     companion object {
 
