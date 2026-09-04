@@ -32,9 +32,10 @@ internal class UpdateMembersAccountTransformer(
 
     override fun transform(prevState: JointAccountMembersUM): JointAccountMembersUM {
         val joined = account.members.mapIndexed(::joinedMember)
-        // The backend hands the invites out once and never reports which are redeemed (accepted risk, B-9),
-        // so assume they are redeemed in the order they were shared: the free slots take the remaining tail
-        val remainingInvites = invites.drop(n = (account.members.size - 1).coerceAtLeast(minimumValue = 0))
+        val redeemedInvites = account.members
+            .mapNotNull { member -> member.inviteId?.lowercase() }
+            .toSet()
+        val remainingInvites = invites.filterNot { invite -> invite.lowercase() in redeemedInvites }
         val freeSlots = List(size = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)) {
             freeSlot(index = it, invite = remainingInvites.getOrNull(it))
         }
