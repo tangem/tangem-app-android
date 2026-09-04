@@ -2140,7 +2140,7 @@
   <string name="tangempay_cashback_widget_error_description">Нажмите, чтобы обновить</string>
   <string name="tangempay_cashback_widget_error_title">Кэшбэк недоступен</string>
   <string name="tangempay_cashback_widget_refund_description">Уменьшен из-за возврата покупок</string>
-  <string name="tangempay_cashback_widget_title">%1$s кэшбэк за %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s за %2$s</string>
   <string name="tangempay_change_pin_code">Изменить PIN-код</string>
   <string name="tangempay_changing_plan">Изменение тарифа</string>
   <string name="tangempay_choose_network_fast_way">Быстрые способы</string>
@@ -2490,12 +2490,12 @@
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_push_notification_banner_subtitle">Включите push-уведомления, и мы мгновенно сообщим вам, когда поступят средства.</string>
   <string name="user_push_notification_banner_title">Не пропустите транзакцию</string>
-  <string name="user_wallet_add_hardware_description">Отсканируйте карту Tangem, чтобы добавить его</string>
+  <string name="user_wallet_add_hardware_description">Отсканируйте карту Tangem, чтобы добавить кошелёк</string>
   <string name="user_wallet_add_hardware_title">Добавить аппаратный кошелёк</string>
   <string name="user_wallet_add_mobile_description">Создайте новый кошелёк на этом устройстве</string>
   <string name="user_wallet_add_mobile_title">Добавить мобильный кошелёк</string>
   <string name="user_wallet_add_wallet">Добавить кошелек</string>
-  <string name="user_wallet_coming_soon_dialog_description">Мы работаем над возможностью создавать несколько мобильных кошельков.</string>
+  <string name="user_wallet_coming_soon_dialog_description">Мы работаем над поддержкой нескольких мобильных кошельков.</string>
   <string name="user_wallet_list_add_button">Добавить кошелек</string>
   <string name="user_wallet_list_delete_hw_prompt">Если вы удалите этот кошелёк без резервной копии, вы навсегда потеряете доступ к своим средствам.</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
@@ -2608,6 +2608,7 @@
   <string name="warning_approval_in_progress_message">Процесс выдачи разрешения уже в работе и скоро будет завершен</string>
   <string name="warning_approval_in_progress_title">Выдача разрешения</string>
   <string name="warning_backup_error_add_funds_message">В этом кошельке возникла проблема с резервным копированием. Обратитесь в службу поддержки для её решения.</string>
+  <string name="warning_backup_error_add_funds_message_v2">У кошелька, который вы хотите пополнить, есть проблема с резервной копией. Переведите средства на другой кошелек и сбросьте его.</string>
   <string name="warning_backup_error_add_funds_title">Пополнение отключено</string>
   <string name="warning_backup_error_attention_message">Ваши карточки были активированы неправильно. Чтобы обезопасить средства, переведите их на другой кошелек, сбросьте карты до заводских настроек и активируйте заново.</string>
   <string name="warning_backup_error_attention_title">Требуется действие: сбросьте настройки кошелька</string>
