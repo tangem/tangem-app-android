@@ -17,6 +17,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListS
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.tangemButtonGroupStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
@@ -43,6 +44,7 @@ private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
 private fun buildDsStories() = listOf(
     DsStoryItem(title = "⏳ TangemLoader", factory = tangemLoaderStoryFactory),
     DsStoryItem(title = "🔘 TangemButton", factory = tangemButtonStoryFactory),
+    DsStoryItem(title = "🔘 TangemButtonGroup", factory = tangemButtonGroupStoryFactory),
     DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
     DsStoryItem(title = "☑️ TangemCheckbox", factory = tangemCheckboxV2StoryFactory),
     DsStoryItem(title = "⭕ TangemCheckmark", factory = tangemCheckmarkStoryFactory),
