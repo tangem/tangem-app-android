@@ -541,6 +541,11 @@ sealed class AppRoute(val path: String) : Route {
     data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
 
     @Serializable
+    data class TangemPayCampaign(
+        val campaignKey: String,
+    ) : AppRoute(path = "/tangem_pay_campaign")
+
+    @Serializable
     data class TangemPayOnboarding(
         val mode: Mode,
     ) : AppRoute(path = "/tangem_pay_onboarding/$mode") {
