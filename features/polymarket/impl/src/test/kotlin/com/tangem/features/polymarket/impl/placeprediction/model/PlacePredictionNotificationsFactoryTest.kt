@@ -9,6 +9,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
@@ -195,12 +196,55 @@ internal class PlacePredictionNotificationsFactoryTest {
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
 
+    @Test
+    fun `GIVEN a closed-market price error WHEN the gate runs THEN the market closed banner blocks`() {
+        // Arrange
+        val state = createState(priceError = PriceErrorUM.MarketClosed)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an unknown price error WHEN the gate runs THEN the generic price banner blocks`() {
+        // Arrange
+        val state = createState(priceError = PriceErrorUM.Unknown)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.PriceFailed)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN market closed by both price and quote WHEN the gate runs THEN the banner appears once`() {
+        // Arrange
+        val state = createState(
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.MARKET_CLOSED),
+            priceError = PriceErrorUM.MarketClosed,
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+    }
+
     private fun createState(
         quote: QuoteUM = QuoteUM.Empty,
         balance: BigDecimal? = BigDecimal("100"),
         tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
         submit: SubmitUM = SubmitUM.Idle,
+        priceError: PriceErrorUM? = null,
     ): PlacePredictionUM = PlacePredictionUM(
+        priceError = priceError,
         market = MarketHeaderUM(
             title = "Will it rain?",
             imageUrl = null,
