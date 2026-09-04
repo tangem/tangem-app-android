@@ -139,9 +139,7 @@ internal class TestPushViewModel @Inject constructor(
         return buildMap {
             putAll(this@withDisplayFallback)
             put(TITLE_KEY, state.title.text.ifBlank { FALLBACK_TITLE })
-
-            val body = state.message.text.ifBlank { this@withDisplayFallback[TYPE_KEY].orEmpty() }
-            if (body.isNotBlank()) put(BODY_KEY, body)
+            state.message.text.takeIf(String::isNotBlank)?.let { put(BODY_KEY, it) }
         }
     }
 
@@ -226,7 +224,6 @@ internal class TestPushViewModel @Inject constructor(
     private companion object {
         const val TITLE_KEY = "title"
         const val BODY_KEY = "body"
-        const val TYPE_KEY = "type"
         const val FALLBACK_TITLE = "Test push"
     }
 }

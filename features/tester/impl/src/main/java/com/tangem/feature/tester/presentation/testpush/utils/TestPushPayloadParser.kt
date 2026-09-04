@@ -19,8 +19,6 @@ internal object TestPushPayloadParser {
     private const val NOTIFICATION_ENABLED_KEY = "gcm.n.e"
     private const val NOTIFICATION_ENABLED_VALUE = "1"
 
-    private val NOTIFICATION_KEY_ALIASES = mapOf("channel_id" to "android_channel_id")
-
     fun parse(rawPayload: String): Either<String, Map<String, String>> {
         val root = runCatching { Json.parseToJsonElement(rawPayload) }
             .getOrElse { return "Invalid JSON: ${it.message}".left() }
@@ -46,7 +44,7 @@ internal object TestPushPayloadParser {
     private fun JsonObject.toNotificationMap(): Map<String, String> = buildMap {
         put(NOTIFICATION_ENABLED_KEY, NOTIFICATION_ENABLED_VALUE)
         this@toNotificationMap.forEach { (key, value) ->
-            put(NOTIFICATION_KEY_PREFIX + NOTIFICATION_KEY_ALIASES.getOrElse(key) { key }, value.asPushValue())
+            put(NOTIFICATION_KEY_PREFIX + key, value.asPushValue())
         }
     }
 
