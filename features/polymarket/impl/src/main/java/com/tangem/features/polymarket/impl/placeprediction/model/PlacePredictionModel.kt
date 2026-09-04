@@ -33,6 +33,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -45,6 +46,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
@@ -248,11 +251,12 @@ internal class PlacePredictionModel @Inject constructor(
             .map { result ->
                 PlaceResultUMConverter.convert(
                     result = result,
-                    requestedAmount = frozen.quote.notional,
+                    quotedShares = frozen.quote.shares,
+                    quotedAmount = frozen.quote.notional,
                     placedAt = System.currentTimeMillis(),
                 )
             }
-            .fold(ifLeft = ::onPlaceError, ifRight = ::showResult)
+            .fold(ifLeft = ::onPlaceError, ifRight = ::onPlaceOutcome)
     }
 
     private suspend fun spendingPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
@@ -295,6 +299,13 @@ internal class PlacePredictionModel @Inject constructor(
                 showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
             }
             else -> showPlaceFailure(reason = "Order refused: $error")
+        }
+    }
+
+    private fun onPlaceOutcome(outcome: PlaceOutcome) {
+        when (outcome) {
+            is PlaceOutcome.Reportable -> showResult(result = outcome.result)
+            is PlaceOutcome.Anomalous -> showPlaceFailure(reason = outcome.reason)
         }
     }
 
@@ -370,6 +381,10 @@ internal class PlacePredictionModel @Inject constructor(
         router.pop()
     }
 
+    override fun onToMainClick() {
+        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+    }
+
     fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
 
     private fun loadMarket() {
@@ -423,6 +438,7 @@ internal class PlacePredictionModel @Inject constructor(
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
+                if (uiState.value.quote.isMarketClosed()) break
                 delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)

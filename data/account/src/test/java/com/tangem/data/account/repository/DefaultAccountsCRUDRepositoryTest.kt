@@ -344,6 +344,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 derivationIndex = DerivationIndex.Main,
                 tokensCount = 0,
                 networksCount = 0,
+                type = ArchivedAccount.Type.CRYPTO,
             )
 
             archivedAccountsInnerStore.store(value = listOf(archivedAccount))
