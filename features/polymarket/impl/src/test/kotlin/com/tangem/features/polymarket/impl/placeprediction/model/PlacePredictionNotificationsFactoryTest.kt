@@ -206,6 +206,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             imageUrl = null,
             outcomeTitle = "Yes",
             outcomePriceCents = 42,
+            resolutionDateMillis = null,
         ),
         payment = PaymentSourceUM(
             tokenSymbol = "USDC",
