@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
@@ -42,12 +43,14 @@ internal fun StorySlideContent(
         }
 
         val isCoveredByAsset = slide.content is StoriesV2UM.SlideUM.Content.Video && slide.isAssetReady
+        val poster = slide.poster
         StoryMedia(
-            ref = slide.poster,
+            ref = poster,
             contentMode = slide.contentMode,
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer { alpha = if (isCoveredByAsset) 0f else 1f },
+            prefetchedPainter = (poster as? StoryV2MediaRef.DrawableResource)?.let { handle.posterPainter(it.id) },
         )
 
         val content = slide.content
@@ -79,17 +82,23 @@ private fun BoxScope.VideoSurface(handle: StoryPlayerHandle, contentMode: StoryV
 }
 
 @Composable
-internal fun StoryMedia(ref: StoryV2MediaRef, contentMode: StoryV2ContentMode, modifier: Modifier = Modifier) {
+internal fun StoryMedia(
+    ref: StoryV2MediaRef,
+    contentMode: StoryV2ContentMode,
+    modifier: Modifier = Modifier,
+    prefetchedPainter: Painter? = null,
+) {
     val contentScale = when (contentMode) {
         StoryV2ContentMode.COVER -> ContentScale.Crop
         StoryV2ContentMode.CONTAIN -> ContentScale.Fit
     }
 
     when (ref) {
-        // Decoded synchronously by the resource system, which is the point: an asynchronous poster would flash the
-        // very frame it exists to prevent.
+        // The prefetched painter is the same frame decoded ahead of time; the synchronous fallback keeps the
+        // guarantee that a poster is on screen the moment its slide is — an asynchronous one would flash the very
+        // frame it exists to prevent.
         is StoryV2MediaRef.DrawableResource -> Image(
-            painter = painterResource(id = ref.id),
+            painter = prefetchedPainter ?: painterResource(id = ref.id),
             contentDescription = null,
             contentScale = contentScale,
             modifier = modifier,

@@ -3,13 +3,13 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.tangem.common.routing.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -21,11 +21,13 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import javax.inject.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +37,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import javax.inject.Inject
-import com.tangem.core.ui.R as CoreUiR
 
 @Stable
 @ModelScoped
@@ -109,9 +109,10 @@ internal class JointAccountMembersModel @Inject constructor(
         val joined = account.members.mapIndexed { index, member ->
             joinedMember(index = index, member = member, isThisDeviceCreator = isThisDeviceCreator)
         }
-        // The backend hands the invites out once and never reports which are redeemed (accepted risk, B-9),
-        // so assume they are redeemed in the order they were shared: the free slots take the remaining tail
-        val remainingInvites = invites.drop(n = (account.members.size - 1).coerceAtLeast(minimumValue = 0))
+        val redeemedInvites = account.members
+            .mapNotNull { member -> member.inviteId?.lowercase() }
+            .toSet()
+        val remainingInvites = invites.filterNot { invite -> invite.lowercase() in redeemedInvites }
         val freeSlots = List(size = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)) {
             freeSlot(index = it, invite = remainingInvites.getOrNull(it))
         }
