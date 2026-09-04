@@ -399,6 +399,8 @@ internal class PlacePredictionModel @Inject constructor(
             isNegRiskMarket = market.isNegRisk
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
+
+            if (isScreenShown) restartQuoteLoop(withDebounce = false)
         }
     }
 
@@ -427,6 +429,8 @@ internal class PlacePredictionModel @Inject constructor(
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
+
+        if (!uiState.value.isMarketAcceptingOrders) return
 
         if (uiState.value.enteredAmount() == null) {
             startPriceLoop()

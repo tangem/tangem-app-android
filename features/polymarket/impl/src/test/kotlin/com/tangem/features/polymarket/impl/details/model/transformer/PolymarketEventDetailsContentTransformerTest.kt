@@ -392,6 +392,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
         imageUrl = null,
         status = status,
         isNegRisk = false,
+        isAcceptingOrders = true,
         startDate = null,
         endDate = null,
         startDateIso = null,
