@@ -2099,7 +2099,7 @@
   <string name="tangempay_cashback_widget_error_description">タップして再読み込み</string>
   <string name="tangempay_cashback_widget_error_title">キャッシュバックを利用できません</string>
   <string name="tangempay_cashback_widget_refund_description">購入代金の返金により減額</string>
-  <string name="tangempay_cashback_widget_title">%2$s で %1$s のキャッシュバック</string>
+  <string name="tangempay_cashback_widget_title">%2$s に%1$sドル</string>
   <string name="tangempay_change_pin_code">PINコードを変更</string>
   <string name="tangempay_changing_plan">プランを変更しています</string>
   <string name="tangempay_choose_network_fast_way">すぐに使えるネットワーク</string>

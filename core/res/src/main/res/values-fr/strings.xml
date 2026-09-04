@@ -278,6 +278,7 @@
   <string name="common_added">Ajouté</string>
   <string name="common_address">Adresse</string>
   <string name="common_all">Tous</string>
+  <string name="common_all_accounts">Tous les comptes</string>
   <string name="common_allow">Permettre</string>
   <string name="common_amount">Montant</string>
   <string name="common_analytics">Analytique</string>
@@ -420,6 +421,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">Non</string>
   <string name="common_no_address">Aucune adresse</string>
+  <string name="common_none">Aucun</string>
   <string name="common_not_added">Non ajouté</string>
   <string name="common_not_available">Indisponible</string>
   <string name="common_not_now">Pas maintenant</string>
@@ -698,6 +700,13 @@
   <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
   <string name="feedback_token_description_error">Erreur de description de la pièce</string>
   <string name="for_you_description">Consultez votre portefeuille et découvrez des opportunités de rendement</string>
+  <string name="for_you_earn_opportunities">Opportunités de rendement</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">Tous vos actifs sont au travail, découvrez de nouvelles opportunités</string>
+  <string name="for_you_earn_opportunities_explore">Explorer tous les tokens</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">Obtenez jusqu\'à %1$s par an</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">Récompenses potentielles maximales %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/an</string>
+  <string name="for_you_portfolio_review_title">Aperçu du portefeuille</string>
   <string name="for_you_title">Pour Vous</string>
   <string name="force_update_action">Mettre à jour maintenant</string>
   <string name="force_update_banner_message">Mettez l\'application à jour pour assurer son bon fonctionnement</string>
@@ -1987,7 +1996,7 @@
   <string name="tangempay_cashback_widget_error_description">Appuyez pour recharger</string>
   <string name="tangempay_cashback_widget_error_title">Cashback indisponible</string>
   <string name="tangempay_cashback_widget_refund_description">Réduit en raison de retours d\'achats</string>
-  <string name="tangempay_cashback_widget_title">%1$s de cashback en %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s en %2$s</string>
   <string name="tangempay_change_pin_code">Modifier le code PIN</string>
   <string name="tangempay_changing_plan">Modification du forfait</string>
   <string name="tangempay_choose_network_fast_way">Voie rapide</string>
@@ -2251,8 +2260,10 @@
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
   <string name="token_receive_show_qr_code_title">Afficher le code QR</string>
   <string name="token_summary_galaxy_score_description">Le \"Galaxy Score\" combine la performance de marché et l\'activité sur les réseaux sociaux en un score unique de 0 à 100 qui reflète la santé globale de l\'actif. Source : LunarCrush.</string>
+  <string name="token_summary_go_to_swap_button">Vers l\'échange</string>
   <string name="token_summary_ma_cross_description">Le \"MA Cross\" compare les prix moyens sur 50 et 200 jours pour indiquer si l\'actif se négocie au-dessus ou en dessous de sa tendance long terme. Source : taapi.io.</string>
   <string name="token_summary_macd_description">Le \"MACD\" compare la dynamique des prix à court terme et à long terme pour indiquer si la dynamique d\'un actif se renforce ou s\'affaiblit. Source : taapi.io.</string>
+  <string name="token_summary_outlook_is_not_available">Perspectives non disponibles pour ce token</string>
   <string name="token_summary_rsi_description">Le \"RSI\" (Relative Strength Index) mesure si un actif a été acheté ou vendu de manière excessive au cours des 14 dernières périodes, signalant un potentiel excès d\'achat ou de vente. Source : taapi.io.</string>
   <string name="token_summary_sentiment_description">Le score de sentiment évalue le ton des publications sur les réseaux sociaux concernant l\'actif sur une échelle de 1 à 5, où un score plus élevé indique plus de discussions positives. Source : LunarCrush.</string>
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
@@ -2489,6 +2500,7 @@
   <string name="warning_approval_in_progress_message">Le processus d\'octroi des autorisations est actuellement en cours et sera bientôt terminé</string>
   <string name="warning_approval_in_progress_title">Approbation en cours</string>
   <string name="warning_backup_error_add_funds_message">Ce portefeuille a un problème de sauvegarde. Contactez le support technique pour le résoudre.</string>
+  <string name="warning_backup_error_add_funds_message_v2">Le portefeuille que vous souhaitez approvisionner présente un problème de sauvegarde. Transférez vos fonds vers un autre portefeuille, puis réinitialisez-le.</string>
   <string name="warning_backup_error_add_funds_title">L\'ajout de fonds est désactivé</string>
   <string name="warning_backup_error_attention_message">Vos cartes n\'ont pas été activées correctement. Continuer à utiliser ce portefeuille peut aboutir à une perte d\'accès à vos fonds. Veuillez transférer vos fonds sur un autre portefeuille, réinitialisez vos cartes aux paramètres d\'usine et activez-les à nouveau avant de continuer.</string>
   <string name="warning_backup_error_attention_title">Action requise : réinitialisez votre portefeuille</string>

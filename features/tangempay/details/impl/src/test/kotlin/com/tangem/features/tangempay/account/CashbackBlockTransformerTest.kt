@@ -7,15 +7,11 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.features.tangempay.cashback.impl.model.TangemPayCashbackDateFormatter
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import org.joda.time.DateTime
@@ -41,18 +37,15 @@ internal class CashbackBlockTransformerTest {
     @BeforeEach
     fun setup() {
         Locale.setDefault(Locale.US)
-        mockkObject(DateTimeFormatters)
-        every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "July 1 – 5"
     }
 
     @AfterEach
     fun tearDown() {
-        unmockkObject(DateTimeFormatters)
         Locale.setDefault(defaultLocale)
     }
 
     @Test
-    fun `GIVEN enabled summary WHEN transform THEN cashback block is widget with content`() {
+    fun `GIVEN enabled summary WHEN transform THEN cashback block is widget with amount and month`() {
         // Arrange
         val transformer = createTransformer(summary = enabledSummary())
 
@@ -60,27 +53,16 @@ internal class CashbackBlockTransformerTest {
         val block = transformer.transform(contentState()).cashbackBlockState
 
         // Assert
-        assertThat(block).isInstanceOf(CashbackBlockUM.Widget::class.java)
-        val widget = block as CashbackBlockUM.Widget
-        assertThat(widget.title).isInstanceOf(TextReference.Res::class.java)
-        assertThat(widget.title).isNotEqualTo(TextReference.EMPTY)
-        assertThat(widget.subtitle).isInstanceOf(TextReference.Res::class.java)
-        assertThat(widget.subtitle).isNotEqualTo(TextReference.EMPTY)
-    }
-
-    @Test
-    fun `GIVEN enabled summary without payout window WHEN transform THEN widget has no subtitle`() {
-        // Arrange
-        val summary = enabledSummary(payoutStart = null, payoutEnd = null)
-        val transformer = createTransformer(summary = summary)
-
-        // Act
-        val block = transformer.transform(contentState()).cashbackBlockState
-
-        // Assert
-        val widget = block as CashbackBlockUM.Widget
-        assertThat(widget.title).isInstanceOf(TextReference.Res::class.java)
-        assertThat(widget.subtitle).isNull()
+        assertThat(block).isEqualTo(
+            CashbackBlockUM.Widget(
+                title = resourceReference(
+                    id = R.string.tangempay_cashback_widget_title,
+                    formatArgs = wrappedList("$32.15", "June"),
+                ),
+                isNegative = false,
+                onClick = onClick,
+            ),
+        )
     }
 
     @ParameterizedTest
@@ -102,7 +84,6 @@ internal class CashbackBlockTransformerTest {
             ),
         )
         assertThat(widget.isNegative).isEqualTo(model.expectedNegative)
-        assertThat(widget.subtitle).isEqualTo(model.expectedSubtitle)
     }
 
     @Test
@@ -231,35 +212,28 @@ internal class CashbackBlockTransformerTest {
 
     private fun provideAmountModels(): List<AmountCase> = listOf(
         AmountCase(
-            description = "negative -> refund subtitle",
+            description = "negative -> negative flag",
             amount = BigDecimal("-2.15"),
             expectedAmount = "-$2.15",
             expectedNegative = true,
-            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_refund_description),
         ),
         AmountCase(
-            description = "zero -> no decimals, start spending subtitle",
+            description = "zero -> two decimals",
             amount = BigDecimal.ZERO,
-            expectedAmount = "$0",
+            expectedAmount = "$0.00",
             expectedNegative = false,
-            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
         ),
         AmountCase(
-            description = "zero with scale -> no decimals, start spending subtitle",
+            description = "zero with scale -> two decimals",
             amount = BigDecimal("0.00"),
-            expectedAmount = "$0",
+            expectedAmount = "$0.00",
             expectedNegative = false,
-            expectedSubtitle = resourceReference(R.string.tangempay_cashback_widget_empty_description),
         ),
         AmountCase(
-            description = "positive -> two decimals, deposit window subtitle",
+            description = "positive -> two decimals",
             amount = BigDecimal("32.15"),
             expectedAmount = "$32.15",
             expectedNegative = false,
-            expectedSubtitle = resourceReference(
-                id = R.string.tangempay_cashback_deposited_on,
-                formatArgs = wrappedList("July 1 – 5"),
-            ),
         ),
     )
 
@@ -336,7 +310,6 @@ internal class CashbackBlockTransformerTest {
         val amount: BigDecimal,
         val expectedAmount: String,
         val expectedNegative: Boolean,
-        val expectedSubtitle: TextReference,
         private val description: String,
     ) {
         override fun toString(): String = description
