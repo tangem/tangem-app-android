@@ -1130,7 +1130,7 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
-  <string name="market_chart_bubble_no_amount">No amount  on tokens</string>
+  <string name="market_chart_bubble_no_amount">No amount \non tokens</string>
   <string name="market_chart_bubble_no_data">No data</string>
   <string name="market_chart_bubble_total_value">Total value</string>
   <string name="market_chart_can_not_load_data">Can’t load data</string>
@@ -1160,6 +1160,15 @@
   <string name="markets_portfolio_eligible_block_title">Other eligible tokens</string>
   <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
+  <string name="markets_real_assets_empty_title">No assets found</string>
+  <string name="markets_real_assets_filter_sectors_title">Sectors</string>
+  <string name="markets_real_assets_filter_title">Category</string>
+  <string name="markets_real_assets_interval_day">Day</string>
+  <string name="markets_real_assets_interval_month">Month</string>
+  <string name="markets_real_assets_interval_week">Week</string>
+  <string name="markets_real_assets_region_restriction_description">Stocks, ETFs, Bonds they\'re not supported in UK and US</string>
+  <string name="markets_real_assets_region_restriction_title">Not supported in your region</string>
+  <string name="markets_real_assets_title">Real world assets</string>
   <string name="markets_search_clear_all_hints">Clear all</string>
   <string name="markets_search_header_title">Search tokens</string>
   <string name="markets_search_hint_header">Recent searches</string>
@@ -1539,6 +1548,8 @@
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="prediction_account_subtitle">Add funds &amp; start predict</string>
   <string name="prediction_account_title">Prediction account</string>
+  <string name="prediction_balance_total">Total Balance</string>
+  <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_details_24h_change">24h change:</string>
   <string name="prediction_details_closed_markets">Closed Markets</string>
   <string name="prediction_details_market_opened">Market Opened</string>
@@ -1614,8 +1625,10 @@
   <string name="prediction_place_result_partial_banner_description">Your order has been partially filled due to insufficient shares on Polymarket Exchange within slippage range</string>
   <string name="prediction_place_result_partial_banner_title">Partially filled</string>
   <string name="prediction_place_result_partial_title">Partially placed</string>
+  <string name="prediction_place_result_placed_title">Placed %s</string>
   <string name="prediction_place_result_success_title">Prediction placed</string>
   <string name="prediction_place_result_to_main">To main</string>
+  <string name="prediction_place_result_tokens_bought">Tokens bought</string>
   <string name="prediction_place_slippage">Slippage</string>
   <string name="prediction_place_slippage_default">Default %s</string>
   <string name="prediction_place_slippage_error">Unsupported amount</string>
@@ -2087,7 +2100,7 @@
   <string name="swap_story_second_title">Unbeatable Rates</string>
   <string name="swap_story_second_title_v2">Best Available Rate</string>
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
-  <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
+  <string name="swap_story_third_subtitle_v2">Swap across major networks\nand thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
   <string name="swap_token_selector_empty_filtered_message">You don\'t have any funded tokens on this wallet. Explore other wallets or change the filter</string>
@@ -2322,7 +2335,7 @@
   <string name="tangempay_cashback_widget_error_description">Tap to reload</string>
   <string name="tangempay_cashback_widget_error_title">Cashback unavailable</string>
   <string name="tangempay_cashback_widget_refund_description">Reduced due to return of purchases</string>
-  <string name="tangempay_cashback_widget_title">%1$s cashback in %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s in %2$s</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_changing_plan">Changing your plan</string>
   <string name="tangempay_choose_network_fast_way">Fast options</string>
@@ -2487,7 +2500,7 @@
   <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_order_type_unavailable">Unavailable</string>
   <string name="tangempay_other_networks_header">Other networks</string>
-  <string name="tangempay_other_networks_subtitle">And then swap it to payment account zero fees</string>
+  <string name="tangempay_other_networks_subtitle">and then swap it to payment account with zero fees</string>
   <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
   <string name="tangempay_pay_support">Support</string>
   <string name="tangempay_payment_account">Payment account</string>
