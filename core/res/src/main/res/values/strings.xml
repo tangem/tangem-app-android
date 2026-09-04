@@ -40,6 +40,7 @@
     <item quantity="one">%d person</item>
     <item quantity="other">%d people</item>
   </plurals>
+  <string name="account_details_joint_members_progress">%1$s/%2$s people</string>
   <string name="account_details_joint_pending_description">The account is still being populated with members</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
@@ -1028,6 +1029,8 @@
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
+  <string name="joint_account_coming_soon_description">We\'re working on it. Support is coming in one of the next updates.</string>
+  <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
@@ -1049,6 +1052,7 @@
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
+  <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the full link, or ask the account owner to send it again.</string>
@@ -1127,6 +1131,7 @@
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
+  <string name="market_categories">Categories</string>
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
   <string name="market_chart_bubble_no_amount">No amount \non tokens</string>
@@ -1159,6 +1164,31 @@
   <string name="markets_portfolio_eligible_block_title">Other eligible tokens</string>
   <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
+  <string name="markets_real_assets_category_bonds">Bonds</string>
+  <string name="markets_real_assets_category_commodities">Commodities</string>
+  <string name="markets_real_assets_category_etfs">ETFs</string>
+  <string name="markets_real_assets_category_stablecoins">Stablecoins</string>
+  <string name="markets_real_assets_category_xstocks">xStocks</string>
+  <string name="markets_real_assets_empty_title">No assets found</string>
+  <string name="markets_real_assets_filter_sectors_title">Sectors</string>
+  <string name="markets_real_assets_filter_title">Category</string>
+  <string name="markets_real_assets_interval_day">Day</string>
+  <string name="markets_real_assets_interval_month">Month</string>
+  <string name="markets_real_assets_interval_week">Week</string>
+  <string name="markets_real_assets_region_restriction_description">Stocks, ETFs, Bonds they\'re not supported in UK and US</string>
+  <string name="markets_real_assets_region_restriction_title">Not supported in your region</string>
+  <string name="markets_real_assets_sector_xstocks_communication">Communication Services</string>
+  <string name="markets_real_assets_sector_xstocks_consumer">Consumer</string>
+  <string name="markets_real_assets_sector_xstocks_crypto">Crypto</string>
+  <string name="markets_real_assets_sector_xstocks_energy">Energy</string>
+  <string name="markets_real_assets_sector_xstocks_financials">Financials</string>
+  <string name="markets_real_assets_sector_xstocks_healthcare">Healthcare</string>
+  <string name="markets_real_assets_sector_xstocks_industrials">Industrials</string>
+  <string name="markets_real_assets_sector_xstocks_technology">Technology</string>
+  <string name="markets_real_assets_sort_market_cap">Market cap</string>
+  <string name="markets_real_assets_sort_top_gainers">Top gainers</string>
+  <string name="markets_real_assets_sort_top_losers">Top losers</string>
+  <string name="markets_real_assets_title">Real world assets</string>
   <string name="markets_search_clear_all_hints">Clear all</string>
   <string name="markets_search_header_title">Search tokens</string>
   <string name="markets_search_hint_header">Recent searches</string>
@@ -1615,8 +1645,10 @@
   <string name="prediction_place_result_partial_banner_description">Your order has been partially filled due to insufficient shares on Polymarket Exchange within slippage range</string>
   <string name="prediction_place_result_partial_banner_title">Partially filled</string>
   <string name="prediction_place_result_partial_title">Partially placed</string>
+  <string name="prediction_place_result_placed_title">Placed %s</string>
   <string name="prediction_place_result_success_title">Prediction placed</string>
   <string name="prediction_place_result_to_main">To main</string>
+  <string name="prediction_place_result_tokens_bought">Tokens bought</string>
   <string name="prediction_place_slippage">Slippage</string>
   <string name="prediction_place_slippage_default">Default %s</string>
   <string name="prediction_place_slippage_error">Unsupported amount</string>
@@ -2323,7 +2355,7 @@
   <string name="tangempay_cashback_widget_error_description">Tap to reload</string>
   <string name="tangempay_cashback_widget_error_title">Cashback unavailable</string>
   <string name="tangempay_cashback_widget_refund_description">Reduced due to return of purchases</string>
-  <string name="tangempay_cashback_widget_title">%1$s cashback in %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s in %2$s</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_changing_plan">Changing your plan</string>
   <string name="tangempay_choose_network_fast_way">Fast options</string>
@@ -2894,7 +2926,7 @@
   <string name="warning_approval_in_progress_message">The permission-granting process is currently underway and will be completed shortly</string>
   <string name="warning_approval_in_progress_title">Approval in Progress</string>
   <string name="warning_backup_error_add_funds_message">This wallet has a backup issue. Contact Support to resolve it.</string>
-  <string name="warning_backup_error_add_funds_message_v2">This wallet has a backup issue. Move your funds to another wallet and reset it.</string>
+  <string name="warning_backup_error_add_funds_message_v2">The wallet you want to fund has a backup issue. Move your funds from it to another wallet and reset it.</string>
   <string name="warning_backup_error_add_funds_title">Adding funds is disabled</string>
   <string name="warning_backup_error_add_funds_title_v2">Backup issue detected</string>
   <string name="warning_backup_error_attention_message">Your cards weren\'t activated correctly. To protect your funds, move them to another wallet, reset your cards to factory settings, and reactivate them before continuing.</string>

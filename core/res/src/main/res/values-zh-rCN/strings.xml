@@ -2051,7 +2051,7 @@
   <string name="tangempay_cashback_widget_error_description">点击重新加载</string>
   <string name="tangempay_cashback_widget_error_title">返现不可用</string>
   <string name="tangempay_cashback_widget_refund_description">因退货而减少</string>
-  <string name="tangempay_cashback_widget_title">%2$s 中的 %1$s 返现</string>
+  <string name="tangempay_cashback_widget_title">%2$s 月获 %1$s</string>
   <string name="tangempay_change_pin_code">更改PIN码</string>
   <string name="tangempay_changing_plan">正在更改您的套餐</string>
   <string name="tangempay_choose_network_fast_way">快速方式</string>
