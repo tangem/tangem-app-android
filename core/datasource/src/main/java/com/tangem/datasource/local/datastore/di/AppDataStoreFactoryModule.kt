@@ -1,7 +1,7 @@
-package com.tangem.datasource.di
+package com.tangem.datasource.local.datastore.di
 
 import com.tangem.datasource.utils.AppDataStoreFactory
-import com.tangem.datasource.utils.DefaultAppDataStoreFactory
+import com.tangem.datasource.local.datastore.DefaultAppDataStoreFactory
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
