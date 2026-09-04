@@ -87,6 +87,45 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
+    fun `GIVEN member redeemed a later invite WHEN model created THEN free slot offers the unredeemed one`() =
+        runTest {
+            // Arrange
+            stub(
+                account = pendingAccount(members = listOf(creator, member.copy(inviteId = INVITE_B))),
+                invites = listOf(INVITE_A, INVITE_B),
+            )
+
+            // Act
+            val slot = createModel().uiState.value.members
+                .filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
+                .single()
+            slot.onInviteClick()
+
+            // Assert
+            verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
+            verify(exactly = 0) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_B") }
+        }
+
+    @Test
+    fun `GIVEN redeemed invite differs in case WHEN model created THEN it is still excluded`() = runTest {
+        // Arrange
+        stub(
+            account = pendingAccount(members = listOf(creator, member.copy(inviteId = INVITE_B.uppercase()))),
+            invites = listOf(INVITE_A, INVITE_B),
+        )
+
+        // Act
+        val slot = createModel().uiState.value.members
+            .filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
+            .single()
+        slot.onInviteClick()
+
+        // Assert
+        verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
+        verify(exactly = 0) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_B") }
+    }
+
+    @Test
     fun `GIVEN no invites on this device WHEN model created THEN no slot can be invited`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = emptyList())
