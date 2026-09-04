@@ -3,6 +3,7 @@ package com.tangem.tap.common.pushes
 import android.content.Context
 import androidx.core.net.toUri
 import com.google.firebase.messaging.RemoteMessage
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
 import javax.inject.Inject
@@ -22,6 +23,9 @@ internal class PushMessageDispatcher @Inject constructor(
             remoteMessage = message,
             handleNotificationTrigger = false,
         )
+
+        // TODO v_rodionov: REMOVE IT, only for test
+        TangemLogger.i("TEST PUSH ${message.data}")
 
         pushMessageHandler.onMessageReceived(message.data)
 

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.res.TangemTheme
@@ -135,19 +136,21 @@ private fun LazyListScope.payloadData(testPushUM: TestPushUM, testPushClickInten
                 text = "Payload (JSON)",
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
             )
+            val value = testPushUM.payload
             OutlinedTextField(
-                value = testPushUM.payload,
+                value = value,
                 onValueChange = testPushClickIntents::onPayloadChange,
-                placeholder = {
-                    Text(
-                        text = "Json...",
-                        style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
+                placeholder = if (value.text.isNotEmpty()) {
+                    null
+                } else {
+                    {
+                        Text(text = "Json...")
+                    }
                 },
                 textStyle = TangemTheme.typography.body2.copy(fontFamily = FontFamily.Monospace),
+                colors = TangemTextFieldsDefault.defaultTextFieldColors,
                 isError = testPushUM.payloadError != null,
                 minLines = 6,
                 maxLines = 16,
