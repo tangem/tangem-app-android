@@ -312,7 +312,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     networkTokens = walletManager.cardTokens.toSet(),
                 ).convertList(itemsResult.data.items),
             )
-            is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
+            is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
         }
     }
 
