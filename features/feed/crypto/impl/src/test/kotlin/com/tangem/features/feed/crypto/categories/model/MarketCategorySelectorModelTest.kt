@@ -2,7 +2,6 @@ package com.tangem.features.feed.crypto.categories.model
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -13,9 +12,12 @@ import com.tangem.domain.markets.MarketCategoryListBatchFlow
 import com.tangem.domain.markets.MarketCategoryListBatchingContext
 import com.tangem.domain.markets.MarketCategoryListConfig
 import com.tangem.domain.markets.MarketCategoryPage
+import com.tangem.features.feed.crypto.categories.ALL_ROW_ID
+import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
-import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
-import com.tangem.features.feed.crypto.categories.components.MarketCategorySelectorComponent.ModelCallback
+import com.tangem.features.feed.crypto.categories.createCategory
+import com.tangem.features.feed.crypto.categories.selectionOf
+import com.tangem.features.feed.crypto.categories.ui.state.FeaturedCategoryUM
 import com.tangem.features.feed.crypto.categories.ui.state.MarketCategoryItemUM
 import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorUM
 import com.tangem.pagination.Batch
@@ -27,10 +29,12 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +48,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -61,6 +66,10 @@ internal class MarketCategorySelectorModelTest {
 
     private val batchingContextSlot = slot<MarketCategoryListBatchingContext>()
     private var batchFlow = FakeCategoryBatchFlow()
+    private val filterController = MarketCategoryFilterController()
+
+    /** The model's scope is its own SupervisorJob, so its eager collectors outlive a test unless destroyed. */
+    private var model: MarketCategorySelectorModel? = null
 
     @BeforeEach
     fun resetMocks() {
@@ -76,6 +85,12 @@ internal class MarketCategorySelectorModelTest {
             getMarketCategoryListFlowUseCase(batchingContext = capture(batchingContextSlot), batchFlowType = any())
         } returns batchFlow
         stubFeatured(meme)
+    }
+
+    @AfterEach
+    fun destroyModel() {
+        model?.onDestroy()
+        model = null
     }
 
     @Test
@@ -135,8 +150,7 @@ internal class MarketCategorySelectorModelTest {
     @Test
     fun `GIVEN a row tapped WHEN apply not pressed THEN the tab is never told`() = runTest {
         // Arrange
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, callback = callback)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai)
         advanceUntilIdle()
@@ -145,15 +159,14 @@ internal class MarketCategorySelectorModelTest {
         model.rowFor(ai.id).onItemClick()
 
         // Assert
-        assertThat(callback.selection).isNull()
+        assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
         verify(exactly = 0) { router.pop() }
     }
 
     @Test
     fun `GIVEN a row tapped WHEN apply pressed THEN the selection reaches the tab and the screen pops`() = runTest {
         // Arrange
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, callback = callback)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai)
         advanceUntilIdle()
@@ -163,15 +176,14 @@ internal class MarketCategorySelectorModelTest {
         model.content().footer.onApply()
 
         // Assert
-        assertThat(callback.selection).isEqualTo(selectionOf(ai))
+        assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
         verify(exactly = 1) { router.pop() }
     }
 
     @Test
     fun `GIVEN a badge tapped WHEN apply pressed THEN it selects the same category as its row`() = runTest {
         // Arrange
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, callback = callback)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai, meme)
         advanceUntilIdle()
@@ -181,15 +193,14 @@ internal class MarketCategorySelectorModelTest {
         model.content().footer.onApply()
 
         // Assert
-        assertThat(callback.selection).isEqualTo(selectionOf(meme))
+        assertThat(filterController.selection.value).isEqualTo(selectionOf(meme))
         assertThat(model.rowFor(meme.id).isSelected).isTrue()
     }
 
     @Test
     fun `GIVEN a filter applied WHEN the All row tapped and applied THEN the empty selection is sent`() = runTest {
         // Arrange
-        val callback = RecordingCallback()
-        val model = createModel(testScope = this, selection = selectionOf(ai), callback = callback)
+        val model = createModel(testScope = this, selection = selectionOf(ai))
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai)
         advanceUntilIdle()
@@ -199,7 +210,7 @@ internal class MarketCategorySelectorModelTest {
         model.content().footer.onApply()
 
         // Assert
-        assertThat(callback.selection).isEqualTo(MarketCategorySelection())
+        assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
     }
 
     @Test
@@ -299,6 +310,189 @@ internal class MarketCategorySelectorModelTest {
         assertThat(actions.filterIsInstance<BatchAction.LoadMore<MarketCategoryListConfig>>()).hasSize(1)
     }
 
+    @Test
+    fun `GIVEN featured resolved WHEN the list has not arrived THEN the screen is still loading`() = runTest {
+        // Arrange — the rail alone is not a screen: the list is the filter, so it gates the content
+        val model = createModel(testScope = this)
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        coVerify { getMarketCategoriesUseCase(any(), any(), any(), any(), any()) }
+        assertThat(model.uiState.value).isEqualTo(MarketCategorySelectorUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN the backend curates no featured categories WHEN the list loads THEN the rail is hidden`() = runTest {
+        // Arrange — an empty success, as opposed to the already covered failure
+        stubFeatured()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchFlow.emitFirstPage(ai, defi)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.content().featured).isNull()
+        assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID, ai.id, defi.id).inOrder()
+    }
+
+    @Test
+    fun `GIVEN an empty first page WHEN it arrives THEN only the All row is offered`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        batchFlow.emitFirstPage()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID)
+    }
+
+    @Test
+    fun `GIVEN a selection absent from the page WHEN it loads THEN nothing is checked`() = runTest {
+        // Arrange — an id filtered out of the current listing must not silently check the All row
+        val model = createModel(testScope = this, selection = selectionOf(defi))
+        advanceUntilIdle()
+
+        // Act
+        batchFlow.emitFirstPage(ai)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.rows().none { it.isSelected }).isTrue()
+        assertThat(model.content().isEdited).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the checked row WHEN tapped again THEN the draft keeps it`() = runTest {
+        // Arrange — clearing is the All row's job, so the row itself never deselects
+        val model = createModel(testScope = this, selection = selectionOf(ai))
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai, defi)
+        advanceUntilIdle()
+
+        // Act
+        model.rowFor(ai.id).onItemClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.rowFor(ai.id).isSelected).isTrue()
+        assertThat(model.content().isEdited).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the checked badge WHEN tapped again THEN the draft is cleared`() = runTest {
+        // Arrange — the rail has no All badge, so the badge itself toggles off
+        val model = createModel(testScope = this, selection = selectionOf(meme))
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai, meme)
+        advanceUntilIdle()
+
+        // Act
+        model.badgeFor(meme.id).onItemClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.rowFor(ALL_ROW_ID).isSelected).isTrue()
+        assertThat(model.content().isEdited).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the app currency WHEN model created THEN the first page of featured categories is requested`() =
+        runTest {
+            // Act
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                getMarketCategoriesUseCase(
+                    currency = AppCurrency.Default.code,
+                    offset = 0,
+                    limit = 20,
+                    timestamp = null,
+                    featured = true,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN the app currency WHEN model created THEN the list request carries it`() = runTest {
+        // Arrange — actionsFlow is a rendezvous SharedFlow and drops what it emits with no subscriber, so
+        // the collector is attached as the batch flow is handed over, before init can reload
+        val actions = mutableListOf<BatchAction<Int, MarketCategoryListConfig, Nothing>>()
+        every {
+            getMarketCategoryListFlowUseCase(batchingContext = capture(batchingContextSlot), batchFlowType = any())
+        } answers {
+            val context = firstArg<MarketCategoryListBatchingContext>()
+            context.coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                context.actionsFlow.collect(actions::add)
+            }
+            batchFlow
+        }
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.filterIsInstance<BatchAction.Reload<MarketCategoryListConfig>>().map { it.requestParams })
+            .containsExactly(MarketCategoryListConfig(fiatCurrencySymbol = AppCurrency.Default.code))
+    }
+
+    @Test
+    fun `GIVEN a rendered list WHEN the first page fails afterwards THEN the error takes the screen`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai)
+        advanceUntilIdle()
+
+        // Act
+        batchFlow.emitInitialLoadingError()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(MarketCategorySelectorUM.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN a next batch in flight WHEN it lands THEN the list stops reporting it`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchFlow.emitNextBatchLoading(ai)
+        advanceUntilIdle()
+
+        // Act
+        batchFlow.emitFirstPage(ai, defi)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.content().categories.isLoadingMore).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an untouched draft WHEN apply pressed THEN the tab is still told and the screen pops`() = runTest {
+        // Arrange — the footer is hidden while unedited, but the model must not depend on that
+        val model = createModel(testScope = this, selection = selectionOf(ai))
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai, defi)
+        advanceUntilIdle()
+
+        // Act
+        model.content().footer.onApply()
+
+        // Assert
+        assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
+        verify(exactly = 1) { router.pop() }
+    }
+
     private fun stubFeatured(vararg categories: MarketCategory) {
         coEvery { getMarketCategoriesUseCase(any(), any(), any(), any(), any()) } returns Either.Right(
             MarketCategoryPage(categories = categories.toList(), total = categories.size, offset = 0, limit = 20),
@@ -308,18 +502,18 @@ internal class MarketCategorySelectorModelTest {
     private fun createModel(
         testScope: TestScope,
         selection: MarketCategorySelection = MarketCategorySelection(),
-        callback: ModelCallback = RecordingCallback(),
     ): MarketCategorySelectorModel {
+        // the screen reads the applied filter from the controller, so it is seeded before construction
+        filterController.onSelectionApplied(selection)
+
         return MarketCategorySelectorModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            paramsContainer = MutableParamsContainer(
-                MarketCategorySelectorRoute(selection = selection, callback = callback),
-            ),
+            filterController = filterController,
             router = router,
             getMarketCategoriesUseCase = getMarketCategoriesUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getMarketCategoryListFlowUseCase = getMarketCategoryListFlowUseCase,
-        )
+        ).also { model = it }
     }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
@@ -329,6 +523,7 @@ internal class MarketCategorySelectorModelTest {
             mainImmediate = testDispatcher,
             io = testDispatcher,
             default = testDispatcher,
+            single = testDispatcher,
         )
     }
 
@@ -338,15 +533,8 @@ internal class MarketCategorySelectorModelTest {
 
     private fun MarketCategorySelectorModel.rowFor(id: String): MarketCategoryItemUM = rows().single { it.id == id }
 
-    private class RecordingCallback : ModelCallback {
-
-        var selection: MarketCategorySelection? = null
-            private set
-
-        override fun onCategorySelect(selection: MarketCategorySelection) {
-            this.selection = selection
-        }
-    }
+    private fun MarketCategorySelectorModel.badgeFor(id: String): FeaturedCategoryUM =
+        content().featured!!.items.single { it.id == id }
 
     private class FakeCategoryBatchFlow : MarketCategoryListBatchFlow {
 
@@ -386,30 +574,8 @@ internal class MarketCategorySelectorModelTest {
 
     private companion object {
 
-        const val ALL_ROW_ID = "__all__"
-
         val ai = createCategory(id = "ai", name = "AI")
         val defi = createCategory(id = "defi", name = "DeFi")
         val meme = createCategory(id = "meme", name = "Meme", isFeatured = true)
-
-        fun selectionOf(category: MarketCategory) = MarketCategorySelection(
-            category = MarketCategorySelection.Entry(id = category.id, name = category.name),
-        )
-
-        fun createCategory(
-            id: String,
-            name: String,
-            isFeatured: Boolean = false,
-            tokensCount: Int = 212,
-        ) = MarketCategory(
-            id = id,
-            name = name,
-            description = null,
-            marketCap = null,
-            marketCapChangePercent24h = null,
-            volume24h = null,
-            isFeatured = isFeatured,
-            tokensCount = tokensCount,
-        )
     }
 }
