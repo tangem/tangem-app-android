@@ -16,6 +16,7 @@ import coil.request.ImageRequest
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.wallet.R
 
@@ -72,19 +73,23 @@ class PushNotificationDelegate(private val context: Context) {
             "NotificationManager not available"
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(
-                channelId,
-                ContextCompat.getString(context, R.string.tangem_app_name),
-                NotificationManager.IMPORTANCE_HIGH,
-            )
-            notificationManager.createNotificationChannel(notificationChannel)
-        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val notificationChannel = NotificationChannel(
+                    channelId,
+                    ContextCompat.getString(context, R.string.tangem_app_name),
+                    NotificationManager.IMPORTANCE_HIGH,
+                )
+                notificationManager.createNotificationChannel(notificationChannel)
+            }
 
-        notificationManager.notify(
-            /* id = */ notificationId,
-            /* notification = */ notificationBuilder.build(),
-        )
+            notificationManager.notify(
+                /* id = */ notificationId,
+                /* notification = */ notificationBuilder.build(),
+            )
+        } catch (e: SecurityException) {
+            TangemLogger.e("Failed to post push notification", e)
+        }
     }
 
     private fun getBitmapImageFromUrl(url: Uri): Bitmap? {
