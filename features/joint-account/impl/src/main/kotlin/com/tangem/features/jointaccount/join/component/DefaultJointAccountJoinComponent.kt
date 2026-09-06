@@ -11,7 +11,6 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -113,13 +112,7 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
     }
 
     private suspend fun onDisplayNameContinue(name: String) {
-        when (val action = model.join(inviteId = params.inviteId, memberName = name)) {
-            is JoinResultAction.OpenMembers -> router.replaceAll(
-                AppRoute.JointAccountMembers(
-                    userWalletId = action.userWalletId,
-                    cryptoAccountId = action.cryptoAccountId,
-                ),
-            )
+        when (model.join(inviteId = params.inviteId, memberName = name)) {
             JoinResultAction.CloseFlow -> router.pop()
             JoinResultAction.None -> Unit
         }
