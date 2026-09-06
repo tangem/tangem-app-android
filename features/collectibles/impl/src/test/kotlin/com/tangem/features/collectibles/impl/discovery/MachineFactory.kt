@@ -1,6 +1,6 @@
 package com.tangem.features.collectibles.impl.discovery
 
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchListState
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
