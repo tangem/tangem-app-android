@@ -10,6 +10,7 @@ dependencies {
     // endregion
 
     // region Core
+    api(projects.core.error)
     api(projects.core.pagination)
     api(projects.core.utils)
     // endregion
