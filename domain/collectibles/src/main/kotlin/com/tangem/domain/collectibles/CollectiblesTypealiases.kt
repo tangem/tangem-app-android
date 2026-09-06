@@ -1,4 +1,4 @@
-package com.tangem.domain.collectibles.model
+package com.tangem.domain.collectibles
 
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
