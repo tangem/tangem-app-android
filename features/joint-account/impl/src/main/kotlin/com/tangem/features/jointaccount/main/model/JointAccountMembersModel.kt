@@ -165,8 +165,20 @@ internal class JointAccountMembersModel @Inject constructor(
 
             val result = activateJointAccountUseCase(account = account)
             stateController.update(SetActivationConfirmationTransformer(confirmation = null))
-            result.onLeft(::onActivationError)
+            result
+                .onLeft(::onActivationError)
+                .onRight { onActivated() }
         }
+    }
+
+    private fun onActivated() {
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
+                startIconId = CoreUiR.drawable.ic_success_20,
+            ),
+        )
+        router.pop()
     }
 
     private suspend fun findAccount(cryptoAccountId: String): Account.Joint? {
