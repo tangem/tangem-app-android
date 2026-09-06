@@ -1026,6 +1026,7 @@
   <string name="introduction_stories_two_subtitle">Use any of your cards to access your wallet</string>
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
   <string name="introduction_terms_of_service">Terms of service</string>
+  <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
