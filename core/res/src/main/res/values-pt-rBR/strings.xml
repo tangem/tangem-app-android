@@ -40,6 +40,7 @@
     <item quantity="one">pessoa</item>
     <item quantity="other">pessoas</item>
   </plurals>
+  <string name="account_details_joint_members_progress">%1$s/%2$s pessoas</string>
   <string name="account_details_joint_pending_description">A conta ainda está sendo preenchida com membros</string>
   <string name="account_details_title">Conta</string>
   <string name="account_edit_failure_dialog_title">Não consigo editar a conta.</string>
@@ -1026,6 +1027,8 @@
   <string name="joint_account_activation_account_button_title">Ativar conta</string>
   <string name="joint_account_activation_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação</string>
   <string name="joint_account_activation_title">Você está ativando uma conta compartilhada</string>
+  <string name="joint_account_coming_soon_description">Estamos trabalhando nisso. O suporte será disponibilizado em uma das próximas atualizações.</string>
+  <string name="joint_account_coming_soon_title">Em breve nas contas conjuntas</string>
   <string name="joint_account_invite_invalid_subtitle">Verifique se você abriu o link completo ou peça ao proprietário da conta para enviá-lo novamente</string>
   <string name="joint_account_invite_invalid_title">O link de convite não é válido</string>
   <string name="joint_account_invite_load_failed_subtitle">Falha ao carregar a página do convite.\nToque para recarregar</string>
@@ -1047,6 +1050,7 @@
   <string name="joint_account_invite_members_subtitle">%1$s de %2$s entraram, incluindo você</string>
   <string name="joint_account_invite_members_title">Convidar membros</string>
   <string name="joint_account_invite_members_to_join">Convide membros para participar</string>
+  <string name="joint_account_invite_members_waiting_title">Aguardando membros</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Todos os membros desta conta compartilham um único saldo. Qualquer membro pode gastar ou sacar os fundos a qualquer momento — inclusive sem a sua aprovação</string>
   <string name="joint_account_join_confirm_sheet_title">Você está entrando em uma conta compartilhada</string>
   <string name="joint_account_join_invalid_link_subtitle">Verifique se você abriu o link completo ou peça ao proprietário da conta para enviá-lo novamente.</string>
@@ -1067,6 +1071,7 @@
   <string name="joint_account_members_signers_title">Obrigatório assinar</string>
   <string name="joint_account_members_subtitle">Defina quantas pessoas compartilham a conta. Cada transação, como enviar, fazer swap ou encerrar a conta, aguarda %1$s de %2$s para assinar. Isso é definido uma única vez</string>
   <string name="joint_account_members_subtitle_helper_part"> %1$s de %2$s para assinar</string>
+  <string name="joint_account_members_subtitle_main_part">Defina quantas pessoas compartilham a conta. Em cada operação — como enviar, fazer swap ou encerrar a conta — são necessárias %1$s assinaturas. Isso é definido uma única vez.</string>
   <string name="joint_account_members_title">Membros</string>
   <string name="joint_account_members_total_subtitle">Máx. %1$s pessoas, incluindo você</string>
   <string name="joint_account_members_total_title">Total de membros</string>
@@ -1124,6 +1129,7 @@
   <string name="manage_tokens_unavailable_description">O token selecionado está atualmente indisponível para ações na carteira de criptomoedas. Mas não se preocupe, você pode demonstrar seu interesse votando a favor dele.</string>
   <string name="manage_tokens_unavailable_vote">Voto positivo</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">A carteira não suporta mais de uma rede.</string>
+  <string name="market_categories">Categorias</string>
   <string name="market_chart_ai_total">Total de IA:</string>
   <string name="market_chart_ask_for_ai_summary_button">Solicite um resumo de IA</string>
   <string name="market_chart_bubble_no_amount">Nenhum valor em fichas</string>
@@ -1156,6 +1162,31 @@
   <string name="markets_portfolio_eligible_block_title">Outros tokens elegíveis</string>
   <string name="markets_pulse_common_title">Pulso do mercado</string>
   <string name="markets_quick_actions">Ações rápidas</string>
+  <string name="markets_real_assets_category_bonds">Títulos de dívida</string>
+  <string name="markets_real_assets_category_commodities">Commodities</string>
+  <string name="markets_real_assets_category_etfs">ETFs</string>
+  <string name="markets_real_assets_category_stablecoins">Stablecoins</string>
+  <string name="markets_real_assets_category_xstocks">xStocks</string>
+  <string name="markets_real_assets_empty_title">Nenhum ativo encontrado</string>
+  <string name="markets_real_assets_filter_sectors_title">Setores</string>
+  <string name="markets_real_assets_filter_title">Categoria</string>
+  <string name="markets_real_assets_interval_day">Dia</string>
+  <string name="markets_real_assets_interval_month">Mês</string>
+  <string name="markets_real_assets_interval_week">Semana</string>
+  <string name="markets_real_assets_region_restriction_description">Ações, ETFs e títulos de dívida não estão disponíveis no Reino Unido e nos EUA</string>
+  <string name="markets_real_assets_region_restriction_title">Não está disponível na sua região</string>
+  <string name="markets_real_assets_sector_xstocks_communication">Serviços de comunicação</string>
+  <string name="markets_real_assets_sector_xstocks_consumer">Bens de consumo</string>
+  <string name="markets_real_assets_sector_xstocks_crypto">Cripto</string>
+  <string name="markets_real_assets_sector_xstocks_energy">Energia</string>
+  <string name="markets_real_assets_sector_xstocks_financials">Serviços financeiros</string>
+  <string name="markets_real_assets_sector_xstocks_healthcare">Saúde</string>
+  <string name="markets_real_assets_sector_xstocks_industrials">Bens industriais</string>
+  <string name="markets_real_assets_sector_xstocks_technology">Tecnologia</string>
+  <string name="markets_real_assets_sort_market_cap">Capitalização de mercado</string>
+  <string name="markets_real_assets_sort_top_gainers">Maiores altas</string>
+  <string name="markets_real_assets_sort_top_losers">Maiores quedas</string>
+  <string name="markets_real_assets_title">Ativos do mundo real</string>
   <string name="markets_search_clear_all_hints">Limpar tudo</string>
   <string name="markets_search_header_title">Pesquisar tokens</string>
   <string name="markets_search_hint_header">Pesquisas recentes</string>
@@ -1593,6 +1624,7 @@
   <string name="prediction_place_fee">Taxa</string>
   <string name="prediction_place_insufficient_balance_bet">Saldo insuficiente – adicione fundos para apostar</string>
   <string name="prediction_place_insufficient_balance_fees">Saldo insuficiente  – para cobrir as taxas</string>
+  <string name="prediction_place_min_amount_error">O valor mínimo deve ser superior a: %s</string>
   <string name="prediction_place_notification_awaiting_funds_description">Seus fundos estão a caminho. Seu saldo é atualizado automaticamente a cada poucos segundos, então você pode permanecer nesta tela.</string>
   <string name="prediction_place_notification_awaiting_funds_title">Aguardando os fundos</string>
   <string name="prediction_place_notification_market_closed_description">Este mercado não aceita mais ordens</string>
@@ -1612,8 +1644,10 @@
   <string name="prediction_place_result_partial_banner_description">Sua ordem foi parcialmente executada devido à quantidade insuficiente de ações disponíveis na corretora Polymarket dentro do limite de derrapagem</string>
   <string name="prediction_place_result_partial_banner_title">Parcialmente executada</string>
   <string name="prediction_place_result_partial_title">Parcialmente enviada</string>
+  <string name="prediction_place_result_placed_title">Enviada %s</string>
   <string name="prediction_place_result_success_title">Previsão enviada</string>
   <string name="prediction_place_result_to_main">Para o principal</string>
+  <string name="prediction_place_result_tokens_bought">Tokens comprados</string>
   <string name="prediction_place_slippage">Derrapagem</string>
   <string name="prediction_place_slippage_default">Padrão %s</string>
   <string name="prediction_place_slippage_error">Valor não suportado</string>
@@ -2485,8 +2519,8 @@
   <string name="tangempay_order_type_title">Solicitar novo cartão</string>
   <string name="tangempay_order_type_unavailable">Indisponível</string>
   <string name="tangempay_other_networks_header">Outras redes</string>
-  <string name="tangempay_other_networks_subtitle">e, em seguida, faça swap para uma conta de pagamento sem tarifas</string>
-  <string name="tangempay_other_networks_title">Envie USDT / USDC de qualquer rede para sua carteira Tangem</string>
+  <string name="tangempay_other_networks_subtitle">E faça swap para uma conta de pagamento sem tarifas</string>
+  <string name="tangempay_other_networks_title">Envie USDT/USDC de qualquer EVM-rede para sua carteira Tangem</string>
   <string name="tangempay_pay_support">Suporte</string>
   <string name="tangempay_payment_account">Conta de pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sessão expirada</string>
@@ -2538,7 +2572,7 @@
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária via ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">De uma conta bancária</string>
   <string name="tangempay_topup_receive_body">Envie USDC Polygon para o endereço da sua conta</string>
   <string name="tangempay_topup_receive_body_multichain">Envie USDC ou USDT para o endereço da sua conta</string>
@@ -2891,7 +2925,7 @@
   <string name="warning_approval_in_progress_message">O processo de concessão de licenças está em andamento e será concluído em breve.</string>
   <string name="warning_approval_in_progress_title">Aprovação em andamento</string>
   <string name="warning_backup_error_add_funds_message">Esta carteira apresenta um problema de backup. Entre em contato com o suporte para resolvê-lo.</string>
-  <string name="warning_backup_error_add_funds_message_v2">Esta carteira apresenta um problema com backup. Transfira seus fundos para outra carteira e redefina-a.</string>
+  <string name="warning_backup_error_add_funds_message_v2">A carteira que você quer adicionar fundos tem um problema de backup. Transfira seus fundos para outra carteira e redefina-a.</string>
   <string name="warning_backup_error_add_funds_title">A adição de fundos está desativada.</string>
   <string name="warning_backup_error_add_funds_title_v2">Problema com o backup detectado</string>
   <string name="warning_backup_error_attention_message">Seus cartões não foram ativados corretamente. Continuar usando esta carteira pode resultar na perda de acesso aos seus fundos. Transfira seus fundos para outra carteira, restaure as configurações de fábrica de todos os seus cartões e ative-os novamente antes de continuar.</string>

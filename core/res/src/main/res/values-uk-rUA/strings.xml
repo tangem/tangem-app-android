@@ -2305,8 +2305,8 @@
   <string name="tangempay_order_type_title">Замовлення нової картки</string>
   <string name="tangempay_order_type_unavailable">Недоступно</string>
   <string name="tangempay_other_networks_header">Інші мережі</string>
-  <string name="tangempay_other_networks_subtitle">А потім обміняйте на платіжний рахунок без комісії</string>
-  <string name="tangempay_other_networks_title">Надішліть USDT / USDC у будь-якій мережі на ваш Tangem Wallet</string>
+  <string name="tangempay_other_networks_subtitle">Потім обміняйте на платіжний рахунок без комісії</string>
+  <string name="tangempay_other_networks_title">Надішліть USDT/USDC у будь-якій EVM-мережі на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Підтримка</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Сесія закінчилася</string>
@@ -2358,7 +2358,7 @@
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Отримати USD з банківського рахунку через ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Отримати USD з банківського рахунку через ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">З банківського рахунку</string>
   <string name="tangempay_topup_receive_body">Надішліть USDC Polygon на адресу вашого акаунту</string>
   <string name="tangempay_topup_receive_body_multichain">Надішліть USDC або USDT на адресу вашого рахунку</string>
@@ -2619,6 +2619,7 @@
   <string name="warning_approval_in_progress_message">Процес підтвердження наразі триває і буде завершено найближчим часом</string>
   <string name="warning_approval_in_progress_title">Підтвердження в процесі</string>
   <string name="warning_backup_error_add_funds_message">У цьому гаманці виникла проблема з резервним копіюванням. Зверніться до служби підтримки для її вирішення.</string>
+  <string name="warning_backup_error_add_funds_message_v2">Гаманець, який ви хочете поповнити, має проблему з резервною копією. Переведіть кошти з нього на інший гаманець і скиньте його.</string>
   <string name="warning_backup_error_add_funds_title">Поповнення вимкнено</string>
   <string name="warning_backup_error_attention_message">Ваші картки були активовані неправильно. Щоб убезпечити кошти, переведіть їх на інший гаманець, скиньте картки до заводських налаштувань і активуйте заново.</string>
   <string name="warning_backup_error_attention_title">Потрібна дія: скиньте налаштування гаманця</string>
