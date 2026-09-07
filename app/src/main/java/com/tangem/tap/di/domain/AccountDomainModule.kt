@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.*
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.feature.referral.data.ExternalReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -67,12 +68,14 @@ internal object AccountDomainModule {
         mainAccountTokensMigration: MainAccountTokensMigration,
         cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
         singleAccountListFetcher: SingleAccountListFetcher,
+        singleJointAccountListFetcher: SingleJointAccountListFetcher,
     ): RecoverCryptoPortfolioUseCase {
         return RecoverCryptoPortfolioUseCase(
             crudRepository = accountsCRUDRepository,
             mainAccountTokensMigration = mainAccountTokensMigration,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             singleAccountListFetcher = singleAccountListFetcher,
+            singleJointAccountListFetcher = singleJointAccountListFetcher,
         )
     }
 

@@ -28,6 +28,7 @@ internal data class TangemPayVirtualAccountDepositUM(
 
     @Immutable
     data class FeeRow(
+        val type: String,
         val title: TextReference,
         val value: String,
     )

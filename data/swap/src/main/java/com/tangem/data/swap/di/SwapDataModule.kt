@@ -12,6 +12,7 @@ import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
@@ -75,6 +76,7 @@ internal object SwapDataModule {
         networkFactory: NetworkFactory,
         multiAccountListSupplier: MultiAccountListSupplier,
         dispatchers: CoroutineDispatcherProvider,
+        growPreferencesKeys: GrowPreferencesKeys,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
@@ -82,6 +84,7 @@ internal object SwapDataModule {
             networkFactory = networkFactory,
             multiAccountListSupplier = multiAccountListSupplier,
             dispatchers = dispatchers,
+            growPreferencesKeys = growPreferencesKeys,
         )
     }
 }

@@ -32,17 +32,21 @@ data class JointAccountDto(
 ) {
 
     /**
-     * @property name    display name, 1..25 chars
-     * @property address the member's owner address in the Safe, EIP-55 checksummed. The app finds itself in the list
-     * by comparing this against the address it derives from the card (lowercased), never by trusting the backend
-     * @property role    `creator` | `member` — only the creator sends invites and activates the account. Raw string,
+     * @property name     display name, 1..25 chars
+     * @property address  the member's owner address in the Safe, lower-case hex (the backend does not checksum).
+     * The app finds itself in the list by comparing this against the address it derives from the card
+     * (case-insensitively), never by trusting the backend
+     * @property role     `creator` | `member` — only the creator sends invites and activates the account. Raw string,
      * same reasoning as [JointAccountDto.status]
+     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
+     * one, and absent in pre-v1.3 responses
      */
     @JsonClass(generateAdapter = true)
     data class Member(
         @Json(name = "name") val name: String,
         @Json(name = "address") val address: String,
         @Json(name = "role") val role: String,
+        @Json(name = "inviteId") val inviteId: String? = null,
     )
 
     /**

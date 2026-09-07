@@ -77,8 +77,6 @@ dependencies {
 
     // region Network
     api(deps.moshi)
-    implementation(deps.moshi.adapters)
-    implementation(deps.moshi.adapters.ext)
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.okHttp)

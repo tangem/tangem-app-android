@@ -22,7 +22,7 @@ import com.tangem.core.remote.header.RequestHeader
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.core.remote.config.managers.MutableApiConfigsManager
-import com.tangem.datasource.utils.AddHeadersInterceptor
+import com.tangem.datasource.remote.interceptors.AddHeadersInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.extensions.*
