@@ -57,15 +57,22 @@ private class CoilErrorEventListener : EventListener {
     }
 
     /**
-     * Query parameter values are dropped because a signed media url carries its credentials there and
-     * this line lands in the log file a user attaches to a support request — the log sanitizer masks
-     * hex-like sequences only, so a token would survive it. Parameter *names* are kept: whether a url
-     * arrived with its query intact is exactly what a broken-image report has to answer.
+     * Credential-bearing parts — query values, userinfo, fragment — are dropped because this line lands
+     * in the log file a user attaches to a support request, and the log sanitizer masks hex-like
+     * sequences only, so a signed url's token would survive it. Parameter *names* are kept: whether a
+     * url arrived with its query intact is exactly what a broken-image report has to answer. Everything
+     * that identifies the endpoint, the port included, is preserved.
      */
     private fun Any?.redactQueryValues(): String {
         val raw = toString()
         val url = raw.toHttpUrlOrNull() ?: return raw.take(n = MAX_LOGGED_DATA_LENGTH)
-        val base = "${url.scheme}://${url.host}${url.encodedPath}"
+        val base = url.newBuilder()
+            .username("")
+            .password("")
+            .query(null)
+            .fragment(null)
+            .build()
+            .toString()
 
         return if (url.querySize == 0) {
             base
