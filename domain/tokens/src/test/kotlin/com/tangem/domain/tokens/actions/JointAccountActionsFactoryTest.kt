@@ -40,6 +40,9 @@ internal class JointAccountActionsFactoryTest {
     fun resetMocks() {
         clearMocks(walletManagersFacade, rampStateManager)
         coEvery { rampStateManager.availableForSell(any(), any(), any()) } returns Unit.right()
+        coEvery {
+            rampStateManager.getSendUnavailabilityReason(any(), any())
+        } returns ScenarioUnavailabilityReason.None
     }
 
     @Test
@@ -69,6 +72,28 @@ internal class JointAccountActionsFactoryTest {
                 ActionState.HideToken(ScenarioUnavailabilityReason.None),
             ).inOrder()
         }
+
+    @Test
+    fun `GIVEN an empty balance WHEN create THEN send keeps the natural reason`() = runTest {
+        // Arrange
+        val naturalReason = ScenarioUnavailabilityReason.EmptyBalance(
+            withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+        )
+        coEvery { rampStateManager.getSendUnavailabilityReason(any(), any()) } returns naturalReason
+        val status = statusWithAddress(SAFE)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.Send>().single().unavailabilityReason)
+            .isEqualTo(naturalReason)
+    }
 
     @Test
     fun `GIVEN staking unavailable for the currency WHEN create THEN there is no stake action at all`() = runTest {
