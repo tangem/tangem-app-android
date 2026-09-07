@@ -132,6 +132,12 @@ interface TangemPayApi {
     @GET("v1/customer/offers")
     suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>
 
+    @GET("v1/product-instances/{product_instance_id}/offers")
+    suspend fun getProductInstanceOffers(
+        @Header("Authorization") authHeader: String,
+        @Path("product_instance_id") productInstanceId: String,
+    ): ApiResponse<CustomerOffersResponse>
+
     @GET("v1/customer/balance")
     suspend fun getCardBalance(@Header("Authorization") authHeader: String): ApiResponse<CardBalanceResponse>
 

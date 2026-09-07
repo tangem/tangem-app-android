@@ -17,11 +17,11 @@ sealed class AmountType {
     data class FiatType(val code: String) : AmountType()
 }
 
-/** Converts `BigDecimal` [cryptoCurrency] to [Amount] */
+/** Converts `BigDecimal` [cryptoCurrency] to [Amount] meant for UI, so it carries the display decimals */
 fun BigDecimal.convertToAmount(cryptoCurrency: CryptoCurrency) = Amount(
     currencySymbol = cryptoCurrency.symbol,
     value = this,
-    decimals = cryptoCurrency.decimals,
+    decimals = cryptoCurrency.displayDecimals,
     type = when (cryptoCurrency) {
         is CryptoCurrency.Coin -> AmountType.CoinType
         is CryptoCurrency.Token -> AmountType.TokenType(

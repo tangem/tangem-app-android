@@ -151,7 +151,7 @@ internal class RestoreCloudBackupModelTest {
         val capturedMnemonicString = slot<String>()
         every { mnemonicRepository.generateMnemonic(capture(capturedMnemonicString)) } returns mnemonic
         coEvery {
-            hotWalletImporter.import(any(), mnemonic, null, "My Wallet")
+            hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
         } returns walletId.right()
 
         val model = createModel(this, holderOf(backupInfo))
@@ -164,9 +164,35 @@ internal class RestoreCloudBackupModelTest {
 
         // Assert
         assertThat(capturedMnemonicString.captured).isEqualTo(words)
-        coVerify(exactly = 1) { hotWalletImporter.import(any(), mnemonic, null, "My Wallet") }
+        coVerify(exactly = 1) {
+            hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
+        }
         coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
         verify(exactly = 1) { callbacks.onWalletImported(walletId) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN cloud restore WHEN wallet imported THEN seed phrase is not marked as backed up`() = runTest {
+        // Arrange
+        val capturedBackedUp = slot<Boolean>()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            restoredBackup(mnemonic = "word1 word2").right()
+        every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+        coEvery {
+            hotWalletImporter.import(any(), mnemonic, null, "My Wallet", capture(capturedBackedUp))
+        } returns walletId.right()
+
+        val model = createModel(this, holderOf(backupInfo))
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(capturedBackedUp.captured).isFalse()
         model.onDestroy()
     }
 
@@ -178,7 +204,9 @@ internal class RestoreCloudBackupModelTest {
             coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
                 restoredBackup(mnemonic = "word1 word2", walletName = fullName).right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
-            coEvery { hotWalletImporter.import(any(), mnemonic, null, fullName) } returns walletId.right()
+            coEvery {
+                hotWalletImporter.import(any(), mnemonic, null, fullName, isSeedPhraseBackedUp = false)
+            } returns walletId.right()
 
             val model = createModel(this, holderOf(backupInfo))
             advanceUntilIdle()
@@ -189,7 +217,9 @@ internal class RestoreCloudBackupModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { hotWalletImporter.import(any(), mnemonic, null, fullName) }
+            coVerify(exactly = 1) {
+                hotWalletImporter.import(any(), mnemonic, null, fullName, isSeedPhraseBackedUp = false)
+            }
             model.onDestroy()
         }
 
@@ -211,7 +241,7 @@ internal class RestoreCloudBackupModelTest {
 
             // Assert
             assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassphrase::class.java)
-            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any()) }
             model.onDestroy()
         }
 
@@ -248,7 +278,13 @@ internal class RestoreCloudBackupModelTest {
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
         val capturedPassphrase = slot<CharArray>()
         coEvery {
-            hotWalletImporter.import(any(), mnemonic, capture(capturedPassphrase), "My Wallet")
+            hotWalletImporter.import(
+                any(),
+                mnemonic,
+                capture(capturedPassphrase),
+                "My Wallet",
+                isSeedPhraseBackedUp = false,
+            )
         } returns walletId.right()
 
         val model = createModel(this, holderOf(backupInfo))
@@ -276,7 +312,7 @@ internal class RestoreCloudBackupModelTest {
                 restoredBackup(mnemonic = "word1 word2").right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
-                hotWalletImporter.import(any(), mnemonic, null, "My Wallet")
+                hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
             } returns HotWalletImportError.AlreadySaved.left()
 
             val model = createModel(this, holderOf(backupInfo))
@@ -316,7 +352,7 @@ internal class RestoreCloudBackupModelTest {
             val state = model.uiState.value
             assertThat(state).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
             assertThat((state as RestoreCloudBackupUM.EnterPassword).isError).isTrue()
-            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { hotWalletImporter.import(any(), any(), any(), any(), any()) }
             verify(exactly = 0) { callbacks.onWalletImported(any()) }
             model.onDestroy()
         }
