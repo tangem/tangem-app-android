@@ -5,7 +5,7 @@ import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
-import com.tangem.grow.datasource.txhistory.db.entity.staking.StakingValidatorEntity
+import com.tangem.store.datasource.txhistory.db.entity.staking.StakingValidatorEntity
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.AddressArgument
