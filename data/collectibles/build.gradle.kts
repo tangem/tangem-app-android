@@ -31,6 +31,7 @@ dependencies {
 
     // region Core
     api(projects.core.utils)
+    implementation(projects.core.error)
     implementation(projects.core.error.ext)
     implementation(projects.core.pagination)
     // endregion
