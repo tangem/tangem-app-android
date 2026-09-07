@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -83,6 +84,8 @@ internal class PredictionBalanceUMConverterTest {
         balance = BigDecimal(balance),
         fiatRate = BigDecimal.ONE,
         isTradingAllowed = isTradingAllowed,
+        cryptoCurrency = mockk(relaxed = true),
+        depositAddress = "0xbridge",
     )
 
     private fun provideTestModels() = listOf(
