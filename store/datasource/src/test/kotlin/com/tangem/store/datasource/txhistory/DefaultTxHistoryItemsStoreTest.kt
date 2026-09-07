@@ -1,4 +1,4 @@
-package com.tangem.grow.datasource.txhistory
+package com.tangem.store.datasource.txhistory
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedMapStore

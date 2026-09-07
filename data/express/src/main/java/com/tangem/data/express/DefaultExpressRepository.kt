@@ -6,7 +6,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.datasource.local.converter.toEntity
-import com.tangem.grow.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
