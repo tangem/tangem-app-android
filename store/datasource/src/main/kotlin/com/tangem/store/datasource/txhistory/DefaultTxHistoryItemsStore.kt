@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.txhistory
+package com.tangem.store.datasource.txhistory
 
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.domain.models.network.TxInfo

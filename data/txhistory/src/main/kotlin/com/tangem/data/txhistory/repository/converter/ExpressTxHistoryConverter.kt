@@ -1,8 +1,8 @@
 package com.tangem.data.txhistory.repository.converter
 
 import com.tangem.data.txhistory.repository.factory.toRefundAssetId
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.domain.express.models.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCurrency
