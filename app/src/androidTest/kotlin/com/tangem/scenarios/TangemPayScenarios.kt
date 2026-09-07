@@ -14,6 +14,7 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
+import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
@@ -40,16 +41,91 @@ fun BaseTestCase.openTangemPay() {
     }
 }
 
-/** From the open payment account screen, opens the details bottom sheet for transaction [name]. */
-fun BaseTestCase.openTangemPayTransactionDetails(name: String) {
+/** Imports the hot wallet and stays on Main with the Tangem Pay tile rendered. */
+fun BaseTestCase.openMainScreenWithTangemPayTile() {
+    step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
+        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+    }
+    step("Assert Tangem Pay tile is displayed") {
+        awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
+    }
+}
+
+/** Scrolls the payment-account list down to the [name] transaction row and asserts it is displayed. */
+fun BaseTestCase.assertTangemPayTransactionRowDisplayed(name: String) {
     step("Assert '$name' transaction row is displayed") {
-        awaitSuccess {
+        // When the row comes from the cache, it lands only once the failing history request gives up.
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             onTangemPayMainScreen {
                 scrollToTransactionWithText(name)
                 transactionRowWithText(name).assertIsDisplayed()
             }
         }
     }
+}
+
+/** Asserts the Main tile renders the persisted account data flagged as stale. */
+fun BaseTestCase.assertTangemPayTileShowsCachedData(balance: String, cardsSubtitle: String) {
+    step("Assert Main tile shows the cached balance '$balance'") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { tileBalance.assertTextContainsSafe(balance, substring = true) }
+        }
+    }
+    step("Assert Main tile shows the cached card data '$cardsSubtitle'") {
+        onTangemPayMainScreen { tileWithSubtitle(cardsSubtitle).assertIsDisplayed() }
+    }
+    step("Assert cached-data icon is displayed on the Tangem Pay tile") {
+        // The icon is composed only while the tile serves cached data, and it only turns up once the
+        // failing refresh has downgraded the status to ONLY_CACHE.
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { tileCacheIcon.assertIsDisplayed() }
+        }
+    }
+}
+
+/** Asserts the session-expired banner and its 'Renew session' action are displayed. */
+fun BaseTestCase.assertTangemPaySessionExpiredBanner() {
+    step("Assert 'Payment account session expired' banner is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { sessionExpiredBannerTitle.assertIsDisplayed() }
+        }
+        onTangemPayMainScreen { sessionExpiredBannerMessage.assertIsDisplayed() }
+    }
+    step("Assert 'Renew session' button is displayed on the banner") {
+        onTangemPayMainScreen { renewSessionButton.assertIsDisplayed() }
+    }
+}
+
+/** Asserts the connection-issues banner is displayed. */
+fun BaseTestCase.assertTangemPayConnectionIssuesBanner() {
+    step("Assert 'Connection issues' banner is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { connectionIssuesBannerTitle.assertIsDisplayed() }
+        }
+        onTangemPayMainScreen { connectionIssuesBannerMessage.assertIsDisplayed() }
+    }
+}
+
+/** Asserts the payment account keeps serving its cached data with every money action out of reach. */
+fun BaseTestCase.assertTangemPayStaleState(cachedBalance: String, cachedTransaction: String) {
+    step("Assert payment account balance shows the cached '$cachedBalance'") {
+        onTangemPayMainScreen { balance.assertTextContainsSafe(cachedBalance, substring = true) }
+    }
+    step("Assert 'Add funds' and 'Withdraw' buttons are disabled") {
+        onTangemPayMainScreen {
+            addFundsButtonControl.assertIsNotEnabled()
+            withdrawButtonControl.assertIsNotEnabled()
+        }
+    }
+    step("Assert card is disabled") {
+        onTangemPayMainScreen { cardButton.assertIsNotEnabled() }
+    }
+    assertTangemPayTransactionRowDisplayed(cachedTransaction)
+}
+
+/** From the open payment account screen, opens the details bottom sheet for transaction [name]. */
+fun BaseTestCase.openTangemPayTransactionDetails(name: String) {
+    assertTangemPayTransactionRowDisplayed(name)
     step("Click on '$name' transaction row") {
         onTangemPayMainScreen { transactionRowWithText(name).performClick() }
     }
@@ -292,4 +368,51 @@ fun BaseTestCase.pullToRefreshTangemPay() {
     }
     composeTestRule.mainClock.advanceTimeBy(2_000L)
     waitForIdle()
+}
+
+/** From the open payment account screen, opens the 'Add funds' bottom sheet. */
+fun BaseTestCase.openTangemPayAddFunds() {
+    step("Click on 'Add funds' button") {
+        awaitSuccess { onTangemPayMainScreen { topUpButton.assertIsDisplayed() } }
+        onTangemPayMainScreen { topUpButton.performClick() }
+    }
+    step("Assert 'Add funds' sheet is displayed") {
+        awaitSuccess { onTangemPayAddFundsSheet { title.assertIsDisplayed() } }
+    }
+}
+
+/** From the open payment account screen, opens the bank-transfer (virtual account) deposit sheet. */
+fun BaseTestCase.openTangemPayBankTransferSheet() {
+    openTangemPayAddFunds()
+    step("Assert 'From a bank account' option is displayed") {
+        onTangemPayAddFundsSheet { bankTransferOption.assertIsDisplayed() }
+    }
+    step("Click on 'From a bank account' option") {
+        onTangemPayAddFundsSheet { bankTransferOption.performClick() }
+    }
+    step("Assert bank transfer deposit sheet is displayed") {
+        awaitSuccess { onTangemPayVirtualAccountDepositSheet { showDetailsButton.assertIsDisplayed() } }
+    }
+}
+
+/** On the open bank-transfer sheet, asserts the [feeType] row shows [expectedTitle] and [expectedValue]. */
+fun BaseTestCase.assertVirtualAccountFee(feeType: String, expectedTitle: String, expectedValue: String) {
+    step("Assert '$expectedTitle' fee equals '$expectedValue'") {
+        awaitSuccess {
+            onTangemPayVirtualAccountDepositSheet {
+                feeTitle(feeType).assertTextEquals(expectedTitle)
+                feeValue(feeType).assertTextEquals(expectedValue)
+            }
+        }
+    }
+}
+
+/**
+ * Asserts the [feeType] row is absent. Both rows are rendered as shimmer placeholders while the fees load,
+ * so call this only after the sheet has settled — an asserted fee row or the error banner.
+ */
+fun BaseTestCase.assertVirtualAccountFeeNotDisplayed(feeType: String, expectedTitle: String) {
+    step("Assert '$expectedTitle' fee row is not displayed") {
+        onTangemPayVirtualAccountDepositSheet { feeTitle(feeType).assertVisibility(shouldBeDisplayed = false) }
+    }
 }

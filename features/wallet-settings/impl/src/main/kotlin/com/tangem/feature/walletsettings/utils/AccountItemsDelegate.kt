@@ -30,6 +30,7 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM.Footer.AddAccountUM
 import com.tangem.feature.walletsettings.impl.R
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -46,13 +47,17 @@ internal class AccountItemsDelegate @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) {
 
     private val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
 
     fun isAccountsSupported(wallet: UserWallet) = wallet.isAccountsSupported
 
-    fun loadAccount(wallet: UserWallet, onAddAccountClick: () -> Unit): Flow<List<WalletSettingsAccountsUM>> {
+    fun loadAccount(
+        wallet: UserWallet,
+        onAddAccountClick: (isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) -> Unit,
+    ): Flow<List<WalletSettingsAccountsUM>> {
         if (!isAccountsSupported(wallet)) return flowOf(emptyList())
 
         return combine(
@@ -76,7 +81,7 @@ internal class AccountItemsDelegate @Inject constructor(
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
         accountsOrder: List<AccountId>?,
-        onAddAccountClick: () -> Unit,
+        onAddAccountClick: (isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) -> Unit,
     ): List<WalletSettingsAccountsUM> = buildList {
         fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
             val accountItemUM = AccountPortfolioItemUMConverter(
@@ -114,7 +119,10 @@ internal class AccountItemsDelegate @Inject constructor(
         add(header)
         addAll(accountItems.applySortingOrder(order = accountsOrder))
 
-        val isAddAccountEnabled = accounts.size < AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
+        val isAddCryptoAccountEnabled = accounts.size < AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
+        val isAddJointAccountEnabled = jointAccountFeatureToggles.isJointAccountEnabled &&
+            jointAccounts.size < AccountList.MAX_JOINT_ACCOUNTS_COUNT
+        val isAddAccountEnabled = isAddCryptoAccountEnabled || isAddJointAccountEnabled
         val shouldShowDescription = accountItems.size > 1
         val isArchivedAccountsEnabled = accounts.size != accountStatusList.totalAccounts
 
@@ -126,7 +134,7 @@ internal class AccountItemsDelegate @Inject constructor(
                 onAddAccountClick = {
                     if (isAddAccountEnabled) {
                         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAddAccount())
-                        onAddAccountClick()
+                        onAddAccountClick(isAddCryptoAccountEnabled, isAddJointAccountEnabled)
                     } else {
                         canNotAddAccountDialog()
                     }
@@ -168,7 +176,7 @@ internal class AccountItemsDelegate @Inject constructor(
         router.push(AppRoute.ArchivedAccountList(userWalletId))
     }
 
-    private fun canNotAddAccountDialog() {
+    fun canNotAddAccountDialog() {
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.common_got_it),
             onClick = { },

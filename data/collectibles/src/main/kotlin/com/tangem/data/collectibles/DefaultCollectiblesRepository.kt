@@ -17,8 +17,9 @@ import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-internal class DefaultCollectiblesRepository(
+internal class DefaultCollectiblesRepository @Inject constructor(
     private val collectiblesApi: CollectiblesApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesRepository {

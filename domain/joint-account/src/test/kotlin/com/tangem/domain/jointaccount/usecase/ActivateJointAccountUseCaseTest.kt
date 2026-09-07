@@ -9,6 +9,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -228,7 +229,7 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(JointAccountActivationError.Failed::class.java)
+        assertThat(actual.leftOrNull()).isInstanceOf(JointAccountFlowError.Failed::class.java)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
     }
 
@@ -243,7 +244,7 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.UserCancelled.left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.UserCancelled.left())
         coVerify(exactly = 0) { repository.activate(any(), any(), any()) }
     }
 
@@ -259,7 +260,7 @@ internal class ActivateJointAccountUseCaseTest {
         val actual = useCase(account = account)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountActivationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
         coVerify(exactly = 0) { fetcher.invoke(params = any()) }
     }
 

@@ -204,6 +204,7 @@ internal class BuildPredictionOrderDraftUseCaseTest {
         total = BigDecimal("74.80800"),
         builderCode = BUILDER_CODE,
         minOrderSize = BigDecimal("7"),
+        minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = false,
     )
