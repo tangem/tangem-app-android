@@ -19,6 +19,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
@@ -57,6 +58,7 @@ internal class IntroductionModelTest {
     private val videoPlayerFactory: IntroductionVideoPlayer.Factory = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
+    private val socialLoginFeatureToggles: SocialLoginFeatureToggles = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
@@ -75,12 +77,14 @@ internal class IntroductionModelTest {
             videoPlayerFactory,
             router,
             isHotWalletCreationSupported,
+            socialLoginFeatureToggles,
             trackingContextProxy,
             cardScanner,
             generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
         every { isHotWalletCreationSupported() } returns true
+        every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
         sentEvents.clear()
         every { videoPlayer.isMotionEnabled } returns true
         surfaceAttached(isAttached = false)
@@ -503,22 +507,123 @@ internal class IntroductionModelTest {
             // Act
             model.pick(options, introductionModel)
 
-            // A canary meant to fail once [REDACTED_TASK_KEY] wires these rows to their flows.
+            // Assert
             verify { router wasNot Called }
+            coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
 
         private fun provideTestModels() = listOf(
-            InertRowModel(name = "card or ring") { options, _ -> options.cardOrRing.onClick() },
-            InertRowModel(name = "sign in") { options, _ -> options.signIn.onClick() },
-            InertRowModel(name = "recovery phrase") { options, model ->
-                options.importWallet.onClick()
-                model.currentImportStep().onRecoveryPhraseClick()
-            },
+            // TODO TWI-1555: the row acts once social login lands.
+            InertRowModel(name = "sign in") { options, _ -> requireNotNull(options.socialLogin).onClick() },
+            // A canary meant to fail once the cloud restore is wired.
             InertRowModel(name = "cloud backup") { options, model ->
                 options.importWallet.onClick()
                 model.currentImportStep().onCloudBackupClick()
             },
         )
+
+        @Test
+        fun `GIVEN the options step WHEN card or ring picked THEN the sheet closes and the scan starts`() {
+            // Arrange
+            val model = createModel()
+
+            // Act
+            model.openHaveWallet().cardOrRing.onClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(sentEvents.last())
+                .isEqualTo(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
+            coVerify(exactly = 1) {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = any(),
+                    onFailed = any(),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN the scan started from the sheet WHEN it fails THEN the viewer stays on the welcome screen`() {
+            // Arrange
+            val model = createModel()
+            model.openHaveWallet().cardOrRing.onClick()
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.bottomSheetConfig).isNull()
+        }
+
+        @Test
+        fun `GIVEN a dismissed sheet WHEN the card row is tapped during its collapse THEN no scan starts`() {
+            // Arrange
+            val model = createModel()
+            val options = model.openHaveWallet()
+            model.closeHaveWalletSheet()
+
+            // Act
+            options.cardOrRing.onClick()
+
+            // Assert
+            coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN an unsupported device WHEN recovery phrase picked THEN a warning replaces the sheet`() {
+            // Arrange
+            every { isHotWalletCreationSupported() } returns false
+            every { isHotWalletCreationSupported.getLeastVersionName() } returns LEAST_OS_VERSION
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onRecoveryPhraseClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            val message = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.title)
+                .isEqualTo(hotWalletCreationNotSupportedDialog(LEAST_OS_VERSION).title)
+            verify { router wasNot Called }
+            verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
+        }
+
+        @Test
+        fun `GIVEN the import step WHEN recovery phrase picked THEN the import flow opens`() {
+            // Arrange
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onRecoveryPhraseClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            verify(exactly = 1) {
+                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+            }
+            // The import flow owns the hot wallet analytics context; a second push here would overwrite its parent.
+            verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
+        }
+
+        @Test
+        fun `GIVEN the import step dismissed WHEN recovery phrase tapped during the collapse THEN it is inert`() {
+            // Arrange
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            val step = model.currentImportStep()
+            model.closeHaveWalletSheet()
+
+            // Act
+            step.onRecoveryPhraseClick()
+
+            // Assert
+            verify { router wasNot Called }
+        }
 
         @Test
         fun `GIVEN the sheet dismissed on the import step WHEN reopened THEN it starts from the options again`() {
@@ -564,6 +669,19 @@ internal class IntroductionModelTest {
         }
 
         @Test
+        fun `GIVEN social login disabled WHEN the options open THEN the sign in row is absent`() {
+            // Arrange
+            every { socialLoginFeatureToggles.isSocialLoginEnabled } returns false
+            val model = createModel()
+
+            // Act
+            val options = model.openHaveWallet()
+
+            // Assert
+            assertThat(options.socialLogin).isNull()
+        }
+
+        @Test
         fun `GIVEN the options step WHEN rendered THEN every row carries its own copy`() {
             // Arrange
             val model = createModel()
@@ -576,7 +694,7 @@ internal class IntroductionModelTest {
                 .isEqualTo(resourceReference(CoreResR.string.introduction_create_wallet_hardware_title))
             assertThat(options.cardOrRing.description)
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_hardware_description))
-            assertThat(options.signIn.title)
+            assertThat(options.socialLogin?.title)
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title))
             assertThat(options.importWallet.title)
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
@@ -749,19 +867,6 @@ internal class IntroductionModelTest {
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
         }
 
-        private fun IntroductionModel.capturedScanCallbacks(): ScanCallbacks {
-            val onNavigatedAway = slot<() -> Unit>()
-            val onFailed = slot<() -> Unit>()
-            coVerify {
-                cardScanner.scanAndOpenWallet(
-                    analyticsSource = any(),
-                    onNavigatedAway = capture(onNavigatedAway),
-                    onFailed = capture(onFailed),
-                )
-            }
-            return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
-        }
-
         @Test
         fun `GIVEN a paused screen WHEN the story returns THEN the background video stays paused`() {
             // Arrange
@@ -854,6 +959,19 @@ internal class IntroductionModelTest {
         }
     }
 
+    private fun IntroductionModel.capturedScanCallbacks(): ScanCallbacks {
+        val onNavigatedAway = slot<() -> Unit>()
+        val onFailed = slot<() -> Unit>()
+        coVerify {
+            cardScanner.scanAndOpenWallet(
+                analyticsSource = any(),
+                onNavigatedAway = capture(onNavigatedAway),
+                onFailed = capture(onFailed),
+            )
+        }
+        return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
+    }
+
     private fun IntroductionModel.haveWalletStep(): HaveWalletUM.Step? =
         (uiState.value.haveWalletBottomSheetConfig?.content as? HaveWalletUM)?.step
 
@@ -886,6 +1004,7 @@ internal class IntroductionModelTest {
         analyticsEventHandler = analyticsEventHandler,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
+        socialLoginFeatureToggles = socialLoginFeatureToggles,
         trackingContextProxy = trackingContextProxy,
         cardScanner = cardScanner,
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,

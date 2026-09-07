@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.wallets)
 
     /** Compose */
