@@ -30,7 +30,7 @@ import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsSto
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.onramp.repositories.*
