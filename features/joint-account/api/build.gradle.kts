@@ -28,5 +28,6 @@ dependencies {
     implementation(deps.compose.ui)
 
     /** Other */
+    implementation(deps.androidx.annotation)
     api(deps.kotlin.immutable.collections)
 }
