@@ -2590,6 +2590,9 @@
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
   <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
+  <string name="tangempay_withdraw_hub_swap_section_subtitle">From your payment account</string>
+  <string name="tangempay_withdraw_hub_swap_section_title">Transfer or swap</string>
+  <string name="tangempay_withdraw_hub_within_portfolio">Within your portfolio</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
