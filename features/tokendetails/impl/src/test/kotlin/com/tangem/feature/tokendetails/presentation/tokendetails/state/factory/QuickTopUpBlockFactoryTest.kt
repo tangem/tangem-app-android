@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
@@ -22,12 +23,14 @@ internal class QuickTopUpBlockFactoryTest {
     private val factory = QuickTopUpBlockFactory()
 
     private val zeroBalanceStatus: CryptoCurrencyStatus = mockk {
+        every { currency.network.derivationPath } returns Network.DerivationPath.None
         every { value } returns mockk<CryptoCurrencyStatus.Loaded> {
             every { amount } returns BigDecimal.ZERO
         }
     }
 
     private val nonZeroBalanceStatus: CryptoCurrencyStatus = mockk {
+        every { currency.network.derivationPath } returns Network.DerivationPath.None
         every { value } returns mockk<CryptoCurrencyStatus.Loaded> {
             every { amount } returns BigDecimal.TEN
         }
@@ -45,6 +48,29 @@ internal class QuickTopUpBlockFactoryTest {
 
     private val available: OnrampAvailability = OnrampAvailability.Available(country = countryMock, currency = usdCurrency)
     private val notSupported: OnrampAvailability = OnrampAvailability.NotSupported(country = countryMock)
+
+    @Test
+    fun `GIVEN a joint currency WHEN build THEN returns null before reading the balance`() {
+        // Arrange
+        val jointStatus: CryptoCurrencyStatus = mockk {
+            every { currency.network.derivationPath } returns
+                Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+        }
+
+        // Act
+        val result = factory.build(
+            currencyStatus = jointStatus,
+            isHistoryEmpty = true,
+            onrampAvailability = available.right(),
+            selectedOnrampCurrency = usdCurrency,
+            appCurrency = usdAppCurrency,
+            onPresetClick = { _, _ -> },
+            onOtherClick = {},
+        )
+
+        // Assert
+        assertThat(result).isNull()
+    }
 
     @Test
     fun `GIVEN non-zero balance WHEN build THEN returns null`() {
@@ -67,6 +93,7 @@ internal class QuickTopUpBlockFactoryTest {
     fun `GIVEN loading balance WHEN build THEN returns null`() {
         // Arrange
         val loadingStatus: CryptoCurrencyStatus = mockk {
+            every { currency.network.derivationPath } returns Network.DerivationPath.None
             every { value } returns CryptoCurrencyStatus.Loading
         }
 

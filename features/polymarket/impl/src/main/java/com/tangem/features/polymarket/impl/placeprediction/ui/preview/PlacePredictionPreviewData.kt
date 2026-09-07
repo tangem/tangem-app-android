@@ -41,6 +41,7 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             previewState(
                 amountValue = "1",
                 quote = previewQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+                minAmount = BigDecimal("4.5"),
             ),
             previewState(amountValue = "4000", quote = QuoteUM.Error(reason = QuoteErrorUM.Network)),
             previewState(
@@ -57,11 +58,12 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
 
     override val values: Sequence<PlaceResultUM>
         get() = sequenceOf(
-            PlaceResultUM.Filled(placedAt = PLACED_AT, amount = BigDecimal("4000")),
+            PlaceResultUM.Filled(placedAt = PLACED_AT, amount = BigDecimal("4400.1"), tokensBought = BigDecimal("500")),
             PlaceResultUM.PartiallyFilled(
                 placedAt = PLACED_AT,
                 filledAmount = BigDecimal("2000"),
                 requestedAmount = BigDecimal("4000"),
+                tokensBought = BigDecimal("250"),
             ),
             PlaceResultUM.NotFilled(placedAt = PLACED_AT),
             PlaceResultUM.Submitted(placedAt = PLACED_AT),
@@ -82,6 +84,7 @@ internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
     override fun onPlaceClick() = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
+    override fun onToMainClick() = Unit
 }
 
 private fun previewState(
@@ -89,12 +92,14 @@ private fun previewState(
     quote: QuoteUM = QuoteUM.Empty,
     balance: BigDecimal = BigDecimal("30000"),
     tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
+    minAmount: BigDecimal? = null,
 ): PlacePredictionUM = PlacePredictionUM(
     market = MarketHeaderUM(
         title = "Will Uzbekistan win the 2026 FIFA World Cup?",
         imageUrl = null,
         outcomeTitle = "No",
         outcomePriceCents = 85,
+        resolutionDateMillis = RESOLUTION_AT,
     ),
     payment = PaymentSourceUM(
         tokenSymbol = "USDC",
@@ -105,7 +110,9 @@ private fun previewState(
     amountValue = amountValue,
     slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
     quote = quote,
+    isMarketAcceptingOrders = true,
     tradingPermission = tradingPermission,
+    minAmount = minAmount,
     notifications = persistentListOf(),
     slippagePicker = SlippagePickerUM.empty(),
     submit = SubmitUM.Idle,
@@ -118,7 +125,6 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
     guaranteedShares = BigDecimal("4612.54"),
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
-    minOrderSize = BigDecimal("5"),
     signable = SignableQuoteUM(quote = previewSignableQuote(status = status), receivedAtMillis = PLACED_AT),
 )
 
@@ -138,8 +144,10 @@ private fun previewSignableQuote(status: PredictionQuoteStatus): PredictionOrder
     total = BigDecimal("4001.4"),
     builderCode = "0x" + "00".repeat(n = 32),
     minOrderSize = BigDecimal("5"),
+    minOrderAmount = BigDecimal.ONE,
     tickSize = BigDecimal("0.01"),
     isLive = false,
 )
 
 private const val PLACED_AT = 1_787_000_000_000L
+private const val RESOLUTION_AT = 1_774_000_000_000L

@@ -21,9 +21,12 @@ internal data class PlacePredictionUM(
     val amountValue: String,
     val slippage: SlippageUM,
     val quote: QuoteUM,
+    val isMarketAcceptingOrders: Boolean,
     val tradingPermission: TradingPermissionUM,
     val notifications: ImmutableList<PredictionNotificationUM>,
     val amountCaption: AmountCaptionUM? = null,
+    val minAmount: BigDecimal? = null,
+    val priceError: PriceErrorUM? = null,
     val slippagePicker: SlippagePickerUM,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
@@ -32,7 +35,13 @@ internal data class PlacePredictionUM(
     companion object {
 
         fun initial(): PlacePredictionUM = PlacePredictionUM(
-            market = MarketHeaderUM(title = "", imageUrl = null, outcomeTitle = "", outcomePriceCents = null),
+            market = MarketHeaderUM(
+                title = "",
+                imageUrl = null,
+                outcomeTitle = "",
+                outcomePriceCents = null,
+                resolutionDateMillis = null,
+            ),
             payment = PaymentSourceUM(
                 tokenSymbol = "",
                 iconState = null,
@@ -42,6 +51,7 @@ internal data class PlacePredictionUM(
             amountValue = "",
             slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
             quote = QuoteUM.Empty,
+            isMarketAcceptingOrders = true,
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
             slippagePicker = SlippagePickerUM.empty(),
@@ -62,12 +72,20 @@ internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
+internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
+    val entered = enteredAmount() ?: return false
+    val minAmount = minAmount ?: return false
+    return entered < minAmount
+}
+
 @Immutable
 internal data class MarketHeaderUM(
     val title: String,
     val imageUrl: String?,
     val outcomeTitle: String,
     val outcomePriceCents: Int?,
+    val resolutionDateMillis: Long?,
+    val isPriceUnavailable: Boolean = false,
 )
 
 @Immutable
@@ -76,6 +94,8 @@ internal sealed interface AmountCaptionUM {
     data class ToWin(val payout: PayoutUM) : AmountCaptionUM
 
     data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
+
+    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM
 }
 
 internal enum class PaymentAmountErrorUM(val text: TextReference) {
@@ -92,6 +112,8 @@ internal data class PaymentSourceUM(
 )
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
+
+internal enum class PriceErrorUM { MarketClosed, Unknown }
 
 @Immutable
 internal data class SlippageUM(val percent: BigDecimal, val isDefault: Boolean) {
@@ -128,7 +150,6 @@ internal sealed interface QuoteUM {
         val guaranteedShares: BigDecimal,
         val feeTotal: BigDecimal,
         val total: BigDecimal,
-        val minOrderSize: BigDecimal,
         val signable: SignableQuoteUM,
     ) : QuoteUM
 
@@ -147,6 +168,9 @@ internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecima
 
 internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
     ?.let { PayoutUM(expected = it.expectedShares, guaranteed = it.guaranteedShares) }
+
+internal fun QuoteUM.isMarketClosed(): Boolean =
+    (this as? QuoteUM.Unavailable)?.status == PredictionQuoteStatus.MARKET_CLOSED
 
 @Immutable
 internal sealed interface SubmitUM {
