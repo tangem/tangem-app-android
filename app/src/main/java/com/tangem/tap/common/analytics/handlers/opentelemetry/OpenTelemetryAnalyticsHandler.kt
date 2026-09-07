@@ -86,7 +86,7 @@ internal class OpenTelemetryAnalyticsHandler(
 
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler {
             val logger = if (data.isDebug && data.logConfig.isOpenTelemetryLogEnabled) {
-                AnalyticsEventsLogger(name = ID, jsonConverter = data.jsonConverter)
+                AnalyticsEventsLogger(name = ID)
             } else {
                 null
             }
