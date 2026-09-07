@@ -2,24 +2,28 @@ package com.tangem.features.introduction.impl.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
-import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
 internal class HaveWalletSheetController(
     private val host: Host,
+    private val scope: CoroutineScope,
     private val router: Router,
-    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
-    private val uiMessageSender: UiMessageSender,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
 ) {
 
     interface Host {
@@ -29,7 +33,12 @@ internal class HaveWalletSheetController(
         fun updateHaveWalletSheetConfig(transform: (TangemBottomSheetConfig?) -> TangemBottomSheetConfig?)
 
         fun scanCardForExistingWallet()
+
+        /** Shows the unsupported-device warning when it returns `false`. */
+        fun ensureHotWalletCreationSupported(): Boolean
     }
+
+    private var cloudResolveJob: Job? = null
 
     val isShown: Boolean get() = host.haveWalletSheetConfig?.isShown == true
 
@@ -74,38 +83,81 @@ internal class HaveWalletSheetController(
     private fun onImportWalletClick() {
         if (!isShown) return
         if (currentStep() is HaveWalletUM.Step.Import) return
-        showStep(::importStep)
+        showStep { importStep(isCloudLoading = false) }
     }
 
     private fun currentStep(): HaveWalletUM.Step? = (host.haveWalletSheetConfig?.content as? HaveWalletUM)?.step
 
-    private fun importStep() = HaveWalletUM.Step.Import(
+    private fun importStep(isCloudLoading: Boolean) = HaveWalletUM.Step.Import(
         title = resourceReference(CoreResR.string.hw_import_existing_wallet),
         description = resourceReference(CoreResR.string.hw_import_existing_wallet_description),
         recoveryPhraseButtonText = resourceReference(CoreResR.string.hw_cloud_backup_restore_use_recovery_phrase),
-        cloudBackupButtonText = resourceReference(
-            id = CoreResR.string.hw_import_restore_cloud_backup,
-            formatArgs = wrappedList(resourceReference(CoreResR.string.hw_cloud_backup_service_name)),
-        ),
+        cloudBackupButtonText = if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+            resourceReference(
+                id = CoreResR.string.hw_import_restore_cloud_backup,
+                formatArgs = wrappedList(resourceReference(CoreResR.string.hw_cloud_backup_service_name)),
+            )
+        } else {
+            null
+        },
+        isCloudLoading = isCloudLoading,
         onRecoveryPhraseClick = ::onRecoveryPhraseClick,
         onCloudBackupClick = ::onCloudBackupClick,
-        onBack = { showStep(::optionsStep) },
+        onBack = ::onImportBack,
     )
 
+    private fun onImportBack() {
+        if (importStepOrNull() == null) return
+        cancelCloudResolve()
+        showStep(::optionsStep)
+    }
+
     private fun onRecoveryPhraseClick() {
-        if (!isShown) return
+        if (importStepOrNull()?.isCloudLoading != false) return
         dismiss()
-        if (!isHotWalletCreationSupported()) {
-            uiMessageSender.send(
-                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
-            )
-            return
-        }
+        if (!host.ensureHotWalletCreationSupported()) return
         router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
     }
 
+    /**
+     * The device check comes before the account picker: after it the backups would already be parked for a restore
+     * screen that never opens.
+     */
     private fun onCloudBackupClick() {
-        // TODO: wired by the cloud backup team; AddExistingWallet(Mode.CloudRestore) needs the backups resolved first.
+        if (importStepOrNull()?.isCloudLoading != false || !hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return
+        if (!host.ensureHotWalletCreationSupported()) {
+            dismiss()
+            return
+        }
+        showStep { importStep(isCloudLoading = true) }
+        cloudResolveJob = scope.launch {
+            val result = resolveCloudRestoreBackups()
+            if (!isShown) return@launch
+            result.fold(
+                ifLeft = { error ->
+                    val message = CloudRestoreErrorMessage.of(error)
+                    if (message == null) showStep { importStep(isCloudLoading = false) } else showError(message)
+                },
+                ifRight = {
+                    cloudResolveJob = null
+                    dismiss()
+                    router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+                },
+            )
+        }
+    }
+
+    /** The step on screen, if it is Import: the outgoing step stays tappable while the next one slides in. */
+    private fun importStepOrNull(): HaveWalletUM.Step.Import? =
+        (currentStep() as? HaveWalletUM.Step.Import)?.takeIf { isShown }
+
+    private fun cancelCloudResolve() {
+        cloudResolveJob?.cancel()
+        cloudResolveJob = null
+    }
+
+    private fun showError(message: CloudRestoreErrorMessage) {
+        showStep { HaveWalletUM.Step.Error(message = message, onGotItClick = ::dismiss) }
     }
 
     private fun showStep(step: () -> HaveWalletUM.Step) {
@@ -117,6 +169,7 @@ internal class HaveWalletSheetController(
     }
 
     private fun dismiss() {
+        cancelCloudResolve()
         host.updateHaveWalletSheetConfig { it?.copy(isShown = false) }
     }
 }
