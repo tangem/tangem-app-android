@@ -7,6 +7,7 @@ import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.features.feed.earn.createEarnCurrency
+import com.tangem.features.feed.earn.createEarnToken
 import com.tangem.features.feed.earn.createEarnTokenWithCurrency
 import com.tangem.features.feed.earn.model.analytics.EarnSource
 import com.tangem.pagination.Batch
@@ -90,7 +91,9 @@ internal class EarnListBatchFlowManagerTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(manager.uiItems.value.map { it.id }).containsExactly("btc_STAKING", "eth_STAKING").inOrder()
+        assertThat(manager.uiItems.value.map { it.id })
+            .containsExactly("btc_ethereum_STAKING", "eth_ethereum_STAKING")
+            .inOrder()
     }
 
     @Test
@@ -109,7 +112,9 @@ internal class EarnListBatchFlowManagerTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(manager.uiItems.value.map { it.id }).containsExactly("btc_STAKING", "eth_STAKING").inOrder()
+        assertThat(manager.uiItems.value.map { it.id })
+            .containsExactly("btc_ethereum_STAKING", "eth_ethereum_STAKING")
+            .inOrder()
     }
 
     @Test
@@ -129,7 +134,7 @@ internal class EarnListBatchFlowManagerTest {
             advanceUntilIdle()
 
             // Assert — the rows of the dropped pages must not linger
-            assertThat(manager.uiItems.value.map { it.id }).containsExactly("sol_STAKING")
+            assertThat(manager.uiItems.value.map { it.id }).containsExactly("sol_ethereum_STAKING")
         }
 
     @Test
@@ -149,7 +154,7 @@ internal class EarnListBatchFlowManagerTest {
             advanceUntilIdle()
 
             // Assert
-            assertThat(manager.uiItems.value.map { it.id }).containsExactly("btc_STAKING")
+            assertThat(manager.uiItems.value.map { it.id }).containsExactly("btc_ethereum_STAKING")
         }
 
     @Test
@@ -313,8 +318,10 @@ internal class EarnListBatchFlowManagerTest {
         )
     }
 
-    private fun earnToken(id: String): EarnTokenWithCurrency =
-        createEarnTokenWithCurrency(cryptoCurrency = createEarnCurrency(currencyId = id))
+    private fun earnToken(id: String): EarnTokenWithCurrency = createEarnTokenWithCurrency(
+        earnToken = createEarnToken(tokenId = id),
+        cryptoCurrency = createEarnCurrency(currencyId = id),
+    )
 
     private fun batch(key: Int, ids: List<String>): Batch<Int, List<EarnTokenWithCurrency>> =
         Batch(key = key, data = ids.map(::earnToken))
