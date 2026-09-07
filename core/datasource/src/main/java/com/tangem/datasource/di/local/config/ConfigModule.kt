@@ -1,13 +1,7 @@
 package com.tangem.datasource.di.local.config
 
-import com.tangem.core.local.assets.AssetLoader
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.converter.GeneratedEnvironmentConfigConverter
-import com.tangem.datasource.local.config.issuers.DefaultIssuersConfigStorage
-import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
-import com.tangem.datasource.local.config.testnet.DefaultTestnetTokensStorage
-import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
-import com.tangem.core.local.datastore.RuntimeStateStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,19 +23,4 @@ internal object ConfigModule {
     @Singleton
     @Named("authServiceKey")
     fun provideAuthServiceKey(environmentConfig: EnvironmentConfig): String? = environmentConfig.authServiceKey
-
-    @Provides
-    @Singleton
-    fun provideTestnetTokensStorage(assetLoader: AssetLoader): TestnetTokensStorage {
-        return DefaultTestnetTokensStorage(assetLoader)
-    }
-
-    @Provides
-    @Singleton
-    fun provideIssuersConfigStorage(assetLoader: AssetLoader): IssuersConfigStorage {
-        return DefaultIssuersConfigStorage(
-            assetLoader = assetLoader,
-            runtimeStateStore = RuntimeStateStore(defaultValue = emptyList()),
-        )
-    }
 }

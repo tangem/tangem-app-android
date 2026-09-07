@@ -36,7 +36,7 @@ internal object PlaceResultUMConverter {
         return when {
             filledShares.signum() <= 0 -> PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
             filledShares.compareTo(quotedShares) == 0 -> PlaceOutcome.Reportable(
-                result = PlaceResultUM.Filled(placedAt = placedAt, amount = quotedAmount),
+                result = PlaceResultUM.Filled(placedAt = placedAt, amount = quotedAmount, tokensBought = filledShares),
             )
             filledShares > quotedShares -> submitted(placedAt = placedAt)
             else -> result.makingAmount
@@ -46,6 +46,7 @@ internal object PlaceResultUMConverter {
                             placedAt = placedAt,
                             filledAmount = spent,
                             requestedAmount = quotedAmount,
+                            tokensBought = filledShares,
                         ),
                     )
                 }
