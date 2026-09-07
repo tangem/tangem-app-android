@@ -11,7 +11,7 @@ data class PolymarketSupportedAssetsResponse(
 
 @JsonClass(generateAdapter = true)
 data class PolymarketSupportedAssetDto(
-    @Json(name = "chainId") val chainId: Long,
+    @Json(name = "chainId") val chainId: String,
     @Json(name = "chainName") val chainName: String,
     @Json(name = "token") val token: PolymarketBridgeTokenDto,
     @Json(name = "minCheckoutUsd") val minCheckoutUsd: BigDecimal,
@@ -28,6 +28,11 @@ data class PolymarketBridgeTokenDto(
 @JsonClass(generateAdapter = true)
 data class PolymarketDepositRequest(
     @Json(name = "address") val address: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class PolymarketDepositResponse(
+    @Json(name = "address") val address: PolymarketBridgeAddressesDto,
 )
 
 @JsonClass(generateAdapter = true)
