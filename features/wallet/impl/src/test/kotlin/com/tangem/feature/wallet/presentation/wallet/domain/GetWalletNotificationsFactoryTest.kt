@@ -804,6 +804,7 @@ internal class GetWalletNotificationsFactoryTest {
         val list = mockk<AccountStatusList> {
             every { totalFiatBalance } returns balance
             every { flattenCurrencies() } returns currencies
+            every { flattenPersonalCurrencies() } returns currencies
             every { this@mockk.accountStatuses } returns accountStatuses
         }
         every {

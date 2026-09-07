@@ -2,7 +2,7 @@ package com.tangem.data.polymarket.error
 
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.api.polymarket.models.ProblemDetailResponse
+import com.tangem.grow.datasource.polymarket.models.ProblemDetailResponse
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletError.RelayerRejected

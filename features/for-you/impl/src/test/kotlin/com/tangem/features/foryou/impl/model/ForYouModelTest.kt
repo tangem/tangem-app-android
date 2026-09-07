@@ -1125,13 +1125,14 @@ internal class ForYouModelTest {
             userWalletId = walletId,
             cryptoCurrencies = currencies.map { it.currency },
         )
-        val cryptoPortfolioStatus = mockk<AccountStatus.CryptoPortfolio> {
+        val cryptoPortfolioStatus = mockk<AccountStatus.Personal> {
             every { flattenCurrencies() } returns currencies
             every { account } returns portfolioAccount
             every { accountId } returns portfolioAccount.accountId
         }
         return mockk {
             every { flattenCurrencies() } returns currencies
+            every { flattenPersonalCurrencies() } returns currencies
             every { userWalletId } returns walletId
             every { accountStatuses } returns listOf(cryptoPortfolioStatus)
         }

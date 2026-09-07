@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -40,16 +41,12 @@ internal class FeedForYouComponent @AssistedInject constructor(
     )
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         TangemTopNavigation(
             title = resourceReference(R.string.for_you_title),
             contentAlign = TangemTopNavigation.ContentAlign.Center,
-            // rendered inside the shtorka's fixed-height sheet header: no system insets and no
-            // vertical padding, the host centers the bar vertically
             windowInsets = WindowInsets(0.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            // the sheet header is an opaque capsule (the search bar draws no fade either), and the
-            // haze blur re-renders every frame of the header animation — both stay off
             fadeEnabled = false,
             blurBackground = false,
             onBack = { router.pop() },

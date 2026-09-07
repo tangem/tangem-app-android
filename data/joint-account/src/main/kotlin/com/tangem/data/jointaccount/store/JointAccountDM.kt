@@ -22,5 +22,6 @@ internal data class JointAccountDM(
         val name: String,
         val address: String,
         val role: String,
+        val inviteId: String? = null,
     )
 }

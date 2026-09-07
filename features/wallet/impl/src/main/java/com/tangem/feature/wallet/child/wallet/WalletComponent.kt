@@ -329,9 +329,9 @@ internal class WalletComponent @AssistedInject constructor(
             polymarketComponent = polymarketWalletBlockComponent,
             modifier = modifier,
             isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
-            shtorkaHeaderContent = { onExpandSheet ->
+            shtorkaHeaderContent = { sheetExpansion, onExpandSheet ->
                 feedV2Component.Header(
-                    bottomSheetState = bottomSheetState,
+                    sheetExpansion = sheetExpansion,
                     onExpandSheet = onExpandSheet,
                     modifier = Modifier,
                 )

@@ -1,10 +1,13 @@
 package com.tangem.screens.tangempay
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.res.R as CoreResR
@@ -31,6 +34,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val tileBalance: KNode = child {
         hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE_BALANCE)
+        useUnmergedTree = true
+    }
+
+    val tileCacheIcon: KNode = child {
+        hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE_CACHE_ICON)
         useUnmergedTree = true
     }
 
@@ -61,9 +69,26 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
-    val termsAndFeesMenuItem: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangem_pay_terms_limits))
+    val sessionExpiredBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_sync_needed_title)
+
+    val sessionExpiredBannerMessage: KNode = bannerMessage(CoreResR.string.tangempay_sync_needed_body)
+
+    val connectionIssuesBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_temporarily_unavailable)
+
+    val connectionIssuesBannerMessage: KNode =
+        bannerMessage(CoreResR.string.tangempay_service_unreachable_try_later)
+
+    val renewSessionButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_sync_needed_button)))
+        useUnmergedTree = true
     }
+
+    // The chip container carries the tag, but the enabled-state semantics sit on the button next to its label.
+    // That button is the DS2 one — it has no BASE_BUTTON tag, so it is addressed by its label sibling.
+    val addFundsButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_add_funds)
+
+    val withdrawButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_withdraw)
 
     fun transactionRowWithText(text: String): KNode = child {
         hasText(text)
@@ -95,6 +120,24 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
             text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress),
             substring = true,
         )
+        useUnmergedTree = true
+    }
+
+    private fun bannerTitle(@StringRes textRes: Int): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(textRes))
+        useUnmergedTree = true
+    }
+
+    private fun bannerMessage(@StringRes textRes: Int): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(textRes))
+        useUnmergedTree = true
+    }
+
+    private fun actionButtonControl(@StringRes titleRes: Int): KNode = child {
+        hasAnyAncestor(withTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON))
+        hasAnySibling(withText(getResourceString(titleRes)))
         useUnmergedTree = true
     }
 

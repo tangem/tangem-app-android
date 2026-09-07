@@ -19,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -45,24 +44,14 @@ import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.core.ui.R as CoreUiR
 
-private val HorizontalPadding = 16.dp
-private val LogoTopPadding = 16.dp
-private val LogoHeight = 20.dp
-private val ButtonSpacing = 8.dp
-private val CaptionTopPadding = 16.dp
-private val BottomPadding = 12.dp
-
-private val ScrimColor = Color(0xFF0F0F0F)
-
-private val BottomScrimBrush = Brush.verticalGradient(
-    colorStops = arrayOf(
-        0.52f to ScrimColor.copy(alpha = 0f),
-        0.63f to ScrimColor.copy(alpha = 0.5f),
-        0.70f to ScrimColor.copy(alpha = 0.8f),
-        0.76f to ScrimColor.copy(alpha = 0.96f),
-        0.82f to ScrimColor,
-        1f to ScrimColor,
-    ),
+/** Vertical stops of the darkening gradient, each paired with the scrim opacity it reaches. */
+private val ScrimGradient = listOf(
+    0.52f to 0f,
+    0.63f to 0.5f,
+    0.70f to 0.8f,
+    0.76f to 0.96f,
+    0.82f to 1f,
+    1f to 1f,
 )
 
 @Composable
@@ -82,7 +71,7 @@ internal fun IntroductionScreen(
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(Color.Black),
+                    .background(TangemTheme.colors3.bg.base),
             ) {
                 // A SurfaceView punches a hole through the window, erasing whatever is composed before it,
                 // so the shutter below has to come after it.
@@ -95,19 +84,19 @@ internal fun IntroductionScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer { alpha = if (state.isVideoReady) 0f else 1f }
-                        .background(Color.Black),
+                        .background(TangemTheme.colors3.bg.base),
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(BottomScrimBrush),
+                        .background(rememberBottomScrimBrush()),
                 )
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .statusBarsPadding()
-                        .padding(start = HorizontalPadding, top = LogoTopPadding)
-                        .height(LogoHeight),
+                        .padding(start = 16.dp, top = 16.dp)
+                        .height(20.dp),
                     painter = painterResource(id = CoreUiR.drawable.ic_tangem_logo),
                     contentScale = ContentScale.FillHeight,
                     contentDescription = null,
@@ -117,11 +106,24 @@ internal fun IntroductionScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(horizontal = HorizontalPadding)
-                        .padding(bottom = BottomPadding),
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 12.dp),
                 )
             }
+            state.bottomSheetConfig?.let { CreateWalletBottomSheet(config = it) }
+            state.haveWalletBottomSheetConfig?.let { HaveWalletBottomSheet(config = it) }
         }
+    }
+}
+
+@Composable
+private fun rememberBottomScrimBrush(): Brush {
+    val scrimColor = TangemTheme.colors3.bg.primary
+    return remember(scrimColor) {
+        val colorStops = ScrimGradient
+            .map { (stop, alpha) -> stop to scrimColor.copy(alpha = alpha) }
+            .toTypedArray()
+        Brush.verticalGradient(colorStops = colorStops)
     }
 }
 
@@ -129,7 +131,7 @@ internal fun IntroductionScreen(
 private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(ButtonSpacing),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
@@ -146,7 +148,7 @@ private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) 
             onClick = state.onIHaveWalletClick,
         )
         LegalCaption(
-            modifier = Modifier.padding(top = CaptionTopPadding),
+            modifier = Modifier.padding(top = 16.dp),
             onTermsOfServiceClick = state.onTermsOfServiceClick,
             onPrivacyPolicyClick = state.onPrivacyPolicyClick,
         )
@@ -211,6 +213,8 @@ private fun IntroductionScreenPreview() {
             state = IntroductionUM(
                 isVideoReady = true,
                 isMotionEnabled = true,
+                bottomSheetConfig = null,
+                haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},
                 onIHaveWalletClick = {},
                 onTermsOfServiceClick = {},

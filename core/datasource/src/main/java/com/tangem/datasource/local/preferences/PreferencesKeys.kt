@@ -13,13 +13,15 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_K
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_APPLICATION_STOPPED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * All preferences keys that DataStore<Preferences> is stored.
  *
  * !!!IMPORTANT!!!
- * Before DELETING active key do [CleanupKeyMigration] in [PreferencesDataStore]
+ * Before DELETING active key add a [com.tangem.datasource.local.preferences.migration.CleanupKeyMigration]
+ * in [com.tangem.datasource.local.preferences.di.AppPreferencesStoreModule]
  *
 [REDACTED_AUTHOR]
  */
@@ -55,21 +57,13 @@ object PreferencesKeys {
 
     val APP_THEME_MODE_KEY by lazy { stringPreferencesKey(name = "appThemeMode") }
 
-    val SELECTED_APP_CURRENCY_KEY by lazy { stringPreferencesKey(name = "selectedAppCurrency") }
-
     val BALANCE_HIDING_SETTINGS_KEY by lazy { stringPreferencesKey(name = "balanceHidingSettings") }
-
-    val SWAP_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "swapTransactions") }
-
-    val SWAP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "swapTransactionsStatuses") }
 
     val WALLETS_SCROLL_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "walletsScrollPreview") }
 
     val SENT_ONE_TIME_EVENTS_KEY by lazy { stringPreferencesKey(name = "sentOneTimeEvents") }
 
     val WALLETS_BALANCES_STATES_KEY by lazy { stringPreferencesKey(name = "walletsBalancesStates") }
-
-    val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
 
     val SWAP_UI_MODE_KEY by lazy { stringPreferencesKey(name = "swapUiMode") }
 
@@ -168,7 +162,7 @@ object PreferencesKeys {
     val TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY by lazy {
         stringPreferencesKey(name = "tangemPayActiveWithdrawOrdersKey")
     }
-    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityListV2") }
+    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityListV3") }
 
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
@@ -208,6 +202,13 @@ object PreferencesKeys {
 
     fun getTangemPayVirtualAccountOrderIdKey(customerWalletAddress: String) =
         stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
+
+    // region Collectibles
+    /** The wallet id is in the key too: it keeps entries wallet-scoped once account ids come from the backend. */
+    fun getCollectiblesHotDelegateKey(accountId: AccountId) = stringPreferencesKey(
+        name = "collectibles_hot_delegate_${accountId.value}_${accountId.userWalletId.stringValue}",
+    )
+    // endregion
 
     fun getTangemPayCustomerWalletAddressKey(userWalletId: UserWalletId) =
         stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")
