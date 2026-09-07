@@ -5,6 +5,7 @@ import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.markets.R
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -119,7 +120,12 @@ class TokenActionsHandler @AssistedInject constructor(
         val reason = QuickActionsConverter.unavailabilityReason(action, cryptoCurrencyData.actions)
         if (reason == ScenarioUnavailabilityReason.None) return false
 
-        uiMessageSender.send(DialogMessage(message = reason.getUnavailabilityReasonText()))
+        uiMessageSender.send(
+            DialogMessage(
+                message = reason.getUnavailabilityReasonText(),
+                title = reason.getUnavailabilityReasonTitle(),
+            ),
+        )
         return true
     }
 

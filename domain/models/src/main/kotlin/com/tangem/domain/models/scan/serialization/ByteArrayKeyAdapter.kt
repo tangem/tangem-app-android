@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
 import com.tangem.common.extensions.ByteArrayKey
 
-class ByteArrayKeyAdapter {
+internal class ByteArrayKeyAdapter {
     @ToJson
     fun toJson(writer: JsonWriter, src: ByteArrayKey, byteArrayAdapter: JsonAdapter<ByteArray>) {
         byteArrayAdapter.toJson(writer, src.bytes)

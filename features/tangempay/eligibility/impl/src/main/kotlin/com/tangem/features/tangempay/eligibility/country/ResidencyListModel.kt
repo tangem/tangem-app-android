@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -48,8 +49,9 @@ internal class ResidencyListModel @Inject constructor(
     private fun showCountries() {
         step = Step.Countries
         uiState.update { state ->
+            // TODO v_rodionov: #[REDACTED_TASK_KEY]
             state.copy(
-                title = resourceReference(R.string.tangempay_order_type_country_of_residence),
+                title = stringReference("Country of residence"),
                 search = state.search.copy(query = "", isActive = false),
                 content = Content.Loading,
                 onBackClick = null,
@@ -70,6 +72,7 @@ internal class ResidencyListModel @Inject constructor(
         step = Step.States
         uiState.update { state ->
             state.copy(
+                // TODO v_rodionov: #[REDACTED_TASK_KEY]
                 title = stringReference("Select state"),
                 search = state.search.copy(query = "", isActive = false),
                 content = Content.Loading,
@@ -154,10 +157,9 @@ internal class ResidencyListModel @Inject constructor(
         uiMessageSender.send(ToastMessage(stringReference("Open KYC")))
     }
 
-    // TODO v_rodionov
     private fun openEligibilityDeniedScreen() {
         updateContent()
-        uiMessageSender.send(ToastMessage(stringReference("Eligibility Denied")))
+        router.push(EligibilityInnerRoute.RegionUnavailable)
     }
 
     private fun onQueryChange(query: String) {
@@ -257,11 +259,13 @@ internal class ResidencyListModel @Inject constructor(
         )
     }
 
+    // TODO v_rodionov: #[REDACTED_TASK_KEY]
     private fun suggestedSectionTitle(): TextReference = when (step) {
         Step.Countries -> stringReference("Suggested country")
         Step.States -> stringReference("Suggested state")
     }
 
+    // TODO v_rodionov: #[REDACTED_TASK_KEY]
     private fun allSectionTitle(): TextReference = when (step) {
         Step.Countries -> stringReference("Change country")
         Step.States -> stringReference("Select another state")
