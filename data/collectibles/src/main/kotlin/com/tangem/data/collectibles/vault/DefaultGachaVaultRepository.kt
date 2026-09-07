@@ -95,6 +95,24 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         }
     }
 
+    override suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit> =
+        withContext(dispatchers.io) {
+            either {
+                val network = networkProvider.create(userWallet).mapLeft { error -> error.asFailure() }.bind()
+
+                closeVaultInternal(
+                    userWalletId = userWallet.walletId,
+                    network = network,
+                    signer = userWallet.signer(),
+                )
+                    .onLeft { error ->
+                        TangemLogger.e("GachaVaultRepository: closeVault failed: ${error.customMessage}")
+                    }
+                    .mapLeft { error -> error.toVaultFailure(userWallet) }
+                    .bind()
+            }
+        }
+
     private suspend fun deriveAndInitInCardSession(
         userWallet: UserWallet.Cold,
         hotDelegate: HotDelegatePublicKey,
@@ -176,6 +194,17 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     ): Either<CollectiblesAccountError, Unit> = either {
         ownerDeriver.deriveOwner(userWallet.walletId).bind()
         initOrUpdateVault(userWallet, hotDelegate, limits).bind()
+    }
+
+    private suspend fun closeVaultInternal(
+        userWalletId: UserWalletId,
+        network: Network,
+        signer: TransactionSigner,
+    ): Either<BlockchainError, Unit> = either {
+        vaultWalletManager(userWalletId = userWalletId, network = network)
+            .bind()
+            .sendVaultTransaction(signer) { buildCloseCollectiblesVault() }
+            .bind()
     }
 
     /** Reading first keeps it at one signature: `init_vault` over an existing vault fails with `already in use`. */
