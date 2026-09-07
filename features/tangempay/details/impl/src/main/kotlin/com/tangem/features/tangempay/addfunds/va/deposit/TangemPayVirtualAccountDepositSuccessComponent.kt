@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.common.TangemPayResultScreen
 import com.tangem.features.tangempay.details.impl.R
 
@@ -27,6 +28,8 @@ internal class TangemPayVirtualAccountDepositSuccessComponent(
             subtitle = resourceReference(R.string.tangempay_bank_transfer_success_subtitle),
             buttonText = resourceReference(R.string.common_close),
             onButtonClick = ::onClose,
+            titleTestTag = TangemPayTestTags.VA_DEPOSIT_SUCCESS_TITLE,
+            buttonTestTag = TangemPayTestTags.VA_DEPOSIT_SUCCESS_CLOSE_BUTTON,
         )
     }
 

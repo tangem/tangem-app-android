@@ -9,6 +9,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
+import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -204,6 +205,61 @@ internal data class TangemButtonStory(
 ) : DsStoryBookPage {
 
     /** Backdrop the button preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+internal data class TangemFooterStory(
+    val actions: Actions,
+    val fadeVariant: TangemFade.Variant,
+    val hasExtraTop: Boolean,
+    val isFadeEnabled: Boolean,
+    val isBlurEnabled: Boolean,
+    val isInModal: Boolean,
+    val onActionsChange: (Actions) -> Unit,
+    val onFadeVariantChange: (TangemFade.Variant) -> Unit,
+    val onExtraTopToggle: () -> Unit,
+    val onFadeToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onInModalToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which actions block the footer hosts — the configurations from the design. */
+    enum class Actions(val label: String) {
+        ButtonGroupVertical("2 buttons"),
+        ButtonGroupHorizontal("2 in a row"),
+        SingleButton("1 button"),
+        StartEnd("start + end"),
+        Search("search"),
+    }
+}
+
+internal data class TangemButtonStackStory(
+    val variant: TangemButtonStack.Variant,
+    val entryCount: Int,
+    val entryKind: EntryKind,
+    val background: Background,
+    val isBlurEnabled: Boolean,
+    val onVariantChange: (TangemButtonStack.Variant) -> Unit,
+    val onEntryCountChange: (Int) -> Unit,
+    val onEntryKindChange: (EntryKind) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onBlurToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** What each entry of the stack renders — the presets from the design. */
+    enum class EntryKind(val label: String) {
+        Icon("icon"),
+        Label("label"),
+        IconLabel("icon + label"),
+    }
+
+    /** Backdrop the stack is rendered on top of, to verify the material fill. */
     enum class Background(val label: String) {
         Rainbow("rainbow"),
         BgPrimary("bg.primary"),
