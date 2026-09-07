@@ -1035,6 +1035,7 @@ internal class DefaultPolymarketRepositoryTest {
             total = total,
             builderCode = "0xbuilder",
             minOrderSize = "5",
+            minOrderAmount = "1",
             tickSize = "0.001",
             isLive = false,
         )
