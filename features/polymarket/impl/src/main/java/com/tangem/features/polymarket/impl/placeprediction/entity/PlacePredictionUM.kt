@@ -181,5 +181,7 @@ internal sealed interface SubmitUM {
 
     data object Posting : SubmitUM
 
+    data object AwaitingFill : SubmitUM
+
     data class Result(val result: PlaceResultUM) : SubmitUM
 }

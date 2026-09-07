@@ -1,12 +1,15 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PredictionOrderState
+import com.tangem.domain.polymarket.model.PredictionOrderStatus
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -99,6 +102,18 @@ internal class PlaceResultUMConverterTest {
         ),
         ConvertModel(
             result = result(status = "delayed"),
+            expected = PlaceOutcome.Delayed(orderId = ORDER_ID, placedAt = PLACED_AT),
+        ),
+        ConvertModel(
+            result = result(status = " Delayed ", shares = null, makingAmount = null),
+            expected = PlaceOutcome.Delayed(orderId = ORDER_ID, placedAt = PLACED_AT),
+        ),
+        ConvertModel(
+            result = result(status = "delayed", orderId = null),
+            expected = PlaceOutcome.Reportable(PlaceResultUM.Submitted(placedAt = PLACED_AT)),
+        ),
+        ConvertModel(
+            result = result(status = "delayed", orderId = " "),
             expected = PlaceOutcome.Reportable(PlaceResultUM.Submitted(placedAt = PLACED_AT)),
         ),
         ConvertModel(
@@ -108,6 +123,75 @@ internal class PlaceResultUMConverterTest {
         ConvertModel(
             result = result(status = null),
             expected = PlaceOutcome.Reportable(PlaceResultUM.Submitted(placedAt = PLACED_AT)),
+        ),
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideReadBackModels")
+    fun convertReadBack(model: ReadBackModel) {
+        // Act
+        val actual = PlaceResultUMConverter.convert(
+            order = model.order,
+            quotedAmount = QUOTED_AMOUNT,
+            placedAt = PLACED_AT,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    internal data class ReadBackModel(val name: String, val order: PredictionOrderState, val expected: PlaceResultUM?) {
+        override fun toString(): String = name
+    }
+
+    private fun provideReadBackModels() = listOf(
+        ReadBackModel(
+            name = "the whole size matched is a full fill spent at the order's price",
+            order = readBack(sizeMatched = ORDERED_SHARES),
+            expected = PlaceResultUM.Filled(
+                placedAt = PLACED_AT,
+                amount = BigDecimal("73.50"),
+                tokensBought = ORDERED_SHARES,
+            ),
+        ),
+        ReadBackModel(
+            name = "more than the size is still a full fill",
+            order = readBack(sizeMatched = ORDERED_SHARES + BigDecimal.ONE),
+            expected = PlaceResultUM.Filled(
+                placedAt = PLACED_AT,
+                amount = BigDecimal("74.24"),
+                tokensBought = ORDERED_SHARES + BigDecimal.ONE,
+            ),
+        ),
+        ReadBackModel(
+            name = "a partial fill is spent at the order's price, half up to cents",
+            order = readBack(sizeMatched = BigDecimal("33.333333")),
+            expected = PlaceResultUM.PartiallyFilled(
+                placedAt = PLACED_AT,
+                filledAmount = BigDecimal("24.50"),
+                requestedAmount = QUOTED_AMOUNT,
+                tokensBought = BigDecimal("33.333333"),
+            ),
+        ),
+        ReadBackModel(
+            name = "a matched order with nothing filled is no fill",
+            order = readBack(sizeMatched = BigDecimal.ZERO),
+            expected = PlaceResultUM.NotFilled(placedAt = PLACED_AT),
+        ),
+        ReadBackModel(
+            name = "a fill whose size cannot be read has no result",
+            order = readBack(sizeMatched = null),
+            expected = null,
+        ),
+        ReadBackModel(
+            name = "an order whose size cannot be read has no result",
+            order = readBack(sizeMatched = BigDecimal.TEN, originalSize = null),
+            expected = null,
+        ),
+        ReadBackModel(
+            name = "a fill without a price cannot be spent and has no result",
+            order = readBack(sizeMatched = BigDecimal.TEN, price = null),
+            expected = null,
         ),
     )
 
@@ -132,13 +216,29 @@ internal class PlaceResultUMConverterTest {
             tokensBought = tokensBought,
         )
 
+        const val ORDER_ID = "0x6b2e"
+        val ORDERED_SHARES: BigDecimal = BigDecimal("100")
+        val LIMIT_PRICE: BigDecimal = BigDecimal("0.735")
+
+        fun readBack(
+            sizeMatched: BigDecimal?,
+            originalSize: BigDecimal? = ORDERED_SHARES,
+            price: BigDecimal? = LIMIT_PRICE,
+        ) = PredictionOrderState(
+            status = PredictionOrderStatus.Matched,
+            price = price,
+            originalSize = originalSize,
+            sizeMatched = sizeMatched,
+        )
+
         fun result(
             status: String? = "matched",
             shares: BigDecimal? = QUOTED_SHARES,
             makingAmount: BigDecimal? = QUOTED_AMOUNT,
+            orderId: String? = ORDER_ID,
         ) = PredictionPlaceOrderResult(
             isSuccess = true,
-            orderId = "0x6b2e",
+            orderId = orderId,
             status = status,
             makingAmount = makingAmount,
             takingAmount = shares,

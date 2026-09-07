@@ -15,6 +15,7 @@ import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.builder.PolymarketPlaceOrderBodyBuilder
 import com.tangem.data.polymarket.converter.PredictionOrderQuoteConverter
 import com.tangem.data.polymarket.converter.PredictionPlaceOrderConverter
+import com.tangem.data.polymarket.converter.PredictionOrderStateConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
@@ -24,6 +25,7 @@ import com.tangem.data.polymarket.pagination.PolymarketEventsUpdateFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
@@ -52,6 +54,8 @@ import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderState
+import com.tangem.domain.polymarket.model.PredictionOrderStateError
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
@@ -233,6 +237,32 @@ internal class DefaultPolymarketRepository @Inject constructor(
                     }
             },
             onError = { placeOrderErrorResolver.resolve(it).left() },
+        )
+    }
+
+    override suspend fun getOrder(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        orderId: String,
+    ): Either<PredictionOrderStateError, PredictionOrderState> = withContext(dispatchers.io) {
+        val headers = Either
+            .catch {
+                l2HeaderBuilder.build(
+                    ownerAddress = ownerAddress,
+                    credentials = credentials,
+                    requestPath = "$ORDER_READ_SIGNED_PATH/$orderId",
+                )
+            }
+            .mapLeft { PredictionOrderStateError.Unknown(httpCode = null, detail = it.message) }
+            .getOrElse { return@withContext it.left() }
+
+        safeApiCallWithTimeout(
+            timeoutMillis = ORDER_READ_TIMEOUT,
+            call = {
+                val response = clobApi.getOrder(headers = headers, orderId = orderId).bind()
+                PredictionOrderStateConverter.convert(value = response).right()
+            },
+            onError = { it.toOrderStateError().left() },
         )
     }
 
@@ -460,6 +490,18 @@ internal class DefaultPolymarketRepository @Inject constructor(
             PredictionPriceError.Unknown(httpCode = null, detail = cause.message ?: message)
     }
 
+    private fun ApiResponseError.toOrderStateError(): PredictionOrderStateError = when (this) {
+        is ApiResponseError.NetworkException -> PredictionOrderStateError.Network
+        is ApiResponseError.TimeoutException -> PredictionOrderStateError.Timeout
+        is ApiResponseError.HttpException -> when (code) {
+            Code.UNAUTHORIZED -> PredictionOrderStateError.Unauthorized(detail = errorBody)
+            Code.NOT_FOUND -> PredictionOrderStateError.NotFound
+            else -> PredictionOrderStateError.Unknown(httpCode = code.numericCode, detail = errorBody)
+        }
+        is ApiResponseError.UnknownException ->
+            PredictionOrderStateError.Unknown(httpCode = null, detail = cause.message ?: message)
+    }
+
     private fun ApiResponseError.toQuoteError(): PredictionOrderQuoteError = when (this) {
         is ApiResponseError.NetworkException,
         is ApiResponseError.TimeoutException,
@@ -487,11 +529,13 @@ internal class DefaultPolymarketRepository @Inject constructor(
         const val ASSET_TYPE_COLLATERAL = "COLLATERAL"
 
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
+        val ORDER_READ_TIMEOUT = 5.seconds
 
         const val HTTP_METHOD_POST = "POST"
         val JSON_MEDIA_TYPE = "application/json".toMediaType()
 
         const val PLACE_ORDER_SIGNED_PATH = "/order"
+        const val ORDER_READ_SIGNED_PATH = "/data/order"
 
         const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
         const val BALANCE_ALLOWANCE_READ_SIGNED_PATH = "/balance-allowance"

@@ -23,6 +23,8 @@ import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderState
+import com.tangem.domain.polymarket.model.PredictionOrderStateError
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import java.math.BigDecimal
@@ -74,6 +76,16 @@ interface PolymarketRepository {
     suspend fun getOrderQuote(
         request: PredictionOrderQuoteRequest,
     ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
+
+    /**
+     * One placed order as the book sees it (CLOB `GET /data/order/{id}`). Polled while a delayed order sits in
+     * its matching window, so a transport failure is reported as such rather than folded into unknown.
+     */
+    suspend fun getOrder(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        orderId: String,
+    ): Either<PredictionOrderStateError, PredictionOrderState>
 
     /**
      * Best price on [side] of the asset's book (CLOB `GET /price`). Serves the empty order form, where
