@@ -14,7 +14,7 @@ data class JointAccountInvitePreview(
 
     /**
      * @property name    display name, 1..25 chars
-     * @property address the creator's owner address, EIP-55 checksummed
+     * @property address the creator's owner address, lower-case hex — compare case-insensitively
      */
     data class Creator(
         val name: String,

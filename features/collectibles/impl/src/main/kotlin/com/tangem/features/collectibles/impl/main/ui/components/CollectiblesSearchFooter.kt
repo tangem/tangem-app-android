@@ -43,10 +43,11 @@ internal fun CollectiblesSearchFooter(
     ) {
         TangemFade(
             position = TangemFade.Position.Bottom,
-            variant = TangemFade.Variant.Hard,
+            variant = TangemFade.Variant.Soft,
+            blur = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(112.dp + navigationBarInset),
+                .height(110.dp + navigationBarInset),
         )
         TangemSearch(
             state = state,
