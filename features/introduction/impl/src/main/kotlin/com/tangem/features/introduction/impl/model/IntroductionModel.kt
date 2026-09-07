@@ -4,7 +4,6 @@ import android.view.SurfaceView
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -60,6 +59,7 @@ internal class IntroductionModel @Inject constructor(
     private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val cardScanner: IntroductionCardScanner,
+    private val mobileWalletCreator: IntroductionMobileWalletCreator,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host {
@@ -76,6 +76,7 @@ internal class IntroductionModel @Inject constructor(
 
     /** An ended story kept on screen because navigation is covering it; dismissed on the next resume. */
     private var isStoryDismissPendingResume = false
+    private var isCreatingMobileWallet = false
 
     private val videoPlayer = videoPlayerFactory.create(
         videoRes = R.raw.introduction_background,
@@ -190,6 +191,7 @@ internal class IntroductionModel @Inject constructor(
                 title = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
                 onClick = ::onCreateSeedPhraseWalletClick,
+                isLoading = isCreatingMobileWallet,
             ),
         ),
     )
@@ -200,7 +202,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onTangemCardOrRingClick() {
-        if (!isCreateWalletSheetShown()) return
+        if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
         // TODO [REDACTED_TASK_KEY]: report this tap once the analytics contract is settled. The mobile twin has
         //  ButtonMobileWallet, but no event exists for picking the hardware option: CreateWalletSelectionModel
         //  sends none either, and Settings.ButtonAddHardwareWallet is another category and needs a wallet.
@@ -316,8 +318,8 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onCreateSeedPhraseWalletClick() {
-        if (!isCreateWalletSheetShown()) return
-        onBottomSheetDismissed()
+        if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
+        // Released only when creation fails: a saved wallet installs its own context in place of this one.
         trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(
             OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
@@ -325,16 +327,38 @@ internal class IntroductionModel @Inject constructor(
             ),
         )
         if (!ensureHotWalletCreationSupported()) {
+            onBottomSheetDismissed()
             trackingContextProxy.removeContext()
             return
         }
-        // TODO [REDACTED_TASK_KEY]: returning from this terminal flow has to replay the video and the scene text from
-        //  their first frame; both belong to the Welcome screen task, which owns the player and the text layer.
-        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro))
+        setMobileWalletCreating(isCreating = true)
+        modelScope.launch {
+            mobileWalletCreator.createAndOpen(
+                source = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                onFailed = {
+                    trackingContextProxy.removeContext()
+                    setMobileWalletCreating(isCreating = false)
+                },
+            )
+        }
+    }
+
+    private fun setMobileWalletCreating(isCreating: Boolean) {
+        isCreatingMobileWallet = isCreating
+        uiState.update { state ->
+            val config = state.bottomSheetConfig
+            val content = config?.content as? CreateWalletUM
+            if (config == null || content == null) {
+                state
+            } else {
+                val seedPhrase = content.seedPhrase.copy(isLoading = isCreating)
+                state.copy(bottomSheetConfig = config.copy(content = content.copy(seedPhrase = seedPhrase)))
+            }
+        }
     }
 
     private fun onIHaveWalletClick() {
-        if (isAnySheetShown()) return
+        if (isAnySheetShown() || isCreatingMobileWallet) return
         // TODO [REDACTED_TASK_KEY]: report this tap once the analytics contract is settled. The spec asks for
         //  "[Sign In] Button - Open Existing Account" and calls it an existing event, but the only event of
         //  that name lives in the "Settings / Wallet Settings" category and is about accounts, and the

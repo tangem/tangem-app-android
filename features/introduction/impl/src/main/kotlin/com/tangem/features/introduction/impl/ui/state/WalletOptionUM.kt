@@ -8,4 +8,5 @@ internal data class WalletOptionUM(
     val title: TextReference,
     val description: TextReference,
     val onClick: () -> Unit,
+    val isLoading: Boolean = false,
 )
