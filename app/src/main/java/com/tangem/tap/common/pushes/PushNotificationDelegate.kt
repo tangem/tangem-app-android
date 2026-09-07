@@ -12,12 +12,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.executeBlocking
+import coil.imageLoader
 import coil.request.ImageRequest
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
-import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.wallet.R
@@ -108,10 +107,7 @@ class PushNotificationDelegate(
     }
 
     private fun getBitmapImageFromUrl(url: Uri): Bitmap? {
-        return createCoilImageLoader(
-            context,
-            logEnabled = LogConfig.imageLoader,
-        ).executeBlocking(
+        return context.imageLoader.executeBlocking(
             ImageRequest.Builder(context)
                 .data(url)
                 .build(),
