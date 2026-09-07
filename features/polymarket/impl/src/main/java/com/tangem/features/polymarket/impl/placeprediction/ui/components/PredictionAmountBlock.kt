@@ -38,7 +38,6 @@ import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
-import com.tangem.utils.StringsSigns.DASH_SIGN
 
 @Suppress("LongParameterList")
 @Composable
@@ -77,7 +76,7 @@ internal fun PredictionAmountBlock(
                     Text(
                         text = stringResourceSafe(
                             R.string.common_balance,
-                            payment.balance?.formatPolymarketMoney() ?: DASH_SIGN,
+                            payment.balance.formatPolymarketMoney(),
                         ),
                         style = TangemTheme.typography3.caption.medium,
                         color = TangemTheme.colors3.text.secondary,
@@ -154,6 +153,16 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
             is AmountCaptionUM.Shortfall -> Text(
                 modifier = Modifier.padding(top = CAPTION_GAP),
                 text = caption.error.text.resolveReference(),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.error,
+                textAlign = TextAlign.Center,
+            )
+            is AmountCaptionUM.BelowMinimum -> Text(
+                modifier = Modifier.padding(top = CAPTION_GAP),
+                text = stringResourceSafe(
+                    R.string.prediction_place_min_amount_error,
+                    caption.minAmount.formatPolymarketMoney(),
+                ),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,

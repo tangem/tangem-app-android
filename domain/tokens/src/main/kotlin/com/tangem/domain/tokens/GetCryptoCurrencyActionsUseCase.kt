@@ -72,6 +72,7 @@ class GetCryptoCurrencyActionsUseCase(
                     val actions = jointAccountActionsFactory.create(
                         userWallet = userWallet,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        yieldSupplyAvailability = yieldSupplyAvailability,
                     )
                     emit(actions)
                 }

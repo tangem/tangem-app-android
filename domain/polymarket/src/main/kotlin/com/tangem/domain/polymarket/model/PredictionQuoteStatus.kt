@@ -5,6 +5,7 @@ enum class PredictionQuoteStatus {
     PARTIAL,
     INSUFFICIENT_LIQUIDITY,
     BELOW_MIN_ORDER_SIZE,
+    BELOW_MIN_ORDER_AMOUNT,
     MARKET_CLOSED,
     ;
 

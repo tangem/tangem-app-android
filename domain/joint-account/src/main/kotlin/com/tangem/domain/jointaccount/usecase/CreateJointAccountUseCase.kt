@@ -11,6 +11,7 @@ import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -41,11 +42,11 @@ class CreateJointAccountUseCase(
     ): Either<JointAccountCreationError, JointAccount> = either {
         val rawIndex = Either
             .catch { repository.getFreeOwnerDerivationIndex(userWalletId = userWalletId) }
-            .mapLeft(JointAccountCreationError::Failed)
+            .mapLeft(JointAccountFlowError::Failed)
             .bind()
 
         val derivationIndex = DerivationIndex(value = rawIndex)
-            .mapLeft { JointAccountCreationError.InvalidDerivationIndex(cause = it) }
+            .mapLeft { JointAccountFlowError.InvalidDerivationIndex(cause = it) }
             .bind()
 
         val signResult = signer
@@ -78,7 +79,7 @@ class CreateJointAccountUseCase(
                     signature = signResult.signature,
                 )
             }
-            .mapLeft(JointAccountCreationError::Failed)
+            .mapLeft(JointAccountFlowError::Failed)
             .bind()
 
         val refresh = refreshAccounts(userWalletId = userWalletId)
@@ -90,7 +91,7 @@ class CreateJointAccountUseCase(
             JointAccountCreationResult.CreatorAlreadyRegistered -> {
                 // Here the refresh is the only source of the existing account, so its failure is the real cause —
                 // reporting "not found" instead would blame the data for a network problem
-                refresh.mapLeft(JointAccountCreationError::Failed).bind()
+                refresh.mapLeft(JointAccountFlowError::Failed).bind()
 
                 findOwnAccount(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress).bind()
             }
@@ -133,7 +134,7 @@ class CreateJointAccountUseCase(
     }
 
     private fun toCreationError(cause: Throwable): JointAccountCreationError = when (cause) {
-        is TangemSdkError.UserCancelled -> JointAccountCreationError.UserCancelled
-        else -> JointAccountCreationError.Failed(cause = cause)
+        is TangemSdkError.UserCancelled -> JointAccountFlowError.UserCancelled
+        else -> JointAccountFlowError.Failed(cause = cause)
     }
 }

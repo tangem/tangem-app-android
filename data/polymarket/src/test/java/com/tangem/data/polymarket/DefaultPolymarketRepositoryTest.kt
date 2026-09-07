@@ -30,6 +30,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderRes
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoryDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventResponse
@@ -78,6 +79,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -114,6 +116,43 @@ internal class DefaultPolymarketRepositoryTest {
         l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
+
+    @Nested
+    inner class GetBuilderCode {
+
+        @Test
+        fun `GIVEN the configuration is served WHEN asked twice THEN the network is hit once`() = runTest {
+            // Arrange
+            coEvery { api.getConfiguration(any()) } returns ApiResponse.Success(
+                PolymarketConfigurationResponse(builderCode = BUILDER_CODE),
+            )
+
+            // Act
+            val first = repository.getBuilderCode(walletId = WALLET_ID)
+            val second = repository.getBuilderCode(walletId = WALLET_ID)
+
+            // Assert
+            assertThat(first.getOrNull()).isEqualTo(BUILDER_CODE)
+            assertThat(second.getOrNull()).isEqualTo(BUILDER_CODE)
+            coVerify(exactly = 1) { api.getConfiguration(WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN the configuration call fails WHEN asked again THEN it is retried rather than cached`() =
+            runTest {
+                // Arrange
+                coEvery { api.getConfiguration(any()) } returns networkError()
+
+                // Act
+                val first = repository.getBuilderCode(walletId = WALLET_ID)
+                val second = repository.getBuilderCode(walletId = WALLET_ID)
+
+                // Assert
+                assertThat(first.isLeft()).isTrue()
+                assertThat(second.isLeft()).isTrue()
+                coVerify(exactly = 2) { api.getConfiguration(WALLET_ID) }
+            }
+    }
 
     @Test
     fun `GIVEN categories response WHEN getCategories THEN maps to domain categories`() = runTest {
@@ -967,6 +1006,7 @@ internal class DefaultPolymarketRepositoryTest {
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
+        const val BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
         fun quoteRequest() = PredictionOrderQuoteRequest(
@@ -995,6 +1035,7 @@ internal class DefaultPolymarketRepositoryTest {
             total = total,
             builderCode = "0xbuilder",
             minOrderSize = "5",
+            minOrderAmount = "1",
             tickSize = "0.001",
             isLive = false,
         )
