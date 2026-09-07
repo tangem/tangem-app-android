@@ -5,6 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.earn.model.EarnFeedTabModel
 import com.tangem.features.feed.earn.model.filters.EarnNetworkFilterModel
 import com.tangem.features.feed.earn.model.filters.EarnTypeFilterModel
+import com.tangem.features.feed.earn.model.search.EarnFeedSearchTabModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,6 +20,11 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(EarnFeedTabModel::class)
     fun bindEarnFeedTabModel(model: EarnFeedTabModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnFeedSearchTabModel::class)
+    fun bindEarnFeedSearchTabModel(model: EarnFeedSearchTabModel): Model
 
     @Binds
     @IntoMap
