@@ -219,6 +219,7 @@ internal object AuthModule {
         attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
+        sessionTokenRefresher: Lazy<SessionTokenRefresher>,
         dispatchers: CoroutineDispatcherProvider,
     ): DeviceRegistrar {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledDeviceRegistrar
@@ -232,6 +233,7 @@ internal object AuthModule {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            sessionTokenRefresher = sessionTokenRefresher,
             dispatchers = dispatchers,
         )
     }

@@ -17,9 +17,9 @@ import com.tangem.grow.datasource.stakekit.models.response.model.error.StakeKitE
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
+import com.tangem.data.staking.store.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
-import com.tangem.datasource.local.token.P2PVaultLimitsStore
+import com.tangem.data.staking.store.P2PVaultLimitsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.txhistory.db.dao.P2PEthPoolVaultDao

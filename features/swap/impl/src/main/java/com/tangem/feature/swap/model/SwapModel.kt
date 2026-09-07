@@ -46,7 +46,7 @@ import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -182,7 +182,7 @@ internal class SwapModel @Inject constructor(
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
@@ -1888,7 +1888,7 @@ internal class SwapModel @Inject constructor(
                 feeAssetType = feeAssetType,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
-                referralId = appsFlyerStore.get()?.refcode,
+                referralId = appsFlyerRepository.getConversionData()?.refcode,
             ),
         )
     }
@@ -1909,6 +1909,8 @@ internal class SwapModel @Inject constructor(
             is Account.Virtual -> emptyFlow()
             // Prediction account isn't a swap source either — the same MVP rule
             is Account.Prediction -> emptyFlow()
+            // Collectibles account holds no spendable currencies of its own — its funds live in the gacha vault
+            is Account.Collectibles -> emptyFlow()
             // A joint account isn't a swap source either — spending from a Safe is a future co-signed operation
             is Account.Joint -> emptyFlow()
         }.distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
@@ -2490,6 +2492,8 @@ internal class SwapModel @Inject constructor(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = fromToken.isCustom,
+                isCustomFeeToken = getFeeToken().isCustom,
             ),
         )
     }

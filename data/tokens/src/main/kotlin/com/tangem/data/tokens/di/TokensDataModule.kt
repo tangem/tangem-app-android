@@ -7,7 +7,7 @@ import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedReposi
 import com.tangem.data.tokens.repository.DefaultYieldSupplyWarningsViewedRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
+import com.tangem.data.tokens.store.TokenReceiveWarningActionStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
