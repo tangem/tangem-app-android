@@ -16,12 +16,12 @@ import java.math.BigDecimal
  * Formats a traded volume as Polymarket states it: in USD, regardless of the currency selected in the app,
  * and compacted (e.g. "$1.2M"). Shared by the feed cards and the event-details screen.
  */
-internal fun BigDecimal.formatPolymarketVolume(): String = format {
+internal fun BigDecimal?.formatPolymarketVolume(): String = format {
     fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL).compact()
 }
 
 /** Formats a collateral amount the way the trade screens state it: plain USD, never the app's fiat. */
-internal fun BigDecimal.formatPolymarketMoney(): String = format {
+internal fun BigDecimal?.formatPolymarketMoney(): String = format {
     fiat(fiatCurrencyCode = PolymarketConst.USD_CODE, fiatCurrencySymbol = PolymarketConst.USD_SYMBOL)
 }
 
@@ -41,7 +41,7 @@ internal fun BigDecimal.formatPolymarketEnteredAmount(): String = format {
 }
 
 /** Formats a collateral balance as the token it is held in, e.g. "1,000.00 USDC". */
-internal fun BigDecimal.formatPolymarketBalance(tokenSymbol: String): String = format {
+internal fun BigDecimal?.formatPolymarketBalance(tokenSymbol: String): String = format {
     crypto(symbol = tokenSymbol, decimals = PolymarketConst.COLLATERAL_DECIMALS, ignoreSymbolPosition = true)
 }
 
