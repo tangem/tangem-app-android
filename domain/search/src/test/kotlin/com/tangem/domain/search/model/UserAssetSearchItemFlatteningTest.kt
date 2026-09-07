@@ -1,4 +1,4 @@
-package com.tangem.features.feed.crypto.model.search
+package com.tangem.domain.search.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
@@ -11,7 +11,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.search.model.UserAssetSearchItem
 import org.junit.jupiter.api.Test
 
 internal class UserAssetSearchItemFlatteningTest {
