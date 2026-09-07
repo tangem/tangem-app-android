@@ -86,6 +86,15 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
         currency: CryptoCurrency,
         existentialDeposit: BigDecimal?,
     ): Flow<List<CryptoCurrencyWarning>> {
+        // A joint currency lives on a Safe: the wallet pays no fee of its own, so the coin pairing and the fee
+        // warnings do not apply, and a joint portfolio without the network coin is not an outage
+        if (currency.network.derivationPath is Network.DerivationPath.Joint) {
+            return singleAccountStatusListSupplier(userWalletId)
+                .map { accountStatusList -> accountStatusList.getCryptoCurrencyStatus(currency).getOrNull() }
+                .distinctUntilChanged()
+                .map { tokenStatus -> listOfNotNull(tokenStatus?.let(::getUsedOutdatedDataWarning)) }
+        }
+
         return singleAccountStatusListSupplier(userWalletId)
             .map { accountStatusList ->
                 val coin = accountStatusList.getCoinStatus(currency).getOrNull()
