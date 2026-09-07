@@ -1,6 +1,6 @@
 package com.tangem.data.txhistory.repository.converter
 
-import com.tangem.grow.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.utils.converter.Converter
 
