@@ -1,6 +1,7 @@
 package com.tangem.data.common.currency
 
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
@@ -39,7 +40,7 @@ class UserTokensSaverTest {
         addressesEnricher = enricher,
         walletServerBinder = walletServerBinder,
         pushTokensRetryerPool = mockk(),
-        eTagsStore = eTagsStore,
+        walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         jointAccountFeatureToggles = jointAccountFeatureToggles,
     )
 

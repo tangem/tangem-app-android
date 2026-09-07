@@ -4,6 +4,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.*
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.common.quote.DefaultQuotesFetcher
@@ -71,7 +72,7 @@ internal object DataCommonModule {
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
         appScope: AppCoroutineScope,
-        eTagsStore: ETagsStore,
+        walletAccountsETags: WalletAccountsETags,
         jointAccountFeatureToggles: JointAccountFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
@@ -83,7 +84,7 @@ internal object DataCommonModule {
                 coroutineScope = appScope,
             ),
             walletServerBinder = walletServerBinder,
-            eTagsStore = eTagsStore,
+            walletAccountsETags = walletAccountsETags,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
         )
     }
