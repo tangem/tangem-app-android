@@ -1140,6 +1140,7 @@
   <string name="market_chart_can_not_load_data">Can’t load data</string>
   <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
   <string name="market_chart_top_holding">%s of your portfolio</string>
+  <string name="market_failed_to_load_filters">Failed to load filter. \nTap to reload</string>
   <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
@@ -1164,6 +1165,11 @@
   <string name="markets_portfolio_eligible_block_title">Other eligible tokens</string>
   <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
+  <string name="markets_real_assets_category_bonds">Bonds</string>
+  <string name="markets_real_assets_category_commodities">Commodities</string>
+  <string name="markets_real_assets_category_etfs">ETFs</string>
+  <string name="markets_real_assets_category_stablecoins">Stablecoins</string>
+  <string name="markets_real_assets_category_xstocks">xStocks</string>
   <string name="markets_real_assets_empty_title">No assets found</string>
   <string name="markets_real_assets_filter_sectors_title">Sectors</string>
   <string name="markets_real_assets_filter_title">Category</string>
@@ -1172,6 +1178,17 @@
   <string name="markets_real_assets_interval_week">Week</string>
   <string name="markets_real_assets_region_restriction_description">Stocks, ETFs, Bonds they\'re not supported in UK and US</string>
   <string name="markets_real_assets_region_restriction_title">Not supported in your region</string>
+  <string name="markets_real_assets_sector_xstocks_communication">Communication Services</string>
+  <string name="markets_real_assets_sector_xstocks_consumer">Consumer</string>
+  <string name="markets_real_assets_sector_xstocks_crypto">Crypto</string>
+  <string name="markets_real_assets_sector_xstocks_energy">Energy</string>
+  <string name="markets_real_assets_sector_xstocks_financials">Financials</string>
+  <string name="markets_real_assets_sector_xstocks_healthcare">Healthcare</string>
+  <string name="markets_real_assets_sector_xstocks_industrials">Industrials</string>
+  <string name="markets_real_assets_sector_xstocks_technology">Technology</string>
+  <string name="markets_real_assets_sort_market_cap">Market cap</string>
+  <string name="markets_real_assets_sort_top_gainers">Top gainers</string>
+  <string name="markets_real_assets_sort_top_losers">Top losers</string>
   <string name="markets_real_assets_title">Real world assets</string>
   <string name="markets_search_clear_all_hints">Clear all</string>
   <string name="markets_search_header_title">Search tokens</string>
@@ -1610,6 +1627,7 @@
   <string name="prediction_place_fee">Fee</string>
   <string name="prediction_place_insufficient_balance_bet">Insufficient Balance – add fund to bet</string>
   <string name="prediction_place_insufficient_balance_fees">Insufficient Balance – to cover fees</string>
+  <string name="prediction_place_min_amount_error">Min amount should be more than: %s</string>
   <string name="prediction_place_notification_awaiting_funds_description">Your funds are in flight. Your balance updates itself every few seconds so you can stay on this screen.</string>
   <string name="prediction_place_notification_awaiting_funds_title">Awaiting funds</string>
   <string name="prediction_place_notification_market_closed_description">This market no longer accepts orders</string>
@@ -2504,8 +2522,8 @@
   <string name="tangempay_order_type_title">Order new card</string>
   <string name="tangempay_order_type_unavailable">Unavailable</string>
   <string name="tangempay_other_networks_header">Other networks</string>
-  <string name="tangempay_other_networks_subtitle">and then swap it to payment account with zero fees</string>
-  <string name="tangempay_other_networks_title">Send USDT / USDC on any chain to your Tangem Wallet</string>
+  <string name="tangempay_other_networks_subtitle">Then swap it to payment account with zero fees</string>
+  <string name="tangempay_other_networks_title">Send USDT/USDC on any EVM-chain to your Tangem Wallet</string>
   <string name="tangempay_pay_support">Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Session expired</string>
@@ -2557,7 +2575,7 @@
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">From a bank account</string>
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_body_multichain">Send USDC or USDT to your account’s address</string>
@@ -2910,7 +2928,7 @@
   <string name="warning_approval_in_progress_message">The permission-granting process is currently underway and will be completed shortly</string>
   <string name="warning_approval_in_progress_title">Approval in Progress</string>
   <string name="warning_backup_error_add_funds_message">This wallet has a backup issue. Contact Support to resolve it.</string>
-  <string name="warning_backup_error_add_funds_message_v2">This wallet has a backup issue. Move your funds to another wallet and reset it.</string>
+  <string name="warning_backup_error_add_funds_message_v2">The wallet you want to fund has a backup issue. Move your funds from it to another wallet and reset it.</string>
   <string name="warning_backup_error_add_funds_title">Adding funds is disabled</string>
   <string name="warning_backup_error_add_funds_title_v2">Backup issue detected</string>
   <string name="warning_backup_error_attention_message">Your cards weren\'t activated correctly. To protect your funds, move them to another wallet, reset your cards to factory settings, and reactivate them before continuing.</string>
