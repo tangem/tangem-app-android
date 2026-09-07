@@ -21,9 +21,15 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
+    implementation(projects.core.pagination)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+
+    /** Project - Domain */
+    implementation(projects.domain.collectibles)
+    implementation(projects.domain.collectibles.models)
+    implementation(projects.domain.appCurrency.models)
 
     /** Kotlin */
     implementation(deps.kotlin.immutable.collections)
@@ -41,6 +47,7 @@ dependencies {
     /** Other */
     api(deps.compose.coil)
     implementation(deps.androidx.appCompat)
+    implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.haze)

@@ -218,7 +218,9 @@ private fun TangemPayFiatAmount(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Icon(
-                    modifier = Modifier.size(12.dp),
+                    modifier = Modifier
+                        .size(12.dp)
+                        .testTag(TangemPayTestTags.MAIN_SCREEN_TILE_CACHE_ICON),
                     painter = painterResource(R.drawable.ic_error_sync_24),
                     tint = TangemTheme.colors2.graphic.neutral.secondary,
                     contentDescription = null,

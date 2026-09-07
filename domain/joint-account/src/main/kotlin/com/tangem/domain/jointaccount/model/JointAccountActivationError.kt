@@ -1,10 +1,10 @@
 package com.tangem.domain.jointaccount.model
 
-/** Errors of the activation flow. */
-sealed interface JointAccountActivationError {
-
-    /** The user closed the NFC session — the flow stops silently, there is nothing to report */
-    data object UserCancelled : JointAccountActivationError
+/**
+ * Why the activation flow stopped. The shared cases of the one-tap flows live in [JointAccountFlowError];
+ * only the activation-specific ones are declared here.
+ */
+sealed interface JointAccountActivationError : JointAccountFlowError {
 
     /** The wallet has no joint account matching the row being activated */
     data object AccountNotFound : JointAccountActivationError
@@ -26,6 +26,4 @@ sealed interface JointAccountActivationError {
      * reject the signature with 403 anyway, so the call is not made
      */
     data object NotCreator : JointAccountActivationError
-
-    data class Failed(val cause: Throwable) : JointAccountActivationError
 }

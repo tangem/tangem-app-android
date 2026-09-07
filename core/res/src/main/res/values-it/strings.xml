@@ -284,7 +284,7 @@
   <string name="tangempay_cashback_widget_error_description">Tocca per ricaricare</string>
   <string name="tangempay_cashback_widget_error_title">Cashback non disponibile</string>
   <string name="tangempay_cashback_widget_refund_description">Ridotto a causa del reso di acquisti</string>
-  <string name="tangempay_cashback_widget_title">%1$s di cashback in %2$s</string>
+  <string name="tangempay_cashback_widget_title">%1$s in %2$s</string>
   <string name="tangempay_change_pin_code">Cambia codice PIN</string>
   <string name="tangempay_changing_plan">Modifica piano</string>
   <string name="tangempay_choose_network_fast_way">Modo rapido</string>
@@ -449,7 +449,7 @@
   <string name="tangempay_order_type_unavailable">Non disponibile</string>
   <string name="tangempay_other_networks_header">Altre reti</string>
   <string name="tangempay_other_networks_subtitle">Poi convertilo sul conto di pagamento senza commissioni</string>
-  <string name="tangempay_other_networks_title">Invia USDT/USDC su qualsiasi rete al tuo Tangem Wallet</string>
+  <string name="tangempay_other_networks_title">Invia USDT/USDC su qualsiasi EVM-rete al tuo Tangem Wallet</string>
   <string name="tangempay_pay_support">Assistenza</string>
   <string name="tangempay_payment_account">Conto di pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sessione scaduta</string>
@@ -501,7 +501,7 @@
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario tramite ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Ricevi USD da un conto bancario tramite ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">Da un conto bancario</string>
   <string name="tangempay_topup_receive_body">Invia USDC Polygon all\'indirizzo del tuo account</string>
   <string name="tangempay_topup_receive_body_multichain">Invia USDC o USDT all\'indirizzo del tuo conto</string>
