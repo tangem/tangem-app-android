@@ -360,6 +360,9 @@
   <string name="common_forget">忘记</string>
   <string name="common_free">免费</string>
   <string name="common_from">从</string>
+  <string name="common_from_account">从账户</string>
+  <string name="common_from_address">从地址</string>
+  <string name="common_from_wallet">从钱包</string>
   <string name="common_from_wallet_name">从 %s</string>
   <string name="common_generate_addresses">同步地址</string>
   <string name="common_get">得到</string>
@@ -463,7 +466,7 @@
   <string name="common_send_tx_error">交易发送失败</string>
   <string name="common_send_with_swap">发送和交换</string>
   <string name="common_sending">发送中</string>
-  <string name="common_sent">发送</string>
+  <string name="common_sent">已发送</string>
   <string name="common_server_unavailable">服务器不可用，请稍后再试。</string>
   <string name="common_session_expired">会话已过期</string>
   <string name="common_share">分享</string>
@@ -484,7 +487,7 @@
   <string name="common_supported_networks">支持的网络</string>
   <string name="common_swap">兑换</string>
   <string name="common_swapped">已兑换</string>
-  <string name="common_swapping">兑换...</string>
+  <string name="common_swapping">兑换中</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem钱包</string>
   <string name="common_tap_and_hold_hint">点击并按住</string>
@@ -640,7 +643,7 @@
   <string name="express_error_swap_unavailable">目前无法进行兑换。请稍后再试。（代码：） %s）</string>
   <string name="express_estimated_amount">预估金额</string>
   <string name="express_exchange_by">由 %s交易</string>
-  <string name="express_exchange_notification_failed_text">访问提供商网站退款</string>
+  <string name="express_exchange_notification_failed_text">请访问服务提供商的网站办理退款</string>
   <string name="express_exchange_notification_failed_title">提供商操作失败</string>
   <string name="express_exchange_notification_long_transaction_time_text">您的兑换所需时间比平时长，但您的资金完全安全并会到账。如有任何疑问，您可以联系服务提供商的客服团队。</string>
   <string name="express_exchange_notification_long_transaction_time_title">交易时间长</string>
@@ -1982,7 +1985,7 @@
   <string name="tangempay_card_details_receive_error_description">检测到技术问题。请稍后再试或联系技术支持。</string>
   <string name="tangempay_card_details_receive_error_title">目前无法接收</string>
   <string name="tangempay_card_details_reissue_card">重新发行卡片</string>
-  <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字。</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字</string>
   <string name="tangempay_card_details_rename_card_invalid_title">无效字符</string>
   <string name="tangempay_card_details_rename_card_placeholder">卡片名称</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
@@ -1990,7 +1993,7 @@
   <string name="tangempay_card_details_system_downgrade_subtitle">如果余额持续为负，您的 %1$s 卡片将于 %2$s 关闭</string>
   <string name="tangempay_card_details_system_downgrade_title">请尽快为您的账户充值</string>
   <string name="tangempay_card_details_title">卡片详情</string>
-  <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试。</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试</string>
   <string name="tangempay_card_details_unfreeze_card">解冻卡片</string>
   <string name="tangempay_card_details_view_pin_code_description">如果忘记了，请返回应用查看。</string>
   <string name="tangempay_card_details_view_pin_code_title">您的PIN码</string>
@@ -2051,7 +2054,7 @@
   <string name="tangempay_cashback_widget_error_description">点击重新加载</string>
   <string name="tangempay_cashback_widget_error_title">返现不可用</string>
   <string name="tangempay_cashback_widget_refund_description">因退货而减少</string>
-  <string name="tangempay_cashback_widget_title">%2$s 中的 %1$s 返现</string>
+  <string name="tangempay_cashback_widget_title">%2$s 月获 %1$s</string>
   <string name="tangempay_change_pin_code">更改PIN码</string>
   <string name="tangempay_changing_plan">正在更改您的套餐</string>
   <string name="tangempay_choose_network_fast_way">快速方式</string>
@@ -2214,7 +2217,7 @@
   <string name="tangempay_order_type_unavailable">不可用</string>
   <string name="tangempay_other_networks_header">其他网络</string>
   <string name="tangempay_other_networks_subtitle">然后以 1:1 汇率、零手续费兑换到支付账户</string>
-  <string name="tangempay_other_networks_title">在任意链上将 USDT / USDC 发送至您的 Tangem 钱包</string>
+  <string name="tangempay_other_networks_title">在任意链上将 USDT/USDC 发送至您的 Tangem 钱包</string>
   <string name="tangempay_pay_support">支付支持</string>
   <string name="tangempay_payment_account">支付账户</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay 会话已过期</string>
@@ -2266,7 +2269,7 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">通过 ACH 从银行账户接收美元</string>
+  <string name="tangempay_topup_bank_transfer_body">通过 ACH/FedWire 从银行账户接收美元</string>
   <string name="tangempay_topup_bank_transfer_title">从银行账户</string>
   <string name="tangempay_topup_receive_body">將 USDC Polygon 發送至您帳戶地址</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
@@ -2572,6 +2575,7 @@
   <string name="warning_approval_in_progress_message">许可审批程序目前正在进行中，并将很快完成。</string>
   <string name="warning_approval_in_progress_title">审批中</string>
   <string name="warning_backup_error_add_funds_message">此钱包存在备份问题。请联系客服解决。</string>
+  <string name="warning_backup_error_add_funds_message_v2">您想要充值的钱包存在备份问题。请将资金从该钱包转至另一个钱包，然后重置该钱包。</string>
   <string name="warning_backup_error_add_funds_title">充值功能已禁用</string>
   <string name="warning_backup_error_attention_message">您的卡片未正确激活。为保护您的资金安全，请先将资金转至其他钱包，将卡片恢复出厂设置，然后重新激活，再继续操作。</string>
   <string name="warning_backup_error_attention_title">操作提示：请重置您的钱包</string>

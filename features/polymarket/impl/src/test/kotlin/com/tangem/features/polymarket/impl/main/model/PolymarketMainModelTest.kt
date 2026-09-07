@@ -19,8 +19,10 @@ import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -51,6 +53,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketMainModelTest {
@@ -58,20 +62,19 @@ internal class PolymarketMainModelTest {
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
     private val getEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
 
     private val batchState = MutableStateFlow(
         BatchListState<Int, PolymarketEventsBatch>(data = emptyList(), status = PaginationStatus.InitialLoading),
     )
-    // One state per pagination the model creates. The first feed keeps [batchState] so the tests that drive a
-    // single category read the same flow the model does.
+    // One per pagination the model creates; the first feed reuses [batchState].
     private val statePerFeed = mutableListOf<MutableStateFlow<BatchListState<Int, PolymarketEventsBatch>>>()
 
     private val contextSlot = slot<PolymarketEventsBatchingContext>()
     private val dispatchedActions =
         mutableListOf<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>()
 
-    // One entry per pagination the model creates — a feed per category, in the order the categories were opened.
     private val actionsPerFeed =
         mutableListOf<MutableList<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>>()
 
@@ -140,7 +143,7 @@ internal class PolymarketMainModelTest {
         // Assert
         val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
         assertThat(content.events.map { it.id }).containsExactly("event-1", "event-2").inOrder()
-        assertThat(content.isLoadingNextPage).isFalse()
+        assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.None)
     }
 
     @Test
@@ -159,7 +162,29 @@ internal class PolymarketMainModelTest {
 
         // Assert
         val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
-        assertThat(content.isLoadingNextPage).isTrue()
+        assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN the next page failed WHEN the footer retry is tapped THEN the page is requested again`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchState.value = BatchListState(
+            data = listOf(Batch(key = 0, data = batchOf(createEvent()))),
+            status = PaginationStatus.Paginating(lastResult = BatchFetchResult.Error(IllegalStateException("boom"))),
+        )
+        advanceUntilIdle()
+        dispatchedActions.clear()
+
+        // Act
+        val footer = (model.uiState.value.content as PolymarketMainUM.ContentUM.Content).footer
+        (footer as PolymarketFeedFooterUM.Error).onRetryClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions).containsExactly(BatchAction.LoadMore<PolymarketEventsListConfig>())
     }
 
     @Test
@@ -501,12 +526,14 @@ internal class PolymarketMainModelTest {
     private val userWalletId = UserWalletId("011")
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {
+        every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
+            flowOf(PredictionAccountStatusValue.Loading)
+
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
             val feedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig,
                 PolymarketEventsUpdateRequest>>()
             actionsPerFeed += feedActions
 
-            // The model owns the actions flow; collecting it here is what makes the dispatched actions assertable.
             contextSlot.captured.actionsFlow
                 .onEach {
                     dispatchedActions += it
@@ -551,6 +578,7 @@ internal class PolymarketMainModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             getPolymarketEventsBatchFlowUseCase = getEventsBatchFlowUseCase,
             getPolymarketCategoriesUseCase = getCategoriesUseCase,
+            predictionAccountStatusSupplier = predictionAccountStatusSupplier,
         ).also { model = it }
     }
 
@@ -618,6 +646,7 @@ internal class PolymarketMainModelTest {
                 imageUrl = null,
                 status = PolymarketStatus.ACTIVE,
                 isNegRisk = false,
+                isAcceptingOrders = true,
                 startDate = null,
                 endDate = null,
                 startDateIso = null,

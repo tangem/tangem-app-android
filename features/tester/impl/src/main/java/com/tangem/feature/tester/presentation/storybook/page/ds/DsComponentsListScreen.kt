@@ -18,10 +18,12 @@ import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.tangemButtonGroupStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.tangemButtonStackStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.filter.tangemFilterGroupStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.footer.tangemFooterStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.tangemGlowRingStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.tangemMessageBannerStoryFactory
@@ -45,6 +47,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "⏳ TangemLoader", factory = tangemLoaderStoryFactory),
     DsStoryItem(title = "🔘 TangemButton", factory = tangemButtonStoryFactory),
     DsStoryItem(title = "🔘 TangemButtonGroup", factory = tangemButtonGroupStoryFactory),
+    DsStoryItem(title = "🔘 TangemButtonStack", factory = tangemButtonStackStoryFactory),
     DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
     DsStoryItem(title = "☑️ TangemCheckbox", factory = tangemCheckboxV2StoryFactory),
     DsStoryItem(title = "⭕ TangemCheckmark", factory = tangemCheckmarkStoryFactory),
@@ -58,6 +61,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🗂️ TangemModal", factory = tangemModalStoryFactory),
     DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
     DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
+    DsStoryItem(title = "🧱 TangemFooter", factory = tangemFooterStoryFactory),
     DsStoryItem(title = "💫 TangemGlowRing", factory = tangemGlowRingStoryFactory),
     DsStoryItem(title = "🚥 TangemStatusScreen", factory = tangemStatusScreenStoryFactory),
     DsStoryItem(title = "📢 TangemMessageBanner", factory = tangemMessageBannerStoryFactory),

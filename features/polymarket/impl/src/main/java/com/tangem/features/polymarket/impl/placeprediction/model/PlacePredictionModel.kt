@@ -22,18 +22,23 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
@@ -41,13 +46,17 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetOutcomePriceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPaymentCurrencyTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
@@ -71,7 +80,7 @@ internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -86,6 +95,7 @@ internal class PlacePredictionModel @Inject constructor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val getPredictionOrderQuoteUseCase: GetPredictionOrderQuoteUseCase,
+    private val getPredictionPriceUseCase: GetPredictionPriceUseCase,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val signPredictionOrderInteractor: SignPredictionOrderInteractor,
     private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
@@ -372,6 +382,10 @@ internal class PlacePredictionModel @Inject constructor(
         router.pop()
     }
 
+    override fun onToMainClick() {
+        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+    }
+
     fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
 
     private fun loadMarket() {
@@ -386,6 +400,8 @@ internal class PlacePredictionModel @Inject constructor(
             isNegRiskMarket = market.isNegRisk
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
+
+            if (isScreenShown) restartQuoteLoop(withDebounce = false)
         }
     }
 
@@ -414,16 +430,64 @@ internal class PlacePredictionModel @Inject constructor(
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
-        if (uiState.value.enteredAmount() == null) return
+
+        if (!uiState.value.isMarketAcceptingOrders) return
+
+        if (uiState.value.enteredAmount() == null) {
+            startPriceLoop()
+            return
+        }
+
+        if (uiState.value.isBelowMinAmount()) return
 
         modelScope.launch {
             if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
+                if (uiState.value.quote.isMarketClosed()) break
                 delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
+    }
+
+    private fun startPriceLoop() {
+        modelScope.launch {
+            while (isActive && uiState.value.submit is SubmitUM.Idle && uiState.value.enteredAmount() == null) {
+                val canKeepPolling = requestPrice()
+                if (!canKeepPolling) return@launch
+                delay(timeMillis = pollInterval())
+            }
+        }.saveIn(quoteJobHolder)
+    }
+
+    private suspend fun requestPrice(): Boolean {
+        val result = withContext(dispatchers.default) {
+            // A buy executes against the SELL side of the book, so the fair price to show is the best ask.
+            getPredictionPriceUseCase(assetId = params.assetId, side = PredictionOrderSide.SELL)
+        }
+
+        return result.fold(
+            ifLeft = { error ->
+                when (error) {
+                    PredictionPriceError.MarketClosed -> {
+                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.MarketClosed))
+                        false
+                    }
+                    PredictionPriceError.InvalidAsset -> {
+                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
+                        false
+                    }
+                    PredictionPriceError.Network,
+                    is PredictionPriceError.Unknown,
+                    -> true
+                }
+            },
+            ifRight = { price ->
+                uiState.update(SetOutcomePriceTransformer(price = price))
+                true
+            },
+        )
     }
 
     private fun pollInterval(): Long = if (isMarketLive) LIVE_QUOTE_POLL_INTERVAL_MILLIS else QUOTE_POLL_INTERVAL_MILLIS
@@ -431,7 +495,7 @@ internal class PlacePredictionModel @Inject constructor(
     private suspend fun requestQuote() {
         val state = uiState.value
         val amount = state.enteredAmount() ?: return
-        if (state.submit !is SubmitUM.Idle) return
+        if (state.submit !is SubmitUM.Idle || state.isBelowMinAmount()) return
 
         uiState.update(SetQuoteLoadingTransformer)
 

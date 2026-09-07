@@ -43,10 +43,12 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.DsComponentsList
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadgeV2Story
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemButtonStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.TangemButtonGroupStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.TangemButtonStackStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.TangemCheckboxV2Story
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.TangemCheckmarkStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.TangemFadeStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.filter.TangemFilterGroupStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.footer.TangemFooterStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.glowring.TangemGlowRingStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
@@ -120,6 +122,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemLoaderStory -> TangemLoaderStory(state = storyState)
                 is TangemButtonStory -> TangemButtonStory(state = storyState)
                 is TangemButtonGroupStory -> TangemButtonGroupStory(state = storyState)
+                is TangemButtonStackStory -> TangemButtonStackStory(state = storyState)
+                is TangemFooterStory -> TangemFooterStory(state = storyState)
                 is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
                 is TangemCheckboxV2Story -> TangemCheckboxV2Story(state = storyState)
                 is TangemCheckmarkStory -> TangemCheckmarkStory(state = storyState)
