@@ -428,6 +428,47 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN below min order amount WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a stated minimum WHEN a smaller sum is entered THEN no quote is requested`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onAmountChange(value = "1")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+        assertThat(model.uiState.value.amountCaption)
+            .isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("2.15")))
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN quote reports a live market WHEN interval elapses THEN it re-quotes on the fast cadence`() = runTest {
         // Arrange
         coEvery { getQuoteUseCase(request = any()) } returns createQuote(isLive = true).right()
@@ -1077,6 +1118,7 @@ internal class PlacePredictionModelTest {
         total = total,
         builderCode = "0xbuilder",
         minOrderSize = BigDecimal("5"),
+        minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = isLive,
     )

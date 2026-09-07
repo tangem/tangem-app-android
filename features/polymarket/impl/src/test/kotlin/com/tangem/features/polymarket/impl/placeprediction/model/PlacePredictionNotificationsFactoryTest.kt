@@ -74,7 +74,12 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrderSize),
+            expectedNotifications = emptyList(),
+            expectedButtonEnabled = false,
+        ),
+        GateModel(
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT),
+            expectedNotifications = emptyList(),
             expectedButtonEnabled = false,
         ),
         GateModel(
@@ -183,6 +188,38 @@ internal class PlacePredictionNotificationsFactoryTest {
     }
 
     @Test
+    fun `GIVEN the sum is below the exchange minimum WHEN the gate runs THEN the minimum is stated AND the button is off`() {
+        // Arrange
+        val state = createState(amountValue = "1", minAmount = BigDecimal("4.5"), quote = createQuote())
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.5")))
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the balance falls short of a sum below the minimum WHEN the gate runs THEN the balance is blamed first`() {
+        // Arrange
+        val state = createState(
+            amountValue = "1",
+            minAmount = BigDecimal("4.5"),
+            balance = BigDecimal("0.5"),
+            quote = createQuote(),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
     fun `GIVEN the balance is not read yet WHEN the gate runs THEN the user is not told it is insufficient`() {
         // Arrange — a balance nobody answered for must not be reported as an empty one
         val state = createState(balance = null, quote = createQuote())
@@ -270,6 +307,8 @@ internal class PlacePredictionNotificationsFactoryTest {
         balance: BigDecimal? = BigDecimal("100"),
         tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
         submit: SubmitUM = SubmitUM.Idle,
+        amountValue: String = "10",
+        minAmount: BigDecimal? = null,
         priceError: PriceErrorUM? = null,
         isMarketAcceptingOrders: Boolean = true,
     ): PlacePredictionUM = PlacePredictionUM(
@@ -287,8 +326,9 @@ internal class PlacePredictionNotificationsFactoryTest {
             balance = balance,
             hasSufficientBalance = false,
         ),
-        amountValue = "10",
+        amountValue = amountValue,
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
+        minAmount = minAmount,
         quote = quote,
         isMarketAcceptingOrders = isMarketAcceptingOrders,
         tradingPermission = tradingPermission,
@@ -304,14 +344,12 @@ internal class PlacePredictionNotificationsFactoryTest {
         guaranteedShares: BigDecimal = BigDecimal("23.2"),
         feeTotal: BigDecimal = BigDecimal("0.1"),
         total: BigDecimal = BigDecimal("10.1"),
-        minOrderSize: BigDecimal = BigDecimal("5"),
     ): QuoteUM.Content = QuoteUM.Content(
         status = status,
         expectedShares = expectedShares,
         guaranteedShares = guaranteedShares,
         feeTotal = feeTotal,
         total = total,
-        minOrderSize = minOrderSize,
         signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),
     )
 

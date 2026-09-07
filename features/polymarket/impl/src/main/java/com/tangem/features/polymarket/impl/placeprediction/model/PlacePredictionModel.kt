@@ -46,6 +46,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
@@ -437,6 +438,8 @@ internal class PlacePredictionModel @Inject constructor(
             return
         }
 
+        if (uiState.value.isBelowMinAmount()) return
+
         modelScope.launch {
             if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
 
@@ -492,7 +495,7 @@ internal class PlacePredictionModel @Inject constructor(
     private suspend fun requestQuote() {
         val state = uiState.value
         val amount = state.enteredAmount() ?: return
-        if (state.submit !is SubmitUM.Idle) return
+        if (state.submit !is SubmitUM.Idle || state.isBelowMinAmount()) return
 
         uiState.update(SetQuoteLoadingTransformer)
 

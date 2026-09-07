@@ -157,6 +157,16 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,
             )
+            is AmountCaptionUM.BelowMinimum -> Text(
+                modifier = Modifier.padding(top = CAPTION_GAP),
+                text = stringResourceSafe(
+                    R.string.prediction_place_min_amount_error,
+                    caption.minAmount.formatPolymarketMoney(),
+                ),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.status.error,
+                textAlign = TextAlign.Center,
+            )
             is AmountCaptionUM.ToWin -> Column(
                 modifier = Modifier.padding(top = CAPTION_GAP),
                 horizontalAlignment = Alignment.CenterHorizontally,

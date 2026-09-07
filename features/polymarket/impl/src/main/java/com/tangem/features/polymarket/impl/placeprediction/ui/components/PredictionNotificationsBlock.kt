@@ -53,8 +53,6 @@ private fun PredictionNotificationUM.title(): TextReference = when (this) {
     PredictionNotificationUM.PartialFill -> resourceReference(R.string.prediction_place_notification_partial_title)
     PredictionNotificationUM.NoLiquidity ->
         resourceReference(R.string.prediction_place_notification_no_liquidity_title)
-    PredictionNotificationUM.BelowMinOrderSize ->
-        resourceReference(R.string.prediction_place_notification_min_order_title)
     PredictionNotificationUM.MarketClosed ->
         resourceReference(R.string.prediction_place_notification_market_closed_title)
     PredictionNotificationUM.RegionRestricted -> resourceReference(R.string.prediction_region_restrictions_title)
@@ -69,8 +67,6 @@ private fun PredictionNotificationUM.description(): TextReference? = when (this)
         resourceReference(R.string.prediction_place_notification_partial_description)
     PredictionNotificationUM.NoLiquidity ->
         resourceReference(R.string.prediction_place_notification_no_liquidity_description)
-    PredictionNotificationUM.BelowMinOrderSize ->
-        resourceReference(R.string.prediction_place_notification_min_order_description)
     PredictionNotificationUM.MarketClosed ->
         resourceReference(R.string.prediction_place_notification_market_closed_description)
     PredictionNotificationUM.RegionRestricted -> resourceReference(R.string.prediction_region_restrictions_subtitle)
@@ -84,7 +80,6 @@ private fun PredictionNotificationUM.variant(): TangemMessageBanner.Variant = wh
     PredictionNotificationUM.PartialFill,
     PredictionNotificationUM.NoLiquidity,
     -> TangemMessageBanner.Variant.Warning
-    is PredictionNotificationUM.BelowMinOrderSize,
     PredictionNotificationUM.MarketClosed,
     PredictionNotificationUM.RegionRestricted,
     PredictionNotificationUM.QuoteFailed,

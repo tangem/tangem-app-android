@@ -2262,7 +2262,7 @@
   <string name="tangempay_order_type_unavailable">利用不可</string>
   <string name="tangempay_other_networks_header">その他のネットワーク</string>
   <string name="tangempay_other_networks_subtitle">その後、1:1のレートかつ手数料無料で決済口座に交換できます</string>
-  <string name="tangempay_other_networks_title">任意のチェーンでUSDT / USDCをTangem Walletに送金してください</string>
+  <string name="tangempay_other_networks_title">任意のチェーンでUSDT/USDCをTangem Walletに送金してください</string>
   <string name="tangempay_pay_support">サポート</string>
   <string name="tangempay_payment_account">支払いアカウント</string>
   <string name="tangempay_payment_account_sync_needed">セッションの有効期限が切れました</string>
@@ -2314,7 +2314,7 @@
   <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">ACH経由で銀行口座からUSDを受け取る</string>
+  <string name="tangempay_topup_bank_transfer_body">ACH/FedWire経由で銀行口座からUSDを受け取る</string>
   <string name="tangempay_topup_bank_transfer_title">銀行口座から</string>
   <string name="tangempay_topup_receive_body">USDC Polygon をアカウントのアドレスに送信</string>
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
@@ -2622,6 +2622,7 @@
   <string name="warning_approval_in_progress_message">許可付与のプロセスは現在進行中であり、まもなく完了する予定です。</string>
   <string name="warning_approval_in_progress_title">承認中</string>
   <string name="warning_backup_error_add_funds_message">このウォレットにはバックアップの問題があります。解決するにはサポートにお問い合わせください。</string>
+  <string name="warning_backup_error_add_funds_message_v2">入金しようとしているウォレットのバックアップに問題があります。資産を別のウォレットに移してから、このウォレットをリセットしてください。</string>
   <string name="warning_backup_error_add_funds_title">資金を追加できません</string>
   <string name="warning_backup_error_attention_message">カードが正しく有効化されませんでした。資金を保護するため、続行する前に別のウォレットへ資金を移動させ、カードを工場出荷時の設定にリセットしてから、再度有効化してください。</string>
   <string name="warning_backup_error_attention_title">要対応：ウォレットをリセットしてください</string>

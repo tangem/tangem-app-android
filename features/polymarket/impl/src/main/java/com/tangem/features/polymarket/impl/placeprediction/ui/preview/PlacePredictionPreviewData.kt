@@ -41,6 +41,7 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             previewState(
                 amountValue = "1",
                 quote = previewQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+                minAmount = BigDecimal("4.5"),
             ),
             previewState(amountValue = "4000", quote = QuoteUM.Error(reason = QuoteErrorUM.Network)),
             previewState(
@@ -91,6 +92,7 @@ private fun previewState(
     quote: QuoteUM = QuoteUM.Empty,
     balance: BigDecimal = BigDecimal("30000"),
     tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
+    minAmount: BigDecimal? = null,
 ): PlacePredictionUM = PlacePredictionUM(
     market = MarketHeaderUM(
         title = "Will Uzbekistan win the 2026 FIFA World Cup?",
@@ -110,6 +112,7 @@ private fun previewState(
     quote = quote,
     isMarketAcceptingOrders = true,
     tradingPermission = tradingPermission,
+    minAmount = minAmount,
     notifications = persistentListOf(),
     slippagePicker = SlippagePickerUM.empty(),
     submit = SubmitUM.Idle,
@@ -122,7 +125,6 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
     guaranteedShares = BigDecimal("4612.54"),
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
-    minOrderSize = BigDecimal("5"),
     signable = SignableQuoteUM(quote = previewSignableQuote(status = status), receivedAtMillis = PLACED_AT),
 )
 
@@ -142,6 +144,7 @@ private fun previewSignableQuote(status: PredictionQuoteStatus): PredictionOrder
     total = BigDecimal("4001.4"),
     builderCode = "0x" + "00".repeat(n = 32),
     minOrderSize = BigDecimal("5"),
+    minOrderAmount = BigDecimal.ONE,
     tickSize = BigDecimal("0.01"),
     isLive = false,
 )
