@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketBridgeAddressesDto
+import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositResponse
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketBridgeTokenDto
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositRequest
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketSupportedAssetDto
@@ -45,7 +46,9 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         // Arrange
         coEvery { polymarketRepository.getBuilderCode(any()) } returns Either.Right(BUILDER_CODE)
         coEvery { bridgeApi.createDepositAddresses(any(), any()) } returns ApiResponse.Success(
-            PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = "sol", btc = "bc1", tron = null),
+            PolymarketDepositResponse(
+                address = PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = "sol", btc = "bc1", tron = null),
+            ),
         )
 
         // Act
@@ -86,7 +89,9 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         // Arrange
         coEvery { polymarketRepository.getBuilderCode(any()) } returns Either.Right(BUILDER_CODE)
         coEvery { bridgeApi.createDepositAddresses(any(), any()) } returns ApiResponse.Success(
-            PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = null, btc = null, tron = null),
+            PolymarketDepositResponse(
+                address = PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = null, btc = null, tron = null),
+            ),
         )
 
         // Act
@@ -119,7 +124,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
             PolymarketSupportedAssetsResponse(
                 supportedAssets = listOf(
                     PolymarketSupportedAssetDto(
-                        chainId = 137,
+                        chainId = "137",
                         chainName = "Polygon",
                         token = PolymarketBridgeTokenDto(
                             name = "USD Coin",
@@ -138,7 +143,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
 
         // Assert
         val asset = actual.getOrNull()!!.single()
-        assertThat(asset.chainId).isEqualTo(137L)
+        assertThat(asset.chainId).isEqualTo("137")
         assertThat(asset.chainName).isEqualTo("Polygon")
         assertThat(asset.tokenSymbol).isEqualTo("USDC")
         assertThat(asset.tokenAddress).isEqualTo("0x3c49")
