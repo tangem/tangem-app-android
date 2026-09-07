@@ -366,7 +366,8 @@ internal class IntroductionModelTest {
             // Assert
             coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
-            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+            assertThat(model.seedPhraseRow().isLoading).isTrue()
+            assertThat(model.cardOrRingRow().isEnabled).isFalse()
         }
 
         @Test
@@ -384,9 +385,46 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.seedPhraseRow().isLoading).isTrue()
+            assertThat(model.cardOrRingRow().isEnabled).isFalse()
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
             coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
             model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the wallet is being created WHEN the sheet is closed and i have a wallet clicked THEN it stays closed`() {
+            // Arrange
+            coEvery { mobileWalletCreator.createAndOpen(any(), any()) } coAnswers { awaitCancellation() }
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            model.closeCreateWalletSheet()
+
+            // Act
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the sheet closed during creation WHEN the creation fails THEN it stays closed with the rows released`() {
+            // Arrange
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            val onFailed = slot<() -> Unit>()
+            coVerify { mobileWalletCreator.createAndOpen(source = any(), onFailed = capture(onFailed)) }
+            model.closeCreateWalletSheet()
+
+            // Act
+            onFailed.captured()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(model.seedPhraseRow().isLoading).isFalse()
+            assertThat(model.cardOrRingRow().isEnabled).isTrue()
+            model.uiState.value.onIHaveWalletClick()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
         }
 
         @Test
@@ -402,6 +440,7 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.seedPhraseRow().isLoading).isFalse()
+            assertThat(model.cardOrRingRow().isEnabled).isTrue()
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
             verifyOrder {
                 trackingContextProxy.addHotWalletContext()
@@ -1243,6 +1282,9 @@ internal class IntroductionModelTest {
 
     private fun IntroductionModel.seedPhraseRow(): WalletOptionUM =
         (uiState.value.bottomSheetConfig?.content as CreateWalletUM).seedPhrase
+
+    private fun IntroductionModel.cardOrRingRow(): WalletOptionUM =
+        (uiState.value.bottomSheetConfig?.content as CreateWalletUM).cardOrRing
 
     private fun IntroductionModel.haveWalletStep(): HaveWalletUM.Step? =
         (uiState.value.haveWalletBottomSheetConfig?.content as? HaveWalletUM)?.step
