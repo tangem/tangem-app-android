@@ -5,8 +5,8 @@ import com.tangem.data.collectibles.converter.MachineConverter
 import com.tangem.data.collectibles.converter.TurboModeConverter
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachinesBatchFetcher
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchFlow
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchingContext
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchFlow
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.*
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.models.wallet.UserWalletId
