@@ -201,6 +201,7 @@ internal class SendDestinationModel @Inject constructor(
                     address = content.addressTextField.actualAddress,
                     networkId = cryptoCurrency.network.rawId,
                     memo = content.memoTextField?.value?.takeIf(String::isNotBlank),
+                    source = AddressBookOpenMode.ContactCreationSource.SendSuccess,
                 ),
             ),
         )
