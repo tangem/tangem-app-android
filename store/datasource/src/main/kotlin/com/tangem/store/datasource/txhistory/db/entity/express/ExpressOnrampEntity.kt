@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.txhistory.db.entity.express
+package com.tangem.store.datasource.txhistory.db.entity.express
 
 import androidx.room.*
 
