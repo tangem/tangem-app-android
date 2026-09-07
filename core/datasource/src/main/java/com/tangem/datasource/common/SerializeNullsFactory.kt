@@ -1,8 +1,9 @@
-package com.tangem.datasource.utils
+package com.tangem.datasource.common
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.tangem.datasource.utils.SerializeNulls
 import java.lang.reflect.Type
 
 /**
