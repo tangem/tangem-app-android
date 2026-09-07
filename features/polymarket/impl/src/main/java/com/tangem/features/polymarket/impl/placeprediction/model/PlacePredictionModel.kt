@@ -16,24 +16,47 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.interactor.PredictionSignRequest
+import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionPriceError
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetOutcomePriceTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPaymentCurrencyTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSlippageTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -44,6 +67,7 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,7 +79,7 @@ internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -66,10 +90,14 @@ internal class PlacePredictionModel @Inject constructor(
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getPolymarketEventUseCase: GetPolymarketEventUseCase,
+    private val getPolymarketCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val getPredictionOrderQuoteUseCase: GetPredictionOrderQuoteUseCase,
+    private val getPredictionPriceUseCase: GetPredictionPriceUseCase,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val signPredictionOrderInteractor: SignPredictionOrderInteractor,
+    private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
 ) : Model(), PlacePredictionIntents {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -81,7 +109,12 @@ internal class PlacePredictionModel @Inject constructor(
 
     private var isMarketLive = false
 
+    private var isNegRiskMarket: Boolean? = null
+
+    private var isScreenShown = false
+
     init {
+        uiState.update(SetPaymentCurrencyTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
         loadMarket()
         loadBalance()
         loadTradingAllowance()
@@ -111,10 +144,12 @@ internal class PlacePredictionModel @Inject constructor(
      * suspended with the screen and resumed with it, rather than living as long as the model.
      */
     fun onScreenShown() {
+        isScreenShown = true
         restartQuoteLoop(withDebounce = false)
     }
 
     fun onScreenHidden() {
+        isScreenShown = false
         quoteJobHolder.cancel()
     }
 
@@ -123,13 +158,25 @@ internal class PlacePredictionModel @Inject constructor(
         restartQuoteLoop(withDebounce = true)
     }
 
-    override fun onSlippageSelected(percent: BigDecimal) {
-        uiState.update(SetSlippageTransformer(percent = percent))
-        restartQuoteLoop(withDebounce = false)
+    override fun onSlippageClick() {
+        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = it.slippage.percent.toPlainString())) }
+        router.push(PlacePredictionRoute.Slippage)
     }
 
-    override fun onSlippageClick() {
-        showComingLater(part = "Choosing the slippage")
+    override fun onSlippageValueChange(value: String) {
+        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = value)) }
+    }
+
+    override fun onSlippagePresetClick(percent: BigDecimal) {
+        uiState.update { it.copy(slippagePicker = SlippagePickerUM.of(value = percent.toPlainString())) }
+    }
+
+    override fun onSlippageConfirmClick() {
+        val percent = uiState.value.slippagePicker.value.toBigDecimalOrNull() ?: return
+
+        uiState.update { it.copy(slippage = SlippageUM.of(percent = percent)) }
+        restartQuoteLoop(withDebounce = false)
+        router.pop()
     }
 
     override fun onAddFundsClick() {
@@ -145,23 +192,135 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     override fun onPlaceClick() {
-        uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
+        val state = uiState.value
+        if (state.submit !is SubmitUM.Idle) return
 
-        messageSender.send(
-            DialogMessage(
-                title = stringReference(value = "Not implemented"),
-                message = stringReference(value = "Signing and placing the order arrive in the next part."),
-                onDismissRequest = { uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle)) },
-            ),
-        )
+        val frozen = (state.quote as? QuoteUM.Content)?.signable
+        if (frozen == null) {
+            showPlaceFailure(reason = "Place tapped without a priced quote")
+            return
+        }
+
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
+        modelScope.launch { place(frozen = frozen) }
+    }
+
+    private suspend fun place(frozen: SignableQuoteUM) {
+        val isNegRisk = isNegRiskMarket
+        val addresses = withContext(dispatchers.default) {
+            derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
+        }
+        if (addresses == null || isNegRisk == null) {
+            showPlaceFailure(reason = "No stored addresses or unknown market kind")
+            return
+        }
+
+        when (spendingPower(addresses = addresses, required = frozen.quote.total)) {
+            SpendingPower.Sufficient -> Unit
+            SpendingPower.Insufficient -> {
+                returnToIdle()
+                return
+            }
+            SpendingPower.Unknown -> {
+                showPlaceFailure(reason = "Spending power could not be read")
+                return
+            }
+        }
+
+        val signedOrder = withContext(dispatchers.default) {
+            signPredictionOrderInteractor(
+                request = PredictionSignRequest(
+                    addresses = addresses,
+                    quote = frozen.quote,
+                    assetId = params.assetId,
+                    side = params.side,
+                    isNegRisk = isNegRisk,
+                    quoteReceivedAtMillis = frozen.receivedAtMillis,
+                ),
+            )
+        }.getOrElse { failure ->
+            onSignFailure(failure = failure)
+            return
+        }
+
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Posting))
+
+        withContext(dispatchers.default) {
+            placePredictionOrderUseCase(addresses = addresses, signedOrder = signedOrder, isNegRisk = isNegRisk)
+        }
+            .map { result ->
+                PlaceResultUMConverter.convert(
+                    result = result,
+                    quotedShares = frozen.quote.shares,
+                    quotedAmount = frozen.quote.notional,
+                    placedAt = System.currentTimeMillis(),
+                )
+            }
+            .fold(ifLeft = ::onPlaceError, ifRight = ::onPlaceOutcome)
+    }
+
+    private suspend fun spendingPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
+        val balance = withContext(dispatchers.default) {
+            getPolymarketBalanceInteractor(addresses = addresses).getOrNull()
+        } ?: return SpendingPower.Unknown
+
+        uiState.update(SetBalanceTransformer(balance = balance.balance))
+
+        return if (balance.balance >= required) SpendingPower.Sufficient else SpendingPower.Insufficient
+    }
+
+    private enum class SpendingPower { Sufficient, Insufficient, Unknown }
+
+    private fun onSignFailure(failure: PredictionOrderFailure) {
+        val isCancelled = failure is PredictionOrderFailure.Signing &&
+            failure.error == PolymarketSigningError.UserCancelled
+
+        if (isCancelled) {
+            returnToIdle()
+        } else {
+            showPlaceFailure(reason = failure.toReason())
+        }
+    }
+
+    private fun PredictionOrderFailure.toReason(): String = when (this) {
+        is PredictionOrderFailure.Draft -> "Order could not be drafted: $error"
+        is PredictionOrderFailure.Invalid -> "Order failed its own checks: $error"
+        is PredictionOrderFailure.Signing -> "Signing failed: $error"
+    }
+
+    private fun onPlaceError(error: PredictionPlaceOrderError) {
+        when (error) {
+            is PredictionPlaceOrderError.Ambiguous -> {
+                logger.e("Order outcome unknown, reporting it as submitted: $error")
+                showResult(result = PlaceResultUM.Submitted(placedAt = System.currentTimeMillis()))
+            }
+            is PredictionPlaceOrderError.NoLiquidity -> {
+                logger.e("The exchange found no match for the order: $error")
+                showResult(result = PlaceResultUM.NotFilled(placedAt = System.currentTimeMillis()))
+            }
+            else -> showPlaceFailure(reason = "Order refused: $error")
+        }
+    }
+
+    private fun onPlaceOutcome(outcome: PlaceOutcome) {
+        when (outcome) {
+            is PlaceOutcome.Reportable -> showResult(result = outcome.result)
+            is PlaceOutcome.Anomalous -> showPlaceFailure(reason = outcome.reason)
+        }
+    }
+
+    private fun showResult(result: PlaceResultUM) {
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
+        router.replaceAll(PlacePredictionRoute.Status)
     }
 
     /**
      * A submission that never reached the book: the same order can still be placed, so this is a dialog over
      * the summary rather than a result screen, and it returns the flow to [SubmitUM.Idle].
      */
-    fun showPlaceFailure() {
-        uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+    fun showPlaceFailure(reason: String) {
+        logger.e(reason)
+        returnToIdle()
 
         messageSender.send(
             DialogMessage(
@@ -176,6 +335,12 @@ internal class PlacePredictionModel @Inject constructor(
                 secondActionBuilder = { cancelAction() },
             ),
         )
+    }
+
+    private fun returnToIdle() {
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
+
+        if (isScreenShown) restartQuoteLoop(withDebounce = false)
     }
 
     private fun onSupportClick() {
@@ -204,13 +369,23 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     override fun onBackClick() {
+        if (isSubmitting()) return
+
         router.pop()
     }
 
     override fun onCloseClick() {
+        if (isSubmitting()) return
+
         router.popTo(PlacePredictionRoute.Amount)
         router.pop()
     }
+
+    override fun onToMainClick() {
+        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+    }
+
+    fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
 
     private fun loadMarket() {
         modelScope.launch {
@@ -221,7 +396,11 @@ internal class PlacePredictionModel @Inject constructor(
             val market = event.markets.firstOrNull { it.id == params.marketId } ?: return@launch
             val outcome = market.outcomes.firstOrNull { it.assetId == params.assetId } ?: return@launch
 
+            isNegRiskMarket = market.isNegRisk
+
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
+
+            if (isScreenShown) restartQuoteLoop(withDebounce = false)
         }
     }
 
@@ -244,22 +423,68 @@ internal class PlacePredictionModel @Inject constructor(
 
             if (balance == null) logger.e("Spending power could not be read; the screen keeps it unknown")
 
-            uiState.update(SetBalanceTransformer(balance = balance?.balance, tokenSymbol = COLLATERAL_SYMBOL))
+            uiState.update(SetBalanceTransformer(balance = balance?.balance))
         }
     }
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
-        if (uiState.value.enteredAmount() == null) return
+
+        if (!uiState.value.isMarketAcceptingOrders) return
+
+        if (uiState.value.enteredAmount() == null) {
+            startPriceLoop()
+            return
+        }
 
         modelScope.launch {
             if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
                 requestQuote()
+                if (uiState.value.quote.isMarketClosed()) break
                 delay(timeMillis = pollInterval())
             }
         }.saveIn(quoteJobHolder)
+    }
+
+    private fun startPriceLoop() {
+        modelScope.launch {
+            while (isActive && uiState.value.submit is SubmitUM.Idle && uiState.value.enteredAmount() == null) {
+                val canKeepPolling = requestPrice()
+                if (!canKeepPolling) return@launch
+                delay(timeMillis = pollInterval())
+            }
+        }.saveIn(quoteJobHolder)
+    }
+
+    private suspend fun requestPrice(): Boolean {
+        val result = withContext(dispatchers.default) {
+            // A buy executes against the SELL side of the book, so the fair price to show is the best ask.
+            getPredictionPriceUseCase(assetId = params.assetId, side = PredictionOrderSide.SELL)
+        }
+
+        return result.fold(
+            ifLeft = { error ->
+                when (error) {
+                    PredictionPriceError.MarketClosed -> {
+                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.MarketClosed))
+                        false
+                    }
+                    PredictionPriceError.InvalidAsset -> {
+                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
+                        false
+                    }
+                    PredictionPriceError.Network,
+                    is PredictionPriceError.Unknown,
+                    -> true
+                }
+            },
+            ifRight = { price ->
+                uiState.update(SetOutcomePriceTransformer(price = price))
+                true
+            },
+        )
     }
 
     private fun pollInterval(): Long = if (isMarketLive) LIVE_QUOTE_POLL_INTERVAL_MILLIS else QUOTE_POLL_INTERVAL_MILLIS
@@ -285,14 +510,14 @@ internal class PlacePredictionModel @Inject constructor(
 
         result.onRight { isMarketLive = it.isLive }
         if (uiState.value.submit is SubmitUM.Idle) {
-            uiState.update(SetQuoteResultTransformer(result = result))
+            uiState.update(
+                SetQuoteResultTransformer(result = result, receivedAtMillis = System.currentTimeMillis()),
+            )
         }
     }
 
     private companion object {
 
         val logger = TangemLogger.withTag(tag = "PlacePredictionModel")
-
-        const val COLLATERAL_SYMBOL = "USDC"
     }
 }

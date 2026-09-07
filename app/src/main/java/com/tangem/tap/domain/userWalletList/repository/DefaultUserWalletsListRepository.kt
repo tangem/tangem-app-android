@@ -11,6 +11,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.utils.TrackingContextProxy
+import com.tangem.core.res.R
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
@@ -23,8 +24,10 @@ import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.*
-import com.tangem.domain.wallets.R
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository

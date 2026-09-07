@@ -41,7 +41,7 @@ internal class PolymarketEntryModelTest {
     private val walletBId = UserWalletId("bb")
     private val walletA: UserWallet = mockWallet(id = walletAId)
     private val walletB: UserWallet = mockWallet(id = walletBId)
-    private val accountStatusB: AccountStatus.CryptoPortfolio = mockk()
+    private val accountStatusB: AccountStatus.Personal = mockk()
 
     @BeforeEach
     fun resetMocks() {

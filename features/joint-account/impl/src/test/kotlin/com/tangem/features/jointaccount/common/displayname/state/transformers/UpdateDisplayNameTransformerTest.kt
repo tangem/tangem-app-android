@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class UpdateDisplayNameTransformerTest {
 
-    private val prevState = createState(name = "Old", isError = false, isButtonEnabled = true)
+    private val prevState = createState(name = "Old", isButtonEnabled = true)
 
     @ParameterizedTest
     @ProvideTestModels
@@ -21,7 +21,6 @@ internal class UpdateDisplayNameTransformerTest {
         // Assert
         val expected = createState(
             name = model.expectedName,
-            isError = model.expectedError,
             isButtonEnabled = model.expectedButtonEnabled,
         )
         assertThat(actual).isEqualTo(expected)
@@ -31,76 +30,64 @@ internal class UpdateDisplayNameTransformerTest {
         // typed input within the limit is applied as is
         TransformModel(
             input = "Ivan Zolo",
-            expectedName = "Ivan Zolo", expectedError = false, expectedButtonEnabled = true,
+            expectedName = "Ivan Zolo", expectedButtonEnabled = true,
         ),
         // letters of any script and digits are allowed
         TransformModel(
             input = "Иван 2й",
-            expectedName = "Иван 2й", expectedError = false, expectedButtonEnabled = true,
+            expectedName = "Иван 2й", expectedButtonEnabled = true,
         ),
-        // plain pictograph emoji are allowed
-        TransformModel(
-            input = "Ivan 🚀",
-            expectedName = "Ivan 🚀", expectedError = false, expectedButtonEnabled = true,
-        ),
-        // ZWJ sequences and skin-tone modifiers are allowed
+        // emoji are allowed
         TransformModel(
             input = "👨‍👩‍👧 👍🏽",
-            expectedName = "👨‍👩‍👧 👍🏽", expectedError = false, expectedButtonEnabled = true,
+            expectedName = "👨‍👩‍👧 👍🏽", expectedButtonEnabled = true,
         ),
-        // keycap emoji are allowed: digit + variation selector + combining keycap
+        // real names carry hyphens, apostrophes and diacritics
         TransformModel(
-            input = "Signer 1️⃣",
-            expectedName = "Signer 1️⃣", expectedError = false, expectedButtonEnabled = true,
+            input = "Anna-Maria O'Neil José",
+            expectedName = "Anna-Maria O'Neil José", expectedButtonEnabled = true,
         ),
-        // a special character stays visible but marks the field as an error
+        // any other special characters are allowed too
         TransformModel(
             input = "Ivan!",
-            expectedName = "Ivan!", expectedError = true, expectedButtonEnabled = false,
-        ),
-        // punctuation counts as special characters too
-        TransformModel(
-            input = "Ivan-Zolo",
-            expectedName = "Ivan-Zolo", expectedError = true, expectedButtonEnabled = false,
+            expectedName = "Ivan!", expectedButtonEnabled = true,
         ),
         // exactly 25 characters is the maximum allowed
         TransformModel(
             input = "a".repeat(n = 25),
-            expectedName = "a".repeat(n = 25), expectedError = false, expectedButtonEnabled = true,
+            expectedName = "a".repeat(n = 25), expectedButtonEnabled = true,
         ),
         // the 26th character is not entered: the whole change is rejected, the previous value stays
         TransformModel(
             input = "a".repeat(n = 26),
-            expectedName = "Old", expectedError = false, expectedButtonEnabled = true,
+            expectedName = "Old", expectedButtonEnabled = true,
         ),
         // an over-long paste is rejected entirely, not truncated
         TransformModel(
             input = "a".repeat(n = 40),
-            expectedName = "Old", expectedError = false, expectedButtonEnabled = true,
+            expectedName = "Old", expectedButtonEnabled = true,
         ),
-        // the name is required: clearing the field disables the button without an error
+        // the name is required: clearing the field disables the button
         TransformModel(
             input = "",
-            expectedName = "", expectedError = false, expectedButtonEnabled = false,
+            expectedName = "", expectedButtonEnabled = false,
         ),
         // spaces are allowed characters, but a blank-only name is not a name
         TransformModel(
             input = "   ",
-            expectedName = "   ", expectedError = false, expectedButtonEnabled = false,
+            expectedName = "   ", expectedButtonEnabled = false,
         ),
     )
 
     internal data class TransformModel(
         val input: String,
         val expectedName: String,
-        val expectedError: Boolean,
         val expectedButtonEnabled: Boolean,
     )
 
-    private fun createState(name: String, isError: Boolean, isButtonEnabled: Boolean): JointAccountDisplayNameUM {
+    private fun createState(name: String, isButtonEnabled: Boolean): JointAccountDisplayNameUM {
         return JointAccountDisplayNameUM(
             name = name,
-            isError = isError,
             buttonText = buttonText,
             buttonIconRes = null,
             isButtonEnabled = isButtonEnabled,

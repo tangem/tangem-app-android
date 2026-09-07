@@ -1,6 +1,6 @@
 package com.tangem.data.networks.converters
 
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.network.Network
 import com.tangem.utils.converter.TwoWayConverter
 
@@ -17,6 +17,7 @@ internal object NetworkDerivationPathConverter :
             NetworkStatusDM.DerivationPath.Type.CARD -> Network.DerivationPath.Card(value.value)
             NetworkStatusDM.DerivationPath.Type.CUSTOM -> Network.DerivationPath.Custom(value.value)
             NetworkStatusDM.DerivationPath.Type.NONE -> Network.DerivationPath.None
+            NetworkStatusDM.DerivationPath.Type.JOINT -> Network.DerivationPath.Joint(value.value)
         }
     }
 
@@ -26,6 +27,7 @@ internal object NetworkDerivationPathConverter :
             type = when (value) {
                 is Network.DerivationPath.Card -> NetworkStatusDM.DerivationPath.Type.CARD
                 is Network.DerivationPath.Custom -> NetworkStatusDM.DerivationPath.Type.CUSTOM
+                is Network.DerivationPath.Joint -> NetworkStatusDM.DerivationPath.Type.JOINT
                 Network.DerivationPath.None -> NetworkStatusDM.DerivationPath.Type.NONE
             },
         )

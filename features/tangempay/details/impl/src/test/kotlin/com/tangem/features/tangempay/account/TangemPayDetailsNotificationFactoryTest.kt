@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.account
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.tangempay.awaitingDepositOrder
 import com.tangem.features.tangempay.customerTariffPlan
@@ -37,7 +36,7 @@ internal class TangemPayDetailsNotificationFactoryTest {
         val config = factory.createTiersConfig(planState)
 
         // THEN
-        val button = config?.buttonsState as? NotificationConfig.ButtonsState.SecondaryButtonConfig
+        val button = config?.secondaryButton
         assertThat(button?.text).isEqualTo(resourceReference(R.string.tangempay_card_details_add_funds))
         button?.onClick?.invoke()
         verify(exactly = 1) { intents.onClickAddFunds() }

@@ -32,6 +32,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.common.ui)
     implementation(projects.libs.blockchainSdk)
@@ -39,6 +40,7 @@ dependencies {
 
     // region Domain modules
     api(projects.domain.notifications)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
     // endregion

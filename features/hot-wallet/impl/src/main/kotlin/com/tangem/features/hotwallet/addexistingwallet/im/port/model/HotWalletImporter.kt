@@ -6,7 +6,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
@@ -51,7 +51,7 @@ internal class HotWalletImporter @Inject constructor(
     private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -121,7 +121,7 @@ internal class HotWalletImporter @Inject constructor(
                 } else {
                     AnalyticsParam.EmptyFull.Empty
                 },
-                referralId = appsFlyerStore.get()?.refcode,
+                referralId = appsFlyerRepository.getConversionData()?.refcode,
             ),
         )
     }

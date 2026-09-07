@@ -1,6 +1,6 @@
 package com.tangem.data.jointaccount.converter
 
-import com.tangem.datasource.api.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.models.StatusSource
 import javax.inject.Inject
@@ -21,6 +21,7 @@ internal class JointAccountDtoConverter @Inject constructor() {
                 name = member.name,
                 address = member.address,
                 role = JointAccountFieldsConverter.convertRole(member.role),
+                inviteId = member.inviteId,
             )
         },
         source = StatusSource.ACTUAL,

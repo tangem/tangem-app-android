@@ -99,8 +99,16 @@ internal class TangemPayVirtualAccountDepositModelTest {
         assertThat(model.uiState.value.fees).isEqualTo(
             TangemPayVirtualAccountDepositUM.FeesUM.Content(
                 rows = persistentListOf(
-                    TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("ACH"), value = "$1"),
-                    TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("FedWire"), value = "$11"),
+                    TangemPayVirtualAccountDepositUM.FeeRow(
+                        type = "ACH_ONRAMP",
+                        title = stringReference("ACH"),
+                        value = "$1",
+                    ),
+                    TangemPayVirtualAccountDepositUM.FeeRow(
+                        type = "FEDWIRE_ONRAMP",
+                        title = stringReference("FedWire"),
+                        value = "$11",
+                    ),
                 ),
             ),
         )
@@ -137,7 +145,11 @@ internal class TangemPayVirtualAccountDepositModelTest {
         assertThat(model.uiState.value.fees).isEqualTo(
             TangemPayVirtualAccountDepositUM.FeesUM.Content(
                 rows = persistentListOf(
-                    TangemPayVirtualAccountDepositUM.FeeRow(title = stringReference("ACH"), value = "$1"),
+                    TangemPayVirtualAccountDepositUM.FeeRow(
+                        type = "ACH_ONRAMP",
+                        title = stringReference("ACH"),
+                        value = "$1",
+                    ),
                 ),
             ),
         )

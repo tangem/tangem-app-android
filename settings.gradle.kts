@@ -249,7 +249,6 @@ include(":spend:datasource")
 
 // region Store modules
 include(":store:datasource")
-include(":store:datasource:api")
 // endregion Store modules
 
 // region Grow modules
@@ -361,11 +360,16 @@ include(":features:kyc:api")
 include(":features:kyc:impl")
 include(":features:kyc:mock")
 
+include(":features:tangempay:common-ui")
+
 include(":features:tangempay:main:api")
 include(":features:tangempay:main:impl")
 
 include(":features:tangempay:details:api")
 include(":features:tangempay:details:impl")
+
+include(":features:tangempay:eligibility:api")
+include(":features:tangempay:eligibility:impl")
 
 include(":features:tangempay:onboarding")
 include(":features:tangempay:onboarding:api")
@@ -498,10 +502,13 @@ include(":domain:stories")
 include(":domain:stories:models")
 include(":domain:marketing")
 include(":domain:marketing:models")
+include(":domain:collectibles")
+include(":domain:collectibles:models")
 include(":domain:nft")
 include(":domain:nft:models")
 include(":domain:hot-wallet")
 include(":domain:cloud-backup")
+include(":domain:social-login")
 include(":domain:networks")
 include(":domain:quotes")
 include(":domain:blockaid")
@@ -561,6 +568,7 @@ include(":data:networks")
 include(":data:nft")
 include(":data:hot-wallet")
 include(":data:cloud-backup")
+include(":data:social-login")
 include(":data:onramp")
 include(":data:quotes")
 include(":data:notifications")
@@ -576,4 +584,5 @@ include(":data:earn")
 include(":data:search")
 include(":data:joint-account")
 include(":data:feed:search")
+include(":data:collectibles")
 // endregion Data modules

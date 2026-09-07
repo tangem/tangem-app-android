@@ -1,5 +1,6 @@
 package com.tangem.features.jointaccount.main
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -53,11 +54,17 @@ data class JointAccountMembersUM(
         /**
          * The "You're activating a shared account" confirmation sheet.
          *
+         * @property walletInteractionIconRes  wallet-interaction icon on the confirm button; `null` for wallets
+         * without one (hot).
+         * @property isConfirming   the signing and the backend call are in flight — the confirm button
+         * shows a loader.
          * @property onConfirmClick proceed with the activation (leads into the NFC signing session).
          * @property onCancelClick  close the sheet; dismissing it by swipe or the close icon acts the same.
          */
         @Immutable
         data class ConfirmationUM(
+            @DrawableRes val walletInteractionIconRes: Int?,
+            val isConfirming: Boolean,
             val onConfirmClick: () -> Unit,
             val onCancelClick: () -> Unit,
         )

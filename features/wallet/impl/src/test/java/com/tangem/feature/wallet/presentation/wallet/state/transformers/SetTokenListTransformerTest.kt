@@ -121,7 +121,7 @@ class SetTokenListTransformerTest {
     }
 
     private fun mainCryptoPortfolioStatus(tokenList: TokenList): AccountStatus.CryptoPortfolio =
-        AccountStatus.CryptoPortfolio(
+        AccountStatus.Personal(
             account = createMainAccount(userWalletId),
             tokenList = tokenList,
             priceChangeLce = Unit.lceError(),

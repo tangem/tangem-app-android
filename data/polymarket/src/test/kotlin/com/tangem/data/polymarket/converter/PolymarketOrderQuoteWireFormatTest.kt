@@ -2,8 +2,8 @@ package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import org.junit.jupiter.api.Test
 
 /**

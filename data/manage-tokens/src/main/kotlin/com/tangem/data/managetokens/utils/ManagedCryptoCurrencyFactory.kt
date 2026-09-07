@@ -13,11 +13,10 @@ import com.tangem.data.common.currency.getTokenId
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
+import com.tangem.data.managetokens.testnet.models.TestnetTokensConfig
 import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
-import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -34,7 +33,7 @@ internal class ManagedCryptoCurrencyFactory(
         coinsResponse: CoinsResponse,
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet?,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
         allowedNetworkIds: Set<Network.RawID>? = null,
     ): List<ManagedCryptoCurrency> {
         return coinsResponse.coins.mapNotNull { coin ->
@@ -43,7 +42,7 @@ internal class ManagedCryptoCurrencyFactory(
                 tokensResponse = tokensResponse,
                 imageHost = coinsResponse.imageHost,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountDerivation = accountDerivation,
                 allowedNetworkIds = allowedNetworkIds,
             )
         }
@@ -53,19 +52,19 @@ internal class ManagedCryptoCurrencyFactory(
         coinsResponse: CoinsResponse,
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
         allowedNetworkIds: Set<Network.RawID>? = null,
     ): List<ManagedCryptoCurrency> {
         val customTokens = createCustomTokens(
             tokensResponse = tokensResponse,
             userWallet = userWallet,
-            accountIndex = accountIndex,
+            accountDerivation = accountDerivation,
         )
         val tokens = create(
             coinsResponse = coinsResponse,
             tokensResponse = tokensResponse,
             userWallet = userWallet,
-            accountIndex = accountIndex,
+            accountDerivation = accountDerivation,
             allowedNetworkIds = allowedNetworkIds,
         )
 
@@ -76,7 +75,7 @@ internal class ManagedCryptoCurrencyFactory(
         testnetTokensConfig: TestnetTokensConfig,
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
         allowedNetworkIds: Set<Network.RawID>? = null,
     ): List<ManagedCryptoCurrency> {
         val customTokens = tokensResponse
@@ -84,7 +83,7 @@ internal class ManagedCryptoCurrencyFactory(
                 createCustomTokens(
                     tokensResponse = userTokensResponse,
                     userWallet = userWallet,
-                    accountIndex = accountIndex,
+                    accountDerivation = accountDerivation,
                 )
             }
             .orEmpty()
@@ -93,7 +92,7 @@ internal class ManagedCryptoCurrencyFactory(
                 currencyId = testnetToken.id,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountDerivation = accountDerivation,
             )
             val addedNetworkIds = addedInNetworks.mapTo(hashSetOf()) { it.id.rawId }
 
@@ -108,7 +107,7 @@ internal class ManagedCryptoCurrencyFactory(
                         contractAddress = network.address,
                         decimals = network.decimalCount,
                         userWallet = userWallet,
-                        accountIndex = accountIndex,
+                        accountDerivation = accountDerivation,
                         allowedNetworkIds = allowedNetworkIds,
                         addedNetworkIds = addedNetworkIds,
                     )
@@ -124,30 +123,31 @@ internal class ManagedCryptoCurrencyFactory(
     private fun createCustomTokens(
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
     ): List<ManagedCryptoCurrency> = tokensResponse.tokens
         .mapNotNull { token ->
             maybeCreateCustomToken(
                 token = token,
                 userWallet = userWallet,
-                accountIndex = accountIndex,
+                accountDerivation = accountDerivation,
             )
         }
 
     private fun maybeCreateCustomToken(
         token: UserTokensResponse.Token,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
     ): ManagedCryptoCurrency? {
         val blockchain = Blockchain.fromNetworkId(token.networkId)
             ?.takeUnless { it in excludedBlockchains }
             ?: return null
 
-        val network = networkFactory.create(
+        val network = createNetwork(
             blockchain = blockchain,
             extraDerivationPath = token.derivationPath,
             userWallet = userWallet,
-            accountIndex = accountIndex,
+            canHandleTokens = userWallet.canHandleToken(blockchain, excludedBlockchains),
+            accountDerivation = accountDerivation,
         ) ?: return null
 
         if (!checkIsCustomToken(token, network.derivationPath)) {
@@ -187,7 +187,7 @@ internal class ManagedCryptoCurrencyFactory(
         tokensResponse: UserTokensResponse?,
         imageHost: String?,
         userWallet: UserWallet?,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
         allowedNetworkIds: Set<Network.RawID>?,
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
@@ -196,7 +196,7 @@ internal class ManagedCryptoCurrencyFactory(
             currencyId = coinResponse.id,
             tokensResponse = tokensResponse,
             userWallet = userWallet,
-            accountIndex = accountIndex,
+            accountDerivation = accountDerivation,
         )
         val addedNetworkIds = addedInNetworks.mapTo(hashSetOf()) { it.id.rawId }
 
@@ -209,7 +209,7 @@ internal class ManagedCryptoCurrencyFactory(
                     contractAddress = network.contractAddress,
                     decimals = network.decimalCount?.toInt(),
                     userWallet = userWallet,
-                    accountIndex = accountIndex,
+                    accountDerivation = accountDerivation,
                     allowedNetworkIds = allowedNetworkIds,
                     addedNetworkIds = addedNetworkIds,
                 )
@@ -238,7 +238,7 @@ internal class ManagedCryptoCurrencyFactory(
         decimals: Int?,
         userWallet: UserWallet?,
         extraDerivationPath: String? = null,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
         allowedNetworkIds: Set<Network.RawID>?,
         addedNetworkIds: Set<Network.RawID> = emptySet(),
     ): SourceNetwork? {
@@ -251,12 +251,12 @@ internal class ManagedCryptoCurrencyFactory(
             return null
         }
 
-        val network = networkFactory.create(
+        val network = createNetwork(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
-            derivationStyleProvider = userWallet?.derivationStyleProvider,
+            userWallet = userWallet,
             canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) == true,
-            accountIndex = accountIndex,
+            accountDerivation = accountDerivation,
         ) ?: return null
 
         return when {
@@ -286,7 +286,7 @@ internal class ManagedCryptoCurrencyFactory(
         currencyId: String,
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet?,
-        accountIndex: DerivationIndex,
+        accountDerivation: AccountDerivation,
     ): Set<Network> {
         if (tokensResponse == null) return emptySet()
 
@@ -296,17 +296,44 @@ internal class ManagedCryptoCurrencyFactory(
                 val blockchain = Blockchain.fromNetworkId(token.networkId)
 
                 if (blockchain != null && blockchain !in excludedBlockchains) {
-                    networkFactory.create(
+                    createNetwork(
                         blockchain = blockchain,
                         extraDerivationPath = token.derivationPath,
-                        derivationStyleProvider = userWallet?.derivationStyleProvider,
+                        userWallet = userWallet,
                         canHandleTokens = userWallet?.canHandleToken(blockchain, excludedBlockchains) != false,
-                        accountIndex = accountIndex,
+                        accountDerivation = accountDerivation,
                     )
                 } else {
                     null
                 }
             }
+    }
+
+    /**
+     * A joint account has one path for every network, so a token's own derivation path does not apply to it; its
+     * networks are always built for a known wallet.
+     */
+    private fun createNetwork(
+        blockchain: Blockchain,
+        extraDerivationPath: String?,
+        userWallet: UserWallet?,
+        canHandleTokens: Boolean,
+        accountDerivation: AccountDerivation,
+    ): Network? {
+        return when (accountDerivation) {
+            is AccountDerivation.Personal -> networkFactory.create(
+                blockchain = blockchain,
+                extraDerivationPath = extraDerivationPath,
+                derivationStyleProvider = userWallet?.derivationStyleProvider,
+                canHandleTokens = canHandleTokens,
+                accountIndex = accountDerivation.index,
+            )
+            is AccountDerivation.Joint -> networkFactory.create(
+                blockchain = blockchain,
+                derivationPath = accountDerivation.path,
+                userWallet = userWallet ?: return null,
+            )
+        }
     }
 
     private fun getIconUrl(id: String, imageHost: String? = DEFAULT_IMAGE_HOST): String {

@@ -14,7 +14,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
@@ -39,7 +38,6 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
@@ -72,7 +70,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
-    private val urlOpener: UrlOpener,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val uiMessageSender: UiMessageSender,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
@@ -645,15 +642,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         )
     }
 
-    override fun onClickTermsAndLimits() {
-        analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
-        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
-    }
-
-    override fun onClickVisaBenefits() {
-        urlOpener.openUrl(TangemPayConstants.visaBenefitsLink())
-    }
-
     override fun onClickCurrentPlan(tariffPlan: TangemPayTariffPlanState) {
         analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CurrentPlan(tariffPlan))
@@ -763,16 +751,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onRenewSession() {
-        uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = true))
+        uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = true))
         modelScope.launch {
             produceTangemPayInitialDataUseCase(userWalletId)
                 .onRight {
                     paymentAccountStatusFetcher.invoke(userWalletId)
-                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
-                    uiState.update(TangemPayErrorNotificationTransformer(shouldShowProgress = false))
+                    uiState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
         }
     }

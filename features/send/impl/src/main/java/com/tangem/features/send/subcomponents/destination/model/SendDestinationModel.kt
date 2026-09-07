@@ -22,6 +22,7 @@ import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
 import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
+import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -51,6 +52,7 @@ import com.tangem.features.send.api.subcomponents.destination.entity.Destination
 import com.tangem.features.send.subcomponents.destination.SendDestinationAlertFactory
 import com.tangem.features.send.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.subcomponents.destination.analytics.SendDestinationAnalyticEvents
+import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 import com.tangem.features.send.subcomponents.destination.model.transformers.*
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.annotations.RemoveWithToggle
@@ -92,11 +94,14 @@ internal class SendDestinationModel @Inject constructor(
     private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
+    getJointAccountSupportedNetworksUseCase: GetJointAccountSupportedNetworksUseCase,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
     contactSelectionListener: ContactSelectionListener,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
+
+    private val jointAccountSupportedNetworks = getJointAccountSupportedNetworksUseCase()
 
     private val _uiState = MutableStateFlow(params.state)
     val uiState = _uiState.asStateFlow()
@@ -381,12 +386,18 @@ internal class SendDestinationModel @Inject constructor(
                     async {
                         accountStatusList.accountStatuses.flatMap { accountStatus ->
                             when (accountStatus) {
-                                is AccountStatus.CryptoPortfolio -> accountStatus.getDestinationWalletUM(wallet)
+                                is AccountStatus.Personal ->
+                                    accountStatus.getDestinationWalletUM(wallet)
                                 is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
                                 is AccountStatus.Virtual -> emptyList()
                                 is AccountStatus.Prediction -> emptyList()
-                                // while it is not applicable
-                                is AccountStatus.Joint -> emptyList()
+                                is AccountStatus.Collectibles -> emptyList()
+                                is AccountStatus.Joint -> JointAccountDestinationFactory.create(
+                                    accountStatus = accountStatus,
+                                    wallet = wallet,
+                                    cryptoCurrency = cryptoCurrency,
+                                    supportedNetworks = jointAccountSupportedNetworks,
+                                )
                             }
                         }
                     }

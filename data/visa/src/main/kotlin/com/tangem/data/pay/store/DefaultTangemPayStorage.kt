@@ -9,11 +9,10 @@ import com.tangem.data.pay.entity.WithdrawStoreData
 import com.tangem.data.pay.util.WithdrawStateConverter
 import com.tangem.data.pay.util.WithdrawStoreDataConverter
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
-import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.models.wallet.UserWalletId
@@ -277,12 +276,9 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
-    override suspend fun getTangemPayEligibility(): Set<String> {
+    override suspend fun getTangemPayEligibility(): Set<String>? {
         return withContext(dispatcherProvider.io) {
-            appPreferencesStore.getSyncOrDefault(
-                key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY,
-                default = emptySet(),
-            )
+            appPreferencesStore.getSyncOrNull(key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY)
         }
     }
 

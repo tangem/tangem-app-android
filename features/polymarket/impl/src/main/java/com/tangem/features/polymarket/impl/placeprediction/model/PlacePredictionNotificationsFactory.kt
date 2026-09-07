@@ -1,27 +1,35 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 
 internal object PlacePredictionNotificationsFactory {
 
     fun build(state: PlacePredictionUM): ImmutableList<PredictionNotificationUM> = buildList {
+        if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
+
         addAll(state.quote.notifications())
 
-        val isBalanceKnown = state.payment.balance != null
-        if (isBalanceKnown && state.quote is QuoteUM.Content && !state.payment.hasSufficientBalance) {
-            add(PredictionNotificationUM.InsufficientBalance)
+        when (state.priceError) {
+            PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
+            PriceErrorUM.Unknown -> add(PredictionNotificationUM.PriceFailed)
+            null -> Unit
         }
 
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
-    }.toImmutableList()
+    }.distinct().toImmutableList()
 
     private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
         is QuoteUM.Content -> when (status) {
@@ -47,11 +55,15 @@ internal object PlacePredictionNotificationsFactory {
  * flow this one is modelled on gates its button from three places, one of them outside the notifications.
  */
 internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
-    val required = (quote as? QuoteUM.Content)?.total ?: enteredAmount()
+    val entered = enteredAmount()
+    val required = (quote as? QuoteUM.Content)?.total ?: entered
     val balance = payment.balance
     val hasSufficientBalance = required != null && balance != null && balance >= required
 
-    val priced = copy(payment = payment.copy(hasSufficientBalance = hasSufficientBalance))
+    val priced = copy(
+        payment = payment.copy(hasSufficientBalance = hasSufficientBalance),
+        amountCaption = amountCaption(entered = entered, required = required, balance = balance),
+    )
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
     return priced.copy(
@@ -62,4 +74,25 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
             hasSufficientBalance &&
             tradingPermission == TradingPermissionUM.Allowed,
     )
+}
+
+private fun PlacePredictionUM.amountCaption(
+    entered: BigDecimal?,
+    required: BigDecimal?,
+    balance: BigDecimal?,
+): AmountCaptionUM? {
+    val error = paymentAmountError(entered = entered, required = required, balance = balance)
+
+    return if (error != null) AmountCaptionUM.Shortfall(error = error) else quote.payout()?.let(AmountCaptionUM::ToWin)
+}
+
+private fun paymentAmountError(
+    entered: BigDecimal?,
+    required: BigDecimal?,
+    balance: BigDecimal?,
+): PaymentAmountErrorUM? = when {
+    balance == null || entered == null -> null
+    entered > balance -> PaymentAmountErrorUM.NotEnoughForBet
+    required != null && required > balance -> PaymentAmountErrorUM.NotEnoughForFees
+    else -> null
 }

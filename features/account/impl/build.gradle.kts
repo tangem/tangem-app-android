@@ -62,4 +62,9 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(projects.common.test)
 }

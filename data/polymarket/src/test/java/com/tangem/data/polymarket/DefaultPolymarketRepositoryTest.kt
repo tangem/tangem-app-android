@@ -6,13 +6,15 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteFeesResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.data.polymarket.builder.PolymarketOrderTypedDataBuilder
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
+import com.tangem.data.polymarket.error.PredictionPlaceOrderErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
 import com.tangem.data.polymarket.signer.Base64UrlCodec
 import com.tangem.data.polymarket.signer.PolymarketHmacSigner
@@ -20,24 +22,26 @@ import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
-import com.tangem.datasource.api.polymarket.PolymarketApi
-import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
-import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
-import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
-import com.tangem.datasource.api.polymarket.geo.models.PolymarketGeoblockResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketCategoriesResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketCategoryDto
-import com.tangem.datasource.api.polymarket.models.PolymarketEventDto
-import com.tangem.datasource.api.polymarket.models.PolymarketEventResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketEventsResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketSearchResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletOperationResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusResponse
-import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
-import com.tangem.datasource.api.polymarket.relayer.models.PolymarketNonceResponse
+import com.tangem.grow.datasource.polymarket.PolymarketApi
+import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
+import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketCategoryDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketEventsResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketSearchResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
+import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
+import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceResponse
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -52,6 +56,10 @@ import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.PredictionOrder
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchingContext
 import com.tangem.pagination.PaginationStatus
@@ -61,6 +69,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CancellationException
+import okhttp3.RequestBody
+import okio.Buffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -69,6 +79,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -85,6 +96,7 @@ internal class DefaultPolymarketRepositoryTest {
     private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
     private val authErrorResolver = PolymarketAuthErrorResolver()
     private val eventErrorResolver = PolymarketEventErrorResolver()
+    private val placeOrderErrorResolver = PredictionPlaceOrderErrorResolver()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val jvmCodec = object : Base64UrlCodec {
         override fun decode(value: String): ByteArray = JavaBase64.getUrlDecoder().decode(value)
@@ -100,9 +112,47 @@ internal class DefaultPolymarketRepositoryTest {
         walletErrorResolver = walletErrorResolver,
         authErrorResolver = authErrorResolver,
         eventErrorResolver = eventErrorResolver,
+        placeOrderErrorResolver = placeOrderErrorResolver,
         l2HeaderBuilder = l2HeaderBuilder,
         dispatchers = dispatchers,
     )
+
+    @Nested
+    inner class GetBuilderCode {
+
+        @Test
+        fun `GIVEN the configuration is served WHEN asked twice THEN the network is hit once`() = runTest {
+            // Arrange
+            coEvery { api.getConfiguration(any()) } returns ApiResponse.Success(
+                PolymarketConfigurationResponse(builderCode = BUILDER_CODE),
+            )
+
+            // Act
+            val first = repository.getBuilderCode(walletId = WALLET_ID)
+            val second = repository.getBuilderCode(walletId = WALLET_ID)
+
+            // Assert
+            assertThat(first.getOrNull()).isEqualTo(BUILDER_CODE)
+            assertThat(second.getOrNull()).isEqualTo(BUILDER_CODE)
+            coVerify(exactly = 1) { api.getConfiguration(WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN the configuration call fails WHEN asked again THEN it is retried rather than cached`() =
+            runTest {
+                // Arrange
+                coEvery { api.getConfiguration(any()) } returns networkError()
+
+                // Act
+                val first = repository.getBuilderCode(walletId = WALLET_ID)
+                val second = repository.getBuilderCode(walletId = WALLET_ID)
+
+                // Assert
+                assertThat(first.isLeft()).isTrue()
+                assertThat(second.isLeft()).isTrue()
+                coVerify(exactly = 2) { api.getConfiguration(WALLET_ID) }
+            }
+    }
 
     @Test
     fun `GIVEN categories response WHEN getCategories THEN maps to domain categories`() = runTest {
@@ -210,6 +260,7 @@ internal class DefaultPolymarketRepositoryTest {
                 walletErrorResolver = walletErrorResolver,
                 authErrorResolver = authErrorResolver,
                 eventErrorResolver = eventErrorResolver,
+                placeOrderErrorResolver = placeOrderErrorResolver,
                 l2HeaderBuilder = l2HeaderBuilder,
                 // The silent retry waits on a virtual-time dispatcher, so the test skips the 2s delay.
                 dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
@@ -568,6 +619,134 @@ internal class DefaultPolymarketRepositoryTest {
         }
 
     @Test
+    fun `GIVEN a signed order WHEN placeOrder THEN the signature covers exactly the bytes that are sent`() =
+        runTest {
+            // Arrange
+            val headers = slot<Map<String, String>>()
+            val body = slot<RequestBody>()
+            coEvery { clobApi.placeOrder(capture(headers), capture(body)) } returns
+                ApiResponse.Success(placeOrderResponse())
+
+            // Act
+            val result = repository.placeOrder(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                signedOrder = signedOrder(),
+                isNegRisk = false,
+            )
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            val sent = Buffer().also { body.captured.writeTo(it) }.readUtf8()
+            val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
+            assertThat(headers.captured["POLY_SIGNATURE"]).isEqualTo(hmac(timestamp + "POST" + "/order" + sent))
+            assertThat(sent).contains(""""orderType":"FAK"""")
+            assertThat(sent).contains(""""owner":"k"""")
+        }
+
+    @Test
+    fun `GIVEN a timeout WHEN placeOrder THEN the outcome is ambiguous rather than failed`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns timeoutError()
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+            isNegRisk = false,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
+    fun `GIVEN an order signed for the other exchange WHEN placeOrder THEN nothing is sent`() = runTest {
+        // Arrange
+        val standardExchangeOrder = signedOrder(signature = standardExchangeSignature())
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = standardExchangeOrder,
+            isNegRisk = true,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.NotSent::class.java)
+        coVerify(exactly = 0) { clobApi.placeOrder(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a refusal inside a 2xx WHEN placeOrder THEN it is a rejection and not a result`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
+            placeOrderResponse(isSuccess = false, errorMessage = "not enough balance"),
+        )
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+            isNegRisk = false,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull())
+            .isEqualTo(PredictionPlaceOrderError.Rejected(detail = "not enough balance"))
+    }
+
+    @Test
+    fun `GIVEN a 5xx WHEN placeOrder THEN the outcome is ambiguous rather than retryable`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns
+            httpError(code = Code.INTERNAL_SERVER_ERROR, body = "upstream timeout")
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+            isNegRisk = false,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Ambiguous::class.java)
+    }
+
+    @Test
+    fun `GIVEN a filled response WHEN placeOrder THEN the fill amounts come from the exchange`() = runTest {
+        // Arrange
+        coEvery { clobApi.placeOrder(any(), any()) } returns ApiResponse.Success(
+            placeOrderResponse(status = "matched", makingAmount = "36.00", takingAmount = "48.97959"),
+        )
+
+        // Act
+        val result = repository.placeOrder(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            signedOrder = signedOrder(),
+            isNegRisk = false,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PredictionPlaceOrderResult(
+                isSuccess = true,
+                orderId = "0xorder",
+                status = "matched",
+                makingAmount = BigDecimal("36.00"),
+                takingAmount = BigDecimal("48.97959"),
+                transactionHashes = listOf("0xtx"),
+                errorMessage = null,
+            ).right(),
+        )
+    }
+
+    @Test
     fun `GIVEN a 401 WHEN syncBalanceAllowance THEN maps to InvalidSignature`() = runTest {
         // Arrange
         coEvery { clobApi.updateBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
@@ -621,7 +800,7 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery {
             clobApi.getBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
         } returns ApiResponse.Success(
-            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = "1000000"),
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowances = mapOf(SPENDER to "1000000")),
         )
 
         // Act
@@ -629,7 +808,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = BigDecimal("1")).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = mapOf(SPENDER to BigDecimal("1"))).right(),
         )
         assertThat(assetType.captured).isEqualTo("COLLATERAL")
         assertThat(signatureType.captured).isEqualTo(3)
@@ -641,7 +820,7 @@ internal class DefaultPolymarketRepositoryTest {
     fun `GIVEN no allowance reported WHEN getBalanceAllowance THEN leaves it absent rather than zero`() = runTest {
         // Arrange
         coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-            PolymarketBalanceAllowanceResponse(balance = "12340000", allowance = null),
+            PolymarketBalanceAllowanceResponse(balance = "12340000", allowances = null),
         )
 
         // Act
@@ -649,7 +828,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Assert
         assertThat(result).isEqualTo(
-            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowance = null).right(),
+            PolymarketBalanceAllowance(balance = BigDecimal("12.34"), allowances = null).right(),
         )
     }
 
@@ -658,7 +837,7 @@ internal class DefaultPolymarketRepositoryTest {
         runTest {
             // Arrange
             coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-                PolymarketBalanceAllowanceResponse(balance = "0", allowance = "1000000000"),
+                PolymarketBalanceAllowanceResponse(balance = "0", allowances = mapOf(SPENDER to "1000000000")),
             )
 
             // Act
@@ -666,16 +845,37 @@ internal class DefaultPolymarketRepositoryTest {
 
             // Assert
             assertThat(result).isEqualTo(
-                PolymarketBalanceAllowance(balance = BigDecimal.ZERO, allowance = BigDecimal("1000")).right(),
+                PolymarketBalanceAllowance(
+                    balance = BigDecimal.ZERO,
+                    allowances = mapOf(SPENDER to BigDecimal("1000")),
+                ).right(),
             )
         }
+
+    @Test
+    fun `GIVEN a spender with no allowance WHEN getBalanceAllowance THEN the zero survives as itself`() = runTest {
+        // Arrange
+        coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
+            PolymarketBalanceAllowanceResponse(
+                balance = "2950011",
+                allowances = mapOf(SPENDER to "1000000000", "0xD91E80cF" to "0"),
+            ),
+        )
+
+        // Act
+        val result = repository.getBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+
+        // Assert
+        assertThat(result.getOrNull()?.allowances)
+            .containsExactly(SPENDER, BigDecimal("1000"), "0xd91e80cf", BigDecimal.ZERO)
+    }
 
     @Test
     fun `GIVEN an unparsable balance WHEN getBalanceAllowance THEN returns Unknown instead of a wrong amount`() =
         runTest {
             // Arrange
             coEvery { clobApi.getBalanceAllowance(any(), any(), any()) } returns ApiResponse.Success(
-                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowance = null),
+                PolymarketBalanceAllowanceResponse(balance = "not-a-number", allowances = null),
             )
 
             // Act
@@ -797,10 +997,16 @@ internal class DefaultPolymarketRepositoryTest {
     private fun <T : Any> networkError(): ApiResponse<T> =
         ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<T>
 
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> timeoutError(): ApiResponse<T> =
+        ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<T>
+
     private companion object {
+        const val SPENDER = "0xe111180000d2663c0091e4f400237545b87b996b"
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
+        const val BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
         val HEADERS = PolymarketL1Headers(address = "0xabc", signature = "0xsig", timestamp = "1700", nonce = "0")
         fun quoteRequest() = PredictionOrderQuoteRequest(
@@ -833,16 +1039,53 @@ internal class DefaultPolymarketRepositoryTest {
             isLive = false,
         )
 
+        fun standardExchangeSignature(): String = "0x" + "11".repeat(n = 65) +
+            PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = false)
+                .joinToString(separator = "") { byte -> "%02x".format(byte) }
+
+        fun signedOrder(
+            signature: String = standardExchangeSignature(),
+            salt: Long = 1_234_567_890L,
+        ): PredictionSignedOrder =
+            PredictionSignedOrder(
+            order = PredictionOrder(
+                salt = salt,
+                maker = "0xMaker",
+                signer = "0xSigner",
+                tokenId = BigInteger("7"),
+                makerAmount = BigInteger("72000000"),
+                takerAmount = BigInteger("97959180"),
+                side = PredictionOrderSide.BUY,
+                signatureType = 3,
+                timestampMillis = 1_787_300_000_000L,
+                metadata = "0xmeta",
+                builder = "0xbuilder",
+            ),
+            signature = signature,
+        )
+
+        fun placeOrderResponse(
+            status: String? = "live",
+            makingAmount: String? = null,
+            takingAmount: String? = null,
+            isSuccess: Boolean = true,
+            errorMessage: String? = null,
+        ): PolymarketPlaceOrderResponse = PolymarketPlaceOrderResponse(
+            isSuccess = isSuccess,
+            orderId = "0xorder",
+            status = status,
+            makingAmount = makingAmount,
+            takingAmount = takingAmount,
+            transactionHashes = listOf("0xtx"),
+            errorMessage = errorMessage,
+        )
+
         val SYNC_CREDENTIALS = PolymarketApiCredentials(
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             passphrase = "p",
         )
 
-        /**
-         * Field-by-field mapping is pinned by `PolymarketEventConverterTest`; here the event only has to come
-         * back out of the repository identifiable.
-         */
         val EVENT_DTO = PolymarketEventDto(
             eventId = "event-id",
             slug = "event-slug",
@@ -858,9 +1101,9 @@ internal class DefaultPolymarketRepositoryTest {
             volume24hr = null,
             liquidity = null,
             totalMarketsCount = 0,
-            isNegRisk = false,
             displayMode = "plain_markets",
             markets = emptyList(),
+            isNegRisk = false,
         )
     }
 }
