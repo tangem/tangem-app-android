@@ -30,4 +30,8 @@ internal sealed interface PredictionNotificationUM {
     data object QuoteFailed : PredictionNotificationUM {
         override val isBlocking = true
     }
+
+    data object PriceFailed : PredictionNotificationUM {
+        override val isBlocking = true
+    }
 }

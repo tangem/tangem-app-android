@@ -57,6 +57,7 @@ private fun PredictionNotificationUM.title(): TextReference = when (this) {
         resourceReference(R.string.prediction_place_notification_market_closed_title)
     PredictionNotificationUM.RegionRestricted -> resourceReference(R.string.prediction_region_restrictions_title)
     PredictionNotificationUM.QuoteFailed -> resourceReference(R.string.prediction_place_notification_quote_error_title)
+    PredictionNotificationUM.PriceFailed -> resourceReference(R.string.common_something_went_wrong)
 }
 
 private fun PredictionNotificationUM.description(): TextReference? = when (this) {
@@ -71,6 +72,7 @@ private fun PredictionNotificationUM.description(): TextReference? = when (this)
     PredictionNotificationUM.RegionRestricted -> resourceReference(R.string.prediction_region_restrictions_subtitle)
     PredictionNotificationUM.QuoteFailed ->
         resourceReference(R.string.prediction_place_notification_quote_error_description)
+    PredictionNotificationUM.PriceFailed -> null
 }
 
 private fun PredictionNotificationUM.variant(): TangemMessageBanner.Variant = when (this) {
@@ -81,6 +83,7 @@ private fun PredictionNotificationUM.variant(): TangemMessageBanner.Variant = wh
     PredictionNotificationUM.MarketClosed,
     PredictionNotificationUM.RegionRestricted,
     PredictionNotificationUM.QuoteFailed,
+    PredictionNotificationUM.PriceFailed,
     -> TangemMessageBanner.Variant.Error
 }
 

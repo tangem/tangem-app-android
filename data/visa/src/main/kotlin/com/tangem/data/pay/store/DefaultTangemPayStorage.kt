@@ -9,7 +9,7 @@ import com.tangem.data.pay.entity.WithdrawStoreData
 import com.tangem.data.pay.util.WithdrawStateConverter
 import com.tangem.data.pay.util.WithdrawStoreDataConverter
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync

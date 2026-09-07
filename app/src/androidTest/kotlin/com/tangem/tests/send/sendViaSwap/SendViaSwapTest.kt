@@ -1,7 +1,6 @@
 package com.tangem.tests.send.sendViaSwap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLYGON_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
@@ -13,6 +12,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.res.R
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.*
 import com.tangem.screens.*

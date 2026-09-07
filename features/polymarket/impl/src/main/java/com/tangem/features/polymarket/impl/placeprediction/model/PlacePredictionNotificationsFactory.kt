@@ -5,6 +5,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
@@ -18,10 +19,18 @@ import java.math.BigDecimal
 internal object PlacePredictionNotificationsFactory {
 
     fun build(state: PlacePredictionUM): ImmutableList<PredictionNotificationUM> = buildList {
+        if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
+
         addAll(state.quote.notifications())
 
+        when (state.priceError) {
+            PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
+            PriceErrorUM.Unknown -> add(PredictionNotificationUM.PriceFailed)
+            null -> Unit
+        }
+
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
-    }.toImmutableList()
+    }.distinct().toImmutableList()
 
     private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
         is QuoteUM.Content -> when (status) {
