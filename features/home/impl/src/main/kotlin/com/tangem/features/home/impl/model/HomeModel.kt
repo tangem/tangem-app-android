@@ -43,7 +43,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 private const val HIDE_PROGRESS_DELAY = 400L
@@ -101,7 +100,7 @@ internal class HomeModel @Inject constructor(
             .distinctUntilChanged()
             .filterNotNull()
             .onEach { result ->
-                val userCountry = result.getOrNull() ?: UserCountry.Other(Locale.getDefault().country)
+                val userCountry = result.getOrNull() ?: UserCountry.fromDeviceLocale()
                 updateStoriesForCountry(userCountry)
             }
             .flowOn(dispatchers.io)
