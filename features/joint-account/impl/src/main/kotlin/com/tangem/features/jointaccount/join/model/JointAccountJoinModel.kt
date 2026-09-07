@@ -54,7 +54,7 @@ internal class JointAccountJoinModel @Inject constructor(
         )
     }
 
-    /** A successful join closes the flow with the confirming snackbar shown over wherever the user came from */
+    /** The join confirmation, shown over whatever screen the closed flow returns the user to */
     private fun showAccountAdded() {
         uiMessageSender.send(
             SnackbarMessage(
