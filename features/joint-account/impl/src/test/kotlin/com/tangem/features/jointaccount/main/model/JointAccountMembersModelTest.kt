@@ -12,6 +12,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
@@ -280,7 +281,12 @@ internal class JointAccountMembersModelTest {
         // Assert
         assertThat(confirmation.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
         coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
-        verify(exactly = 0) { uiMessageSender.send(any()) }
+        val message = slot<SnackbarMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_activated_snackbar))
+        assertThat(message.captured.startIconId).isEqualTo(CoreUiR.drawable.ic_success_20)
+        verify(exactly = 1) { router.pop() }
         assertThat(model.uiState.value.activation?.confirmation).isNull()
     }
 
