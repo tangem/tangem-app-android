@@ -2231,7 +2231,7 @@
   <string name="tangempay_order_type_unavailable">No disponible</string>
   <string name="tangempay_other_networks_header">Otras redes</string>
   <string name="tangempay_other_networks_subtitle">Luego cámbielo a la cuenta de pago sin comisiones</string>
-  <string name="tangempay_other_networks_title">Envíe USDT/USDC en cualquier red a su Tangem Wallet</string>
+  <string name="tangempay_other_networks_title">Envíe USDT/USDC en cualquier EVM-red a su Tangem Wallet</string>
   <string name="tangempay_pay_support">Soporte</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
@@ -2283,7 +2283,7 @@
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Recibir USD desde una cuenta bancaria mediante ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Recibir USD desde una cuenta bancaria mediante ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">Desde una cuenta bancaria</string>
   <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
   <string name="tangempay_topup_receive_body_multichain">Envíe USDC o USDT a la dirección de su cuenta</string>
@@ -2590,6 +2590,7 @@
   <string name="warning_approval_in_progress_message">El proceso de obtención de permisos está actualmente en marcha y se completará pronto.</string>
   <string name="warning_approval_in_progress_title">Aprobación en curso</string>
   <string name="warning_backup_error_add_funds_message">Esta billetera tiene un problema de copia de seguridad. Comuníquese con el soporte técnico para solucionarlo.</string>
+  <string name="warning_backup_error_add_funds_message_v2">La wallet que quieres depositar tiene un problema con la copia de seguridad. Transfiere tus fondos a otra wallet y restablécela.</string>
   <string name="warning_backup_error_add_funds_title">Agregar fondos está deshabilitado.</string>
   <string name="warning_backup_error_attention_message">Sus tarjetas no se han activado correctamente. Para proteger sus fondos, transfiérelos a otra billetera, restablezca las tarjetas a ajustes de fábrica y vuelva a activarlas antes de continuar.</string>
   <string name="warning_backup_error_attention_title">Acción requerida: restablezca su billetera</string>
