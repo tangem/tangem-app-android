@@ -38,22 +38,24 @@ internal class DefaultPolymarketCollateralCurrencyFactory @Inject constructor() 
         )
     }
 
-    override fun create(): CryptoCurrency.Token {
-        val contractAddress = PolymarketContracts.COLLATERAL.lowercase()
+    override fun create(): CryptoCurrency.Token = token(contractAddress = PolymarketContracts.COLLATERAL.lowercase())
 
-        return CryptoCurrency.Token(
-            id = getTokenId(
-                network = network,
-                rawTokenId = PredictionCollateral.RAW_ID,
-                contractAddress = contractAddress,
-            ),
+    override fun createDepositTarget(): CryptoCurrency.Token = token(
+        contractAddress = PolymarketContracts.USDC_TOKEN_ADDRESS,
+    )
+
+    private fun token(contractAddress: String) = CryptoCurrency.Token(
+        id = getTokenId(
             network = network,
-            name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
-            symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
-            decimals = PolymarketContracts.COLLATERAL_DECIMALS,
-            iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
-            isCustom = false,
+            rawTokenId = PredictionCollateral.RAW_ID,
             contractAddress = contractAddress,
-        )
-    }
+        ),
+        network = network,
+        name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
+        symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
+        decimals = PolymarketContracts.COLLATERAL_DECIMALS,
+        iconUrl = getTokenIconUrlFromDefaultHost(PredictionCollateral.RAW_ID),
+        isCustom = false,
+        contractAddress = contractAddress,
+    )
 }
