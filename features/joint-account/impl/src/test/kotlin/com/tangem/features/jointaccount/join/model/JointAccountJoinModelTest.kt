@@ -4,6 +4,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -16,11 +18,13 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import com.tangem.core.ui.R as CoreUiR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointAccountJoinModelTest {
@@ -34,7 +38,7 @@ internal class JointAccountJoinModelTest {
     }
 
     @Test
-    fun `GIVEN complete draft WHEN join THEN the members screen of the joined account is opened`() = runTest {
+    fun `GIVEN complete draft WHEN join THEN the flow closes with the account added snackbar`() = runTest {
         // Arrange
         val model = createModelWithDraft()
         coEvery {
@@ -45,11 +49,13 @@ internal class JointAccountJoinModelTest {
         val action = model.join(inviteId = INVITE_ID, memberName = NAME)
 
         // Assert
-        assertThat(action).isEqualTo(
-            JoinResultAction.OpenMembers(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID),
-        )
+        assertThat(action).isEqualTo(JoinResultAction.CloseFlow)
         assertThat(model.draftHolder.draft.value.displayName).isEqualTo(NAME)
-        verify(exactly = 0) { uiMessageSender.send(any()) }
+        val message = slot<SnackbarMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        assertThat(message.captured.message)
+            .isEqualTo(resourceReference(CoreUiR.string.account_create_success_message))
+        assertThat(message.captured.startIconId).isEqualTo(CoreUiR.drawable.ic_success_20)
     }
 
     @Test
