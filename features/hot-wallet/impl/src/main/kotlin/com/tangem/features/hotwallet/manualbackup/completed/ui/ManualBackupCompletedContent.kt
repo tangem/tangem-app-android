@@ -18,7 +18,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.hotwallet.manualbackup.completed.entity.ManualBackupCompletedUM
 
 @Suppress("LongMethod")
@@ -58,7 +57,7 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
                     top = 12.dp,
                     end = 48.dp,
                 ),
-            text = stringResourceSafe(R.string.backup_complete_description),
+            text = state.description.resolveReference(),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
@@ -99,7 +98,7 @@ private fun PreviewManualBackupCompletedContentImport() {
                 isLoading = false,
                 title = resourceReference(R.string.wallet_import_success_title),
                 continueButtonText = resourceReference(R.string.common_continue),
-                description = resourceReference(R.string.backup_complete_description),
+                description = resourceReference(R.string.wallet_import_success_description),
                 onContinueClick = { },
             ),
         )
