@@ -1,14 +1,14 @@
-package com.tangem.grow.datasource.txhistory
+package com.tangem.store.datasource.txhistory
 
 import android.content.Context
 import androidx.room.Room
-import com.tangem.grow.datasource.txhistory.db.TxHistoryDatabase
-import com.tangem.grow.datasource.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.grow.datasource.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.grow.datasource.txhistory.db.dao.HistoryIndexDao
-import com.tangem.grow.datasource.txhistory.db.dao.P2PEthPoolVaultDao
-import com.tangem.grow.datasource.txhistory.db.dao.StakingValidatorDao
-import com.tangem.grow.datasource.txhistory.db.dao.TokenInfoDao
+import com.tangem.store.datasource.txhistory.db.TxHistoryDatabase
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
+import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
+import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
+import com.tangem.store.datasource.txhistory.db.dao.TokenInfoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

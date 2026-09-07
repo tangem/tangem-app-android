@@ -9,7 +9,7 @@ import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.grow.datasource.express.ExpressUtils
-import com.tangem.grow.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.ExpressServiceFetcher

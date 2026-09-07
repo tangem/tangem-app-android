@@ -7,16 +7,11 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.ksp)
-    alias(deps.plugins.room)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.grow.datasource"
-}
-
-room {
-    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -33,10 +28,6 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    api(deps.room.runtime)
-    api(deps.room.ktx)
-    ksp(deps.room.compiler)
-
     implementation(tangemDeps.card.core)
 
     implementation(projects.libs.auth)
@@ -46,7 +37,6 @@ dependencies {
     api(projects.core.utils)
     api(projects.domain.models)
     implementation(projects.domain.staking.models)
-    implementation(projects.domain.txhistory.models)
 
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)
