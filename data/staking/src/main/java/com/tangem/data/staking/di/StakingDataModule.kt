@@ -22,8 +22,8 @@ import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.data.staking.store.P2PVaultLimitsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.grow.datasource.txhistory.db.dao.P2PEthPoolVaultDao
-import com.tangem.grow.datasource.txhistory.db.dao.StakingValidatorDao
+import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
+import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
