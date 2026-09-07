@@ -26,6 +26,7 @@ import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
@@ -57,6 +58,9 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.model.PredictionOrder
+import com.tangem.domain.polymarket.model.PredictionOrderState
+import com.tangem.domain.polymarket.model.PredictionOrderStateError
+import com.tangem.domain.polymarket.model.PredictionOrderStatus
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
@@ -792,6 +796,85 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
+    fun `GIVEN credentials WHEN getOrder THEN signs the path with the id and reads the fill`() = runTest {
+        // Arrange
+        val headers = slot<Map<String, String>>()
+        coEvery { clobApi.getOrder(capture(headers), ORDER_ID) } returns ApiResponse.Success(
+            PolymarketOrderResponse(
+                id = ORDER_ID,
+                status = "ORDER_STATUS_MATCHED",
+                price = "0.52",
+                originalSize = "100000000",
+                sizeMatched = "37500000",
+            ),
+        )
+
+        // Act
+        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(result).isEqualTo(
+            PredictionOrderState(
+                status = PredictionOrderStatus.Matched,
+                price = BigDecimal("0.52"),
+                originalSize = BigDecimal("100.000000"),
+                sizeMatched = BigDecimal("37.500000"),
+            ).right(),
+        )
+        val timestamp = headers.captured.getValue("POLY_TIMESTAMP")
+        assertThat(headers.captured["POLY_SIGNATURE"]).isEqualTo(hmac(timestamp + "GET" + "/data/order/" + ORDER_ID))
+    }
+
+    @Test
+    fun `GIVEN the book does not know the id WHEN getOrder THEN reports not found`() = runTest {
+        // Arrange
+        coEvery { clobApi.getOrder(any(), ORDER_ID) } returns httpError(code = Code.NOT_FOUND, body = "order not found")
+
+        // Act
+        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(result).isEqualTo(PredictionOrderStateError.NotFound.left())
+    }
+
+    @Test
+    fun `GIVEN refused credentials WHEN getOrder THEN reports unauthorized with the body`() = runTest {
+        // Arrange
+        coEvery { clobApi.getOrder(any(), ORDER_ID) } returns httpError(code = Code.UNAUTHORIZED, body = "bad sig")
+
+        // Act
+        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(result).isEqualTo(PredictionOrderStateError.Unauthorized(detail = "bad sig").left())
+    }
+
+    @Test
+    fun `GIVEN a timeout WHEN getOrder THEN reports a timeout apart from other failures`() = runTest {
+        // Arrange
+        coEvery { clobApi.getOrder(any(), ORDER_ID) } returns timeoutError()
+
+        // Act
+        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(result).isEqualTo(PredictionOrderStateError.Timeout.left())
+    }
+
+    @Test
+    fun `GIVEN a 5xx WHEN getOrder THEN reports unknown with the code`() = runTest {
+        // Arrange
+        coEvery { clobApi.getOrder(any(), ORDER_ID) } returns
+            httpError(code = Code.INTERNAL_SERVER_ERROR, body = "upstream")
+
+        // Act
+        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(result).isEqualTo(PredictionOrderStateError.Unknown(httpCode = 500, detail = "upstream").left())
+    }
+
+    @Test
     fun `GIVEN credentials WHEN getBalanceAllowance THEN signs the read path and converts the base units`() = runTest {
         // Arrange
         val headers = slot<Map<String, String>>()
@@ -1005,6 +1088,7 @@ internal class DefaultPolymarketRepositoryTest {
         const val SPENDER = "0xe111180000d2663c0091e4f400237545b87b996b"
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
+        const val ORDER_ID = "0x6b2e"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"
