@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.connections.routing
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -55,7 +56,14 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val slot by slot.subscribeAsState()
-        slot.child?.instance?.Content(modifier)
+        val child = slot.child ?: return
+
+        // Consecutive children of the same type (e.g. Send -> Send) share one call site, so without a key
+        // Compose keeps the previous child's remembered state (collectAsStateWithLifecycle) for a frame.
+        // Keyed by instance rather than configuration: singleton routes yield equal configurations
+        key(child.instance) {
+            child.instance.Content(modifier)
+        }
     }
 
     override fun onAppRouteChange(appRoute: AppRoute) {
