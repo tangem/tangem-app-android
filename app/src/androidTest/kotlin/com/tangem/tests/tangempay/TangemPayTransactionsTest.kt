@@ -222,11 +222,14 @@ class TangemPayTransactionsTest : BaseTestCase() {
                     }
                 }
             }
+            step("Assert the Card field") {
+                assertTangemPayTransactionCardField(MASKED_CARD_NUMBER, CARD_NAME)
+            }
         }
     }
 
     @AllureId("9539")
-    @DisplayName("Tangem Pay: completed transaction details show the Completed status")
+    @DisplayName("Tangem Pay: completed transaction details show the Completed status and the Card field")
     @Test
     fun completedTransactionDetailsShowCompletedStatusTest() {
         val spendCompletedState = "SpendCompleted"
@@ -252,11 +255,18 @@ class TangemPayTransactionsTest : BaseTestCase() {
                     }
                 }
             }
+            step("Assert the Card field") {
+                assertTangemPayTransactionCardField(MASKED_CARD_NUMBER, CARD_NAME)
+            }
         }
     }
 
     private companion object {
         // authorized_at of the mocked "Tangem Coffee" spend (2026-04-23T14:00:00Z).
         const val COFFEE_TX_MILLIS = 1776952800000L
+
+        // card_number_end / card_display_name of the mocked single-transaction response.
+        const val MASKED_CARD_NUMBER = "*4242"
+        const val CARD_NAME = "My Card"
     }
 }

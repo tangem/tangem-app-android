@@ -9,6 +9,8 @@ import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.data.networks.store.setSourceAsOnlyCache
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.test.core.assertEither
@@ -29,12 +31,14 @@ internal class DefaultMultiNetworkStatusFetcherTest {
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher = mockk()
     private val dynamicAddressesInitializer: DynamicAddressesInitializer = mockk()
+    private val safeAddressResolver: JointAccountSafeAddressResolver = mockk()
 
     private val fetcher = DefaultMultiNetworkStatusFetcher(
         networksStatusesStore = networksStatusesStore,
         cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         commonNetworkStatusFetcher = commonNetworkStatusFetcher,
         dynamicAddressesInitializer = dynamicAddressesInitializer,
+        safeAddressResolver = safeAddressResolver,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -45,6 +49,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
             cardCryptoCurrencyFactory,
             commonNetworkStatusFetcher,
             dynamicAddressesInitializer,
+            safeAddressResolver,
         )
         // No dynamic addresses restore by default
         coEvery { dynamicAddressesInitializer.getXpubs(any(), any()) } returns emptyMap()
@@ -471,6 +476,88 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         assertEither(actual, expected)
     }
 
+    @Test
+    fun `GIVEN a joint network WHEN fetch THEN its Safe address is resolved and passed, the resolver sees joint only`() =
+        runTest {
+            // Arrange
+            val safeAddress = "0x5afe"
+            val params = MultiNetworkStatusFetcher.Params(
+                userWalletId = userWalletId,
+                networks = setOf(ethereum.network, jointEthereum.network),
+            )
+            coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.networks) } returns mapOf(
+                ethereum.network to listOf(ethereum),
+                jointEthereum.network to listOf(jointEthereum),
+            )
+            coEvery {
+                safeAddressResolver.resolve(params.userWalletId, setOf(jointEthereum.network))
+            } returns mapOf(jointEthereum.network to safeAddress)
+            coEvery {
+                commonNetworkStatusFetcher.fetch(any(), any(), any(), any(), any())
+            } returns Either.Right(Unit)
+
+            // Act
+            val actual = fetcher(params)
+
+            // Assert
+            assertEither(actual, Either.Right(Unit))
+            coVerify(exactly = 1) {
+                commonNetworkStatusFetcher.fetch(
+                    userWalletId = params.userWalletId,
+                    network = jointEthereum.network,
+                    networkCurrencies = setOf(jointEthereum),
+                    xpub = null,
+                    safeAddress = safeAddress,
+                )
+                commonNetworkStatusFetcher.fetch(
+                    userWalletId = params.userWalletId,
+                    network = ethereum.network,
+                    networkCurrencies = setOf(ethereum),
+                    xpub = null,
+                    safeAddress = null,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN no joint network WHEN fetch THEN the resolver is not asked`() = runTest {
+        // Arrange
+        val params = setupTwoNetworkParams()
+        coEvery { commonNetworkStatusFetcher.fetch(any(), any(), any(), any(), any()) } returns Either.Right(Unit)
+
+        // Act
+        fetcher(params)
+
+        // Assert
+        verify { safeAddressResolver wasNot Called }
+    }
+
+    @Test
+    fun `GIVEN the resolver throws WHEN fetch THEN the joint network is fetched without an address`() = runTest {
+        // Arrange
+        val params = MultiNetworkStatusFetcher.Params(userWalletId = userWalletId, networks = setOf(jointEthereum.network))
+        coEvery { cardCryptoCurrencyFactory.create(params.userWalletId, params.networks) } returns mapOf(
+            jointEthereum.network to listOf(jointEthereum),
+        )
+        coEvery { safeAddressResolver.resolve(any(), any()) } throws IllegalStateException("accounts unavailable")
+        coEvery { commonNetworkStatusFetcher.fetch(any(), any(), any(), any(), any()) } returns Either.Right(Unit)
+
+        // Act
+        val actual = fetcher(params)
+
+        // Assert
+        assertEither(actual, Either.Right(Unit))
+        coVerify(exactly = 1) {
+            commonNetworkStatusFetcher.fetch(
+                userWalletId = params.userWalletId,
+                network = jointEthereum.network,
+                networkCurrencies = setOf(jointEthereum),
+                xpub = null,
+                safeAddress = null,
+            )
+        }
+    }
+
     private fun setupTwoNetworkParams(): MultiNetworkStatusFetcher.Params {
         val params = MultiNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
@@ -488,5 +575,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
         val ethereum = cryptoCurrencyFactory.ethereum
         val cardano = cryptoCurrencyFactory.cardano
+        val jointEthereum = ethereum.network.let { network ->
+            val derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+            val jointNetwork = network.copy(
+                id = Network.ID(rawId = network.id.rawId, derivationPath = derivationPath),
+                derivationPath = derivationPath,
+            )
+            ethereum.copy(network = jointNetwork)
+        }
     }
 }

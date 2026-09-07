@@ -3,7 +3,7 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -29,13 +29,13 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class AppsFlyerDeeplinkRouterTest {
 
-    private val appsFlyerStore: AppsFlyerStore = mockk()
+    private val appsFlyerRepository: AppsFlyerRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
 
     private val router = AppsFlyerDeeplinkRouter(
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         userWalletsListRepository = userWalletsListRepository,
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
         appRouter = appRouter,
@@ -44,13 +44,13 @@ internal class AppsFlyerDeeplinkRouterTest {
     @BeforeEach
     fun setup() {
         clearMocks(
-            appsFlyerStore,
+            appsFlyerRepository,
             userWalletsListRepository,
             clearAppsFlyerDeeplinkUseCase,
             appRouter,
         )
         // Happy baseline: deep link pending, authorized.
-        every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
+        every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
     }
 
@@ -122,7 +122,7 @@ internal class AppsFlyerDeeplinkRouterTest {
     fun `GIVEN referral deeplink and empty wallets on Home WHEN observe THEN replaceAll create wallet, not cleared`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
-            every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf("referral")
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("referral")
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
 
@@ -145,7 +145,7 @@ internal class AppsFlyerDeeplinkRouterTest {
     @Test
     fun `GIVEN no stored deeplink WHEN observe THEN does not evaluate`() = runTest(UnconfinedTestDispatcher()) {
         // Arrange
-        every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf(null)
+        every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(null)
         val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
         // Act

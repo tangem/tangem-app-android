@@ -355,7 +355,7 @@ class GetWalletAccountsResponseExtTest {
             val mainAccount = createWalletAccountDTO(derivationIndex = 0)
             val jointAccount = createWalletAccountDTO(
                 derivationIndex = 0,
-                type = WalletAccountDTO.Type.JOINT.value,
+                type = WalletAccountDTO.Type.JOINT,
                 accountId = "aa".repeat(n = 32),
             )
 
@@ -378,7 +378,7 @@ class GetWalletAccountsResponseExtTest {
     private fun createWalletAccountDTO(
         derivationIndex: Int,
         tokens: List<UserTokensResponse.Token> = emptyList(),
-        type: String? = null,
+        type: WalletAccountDTO.Type? = null,
         accountId: String? = null,
     ) = WalletAccountDTO(
         id = accountId ?: AccountId.forCryptoPortfolio(

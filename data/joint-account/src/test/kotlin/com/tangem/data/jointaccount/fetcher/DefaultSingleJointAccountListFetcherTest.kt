@@ -9,8 +9,8 @@ import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.data.jointaccount.store.WalletIdWithJointAccountsDM
-import com.tangem.datasource.api.jointaccount.JointAccountApi
-import com.tangem.datasource.api.jointaccount.models.GetJointAccountsResponse
+import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope

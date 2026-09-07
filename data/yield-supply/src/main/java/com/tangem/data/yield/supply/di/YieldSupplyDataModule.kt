@@ -11,8 +11,8 @@ import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
-import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
-import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
+import com.tangem.data.yield.supply.store.YieldBoostPromoStore
+import com.tangem.data.yield.supply.store.YieldBoostStatusStore
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider

@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -56,7 +56,7 @@ internal abstract class YieldSupplyActionModelTestBase {
     protected val alertFactory: YieldSupplyAlertFactory = mockk(relaxed = true)
     protected val pendingTracker: YieldSupplyPendingTracker = mockk(relaxed = true)
     protected val yieldSupplyRepository: YieldSupplyRepository = mockk(relaxed = true)
-    protected val appsFlyerStore: AppsFlyerStore = mockk(relaxed = true)
+    protected val appsFlyerRepository: AppsFlyerRepository = mockk(relaxed = true)
 
     protected val userWalletId = UserWalletId("abcdef012345")
     protected val userWallet: UserWallet = mockk(relaxed = true) {

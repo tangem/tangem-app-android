@@ -28,7 +28,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
-    implementation(projects.core.datasource)
+    implementation(projects.data.nft)
     implementation(projects.core.utils)
 
     /** Tangem SDK */
@@ -41,6 +41,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.legacy)
     implementation(projects.domain.offramp)
     implementation(projects.domain.tokens.models)
@@ -97,6 +98,7 @@ dependencies {
     
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     api(deps.kotlin.coroutines)
