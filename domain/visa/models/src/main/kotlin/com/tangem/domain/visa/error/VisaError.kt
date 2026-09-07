@@ -60,6 +60,7 @@ sealed class VisaApiError(
     data object CardIssueOfferNotAvailable : VisaApiError(104140115)
     data object CardIssueInsufficientBalance : VisaApiError(104140116)
     data object CardIssueInvalidShippingAddress : VisaApiError(104140126)
+    data object CardIssueInvalidEmbossName : VisaApiError(104140144)
     data object UnknownWithoutCode : VisaApiError(104110999)
     data class Unknown(override val errorCode: Int) : VisaApiError(errorCode)
 
@@ -87,6 +88,7 @@ sealed class VisaApiError(
     data object CardReissuePlasticInsufficientBalance : VisaApiError(104140134)
     data object CardReissuePlasticNotAvailable : VisaApiError(104140135)
     data object CardReissuePlasticInvalidShippingAddress : VisaApiError(104140136)
+    data object CardReissuePlasticInvalidEmbossName : VisaApiError(104140143)
 
     companion object {
 
@@ -104,6 +106,7 @@ sealed class VisaApiError(
                 CardIssueOfferNotAvailable.errorCode -> CardIssueOfferNotAvailable
                 CardIssueInsufficientBalance.errorCode -> CardIssueInsufficientBalance
                 CardIssueInvalidShippingAddress.errorCode -> CardIssueInvalidShippingAddress
+                CardIssueInvalidEmbossName.errorCode -> CardIssueInvalidEmbossName
                 CardActivationInvalidCardData.errorCode -> CardActivationInvalidCardData
                 CardActivationCardNotPhysical.errorCode -> CardActivationCardNotPhysical
                 CardActivationCardAlreadyActive.errorCode -> CardActivationCardAlreadyActive
@@ -114,6 +117,7 @@ sealed class VisaApiError(
                 CardReissuePlasticInsufficientBalance.errorCode -> CardReissuePlasticInsufficientBalance
                 CardReissuePlasticNotAvailable.errorCode -> CardReissuePlasticNotAvailable
                 CardReissuePlasticInvalidShippingAddress.errorCode -> CardReissuePlasticInvalidShippingAddress
+                CardReissuePlasticInvalidEmbossName.errorCode -> CardReissuePlasticInvalidEmbossName
                 else -> Unknown(universalErrorCode)
             }
         }

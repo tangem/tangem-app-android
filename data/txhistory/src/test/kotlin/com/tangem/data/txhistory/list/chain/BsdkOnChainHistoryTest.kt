@@ -6,6 +6,7 @@ import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
@@ -180,7 +181,7 @@ internal class BsdkOnChainHistoryTest {
             txHash = "approve",
             amount = BigDecimal.ZERO,
             isOutgoing = false,
-            type = TxInfo.TransactionType.Approve(amount = null, address = "spender-addr"),
+            type = TxInfo.TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "spender-addr"),
         )
 
         // Act
