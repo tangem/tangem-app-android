@@ -14,6 +14,7 @@ import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.common.ui.backup.BackupErrorWarningSender
@@ -1250,7 +1251,10 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        dialogFactory.showError(text = unavailabilityReason.getUnavailabilityReasonText())
+        dialogFactory.showError(
+            text = unavailabilityReason.getUnavailabilityReasonText(),
+            title = unavailabilityReason.getUnavailabilityReasonTitle(),
+        )
 
         return true
     }
