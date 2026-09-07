@@ -7,13 +7,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
-import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
@@ -30,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayReissuePlasticCardModel @Inject constructor(
@@ -38,7 +33,6 @@ internal class TangemPayReissuePlasticCardModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val onboardingRepository: OnboardingRepository,
-    private val reissueCardRepository: TangemPayReissueCardRepository,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -64,33 +58,32 @@ internal class TangemPayReissuePlasticCardModel @Inject constructor(
         state.value = TangemPayReissuePlasticCardUM.Loading(onDismissRequest = ::onDismiss)
 
         modelScope.launch {
-            val (offer, fee, customerInfo) = coroutineScope {
-                val offerDeferred = async { getCustomerOffers(params.userWalletId).getOrNull()?.plasticOffer() }
-                val feeDeferred = async {
-                    reissueCardRepository.getPlasticReissueCardFee(params.userWalletId).getOrNull()
+            val (offer, customerInfo) = coroutineScope {
+                val offerDeferred = async {
+                    getCustomerOffers.plasticReissueOffer(
+                        userWalletId = params.userWalletId,
+                        productInstanceId = params.sourceProductInstanceId,
+                    ).getOrNull()
                 }
                 val customerInfoDeferred = async {
                     onboardingRepository.getCustomerInfo(params.userWalletId).getOrNull()
                 }
-                Triple(offerDeferred.await(), feeDeferred.await(), customerInfoDeferred.await())
+                offerDeferred.await() to customerInfoDeferred.await()
             }
 
-            state.value = buildState(offer = offer, fee = fee, customerInfo = customerInfo)
+            state.value = buildState(offer = offer, customerInfo = customerInfo)
         }.saveIn(loadDataJobHolder)
     }
 
-    private fun buildState(
-        offer: Offer?,
-        fee: TangemPayReissueCardFee?,
-        customerInfo: CustomerInfo?,
-    ): TangemPayReissuePlasticCardUM {
-        val deliveryEta = offer?.data?.deliveryEta
-        val country = CountryNames.getDisplayName(customerInfo?.country)
-        if (deliveryEta == null || fee == null || country.isBlank()) {
-            return TangemPayReissuePlasticCardUM.Error(onDismissRequest = ::onDismiss, onRetry = ::loadData)
-        }
+    private fun buildState(offer: Offer?, customerInfo: CustomerInfo?): TangemPayReissuePlasticCardUM {
+        if (offer == null || customerInfo == null) return errorState()
 
-        val availableBalance = customerInfo?.fiatBalance?.availableBalance.orZero()
+        val deliveryEta = offer.data.deliveryEta ?: return errorState()
+        val country = CountryNames.getDisplayName(customerInfo.country)
+        if (country.isBlank()) return errorState()
+
+        val fee = offer.fee
+        val availableBalance = customerInfo.fiatBalance?.availableBalance.orZero()
         return TangemPayReissuePlasticCardUM.Content(
             onDismissRequest = ::onDismiss,
             country = country,
@@ -101,12 +94,17 @@ internal class TangemPayReissuePlasticCardModel @Inject constructor(
         )
     }
 
+    private fun errorState() = TangemPayReissuePlasticCardUM.Error(
+        onDismissRequest = ::onDismiss,
+        onRetry = ::loadData,
+    )
+
     private fun onReplaceClick(deliveryEtaMaxBusinessDays: Int) {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardConfirmed())
         params.onReplaceConfirmed(deliveryEtaMaxBusinessDays)
     }
 
-    private fun TangemPayReissueCardFee.formatted(): String = amount.format {
-        fiat(fiatCurrencyCode = currencyCode, fiatCurrencySymbol = getJavaCurrencyByCode(currencyCode).symbol)
+    private fun Offer.Fee.formatted(): String = amount.format {
+        fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
     }
 }
