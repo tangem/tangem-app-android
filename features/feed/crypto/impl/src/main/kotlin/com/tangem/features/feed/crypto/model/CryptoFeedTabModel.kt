@@ -196,9 +196,9 @@ internal class CryptoFeedTabModel @Inject constructor(
     }
 
     override fun onDestroy() {
+        super.onDestroy()
         // the controller outlives the tab, so a reopened feed would otherwise start pre-filtered
         categoryFilterController.clear()
-        super.onDestroy()
     }
 
     private inline fun updateMarketPulse(block: (MarketPulseUM) -> MarketPulseUM) {
