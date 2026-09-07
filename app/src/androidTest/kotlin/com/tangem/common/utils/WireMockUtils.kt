@@ -1,6 +1,6 @@
 package com.tangem.common.utils
 
-import com.tangem.datasource.utils.WireMockRedirectInterceptor
+import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody

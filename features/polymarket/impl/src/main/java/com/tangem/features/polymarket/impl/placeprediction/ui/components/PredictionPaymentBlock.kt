@@ -27,7 +27,6 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
-import com.tangem.utils.StringsSigns.DASH_SIGN
 
 /** What the order is paid from and what it pays out, as read on the summary screen. */
 @Composable
@@ -110,5 +109,4 @@ private fun HeaderText(text: String) {
     )
 }
 
-private fun PaymentSourceUM.balanceLabel(): String =
-    balance?.formatPolymarketBalance(tokenSymbol = tokenSymbol) ?: DASH_SIGN
+private fun PaymentSourceUM.balanceLabel(): String = balance.formatPolymarketBalance(tokenSymbol = tokenSymbol)

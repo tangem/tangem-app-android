@@ -19,6 +19,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.arrow.core)
+    implementation(deps.moshi)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
@@ -33,7 +34,7 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)

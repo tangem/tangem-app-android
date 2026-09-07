@@ -74,22 +74,20 @@ private fun MarketCard(state: PolymarketDetailsMarketUM, modifier: Modifier = Mo
                         overflow = TextOverflow.Ellipsis,
                     )
 
-                    state.volume?.let { volume ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                text = stringResourceSafe(R.string.prediction_details_market_volume),
-                                color = TangemTheme.colors3.text.secondary,
-                                style = TangemTheme.typography3.caption.medium,
-                                maxLines = 1,
-                            )
-                            Text(
-                                text = volume.resolveReference(),
-                                color = TangemTheme.colors3.text.primary,
-                                style = TangemTheme.typography3.caption.medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResourceSafe(R.string.prediction_details_market_volume),
+                            color = TangemTheme.colors3.text.secondary,
+                            style = TangemTheme.typography3.caption.medium,
+                            maxLines = 1,
+                        )
+                        Text(
+                            text = state.volume.resolveReference(),
+                            color = TangemTheme.colors3.text.primary,
+                            style = TangemTheme.typography3.caption.medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
 

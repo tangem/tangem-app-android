@@ -360,11 +360,16 @@ include(":features:kyc:api")
 include(":features:kyc:impl")
 include(":features:kyc:mock")
 
+include(":features:tangempay:common-ui")
+
 include(":features:tangempay:main:api")
 include(":features:tangempay:main:impl")
 
 include(":features:tangempay:details:api")
 include(":features:tangempay:details:impl")
+
+include(":features:tangempay:eligibility:api")
+include(":features:tangempay:eligibility:impl")
 
 include(":features:tangempay:onboarding")
 include(":features:tangempay:onboarding:api")
