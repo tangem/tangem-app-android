@@ -1,11 +1,10 @@
 package com.tangem.data.common.currency
 
 import com.tangem.data.common.api.safeApiCall
-import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -28,7 +27,7 @@ class UserTokensSaver(
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
     private val walletServerBinder: WalletServerBinder,
     private val pushTokensRetryerPool: RetryerPool,
-    private val eTagsStore: ETagsStore,
+    private val walletAccountsETags: WalletAccountsETags,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) {
 
@@ -114,7 +113,7 @@ class UserTokensSaver(
         )
 
         if (apiResponse is ApiResponse.Success) {
-            refreshETagAfterWrite(userWalletId = userWalletId, apiResponse = apiResponse)
+            refreshETag(userWalletId = userWalletId, apiResponse = apiResponse)
         }
 
         return apiResponse
@@ -128,7 +127,7 @@ class UserTokensSaver(
         safeApiCall(
             call = {
                 val accountsResponse = tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
-                storeETagIfPresent(userWalletId = userWalletId, apiResponse = accountsResponse)
+                storeETag(userWalletId = userWalletId, apiResponse = accountsResponse)
 
                 // The raw response carries no accountId on the tokens — it is implied by the owning account,
                 // the same way DefaultWalletAccountsFetcher enriches it after every GET
@@ -137,9 +136,11 @@ class UserTokensSaver(
                     account.tokens.orEmpty().map { token -> token.copy(accountId = account.id) }
                 } + fresh.unassignedTokens
 
-                val pushedKeys = response.tokens.map { it.toIdentityKey() }.toSet()
+                // Token.equals compares the identity fields (network, derivation, contract), which is exactly
+                // the dedup key here: our push stays authoritative, remote-only tokens are appended
+                val pushedTokens = response.tokens.toSet()
                 val merged = response.copy(
-                    tokens = response.tokens + remoteTokens.filterNot { it.toIdentityKey() in pushedKeys },
+                    tokens = response.tokens + remoteTokens.filterNot { it in pushedTokens },
                 )
 
                 saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
@@ -154,37 +155,19 @@ class UserTokensSaver(
     private suspend fun getETagOrNull(userWalletId: UserWalletId): String? {
         if (!jointAccountFeatureToggles.isJointAccountEnabled) return null
 
-        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+        return walletAccountsETags.getSyncOrNull(userWalletId = userWalletId)
     }
 
-    /**
-     * A successful write bumps the wallet's tokens version, so the stored ETag is refreshed from the response.
-     * A response without the header would leave a knowingly stale ETag behind — every next write would 412 —
-     * so the stored value is dropped instead: the next `GET /accounts` restores it.
-     */
-    private suspend fun refreshETagAfterWrite(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+    private suspend fun refreshETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
         if (!jointAccountFeatureToggles.isJointAccountEnabled) return
 
-        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
-
-        if (eTag != null) {
-            eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
-        } else {
-            eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
-        }
+        walletAccountsETags.refresh(userWalletId = userWalletId, apiResponse = apiResponse)
     }
 
-    /** A read invalidates nothing: a response without the header keeps the stored ETag, as the accounts fetcher does */
-    private suspend fun storeETagIfPresent(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+    private suspend fun storeETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
         if (!jointAccountFeatureToggles.isJointAccountEnabled) return
 
-        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull() ?: return
-
-        eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
-    }
-
-    private fun UserTokensResponse.Token.toIdentityKey(): List<Any?> {
-        return listOf(id, accountId, networkId, derivationPath, contractAddress)
+        walletAccountsETags.store(userWalletId = userWalletId, apiResponse = apiResponse)
     }
 
     /**
