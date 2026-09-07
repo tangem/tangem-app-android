@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchListState
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.features.collectibles.impl.discovery.createBatchListState
 import com.tangem.features.collectibles.impl.discovery.createMachine
