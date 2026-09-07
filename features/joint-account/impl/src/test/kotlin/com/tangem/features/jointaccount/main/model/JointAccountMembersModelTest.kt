@@ -5,10 +5,15 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -17,6 +22,7 @@ import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
@@ -29,6 +35,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -61,6 +68,7 @@ internal class JointAccountMembersModelTest {
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
+    private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
 
     @BeforeEach
@@ -74,6 +82,7 @@ internal class JointAccountMembersModelTest {
             getInvitesUseCase,
             singleAccountSupplier,
             activateUseCase,
+            archiveCryptoPortfolioUseCase,
             userWalletsListRepository,
         )
         val coldWallet = mockk<UserWallet.Cold> {
@@ -97,6 +106,37 @@ internal class JointAccountMembersModelTest {
         assertThat(own.avatar.monogram).isEqualTo("I")
         assertThat(state.otherMembersLabel).isNotNull()
     }
+
+    @Test
+    fun `GIVEN creator on invite mode WHEN model created THEN title share-safely and archive are shown`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+
+        // Act
+        val state = createModel().uiState.value
+
+        // Assert
+        assertThat(state.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_title))
+        assertThat(state.shareSafely).isNotNull()
+        assertThat(state.canArchive).isTrue()
+    }
+
+    @Test
+    fun `GIVEN non-creator member on a pending account WHEN model created THEN waiting title with no share-safely or archive`() =
+        runTest {
+            // Arrange
+            stub(account = pendingAccount(members = listOf(creator, member)), invites = emptyList())
+
+            // Act
+            val state = createModel().uiState.value
+
+            // Assert
+            assertThat(state.title).isEqualTo(
+                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_title),
+            )
+            assertThat(state.shareSafely).isNull()
+            assertThat(state.canArchive).isFalse()
+        }
 
     @Test
     fun `GIVEN invites on this device WHEN model created THEN every free slot offers its own invite`() = runTest {
@@ -419,6 +459,83 @@ internal class JointAccountMembersModelTest {
         )
     }
 
+    @Test
+    fun `GIVEN creator confirms archive WHEN it succeeds THEN account is archived and screen closes`() = runTest {
+        // Arrange
+        val expectedAccountId = stubForArchive()
+        coEvery { archiveCryptoPortfolioUseCase(expectedAccountId) } returns Unit.right()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onArchiveClick()
+        confirmArchiveDialog().firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { archiveCryptoPortfolioUseCase(expectedAccountId) }
+        val sentMessages = mutableListOf<UiMessage>()
+        verify { uiMessageSender.send(capture(sentMessages)) }
+        assertThat(sentMessages.filterIsInstance<ToastMessage>()).isNotEmpty()
+        verify(exactly = 1) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN archive fails with active referral status WHEN archived THEN referral dialog is shown`() = runTest {
+        // Arrange
+        stubForArchive()
+        coEvery { archiveCryptoPortfolioUseCase(any()) } returns
+            ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus.left()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onArchiveClick()
+        confirmArchiveDialog().firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val sentMessages = mutableListOf<UiMessage>()
+        verify { uiMessageSender.send(capture(sentMessages)) }
+        val errorDialog = sentMessages.filterIsInstance<DialogMessage>().last()
+        assertThat(errorDialog.title).isEqualTo(
+            resourceReference(CoreUiR.string.account_could_not_archive_referral_program_title),
+        )
+    }
+
+    @Test
+    fun `GIVEN archive fails otherwise WHEN archived THEN generic error dialog is shown`() = runTest {
+        // Arrange
+        stubForArchive()
+        coEvery { archiveCryptoPortfolioUseCase(any()) } returns
+            ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed(cause = RuntimeException("boom")).left()
+        val model = createModel()
+
+        // Act
+        model.uiState.value.onArchiveClick()
+        confirmArchiveDialog().firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val sentMessages = mutableListOf<UiMessage>()
+        verify { uiMessageSender.send(capture(sentMessages)) }
+        val errorDialog = sentMessages.filterIsInstance<DialogMessage>().last()
+        assertThat(errorDialog.title).isEqualTo(resourceReference(CoreUiR.string.common_something_went_wrong))
+    }
+
+    /** Captures the confirmation [DialogMessage] sent so far by [JointAccountMembersModel.onArchiveClick]. */
+    private fun confirmArchiveDialog(): DialogMessage {
+        val slot = slot<UiMessage>()
+        verify { uiMessageSender.send(capture(slot)) }
+        return slot.captured as DialogMessage
+    }
+
+    /** Stubs a creator-owned pending account; returns its resolved [AccountId] for the archive use case. */
+    private fun stubForArchive(): AccountId {
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+
+        return AccountId.forJointAccount(userWalletId = USER_WALLET_ID, value = ACCOUNT_ID)
+            .getOrNull()!!
+    }
+
     private fun stub(account: JointAccount, invites: List<String>) {
         every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(listOf(account))
         coEvery { getInvitesUseCase(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID) } returns invites
@@ -436,12 +553,13 @@ internal class JointAccountMembersModelTest {
 
     private fun TestScope.createModel(
         mode: JointAccountMembersComponent.Mode = JointAccountMembersComponent.Mode.Invite,
+        cryptoAccountId: String = ACCOUNT_ID,
     ): JointAccountMembersModel {
         val model = JointAccountMembersModel(
             paramsContainer = MutableParamsContainer(
                 JointAccountMembersComponent.Params(
                     userWalletId = USER_WALLET_ID,
-                    cryptoAccountId = ACCOUNT_ID,
+                    cryptoAccountId = cryptoAccountId,
                     mode = mode,
                 ),
             ),
@@ -454,6 +572,7 @@ internal class JointAccountMembersModelTest {
             getJointAccountInvitesUseCase = getInvitesUseCase,
             singleAccountSupplier = singleAccountSupplier,
             activateJointAccountUseCase = activateUseCase,
+            archiveCryptoPortfolioUseCase = archiveCryptoPortfolioUseCase,
             userWalletsListRepository = userWalletsListRepository,
             stateController = JointAccountMembersStateController(),
         )
