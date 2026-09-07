@@ -27,18 +27,27 @@ internal class EllipticCurveDerivationSupportTest {
         provideSecpModels() +
         provideBlsModels()
 
-    private fun provideEd25519Models() = listOf(
-        // region ed25519-family require a fully-hardened path
+    private fun provideEd25519Models() = provideEd25519Slip0010Models() + provideIkarusEd25519Models()
+
+    private fun provideEd25519Slip0010Models() = listOf(
+        // region ed25519_slip0010 requires a fully-hardened path
         // Algorand default path — fully hardened
-        TestModel(curve = EllipticCurve.Ed25519, derivationPath = "m/44'/283'/0'/0'/0'", expected = true),
         TestModel(curve = EllipticCurve.Ed25519Slip0010, derivationPath = "m/44'/283'/0'/0'/0'", expected = true),
-        // The reported bug: Algorand (ed25519) + ApeChain/EVM path with non-hardened tail
-        TestModel(curve = EllipticCurve.Ed25519, derivationPath = "m/44'/60'/0'/0/0", expected = false),
-        TestModel(curve = EllipticCurve.Ed25519Slip0010, derivationPath = "m/44'/60'/0'/0/0", expected = false),
         // Solana default path — fully hardened
         TestModel(curve = EllipticCurve.Ed25519Slip0010, derivationPath = "m/44'/501'/0'/0'", expected = true),
+        // Algorand + an EVM path with a non-hardened tail
+        TestModel(curve = EllipticCurve.Ed25519Slip0010, derivationPath = "m/44'/60'/0'/0/0", expected = false),
         // A single non-hardened node is enough to make it unsupported
-        TestModel(curve = EllipticCurve.Ed25519, derivationPath = "m/44'/283'/0'/0'/0", expected = false),
+        TestModel(curve = EllipticCurve.Ed25519Slip0010, derivationPath = "m/44'/283'/0'/0'/0", expected = false),
+        // endregion
+    )
+
+    private fun provideIkarusEd25519Models() = listOf(
+        // region ed25519 (Ikarus / BIP32-Ed25519) accepts non-hardened nodes as well
+        // Cardano default path — CIP-1852, with a non-hardened change and index
+        TestModel(curve = EllipticCurve.Ed25519, derivationPath = "m/1852'/1815'/0'/0/0", expected = true),
+        TestModel(curve = EllipticCurve.Ed25519, derivationPath = "m/44'/283'/0'/0'/0'", expected = true),
+        TestModel(curve = EllipticCurve.Ed25519, derivationPath = "m/44'/60'/0'/0/0", expected = true),
         // endregion
     )
 
