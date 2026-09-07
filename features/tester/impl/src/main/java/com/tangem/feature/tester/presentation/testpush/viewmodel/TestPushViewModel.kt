@@ -22,7 +22,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
-import com.tangem.utils.notifications.TestPushEmitter
+import com.tangem.features.tester.api.TestPushEmitter
 import com.tangem.utils.transformer.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
