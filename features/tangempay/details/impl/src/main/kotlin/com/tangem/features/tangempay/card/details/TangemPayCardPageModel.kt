@@ -570,6 +570,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             TangemPayCardNavigation.ReissuePlasticCard(
                 userWalletId = userWalletId,
                 sourceProductInstanceId = card.productInstanceId,
+                sourceCardId = card.id,
             )
         } else {
             TangemPayCardNavigation.ReissueCard(cardId = selectedCardId.value)
@@ -577,12 +578,17 @@ internal class TangemPayCardPageModel @Inject constructor(
         bottomSheetNavigation.activate(navigation)
     }
 
-    fun onReplacePlasticCardConfirmed(sourceProductInstanceId: String, deliveryEtaMaxBusinessDays: Int) {
+    fun onReplacePlasticCardConfirmed(
+        sourceProductInstanceId: String,
+        sourceCardId: String,
+        deliveryEtaMaxBusinessDays: Int,
+    ) {
         bottomSheetNavigation.dismiss()
         router.push(
             TangemPayAccountDetailsInnerRoute.OrderCard(
                 intent = TangemPayOrderCardIntent.ReissuePlastic(
                     sourceProductInstanceId = sourceProductInstanceId,
+                    sourceCardId = sourceCardId,
                     deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
                 ),
             ),

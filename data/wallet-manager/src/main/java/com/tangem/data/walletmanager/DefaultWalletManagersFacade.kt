@@ -6,6 +6,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.ethereum.ExternalAddressBalanceProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.blockchains.tron.TronAccountActivationProvider
 import com.tangem.blockchain.blockchains.tron.gasless.TronGaslessTransactionSigner
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
@@ -28,11 +29,11 @@ import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.data.walletmanager.utils.*
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.assets.loadMap
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.store.WalletManagersStore
+import com.tangem.data.walletmanager.utils.*
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
@@ -321,6 +322,16 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
             emptySet()
         }
+
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = currency.network,
+        )
+
+        requireNotNull(walletManager) {
+            "Unable to get a wallet manager for blockchain: ${currency.network}"
+        }
+
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
@@ -329,9 +340,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
+                    currency = currency,
+                    networkTokens = walletManager.cardTokens.toSet(),
                 ).convertList(itemsResult.data.items),
             )
-            is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
+            is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
         }
     }
 
@@ -592,6 +605,19 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             is Result.Failure -> null
         }
     }
+
+    override suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean =
+        withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+                ?: return@withContext false
+
+            if (walletManager !is TronAccountActivationProvider) return@withContext false
+
+            when (val result = walletManager.isAccountActivated()) {
+                is Result.Success -> result.data
+                is Result.Failure -> false
+            }
+        }
 
     override suspend fun isSwapSpenderAllowed(
         userWalletId: UserWalletId,

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -40,9 +41,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -103,6 +105,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
         rotateCardY = rotateCardY,
         zAxisDistance = zAxisDistance,
         shouldShowDetails = shouldShowDetails,
+        flipProgress = rotateCardY / 180f,
         backgroundImageUrl = state.cardBackgroundImageUrl,
         modifier = modifier,
         front = { TangemPayCardDetailsHiddenBlock(state = state) },
@@ -259,6 +262,7 @@ private fun CardBgWrapper(
     rotateCardY: Float,
     zAxisDistance: Float,
     shouldShowDetails: Boolean,
+    flipProgress: Float,
     backgroundImageUrl: String?,
     modifier: Modifier = Modifier,
     back: @Composable () -> Unit,
@@ -267,7 +271,6 @@ private fun CardBgWrapper(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(CARD_ASPECT_RATIO)
             .graphicsLayer {
                 rotationY = rotateCardY
                 cameraDistance = zAxisDistance
@@ -280,36 +283,85 @@ private fun CardBgWrapper(
             )
             .background(CardBackgroundColor),
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .zIndex(if (shouldShowDetails) 0f else 1f)
-                .graphicsLayer { alpha = if (shouldShowDetails) 0f else 1f },
-        ) { front() }
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .zIndex(if (shouldShowDetails) 1f else 0f)
-                .graphicsLayer { alpha = if (shouldShowDetails) 1f else 0f },
-        ) {
-            AsyncImage(
-                modifier = Modifier
-                    .matchParentSize()
-                    .graphicsLayer { rotationY = 180f },
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(backgroundImageUrl)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.img_tangem_pay_details_placeholder),
-                error = painterResource(R.drawable.img_tangem_pay_details_placeholder),
-                fallback = painterResource(R.drawable.img_tangem_pay_details_placeholder),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-            )
-            back()
+        CardSidesLayout(
+            modifier = Modifier.fillMaxWidth(),
+            placeBackOnTop = shouldShowDetails,
+            flipProgress = flipProgress,
+            front = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = if (shouldShowDetails) 0f else 1f },
+                ) { front() }
+            },
+            back = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = if (shouldShowDetails) 1f else 0f },
+                ) {
+                    AsyncImage(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .graphicsLayer { rotationY = 180f },
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(backgroundImageUrl)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                        error = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                        fallback = painterResource(R.drawable.img_tangem_pay_details_placeholder),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                    )
+                    back()
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun CardSidesLayout(
+    placeBackOnTop: Boolean,
+    flipProgress: Float,
+    modifier: Modifier = Modifier,
+    back: @Composable () -> Unit,
+    front: @Composable () -> Unit,
+) {
+    SubcomposeLayout(modifier) { constraints ->
+        val width = constraints.maxWidth
+        val frontHeight = if (width == Constraints.Infinity) {
+            0
+        } else {
+            (width / CARD_ASPECT_RATIO).roundToInt()
+        }
+        val progress = flipProgress.coerceIn(0f, 1f)
+        val flippedHeight = if (progress == 0f) {
+            frontHeight
+        } else {
+            val squeezedConstraints = constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity)
+            val backSqueezedHeight = subcompose(CardSide.BackMeasure, back)
+                .maxOfOrNull { it.measure(squeezedConstraints).height } ?: 0
+            maxOf(frontHeight, backSqueezedHeight)
+        }
+        val height = lerp(frontHeight, flippedHeight, progress)
+
+        val sideConstraints = constraints.copy(minHeight = height, maxHeight = height)
+        val frontPlaceables = subcompose(CardSide.Front, front).map { it.measure(sideConstraints) }
+        val backPlaceables = subcompose(CardSide.Back, back).map { it.measure(sideConstraints) }
+        layout(width, height) {
+            val ordered = if (placeBackOnTop) {
+                frontPlaceables + backPlaceables
+            } else {
+                backPlaceables + frontPlaceables
+            }
+            ordered.forEach { it.place(0, 0) }
         }
     }
 }
+
+private enum class CardSide { BackMeasure, Front, Back }
 
 @Composable
 private fun CardTopBlock(modifier: Modifier = Modifier) {
@@ -523,13 +575,11 @@ private fun TangemPayCardDetailsShownBlock(
 
 private object CardDetailsArrangement : Arrangement.Vertical {
 
-    override val spacing: Dp = DetailsFieldSpacing
-
     override fun Density.arrange(totalSize: Int, sizes: IntArray, outPositions: IntArray) {
         if (sizes.isEmpty()) return
         val gapCount = sizes.lastIndex.coerceAtLeast(1)
         val freeSpace = totalSize - sizes.sum()
-        val squeezedGap = (freeSpace.toFloat() / gapCount).coerceIn(0f, spacing.toPx())
+        val squeezedGap = (freeSpace.toFloat() / gapCount).coerceIn(0f, DetailsFieldSpacing.toPx())
 
         var offset = 0f
         sizes.forEachIndexed { index, size ->

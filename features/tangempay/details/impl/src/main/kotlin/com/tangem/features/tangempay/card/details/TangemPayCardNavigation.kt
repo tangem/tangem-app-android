@@ -23,6 +23,7 @@ internal sealed class TangemPayCardNavigation {
     data class ReissuePlasticCard(
         val userWalletId: UserWalletId,
         val sourceProductInstanceId: String,
+        val sourceCardId: String,
     ) : TangemPayCardNavigation()
 
     @Serializable
