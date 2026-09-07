@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -28,7 +29,7 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(TangemTheme.colors3.bg.opaque.primary),
-        onClick = option.onClick,
+        onClick = if (option.isLoading) null else option.onClick,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { OptionIcon(iconRes = option.iconRes) },
         titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },
@@ -40,12 +41,16 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
             )
         },
         endSlot = {
-            Icon(
-                modifier = Modifier.size(24.dp),
-                painter = painterResource(id = CoreUiR.drawable.ic_chevron_right_24),
-                contentDescription = null,
-                tint = TangemTheme.colors3.icon.secondary,
-            )
+            if (option.isLoading) {
+                TangemLoader(color = TangemTheme.colors3.icon.secondary)
+            } else {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = CoreUiR.drawable.ic_chevron_right_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.secondary,
+                )
+            }
         },
     )
 }
