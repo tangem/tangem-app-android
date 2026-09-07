@@ -40,7 +40,7 @@ internal class GetPolymarketDepositTargetInteractorTest {
     )
 
     private val polygonUsdc = PolymarketBridgeAsset(
-        chainId = 137,
+        chainId = "137",
         chainName = "Polygon",
         tokenSymbol = "USDC",
         tokenAddress = "0x3c49",
@@ -74,7 +74,7 @@ internal class GetPolymarketDepositTargetInteractorTest {
     fun `GIVEN polygon usdc is not accepted WHEN invoked THEN no address is issued`() = runTest {
         // Arrange
         coEvery { bridgeRepository.getSupportedAssets() } returns Either.Right(
-            listOf(polygonUsdc.copy(chainId = 8453, chainName = "Base")),
+            listOf(polygonUsdc.copy(chainId = "8453", chainName = "Base")),
         )
 
         // Act
