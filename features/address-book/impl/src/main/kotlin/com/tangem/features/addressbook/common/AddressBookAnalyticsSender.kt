@@ -98,17 +98,10 @@ internal class AddressBookAnalyticsSender @Inject constructor(
         }
     }
 
-    fun sendAddContactTapped(fromSendSuccess: Boolean, scope: CoroutineScope) {
+    fun sendAddContactTapped(source: AddressBookEvents.AddContactTapped.Source, scope: CoroutineScope) {
         scope.launch(dispatcherProvider.default) {
             analyticsEventHandler.send(
-                AddressBookEvents.AddContactTapped(
-                    walletId = selectedWalletId(),
-                    source = if (fromSendSuccess) {
-                        AddressBookEvents.AddContactTapped.Source.SendSuccess
-                    } else {
-                        AddressBookEvents.AddContactTapped.Source.Settings
-                    },
-                ),
+                AddressBookEvents.AddContactTapped(walletId = selectedWalletId(), source = source),
             )
         }
     }
