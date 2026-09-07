@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.test.core.ProvideTestModels
 import java.math.BigDecimal
 
@@ -163,7 +164,7 @@ internal class DefaultMarketsTokenRepositoryTest {
             // Arrange
             val response = marketCategoriesResponse(categories = listOf(marketCategoryDto(id = "layer-2")))
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(response)
 
             // Act
@@ -191,7 +192,7 @@ internal class DefaultMarketsTokenRepositoryTest {
                 volume24h = null,
             )
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse(categories = listOf(dto)))
 
             // Act
@@ -214,7 +215,7 @@ internal class DefaultMarketsTokenRepositoryTest {
             // Arrange — the api sends -1.52 meaning -1.52%, while the domain carries fractions like TokenQuotesShort
             val dto = marketCategoryDto(marketCapChange24h = BigDecimal("-1.52"))
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse(categories = listOf(dto)))
 
             // Act
@@ -229,7 +230,7 @@ internal class DefaultMarketsTokenRepositoryTest {
             // Arrange — the api returns "" and null interchangeably for a missing description
             val dto = marketCategoryDto(description = "   ")
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse(categories = listOf(dto)))
 
             // Act
@@ -243,7 +244,7 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN paging arguments WHEN getMarketCategories THEN they are forwarded to the api`() = runTest {
             // Arrange
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse())
 
             // Act
@@ -272,7 +273,7 @@ internal class DefaultMarketsTokenRepositoryTest {
             // Arrange — a single-value store cannot hold more than one page, and expiry is disabled project-wide,
             // so caching this endpoint would make every page after the first unreachable
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse())
 
             // Act
@@ -285,7 +286,7 @@ internal class DefaultMarketsTokenRepositoryTest {
         @Test
         fun `GIVEN api error WHEN getMarketCategories THEN the error propagates`() = runTest {
             // Arrange — the method is deliberately not total; the Either boundary lives in the use case
-            coEvery { marketsApi.getMarketCategories(any(), any(), any(), any(), any()) } returns networkError()
+            coEvery { marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any()) } returns networkError()
 
             // Act
             val error = runCatching {
@@ -311,12 +312,12 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN two pages WHEN flow reloaded and load more THEN both batches are emitted in order`() = runTest {
             // Arrange
             coEvery {
-                marketsApi.getMarketCategories(any(), offset = 0, any(), any(), any())
+                marketsApi.getMarketCategories(any(), offset = 0, any(), any(), any(), any())
             } returns ApiResponse.Success(
                 marketCategoriesResponse(categories = listOf(marketCategoryDto(id = "first")), limit = 1),
             )
             coEvery {
-                marketsApi.getMarketCategories(any(), offset = 1, any(), any(), any())
+                marketsApi.getMarketCategories(any(), offset = 1, any(), any(), any(), any())
             } returns ApiResponse.Success(
                 marketCategoriesResponse(categories = listOf(marketCategoryDto(id = "second")), offset = 1, limit = 1),
             )
@@ -345,7 +346,7 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN a config WHEN flow reloaded THEN currency featured and timestamp reach the api`() = runTest {
             // Arrange
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse())
             val actions = MutableSharedFlow<BatchAction<Int, MarketCategoryListConfig, Nothing>>(replay = 1)
             val sourceScope = testSourceScope()
@@ -375,6 +376,7 @@ internal class DefaultMarketsTokenRepositoryTest {
                     limit = 7,
                     timestamp = 1754838000000L,
                     featured = true,
+                    search = null,
                 )
             }
             assertThat(batchFlow.state.value.data).hasSize(1)
@@ -388,7 +390,7 @@ internal class DefaultMarketsTokenRepositoryTest {
         ) = runTest {
             // Arrange — a tri-state filter: no param at all means "every category"
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse())
             val actions = MutableSharedFlow<BatchAction<Int, MarketCategoryListConfig, Nothing>>(replay = 1)
             val sourceScope = testSourceScope()
@@ -404,7 +406,7 @@ internal class DefaultMarketsTokenRepositoryTest {
 
             // Assert
             coVerify(exactly = 1) {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), featured = model.expected)
+                marketsApi.getMarketCategories(any(), any(), any(), any(), featured = model.expected, search = any())
             }
             sourceScope.cancel()
         }
@@ -413,7 +415,7 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN every page pinned to one snapshot WHEN paging THEN the timestamp does not change`() = runTest {
             // Arrange — the backend issues no snapshot token to echo, so the config carries it for the whole listing
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(
                 marketCategoriesResponse(categories = listOf(marketCategoryDto()), limit = 1),
             )
@@ -434,7 +436,7 @@ internal class DefaultMarketsTokenRepositoryTest {
             // Assert
             assertThat(batchFlow.state.value.data).hasSize(2)
             coVerify(exactly = 2) {
-                marketsApi.getMarketCategories(any(), any(), any(), timestamp = 1754838000000L, any())
+                marketsApi.getMarketCategories(any(), any(), any(), timestamp = 1754838000000L, any(), any())
             }
         }
 
@@ -442,7 +444,7 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN a short page WHEN flow reloaded THEN pagination ends`() = runTest {
             // Arrange — fewer items than requested is the only end-of-list signal the backend gives
             coEvery {
-                marketsApi.getMarketCategories(any(), any(), any(), any(), any())
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
             } returns ApiResponse.Success(
                 marketCategoriesResponse(categories = listOf(marketCategoryDto()), limit = 20),
             )
@@ -467,12 +469,12 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN a past-the-end page WHEN load more THEN the empty batch is not appended`() = runTest {
             // Arrange — offset beyond total answers 200 with an empty list, not an error
             coEvery {
-                marketsApi.getMarketCategories(any(), offset = 0, any(), any(), any())
+                marketsApi.getMarketCategories(any(), offset = 0, any(), any(), any(), any())
             } returns ApiResponse.Success(
                 marketCategoriesResponse(categories = listOf(marketCategoryDto()), limit = 1),
             )
             coEvery {
-                marketsApi.getMarketCategories(any(), offset = 1, any(), any(), any())
+                marketsApi.getMarketCategories(any(), offset = 1, any(), any(), any(), any())
             } returns ApiResponse.Success(marketCategoriesResponse(categories = emptyList(), offset = 1, limit = 1))
             val actions = MutableSharedFlow<BatchAction<Int, MarketCategoryListConfig, Nothing>>(replay = 1)
             val sourceScope = testSourceScope()
@@ -493,10 +495,73 @@ internal class DefaultMarketsTokenRepositoryTest {
             sourceScope.cancel()
         }
 
+        @ParameterizedTest
+        @MethodSource("provideSearchTextModels")
+        fun `GIVEN a search text WHEN flow reloaded THEN it reaches the api normalized`(model: SearchTextModel) =
+            runTest {
+                // Arrange — a blank query is no query: it must not narrow the listing to nothing
+                coEvery {
+                    marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
+                } returns ApiResponse.Success(marketCategoriesResponse())
+                val actions = MutableSharedFlow<BatchAction<Int, MarketCategoryListConfig, Nothing>>(replay = 1)
+                val sourceScope = testSourceScope()
+                repository.getMarketCategoryListFlow(
+                    batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                    firstBatchSize = 20,
+                    nextBatchSize = 20,
+                )
+
+                // Act
+                actions.emit(BatchAction.Reload(requestParams = usdConfig.copy(searchText = model.searchText)))
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    marketsApi.getMarketCategories(any(), any(), any(), any(), any(), search = model.expected)
+                }
+                sourceScope.cancel()
+            }
+
+        @Test
+        fun `GIVEN a search text WHEN the next page is loaded THEN it still carries the query`() = runTest {
+            // Arrange
+            coEvery {
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any())
+            } returns ApiResponse.Success(
+                marketCategoriesResponse(categories = listOf(marketCategoryDto()), limit = 1),
+            )
+            val actions = MutableSharedFlow<BatchAction<Int, MarketCategoryListConfig, Nothing>>(replay = 1)
+            val sourceScope = testSourceScope()
+            repository.getMarketCategoryListFlow(
+                batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                firstBatchSize = 1,
+                nextBatchSize = 1,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = usdConfig.copy(searchText = "meme")))
+            advanceUntilIdle()
+            actions.emit(BatchAction.LoadMore())
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) {
+                marketsApi.getMarketCategories(any(), any(), any(), any(), any(), search = "meme")
+            }
+            sourceScope.cancel()
+        }
+
+        private fun provideSearchTextModels() = listOf(
+            SearchTextModel(searchText = "meme", expected = "meme"),
+            SearchTextModel(searchText = null, expected = null),
+            SearchTextModel(searchText = "", expected = null),
+            SearchTextModel(searchText = "   ", expected = null),
+        )
+
         @Test
         fun `GIVEN a failing first page WHEN flow reloaded THEN the error is reported without a retry`() = runTest {
             // Arrange — unlike the token list this fetcher does not retryOnError, so a dead network surfaces
-            coEvery { marketsApi.getMarketCategories(any(), any(), any(), any(), any()) } returns networkError()
+            coEvery { marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any()) } returns networkError()
             val actions = MutableSharedFlow<BatchAction<Int, MarketCategoryListConfig, Nothing>>(replay = 1)
             val sourceScope = testSourceScope()
             val batchFlow = repository.getMarketCategoryListFlow(
@@ -514,7 +579,7 @@ internal class DefaultMarketsTokenRepositoryTest {
             assertThat(status).isInstanceOf(PaginationStatus.InitialLoadingError::class.java)
             assertThat((status as PaginationStatus.InitialLoadingError).throwable)
                 .isInstanceOf(ApiResponseError.NetworkException::class.java)
-            coVerify(exactly = 1) { marketsApi.getMarketCategories(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 1) { marketsApi.getMarketCategories(any(), any(), any(), any(), any(), any()) }
             sourceScope.cancel()
         }
     }
@@ -698,6 +763,8 @@ internal class DefaultMarketsTokenRepositoryTest {
         val filter: MarketCategoryListConfig.FeaturedFilter,
         val expected: Boolean?,
     )
+
+    internal data class SearchTextModel(val searchText: String?, val expected: String?)
 
     private fun marketCategoriesResponse(
         categories: List<MarketCategoriesResponse.Category> = listOf(marketCategoryDto()),
