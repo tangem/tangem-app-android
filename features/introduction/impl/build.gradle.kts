@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.card)
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.common)
@@ -51,6 +52,7 @@ dependencies {
 
     /** SDK */
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
 
     /** Other */
     implementation(deps.androidx.annotation)
