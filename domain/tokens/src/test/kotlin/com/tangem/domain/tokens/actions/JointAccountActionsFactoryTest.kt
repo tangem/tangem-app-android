@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
@@ -34,7 +35,11 @@ internal class JointAccountActionsFactoryTest {
         val status = statusWithAddress(SAFE)
 
         // Act
-        val actual = factory.create(userWallet = userWallet, cryptoCurrencyStatus = status)
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
 
         // Assert
         assertThat(actual).containsExactly(
@@ -60,13 +65,50 @@ internal class JointAccountActionsFactoryTest {
         val status = statusWithAddress(address = null)
 
         // Act
-        val actual = factory.create(userWallet = userWallet, cryptoCurrencyStatus = status)
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
 
         // Assert
         assertThat(actual.filterIsInstance<ActionState.Receive>()).isEmpty()
         assertThat(actual.filterIsInstance<ActionState.CopyAddress>()).isEmpty()
         assertThat(actual.filterIsInstance<ActionState.Send>().single().unavailabilityReason)
             .isEqualTo(ScenarioUnavailabilityReason.JointAccount)
+    }
+
+    @Test
+    fun `GIVEN yield supply available WHEN create THEN the yield button is disabled rather than hidden`() = runTest {
+        // Arrange
+        val status = statusWithAddress(SAFE)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            yieldSupplyAvailability = YieldSupplyAvailability.Available(apy = APY),
+        )
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.YieldMode>().single())
+            .isEqualTo(ActionState.YieldMode(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount, apy = APY))
+    }
+
+    @Test
+    fun `GIVEN yield supply unavailable WHEN create THEN there is no yield button at all`() = runTest {
+        // Arrange
+        val status = statusWithAddress(SAFE)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.YieldMode>()).isEmpty()
     }
 
     private fun statusWithAddress(address: String?): CryptoCurrencyStatus {
@@ -83,5 +125,6 @@ internal class JointAccountActionsFactoryTest {
 
     private companion object {
         const val SAFE = "0x5afe000000000000000000000000000000000001"
+        const val APY = "4.2%"
     }
 }
