@@ -58,6 +58,7 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization.core)
+    implementation(deps.jodatime)
     implementation(deps.arrow.core)
     implementation(deps.compose.coil)
     implementation(deps.lifecycle.compose)
