@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountJoinError
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
@@ -46,9 +47,20 @@ internal class JointAccountJoinModel @Inject constructor(
             memberName = memberName,
         ).fold(
             ifLeft = ::handleErrorAction,
-            ifRight = { account ->
-                JoinResultAction.OpenMembers(userWalletId = walletId, cryptoAccountId = account.cryptoAccountId)
+            ifRight = {
+                showAccountAdded()
+                JoinResultAction.CloseFlow
             },
+        )
+    }
+
+    /** The join confirmation, shown over whatever screen the closed flow returns the user to */
+    private fun showAccountAdded() {
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(CoreUiR.string.account_create_success_message),
+                startIconId = CoreUiR.drawable.ic_success_20,
+            ),
         )
     }
 
