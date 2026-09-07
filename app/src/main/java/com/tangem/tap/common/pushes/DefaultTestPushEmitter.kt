@@ -3,7 +3,7 @@ package com.tangem.tap.common.pushes
 import android.os.Bundle
 import com.google.firebase.messaging.RemoteMessage
 import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.utils.notifications.TestPushEmitter
+import com.tangem.features.tester.api.TestPushEmitter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
