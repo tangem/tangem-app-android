@@ -10,24 +10,26 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -54,8 +56,10 @@ import org.junit.jupiter.api.TestInstance
 import com.tangem.core.ui.R as CoreUiR
 
 /**
- * The members screen reads the account from the domain and takes its right to invite and activate from the
- * invites this device holds — only the creating device ever gets them.
+ * Mapping the account onto the screen (title/progress/members/activation offered or not) is covered by
+ * [com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverterTest]. This suite only
+ * covers what the Model itself does: switching between the account-present and account-cleared state,
+ * wiring callbacks into their side effects, activation signing, and archiving.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -93,23 +97,7 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN creator with two free slots WHEN model created THEN own role and progress of the account`() = runTest {
-        // Arrange
-        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A, INVITE_B))
-
-        // Act
-        val state = createModel().uiState.value
-
-        // Assert
-        assertThat(state.members).hasSize(THREE_SLOTS)
-        val own = state.members.first() as JointAccountMembersUM.MemberUM.Joined
-        assertThat(own.name).isEqualTo(stringReference(CREATOR_NAME))
-        assertThat(own.avatar.monogram).isEqualTo("I")
-        assertThat(state.otherMembersLabel).isNotNull()
-    }
-
-    @Test
-    fun `GIVEN creator on invite mode WHEN model created THEN title share-safely and archive are shown`() = runTest {
+    fun `GIVEN account for this wallet WHEN model created THEN state is built from it`() = runTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
 
@@ -117,150 +105,45 @@ internal class JointAccountMembersModelTest {
         val state = createModel().uiState.value
 
         // Assert
-        assertThat(state.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_title))
-        assertThat(state.shareSafely).isNotNull()
-        assertThat(state.canArchive).isTrue()
+        assertThat(state.header).isNotNull()
+        assertThat(state.joined).isNotEmpty()
     }
 
     @Test
-    fun `GIVEN non-creator member on a pending account WHEN model created THEN waiting title with no share-safely or archive`() =
-        runTest {
-            // Arrange
-            stub(account = pendingAccount(members = listOf(creator, member)), invites = emptyList())
-
-            // Act
-            val state = createModel().uiState.value
-
-            // Assert
-            assertThat(state.title).isEqualTo(
-                resourceReference(CoreUiR.string.joint_account_invite_members_waiting_title),
-            )
-            assertThat(state.shareSafely).isNull()
-            assertThat(state.canArchive).isFalse()
-        }
-
-    @Test
-    fun `GIVEN invites on this device WHEN model created THEN every free slot offers its own invite`() = runTest {
+    fun `GIVEN another wallet's account in the list WHEN model created THEN it is ignored`() = runTest {
         // Arrange
-        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A, INVITE_B))
+        val other = pendingAccount(members = listOf(member)).copy(cryptoAccountId = OTHER_ACCOUNT_ID)
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(listOf(other))
+        coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
 
         // Act
-        val slots = createModel().uiState.value.members
-            .filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
+        val state = createModel().uiState.value
 
         // Assert
-        assertThat(slots.map { it.canInvite }).containsExactly(true, true)
-
-        // Act
-        slots.forEach { it.onInviteClick() }
-
-        // Assert
-        verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
-        verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_B") }
+        assertThat(state.header).isNull()
+        assertThat(state.joined).isEmpty()
     }
 
     @Test
-    fun `GIVEN member redeemed a later invite WHEN model created THEN free slot offers the unredeemed one`() =
-        runTest {
-            // Arrange
-            stub(
-                account = pendingAccount(members = listOf(creator, member.copy(inviteId = INVITE_B))),
-                invites = listOf(INVITE_A, INVITE_B),
-            )
-
-            // Act
-            val slot = createModel().uiState.value.members
-                .filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
-                .single()
-            slot.onInviteClick()
-
-            // Assert
-            verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
-            verify(exactly = 0) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_B") }
-        }
-
-    @Test
-    fun `GIVEN redeemed invite differs in case WHEN model created THEN it is still excluded`() = runTest {
+    fun `GIVEN free slot with an invite WHEN slot invite clicked THEN the link is shared`() = runTest {
         // Arrange
-        stub(
-            account = pendingAccount(members = listOf(creator, member.copy(inviteId = INVITE_B.uppercase()))),
-            invites = listOf(INVITE_A, INVITE_B),
-        )
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
 
         // Act
-        val slot = createModel().uiState.value.members
-            .filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
-            .single()
+        val slot = createModel().uiState.value.freeSlots.first()
         slot.onInviteClick()
 
         // Assert
         verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
-        verify(exactly = 0) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_B") }
     }
 
-    @Test
-    fun `GIVEN no invites on this device WHEN model created THEN no slot can be invited`() = runTest {
-        // Arrange
-        stub(account = pendingAccount(members = listOf(creator)), invites = emptyList())
-
-        // Act
-        val slots = createModel().uiState.value.members
-            .filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
-
-        // Assert
-        assertThat(slots.map { it.canInvite }).containsExactly(false, false)
-
-        // Act
-        slots.forEach { it.onInviteClick() }
-
-        // Assert
-        verify(exactly = 0) { shareManager.shareText(any()) }
-    }
-
-    @Test
-    fun `GIVEN pending account of the creator WHEN model created THEN activation is not offered yet`() = runTest {
-        // Arrange
-        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
-
-        // Act
-        val state = createModel().uiState.value
-
-        // Assert
-        assertThat(state.activation).isNull()
-    }
-
-    @Test
-    fun `GIVEN confirming account of the creator WHEN model created THEN activation is offered`() = runTest {
-        // Arrange
+    private fun stubConfirmingAccount() {
         stub(
             account = pendingAccount(members = listOf(creator, member)).copy(
                 status = JointAccount.Status.CONFIRMING,
             ),
             invites = listOf(INVITE_A),
         )
-
-        // Act
-        val state = createModel().uiState.value
-
-        // Assert
-        assertThat(state.activation).isNotNull()
-    }
-
-    @Test
-    fun `GIVEN confirming account without invites WHEN model created THEN activation is not offered`() = runTest {
-        // Arrange
-        stub(
-            account = pendingAccount(members = listOf(creator, member)).copy(
-                status = JointAccount.Status.CONFIRMING,
-            ),
-            invites = emptyList(),
-        )
-
-        // Act
-        val state = createModel().uiState.value
-
-        // Assert
-        assertThat(state.activation).isNull()
     }
 
     @Test
@@ -273,13 +156,13 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.activation!!.onActivateClick()
-        val confirmation = model.uiState.value.activation!!.confirmation!!
-        confirmation.onConfirmClick()
+        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        model.uiState.value.onActivateClick!!()
+        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
         // Assert
-        assertThat(confirmation.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
+        assertThat(openedConfirmations.first()!!.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
         coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
         val message = slot<SnackbarMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
@@ -287,7 +170,7 @@ internal class JointAccountMembersModelTest {
             .isEqualTo(resourceReference(CoreUiR.string.joint_account_activated_snackbar))
         assertThat(message.captured.startIconId).isEqualTo(CoreUiR.drawable.ic_success_20)
         verify(exactly = 1) { router.pop() }
-        assertThat(model.uiState.value.activation?.confirmation).isNull()
+        assertThat(openedConfirmations.last()).isNull()
     }
 
     @Test
@@ -301,10 +184,11 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.activation!!.onActivateClick()
+        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        model.uiState.value.onActivateClick!!()
 
         // Assert
-        assertThat(model.uiState.value.activation!!.confirmation!!.walletInteractionIconRes).isNull()
+        assertThat(openedConfirmations.last()!!.walletInteractionIconRes).isNull()
     }
 
     @Test
@@ -320,18 +204,19 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.activation!!.onActivateClick()
-        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        model.uiState.value.onActivateClick!!()
+        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         runCurrent()
 
         // Assert
-        assertThat(model.uiState.value.activation!!.confirmation!!.isConfirming).isTrue()
+        assertThat(model.isConfirmingActivation.value).isTrue()
 
         // Act
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.activation?.confirmation).isNull()
+        assertThat(openedConfirmations.last()).isNull()
     }
 
     @Test
@@ -348,23 +233,24 @@ internal class JointAccountMembersModelTest {
 
             // Act — confirm, dismiss the sheet mid-flight, reopen it and confirm again
             val model = createModel()
-            model.uiState.value.activation!!.onActivateClick()
-            model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+            val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+            model.uiState.value.onActivateClick!!()
+            model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
             runCurrent()
-            model.uiState.value.activation!!.confirmation!!.onCancelClick()
-            model.uiState.value.activation!!.onActivateClick()
-            model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+            model.activationConfirmationNavigation.dismiss()
+            model.uiState.value.onActivateClick!!()
+            model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.activation!!.confirmation!!.isConfirming).isTrue()
+            assertThat(model.isConfirmingActivation.value).isTrue()
 
             // Act
             advanceUntilIdle()
 
             // Assert
             coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
-            assertThat(model.uiState.value.activation?.confirmation).isNull()
+            assertThat(openedConfirmations.last()).isNull()
         }
 
     @Test
@@ -377,8 +263,8 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.activation!!.onActivateClick()
-        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        model.uiState.value.onActivateClick!!()
+        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
         // Assert
@@ -397,8 +283,8 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.activation!!.onActivateClick()
-        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        model.uiState.value.onActivateClick!!()
+        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
         // Assert
@@ -413,8 +299,8 @@ internal class JointAccountMembersModelTest {
 
         // Act
         val model = createModel()
-        model.uiState.value.activation!!.onActivateClick()
-        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        model.uiState.value.onActivateClick!!()
+        model.onConfirmActivationClick(cryptoAccountId = ACCOUNT_ID)
         advanceUntilIdle()
 
         // Assert
@@ -423,46 +309,32 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN reference mode WHEN model created THEN neither inviting nor activation nor archiving`() = runTest {
+    fun `GIVEN confirmation open WHEN the resolved account changes identity THEN the sheet is dropped`() = runTest {
         // Arrange
-        stub(
-            account = pendingAccount(members = listOf(creator, member)).copy(
-                status = JointAccount.Status.CONFIRMING,
-            ),
-            invites = listOf(INVITE_A),
+        val accountsFlow = MutableStateFlow(
+            listOf(pendingAccount(members = listOf(creator, member)).copy(status = JointAccount.Status.CONFIRMING)),
         )
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns accountsFlow
+        coEvery { getInvitesUseCase(any(), any()) } returns listOf(INVITE_A)
 
-        // Act
-        val state = createModel(mode = JointAccountMembersComponent.Mode.Reference).uiState.value
+        val model = createModel(cryptoAccountId = null)
+        val openedConfirmations = model.activationConfirmationNavigation.trackSlot()
+        model.uiState.value.onActivateClick!!()
+        assertThat(openedConfirmations.last()).isNotNull()
+
+        // Act — a different account now resolves first
+        accountsFlow.value = listOf(pendingAccount(members = listOf(creator)).copy(cryptoAccountId = OTHER_ACCOUNT_ID))
+        advanceUntilIdle()
 
         // Assert
-        assertThat(state.activation).isNull()
-        assertThat(state.canArchive).isFalse()
-        val slots = state.members.filterIsInstance<JointAccountMembersUM.MemberUM.FreeSlot>()
-        assertThat(slots.map { it.canInvite }).doesNotContain(true)
+        assertThat(openedConfirmations.last()).isNull()
     }
 
-    @Test
-    fun `GIVEN another wallet's account in the list WHEN model created THEN it is ignored`() = runTest {
-        // Arrange
-        val other = pendingAccount(members = listOf(member)).copy(cryptoAccountId = OTHER_ACCOUNT_ID)
-        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(listOf(other))
-        coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
-
-        // Act
-        val state = createModel().uiState.value
-
-        // Assert
-        assertThat(state.members).isEmpty()
-    }
-
-    private fun stubConfirmingAccount() {
-        stub(
-            account = pendingAccount(members = listOf(creator, member)).copy(
-                status = JointAccount.Status.CONFIRMING,
-            ),
-            invites = listOf(INVITE_A),
-        )
+    /** Mirrors what a real `childSlot` would track, since bare [SlotNavigation] only relays events. */
+    private fun SlotNavigation<ActivationConfirmationConfig>.trackSlot(): List<ActivationConfirmationConfig?> {
+        val tracked = mutableListOf<ActivationConfirmationConfig?>()
+        subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
+        return tracked
     }
 
     @Test
@@ -473,7 +345,7 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.onArchiveClick()
+        model.dismissibleTopBar().onArchiveClick()
         confirmArchiveDialog().firstAction.onClick()
         advanceUntilIdle()
 
@@ -494,7 +366,7 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.onArchiveClick()
+        model.dismissibleTopBar().onArchiveClick()
         confirmArchiveDialog().firstAction.onClick()
         advanceUntilIdle()
 
@@ -516,7 +388,7 @@ internal class JointAccountMembersModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.onArchiveClick()
+        model.dismissibleTopBar().onArchiveClick()
         confirmArchiveDialog().firstAction.onClick()
         advanceUntilIdle()
 
@@ -527,7 +399,10 @@ internal class JointAccountMembersModelTest {
         assertThat(errorDialog.title).isEqualTo(resourceReference(CoreUiR.string.common_something_went_wrong))
     }
 
-    /** Captures the confirmation [DialogMessage] sent so far by [JointAccountMembersModel.onArchiveClick]. */
+    private fun JointAccountMembersModel.dismissibleTopBar() =
+        uiState.value.topBar as JointAccountMembersUM.TopBarUM.Dismissible
+
+    /** Captures the confirmation [DialogMessage] sent so far by [JointAccountMembersModel]'s archive click. */
     private fun confirmArchiveDialog(): DialogMessage {
         val slot = slot<UiMessage>()
         verify { uiMessageSender.send(capture(slot)) }
@@ -557,16 +432,12 @@ internal class JointAccountMembersModelTest {
         source = StatusSource.ACTUAL,
     )
 
-    private fun TestScope.createModel(
-        mode: JointAccountMembersComponent.Mode = JointAccountMembersComponent.Mode.Invite,
-        cryptoAccountId: String = ACCOUNT_ID,
-    ): JointAccountMembersModel {
+    private fun TestScope.createModel(cryptoAccountId: String? = ACCOUNT_ID): JointAccountMembersModel {
         val model = JointAccountMembersModel(
             paramsContainer = MutableParamsContainer(
                 JointAccountMembersComponent.Params(
                     userWalletId = USER_WALLET_ID,
                     cryptoAccountId = cryptoAccountId,
-                    mode = mode,
                 ),
             ),
             dispatchers = createTestingCoroutineDispatcherProvider(),
@@ -602,14 +473,12 @@ internal class JointAccountMembersModelTest {
         val USER_WALLET_ID = UserWalletId("011")
         val ACCOUNT_ID = "a1".repeat(n = 32)
         val OTHER_ACCOUNT_ID = "b2".repeat(n = 32)
-        const val CREATOR_NAME = "Ivan"
         const val THREE_SLOTS = 3
         const val INVITE_A = "invite-a"
-        const val INVITE_B = "invite-b"
         const val INVITE_LINK_PREFIX = "https://tangem.com/joint-account/join/"
 
         val creator = JointAccount.Member(
-            name = CREATOR_NAME,
+            name = "Ivan",
             address = "0xC0FFEE",
             role = JointAccount.Role.CREATOR,
         )
