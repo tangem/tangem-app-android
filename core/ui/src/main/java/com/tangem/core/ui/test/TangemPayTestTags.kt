@@ -100,5 +100,19 @@ object TangemPayTestTags {
     const val DAILY_LIMIT_SUCCESS_TITLE = "TANGEM_PAY_DAILY_LIMIT_SUCCESS_TITLE"
     const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
 
+    // Bank transfer (virtual account) deposit bottom sheet
+    const val VA_DEPOSIT_SHOW_DETAILS_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SHOW_DETAILS_BUTTON"
+    const val VA_DEPOSIT_FEE_ERROR_BANNER = "TANGEM_PAY_VA_DEPOSIT_FEE_ERROR_BANNER"
+
+    // Virtual account order success screen
+    const val VA_DEPOSIT_SUCCESS_TITLE = "TANGEM_PAY_VA_DEPOSIT_SUCCESS_TITLE"
+    const val VA_DEPOSIT_SUCCESS_CLOSE_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SUCCESS_CLOSE_BUTTON"
+
     fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
+
+    /** [feeType] is the backend fee type, e.g. `ACH_ONRAMP`. */
+    fun vaDepositFeeTitle(feeType: String): String = "TANGEM_PAY_VA_DEPOSIT_FEE_TITLE_$feeType"
+
+    /** [feeType] is the backend fee type, e.g. `ACH_ONRAMP`. */
+    fun vaDepositFeeValue(feeType: String): String = "TANGEM_PAY_VA_DEPOSIT_FEE_VALUE_$feeType"
 }
