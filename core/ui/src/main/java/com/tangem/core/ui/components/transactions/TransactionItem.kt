@@ -318,6 +318,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
         }
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
+        is ContentSubtitle.Contact -> ContactSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
     }
@@ -471,6 +472,49 @@ private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Sta
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
     )
+}
+
+/**
+ * Address-book counterparty subtitle: "to: {avatar} {contact name}", with the avatar drawn as a 16dp circle — the shape
+ * contacts carry everywhere else in the app, unlike the rounded square of an own account.
+ */
+@Composable
+private fun ContactSubtitle(subtitle: ContentSubtitle.Contact, status: Status, modifier: Modifier = Modifier) {
+    val isFailed = status is Status.Failed
+    val avatar = subtitle.avatar
+    InlineImageSubtitle(
+        template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.contactName),
+        color = TangemTheme.colors3.text.secondary,
+        afterIconColor = if (isFailed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    ) {
+        val avatarColor = when (avatar) {
+            is ContentSubtitle.ContactAvatar.Monogram -> avatar.color
+            is ContentSubtitle.ContactAvatar.Resource -> avatar.color
+        }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(if (isFailed) TangemTheme.colors3.bg.disabled else avatarColor),
+        ) {
+            when (avatar) {
+                is ContentSubtitle.ContactAvatar.Monogram -> Text(
+                    text = avatar.char.uppercase(),
+                    color = TangemTheme.colors3.text.staticDark.primary,
+                    style = TangemTheme.typography2.captionMedium11,
+                )
+                is ContentSubtitle.ContactAvatar.Resource -> Icon(
+                    imageVector = ImageVector.vectorResource(id = avatar.resId),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.staticDark,
+                    modifier = Modifier.size(10.dp),
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -671,6 +715,56 @@ private fun Preview_TransactionItem_Send() {
                     title = "Sending failed",
                     subtitle = "to: 33BdfS...ga2B",
                     amount = "350.31",
+                ),
+            ),
+        )
+    }
+}
+
+@Suppress("MagicNumber")
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_Send_Contact() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                TransactionItemUM.Content(
+                    txHash = "snd-contact",
+                    amount = "-350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Confirmed,
+                    direction = Direction.OUTGOING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+                    title = stringReference("Sent"),
+                    subtitle = ContentSubtitle.Contact(
+                        direction = ContentSubtitle.Direction.TO,
+                        contactName = "Binance",
+                        avatar = ContentSubtitle.ContactAvatar.Monogram(char = 'B', color = Color(0xFF007FFF)),
+                    ),
+                    timestamp = 0L,
+                ),
+                TransactionItemUM.Content(
+                    txHash = "snd-contact-icon",
+                    amount = "-350.31",
+                    currencySymbol = "USDT",
+                    time = "",
+                    status = Status.Failed,
+                    direction = Direction.OUTGOING,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_cross_20),
+                    title = stringReference("Sending failed"),
+                    subtitle = ContentSubtitle.Contact(
+                        direction = ContentSubtitle.Direction.TO,
+                        contactName = "Mom",
+                        avatar = ContentSubtitle.ContactAvatar.Resource(
+                            resId = R.drawable.ic_user_24,
+                            color = Color(0xFF32CB77),
+                        ),
+                    ),
+                    timestamp = 0L,
                 ),
             ),
         )

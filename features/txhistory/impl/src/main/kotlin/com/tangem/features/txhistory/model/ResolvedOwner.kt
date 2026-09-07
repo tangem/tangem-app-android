@@ -1,5 +1,6 @@
 package com.tangem.features.txhistory.model
 
+import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -9,7 +10,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 /**
  * The owner that a transfer counterparty resolves to, before it is mapped to a UI model. Shared by the history list
  * (subtitle) and the details screen (leg owner) so both apply the same precedence:
- * account (accounts mode on) → wallet (accounts mode off) → external address.
+ * account (accounts mode on) → wallet (accounts mode off) → saved contact → external address.
  */
 internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
@@ -21,6 +22,8 @@ internal sealed interface ResolvedOwner {
         val address: String
     }
 
+    /** A foreign address saved in an address book — named after [contact] instead of shown as an address. */
+    data class SavedContact(val contact: Contact, override val address: String) : Foreign
     data class External(override val address: String) : Foreign
 }
 
@@ -63,6 +66,32 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
         account is Account.Payment -> ResolvedOwner.OwnPaymentAccount(account)
         else -> ResolvedOwner.External(address)
     }
+}
+
+/**
+ * Resolves a transfer counterparty [address] the way it is displayed: [resolveOwner] first, and — for an **outgoing**
+ * transfer whose recipient is none of the user's own portfolios — the address books, so a saved recipient reads as its
+ * contact name instead of an address.
+ *
+ * Contacts are matched for outgoing transfers only: an incoming transfer's sender keeps showing its address. The
+ * cross-network fallback of [resolveOwner] has no counterpart here either — an address book entry is always bound to a
+ * concrete network, so [networkRawId] `null` stays external.
+ */
+internal fun TxHistoryLookupContext.resolveCounterparty(
+    address: String,
+    networkRawId: Network.RawID?,
+    isOutgoing: Boolean,
+): ResolvedOwner {
+    val owner = resolveOwner(address, networkRawId)
+    if (owner !is ResolvedOwner.External || !isOutgoing || networkRawId == null) return owner
+
+    val contact = contacts.resolve(
+        networkId = networkRawId,
+        address = address,
+        preferredWalletId = viewedWalletId,
+    ) ?: return owner
+
+    return ResolvedOwner.SavedContact(contact = contact, address = address)
 }
 
 /**
