@@ -50,8 +50,11 @@ internal class JointAccountActionsFactory(
                 }
             }
 
-            // A personal account always offers Send, so the joint one always holds it back
-            ActionState.Send(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount).active()
+            val naturalSend = getSendUnavailabilityReason(
+                userWalletId = userWallet.walletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            )
+            addHeldBack(natural = naturalSend) { ActionState.Send(unavailabilityReason = it) }
 
             val naturalSwap = createSwapAction(
                 userWallet = userWallet,
