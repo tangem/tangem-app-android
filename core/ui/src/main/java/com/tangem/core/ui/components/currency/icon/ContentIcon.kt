@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountResIcon
@@ -23,6 +24,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 internal fun ContentIcon(
     icon: CurrencyIconState,
+    iconSize: Dp,
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
@@ -34,6 +36,7 @@ internal fun ContentIcon(
             fallbackResId = icon.fallbackResId,
             alpha = alpha,
             colorFilter = colorFilter,
+            iconSize = iconSize,
         )
         is CurrencyIconState.FiatIcon -> CoinIcon(
             modifier = modifier,
@@ -41,10 +44,12 @@ internal fun ContentIcon(
             fallbackResId = icon.fallbackResId,
             alpha = alpha,
             colorFilter = colorFilter,
+            iconSize = iconSize,
         )
         is CurrencyIconState.TokenIcon -> TokenIcon(
             modifier = modifier,
             url = icon.url,
+            iconSize = iconSize,
             alpha = alpha,
             colorFilter = colorFilter,
             errorIcon = {
@@ -82,6 +87,10 @@ internal fun ContentIcon(
     }
 }
 
+/**
+ * @param iconSize rendered size of the icon; also used as the image request size, so the bitmap is decoded
+ * at the resolution it is displayed at instead of being upscaled from a smaller one.
+ */
 @Composable
 fun CoinIcon(
     url: String?,
@@ -89,12 +98,13 @@ fun CoinIcon(
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
+    iconSize: Dp = TangemTheme.dimens.size36,
 ) {
     val iconData: Any = if (url.isNullOrBlank()) fallbackResId else url
 
     DefaultCurrencyIcon(
         iconData = iconData,
-        size = TangemTheme.dimens.size36,
+        size = iconSize,
         alpha = alpha,
         colorFilter = colorFilter,
         errorIcon = {
@@ -112,6 +122,7 @@ fun CoinIcon(
 @Composable
 private fun TokenIcon(
     url: String?,
+    iconSize: Dp,
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
@@ -122,7 +133,7 @@ private fun TokenIcon(
     } else {
         DefaultCurrencyIcon(
             iconData = url,
-            size = TangemTheme.dimens.size36,
+            size = iconSize,
             alpha = alpha,
             colorFilter = colorFilter,
             errorIcon = errorIcon,

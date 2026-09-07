@@ -130,6 +130,7 @@ internal class DefaultCustomerOrderRepositoryTest {
                         customerWalletAddress = WALLET_ADDRESS,
                         specificationName = null,
                         type = "CARD_REISSUE_PLASTIC_RAIN",
+                        embossName = "JOHNNY SILVERHAND",
                         sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
                         shippingAddress = OrderRequest.ShippingAddress(
                             firstName = "Johnny",
@@ -166,6 +167,7 @@ internal class DefaultCustomerOrderRepositoryTest {
         assertThat(data.keys().asSequence().toList()).containsExactly(
             "customer_wallet_address",
             "type",
+            "emboss_name",
             "source_product_instance_id",
             "shipping_address",
         )
@@ -213,19 +215,20 @@ internal class DefaultCustomerOrderRepositoryTest {
         requestHelper = requestHelper,
     )
 
-    private fun plasticCardOrder(line2: String? = "Apt. 56") = PlasticCardOrder(
-        embossName = "JOHNNY SILVERHAND",
-        shippingAddress = ShippingAddress(
-            firstName = "Johnny",
-            lastName = "Silverhand",
-            region = "California",
-            city = "Night City",
-            line1 = "Crescent st. 24",
-            line2 = line2,
-            postalCode = "90210",
-            phone = "+12345678901",
-        ),
-    )
+    private fun plasticCardOrder(line2: String? = "Apt. 56") =
+        PlasticCardOrder(
+            embossName = "JOHNNY SILVERHAND",
+            shippingAddress = ShippingAddress(
+                firstName = "Johnny",
+                lastName = "Silverhand",
+                region = "California",
+                city = "Night City",
+                line1 = "Crescent st. 24",
+                line2 = line2,
+                postalCode = "90210",
+                phone = "+12345678901",
+            ),
+        )
 
     private fun orderResponse() = OrderResponse(
         result = OrderResponse.Result(

@@ -129,6 +129,7 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                         customerWalletAddress = walletAddress,
                         specificationName = null,
                         type = OrderType.CARD_REISSUE_PLASTIC_RAIN.wireValue,
+                        embossName = order.embossName,
                         sourceProductInstanceId = sourceProductInstanceId,
                         shippingAddress = ShippingAddressRequestConverter.convert(order.shippingAddress),
                     ),
