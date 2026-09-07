@@ -158,5 +158,9 @@
     {
         "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_16842_TANGEM_PAY_BANK_OFFRAMP_ENABLED",
+        "version": "undefined"
     }
 ]
