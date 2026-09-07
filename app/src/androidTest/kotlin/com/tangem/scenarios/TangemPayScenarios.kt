@@ -16,6 +16,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.extractText
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -24,6 +25,9 @@ import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
+
+/** A fiat balance rendered with a currency symbol and two decimals, e.g. `$1,234.00`. */
+private val FIAT_BALANCE_REGEX = """^\D\d[\d,]*\.\d{2}$""".toRegex()
 
 fun BaseTestCase.openTangemPay() {
     // Existing customer: callers set the `tangem_pay_eligibility` scenario to PaeraCustomer (in
@@ -143,6 +147,86 @@ fun BaseTestCase.assertTangemPayTransactionCardField(cardNumber: String, cardNam
                 cardFieldTitle.assertIsDisplayed()
                 cardFieldValue(cardNumber).assertIsDisplayed()
                 cardFieldValue(cardName).assertIsDisplayed()
+            }
+        }
+    }
+}
+
+/** Asserts the payment-account elements that are on screen while the transaction history is empty. */
+fun BaseTestCase.assertTangemPayEmptyPaymentAccountElements() {
+    step("Assert 'Payment account' title and 'Multinetwork' subtitle are displayed") {
+        onTangemPayMainScreen {
+            paymentAccountTitle.assertIsDisplayed()
+            multinetworkSubtitle.assertIsDisplayed()
+        }
+    }
+    step("Assert the balance is a fiat amount with two decimals") {
+        var balanceText = ""
+        // The screen first paints a dash for the not-yet-loaded balance, so the format is awaited.
+        awaitSuccess {
+            onTangemPayMainScreen { balanceText = balance.extractText() }
+            if (!FIAT_BALANCE_REGEX.matches(balanceText)) {
+                throw AssertionError("Balance should be formatted as \$X.XX, but was '$balanceText'")
+            }
+        }
+    }
+    step("Assert card and 'Add card' buttons are displayed") {
+        onTangemPayMainScreen {
+            cardButton.assertIsDisplayed()
+            addCardButton.assertIsDisplayed()
+        }
+    }
+    step("Assert 'Add funds' and 'Withdraw' buttons are displayed") {
+        onTangemPayMainScreen {
+            topUpButton.assertIsDisplayed()
+            withdrawButton.assertIsDisplayed()
+        }
+    }
+    step("Assert empty transaction history state is displayed") {
+        awaitSuccess {
+            onTangemPayMainScreen {
+                scrollToHistoryStateBlock()
+                emptyHistoryIcon.assertIsDisplayed()
+                emptyHistoryText.assertIsDisplayed()
+            }
+        }
+    }
+}
+
+/** On the open transaction details sheet, asserts the fields every spend transaction shows. */
+fun BaseTestCase.assertTangemPaySpendDetails(
+    expectedDate: String,
+    expectedMerchant: String,
+    expectedCategory: String,
+    expectedAmount: String,
+) {
+    step("Assert 'Purchase' title, '$expectedDate' date and category icon are displayed") {
+        onTangemPayTransactionDetailsSheet {
+            purchaseTitle.assertIsDisplayed()
+            date(expectedDate).assertIsDisplayed()
+            transactionIcon.assertIsDisplayed()
+        }
+    }
+    step("Assert '$expectedMerchant', '$expectedCategory' and '$expectedAmount' are displayed") {
+        onTangemPayTransactionDetailsSheet {
+            merchantName(expectedMerchant).assertIsDisplayed()
+            category(expectedCategory).assertIsDisplayed()
+            amount.assertTextContainsSafe(expectedAmount, substring = true)
+        }
+    }
+    step("Assert 'Get help' button is displayed") {
+        onTangemPayTransactionDetailsSheet { getHelpButton.assertIsDisplayed() }
+    }
+}
+
+/** On the open transaction details sheet, asserts the Card field failed to load. */
+fun BaseTestCase.assertTangemPayTransactionCardFieldError() {
+    step("Assert 'Card' field shows the 'Error loading' state") {
+        // The error lands with the failing single-transaction request, after the sheet opens.
+        awaitSuccess {
+            onTangemPayTransactionDetailsSheet {
+                cardFieldTitle.assertIsDisplayed()
+                cardFieldErrorText.assertIsDisplayed()
             }
         }
     }
