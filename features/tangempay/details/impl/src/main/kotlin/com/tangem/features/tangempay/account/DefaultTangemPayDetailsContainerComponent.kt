@@ -28,6 +28,7 @@ import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
+import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
@@ -152,6 +153,12 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayOrderCardComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
                 intent = config.intent,
+            ),
+        )
+        TangemPayAccountDetailsInnerRoute.WithdrawHub -> TangemPayWithdrawHubComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayWithdrawHubComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
             ),
         )
     }
