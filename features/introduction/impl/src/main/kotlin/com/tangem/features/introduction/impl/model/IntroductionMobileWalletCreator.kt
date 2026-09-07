@@ -42,7 +42,7 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
                 onFailed()
             },
             ifRight = {
-                val referralId = runSuspendCatching { appsFlyerRepository.getConversionData()?.refcode }.getOrNull()
+                val referralId = readReferralId()
                 analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = source))
                 analyticsEventHandler.send(
                     OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
@@ -57,6 +57,11 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
             },
         )
     }
+
+    private suspend fun readReferralId(): String? =
+        runSuspendCatching { appsFlyerRepository.getConversionData()?.refcode }
+            .onFailure { error -> TangemLogger.e("Failed to read the referral of the created mobile wallet", error) }
+            .getOrNull()
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12

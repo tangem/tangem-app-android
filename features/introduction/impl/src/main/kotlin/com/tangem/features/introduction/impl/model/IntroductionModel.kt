@@ -184,14 +184,15 @@ internal class IntroductionModel @Inject constructor(
                 iconRes = CoreUiR.drawable.ic_tangem_24,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_hardware_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_hardware_description),
+                isEnabled = !isCreatingMobileWallet,
                 onClick = ::onTangemCardOrRingClick,
             ),
             seedPhrase = WalletOptionUM(
                 iconRes = CoreUiR.drawable.ic_seed_phrase_24,
                 title = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_title),
                 description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
-                onClick = ::onCreateSeedPhraseWalletClick,
                 isLoading = isCreatingMobileWallet,
+                onClick = ::onCreateSeedPhraseWalletClick,
             ),
         ),
     )
@@ -319,7 +320,7 @@ internal class IntroductionModel @Inject constructor(
 
     private fun onCreateSeedPhraseWalletClick() {
         if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
-        // Released only when creation fails: a saved wallet installs its own context in place of this one.
+        // Released only if no wallet gets saved: a saved wallet installs its own context in place of this one.
         trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(
             OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
@@ -346,14 +347,8 @@ internal class IntroductionModel @Inject constructor(
     private fun setMobileWalletCreating(isCreating: Boolean) {
         isCreatingMobileWallet = isCreating
         uiState.update { state ->
-            val config = state.bottomSheetConfig
-            val content = config?.content as? CreateWalletUM
-            if (config == null || content == null) {
-                state
-            } else {
-                val seedPhrase = content.seedPhrase.copy(isLoading = isCreating)
-                state.copy(bottomSheetConfig = config.copy(content = content.copy(seedPhrase = seedPhrase)))
-            }
+            val config = state.bottomSheetConfig?.let { createWalletBottomSheetConfig().copy(isShown = it.isShown) }
+            state.copy(bottomSheetConfig = config)
         }
     }
 
