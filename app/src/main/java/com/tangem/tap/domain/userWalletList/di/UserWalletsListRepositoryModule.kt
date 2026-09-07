@@ -118,14 +118,13 @@ internal object UserWalletsListRepositoryModule {
         )
     }
 
+    // Do NOT replace this with the shared @SdkMoshi. That instance pulls in getTangemSdkAdapters(), which
+    // hex-encodes ByteArrays and lowercases enum names. This Moshi persists wallet info to secure storage in
+    // the reflection format (byte arrays as int lists, exact enum names), so switching would make every
+    // existing user's stored wallet list unreadable after an update.
     private fun buildMoshi(): Moshi {
         return Moshi.Builder()
-            .add(WalletDerivedKeysMapAdapter())
-            .add(ScanResponseDerivedKeysMapAdapter())
-            .add(ByteArrayKeyAdapter())
-            .add(ExtendedPublicKeysMapAdapter())
-            .add(CardBackupStatusAdapter())
-            .add(DerivationPathAdapterWithMigration())
+            .addScanResponseAdapters()
             .add(TangemSdkAdapter.DateAdapter())
             .add(TangemSdkAdapter.DerivationNodeAdapter())
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
