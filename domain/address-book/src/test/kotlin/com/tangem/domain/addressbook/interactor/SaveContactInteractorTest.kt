@@ -62,7 +62,7 @@ internal class SaveContactInteractorTest {
             // Arrange
             stubValidName(name = "Alice")
             val signatures = listOf(byteArrayOf(0x01, 0xAB.toByte()))
-            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(userWallet)) } returns
+            coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = eq(userWallet)) } returns
                 signatures.right()
             val saved = slot<Contact>()
             coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
@@ -130,7 +130,7 @@ internal class SaveContactInteractorTest {
             // Assert
             assertThat(result.getOrNull()).isEqualTo(saved.captured)
             assertThat(saved.captured.addresses).isEmpty()
-            coVerify(exactly = 0) { signUseCase(any<List<ByteArray>>(), any(), any()) }
+            coVerify(exactly = 0) { signUseCase(any<List<ByteArray>>(), any<ByteArray>(), any()) }
         }
 
         @Test
@@ -156,7 +156,7 @@ internal class SaveContactInteractorTest {
         fun `GIVEN signUseCase fails WHEN createContact THEN propagates Signing error without persisting`() = runTest {
             // Arrange
             stubValidName(name = "Alice")
-            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = any()) } returns
+            coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = any()) } returns
                 SignHashesError.SigningFailed(message = "canceled").left()
 
             // Act
@@ -202,7 +202,7 @@ internal class SaveContactInteractorTest {
         fun `GIVEN backend rejects the save WHEN createContact THEN Backend error is propagated`() = runTest {
             // Arrange
             stubValidName(name = "Alice")
-            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = any()) } returns
+            coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = any()) } returns
                 listOf(byteArrayOf(0x01)).right()
             coEvery { repository.saveContact(any()) } returns AddressBookSyncError.Conflict.left()
 
@@ -232,7 +232,7 @@ internal class SaveContactInteractorTest {
                 // Arrange
                 val existing = contact(name = "Alice")
                 val signatures = listOf(byteArrayOf(0x01, 0xAB.toByte()))
-                coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(userWallet)) } returns
+                coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = eq(userWallet)) } returns
                     signatures.right()
                 val saved = slot<Contact>()
                 coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
@@ -261,7 +261,7 @@ internal class SaveContactInteractorTest {
         @Test
         fun `GIVEN signUseCase fails WHEN updateContact THEN propagates Signing error without persisting`() = runTest {
             // Arrange
-            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = any()) } returns
+            coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = any()) } returns
                 SignHashesError.NoSigningKey.left()
 
             // Act
@@ -311,7 +311,7 @@ internal class SaveContactInteractorTest {
             val existing = contact(name = "Alice")
             coEvery { contactNameValidator.validate(targetWallet.walletId, "Alice") } returns
                 requireNotNull(ContactName("Alice").getOrNull()).right()
-            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(targetWallet)) } returns
+            coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = eq(targetWallet)) } returns
                 listOf(byteArrayOf(0x01)).right()
             val saved = slot<Contact>()
             coEvery { repository.saveContact(capture(saved)) } returns Unit.right()
@@ -363,7 +363,7 @@ internal class SaveContactInteractorTest {
             val existing = contact(name = "Alice")
             coEvery { contactNameValidator.validate(targetWallet.walletId, "Alice") } returns
                 requireNotNull(ContactName("Alice").getOrNull()).right()
-            coEvery { signUseCase(hashes = any(), publicKey = any(), userWallet = eq(targetWallet)) } returns
+            coEvery { signUseCase(hashes = any(), publicKey = any<ByteArray>(), userWallet = eq(targetWallet)) } returns
                 listOf(byteArrayOf(0x01)).right()
             coEvery { repository.saveContact(any()) } returns Unit.right()
             coEvery { repository.deleteContact(existing.id) } returns AddressBookSyncError.Network.left()
