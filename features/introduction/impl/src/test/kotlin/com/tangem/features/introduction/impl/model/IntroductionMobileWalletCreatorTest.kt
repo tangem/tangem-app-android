@@ -29,7 +29,9 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class IntroductionMobileWalletCreatorTest {
 
     private val createHotWalletUseCase: CreateHotWalletUseCase = mockk()
@@ -61,7 +63,9 @@ internal class IntroductionMobileWalletCreatorTest {
     fun `GIVEN the wallet is created WHEN invoked THEN the funnel is reported and the wallet opens`() = runTest {
         // Arrange
         val wallet: UserWallet.Hot = mockk()
-        coEvery { createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12) } returns wallet.right()
+        coEvery {
+            createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12)
+        } returns wallet.right()
 
         // Act
         creator.createAndOpen(source = SOURCE, onFailed = onFailed)
@@ -73,6 +77,7 @@ internal class IntroductionMobileWalletCreatorTest {
             walletCreated(referralId = null),
         ).inOrder()
         verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+        verify { messageSender wasNot Called }
         verify { onFailed wasNot Called }
     }
 
@@ -95,7 +100,9 @@ internal class IntroductionMobileWalletCreatorTest {
     fun `GIVEN a referral WHEN the wallet is created THEN the referral id is reported`() = runTest {
         // Arrange
         coEvery { createHotWalletUseCase(any(), any()) } returns mockk<UserWallet.Hot>().right()
-        coEvery { appsFlyerRepository.getConversionData() } returns AppsFlyerConversionData(refcode = "ref-42", campaign = null)
+        coEvery {
+            appsFlyerRepository.getConversionData()
+        } returns AppsFlyerConversionData(refcode = "ref-42", campaign = null)
 
         // Act
         creator.createAndOpen(source = SOURCE, onFailed = onFailed)
