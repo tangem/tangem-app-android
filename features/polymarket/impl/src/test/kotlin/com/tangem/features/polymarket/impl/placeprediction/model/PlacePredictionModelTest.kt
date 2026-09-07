@@ -34,6 +34,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
+import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
@@ -43,13 +44,16 @@ import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -70,6 +74,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import kotlinx.coroutines.test.runCurrent
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionModelTest {
@@ -83,6 +88,7 @@ internal class PlacePredictionModelTest {
     private val deriveAddressesUseCase: DerivePolymarketAddressesUseCase = mockk()
     private val getBalanceInteractor: GetPolymarketBalanceInteractor = mockk()
     private val getQuoteUseCase: GetPredictionOrderQuoteUseCase = mockk()
+    private val getPriceUseCase: GetPredictionPriceUseCase = mockk()
     private val checkGeoblockUseCase: CheckPolymarketGeoblockUseCase = mockk()
     private val signOrderInteractor: SignPredictionOrderInteractor = mockk()
     private val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
@@ -99,6 +105,7 @@ internal class PlacePredictionModelTest {
             deriveAddressesUseCase,
             getBalanceInteractor,
             getQuoteUseCase,
+            getPriceUseCase,
             checkGeoblockUseCase,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
@@ -111,6 +118,7 @@ internal class PlacePredictionModelTest {
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("100"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
         coEvery { getQuoteUseCase(request = any()) } returns createQuote().right()
+        coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
@@ -178,6 +186,64 @@ internal class PlacePredictionModelTest {
 
         // Assert
         coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the market takes no orders WHEN an amount is typed THEN no quote is requested`() = runTest {
+        // Arrange
+        coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an amount typed before the market lands WHEN it takes no orders THEN no quote is requested`() =
+        runTest {
+            // Arrange
+            coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+            val model = createModel(testScope = this)
+            model.onScreenShown()
+
+            // Act
+            model.onAmountChange(value = "10")
+            runCurrent()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+            // Assert
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the market is closed WHEN poll interval elapses THEN quote NOT requested again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.MARKET_CLOSED).right()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Unavailable(PredictionQuoteStatus.MARKET_CLOSED))
 
         model.onDestroy()
     }
@@ -362,6 +428,47 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN below min order amount WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returns
+            createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a stated minimum WHEN a smaller sum is entered THEN no quote is requested`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onAmountChange(value = "1")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+        assertThat(model.uiState.value.amountCaption)
+            .isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("2.15")))
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN quote reports a live market WHEN interval elapses THEN it re-quotes on the fast cadence`() = runTest {
         // Arrange
         coEvery { getQuoteUseCase(request = any()) } returns createQuote(isLive = true).right()
@@ -505,6 +612,21 @@ internal class PlacePredictionModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `WHEN to main clicked THEN stack pops to the feed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onToMainClick()
+
+        // Assert
+        verify { router.popTo(route = PolymarketRoute.Main(userWalletId = USER_WALLET_ID), onComplete = any()) }
+
+        model.onDestroy()
+    }
+
 
     @Test
     fun `GIVEN a priced quote WHEN place clicked twice THEN the order is signed once`() = runTest {
@@ -628,6 +750,29 @@ internal class PlacePredictionModelTest {
         }
 
     @Test
+    fun `GIVEN a matched order filled no shares WHEN place clicked THEN the flow reports a failure`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            createPlaceResult(takingAmount = BigDecimal.ZERO).right()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+        verify { messageSender.send(any()) }
+        verify(exactly = 0) { router.replaceAll(PlacePredictionRoute.Status) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN no answer from the exchange WHEN place clicked THEN the outcome is submitted and not retried`() =
         runTest {
             // Arrange
@@ -699,8 +844,8 @@ internal class PlacePredictionModelTest {
     fun `GIVEN a failed attempt WHEN the flow returns to idle THEN the quote starts refreshing again`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        model.onScreenShown()
         advanceUntilIdle()
+        model.onScreenShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { signOrderInteractor(request = any()) } returns
@@ -720,8 +865,8 @@ internal class PlacePredictionModelTest {
     fun `GIVEN the screen is hidden WHEN an attempt returns to idle THEN nothing is polled off-screen`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        model.onScreenShown()
         advanceUntilIdle()
+        model.onScreenShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { signOrderInteractor(request = any()) } returns
@@ -742,8 +887,8 @@ internal class PlacePredictionModelTest {
     fun `GIVEN a submission in flight WHEN close is tapped THEN the flow refuses to leave`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        model.onScreenShown()
         advanceUntilIdle()
+        model.onScreenShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
@@ -769,8 +914,8 @@ internal class PlacePredictionModelTest {
     fun `GIVEN the balance cannot be read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
-        model.onScreenShown()
         advanceUntilIdle()
+        model.onScreenShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns PolymarketAuthError.KeyNotFound.left()
@@ -784,6 +929,94 @@ internal class PlacePredictionModelTest {
         assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
         verify { messageSender.send(any()) }
         coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN empty amount WHEN screen shown THEN book price polls into the header`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onScreenShown()
+        advanceTimeBy(delayTimeMillis = 1)
+
+        // Assert
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+        coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        coVerify(exactly = 2) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN closed market WHEN price polled THEN market closed banner AND polling stops`() = runTest {
+        // Arrange
+        coEvery { getPriceUseCase(assetId = any(), side = any()) } returns PredictionPriceError.MarketClosed.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onScreenShown()
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.notifications).contains(PredictionNotificationUM.MarketClosed)
+        assertThat(state.market.isPriceUnavailable).isTrue()
+        coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN transport failure WHEN price polled THEN last price kept AND polling continues`() = runTest {
+        // Arrange
+        coEvery { getPriceUseCase(assetId = any(), side = any()) } returnsMany listOf(
+            BigDecimal("0.48").right(),
+            PredictionPriceError.Network.left(),
+            BigDecimal("0.52").right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScreenShown()
+        advanceTimeBy(delayTimeMillis = 1)
+
+        // Act
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+        // Assert
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+        assertThat(model.uiState.value.notifications).isEmpty()
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(52)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount entered and cleared WHEN polling THEN price loop yields to quote loop and resumes`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScreenShown()
+        advanceTimeBy(delayTimeMillis = 1)
+
+        // Act
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 2)
+
+        // Assert
+        coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+
+        model.onAmountChange(value = "")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
 
         model.onDestroy()
     }
@@ -810,6 +1043,7 @@ internal class PlacePredictionModelTest {
             derivePolymarketAddressesUseCase = deriveAddressesUseCase,
             getPolymarketBalanceInteractor = getBalanceInteractor,
             getPredictionOrderQuoteUseCase = getQuoteUseCase,
+            getPredictionPriceUseCase = getPriceUseCase,
             checkPolymarketGeoblockUseCase = checkGeoblockUseCase,
             signPredictionOrderInteractor = signOrderInteractor,
             placePredictionOrderUseCase = placeOrderUseCase,
@@ -884,11 +1118,12 @@ internal class PlacePredictionModelTest {
         total = total,
         builderCode = "0xbuilder",
         minOrderSize = BigDecimal("5"),
+        minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = isLive,
     )
 
-    private fun createEvent(): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(isAcceptingOrders: Boolean = true): PolymarketEvent = PolymarketEvent(
         id = EVENT_ID,
         slug = "event-slug",
         title = "Event title",
@@ -917,6 +1152,7 @@ internal class PlacePredictionModelTest {
                 imageUrl = null,
                 status = PolymarketStatus.ACTIVE,
                 isNegRisk = false,
+                isAcceptingOrders = isAcceptingOrders,
                 startDate = null,
                 endDate = null,
                 startDateIso = null,
@@ -942,12 +1178,15 @@ internal class PlacePredictionModelTest {
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
 
-        fun createPlaceResult(makingAmount: BigDecimal? = BigDecimal("10")) = PredictionPlaceOrderResult(
+        fun createPlaceResult(
+            makingAmount: BigDecimal? = BigDecimal("10"),
+            takingAmount: BigDecimal? = BigDecimal("23.2"),
+        ) = PredictionPlaceOrderResult(
             isSuccess = true,
             orderId = "0x6b2e",
             status = "matched",
             makingAmount = makingAmount,
-            takingAmount = BigDecimal("23.2"),
+            takingAmount = takingAmount,
             transactionHashes = listOf("0xdead"),
             errorMessage = null,
         )

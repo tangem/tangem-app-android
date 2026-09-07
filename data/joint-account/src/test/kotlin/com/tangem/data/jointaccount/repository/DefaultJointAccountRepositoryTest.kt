@@ -16,6 +16,7 @@ import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -24,6 +25,8 @@ import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
+import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.StatusSource
@@ -174,6 +177,60 @@ internal class DefaultJointAccountRepositoryTest {
         // Act
         val actual = runCatching {
             repository.create(userWalletId = WALLET_ID, payload = createPayload(), signature = SIGNATURE)
+        }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isEqualTo((response as ApiResponse.Error).cause)
+    }
+
+    @Test
+    fun `GIVEN payload WHEN join THEN it is sent verbatim and the account returned`() = runTest {
+        // Arrange
+        val bodySlot = slot<JoinJointAccountRequest>()
+        coEvery {
+            jointAccountApi.joinJointAccount(walletId = WALLET_ID.stringValue, body = capture(bodySlot))
+        } returns ApiResponse.Success(createJointAccountDto())
+
+        // Act
+        val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
+
+        // Assert
+        val expected = JointAccountJoinResult.Joined(account = createJointAccount(source = StatusSource.ACTUAL))
+        assertThat(actual).isEqualTo(expected)
+        // The signature covers the canonical form of exactly these values — trimming any of them breaks it
+        val body = bodySlot.captured
+        assertThat(body.signature).isEqualTo(SIGNATURE)
+        assertThat(body.payload.inviteId).isEqualTo(INVITE_A)
+        assertThat(body.payload.config.name).isEqualTo(" Family ")
+        assertThat(body.payload.member.name).isEqualTo(" Bob ")
+        assertThat(body.payload.member.walletId).isEqualTo(WALLET_ID.stringValue)
+        assertThat(body.payload.member.address).isEqualTo(OWNER_ADDRESS)
+        assertThat(body.payload.member.derivation).isEqualTo(4)
+    }
+
+    @Test
+    fun `GIVEN conflict WHEN join THEN Conflict result`() = runTest {
+        // Arrange — a spent invite and an already-registered address are the same 409; the domain resolves it
+        coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns errorResponse(
+            code = ApiResponseError.HttpException.Code.CONFLICT,
+        )
+
+        // Act
+        val actual = repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountJoinResult.Conflict)
+    }
+
+    @Test
+    fun `GIVEN server error WHEN join THEN it is thrown`() = runTest {
+        // Arrange
+        val response = errorResponse(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
+        coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns response
+
+        // Act
+        val actual = runCatching {
+            repository.join(userWalletId = WALLET_ID, payload = joinPayload(), signature = SIGNATURE)
         }.exceptionOrNull()
 
         // Assert
@@ -344,6 +401,23 @@ internal class DefaultJointAccountRepositoryTest {
         // Assert
         assertThat(actual).isEmpty()
     }
+
+    private fun joinPayload() = JointAccountJoinPayload(
+        inviteId = INVITE_A,
+        config = JointAccountConfig(
+            name = " Family ",
+            icon = "Family",
+            iconColor = "Azure",
+            membersCount = 3,
+            threshold = 2,
+        ),
+        member = JointAccountParticipant(
+            walletId = WALLET_ID.stringValue,
+            name = " Bob ",
+            address = OWNER_ADDRESS,
+            derivation = 4,
+        ),
+    )
 
     private fun activationPayload() = JointAccountActivationPayload(
         walletId = WALLET_ID.stringValue,

@@ -20,7 +20,12 @@ internal class SetQuoteResultTransformer(
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         if (prevState.submit !is SubmitUM.Idle) return prevState
 
-        return prevState.copy(quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)).recomputeGate()
+        return prevState
+            .copy(
+                quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
+                minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
+            )
+            .recomputeGate()
     }
 
     private fun toError(error: PredictionOrderQuoteError): QuoteUM.Error = QuoteUM.Error(
@@ -42,13 +47,13 @@ internal class SetQuoteResultTransformer(
         PredictionQuoteStatus.FULL,
         PredictionQuoteStatus.PARTIAL,
         PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+        PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT,
         -> QuoteUM.Content(
             status = quote.status,
             expectedShares = quote.expectedExecutionAmount,
             guaranteedShares = quote.shares,
             feeTotal = quote.fees.total,
             total = quote.total,
-            minOrderSize = quote.minOrderSize,
             signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis),
         )
     }
