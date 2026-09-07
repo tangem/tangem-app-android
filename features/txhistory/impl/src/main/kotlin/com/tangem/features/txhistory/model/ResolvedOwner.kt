@@ -15,7 +15,13 @@ internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
     data class OwnPaymentAccount(val account: Account.Payment) : ResolvedOwner
     data class OwnWallet(val userWalletId: UserWalletId, val walletInfo: WalletInfo) : ResolvedOwner
-    data class External(val address: String) : ResolvedOwner
+
+    /** A counterparty that is none of the user's own portfolios, so it always has a plain [address]. */
+    sealed interface Foreign : ResolvedOwner {
+        val address: String
+    }
+
+    data class External(override val address: String) : Foreign
 }
 
 /**

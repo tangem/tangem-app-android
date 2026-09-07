@@ -144,7 +144,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
-        flow2 = ownerLookupProducer(),
+        flow2 = ownerLookupProducer(params.userWalletId),
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
         flow5 = balanceHidingSettings.isBalanceHidden(),
