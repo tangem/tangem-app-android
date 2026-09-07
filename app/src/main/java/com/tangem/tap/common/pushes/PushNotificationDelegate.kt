@@ -13,6 +13,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.executeBlocking
 import coil.request.ImageRequest
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -20,7 +22,10 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.wallet.R
 
-class PushNotificationDelegate(private val context: Context) {
+class PushNotificationDelegate(
+    private val context: Context,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+) {
 
     @Suppress("LongParameterList")
     fun showNotification(
@@ -68,9 +73,10 @@ class PushNotificationDelegate(private val context: Context) {
                 }
             }
 
-        val service = context.getSystemService(Context.NOTIFICATION_SERVICE)
-        val notificationManager = requireNotNull(service as? NotificationManager) {
-            "NotificationManager not available"
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        if (notificationManager == null) {
+            reportFailure(IllegalStateException("NotificationManager is not available"))
+            return
         }
 
         try {
@@ -88,8 +94,17 @@ class PushNotificationDelegate(private val context: Context) {
                 /* notification = */ notificationBuilder.build(),
             )
         } catch (e: SecurityException) {
-            TangemLogger.e("Failed to post push notification", e)
+            reportFailure(e)
         }
+    }
+
+    /**
+     * The push is lost for the user either way, so the failure is reported as a non-fatal — otherwise the guard
+     * silently hides how many users never receive notifications.
+     */
+    private fun reportFailure(e: Throwable) {
+        TangemLogger.e("Failed to post push notification", e)
+        analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(exception = e))
     }
 
     private fun getBitmapImageFromUrl(url: Uri): Bitmap? {
