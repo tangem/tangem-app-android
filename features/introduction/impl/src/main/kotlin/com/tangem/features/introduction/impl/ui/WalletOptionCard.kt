@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -28,8 +29,9 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary),
-        onClick = if (option.isLoading) null else option.onClick,
+            .background(TangemTheme.colors3.bg.opaque.primary)
+            .alpha(if (option.isEnabled) 1f else DISABLED_CONTENT_ALPHA),
+        onClick = if (option.isEnabled && !option.isLoading) option.onClick else null,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { OptionIcon(iconRes = option.iconRes) },
         titleSlot = { TangemRowText(text = option.title, role = TangemRowTextRole.Title) },
@@ -54,6 +56,8 @@ internal fun WalletOptionCard(option: WalletOptionUM, modifier: Modifier = Modif
         },
     )
 }
+
+private const val DISABLED_CONTENT_ALPHA = 0.4f
 
 @Composable
 private fun OptionIcon(iconRes: Int) {
