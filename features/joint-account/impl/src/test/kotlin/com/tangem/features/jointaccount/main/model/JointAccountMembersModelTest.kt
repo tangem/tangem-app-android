@@ -1,5 +1,7 @@
 package com.tangem.features.jointaccount.main.model
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -7,28 +9,41 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * The members screen reads the account from the domain and takes its right to invite and activate from the
@@ -44,10 +59,27 @@ internal class JointAccountMembersModelTest {
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
+    private val singleAccountSupplier: SingleAccountSupplier = mockk()
+    private val activateUseCase: ActivateJointAccountUseCase = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, clipboardManager, uiMessageSender, shareManager, supplier, getInvitesUseCase)
+        clearMocks(
+            router,
+            clipboardManager,
+            uiMessageSender,
+            shareManager,
+            supplier,
+            getInvitesUseCase,
+            singleAccountSupplier,
+            activateUseCase,
+            userWalletsListRepository,
+        )
+        val coldWallet = mockk<UserWallet.Cold> {
+            every { walletId } returns USER_WALLET_ID
+        }
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(coldWallet))
     }
 
     @Test
@@ -191,6 +223,160 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
+    fun `GIVEN confirming account WHEN activation confirmed THEN use case gets the account`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery { activateUseCase(account = jointAccount) } returns Unit.right()
+
+        // Act
+        val model = createModel()
+        model.uiState.value.activation!!.onActivateClick()
+        val confirmation = model.uiState.value.activation!!.confirmation!!
+        confirmation.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(confirmation.walletInteractionIconRes).isEqualTo(CoreUiR.drawable.ic_tangem_24)
+        coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        assertThat(model.uiState.value.activation?.confirmation).isNull()
+    }
+
+    @Test
+    fun `GIVEN hot wallet WHEN activation offered THEN the confirm button carries no wallet icon`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val hotWallet = mockk<UserWallet.Hot> {
+            every { walletId } returns USER_WALLET_ID
+        }
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(hotWallet))
+
+        // Act
+        val model = createModel()
+        model.uiState.value.activation!!.onActivateClick()
+
+        // Assert
+        assertThat(model.uiState.value.activation!!.confirmation!!.walletInteractionIconRes).isNull()
+    }
+
+    @Test
+    fun `GIVEN signing in flight WHEN activation confirmed THEN the confirm button shows a loader`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery { activateUseCase(account = jointAccount) } coAnswers {
+            delay(timeMillis = 500)
+            Unit.right()
+        }
+
+        // Act
+        val model = createModel()
+        model.uiState.value.activation!!.onActivateClick()
+        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.activation!!.confirmation!!.isConfirming).isTrue()
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.activation?.confirmation).isNull()
+    }
+
+    @Test
+    fun `GIVEN signing in flight WHEN sheet reopened and confirmed again THEN loader shows without second signing`() =
+        runTest {
+            // Arrange
+            stubConfirmingAccount()
+            val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+            every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+            coEvery { activateUseCase(account = jointAccount) } coAnswers {
+                delay(timeMillis = 500)
+                Unit.right()
+            }
+
+            // Act — confirm, dismiss the sheet mid-flight, reopen it and confirm again
+            val model = createModel()
+            model.uiState.value.activation!!.onActivateClick()
+            model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+            runCurrent()
+            model.uiState.value.activation!!.confirmation!!.onCancelClick()
+            model.uiState.value.activation!!.onActivateClick()
+            model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.activation!!.confirmation!!.isConfirming).isTrue()
+
+            // Act
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { activateUseCase(account = jointAccount) }
+            assertThat(model.uiState.value.activation?.confirmation).isNull()
+        }
+
+    @Test
+    fun `GIVEN signing dismissed WHEN activation confirmed THEN no dialog is shown`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery { activateUseCase(account = jointAccount) } returns JointAccountFlowError.UserCancelled.left()
+
+        // Act
+        val model = createModel()
+        model.uiState.value.activation!!.onActivateClick()
+        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN activation fails WHEN activation confirmed THEN error dialog is shown`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        val jointAccount = MockAccounts.createJointAccount(userWalletId = USER_WALLET_ID)
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns flowOf(jointAccount)
+        coEvery {
+            activateUseCase(account = jointAccount)
+        } returns JointAccountFlowError.Failed(cause = IllegalStateException("boom")).left()
+
+        // Act
+        val model = createModel()
+        model.uiState.value.activation!!.onActivateClick()
+        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN account not in the store WHEN activation confirmed THEN error dialog without signing`() = runTest {
+        // Arrange
+        stubConfirmingAccount()
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns emptyFlow()
+
+        // Act
+        val model = createModel()
+        model.uiState.value.activation!!.onActivateClick()
+        model.uiState.value.activation!!.confirmation!!.onConfirmClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { activateUseCase(account = any()) }
+        verify(exactly = 1) { uiMessageSender.send(any()) }
+    }
+
+    @Test
     fun `GIVEN reference mode WHEN model created THEN neither inviting nor activation nor archiving`() = runTest {
         // Arrange
         stub(
@@ -222,6 +408,15 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         assertThat(state.members).isEmpty()
+    }
+
+    private fun stubConfirmingAccount() {
+        stub(
+            account = pendingAccount(members = listOf(creator, member)).copy(
+                status = JointAccount.Status.CONFIRMING,
+            ),
+            invites = listOf(INVITE_A),
+        )
     }
 
     private fun stub(account: JointAccount, invites: List<String>) {
@@ -257,6 +452,10 @@ internal class JointAccountMembersModelTest {
             shareManager = shareManager,
             jointAccountListSupplier = supplier,
             getJointAccountInvitesUseCase = getInvitesUseCase,
+            singleAccountSupplier = singleAccountSupplier,
+            activateJointAccountUseCase = activateUseCase,
+            userWalletsListRepository = userWalletsListRepository,
+            stateController = JointAccountMembersStateController(),
         )
         advanceUntilIdle()
 
@@ -276,8 +475,8 @@ internal class JointAccountMembersModelTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
-        const val ACCOUNT_ID = "a1"
-        const val OTHER_ACCOUNT_ID = "b2"
+        val ACCOUNT_ID = "a1".repeat(n = 32)
+        val OTHER_ACCOUNT_ID = "b2".repeat(n = 32)
         const val CREATOR_NAME = "Ivan"
         const val THREE_SLOTS = 3
         const val INVITE_A = "invite-a"

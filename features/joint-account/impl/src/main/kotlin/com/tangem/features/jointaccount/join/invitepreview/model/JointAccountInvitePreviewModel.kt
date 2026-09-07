@@ -149,6 +149,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                     }
                 },
                 ifRight = { preview ->
+                    params.draftHolder.setConfig(config = preview.config)
                     stateController.update(
                         SetContentTransformer(
                             preview = preview,
