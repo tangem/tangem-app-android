@@ -26,9 +26,9 @@ internal class UpdateMembersInitialStateTransformerTest {
 
         // Assert
         assertThat(actual.title).isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_title))
-        assertThat(actual.shareSafely.title)
+        assertThat(actual.shareSafely?.title)
             .isEqualTo(resourceReference(CoreUiR.string.joint_account_invite_members_safety_title))
-        assertThat(actual.shareSafely.onClick).isSameInstanceAs(onShareSafelyClick)
+        assertThat(actual.shareSafely?.onClick).isSameInstanceAs(onShareSafelyClick)
         assertThat(actual.onArchiveClick).isSameInstanceAs(onArchiveClick)
         assertThat(actual.onCloseClick).isSameInstanceAs(onCloseClick)
     }

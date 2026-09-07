@@ -3,7 +3,6 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,7 +13,11 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.GlobalLoadingMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
@@ -25,6 +28,7 @@ import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
@@ -54,11 +58,15 @@ internal class JointAccountMembersModel @Inject constructor(
     private val singleAccountSupplier: SingleAccountSupplier,
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
+    private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val stateController: JointAccountMembersStateController,
 ) : Model() {
 
     private var activationJob: Job? = null
+
+    /** The account currently shown, kept only so [onArchiveClick] knows which account to archive. */
+    private var currentCryptoAccountId: String? = null
 
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
 
@@ -98,6 +106,8 @@ internal class JointAccountMembersModel @Inject constructor(
                 }
             }
             .onEach { accountWithInvites ->
+                currentCryptoAccountId = accountWithInvites?.first?.cryptoAccountId
+
                 val transformer = accountWithInvites
                     ?.let { (account, invites) ->
                         UpdateMembersAccountTransformer(
@@ -223,8 +233,64 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onArchiveClick() {
-        // TODO: archive the account once domain integration lands. The "Account archived" toast is
-        //  shown by the screen.
+        val cryptoAccountId = currentCryptoAccountId ?: return
+
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreUiR.string.account_details_archive),
+                message = resourceReference(CoreUiR.string.account_details_archive_joint_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(CoreUiR.string.account_details_archive_action),
+                        isWarning = true,
+                        onClick = { archiveAccount(cryptoAccountId) },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun archiveAccount(cryptoAccountId: String) {
+        modelScope.launch {
+            uiMessageSender.send(GlobalLoadingMessage(isShow = true))
+
+            AccountId.forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId).fold(
+                ifLeft = { failedArchiveDialog(error = null) },
+                ifRight = { accountId ->
+                    archiveCryptoPortfolioUseCase(accountId)
+                        .onLeft { error -> failedArchiveDialog(error = error) }
+                        .onRight {
+                            val toast = ToastMessage(
+                                message = resourceReference(CoreUiR.string.account_archive_success_message),
+                            )
+                            uiMessageSender.send(toast)
+                            router.pop()
+                        }
+                },
+            )
+
+            uiMessageSender.send(GlobalLoadingMessage(isShow = false))
+        }
+    }
+
+    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error?) {
+        val titleRes: Int
+        val messageRes: Int
+        if (error is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus) {
+            titleRes = CoreUiR.string.account_could_not_archive_referral_program_title
+            messageRes = CoreUiR.string.account_could_not_archive_referral_program_message
+        } else {
+            titleRes = CoreUiR.string.common_something_went_wrong
+            messageRes = CoreUiR.string.account_generic_error_dialog_message
+        }
+
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(titleRes),
+                message = resourceReference(messageRes),
+            ),
+        )
     }
 
     private fun onCloseClick() {

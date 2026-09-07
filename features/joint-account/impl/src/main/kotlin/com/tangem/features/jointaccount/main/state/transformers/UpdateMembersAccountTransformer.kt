@@ -41,6 +41,7 @@ internal class UpdateMembersAccountTransformer(
         }
 
         return prevState.copy(
+            title = title(),
             progress = resourceReference(
                 id = if (isInviteMode) {
                     CoreUiR.string.joint_account_invite_members_subtitle
@@ -49,15 +50,24 @@ internal class UpdateMembersAccountTransformer(
                 },
                 formatArgs = wrappedList(account.members.size, account.membersCount),
             ),
+            // Only the creator shares invites, so only the creator sees the safety tips and can archive
+            // the account while it's still filling up
+            shareSafely = if (isInviteMode && !isThisDeviceCreator) null else prevState.shareSafely,
             members = (joined + freeSlots).toImmutableList(),
             otherMembersLabel = if (freeSlots.isNotEmpty()) {
                 resourceReference(CoreUiR.string.joint_account_invite_members_other_members)
             } else {
                 null
             },
-            canArchive = isInviteMode,
+            canArchive = isInviteMode && isThisDeviceCreator,
             activation = activation(),
         )
+    }
+
+    private fun title(): TextReference = when {
+        !isInviteMode -> resourceReference(CoreUiR.string.joint_account_members_title)
+        isThisDeviceCreator -> resourceReference(CoreUiR.string.joint_account_invite_members_title)
+        else -> resourceReference(CoreUiR.string.joint_account_invite_members_waiting_title)
     }
 
     private fun joinedMember(index: Int, member: JointAccount.Member): JointAccountMembersUM.MemberUM.Joined {

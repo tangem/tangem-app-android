@@ -16,7 +16,8 @@ import kotlinx.collections.immutable.ImmutableList
  *
  * @property title           screen title ("Invite members" in the working view, "Members" in the reference view).
  * @property progress        collection progress, e.g. "1 of 5 joined, including you".
- * @property shareSafely     permanent "Share invites safely" info block; tapping opens the info sheet.
+ * @property shareSafely     "Share invites safely" info block; tapping opens the info sheet. `null` when this
+ * device isn't the creator in the working (Invite) view — only the creator shares invites.
  * @property members         joined members followed by free slots, in display order.
  * @property otherMembersLabel section label shown above the free slots; `null` hides it (no free slots).
  * @property canArchive      whether the three-dot menu with the destructive "Archive account" action is shown.
@@ -29,7 +30,7 @@ import kotlinx.collections.immutable.ImmutableList
 data class JointAccountMembersUM(
     val title: TextReference,
     val progress: TextReference,
-    val shareSafely: ShareSafelyUM,
+    val shareSafely: ShareSafelyUM?,
     val members: ImmutableList<MemberUM>,
     val otherMembersLabel: TextReference?,
     val canArchive: Boolean,
