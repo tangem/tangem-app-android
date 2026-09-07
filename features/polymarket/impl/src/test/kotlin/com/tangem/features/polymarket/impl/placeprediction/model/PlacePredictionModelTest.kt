@@ -35,6 +35,8 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.domain.polymarket.model.PredictionPriceError
+import com.tangem.domain.polymarket.model.PredictionOrderState
+import com.tangem.domain.polymarket.model.PredictionOrderStatus
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
@@ -45,6 +47,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -65,6 +69,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -92,6 +97,7 @@ internal class PlacePredictionModelTest {
     private val checkGeoblockUseCase: CheckPolymarketGeoblockUseCase = mockk()
     private val signOrderInteractor: SignPredictionOrderInteractor = mockk()
     private val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
+    private val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
 
     private var model: PlacePredictionModel? = null
 
@@ -111,6 +117,7 @@ internal class PlacePredictionModelTest {
             sendFeedbackEmailUseCase,
             signOrderInteractor,
             placeOrderUseCase,
+            awaitDelayedOrderUseCase,
         )
 
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
@@ -797,6 +804,128 @@ internal class PlacePredictionModelTest {
         }
 
     @Test
+    fun `GIVEN the exchange delays the order WHEN place clicked THEN the fill is read back before the result`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+            var submitWhileWaiting: SubmitUM? = null
+            coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } answers {
+                submitWhileWaiting = model.uiState.value.submit
+                DelayedPredictionOrderOutcome.Matched(
+                    order = PredictionOrderState(
+                        status = PredictionOrderStatus.Matched,
+                        price = BigDecimal("0.5"),
+                        originalSize = BigDecimal("23.2"),
+                        sizeMatched = BigDecimal("23.2"),
+                    ),
+                )
+            }
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(submitWhileWaiting).isEqualTo(SubmitUM.AwaitingFill)
+            assertThat((model.uiState.value.submit as SubmitUM.Result).result).isEqualTo(
+                PlaceResultUM.Filled(
+                    placedAt = (model.uiState.value.submit as SubmitUM.Result).result.placedAt,
+                    amount = BigDecimal("11.60"),
+                    tokensBought = BigDecimal("23.2"),
+                ),
+            )
+            verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the book answers that a delayed order did not match WHEN the wait ends THEN a dialog returns the summary to idle`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+            coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
+                DelayedPredictionOrderOutcome.Failed(detail = "ORDER_STATUS_CANCELED")
+            model.onScreenHidden()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            verify(exactly = 1) { messageSender.send(any()) }
+            verify(exactly = 0) { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the reads of a delayed order run out WHEN the wait ends THEN a dialog returns the summary to idle`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+            coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
+                DelayedPredictionOrderOutcome.TimedOut
+            model.onScreenHidden()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            verify(exactly = 1) { messageSender.send(any()) }
+            verify(exactly = 0) { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
+            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the fill is being read back WHEN back or close is tapped THEN the flow stays put`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
+        coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } coAnswers {
+            delay(timeMillis = 30_000)
+            DelayedPredictionOrderOutcome.TimedOut
+        }
+        model.onScreenHidden()
+        model.onPlaceClick()
+        advanceTimeBy(delayTimeMillis = 1_000)
+        clearMocks(router)
+
+        // Act
+        model.onBackClick()
+        model.onCloseClick()
+
+        // Assert
+        assertThat(model.isSubmitting()).isTrue()
+        verify(exactly = 0) { router.pop(onComplete = any()) }
+        verify(exactly = 0) { router.popTo(any<PolymarketRoute.Main>(), onComplete = any()) }
+        advanceUntilIdle()
+        assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the balance no longer covers the order WHEN place clicked THEN nothing is signed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -1047,6 +1176,7 @@ internal class PlacePredictionModelTest {
             checkPolymarketGeoblockUseCase = checkGeoblockUseCase,
             signPredictionOrderInteractor = signOrderInteractor,
             placePredictionOrderUseCase = placeOrderUseCase,
+            awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
         ).also { model = it }
     }
 
@@ -1178,13 +1308,16 @@ internal class PlacePredictionModelTest {
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
 
+        const val ORDER_ID = "0x6b2e"
+
         fun createPlaceResult(
             makingAmount: BigDecimal? = BigDecimal("10"),
             takingAmount: BigDecimal? = BigDecimal("23.2"),
+            status: String? = "matched",
         ) = PredictionPlaceOrderResult(
             isSuccess = true,
-            orderId = "0x6b2e",
-            status = "matched",
+            orderId = ORDER_ID,
+            status = status,
             makingAmount = makingAmount,
             takingAmount = takingAmount,
             transactionHashes = listOf("0xdead"),
