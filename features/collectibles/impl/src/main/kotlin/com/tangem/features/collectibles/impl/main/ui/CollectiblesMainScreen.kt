@@ -5,8 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
@@ -28,34 +27,46 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesGrid
+import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
+import com.tangem.features.collectibles.impl.discovery.ui.isCollectiblesTabBandPinned
+import com.tangem.features.collectibles.impl.discovery.ui.preview.CollectiblesDiscoveryPreviewComponent
+import com.tangem.features.collectibles.impl.discovery.ui.preview.CollectiblesDiscoveryPreviewData
+import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesLeadingBlocks
+import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesMainList
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesMainMenu
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesPinnedHeader
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesSearchFooter
-import com.tangem.features.collectibles.impl.main.ui.components.isTabBandPinned
+import com.tangem.features.collectibles.impl.main.ui.components.MainListKeys
 import com.tangem.features.collectibles.impl.main.ui.components.rememberRestingFooterHeight
 import com.tangem.features.collectibles.impl.main.ui.preview.CollectiblesMainPreviewData
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import dev.chrisbanes.haze.rememberHazeState
 
 @Composable
-internal fun CollectiblesMainScreen(state: CollectiblesMainUM, modifier: Modifier = Modifier) {
-    val isSearchActive = state.search.isActive
-    val mainGridState = rememberLazyGridState()
-    val searchEntry = remember(isSearchActive, state.tabs.isEmpty()) {
+internal fun CollectiblesMainScreen(
+    state: CollectiblesMainUM,
+    discoveryComponent: CollectiblesDiscoveryComponent,
+    discoveryState: CollectiblesDiscoveryUM,
+    modifier: Modifier = Modifier,
+) {
+    val isSearchActive = discoveryState.search.isActive
+    val hasTabs = discoveryState.tabs.isNotEmpty()
+    val mainListState = rememberLazyListState()
+    val searchEntry = remember(isSearchActive, hasTabs) {
         Snapshot.withoutReadObservation {
-            createSearchEntry(mainGridState = mainGridState, hasTabs = state.tabs.isNotEmpty())
+            createSearchEntry(mainListState = mainListState, hasTabs = hasTabs)
         }
     }
-    val searchGridState = searchEntry.gridState
-    val gridState = if (isSearchActive) searchGridState else mainGridState
-    val tabScrollState = rememberScrollState()
+    val listState = if (isSearchActive) searchEntry.listState else mainListState
+    val tabScrollState = discoveryComponent.tabScrollState
     val focusRequester = remember { FocusRequester() }
     var footerHeight by remember { mutableIntStateOf(0) }
     val restingFooterHeight = rememberRestingFooterHeight(isSearchActive = isSearchActive, footerHeight = footerHeight)
-    val isTabBandPinned by remember(mainGridState) { derivedStateOf { mainGridState.isTabBandPinned() } }
-    val shouldShowPinnedTabs = isTabBandPinned && !isSearchActive && state.tabs.isNotEmpty()
+    val isTabBandPinned by remember(mainListState) {
+        derivedStateOf { mainListState.isCollectiblesTabBandPinned(headerKey = MainListKeys.HEADER) }
+    }
+    val shouldShowPinnedTabs = isTabBandPinned && !isSearchActive && hasTabs
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -72,13 +83,13 @@ internal fun CollectiblesMainScreen(state: CollectiblesMainUM, modifier: Modifie
         },
         overlay = { contentPadding ->
             CollectiblesPinnedHeader(
-                tabs = state.tabs,
+                tabs = discoveryState.tabs,
                 scrollState = tabScrollState,
                 topPadding = contentPadding.calculateTopPadding(),
                 isPinned = shouldShowPinnedTabs,
             )
             CollectiblesSearchFooter(
-                state = state.search,
+                state = discoveryState.search,
                 focusRequester = focusRequester,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -90,10 +101,11 @@ internal fun CollectiblesMainScreen(state: CollectiblesMainUM, modifier: Modifie
         val bottomInset = with(LocalDensity.current) { footerInset.toDp() } + 12.dp
 
         MaterialBackdrop {
-            CollectiblesGrid(
+            CollectiblesMainList(
                 state = state,
-                gridState = gridState,
-                tabScrollState = tabScrollState,
+                discoveryComponent = discoveryComponent,
+                discoveryState = discoveryState,
+                listState = listState,
                 lead = CollectiblesLeadingBlocks(
                     isHeaderShown = !isSearchActive || searchEntry.isHeaderShown,
                     isTabBandShown = !isSearchActive || searchEntry.isTabBandShown,
@@ -102,8 +114,6 @@ internal fun CollectiblesMainScreen(state: CollectiblesMainUM, modifier: Modifie
                 contentPadding = PaddingValues(
                     top = contentPadding.calculateTopPadding(),
                     bottom = bottomInset,
-                    start = 16.dp,
-                    end = 16.dp,
                 ),
             )
         }
@@ -129,7 +139,7 @@ private fun MaterialBackdrop(modifier: Modifier = Modifier, content: @Composable
 @Composable
 private fun CollectiblesMainScreenPreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.default)
+        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.default)
     }
 }
 
@@ -137,7 +147,10 @@ private fun CollectiblesMainScreenPreview() {
 @Composable
 private fun CollectiblesMainScreenZeroPreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.zero)
+        PreviewScreen(
+            state = CollectiblesMainPreviewData.zero,
+            discoveryState = CollectiblesDiscoveryPreviewData.default,
+        )
     }
 }
 
@@ -145,7 +158,7 @@ private fun CollectiblesMainScreenZeroPreview() {
 @Composable
 private fun CollectiblesMainScreenListErrorPreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.listError)
+        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.listError)
     }
 }
 
@@ -153,7 +166,7 @@ private fun CollectiblesMainScreenListErrorPreview() {
 @Composable
 private fun CollectiblesMainScreenSearchActivePreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.searchActive)
+        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchActive)
     }
 }
 
@@ -161,7 +174,7 @@ private fun CollectiblesMainScreenSearchActivePreview() {
 @Composable
 private fun CollectiblesMainScreenSearchZeroPreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.searchZero)
+        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchZero)
     }
 }
 
@@ -169,7 +182,7 @@ private fun CollectiblesMainScreenSearchZeroPreview() {
 @Composable
 private fun CollectiblesMainScreenSearchErrorPreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.searchError)
+        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchError)
     }
 }
 
@@ -177,6 +190,21 @@ private fun CollectiblesMainScreenSearchErrorPreview() {
 @Composable
 private fun CollectiblesMainScreenMenuPreview() {
     TangemThemePreviewRedesign {
-        CollectiblesMainScreen(state = CollectiblesMainPreviewData.menuShown)
+        PreviewScreen(
+            state = CollectiblesMainPreviewData.menuShown,
+            discoveryState = CollectiblesDiscoveryPreviewData.default,
+        )
     }
+}
+
+@Composable
+private fun PreviewScreen(
+    discoveryState: CollectiblesDiscoveryUM,
+    state: CollectiblesMainUM = CollectiblesMainPreviewData.default,
+) {
+    CollectiblesMainScreen(
+        state = state,
+        discoveryComponent = remember { CollectiblesDiscoveryPreviewComponent(um = discoveryState) },
+        discoveryState = discoveryState,
+    )
 }

@@ -53,6 +53,26 @@ internal class AccountListTest {
     }
 
     @Test
+    fun `GIVEN personal cap reached WHEN canAddMoreJointAccounts THEN joint cap is unaffected`() {
+        // Arrange
+        val accountList = MockAccounts.fullAccountList
+
+        // Act & Assert
+        Truth.assertThat(accountList.canAddMoreCryptoAccounts).isFalse()
+        Truth.assertThat(accountList.canAddMoreJointAccounts).isTrue()
+    }
+
+    @Test
+    fun `GIVEN joint cap reached WHEN canAddMoreCryptoAccounts THEN personal cap is unaffected`() {
+        // Arrange
+        val accountList = MockAccounts.fullJointAccountList
+
+        // Act & Assert
+        Truth.assertThat(accountList.canAddMoreJointAccounts).isFalse()
+        Truth.assertThat(accountList.canAddMoreCryptoAccounts).isTrue()
+    }
+
+    @Test
     fun activeAccounts() {
         // Arrange
         val accountList = createAccountList(activeAccounts = 5, totalAccounts = 10)
@@ -546,6 +566,20 @@ internal class AccountListTest {
                 ).getOrNull()!!,
                 toAdd = createAccount(derivationIndex = 21),
                 expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
+            ),
+            // endregion
+            // region ExceedsMaxJointAccountsCount
+            PlusTestModel(
+                initial = AccountList(
+                    userWalletId = userWalletId,
+                    accounts = listOf(Account.Personal.createMainAccount(userWalletId)) +
+                        MockAccounts.createJointAccounts(count = 20),
+                    totalAccounts = 1,
+                    totalArchivedAccounts = 0,
+                    totalJointAccounts = 20,
+                ).getOrNull()!!,
+                toAdd = MockAccounts.createJointAccount(ownerKeyIndex = 20),
+                expected = AccountList.Error.ExceedsMaxJointAccountsCount.left(),
             ),
             // endregion
         )
