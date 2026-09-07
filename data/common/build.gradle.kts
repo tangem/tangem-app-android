@@ -33,6 +33,7 @@ dependencies {
 
     // region Core
     api(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.grow.datasource)
     api(projects.core.utils)

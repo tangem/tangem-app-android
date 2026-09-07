@@ -8,7 +8,7 @@ internal class CollectiblesDerivationConstantsTest {
     @Test
     fun `GIVEN owner derivation path constant WHEN read THEN equals the expected path`() {
         // Assert
-        assertThat(COLLECTIBLES_OWNER_DERIVATION_PATH).isEqualTo("m/44'/60'/999700'/0'/0'")
+        assertThat(COLLECTIBLES_OWNER_DERIVATION_PATH).isEqualTo("m/44'/501'/999700'/0'/0'")
     }
 
     @Test

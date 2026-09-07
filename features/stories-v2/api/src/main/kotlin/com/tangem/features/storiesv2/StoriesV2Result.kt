@@ -9,7 +9,11 @@ sealed interface StoriesV2Result {
     /** Loop stories never end on their own and never report this. */
     data object Completed : StoriesV2Result
 
-    /** An action button was tapped. The host performs [target]. */
+    /**
+     * The story ended because of an action button: the viewer tapped it, the host performed it through
+     * [StoriesV2Component.Params.onAction] and settled the tap with [StoriesV2PendingAction.end]. The action's
+     * work is already done by the time this arrives — the host tears the player down, it does not act again.
+     */
     data class ActionInvoked(val actionId: String, val target: StoryV2ActionTarget) : StoriesV2Result
 
     /**

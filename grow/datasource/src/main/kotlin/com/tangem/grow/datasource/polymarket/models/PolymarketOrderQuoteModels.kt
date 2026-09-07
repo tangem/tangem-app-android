@@ -37,6 +37,7 @@ data class PolymarketOrderQuoteResponse(
     @Json(name = "total") val total: String,
     @Json(name = "builderCode") val builderCode: String,
     @Json(name = "minOrderSize") val minOrderSize: String,
+    @Json(name = "minOrderAmount") val minOrderAmount: String?,
     @Json(name = "tickSize") val tickSize: String,
     @Json(name = "live") val isLive: Boolean,
 )

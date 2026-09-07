@@ -38,6 +38,7 @@ dependencies {
     api(projects.core.remote)
     implementation(projects.core.local)
     implementation(deps.androidx.datastore.core)
+    implementation(deps.androidx.datastore.preferences.core)
     implementation(projects.core.utils)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
