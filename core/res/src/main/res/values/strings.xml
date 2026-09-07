@@ -770,6 +770,8 @@
   <string name="feed_search_show_all_user_assets">Show All</string>
   <string name="feed_search_show_less_user_assets">Show less</string>
   <string name="feed_tab_crypto">Crypto</string>
+  <string name="feed_tab_earn">Earn</string>
+  <string name="feed_tab_rwa">Real assets</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">Trending Now</string>
   <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
@@ -1014,6 +1016,9 @@
   <string name="introduction_create_wallet_seed_phrase_title">Create seed phrase wallet</string>
   <string name="introduction_i_have_wallet_hardware_description">Use Tangem Wallet to enter the app</string>
   <string name="introduction_i_have_wallet_sign_in_google_title">Sign in with Google</string>
+  <string name="introduction_import_icloud_not_found">iCloud backup not found</string>
+  <string name="introduction_import_icloud_restore">Restore iCloud backup</string>
+  <string name="introduction_import_icloud_retry">Retry iCloud backup</string>
   <string name="introduction_legal">By continuing, you agree with %1$s and %2$s</string>
   <string name="introduction_stories_button_primary">Scan your wallet</string>
   <string name="introduction_stories_button_secondary">Learn more or buy</string>
@@ -1025,7 +1030,9 @@
   <string name="introduction_stories_three_title">Your keys, your crypto</string>
   <string name="introduction_stories_two_subtitle">Use any of your cards to access your wallet</string>
   <string name="introduction_stories_two_title">One wallet, multiple cards</string>
+  <string name="introduction_subtitle">The only app you need\nto manage your finances</string>
   <string name="introduction_terms_of_service">Terms of service</string>
+  <string name="introduction_title">Store all your assets</string>
   <string name="joint_account_activated_snackbar">Account activated</string>
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
@@ -1172,6 +1179,7 @@
   <string name="markets_real_assets_category_stablecoins">Stablecoins</string>
   <string name="markets_real_assets_category_xstocks">xStocks</string>
   <string name="markets_real_assets_empty_title">No assets found</string>
+  <string name="markets_real_assets_featured_assets">Featured assets</string>
   <string name="markets_real_assets_filter_sectors_title">Sectors</string>
   <string name="markets_real_assets_filter_title">Category</string>
   <string name="markets_real_assets_interval_day">Day</string>
@@ -1908,7 +1916,7 @@
   <string name="send_validation_destination_tag_required_title">Destination Tag Required</string>
   <string name="send_validation_invalid_amount">Invalid amount</string>
   <string name="send_validation_invalid_fee">Fee exceeds balance</string>
-  <string name="send_validation_invalid_total">Total amount exceeds balance</string>
+  <string name="send_validation_invalid_total">Total amount exceeds balance!</string>
   <string name="send_with_swap_change_token_alert_message">Are you sure you want to change the receiving token? This will reset your previously entered data.</string>
   <string name="send_with_swap_change_token_alert_title">Changing token</string>
   <string name="send_with_swap_confirm_title">Swap &amp; Send</string>
@@ -2201,7 +2209,7 @@
   <string name="tangem_pay_transaction_details_cashback_below_min">Below min trx amount</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Monthly cap reached</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluded</string>
-  <string name="tangem_pay_transaction_details_cashback_none">No cashback</string>
+  <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Return of purchase</string>
   <string name="tangem_pay_transaction_details_cashback_region_excluded">Excluded region</string>
   <string name="tangem_pay_transaction_details_category">Category</string>
@@ -2325,7 +2333,7 @@
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">We process purchases within 5 days after the operation and count only completed transactions</string>
   <string name="tangempay_cashback_accruals_calc_title">How we calculate cashback?</string>
-  <string name="tangempay_cashback_accruals_exceptions_description">No cashback will be awarded for in-person/in-store purchases at EU merchants; also for withdrawals, transfers, quasi-cash, mobile phone bills, government services and certain other categories</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">For now, cashback isn’t available for in-store purchases at EU merchants. It’s also no cashback for ATMs, quasi-cash, mobile phone bills, government services, and some other categories.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
   <string name="tangempay_cashback_accruals_pay_description">From the 2nd to the 5th of the next month</string>
   <string name="tangempay_cashback_accruals_pay_title">How we pay cashback?</string>
@@ -2367,7 +2375,7 @@
   <string name="tangempay_choose_network_row_loading">Preparing address…</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
-  <string name="tangempay_common_error_loading">Error loading</string>
+  <string name="tangempay_common_error_loading">—</string>
   <string name="tangempay_current_plan_active_till_notification">Your %1$s plan is active till %2$s, then we will move you to %3$s. %4$s won\'t be charged.</string>
   <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
   <string name="tangempay_current_plan_change">Change plan</string>
@@ -2406,7 +2414,7 @@
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
   <string name="tangempay_feature_will_be_available_soon">Feature will be available soon</string>
   <string name="tangempay_feature_will_be_available_soon_description">You will be available to issue additional cards for your payment account</string>
-  <string name="tangempay_get_banner_description">Get your free Tangem Visa virtual card</string>
+  <string name="tangempay_get_banner_description">Free Tangem Pay card with up to 2% cashback</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_go_to_support">Go to Support</string>
   <string name="tangempay_issue_additional_card_description">It generates a new set of card details</string>
@@ -2458,15 +2466,15 @@
   <string name="tangempay_newonboard_title">Get your Tangem Pay Card</string>
   <string name="tangempay_newonboard_topleft_body">Pay what you see</string>
   <string name="tangempay_newonboard_topleft_title">No purchase fees, \n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">No surprises</string>
-  <string name="tangempay_newonboard_topright_title">$0 monthly fee\n$0 topup fee</string>
-  <string name="tangempay_onboarding_banner_description">Get your free Tangem Visa virtual card</string>
-  <string name="tangempay_onboarding_banner_title">Use USDC for everyday payments</string>
+  <string name="tangempay_newonboard_topright_body">Paid in USDC, not obscure tokens</string>
+  <string name="tangempay_newonboard_topright_title">Cashback up to 2%</string>
+  <string name="tangempay_onboarding_banner_description">Free Tangem Pay card with up to 2% cashback</string>
+  <string name="tangempay_onboarding_banner_title">Spend crypto anywhere in real life</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
-  <string name="tangempay_onboarding_pay_description">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">With digital card via Apple Pay or Google Pay, no additional fees for purchases</string>
   <string name="tangempay_onboarding_pay_title">Spend your assets anywhere</string>
-  <string name="tangempay_onboarding_purchases_description">There are no additional fees for purchases</string>
-  <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
+  <string name="tangempay_onboarding_purchases_description">For all purchases. Paid in USDC — not in points or obscure tokens</string>
+  <string name="tangempay_onboarding_purchases_title">Cashback up to 2%</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
@@ -2573,7 +2581,7 @@
   <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
   <string name="tangempay_sync_needed_button">Renew session</string>
   <string name="tangempay_sync_needed_title">Payment account session expired</string>
-  <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
+  <string name="tangempay_tangem_visa_card">Spend crypto anywhere in real life</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH/FedWire</string>
@@ -2590,8 +2598,13 @@
   <string name="tangempay_va_banking_details_error_title">Couldn\'t load banking details</string>
   <string name="tangempay_va_limit_resetting_everyday">Limit is resetting every day</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
+  <string name="tangempay_withdraw_hub_bank_section_subtitle">Send to another bank using ACH or FedWire</string>
+  <string name="tangempay_withdraw_hub_bank_section_title">Bank transfer</string>
+  <string name="tangempay_withdraw_hub_recents_empty">Your recent transfers will be here</string>
   <string name="tangempay_withdraw_hub_swap_section_subtitle">From your payment account</string>
   <string name="tangempay_withdraw_hub_swap_section_title">Transfer or swap</string>
+  <string name="tangempay_withdraw_hub_to_business_account">To business account</string>
+  <string name="tangempay_withdraw_hub_to_personal_account">To personal account</string>
   <string name="tangempay_withdraw_hub_within_portfolio">Within your portfolio</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
@@ -2907,7 +2920,7 @@
   <string name="wallet_import_seed_description">Import an existing wallet with your recovery phrase.</string>
   <string name="wallet_import_seed_navtitle">Import wallet</string>
   <string name="wallet_import_seed_title">Enter recovery phrase</string>
-  <string name="wallet_import_success_description">You successfully import up your wallet.</string>
+  <string name="wallet_import_success_description">You successfully imported your wallet.</string>
   <string name="wallet_import_success_navtitle">Import wallet</string>
   <string name="wallet_import_success_title">Import completed</string>
   <string name="wallet_import_title">Import wallet</string>
