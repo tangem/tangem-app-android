@@ -199,7 +199,7 @@ internal class PredictionAccountStatusValueTest {
             balance = balance,
             fiatRate = fiatRate,
             isTradingAllowed = isTradingAllowed,
-            cryptoCurrency = COLLATERAL,
+            depositCurrency = COLLATERAL,
             depositAddress = "0xbridge",
         )
     }
