@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.exchange.RampStateManager
@@ -17,7 +18,11 @@ internal class JointAccountActionsFactory(
     rampStateManager: RampStateManager,
 ) : BaseActionsFactory(walletManagersFacade, rampStateManager) {
 
-    suspend fun create(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Set<ActionState> {
+    suspend fun create(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        yieldSupplyAvailability: YieldSupplyAvailability,
+    ): Set<ActionState> {
         val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
         val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
 
@@ -44,6 +49,13 @@ internal class JointAccountActionsFactory(
                 ActionState.Sell(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount),
                 ActionState.Stake(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount, option = null),
             ).disabled()
+
+            if (yieldSupplyAvailability is YieldSupplyAvailability.Available) {
+                ActionState.YieldMode(
+                    unavailabilityReason = ScenarioUnavailabilityReason.JointAccount,
+                    apy = yieldSupplyAvailability.apy,
+                ).disabled()
+            }
         }
     }
 }

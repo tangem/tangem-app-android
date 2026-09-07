@@ -120,6 +120,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                             tokenFilter = tokenFilter,
                             paymentAccountTokens = featureSettings.paymentAccountTokens,
                             balanceFilter = balanceFilter,
+                            isJointAccountsShown = featureSettings.isJointAccountsShown,
                         ),
                     ).convert()
 

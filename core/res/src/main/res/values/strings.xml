@@ -1029,6 +1029,8 @@
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
+  <string name="joint_account_coming_soon_description">We\'re working on it. Support is coming in one of the next updates.</string>
+  <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
@@ -1050,6 +1052,7 @@
   <string name="joint_account_invite_members_subtitle">%1$s of %2$s joined, including you</string>
   <string name="joint_account_invite_members_title">Invite members</string>
   <string name="joint_account_invite_members_to_join">Invite members to join</string>
+  <string name="joint_account_invite_members_waiting_title">Waiting for members</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_join_confirm_sheet_title">You\'re joining a shared account</string>
   <string name="joint_account_join_invalid_link_subtitle">Check that you opened the full link, or ask the account owner to send it again.</string>
@@ -1128,6 +1131,7 @@
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
+  <string name="market_categories">Categories</string>
   <string name="market_chart_ai_total">AI Total:</string>
   <string name="market_chart_ask_for_ai_summary_button">Ask for AI summary</string>
   <string name="market_chart_bubble_no_amount">No amount \non tokens</string>
