@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.*
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -21,6 +22,19 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     val title: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
         hasText(getResourceString(R.string.common_swap))
+        useUnmergedTree = true
+    }
+
+    // Account flows reuse the Swap screen but retitle it (SwapModel.withAccountFlowPresentation).
+    val withdrawTitle: KNode = child {
+        hasTestTag(TopAppBarTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_withdraw))
+        useUnmergedTree = true
+    }
+
+    val addFundsTitle: KNode = child {
+        hasTestTag(TopAppBarTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_add_funds))
         useUnmergedTree = true
     }
 
@@ -188,6 +202,14 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     val transferButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.swapping_transfer_action))
+    }
+
+    // A disabled MainButton has no click action, so its label is not merged into BASE_BUTTON —
+    // match the label node itself when the button may still be disabled.
+    val transferButtonText: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.swapping_transfer_action))
+        useUnmergedTree = true
     }
 
     val transferTitle: KNode = child {

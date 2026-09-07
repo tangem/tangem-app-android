@@ -37,6 +37,8 @@ class IssuePlasticCardUseCase(
             catch = { handleError(it) },
         ) ?: raise(VisaApiError.CardIssueOfferNotAvailable)
 
+        val specificationName = offer.data.specificationName ?: raise(VisaApiError.CardIssueOfferNotAvailable)
+
         val activeOrders = catch(
             block = {
                 customerOrderRepository
@@ -59,7 +61,7 @@ class IssuePlasticCardUseCase(
                 customerOrderRepository
                     .createPlasticIssueOrder(
                         userWalletId = userWalletId,
-                        specificationName = offer.data.specificationName,
+                        specificationName = specificationName,
                         order = plasticCardOrder,
                         idempotencyKey = idempotencyKey,
                     )

@@ -132,7 +132,11 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     ): CryptoCurrencyWarning? {
         val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
         val isNetworkFeeZero = currenciesRepository.isNetworkFeeZero(userWalletId, tokenStatus.currency.network)
-        val isGaslessAvailable = isGaslessAvailable(coinStatus = coinStatus, tokenStatus = tokenStatus)
+        val isGaslessAvailable = isGaslessAvailable(
+            userWalletId = userWalletId,
+            coinStatus = coinStatus,
+            tokenStatus = tokenStatus,
+        )
         return when {
             feePaidCurrency is FeePaidCurrency.Coin &&
                 !tokenStatus.value.amount.isZero() &&
@@ -162,6 +166,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     }
 
     private suspend fun isGaslessAvailable(
+        userWalletId: UserWalletId,
         coinStatus: CryptoCurrencyStatus,
         tokenStatus: CryptoCurrencyStatus,
     ): Boolean {
@@ -169,6 +174,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
 
         return sendFeatureToggles.isTronGaslessEnabled &&
             isTronGaslessSupportedUseCase(
+                userWalletId = userWalletId,
                 network = tokenStatus.currency.network,
                 currency = tokenStatus.currency,
             )

@@ -199,6 +199,7 @@ private fun CardArea(
     if (availableTypes.size <= 1) {
         CardArtwork(
             imageUrl = imageUrls.firstOrNull(),
+            type = availableTypes.firstOrNull(),
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 48.dp),
@@ -211,7 +212,11 @@ private fun CardArea(
         contentPadding = PaddingValues(horizontal = 48.dp),
         pageSpacing = 24.dp,
     ) { page ->
-        CardArtwork(imageUrl = imageUrls.getOrNull(page), modifier = Modifier.fillMaxWidth())
+        CardArtwork(
+            imageUrl = imageUrls.getOrNull(page),
+            type = availableTypes.getOrNull(page),
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -287,7 +292,7 @@ private fun CardTypeTabs(
 
 @Suppress("MagicNumber")
 @Composable
-private fun CardArtwork(imageUrl: String?, modifier: Modifier = Modifier) {
+private fun CardArtwork(imageUrl: String?, type: OrderCardType?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -297,15 +302,6 @@ private fun CardArtwork(imageUrl: String?, modifier: Modifier = Modifier) {
                 Brush.linearGradient(colors = listOf(Color(0xFF2A2E3A), Color(0xFF1C1F29))),
             ),
     ) {
-        Icon(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-                .size(20.dp),
-            imageVector = Icons.ic_cloud_12_filled,
-            tint = TangemTheme.colors3.icon.staticDark,
-            contentDescription = null,
-        )
         Icon(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -325,6 +321,17 @@ private fun CardArtwork(imageUrl: String?, modifier: Modifier = Modifier) {
                 loading = {},
                 error = {},
                 contentScale = ContentScale.Crop,
+                contentDescription = null,
+            )
+        }
+        if (type == OrderCardType.Virtual) {
+            Icon(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .size(20.dp),
+                imageVector = Icons.ic_cloud_12_filled,
+                tint = TangemTheme.colors3.icon.staticDark,
                 contentDescription = null,
             )
         }
