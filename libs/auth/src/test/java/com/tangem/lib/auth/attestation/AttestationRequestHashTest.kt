@@ -15,8 +15,17 @@ internal class AttestationRequestHashTest {
         // Delegate android.util.Base64 to java.util.Base64 so the real digest/encoding pipeline runs
         // and the test can assert the exact contract vector shared with the backend.
         mockkStatic(android.util.Base64::class)
+        // Honor the flags so the vector breaks if production switches the digest encoding (e.g. to
+        // URL_SAFE or NO_PADDING) — the backend contract requires standard padded Base64.
         every { android.util.Base64.encodeToString(any(), any()) } answers {
-            java.util.Base64.getEncoder().encodeToString(firstArg())
+            val flags = secondArg<Int>()
+            val encoder = if (flags and android.util.Base64.URL_SAFE != 0) {
+                java.util.Base64.getUrlEncoder()
+            } else {
+                java.util.Base64.getEncoder()
+            }
+            val configured = if (flags and android.util.Base64.NO_PADDING != 0) encoder.withoutPadding() else encoder
+            configured.encodeToString(firstArg())
         }
     }
 
