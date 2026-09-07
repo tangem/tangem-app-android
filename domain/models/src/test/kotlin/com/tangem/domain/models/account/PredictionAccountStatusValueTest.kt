@@ -5,6 +5,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
+import com.tangem.domain.models.currency.CryptoCurrency
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -181,6 +183,8 @@ internal class PredictionAccountStatusValueTest {
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
 
         fun onboarding(source: StatusSource, stage: PredictionAccountStatusValue.Onboarding.Stage) =
             PredictionAccountStatusValue.Onboarding(source = source, stage = stage)
@@ -195,6 +199,8 @@ internal class PredictionAccountStatusValueTest {
             balance = balance,
             fiatRate = fiatRate,
             isTradingAllowed = isTradingAllowed,
+            cryptoCurrency = COLLATERAL,
+            depositAddress = "0xbridge",
         )
     }
 }
