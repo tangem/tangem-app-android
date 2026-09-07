@@ -3,40 +3,46 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
-import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.GlobalLoadingMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
+import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.jointaccount.model.JointAccountActivationError
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
-import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
-import com.tangem.utils.StringsSigns
+import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
+import com.tangem.features.jointaccount.main.state.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlin.time.Duration.Companion.milliseconds
+import com.tangem.core.ui.R as CoreUiR
 
 @Stable
 @ModelScoped
@@ -49,21 +55,39 @@ internal class JointAccountMembersModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val shareManager: ShareManager,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
+    private val singleAccountSupplier: SingleAccountSupplier,
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
+    private val activateJointAccountUseCase: ActivateJointAccountUseCase,
+    private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val stateController: JointAccountMembersStateController,
 ) : Model() {
 
+    private var activationJob: Job? = null
+
+    /** The account currently shown, kept only so [onArchiveClick] knows which account to archive. */
+    private var currentCryptoAccountId: String? = null
+
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
+
+    private val isInviteMode: Boolean
+        get() = params.mode == JointAccountMembersComponent.Mode.Invite
 
     val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
     val shareSafelyNavigation: SlotNavigation<Unit> = SlotNavigation()
 
     val uiState: StateFlow<JointAccountMembersUM>
-        field = MutableStateFlow(createInitialState())
-
-    private val isInviteMode: Boolean
-        get() = params.mode == JointAccountMembersComponent.Mode.Invite
+        get() = stateController.uiState
 
     init {
+        stateController.update(
+            UpdateMembersInitialStateTransformer(
+                isInviteMode = isInviteMode,
+                onShareSafelyClick = ::onShareSafelyClick,
+                onArchiveClick = ::onArchiveClick,
+                onCloseClick = ::onCloseClick,
+            ),
+        )
         observeAccount()
     }
 
@@ -81,113 +105,25 @@ internal class JointAccountMembersModel @Inject constructor(
                     )
                 }
             }
-            // The account can leave the supplier (refreshed away, removed): stale members must not survive it
             .onEach { accountWithInvites ->
-                uiState.update {
-                    accountWithInvites
-                        ?.let { (account, invites) -> buildState(account = account, invites = invites) }
-                        ?: createInitialState()
-                }
+                currentCryptoAccountId = accountWithInvites?.first?.cryptoAccountId
+
+                val transformer = accountWithInvites
+                    ?.let { (account, invites) ->
+                        UpdateMembersAccountTransformer(
+                            account = account,
+                            invites = invites,
+                            isInviteMode = isInviteMode,
+                            onShareInviteClick = ::shareInvite,
+                            onMemberInfoClick = ::onMemberInfoClick,
+                            onActivateClick = ::onActivateClick,
+                        )
+                    }
+                    ?: ClearMembersAccountTransformer()
+
+                stateController.update(transformer)
             }
             .launchIn(modelScope)
-    }
-
-    private fun createInitialState(): JointAccountMembersUM = JointAccountMembersUM(
-        title = title(),
-        progress = TextReference.EMPTY,
-        shareSafely = shareSafelyBlock(),
-        members = persistentListOf(),
-        otherMembersLabel = null,
-        canArchive = false,
-        activation = null,
-        onArchiveClick = ::onArchiveClick,
-        onCloseClick = ::onCloseClick,
-    )
-
-    private fun buildState(account: JointAccount, invites: List<String>): JointAccountMembersUM {
-        val isThisDeviceCreator = invites.isNotEmpty()
-        val joined = account.members.mapIndexed { index, member ->
-            joinedMember(index = index, member = member, isThisDeviceCreator = isThisDeviceCreator)
-        }
-        // The backend hands the invites out once and never reports which are redeemed (accepted risk, B-9),
-        // so assume they are redeemed in the order they were shared: the free slots take the remaining tail
-        val remainingInvites = invites.drop(n = (account.members.size - 1).coerceAtLeast(minimumValue = 0))
-        val freeSlots = List(size = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0)) {
-            freeSlot(index = it, invite = remainingInvites.getOrNull(it))
-        }
-
-        return JointAccountMembersUM(
-            title = title(),
-            progress = resourceReference(
-                id = if (isInviteMode) {
-                    CoreUiR.string.joint_account_invite_members_subtitle
-                } else {
-                    CoreUiR.string.joint_account_members_progress
-                },
-                formatArgs = wrappedList(account.members.size, account.membersCount),
-            ),
-            shareSafely = shareSafelyBlock(),
-            members = (joined + freeSlots).toImmutableList(),
-            otherMembersLabel = if (freeSlots.isNotEmpty()) {
-                resourceReference(CoreUiR.string.joint_account_invite_members_other_members)
-            } else {
-                null
-            },
-            canArchive = isInviteMode,
-            activation = activation(account = account, isCreator = isThisDeviceCreator),
-            onArchiveClick = ::onArchiveClick,
-            onCloseClick = ::onCloseClick,
-        )
-    }
-
-    private fun joinedMember(
-        index: Int,
-        member: JointAccount.Member,
-        isThisDeviceCreator: Boolean,
-    ): JointAccountMembersUM.MemberUM.Joined {
-        val avatar = avatar(member = member, index = index)
-        val name = stringReference(member.name)
-
-        return JointAccountMembersUM.MemberUM.Joined(
-            id = member.address,
-            avatar = avatar,
-            name = name,
-            role = role(member = member, isThisDeviceCreator = isThisDeviceCreator),
-            onInfoClick = { onMemberInfoClick(avatar = avatar, name = name, address = member.address) },
-        )
-    }
-
-    private fun role(member: JointAccount.Member, isThisDeviceCreator: Boolean): TextReference {
-        val isCreator = member.role == JointAccount.Role.CREATOR
-
-        return when {
-            isCreator && isThisDeviceCreator -> combinedReference(
-                resourceReference(CoreUiR.string.joint_account_members_role_you),
-                stringReference(" ${StringsSigns.DOT} "),
-                resourceReference(CoreUiR.string.joint_account_invite_members_creator),
-            )
-            isCreator -> resourceReference(CoreUiR.string.joint_account_invite_members_creator)
-            else -> resourceReference(CoreUiR.string.joint_account_members_role_joined)
-        }
-    }
-
-    private fun avatar(member: JointAccount.Member, index: Int): JointAccountMembersUM.MemberAvatarUM {
-        val colors = CryptoPortfolioIcon.Color.entries
-
-        return JointAccountMembersUM.MemberAvatarUM(
-            monogram = member.name.take(n = 1).uppercase(),
-            color = colors[index % colors.size],
-        )
-    }
-
-    private fun freeSlot(index: Int, invite: String?): JointAccountMembersUM.MemberUM.FreeSlot {
-        return JointAccountMembersUM.MemberUM.FreeSlot(
-            id = "slot_$index",
-            title = resourceReference(CoreUiR.string.joint_account_invite_members_new_member),
-            status = resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
-            canInvite = isInviteMode && invite != null,
-            onInviteClick = { invite?.let(::shareInvite) },
-        )
     }
 
     /** The slot's own invite: a link issued for one slot cannot be redeemed for another */
@@ -195,61 +131,107 @@ internal class JointAccountMembersModel @Inject constructor(
         shareManager.shareText(text = JointAccountInviteLinkBuilder.build(inviteId = inviteId))
     }
 
-    private fun activation(account: JointAccount, isCreator: Boolean): JointAccountMembersUM.ActivationUM? {
-        val canActivate = isInviteMode && isCreator && account.status == JointAccount.Status.CONFIRMING
+    private fun onActivateClick(cryptoAccountId: String) {
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId)
 
-        if (!canActivate) return null
-
-        return JointAccountMembersUM.ActivationUM(
-            onActivateClick = ::onActivateClick,
-            confirmation = null,
-        )
-    }
-
-    private fun title(): TextReference = if (isInviteMode) {
-        resourceReference(CoreUiR.string.joint_account_invite_members_title)
-    } else {
-        resourceReference(CoreUiR.string.joint_account_members_title)
-    }
-
-    private fun shareSafelyBlock() = JointAccountMembersUM.ShareSafelyUM(
-        title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_title),
-        description = resourceReference(CoreUiR.string.joint_account_invite_members_safety_subtitle),
-        onClick = ::onShareSafelyClick,
-    )
-
-    private fun onActivateClick() {
-        updateActivationConfirmation(
-            confirmation = JointAccountMembersUM.ActivationUM.ConfirmationUM(
-                onConfirmClick = ::onConfirmActivationClick,
-                onCancelClick = ::onCancelActivationClick,
+        stateController.update(
+            SetActivationConfirmationTransformer(
+                confirmation = JointAccountMembersUM.ActivationUM.ConfirmationUM(
+                    walletInteractionIconRes = userWallet?.let(::walletInterationIcon),
+                    isConfirming = false,
+                    onConfirmClick = { onConfirmActivationClick(cryptoAccountId = cryptoAccountId) },
+                    onCancelClick = ::onCancelActivationClick,
+                ),
             ),
         )
     }
 
-    private fun onConfirmActivationClick() {
-        // TODO([REDACTED_TASK_KEY]): run the activation orchestrator (one-tap payload signing) once it lands
-        updateActivationConfirmation(confirmation = null)
+    private fun onConfirmActivationClick(cryptoAccountId: String) {
+        // The loader shows even when a signing is already in flight — a re-opened sheet joins the running
+        // attempt instead of silently ignoring the tap; its completion closes the sheet either way
+        stateController.update(SetActivationConfirmingTransformer(isConfirming = true))
+
+        if (activationJob?.isActive == true) return
+
+        activationJob = modelScope.launch {
+            val account = findAccount(cryptoAccountId = cryptoAccountId)
+
+            if (account == null) {
+                TangemLogger.e("Joint account activation failed: no account behind the shown members list")
+                stateController.update(SetActivationConfirmationTransformer(confirmation = null))
+                showActivationError()
+                return@launch
+            }
+
+            val result = activateJointAccountUseCase(account = account)
+            stateController.update(SetActivationConfirmationTransformer(confirmation = null))
+            result
+                .onLeft(::onActivationError)
+                .onRight { onActivated() }
+        }
+    }
+
+    private fun onActivated() {
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
+                startIconId = CoreUiR.drawable.ic_success_20,
+            ),
+        )
+        router.pop()
+    }
+
+    private suspend fun findAccount(cryptoAccountId: String): Account.Joint? {
+        val accountId = AccountId
+            .forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId)
+            .getOrNull()
+            ?: return null
+
+        return withTimeoutOrNull(ACCOUNT_LOOKUP_TIMEOUT_MILLIS.milliseconds) {
+            singleAccountSupplier.filterJointAccount(accountId = accountId).firstOrNull()
+        }
+    }
+
+    // TODO: a separate task tells the cases apart (no network, a mismatching address, not the creator) — for now
+    //  they share the generic dialog, like the creation flow
+    private fun onActivationError(error: JointAccountActivationError) {
+        when (error) {
+            // Dismissing the signing is not a failure: the screen stays as it was
+            JointAccountFlowError.UserCancelled -> Unit
+            JointAccountActivationError.AccountNotFound,
+            JointAccountActivationError.NotReadyForActivation,
+            JointAccountActivationError.AddressMismatch,
+            JointAccountActivationError.NotCreator,
+            -> {
+                TangemLogger.e("Joint account activation failed: $error")
+                showActivationError()
+            }
+            is JointAccountFlowError.Failed -> {
+                TangemLogger.e("Joint account activation failed", error.cause)
+                showActivationError()
+            }
+        }
+    }
+
+    private fun showActivationError() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreUiR.string.common_error),
+                message = resourceReference(CoreUiR.string.common_something_went_wrong),
+            ),
+        )
     }
 
     private fun onCancelActivationClick() {
-        updateActivationConfirmation(confirmation = null)
-    }
-
-    private fun updateActivationConfirmation(confirmation: JointAccountMembersUM.ActivationUM.ConfirmationUM?) {
-        uiState.update { state ->
-            state.copy(activation = state.activation?.copy(confirmation = confirmation))
-        }
+        stateController.update(SetActivationConfirmationTransformer(confirmation = null))
     }
 
     private fun onShareSafelyClick() {
         shareSafelyNavigation.activate(Unit)
     }
 
-    private fun onMemberInfoClick(avatar: JointAccountMembersUM.MemberAvatarUM, name: TextReference, address: String) {
-        bottomSheetNavigation.activate(
-            MemberCardConfig(avatar = avatar, name = name, address = address),
-        )
+    private fun onMemberInfoClick(config: MemberCardConfig) {
+        bottomSheetNavigation.activate(config)
     }
 
     fun onCopyAddressClick(address: String) {
@@ -263,11 +245,71 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun onArchiveClick() {
-        // TODO: archive the account once domain integration lands. The "Account archived" toast is
-        //  shown by the screen.
+        val cryptoAccountId = currentCryptoAccountId ?: return
+
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreUiR.string.account_details_archive),
+                message = resourceReference(CoreUiR.string.account_details_archive_joint_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(CoreUiR.string.account_details_archive_action),
+                        isWarning = true,
+                        onClick = { archiveAccount(cryptoAccountId) },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun archiveAccount(cryptoAccountId: String) {
+        modelScope.launch {
+            uiMessageSender.send(GlobalLoadingMessage(isShow = true))
+
+            AccountId.forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId).fold(
+                ifLeft = { failedArchiveDialog(error = null) },
+                ifRight = { accountId ->
+                    archiveCryptoPortfolioUseCase(accountId)
+                        .onLeft { error -> failedArchiveDialog(error = error) }
+                        .onRight {
+                            val toast = ToastMessage(
+                                message = resourceReference(CoreUiR.string.account_archive_success_message),
+                            )
+                            uiMessageSender.send(toast)
+                            router.pop()
+                        }
+                },
+            )
+
+            uiMessageSender.send(GlobalLoadingMessage(isShow = false))
+        }
+    }
+
+    private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error?) {
+        val titleRes: Int
+        val messageRes: Int
+        if (error is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus) {
+            titleRes = CoreUiR.string.account_could_not_archive_referral_program_title
+            messageRes = CoreUiR.string.account_could_not_archive_referral_program_message
+        } else {
+            titleRes = CoreUiR.string.common_something_went_wrong
+            messageRes = CoreUiR.string.account_generic_error_dialog_message
+        }
+
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(titleRes),
+                message = resourceReference(messageRes),
+            ),
+        )
     }
 
     private fun onCloseClick() {
         router.pop()
+    }
+
+    private companion object {
+        const val ACCOUNT_LOOKUP_TIMEOUT_MILLIS = 3_000L
     }
 }

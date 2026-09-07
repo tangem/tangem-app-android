@@ -9,6 +9,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
@@ -73,7 +74,12 @@ internal class PlacePredictionNotificationsFactoryTest {
         ),
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
-            expectedNotifications = listOf(PredictionNotificationUM.BelowMinOrderSize),
+            expectedNotifications = emptyList(),
+            expectedButtonEnabled = false,
+        ),
+        GateModel(
+            quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT),
+            expectedNotifications = emptyList(),
             expectedButtonEnabled = false,
         ),
         GateModel(
@@ -182,6 +188,38 @@ internal class PlacePredictionNotificationsFactoryTest {
     }
 
     @Test
+    fun `GIVEN the sum is below the exchange minimum WHEN the gate runs THEN the minimum is stated AND the button is off`() {
+        // Arrange
+        val state = createState(amountValue = "1", minAmount = BigDecimal("4.5"), quote = createQuote())
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.5")))
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the balance falls short of a sum below the minimum WHEN the gate runs THEN the balance is blamed first`() {
+        // Arrange
+        val state = createState(
+            amountValue = "1",
+            minAmount = BigDecimal("4.5"),
+            balance = BigDecimal("0.5"),
+            quote = createQuote(),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
     fun `GIVEN the balance is not read yet WHEN the gate runs THEN the user is not told it is insufficient`() {
         // Arrange — a balance nobody answered for must not be reported as an empty one
         val state = createState(balance = null, quote = createQuote())
@@ -195,17 +233,92 @@ internal class PlacePredictionNotificationsFactoryTest {
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
 
+    @Test
+    fun `GIVEN a closed-market price error WHEN the gate runs THEN the market closed banner blocks`() {
+        // Arrange
+        val state = createState(priceError = PriceErrorUM.MarketClosed)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN an unknown price error WHEN the gate runs THEN the generic price banner blocks`() {
+        // Arrange
+        val state = createState(priceError = PriceErrorUM.Unknown)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.PriceFailed)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN market closed by both price and quote WHEN the gate runs THEN the banner appears once`() {
+        // Arrange
+        val state = createState(
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.MARKET_CLOSED),
+            priceError = PriceErrorUM.MarketClosed,
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+    }
+
+    @Test
+    fun `GIVEN the market takes no orders WHEN the gate runs THEN it is closed before any quote`() {
+        // Arrange
+        val state = createState(quote = QuoteUM.Empty, isMarketAcceptingOrders = false)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the quote also reports the market closed WHEN the gate runs THEN it is reported once`() {
+        // Arrange
+        val state = createState(
+            quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.MARKET_CLOSED),
+            isMarketAcceptingOrders = false,
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
+    }
+
     private fun createState(
         quote: QuoteUM = QuoteUM.Empty,
         balance: BigDecimal? = BigDecimal("100"),
         tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
         submit: SubmitUM = SubmitUM.Idle,
+        amountValue: String = "10",
+        minAmount: BigDecimal? = null,
+        priceError: PriceErrorUM? = null,
+        isMarketAcceptingOrders: Boolean = true,
     ): PlacePredictionUM = PlacePredictionUM(
+        priceError = priceError,
         market = MarketHeaderUM(
             title = "Will it rain?",
             imageUrl = null,
             outcomeTitle = "Yes",
             outcomePriceCents = 42,
+            resolutionDateMillis = null,
         ),
         payment = PaymentSourceUM(
             tokenSymbol = "USDC",
@@ -213,9 +326,11 @@ internal class PlacePredictionNotificationsFactoryTest {
             balance = balance,
             hasSufficientBalance = false,
         ),
-        amountValue = "10",
+        amountValue = amountValue,
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
+        minAmount = minAmount,
         quote = quote,
+        isMarketAcceptingOrders = isMarketAcceptingOrders,
         tradingPermission = tradingPermission,
         notifications = persistentListOf(),
         slippagePicker = SlippagePickerUM.empty(),
@@ -229,14 +344,12 @@ internal class PlacePredictionNotificationsFactoryTest {
         guaranteedShares: BigDecimal = BigDecimal("23.2"),
         feeTotal: BigDecimal = BigDecimal("0.1"),
         total: BigDecimal = BigDecimal("10.1"),
-        minOrderSize: BigDecimal = BigDecimal("5"),
     ): QuoteUM.Content = QuoteUM.Content(
         status = status,
         expectedShares = expectedShares,
         guaranteedShares = guaranteedShares,
         feeTotal = feeTotal,
         total = total,
-        minOrderSize = minOrderSize,
         signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),
     )
 

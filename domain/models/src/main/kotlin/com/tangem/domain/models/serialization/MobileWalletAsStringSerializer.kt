@@ -15,11 +15,7 @@ import kotlinx.serialization.encoding.Encoder
 internal object MobileWalletAsStringSerializer : KSerializer<MobileWallet> {
 
     private val moshi = Moshi.Builder()
-        .add(WalletDerivedKeysMapAdapter())
-        .add(ScanResponseDerivedKeysMapAdapter())
-        .add(ByteArrayKeyAdapter())
-        .add(ExtendedPublicKeysMapAdapter())
-        .add(DerivationPathAdapterWithMigration())
+        .addScanResponseAdapters()
         .add(TangemSdkAdapter.DateAdapter())
         .add(TangemSdkAdapter.DerivationNodeAdapter())
         .addLast(KotlinJsonAdapterFactory())

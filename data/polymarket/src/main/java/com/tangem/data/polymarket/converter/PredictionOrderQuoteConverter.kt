@@ -28,6 +28,7 @@ internal object PredictionOrderQuoteConverter : Converter<PolymarketOrderQuoteRe
         total = BigDecimal(value.total),
         builderCode = value.builderCode,
         minOrderSize = BigDecimal(value.minOrderSize),
+        minOrderAmount = value.minOrderAmount?.let(::BigDecimal),
         tickSize = BigDecimal(value.tickSize),
         isLive = value.isLive,
     )

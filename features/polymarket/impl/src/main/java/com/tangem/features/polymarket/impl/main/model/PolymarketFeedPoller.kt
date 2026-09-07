@@ -12,6 +12,7 @@ import com.tangem.pagination.exception.OperationWIthTheSameIdInProgress
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,17 +20,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-/**
- * Keeps the pages of the Discovery feed that the user is looking at up to date.
- *
- * Only visible pages are refreshed: the feed can hold many loaded pages, and the ones scrolled away change
- * nothing on the screen.
- */
+/** Keeps the visible pages of the Discovery feed up to date. */
 @Suppress("LongParameterList")
 internal class PolymarketFeedPoller(
     private val scope: CoroutineScope,
@@ -40,7 +35,6 @@ internal class PolymarketFeedPoller(
     private val pollInterval: Duration = POLL_INTERVAL,
     private val staleAfter: Duration = STALE_AFTER,
     private val reportAfterFailures: Int = REPORT_AFTER_FAILURES,
-    private val reportCooldown: Duration = REPORT_COOLDOWN,
 ) {
 
     private val tickerJob = JobHolder()
@@ -50,13 +44,8 @@ internal class PolymarketFeedPoller(
 
     private var visibleEventIds: Set<String> = emptySet()
     private var config: PolymarketEventsListConfig? = null
-    private var lastStaleDataReport: TimeMark? = null
 
-    /**
-     * [scope] is expected to be single-threaded — the model hands over its own, on the main dispatcher. That is
-     * load-bearing: [pageMeta] and [refreshesInFlight] are touched both from the coroutines started here and from
-     * the calls the screen and the model make, and one thread is what keeps them race-free without locks.
-     */
+    /** Relies on [scope] being single-threaded: [pageMeta] and [refreshesInFlight] are unguarded. */
     fun start() {
         batchFlow.state
             .onEach(::stampLoadedPages)
@@ -120,13 +109,10 @@ internal class PolymarketFeedPoller(
         val stalePages = visibleBatchKeys(state).filter { key ->
             val meta = pageMeta[key] ?: return@filter false
 
-            // A failed refresh leaves the page stale for good, so staleness alone would let every scroll-idle
-            // tick ask again.
             meta.fetchedAt.elapsedNow() >= staleAfter && meta.lastAttemptAt.elapsedNow() >= pollInterval
         }
 
         stalePages.forEach { key ->
-            // Skipped rather than queued: the tick after a slow refresh would stack a second request on it.
             if (!refreshesInFlight.add(key)) return@forEach
 
             pageMeta[key] = pageMeta.getValue(key).copy(lastAttemptAt = timeSource.markNow())
@@ -147,7 +133,6 @@ internal class PolymarketFeedPoller(
         request: PolymarketEventsUpdateRequest,
         result: BatchUpdateResult<Int, PolymarketEventsBatch>,
     ) {
-        // Not an answer about the page: the pagination reports it when an operation is issued twice over.
         if (result is BatchUpdateResult.Error && result.throwable is OperationWIthTheSameIdInProgress) return
 
         val key = request.batchKey
@@ -159,6 +144,8 @@ internal class PolymarketFeedPoller(
                 pageMeta[key] = meta.copy(fetchedAt = timeSource.markNow(), failCount = 0)
             }
             is BatchUpdateResult.Error -> {
+                if (result.throwable is CancellationException) return
+
                 val failCount = meta.failCount + 1
                 TangemLogger.i("Feed: refresh of page $key failed, $failCount in a row")
                 pageMeta[key] = meta.copy(failCount = failCount)
@@ -172,17 +159,10 @@ internal class PolymarketFeedPoller(
         if (meta.failCount < reportAfterFailures) return
         if (key !in visibleBatchKeys(batchFlow.state.value)) return
 
-        val lastReport = lastStaleDataReport
-        if (lastReport != null && lastReport.elapsedNow() < reportCooldown) return
-
-        lastStaleDataReport = timeSource.markNow()
         onStaleData()
     }
 
-    /**
-     * An event the cursor served twice counts towards the page it first appeared on — the rule the feed renders
-     * by — so a duplicate never marks a page the user cannot see as visible.
-     */
+    /** An event served twice counts towards the page it first appeared on — the rule the feed renders by. */
     private fun visibleBatchKeys(state: PolymarketEventsBatchListState): Set<Int> {
         val visibleIds = visibleEventIds
         if (visibleIds.isEmpty()) return emptySet()
@@ -198,13 +178,12 @@ internal class PolymarketFeedPoller(
         }
     }
 
-    /** [fetchedAt] moves only on a success; [lastAttemptAt] on every request, which is what paces the retries. */
+    /** [fetchedAt] moves on success only, [lastAttemptAt] on every request. */
     private data class PageMeta(val fetchedAt: TimeMark, val lastAttemptAt: TimeMark, val failCount: Int)
 
     private companion object {
         val POLL_INTERVAL = 20.seconds
         val STALE_AFTER = 20.seconds
-        val REPORT_COOLDOWN = 5.minutes
         const val REPORT_AFTER_FAILURES = 3
         const val REFRESH_OPERATION_PREFIX = "polymarket-feed-refresh-"
     }
