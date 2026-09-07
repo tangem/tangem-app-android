@@ -17,7 +17,10 @@ internal class UpdateMembersAccountTransformerTest {
     @Test
     fun `GIVEN one joined of three WHEN transform THEN joined member and two free slots`() {
         // Arrange
-        val transformer = createTransformer(account = createJointAccount(members = listOf(fixtureCreator)))
+        val transformer = createTransformer(
+            account = createJointAccount(members = listOf(fixtureCreator)),
+            invites = listOf("invite-a"),
+        )
 
         // Act
         val actual = transformer.transform(createMembersUM())
@@ -193,6 +196,25 @@ internal class UpdateMembersAccountTransformerTest {
 
         // Assert
         assertThat(actual.activation).isNull()
+    }
+
+    @Test
+    fun `GIVEN non-creator device in invite mode WHEN transform THEN waiting title and share-safely hidden`() {
+        // Arrange
+        val transformer = createTransformer(
+            account = createJointAccount(members = listOf(fixtureCreator, fixtureMember)),
+            invites = emptyList(),
+        )
+
+        // Act
+        val actual = transformer.transform(createMembersUM())
+
+        // Assert
+        assertThat(actual.title).isEqualTo(
+            resourceReference(CoreUiR.string.joint_account_invite_members_waiting_title),
+        )
+        assertThat(actual.shareSafely).isNull()
+        assertThat(actual.canArchive).isFalse()
     }
 
     @Test
