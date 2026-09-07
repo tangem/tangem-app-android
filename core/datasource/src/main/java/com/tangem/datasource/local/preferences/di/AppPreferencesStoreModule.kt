@@ -12,7 +12,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.datasource.local.preferences.*
 import com.tangem.datasource.local.preferences.migration.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration

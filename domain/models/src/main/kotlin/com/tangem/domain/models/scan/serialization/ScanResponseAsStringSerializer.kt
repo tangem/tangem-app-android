@@ -13,12 +13,7 @@ import kotlinx.serialization.encoding.Encoder
 
 internal object ScanResponseAsStringSerializer : KSerializer<ScanResponse> {
     private val moshi = Moshi.Builder()
-        .add(WalletDerivedKeysMapAdapter())
-        .add(ScanResponseDerivedKeysMapAdapter())
-        .add(ByteArrayKeyAdapter())
-        .add(ExtendedPublicKeysMapAdapter())
-        .add(CardBackupStatusAdapter())
-        .add(DerivationPathAdapterWithMigration())
+        .addScanResponseAdapters()
         .add(TangemSdkAdapter.DateAdapter())
         .add(TangemSdkAdapter.DerivationNodeAdapter())
         .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
