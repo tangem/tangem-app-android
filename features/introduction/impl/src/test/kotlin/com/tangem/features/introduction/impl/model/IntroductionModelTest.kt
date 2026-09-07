@@ -34,6 +34,7 @@ import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
+import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -73,6 +74,7 @@ internal class IntroductionModelTest {
     private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
+    private val mobileWalletCreator: IntroductionMobileWalletCreator = mockk(relaxed = true)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val surfaceView: SurfaceView = mockk(relaxed = true)
@@ -94,6 +96,7 @@ internal class IntroductionModelTest {
             resolveCloudRestoreBackups,
             trackingContextProxy,
             cardScanner,
+            mobileWalletCreator,
             generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
@@ -323,7 +326,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN a supported device WHEN the seed phrase option is picked THEN the creation flow opens`() {
+        fun `GIVEN a supported device WHEN the seed phrase option is picked THEN the wallet is created in place`() {
             // Arrange
             val model = createModel()
 
@@ -331,18 +334,79 @@ internal class IntroductionModelTest {
             model.openSheet().seedPhrase.onClick()
 
             // Assert
-            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(model.seedPhraseRow().isLoading).isTrue()
             verify(exactly = 1) { trackingContextProxy.addHotWalletContext() }
-            // The creation flow owns the context from here on and releases it on its own destroy.
             verify(exactly = 0) { trackingContextProxy.removeContext() }
-            verify(exactly = 1) {
-                router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro))
+            coVerify(exactly = 1) {
+                mobileWalletCreator.createAndOpen(
+                    source = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                    onFailed = any(),
+                )
             }
+            verify { router wasNot Called }
             assertThat(sentEvents.last()).isEqualTo(
                 OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
                     source = AnalyticsParam.ScreensSources.CreateWalletIntro.value,
                 ),
             )
+        }
+
+        @Test
+        fun `GIVEN the wallet is being created WHEN the rows are tapped again THEN the taps are ignored`() {
+            // Arrange
+            val model = createModel()
+            val sheet = model.openSheet()
+            sheet.seedPhrase.onClick()
+
+            // Act
+            sheet.seedPhrase.onClick()
+            sheet.cardOrRing.onClick()
+
+            // Assert
+            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+        }
+
+        @Test
+        fun `GIVEN the wallet is being created WHEN the sheet is closed and reopened THEN it still shows the creation`() {
+            // Arrange
+            coEvery { mobileWalletCreator.createAndOpen(any(), any()) } coAnswers { awaitCancellation() }
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            model.closeCreateWalletSheet()
+
+            // Act
+            model.uiState.value.onCreateWalletClick()
+            model.seedPhraseRow().onClick()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.seedPhraseRow().isLoading).isTrue()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the wallet creation failed WHEN reported THEN the row is released and the context dropped`() {
+            // Arrange
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            val onFailed = slot<() -> Unit>()
+            coVerify { mobileWalletCreator.createAndOpen(source = any(), onFailed = capture(onFailed)) }
+
+            // Act
+            onFailed.captured()
+
+            // Assert
+            assertThat(model.seedPhraseRow().isLoading).isFalse()
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            verifyOrder {
+                trackingContextProxy.addHotWalletContext()
+                trackingContextProxy.removeContext()
+            }
         }
 
         @Test
@@ -360,7 +424,8 @@ internal class IntroductionModelTest {
             verify(exactly = 1) { uiMessageSender.send(capture(message)) }
             assertThat(message.captured.title)
                 .isEqualTo(hotWalletCreationNotSupportedDialog(LEAST_OS_VERSION).title)
-            verify { router wasNot Called }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any()) }
             // Nothing downstream opens, so the context added for the tap has to be given back here.
             verifyOrder {
                 trackingContextProxy.addHotWalletContext()
@@ -379,7 +444,7 @@ internal class IntroductionModelTest {
             sheet.seedPhrase.onClick()
 
             // Assert
-            verify { router wasNot Called }
+            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any()) }
             assertThat(sentEvents.filterIsInstance<OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet>())
                 .isEmpty()
         }
@@ -1176,6 +1241,9 @@ internal class IntroductionModelTest {
         return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
     }
 
+    private fun IntroductionModel.seedPhraseRow(): WalletOptionUM =
+        (uiState.value.bottomSheetConfig?.content as CreateWalletUM).seedPhrase
+
     private fun IntroductionModel.haveWalletStep(): HaveWalletUM.Step? =
         (uiState.value.haveWalletBottomSheetConfig?.content as? HaveWalletUM)?.step
 
@@ -1213,6 +1281,7 @@ internal class IntroductionModelTest {
         resolveCloudRestoreBackups = resolveCloudRestoreBackups,
         trackingContextProxy = trackingContextProxy,
         cardScanner = cardScanner,
+        mobileWalletCreator = mobileWalletCreator,
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         uiMessageSender = uiMessageSender,
     )
