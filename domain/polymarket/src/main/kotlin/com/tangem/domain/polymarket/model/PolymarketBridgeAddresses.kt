@@ -2,7 +2,7 @@ package com.tangem.domain.polymarket.model
 
 /**
  * @property evm serves every EVM chain the bridge accepts, not one of them
- * @property tron null when the payload names the field `tvm`, which Polymarket's own pages do inconsistently
+ * @property tron null when the bridge issues no Tron address for the deposit wallet
  */
 data class PolymarketBridgeAddresses(
     val evm: String,
