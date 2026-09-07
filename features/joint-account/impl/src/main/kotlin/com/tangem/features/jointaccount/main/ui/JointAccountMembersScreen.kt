@@ -59,20 +59,14 @@ internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: M
     TangemTopBarScaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
-        topBar = {
-            MembersTopBar(
-                canArchive = state.canArchive,
-                onArchiveClick = state.onArchiveClick,
-                onCloseClick = state.onCloseClick,
-            )
-        },
+        topBar = { MembersTopBar(topBar = state.topBar) },
     ) { contentPadding ->
         MembersContent(state = state, contentPadding = contentPadding)
 
-        val activation = state.activation
-        if (activation != null) {
+        val onActivateClick = state.onActivateClick
+        if (onActivateClick != null) {
             ActivateAccountFooter(
-                onActivateClick = activation.onActivateClick,
+                onActivateClick = onActivateClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = contentPadding.calculateBottomPadding()),
@@ -98,15 +92,24 @@ private fun ActivateAccountFooter(onActivateClick: () -> Unit, modifier: Modifie
 }
 
 @Composable
-private fun MembersTopBar(canArchive: Boolean, onArchiveClick: () -> Unit, onCloseClick: () -> Unit) {
-    TangemTopNavigation(
-        endButtonsGroup = if (canArchive) {
-            { MembersMenuButton(onArchiveClick = onArchiveClick) }
-        } else {
-            null
-        },
-        endButton = { TangemButton.Close(onClick = onCloseClick) },
-    )
+private fun MembersTopBar(topBar: JointAccountMembersUM.TopBarUM, modifier: Modifier = Modifier) {
+    when (topBar) {
+        is JointAccountMembersUM.TopBarUM.Titled -> TangemTopNavigation(
+            modifier = modifier,
+            title = topBar.title,
+            contentAlign = TangemTopNavigation.ContentAlign.Center,
+            onBack = topBar.onBackClick,
+        )
+        is JointAccountMembersUM.TopBarUM.Dismissible -> TangemTopNavigation(
+            modifier = modifier,
+            endButtonsGroup = if (topBar.canArchive) {
+                { MembersMenuButton(onArchiveClick = topBar.onArchiveClick) }
+            } else {
+                null
+            },
+            endButton = { TangemButton.Close(onClick = topBar.onCloseClick) },
+        )
+    }
 }
 
 @Composable
@@ -151,10 +154,15 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding(),
             bottom = contentPadding.calculateBottomPadding() +
-                if (state.activation != null) ACTIVATION_FOOTER_HEIGHT + 16.dp else 16.dp,
+                if (state.onActivateClick != null) ACTIVATION_FOOTER_HEIGHT + 16.dp else 16.dp,
         ),
     ) {
-        item(key = "header") { MembersHeader(title = state.title, progress = state.progress) }
+        val header = state.header
+        if (header != null) {
+            item(key = "header") { MembersHeader(title = header.title, progress = header.progress) }
+        } else {
+            item(key = "top_spacer") { Spacer(Modifier.height(12.dp)) }
+        }
 
         val shareSafely = state.shareSafely
         if (shareSafely != null) {
@@ -166,12 +174,10 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
             }
         }
 
-        val (joined, freeSlots) = state.members.partitionMembers()
-
-        items(items = joined, key = { it.id }) { member ->
+        items(items = state.joined, key = { it.id }) { member ->
             JoinedMemberRow(
                 member = member,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             )
         }
 
@@ -187,7 +193,7 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
             }
         }
 
-        items(items = freeSlots, key = { it.id }) { slot ->
+        items(items = state.freeSlots, key = { it.id }) { slot ->
             FreeSlotRow(
                 slot = slot,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
@@ -320,12 +326,6 @@ private fun Modifier.jointAccountCard(): Modifier = this
     .clip(RoundedCornerShape(24.dp))
     .background(TangemTheme.colors3.bg.secondary)
 
-private fun List<MemberUM>.partitionMembers(): Pair<List<MemberUM.Joined>, List<MemberUM.FreeSlot>> {
-    val joined = filterIsInstance<MemberUM.Joined>()
-    val freeSlots = filterIsInstance<MemberUM.FreeSlot>()
-    return joined to freeSlots
-}
-
 // region Preview
 @Preview(name = "Light", showBackground = true, heightDp = 874)
 @Composable
@@ -347,37 +347,73 @@ private fun JointAccountMembersScreen_DarkPreview(
     }
 }
 
+/**
+ * Mirrors the four real phases the screen goes through (see `MembersScreenPhase` in
+ * `JointAccountToMembersUMConverter`) — not ad-hoc combinations, so a preview going stale is a signal the
+ * converter's phase mapping changed.
+ */
 private class JointAccountMembersPreviewProvider :
     CollectionPreviewParameterProvider<JointAccountMembersUM>(
         collection = listOf(
-            previewState(title = "Invite members", canInvite = true, canArchive = true),
-            previewState(title = "Invite members", canInvite = false, canArchive = false),
-            previewState(title = "Members", canInvite = false, canArchive = false),
-            previewState(title = "Invite members", canInvite = false, canArchive = true, canActivate = true),
+            previewState(
+                title = "Invite members",
+                progress = "1 of 5 joined, including you",
+                joinedCount = 1,
+                canInvite = true,
+                canArchive = true,
+            ),
             previewState(
                 title = "Waiting for members",
+                progress = "2 of 5 joined, including you",
+                joinedCount = 2,
                 canInvite = false,
                 canArchive = false,
                 showShareSafely = false,
             ),
+            previewState(
+                title = "Invite members",
+                progress = "5 of 5 joined, including you",
+                joinedCount = 5,
+                canInvite = false,
+                canArchive = true,
+                canActivate = true,
+            ),
+            previewState(
+                title = "Members",
+                progress = "5 of 5 joined, including you",
+                joinedCount = 5,
+                canInvite = false,
+                canArchive = false,
+                showShareSafely = false,
+                completed = true,
+            ),
         ),
     )
 
+@Suppress("LongParameterList")
 private fun previewState(
     title: String,
+    progress: String,
+    joinedCount: Int,
     canInvite: Boolean,
     canArchive: Boolean,
     canActivate: Boolean = false,
     showShareSafely: Boolean = true,
+    completed: Boolean = false,
 ): JointAccountMembersUM {
-    val creator = MemberUM.Joined(
-        id = "creator",
-        avatar = JointAccountMembersUM.MemberAvatarUM(monogram = "I", color = CryptoPortfolioIcon.Color.Azure),
-        name = stringReference("Ivan Zolo"),
-        role = stringReference("You • Creator"),
-        onInfoClick = {},
-    )
-    val freeSlots = List(size = 4) { index ->
+    val joined = List(size = joinedCount) { index ->
+        MemberUM.Joined(
+            id = "member_$index",
+            avatar = JointAccountMembersUM.MemberAvatarUM(
+                monogram = "I",
+                color = CryptoPortfolioIcon.Color.entries[index % CryptoPortfolioIcon.Color.entries.size],
+            ),
+            name = stringReference(if (index == 0) "Ivan Zolo" else "Member $index"),
+            role = stringReference(if (index == 0) "You • Creator" else "Joined"),
+            onInfoClick = {},
+        )
+    }
+    val freeSlots = List(size = (5 - joinedCount).coerceAtLeast(0)) { index ->
         MemberUM.FreeSlot(
             id = "slot_$index",
             title = stringReference("Member"),
@@ -387,8 +423,16 @@ private fun previewState(
         )
     }
     return JointAccountMembersUM(
-        title = stringReference(title),
-        progress = stringReference("1 of 5 joined, including you"),
+        topBar = if (completed) {
+            JointAccountMembersUM.TopBarUM.Titled(title = stringReference(title), onBackClick = {})
+        } else {
+            JointAccountMembersUM.TopBarUM.Dismissible(canArchive = canArchive, onArchiveClick = {}, onCloseClick = {})
+        },
+        header = if (completed) {
+            null
+        } else {
+            JointAccountMembersUM.HeaderUM(title = stringReference(title), progress = stringReference(progress))
+        },
         shareSafely = if (showShareSafely) {
             JointAccountMembersUM.ShareSafelyUM(
                 title = stringReference("Share invites safely"),
@@ -400,16 +444,14 @@ private fun previewState(
         } else {
             null
         },
-        members = (listOf(creator) + freeSlots).toImmutableList(),
-        otherMembersLabel = stringReference("Other members"),
-        canArchive = canArchive,
-        activation = if (canActivate) {
-            JointAccountMembersUM.ActivationUM(onActivateClick = {}, confirmation = null)
+        joined = joined.toImmutableList(),
+        freeSlots = freeSlots.toImmutableList(),
+        otherMembersLabel = if (freeSlots.isNotEmpty()) stringReference("Other members") else null,
+        onActivateClick = if (canActivate) {
+            {}
         } else {
             null
         },
-        onArchiveClick = {},
-        onCloseClick = {},
     )
 }
 // endregion
