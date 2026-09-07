@@ -124,7 +124,8 @@ sealed class PredictionAccountStatusValue {
      *                    quote has never been available. When `null`, [totalFiatBalance] resolves to
      *                    [TotalFiatBalance.Failed].
      * @property isTradingAllowed Whether the user may trade, as opposed to only viewing and withdrawing.
-     * @property cryptoCurrency The token the collateral is denominated in.
+     * @property depositCurrency The token a deposit is made in, which is not the token [balance] is
+     *                           denominated in.
      * @property depositAddress Address a deposit is sent to for it to credit this account, or `null` until the
      *                          bridge has confirmed one.
      */
@@ -134,19 +135,21 @@ sealed class PredictionAccountStatusValue {
         val balance: SerializedBigDecimal,
         val fiatRate: SerializedBigDecimal?,
         val isTradingAllowed: Boolean,
-        val cryptoCurrency: CryptoCurrency.Token,
+        val depositCurrency: CryptoCurrency.Token,
         val depositAddress: String?,
     ) : PredictionAccountStatusValue() {
 
         /**
-         * The collateral as the funding flows read it: the swap takes its destination from
-         * [CryptoCurrencyStatus.value]'s network address, and so does the receive sheet. `null` while the
-         * deposit address is unknown, which is the only state in which neither may be offered.
+         * What the funding flows act on: the token a deposit is made in, at the bridge address that credits
+         * this account. The swap takes its destination from [CryptoCurrencyStatus.value]'s network address, and
+         * so does the receive sheet. `null` while the deposit address is unknown, which is the only state in
+         * which neither may be offered. The amount is the trading balance, which is denominated in the
+         * exchange's own settlement token rather than in [depositCurrency].
          */
         val cryptoCurrencyStatus: CryptoCurrencyStatus?
             get() = depositAddress?.let { address ->
                 CryptoCurrencyStatus(
-                    currency = cryptoCurrency,
+                    currency = depositCurrency,
                     value = buildCollateralStatusValue(
                         amount = balance,
                         fiatRate = fiatRate,
