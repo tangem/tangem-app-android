@@ -8,6 +8,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 
 class TangemPayTransactionDetailsSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TangemPayTransactionDetailsSheetPageObject>(semanticsProvider = semanticsProvider) {
@@ -39,6 +40,19 @@ class TangemPayTransactionDetailsSheetPageObject(semanticsProvider: SemanticsNod
 
     val getHelpButton: KNode = child {
         hasText(getResourceString(CoreResR.string.tangem_pay_get_help))
+        useUnmergedTree = true
+    }
+
+    val cardFieldTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_common_card))
+        hasAnyAncestor(withTestTag(TangemPayTestTags.TRANSACTION_DETAILS_CARD_ROW))
+        useUnmergedTree = true
+    }
+
+    // The row stacks its subvalue under its value, so scoping to the Card row pins the name to the number.
+    fun cardFieldValue(text: String): KNode = child {
+        hasText(text)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.TRANSACTION_DETAILS_CARD_ROW))
         useUnmergedTree = true
     }
 }

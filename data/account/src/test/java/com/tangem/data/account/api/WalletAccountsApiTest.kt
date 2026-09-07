@@ -2,7 +2,9 @@ package com.tangem.data.account.api
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.*
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import io.mockk.*
@@ -31,12 +33,12 @@ internal class WalletAccountsApiTest {
         derivationIndex = 0,
         icon = "Wallet",
         iconColor = "DullLavender",
-        type = WalletAccountDTO.Type.CRYPTO.value,
+        type = WalletAccountDTO.Type.CRYPTO,
     )
     private val jointRow = personalRow.copy(
         id = "B".repeat(64),
         name = "Family",
-        type = WalletAccountDTO.Type.JOINT.value,
+        type = WalletAccountDTO.Type.JOINT,
     )
     private val body = SaveWalletAccountsResponse(accounts = listOf(personalRow, jointRow))
 
@@ -45,34 +47,87 @@ internal class WalletAccountsApiTest {
         clearMocks(tangemTechApi, jointAccountFeatureToggles)
     }
 
+    private val v2Response = GetWalletAccountsV2Response(
+        wallet = GetWalletAccountsV2Response.Wallet(
+            version = 3,
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            totalCryptoAccounts = 2,
+            totalArchivedAccounts = 1,
+            totalJointAccounts = 1,
+        ),
+        accounts = listOf(
+            WalletAccountDTO(
+                id = personalRow.id,
+                name = null,
+                derivationIndex = 0,
+                icon = "Wallet",
+                iconColor = "DullLavender",
+                type = WalletAccountDTO.Type.CRYPTO,
+            ),
+        ),
+        unassignedTokens = emptyList(),
+    )
+    private val mappedV2Response = GetWalletAccountsResponse(
+        wallet = GetWalletAccountsResponse.Wallet(
+            version = 3,
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            totalAccounts = 2,
+            totalArchivedAccounts = 1,
+            totalJointAccounts = 1,
+        ),
+        accounts = v2Response.accounts,
+        unassignedTokens = emptyList(),
+    )
+    private val headers = mapOf("ETag" to listOf("W/\"1\""))
+
     @Test
     fun `GIVEN toggle is off WHEN getAccounts THEN v1 is requested`() = runTest {
         // Arrange
         toggle(enabled = false)
         val response = ApiResponse.Success(data = mockk<GetWalletAccountsResponse>())
-        coEvery { tangemTechApi.getWalletAccounts(version = "v1", walletId = walletId, eTag = eTag) } returns response
+        coEvery { tangemTechApi.getWalletAccountsV1(walletId = walletId, eTag = eTag) } returns response
 
         // Act
         val actual = walletAccountsApi.getAccounts(walletId = walletId, eTag = eTag)
 
         // Assert
         assertThat(actual).isEqualTo(response)
+        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV2(walletId = any(), eTag = any()) }
     }
 
     @Test
-    fun `GIVEN toggle is on WHEN getAccounts THEN api v2 is requested`() = runTest {
+    fun `GIVEN toggle is on WHEN getAccounts THEN api v2 is requested and its counters renamed`() = runTest {
         // Arrange
         toggle(enabled = true)
-        val response = ApiResponse.Success(data = mockk<GetWalletAccountsResponse>())
         coEvery {
-            tangemTechApi.getWalletAccounts(version = "api/v2", walletId = walletId, eTag = eTag)
-        } returns response
+            tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
+        } returns ApiResponse.Success(data = v2Response, headers = headers)
 
         // Act
         val actual = walletAccountsApi.getAccounts(walletId = walletId, eTag = eTag)
 
         // Assert
-        assertThat(actual).isEqualTo(response)
+        assertThat(actual).isEqualTo(ApiResponse.Success(data = mappedV2Response, headers = headers))
+        coVerify(exactly = 0) { tangemTechApi.getWalletAccountsV1(walletId = any(), eTag = any()) }
+    }
+
+    @Test
+    fun `GIVEN toggle is on WHEN api v2 answers with an error THEN error and headers go through`() = runTest {
+        // Arrange
+        toggle(enabled = true)
+        val error = ApiResponse.Error(cause = ApiResponseError.NetworkException(), headers = headers)
+        @Suppress("UNCHECKED_CAST")
+        coEvery {
+            tangemTechApi.getWalletAccountsV2(walletId = walletId, eTag = eTag)
+        } returns error as ApiResponse<GetWalletAccountsV2Response>
+
+        // Act
+        val actual = walletAccountsApi.getAccounts(walletId = walletId, eTag = eTag)
+
+        // Assert
+        assertThat(actual).isEqualTo(error)
     }
 
     @Test
@@ -106,23 +161,22 @@ internal class WalletAccountsApiTest {
         // Assert
         assertThat(actual).isEqualTo(response)
         coVerify(exactly = 1) { tangemTechApi.saveWalletAccountsV1(walletId, eTag, expectedBody) }
-        coVerify(exactly = 0) {
-            tangemTechApi.saveWalletAccounts(version = any(), walletId = any(), eTag = any(), body = any())
-        }
+        coVerify(exactly = 0) { tangemTechApi.saveWalletAccountsV2(walletId = any(), eTag = any(), body = any()) }
     }
 
     @Test
-    fun `GIVEN toggle is on WHEN saveAccounts THEN api v2 receives the body as is`() = runTest {
+    fun `GIVEN toggle is on WHEN saveAccounts THEN api v2 receives the body as is and answers renamed`() = runTest {
         // Arrange
         toggle(enabled = true)
-        val response = ApiResponse.Success(data = mockk<GetWalletAccountsResponse>())
-        coEvery { tangemTechApi.saveWalletAccounts("api/v2", walletId, eTag, body) } returns response
+        coEvery {
+            tangemTechApi.saveWalletAccountsV2(walletId, eTag, body)
+        } returns ApiResponse.Success(data = v2Response, headers = headers)
 
         // Act
         val actual = walletAccountsApi.saveAccounts(walletId = walletId, eTag = eTag, body = body)
 
         // Assert
-        assertThat(actual).isEqualTo(response)
+        assertThat(actual).isEqualTo(ApiResponse.Success(data = mappedV2Response, headers = headers))
         coVerify(exactly = 0) { tangemTechApi.saveWalletAccountsV1(walletId = any(), eTag = any(), body = any()) }
     }
 
@@ -159,6 +213,6 @@ internal class WalletAccountsApiTest {
     }
 
     private fun toggle(enabled: Boolean) {
-        every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns enabled
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns enabled
     }
 }

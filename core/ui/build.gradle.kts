@@ -197,6 +197,8 @@ dependencies {
         exclude(module = "activity-ktx")
     }
     api(deps.jodatime)
+    implementation(deps.lottie)
+    implementation(deps.lottie.compose)
     api(deps.markdown)
     implementation(deps.material)
     implementation(deps.zxing.qrCore)

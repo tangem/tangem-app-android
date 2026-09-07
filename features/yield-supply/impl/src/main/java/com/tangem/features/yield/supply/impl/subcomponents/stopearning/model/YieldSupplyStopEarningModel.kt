@@ -12,7 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -65,7 +65,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -192,7 +192,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             YieldSupplyAnalytics.FundsWithdrawn(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
-                referralId = appsFlyerStore.get()?.refcode,
+                referralId = appsFlyerRepository.getConversionData()?.refcode,
             ),
         )
         val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
@@ -211,6 +211,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
+                isCustomToken = cryptoCurrency.isCustom,
+                isCustomFeeToken = feeCryptoCurrencyStatus.currency.isCustom,
             ),
         )
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value

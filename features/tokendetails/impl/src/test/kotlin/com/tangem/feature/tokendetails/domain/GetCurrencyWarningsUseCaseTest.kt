@@ -7,6 +7,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -332,6 +333,70 @@ class GetCurrencyWarningsUseCaseTest {
 
         // Assert
         assertThat(result.filterIsInstance<CryptoCurrencyWarning.BalanceNotEnoughForFee>()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN joint currency without a coin status WHEN invoke THEN networks unreachable warning is absent`() =
+        runTest {
+            // Arrange
+            val currencyStatus = statusFor(currency = jointToken())
+            with(CryptoCurrencyStatusOperations) {
+                every { accountStatusList.getCryptoCurrencyStatus(any<CryptoCurrency>()) } returns
+                    currencyStatus.some()
+            }
+
+            // Act
+            val result = useCase.invoke(userWalletId, currencyStatus, derivationPath).first()
+
+            // Assert
+            assertThat(result).doesNotContain(CryptoCurrencyWarning.SomeNetworksUnreachable)
+        }
+
+    @Test
+    fun `GIVEN joint token with funds and empty fee coin WHEN invoke THEN fee warning is absent`() = runTest {
+        // Arrange
+        val currencyStatus = statusFor(currency = jointToken(), amount = BigDecimal.TEN)
+        givenStatuses(
+            coinStatus = statusFor(currency = coin(name = "Ethereum", symbol = "ETH"), amount = BigDecimal.ZERO),
+            currencyStatus = currencyStatus,
+        )
+
+        // Act
+        val result = useCase.invoke(userWalletId, currencyStatus, derivationPath).first()
+
+        // Assert
+        assertThat(result.filterIsInstance<CryptoCurrencyWarning.BalanceNotEnoughForFee>()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN joint currency with only cached data WHEN invoke THEN outdated data warning is present`() = runTest {
+        // Arrange
+        val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
+            every { sources.total } returns StatusSource.ONLY_CACHE
+        }
+        val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true) {
+            every { currency } returns jointToken()
+            every { value } returns statusValue
+        }
+        with(CryptoCurrencyStatusOperations) {
+            every { accountStatusList.getCryptoCurrencyStatus(any<CryptoCurrency>()) } returns currencyStatus.some()
+        }
+
+        // Act
+        val result = useCase.invoke(userWalletId, currencyStatus, derivationPath).first()
+
+        // Assert
+        assertThat(result).contains(CryptoCurrencyWarning.UsedOutdatedDataWarning)
+    }
+
+    private fun jointToken(): CryptoCurrency.Token {
+        val jointNetwork: Network = mockk(relaxed = true) {
+            every { derivationPath } returns Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
+        }
+
+        return mockk(relaxed = true) {
+            every { this@mockk.network } returns jointNetwork
+        }
     }
 
     /** [REDACTED_TASK_KEY] setup: the token holds funds while its fee coin balance is empty. */

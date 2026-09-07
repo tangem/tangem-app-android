@@ -12,6 +12,7 @@ internal data class AccountDetailsUM(
     val onCloseClick: () -> Unit,
     val onManageTokensClick: () -> Unit,
     val onAccountEditClick: (() -> Unit)?,
+    val isPendingActivation: Boolean = false,
     val members: MembersRowUM? = null,
     val networksInfo: NetworksInfoUM? = null,
 ) {

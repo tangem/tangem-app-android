@@ -47,9 +47,14 @@ data class AccountList private constructor(
     val mainAccount: Account.Personal
         get() = accounts.first { it is Account.Personal && it.isMainAccount } as Account.Personal
 
-    /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
+    /** Returns true if more personal accounts can be added (the personal maximum has not been reached) */
     val canAddMoreCryptoAccounts: Boolean
         get() = accounts.filterIsInstance<Account.Personal>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
+
+    /** Returns true if more joint accounts can be added. The joint cap ([MAX_JOINT_ACCOUNTS_COUNT]) is tracked
+     * independently of the personal one, mirroring [totalJointAccounts] being independent of [totalAccounts] */
+    val canAddMoreJointAccounts: Boolean
+        get() = accounts.filterIsInstance<Account.Joint>().size < MAX_JOINT_ACCOUNTS_COUNT
 
     /** Returns the number of active accounts in the list */
     val activeAccounts: Int
@@ -119,6 +124,7 @@ data class AccountList private constructor(
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
                 is Account.Prediction -> emptyList()
+                is Account.Collectibles -> emptyList()
                 // A joint account is a Safe contract, not an EOA: its currencies must never reach the regular
                 // send/swap/staking flows, which sign a plain transfer from the participant's own key
                 is Account.Joint -> emptyList()
@@ -128,7 +134,7 @@ data class AccountList private constructor(
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
         accounts
-            .filterIsInstance<Account.Personal>()
+            .filterIsInstance<Account.CryptoPortfolio>()
             .forEach { account ->
                 account.cryptoCurrencies.forEach { currency ->
                     val key = account.accountId to currency.id
@@ -170,6 +176,11 @@ data class AccountList private constructor(
             override fun toString(): String = "$tag: The number of accounts must not exceed 20"
         }
 
+        @Serializable
+        data object ExceedsMaxJointAccountsCount : Error {
+            override fun toString(): String = "$tag: The number of joint accounts must not exceed 20"
+        }
+
         data object ExceedsMaxPaymentAccountsCount : Error {
             override fun toString(): String =
                 "$tag: The number of payment accounts must not exceed $MAX_PAYMENT_ACCOUNTS_COUNT"
@@ -185,6 +196,12 @@ data class AccountList private constructor(
         data object ExceedsMaxPredictionAccountsCount : Error {
             override fun toString(): String =
                 "$tag: The number of prediction accounts must not exceed $MAX_PREDICTION_ACCOUNTS_COUNT"
+        }
+
+        @Serializable
+        data object ExceedsMaxCollectiblesAccountsCount : Error {
+            override fun toString(): String =
+                "$tag: The number of collectibles accounts must not exceed $MAX_COLLECTIBLES_ACCOUNTS_COUNT"
         }
 
         @Serializable
@@ -213,7 +230,9 @@ data class AccountList private constructor(
         const val MAX_PAYMENT_ACCOUNTS_COUNT = 1
         const val MAX_VIRTUAL_ACCOUNTS_COUNT = 1
         const val MAX_PREDICTION_ACCOUNTS_COUNT = 1
+        const val MAX_COLLECTIBLES_ACCOUNTS_COUNT = 1
         const val MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT = 20
+        const val MAX_JOINT_ACCOUNTS_COUNT = 20
         const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
@@ -248,8 +267,16 @@ data class AccountList private constructor(
                 Error.ExceedsMaxPredictionAccountsCount
             }
 
+            val collectiblesAccounts = accounts.filterIsInstance<Account.Collectibles>()
+            ensure(collectiblesAccounts.size <= MAX_COLLECTIBLES_ACCOUNTS_COUNT) {
+                Error.ExceedsMaxCollectiblesAccountsCount
+            }
+
             val personalAccounts = accounts.filterIsInstance<Account.Personal>()
             ensure(personalAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
+
+            val jointAccounts = accounts.filterIsInstance<Account.Joint>()
+            ensure(jointAccounts.size <= MAX_JOINT_ACCOUNTS_COUNT) { Error.ExceedsMaxJointAccountsCount }
 
             val mainAccountsCount = accounts.mainAccountsCount()
             ensure(mainAccountsCount == MAX_MAIN_ACCOUNTS_COUNT) {
@@ -283,7 +310,7 @@ data class AccountList private constructor(
             }
 
             // The joint counter is policed the same way, against the joint rows alone
-            ensure(totalJointAccounts >= accounts.count { it is Account.Joint }) {
+            ensure(totalJointAccounts >= jointAccounts.size) {
                 Error.TotalJointAccountsLessThanActive
             }
 

@@ -70,12 +70,14 @@ dependencies {
     /** Core modules */
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.core.remote)
     implementation(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     implementation(projects.grow.datasource)
+    implementation(projects.store.datasource)
 
     /** Feature Apis */
     api(projects.features.storiesV2.api)
