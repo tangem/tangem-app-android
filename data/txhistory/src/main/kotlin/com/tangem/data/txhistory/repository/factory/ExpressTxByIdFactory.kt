@@ -4,10 +4,10 @@ import com.tangem.data.common.converter.ExpressProviderConverter
 import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
 import com.tangem.data.txhistory.repository.converter.ExpressSwapConverter
 import com.tangem.data.txhistory.repository.converter.OnrampCurrencyConverter
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressProviderEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
 import javax.inject.Inject

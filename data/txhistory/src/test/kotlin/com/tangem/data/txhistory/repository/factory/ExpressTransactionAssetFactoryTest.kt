@@ -3,8 +3,8 @@ package com.tangem.data.txhistory.repository.factory
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.TokenInfoEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.models.ExpressAsset

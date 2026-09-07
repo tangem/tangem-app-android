@@ -1,4 +1,4 @@
-package com.tangem.grow.datasource.txhistory.db.entity.express
+package com.tangem.store.datasource.txhistory.db.entity.express
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -6,7 +6,7 @@ import androidx.room.Entity
 /**
  * Persisted sync state of the express tx history.
  *
- * Stored inside [com.tangem.grow.datasource.txhistory.db.TxHistoryDatabase] on purpose: if the history tables are
+ * Stored inside [com.tangem.store.datasource.txhistory.db.TxHistoryDatabase] on purpose: if the history tables are
  * dropped (e.g. destructive migration), the sync state is wiped together with them and the history is re-synced
  * from scratch.
  */

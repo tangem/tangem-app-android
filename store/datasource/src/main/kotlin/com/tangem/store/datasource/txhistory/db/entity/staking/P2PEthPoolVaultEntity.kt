@@ -1,4 +1,4 @@
-package com.tangem.grow.datasource.txhistory.db.entity.staking
+package com.tangem.store.datasource.txhistory.db.entity.staking
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

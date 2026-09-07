@@ -1,14 +1,14 @@
-package com.tangem.grow.datasource.txhistory.db.dao
+package com.tangem.store.datasource.txhistory.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.MapColumn
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.ExpressProviderEntity
-import com.tangem.grow.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
