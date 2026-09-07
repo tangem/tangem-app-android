@@ -3,6 +3,8 @@ package com.tangem.features.feed.crypto.categories.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketCategoriesUseCase
@@ -11,16 +13,21 @@ import com.tangem.domain.markets.MarketCategory
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.model.transformer.MarketCategorySelectorTransformer
+import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorFooterUM
 import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorUM
+import com.tangem.features.feed.crypto.impl.R
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** A featured rail that needs scrolling is a design failure, not a paging problem. */
 private const val FEATURED_LIMIT = 20
+
+private const val QUERY_DEBOUNCE_MILLIS = 500L
 
 @ModelScoped
 internal class MarketCategorySelectorModel @Inject constructor(
@@ -39,6 +46,8 @@ internal class MarketCategorySelectorModel @Inject constructor(
     private var categories: List<MarketCategory> = emptyList()
     private var listStatus: PaginationStatus<List<MarketCategory>> = PaginationStatus.None
 
+    private var appliedQuery: String? = null
+
     /** The filter as it stood when the screen opened; [onReset] returns here and the footer compares to it. */
     private val appliedSelection: MarketCategorySelection = filterController.selection.value
 
@@ -52,7 +61,7 @@ internal class MarketCategorySelectorModel @Inject constructor(
     )
 
     val uiState: StateFlow<MarketCategorySelectorUM>
-        field = MutableStateFlow<MarketCategorySelectorUM>(MarketCategorySelectorUM.Loading)
+        field = MutableStateFlow(buildInitialState())
 
     init {
         combine(listManager.categories, listManager.status, ::Pair)
@@ -63,18 +72,36 @@ internal class MarketCategorySelectorModel @Inject constructor(
             }
             .launchIn(modelScope)
 
+        observeQuery()
         load()
     }
+
+    private fun buildInitialState() = MarketCategorySelectorUM(
+        search = TangemSearch.State(
+            placeholderText = resourceReference(R.string.common_search),
+            query = "",
+            onQueryChange = ::onQueryChange,
+            isActive = false,
+            onActiveChange = ::onSearchActiveChange,
+            onClearClick = { onQueryChange(query = "") },
+            // The screen's close button sits beside the field: the one built into TangemSearch is
+            // hidden while the field is idle and empty, which is when there is most to escape from.
+            onCloseClick = null,
+        ),
+        isEdited = false,
+        footer = MarketCategorySelectorFooterUM(onReset = ::onReset, onApply = ::onApply),
+        content = MarketCategorySelectorUM.ContentUM.Loading,
+    )
 
     /**
      * The currency is resolved before either request so both pages are priced consistently, rather
      * than the first one racing the app-currency store and going out in the default currency.
      */
     private fun load() {
-        uiState.value = MarketCategorySelectorUM.Loading
+        uiState.update { it.copy(content = MarketCategorySelectorUM.ContentUM.Loading) }
         modelScope.launch {
             loadFeatured()
-            listManager.reload()
+            listManager.reload(searchText = appliedQuery)
         }
     }
 
@@ -89,6 +116,28 @@ internal class MarketCategorySelectorModel @Inject constructor(
             ifRight = { page -> page.categories },
         )
         render()
+    }
+
+    @OptIn(FlowPreview::class)
+    private fun observeQuery() {
+        uiState
+            .map { it.search.query.trim() }
+            .distinctUntilChanged()
+            .drop(count = 1)
+            .debounce(QUERY_DEBOUNCE_MILLIS)
+            .onEach { query ->
+                appliedQuery = query.takeIf(String::isNotEmpty)
+                listManager.reload(searchText = appliedQuery)
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun onQueryChange(query: String) {
+        uiState.update { it.copy(search = it.search.copy(query = query)) }
+    }
+
+    private fun onSearchActiveChange(isActive: Boolean) {
+        uiState.update { it.copy(search = it.search.copy(isActive = isActive)) }
     }
 
     private fun onSelectionChange(selection: MarketCategorySelection) {
@@ -107,26 +156,33 @@ internal class MarketCategorySelectorModel @Inject constructor(
     }
 
     private fun render() {
-        when (listStatus) {
-            is PaginationStatus.None,
-            is PaginationStatus.InitialLoading,
-            -> uiState.value = MarketCategorySelectorUM.Loading
-            is PaginationStatus.InitialLoadingError -> uiState.value =
-                MarketCategorySelectorUM.Error(onRetry = ::load)
+        val isEdited = draftSelection != appliedSelection
+
+        when {
+            listStatus is PaginationStatus.None || listStatus is PaginationStatus.InitialLoading ->
+                renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Loading)
+            listStatus is PaginationStatus.InitialLoadingError ->
+                renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Error(onRetry = ::load))
+            // An unfiltered listing always has the "All" row, so emptiness only ever means "no matches"
+            appliedQuery != null && categories.isEmpty() ->
+                renderBody(isEdited = isEdited, content = MarketCategorySelectorUM.ContentUM.Empty)
             else -> uiState.update(
                 transformer = MarketCategorySelectorTransformer(
                     featured = featured,
                     categories = categories,
                     selection = draftSelection,
                     appCurrency = appCurrency.value,
-                    isEdited = draftSelection != appliedSelection,
+                    isSearching = appliedQuery != null,
+                    isEdited = isEdited,
                     isLoadingMore = listStatus is PaginationStatus.NextBatchLoading,
                     onLoadMore = listManager::loadMore,
-                    onReset = ::onReset,
-                    onApply = ::onApply,
                     onSelectionChange = ::onSelectionChange,
                 ),
             )
         }
+    }
+
+    private fun renderBody(isEdited: Boolean, content: MarketCategorySelectorUM.ContentUM) {
+        uiState.update { it.copy(isEdited = isEdited, content = content) }
     }
 }
