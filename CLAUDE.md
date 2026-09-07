@@ -75,6 +75,7 @@ Exception: `// Arrange`, `// Act`, `// Assert` in unit tests are required — se
 ## Other Rules
 
 - Unit testing: @.claude/rules/unit-testing.md
+- Logging (`TangemLogger`; prefer `i`/`e` — only these persist to the log file): @.claude/rules/codestyle/logging.md
 - Drawable/image resource naming: @.claude/rules/codestyle/drawable-naming.md
 - Tangem SDKs and `libs/` wrappers: @.claude/rules/tangem-sdk.md
 - Domain models reference: @.claude/rules/domain/core-models.md
