@@ -6,11 +6,16 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.ksp)
+    alias(deps.plugins.room)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.store.datasource"
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -26,12 +31,17 @@ dependencies {
 
     implementation(tangemDeps.card.core)
 
+    api(deps.room.runtime)
+    api(deps.room.ktx)
+    ksp(deps.room.compiler)
+
     api(projects.core.remote)
     implementation(projects.core.local)
     implementation(deps.androidx.datastore.core)
     implementation(projects.core.utils)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.txhistory.models)
 
     testImplementation(projects.test.core)
     testImplementation(deps.moshi.kotlin)
