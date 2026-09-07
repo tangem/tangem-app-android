@@ -1,23 +1,19 @@
 package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.blockchain.nft.models.NFTAsset
-import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.local.moshi.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshiConfigurer
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.datasource.api.common.adapter.*
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
-import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
 import javax.inject.Singleton
 
 @Module
@@ -30,48 +26,10 @@ class MoshiModule {
     fun provideNetworkMoshi(configurers: Set<@JvmSuppressWildcards NetworkMoshiConfigurer>): Moshi {
         val builder = Moshi.Builder()
             .add(SerializeNullsFactory)
-            .add(BigDecimalAdapter())
-            .add(BigIntegerAdapter())
+            .apply { commonAdapters().forEach(::add) }
             .add(LocalDateAdapter())
-            .add(DateTimeAdapter())
             // .add(VisaActivationRemoteState.jsonAdapter)
             // .add(VisaCardActivationStatus.jsonAdapter)
-            .add(
-                NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
-                    .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
-                    .withSubtype(PaymentAccountStatusValueDM.NotCreated::class.java, "not_created")
-                    .withSubtype(PaymentAccountStatusValueDM.UnderReview::class.java, "kyc_status")
-                    .withSubtype(PaymentAccountStatusValueDM.IssuingCard::class.java, "issuing_card")
-                    .withSubtype(PaymentAccountStatusValueDM.ActiveAccount::class.java, "active_account")
-                    .withSubtype(PaymentAccountStatusValueDM.DeactivatedAccount::class.java, "deactivated_account")
-                    .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
-            )
-            .add(
-                NamePolymorphicAdapterFactory.of(VirtualAccountStatusValueDM::class.java)
-                    .withSubtype(VirtualAccountStatusValueDM.Empty::class.java, "empty")
-                    .withSubtype(VirtualAccountStatusValueDM.NotCreated::class.java, "not_created")
-                    .withSubtype(VirtualAccountStatusValueDM.UnderReview::class.java, "kyc_status")
-                    .withSubtype(VirtualAccountStatusValueDM.Provisioning::class.java, "provisioning")
-                    .withSubtype(
-                        VirtualAccountStatusValueDM.CountryNotSupported::class.java,
-                        "country_not_supported",
-                    )
-                    .withSubtype(VirtualAccountStatusValueDM.ActiveAccount::class.java, "active_account"),
-            )
-            .add(
-                PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
-                    .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")
-                    .withSubtype(NFTCollection.Identifier.TON::class.java, "ton")
-                    .withSubtype(NFTCollection.Identifier.Solana::class.java, "sol")
-                    .withDefaultValue(NFTCollection.Identifier.Unknown),
-            )
-            .add(
-                PolymorphicJsonAdapterFactory.of(NFTAsset.Identifier::class.java, "bc")
-                    .withSubtype(NFTAsset.Identifier.EVM::class.java, "evm")
-                    .withSubtype(NFTAsset.Identifier.TON::class.java, "ton")
-                    .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
-                    .withDefaultValue(NFTAsset.Identifier.Unknown),
-            )
             .addLast(KotlinJsonAdapterFactory())
 
         // Enum-fallback (and future) adapters are contributed via @IntoSet so stream modules can register
@@ -82,29 +40,19 @@ class MoshiModule {
     @Provides
     @Singleton
     @SdkMoshi
-    fun provideSdkMoshi(): Moshi {
-        val adapters = MoshiJsonConverter.getTangemSdkAdapters() +
-            listOf(
-                BigDecimalAdapter(),
-                BigIntegerAdapter(),
-                WalletDerivedKeysMapAdapter(),
-                ScanResponseDerivedKeysMapAdapter(),
-                ByteArrayKeyAdapter(),
-                ExtendedPublicKeysMapAdapter(),
-                CardBackupStatusAdapter(),
-                DerivationPathAdapterWithMigration(),
-                DateTimeAdapter(),
-            )
-
+    fun provideSdkMoshi(configurers: Set<@JvmSuppressWildcards SdkMoshiConfigurer>): Moshi {
+        val adapters = MoshiJsonConverter.getTangemSdkAdapters() + commonAdapters()
         val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
 
-        return Moshi.Builder().apply {
-            // add(VisaActivationRemoteState.jsonAdapter)
-            // add(VisaCardActivationStatus.jsonAdapter)
+        val builder = Moshi.Builder().apply {
             adapters.forEach { this.add(it) }
             typedAdapters.forEach { add(it.key, it.value) }
             addLast(KotlinJsonAdapterFactory())
-        }.build()
+        }
+
+        // Card model adapters (e.g. ScanResponse) are contributed via @IntoSet by the module that
+        // (de)serializes them through this Moshi, so this builder doesn't depend on domain models.
+        return configurers.fold(builder) { acc, configurer -> configurer.configure(acc) }.build()
     }
 
     @Provides
@@ -112,17 +60,16 @@ class MoshiModule {
     fun provideSdkMoshiConverter(): MoshiJsonConverter {
         return MoshiJsonConverter(
             adapters = MoshiJsonConverter.getTangemSdkAdapters() +
-                listOf(
-                    BigDecimalAdapter(),
-                    BigIntegerAdapter(),
-                    WalletDerivedKeysMapAdapter(),
-                    ScanResponseDerivedKeysMapAdapter(),
-                    ByteArrayKeyAdapter(),
-                    ExtendedPublicKeysMapAdapter(),
-                    CardBackupStatusAdapter(),
-                    DerivationPathAdapterWithMigration(),
-                ),
+                listOf(BigDecimalAdapter(), BigIntegerAdapter()) +
+                scanResponseMoshiAdapters(),
             typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
         )
     }
+
+    /** Adapters shared by both the network and the SDK [Moshi] instances. */
+    private fun commonAdapters(): List<Any> = listOf(
+        BigDecimalAdapter(),
+        BigIntegerAdapter(),
+        DateTimeAdapter(),
+    )
 }

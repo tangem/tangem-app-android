@@ -5,8 +5,10 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -17,15 +19,22 @@ import java.math.BigDecimal
 internal object PlacePredictionNotificationsFactory {
 
     fun build(state: PlacePredictionUM): ImmutableList<PredictionNotificationUM> = buildList {
+        if (!state.isMarketAcceptingOrders) add(PredictionNotificationUM.MarketClosed)
+
         addAll(state.quote.notifications())
 
+        when (state.priceError) {
+            PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
+            PriceErrorUM.Unknown -> add(PredictionNotificationUM.PriceFailed)
+            null -> Unit
+        }
+
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
-    }.toImmutableList()
+    }.distinct().toImmutableList()
 
     private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
         is QuoteUM.Content -> when (status) {
             PredictionQuoteStatus.PARTIAL -> listOf(PredictionNotificationUM.PartialFill)
-            PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE -> listOf(PredictionNotificationUM.BelowMinOrderSize)
             else -> emptyList()
         }
         is QuoteUM.Unavailable -> when (status) {
@@ -50,10 +59,16 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
     val required = (quote as? QuoteUM.Content)?.total ?: entered
     val balance = payment.balance
     val hasSufficientBalance = required != null && balance != null && balance >= required
+    val isBelowMinAmount = isBelowMinAmount()
 
     val priced = copy(
         payment = payment.copy(hasSufficientBalance = hasSufficientBalance),
-        amountCaption = amountCaption(entered = entered, required = required, balance = balance),
+        amountCaption = amountCaption(
+            entered = entered,
+            required = required,
+            balance = balance,
+            isBelowMinAmount = isBelowMinAmount,
+        ),
     )
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
@@ -61,6 +76,8 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         notifications = notifications,
         isPrimaryButtonEnabled = notifications.none { it.isBlocking } &&
             quote is QuoteUM.Content &&
+            quote.status.isPlaceable &&
+            !isBelowMinAmount &&
             submit is SubmitUM.Idle &&
             hasSufficientBalance &&
             tradingPermission == TradingPermissionUM.Allowed,
@@ -71,10 +88,16 @@ private fun PlacePredictionUM.amountCaption(
     entered: BigDecimal?,
     required: BigDecimal?,
     balance: BigDecimal?,
+    isBelowMinAmount: Boolean,
 ): AmountCaptionUM? {
     val error = paymentAmountError(entered = entered, required = required, balance = balance)
+    val minAmount = minAmount
 
-    return if (error != null) AmountCaptionUM.Shortfall(error = error) else quote.payout()?.let(AmountCaptionUM::ToWin)
+    return when {
+        error != null -> AmountCaptionUM.Shortfall(error = error)
+        isBelowMinAmount && minAmount != null -> AmountCaptionUM.BelowMinimum(minAmount = minAmount)
+        else -> quote.payout()?.let(AmountCaptionUM::ToWin)
+    }
 }
 
 private fun paymentAmountError(

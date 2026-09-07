@@ -22,7 +22,7 @@ dependencies {
     api(projects.core.analytics)
     api(projects.core.analytics.models)
     api(projects.core.configToggles)
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     api(projects.core.decompose)
     implementation(projects.spend.datasource)
     api(projects.core.navigation)
@@ -68,6 +68,7 @@ dependencies {
     /** AndroidX libraries */
     api(deps.androidx.appCompat)
     implementation(deps.androidx.annotation)
+    implementation(deps.moshi)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
 

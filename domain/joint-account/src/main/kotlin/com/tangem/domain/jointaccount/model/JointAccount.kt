@@ -40,14 +40,17 @@ data class JointAccount(
     }
 
     /**
-     * @property name    the member's display name, 1..25 chars
-     * @property address the member's owner address in the Safe, EIP-55 checksummed
-     * @property role    only the creator sends invites and activates the account
+     * @property name     the member's display name, 1..25 chars
+     * @property address  the member's owner address in the Safe, lower-case hex — compare case-insensitively
+     * @property role     only the creator sends invites and activates the account
+     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
+     * one, and for data cached before the backend started reporting it
      */
     data class Member(
         val name: String,
         val address: String,
         val role: Role,
+        val inviteId: String? = null,
     )
 
     /** [UNKNOWN] is a backend value this build does not know. */
