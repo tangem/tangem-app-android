@@ -1,7 +1,6 @@
 package com.tangem.features.introduction.impl.model
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -20,7 +19,6 @@ internal class HaveWalletSheetController(
     private val router: Router,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
-    private val trackingContextProxy: TrackingContextProxy,
     private val uiMessageSender: UiMessageSender,
 ) {
 
@@ -33,21 +31,9 @@ internal class HaveWalletSheetController(
         fun scanCardForExistingWallet()
     }
 
-    /**
-     * Entered from the mobile wallet screen, the import flow gets its hot-wallet analytics context removed by that
-     * screen's destroy; pushed straight over Introduction it has no such owner, so the context goes on resume.
-     */
-    private var isHotWalletContextPendingResume = false
-
     val isShown: Boolean get() = host.haveWalletSheetConfig?.isShown == true
 
     fun open() = showStep(::optionsStep)
-
-    fun onScreenResumed() {
-        if (!isHotWalletContextPendingResume) return
-        isHotWalletContextPendingResume = false
-        trackingContextProxy.removeContext()
-    }
 
     private fun optionsStep() = HaveWalletUM.Step.Options(
         cardOrRing = WalletOptionUM(
@@ -115,8 +101,6 @@ internal class HaveWalletSheetController(
             )
             return
         }
-        trackingContextProxy.addHotWalletContext()
-        isHotWalletContextPendingResume = true
         router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
     }
 

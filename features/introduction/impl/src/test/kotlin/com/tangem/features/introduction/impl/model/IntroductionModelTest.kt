@@ -603,27 +603,11 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
-            verifyOrder {
-                trackingContextProxy.addHotWalletContext()
+            verify(exactly = 1) {
                 router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
             }
-            verify(exactly = 0) { trackingContextProxy.removeContext() }
-        }
-
-        @Test
-        fun `GIVEN the import flow left from the sheet WHEN the screen resumes THEN the context is dropped once`() {
-            // Arrange
-            val model = createModel()
-            model.openHaveWallet().importWallet.onClick()
-            model.currentImportStep().onRecoveryPhraseClick()
-
-            // Act
-            model.setVideoRunning(isRunning = true)
-            model.setVideoRunning(isRunning = false)
-            model.setVideoRunning(isRunning = true)
-
-            // Assert
-            verify(exactly = 1) { trackingContextProxy.removeContext() }
+            // The import flow owns the hot wallet analytics context; a second push here would overwrite its parent.
+            verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
         }
 
         @Test
