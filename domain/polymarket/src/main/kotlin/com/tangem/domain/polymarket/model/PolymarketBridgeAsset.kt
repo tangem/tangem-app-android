@@ -3,7 +3,7 @@ package com.tangem.domain.polymarket.model
 import java.math.BigDecimal
 
 data class PolymarketBridgeAsset(
-    val chainId: Long,
+    val chainId: String,
     val chainName: String,
     val tokenSymbol: String,
     val tokenAddress: String,
