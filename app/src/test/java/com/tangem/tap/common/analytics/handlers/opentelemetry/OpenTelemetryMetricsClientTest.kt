@@ -3,6 +3,8 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 import android.app.Application
 import android.content.ComponentCallbacks2
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
@@ -16,6 +18,7 @@ import io.opentelemetry.sdk.metrics.export.MetricExporter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.util.Locale
 
 internal class OpenTelemetryMetricsClientTest {
 
@@ -24,18 +27,34 @@ internal class OpenTelemetryMetricsClientTest {
 
     private val componentCallbacks = slot<android.content.ComponentCallbacks>()
 
-    private fun CoroutineScope.createClient(): OpenTelemetryMetricsClient {
+    private fun CoroutineScope.createClient(
+        userCountry: UserCountry? = UserCountry.Other(code = "de"),
+    ): OpenTelemetryMetricsClient {
         val application: Application = mockk(relaxed = true) {
             every { registerComponentCallbacks(capture(componentCallbacks)) } returns Unit
+        }
+        val settingsRepository: SettingsRepository = mockk {
+            every { getUserCountryCodeSync() } returns userCountry
         }
         return OpenTelemetryMetricsClient(
             application = application,
             apiKey = "test-key",
+            settingsRepository = settingsRepository,
             scope = this,
             dispatchers = dispatchers,
             networkExporter = networkExporter,
             storage = InMemoryMetricStorage(),
         ).apply { start(application) }
+    }
+
+    private inline fun <T> withDefaultLocale(locale: Locale, block: () -> T): T {
+        val previous = Locale.getDefault()
+        Locale.setDefault(locale)
+        return try {
+            block()
+        } finally {
+            Locale.setDefault(previous)
+        }
     }
 
     @Test
@@ -71,9 +90,62 @@ internal class OpenTelemetryMetricsClientTest {
     }
 
     @Test
-    fun `GIVEN exported batch WHEN inspecting resource THEN only app coordinates are attached`() = runTest {
+    fun `GIVEN exported batch WHEN inspecting resource THEN only app coordinates country and language attached`() =
+        runTest {
+            // Arrange
+            val client = withDefaultLocale(Locale.GERMANY) { createClient(userCountry = UserCountry.Other(code = "de")) }
+            client.getMeter().counterBuilder("app_test_event").build().add(1)
+
+            // Act
+            client.flush()
+
+            // Assert
+            val resource = networkExporter.exportedBatches.flatten().first().resource
+            val attributes = resource.attributes.asMap().mapKeys { (key, _) -> key.key }
+            assertThat(attributes.keys)
+                .containsExactly("service.name", "service.version", "os.name", "country_code", "language")
+            assertThat(attributes["country_code"]).isEqualTo("de")
+            assertThat(attributes["language"]).isEqualTo("de")
+        }
+
+    @Test
+    fun `GIVEN country not fetched yet WHEN inspecting resource THEN device locale country is attached`() = runTest {
         // Arrange
-        val client = createClient()
+        val client = withDefaultLocale(Locale.FRANCE) { createClient(userCountry = null) }
+        client.getMeter().counterBuilder("app_test_event").build().add(1)
+
+        // Act
+        client.flush()
+
+        // Assert
+        val resource = networkExporter.exportedBatches.flatten().first().resource
+        val attributes = resource.attributes.asMap().mapKeys { (key, _) -> key.key }
+        assertThat(attributes["country_code"]).isEqualTo("fr")
+    }
+
+    @Test
+    fun `GIVEN turkish default locale and uppercase country WHEN inspecting resource THEN ascii lowercase code`() =
+        runTest {
+            // Arrange
+            val client = withDefaultLocale(Locale("tr", "TR")) {
+                createClient(userCountry = UserCountry.Other(code = "IR"))
+            }
+            client.getMeter().counterBuilder("app_test_event").build().add(1)
+
+            // Act
+            client.flush()
+
+            // Assert
+            val resource = networkExporter.exportedBatches.flatten().first().resource
+            val attributes = resource.attributes.asMap().mapKeys { (key, _) -> key.key }
+            assertThat(attributes["country_code"]).isEqualTo("ir")
+            assertThat(attributes["language"]).isEqualTo("en")
+        }
+
+    @Test
+    fun `GIVEN locale with numeric region WHEN inspecting resource THEN country attribute is absent`() = runTest {
+        // Arrange
+        val client = withDefaultLocale(Locale.forLanguageTag("es-419")) { createClient(userCountry = null) }
         client.getMeter().counterBuilder("app_test_event").build().add(1)
 
         // Act
@@ -82,8 +154,24 @@ internal class OpenTelemetryMetricsClientTest {
         // Assert
         val resource = networkExporter.exportedBatches.flatten().first().resource
         val attributeKeys = resource.attributes.asMap().keys.map { it.key }
-        assertThat(attributeKeys).containsExactly("service.name", "service.version", "os.name")
+        assertThat(attributeKeys).containsExactly("service.name", "service.version", "os.name", "language")
     }
+
+    @Test
+    fun `GIVEN no country and locale without country WHEN inspecting resource THEN country attribute is absent`() =
+        runTest {
+            // Arrange
+            val client = withDefaultLocale(Locale("en")) { createClient(userCountry = null) }
+            client.getMeter().counterBuilder("app_test_event").build().add(1)
+
+            // Act
+            client.flush()
+
+            // Assert
+            val resource = networkExporter.exportedBatches.flatten().first().resource
+            val attributeKeys = resource.attributes.asMap().keys.map { it.key }
+            assertThat(attributeKeys).containsExactly("service.name", "service.version", "os.name", "language")
+        }
 
     @Test
     fun `GIVEN app goes background WHEN onTrimMemory THEN pending metrics are flushed`() = runTest {

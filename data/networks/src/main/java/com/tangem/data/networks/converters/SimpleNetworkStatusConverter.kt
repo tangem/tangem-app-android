@@ -3,7 +3,7 @@ package com.tangem.data.networks.converters
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.networks.models.SimpleNetworkStatus
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus

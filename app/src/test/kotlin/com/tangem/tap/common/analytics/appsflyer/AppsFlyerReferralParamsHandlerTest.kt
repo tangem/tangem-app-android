@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -19,15 +19,15 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AppsFlyerReferralParamsHandlerTest {
 
-    private val appsFlyerStore: AppsFlyerStore = mockk(relaxUnitFun = true)
+    private val appsFlyerRepository: AppsFlyerRepository = mockk(relaxUnitFun = true)
     private val handler = AppsFlyerReferralParamsHandler(
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         coroutineScope = TestAppCoroutineScope(),
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(appsFlyerStore)
+        clearMocks(appsFlyerRepository)
     }
 
     @Nested
@@ -42,9 +42,9 @@ class AppsFlyerReferralParamsHandlerTest {
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
 
-                coVerify { appsFlyerStore.storeIfAbsent(value = value) }
+                coVerify { appsFlyerRepository.storeIfAbsent(value = value) }
             } else {
-                coVerify(inverse = true) { appsFlyerStore.storeIfAbsent(value = any()) }
+                coVerify(inverse = true) { appsFlyerRepository.storeIfAbsent(value = any()) }
             }
         }
 
@@ -151,9 +151,9 @@ class AppsFlyerReferralParamsHandlerTest {
 
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
-                coVerify { appsFlyerStore.storeIfAbsent(value = value) }
+                coVerify { appsFlyerRepository.storeIfAbsent(value = value) }
             } else {
-                coVerify(inverse = true) { appsFlyerStore.storeIfAbsent(value = any()) }
+                coVerify(inverse = true) { appsFlyerRepository.storeIfAbsent(value = any()) }
             }
         }
 
@@ -251,7 +251,7 @@ class AppsFlyerReferralParamsHandlerTest {
             handler.handle(params = params)
 
             val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = model.expectedCampaign)
-            coVerify { appsFlyerStore.storeIfAbsent(value = value) }
+            coVerify { appsFlyerRepository.storeIfAbsent(value = value) }
         }
 
         private fun provideTestModels(): List<CampaignModel> {
@@ -274,7 +274,7 @@ class AppsFlyerReferralParamsHandlerTest {
         fun `GIVEN tpay_mobileonboard params WHEN handle THEN navigation deeplink stored`() = runTest {
             handler.handle(params = mapOf("deep_link_value" to "tpay_mobileonboard"))
 
-            coVerify { appsFlyerStore.storeNavigationDeeplink("tpay_mobileonboard") }
+            coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
         }
 
         @Test
@@ -286,14 +286,14 @@ class AppsFlyerReferralParamsHandlerTest {
 
             handler.handleDeeplink(deepLink)
 
-            coVerify { appsFlyerStore.storeNavigationDeeplink("tpay_mobileonboard") }
+            coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
         }
 
         @Test
         fun `GIVEN referral params WHEN handle THEN navigation deeplink stored`() = runTest {
             handler.handle(params = mapOf("deep_link_value" to "referral"))
 
-            coVerify { appsFlyerStore.storeNavigationDeeplink("referral") }
+            coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
 
         @Test
@@ -305,7 +305,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
             handler.handleDeeplink(deepLink)
 
-            coVerify { appsFlyerStore.storeNavigationDeeplink("referral") }
+            coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
 
         @Test
@@ -318,9 +318,9 @@ class AppsFlyerReferralParamsHandlerTest {
                 ),
             )
 
-            coVerify { appsFlyerStore.storeNavigationDeeplink("referral") }
+            coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
             coVerify {
-                appsFlyerStore.storeIfAbsent(
+                appsFlyerRepository.storeIfAbsent(
                     value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN),
                 )
             }
@@ -335,7 +335,7 @@ class AppsFlyerReferralParamsHandlerTest {
                 ),
             )
 
-            coVerify(inverse = true) { appsFlyerStore.storeNavigationDeeplink(any()) }
+            coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
         }
 
         @Test
@@ -347,7 +347,7 @@ class AppsFlyerReferralParamsHandlerTest {
                 ),
             )
 
-            coVerify { appsFlyerStore.storeNavigationDeeplink("tpay_mobileonboard") }
+            coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
         }
 
         @Test
@@ -359,7 +359,7 @@ class AppsFlyerReferralParamsHandlerTest {
                 ),
             )
 
-            coVerify(inverse = true) { appsFlyerStore.storeNavigationDeeplink(any()) }
+            coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
         }
     }
 

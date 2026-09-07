@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -14,7 +14,7 @@ import kotlin.contracts.contract
 
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
 ) {
 
@@ -71,14 +71,14 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
 
     private fun storeNavigationDeeplink(deepLinkValue: String) {
         coroutineScope.launch {
-            appsFlyerStore.storeNavigationDeeplink(deepLinkValue)
+            appsFlyerRepository.storeNavigationDeeplink(deepLinkValue)
             TangemLogger.i("AppsFlyer navigation deep link stored: $deepLinkValue")
         }
     }
 
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
-            appsFlyerStore.storeIfAbsent(
+            appsFlyerRepository.storeIfAbsent(
                 value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
             )
         }
