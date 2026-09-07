@@ -1,10 +1,10 @@
-package com.tangem.datasource.local.txhistory.db.dao
+package com.tangem.store.datasource.txhistory.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 
 @Dao
 interface TokenInfoDao {

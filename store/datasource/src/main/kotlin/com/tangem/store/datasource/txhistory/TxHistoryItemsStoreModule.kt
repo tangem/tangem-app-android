@@ -1,8 +1,6 @@
-package com.tangem.datasource.di
+package com.tangem.store.datasource.txhistory
 
 import com.tangem.core.local.datastore.RuntimeSharedMapStore
-import com.tangem.datasource.local.txhistory.DefaultTxHistoryItemsStore
-import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
