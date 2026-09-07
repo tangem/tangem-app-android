@@ -1,54 +1,50 @@
 package com.tangem.features.collectibles.impl.main.model.converter
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_mail_20
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
+
+internal enum class CollectiblesMenuItem(val id: String) {
+    ACTIVITY_LOG("activity_log"),
+    DELIVERIES("deliveries"),
+    HOW_IT_WORKS("how_it_works"),
+    GET_ASSISTANCE("get_assistance"),
+    CLOSE_ACCOUNT("close_account"),
+}
 
 /** Builds the top bar menu closed; opening and dismissing it is a state update. */
 internal class CollectiblesMenuConverter(
     private val onMenuClick: () -> Unit,
     private val onDismiss: () -> Unit,
-    private val onActivityLogClick: () -> Unit,
-    private val onDeliveriesClick: () -> Unit,
-    private val onHowItWorksClick: () -> Unit,
-    private val onGetAssistanceClick: () -> Unit,
+    private val onItemClick: (CollectiblesMenuItem) -> Unit,
 ) : Converter<Unit, CollectiblesMainUM.MenuUM> {
 
     override fun convert(value: Unit): CollectiblesMainUM.MenuUM = CollectiblesMainUM.MenuUM(
         items = persistentListOf(
-            CollectiblesMainUM.MenuItemUM(
-                id = MENU_ACTIVITY_LOG,
-                icon = Icons.ic_clock_20,
-                title = stringReference("Activity log"),
-                hasDividerAbove = false,
-                onClick = onActivityLogClick,
-            ),
-            CollectiblesMainUM.MenuItemUM(
-                id = MENU_DELIVERIES,
-                icon = Icons.ic_globe_20,
-                title = stringReference("Deliveries"),
-                hasDividerAbove = false,
-                onClick = onDeliveriesClick,
-            ),
-            CollectiblesMainUM.MenuItemUM(
-                id = MENU_HOW_IT_WORKS,
+            item(item = CollectiblesMenuItem.ACTIVITY_LOG, icon = Icons.ic_clock_20, title = "Activity log"),
+            item(item = CollectiblesMenuItem.DELIVERIES, icon = Icons.ic_globe_20, title = "Deliveries"),
+            item(
+                item = CollectiblesMenuItem.HOW_IT_WORKS,
                 icon = Icons.ic_info_20,
-                title = stringReference("How it works"),
+                title = "How it works",
                 hasDividerAbove = true,
-                onClick = onHowItWorksClick,
             ),
-            CollectiblesMainUM.MenuItemUM(
-                id = MENU_GET_ASSISTANCE,
-                icon = Icons.ic_mail_20,
-                title = stringReference("Get assistance"),
-                hasDividerAbove = false,
-                onClick = onGetAssistanceClick,
+            item(item = CollectiblesMenuItem.GET_ASSISTANCE, icon = Icons.ic_mail_20, title = "Get assistance"),
+
+            // TODO move it to test menu
+            item(
+                item = CollectiblesMenuItem.CLOSE_ACCOUNT,
+                icon = Icons.ic_trash_bin_20,
+                title = "Close account",
+                hasDividerAbove = true,
             ),
         ),
         isShown = false,
@@ -56,11 +52,12 @@ internal class CollectiblesMenuConverter(
         onDismiss = onDismiss,
     )
 
-    private companion object {
-
-        const val MENU_ACTIVITY_LOG = "activity_log"
-        const val MENU_DELIVERIES = "deliveries"
-        const val MENU_HOW_IT_WORKS = "how_it_works"
-        const val MENU_GET_ASSISTANCE = "get_assistance"
-    }
+    private fun item(item: CollectiblesMenuItem, icon: ImageVector, title: String, hasDividerAbove: Boolean = false) =
+        CollectiblesMainUM.MenuItemUM(
+            id = item.id,
+            icon = icon,
+            title = stringReference(title),
+            hasDividerAbove = hasDividerAbove,
+            onClick = { onItemClick(item) },
+        )
 }
