@@ -323,6 +323,7 @@ internal object TransactionDomainModule {
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
+        walletManagersFacade: WalletManagersFacade,
         featureTogglesManager: FeatureTogglesManager,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
@@ -330,6 +331,7 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             tronGaslessTransactionRepository = tronGaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
+            walletManagersFacade = walletManagersFacade,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
@@ -375,9 +377,11 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideIsTronGaslessSupportedUseCase(
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
+        walletManagersFacade: WalletManagersFacade,
     ): IsTronGaslessSupportedUseCase {
         return IsTronGaslessSupportedUseCase(
             repository = tronGaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 

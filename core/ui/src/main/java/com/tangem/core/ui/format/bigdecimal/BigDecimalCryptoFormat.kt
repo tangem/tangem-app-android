@@ -30,7 +30,7 @@ class BigDecimalCryptoFormatFull(
     locale: Locale = Locale.getDefault(),
 ) : BigDecimalCryptoFormat(
     symbol = cryptoCurrency.symbol,
-    decimals = cryptoCurrency.decimals,
+    decimals = cryptoCurrency.displayDecimals,
     locale = locale,
 ) {
     override fun invoke(value: BigDecimal): String = defaultAmount()(value)
@@ -70,7 +70,7 @@ fun BigDecimalFormatScope.crypto(
 ): BigDecimalCryptoFormat {
     return BigDecimalCryptoFormat(
         symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
+        decimals = cryptoCurrency.displayDecimals,
         shouldIgnoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,
     )
@@ -98,7 +98,7 @@ fun BigDecimalFormatScope.cryptoStyled(
 ): BigDecimalCryptoFormatStyled {
     return BigDecimalCryptoFormatStyled(
         symbol = cryptoCurrency.symbol,
-        decimals = cryptoCurrency.decimals,
+        decimals = cryptoCurrency.displayDecimals,
         spanStyleReference = spanStyleReference,
         shouldIgnoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,

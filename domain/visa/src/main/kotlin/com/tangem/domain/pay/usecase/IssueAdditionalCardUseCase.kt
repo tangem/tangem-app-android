@@ -70,7 +70,7 @@ class IssueAdditionalCardUseCase(
         val order = existing ?: customerOrderRepository.createOrder(
             userWalletId = userWalletId,
             type = offer.data.orderType,
-            specificationName = offer.data.specificationName,
+            specificationName = offer.data.specificationName ?: raise(VisaApiError.Unspecified),
             idempotencyKey = UUID.randomUUID().toString(),
         ).bind()
 
