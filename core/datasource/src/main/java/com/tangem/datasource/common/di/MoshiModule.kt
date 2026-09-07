@@ -1,4 +1,4 @@
-package com.tangem.datasource.di
+package com.tangem.datasource.common.di
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -6,8 +6,7 @@ import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.core.local.moshi.SdkMoshiConfigurer
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
-import com.tangem.datasource.api.common.adapter.*
-import com.tangem.datasource.utils.SerializeNullsFactory
+import com.tangem.datasource.common.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
