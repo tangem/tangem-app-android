@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.core.net.toUri
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.AndroidEntryPoint
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
@@ -16,8 +17,11 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
     @Inject
     lateinit var pushMessageHandler: PushMessageHandler
 
+    @Inject
+    lateinit var analyticsExceptionHandler: AnalyticsExceptionHandler
+
     private val pushNotificationDelegate: PushNotificationDelegate by lazy {
-        PushNotificationDelegate(applicationContext)
+        PushNotificationDelegate(applicationContext, analyticsExceptionHandler)
     }
 
     override fun onNewToken(token: String) {
