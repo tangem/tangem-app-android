@@ -29,11 +29,11 @@ import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.data.walletmanager.utils.*
 import com.tangem.core.local.assets.AssetLoader
 import com.tangem.core.local.assets.loadMap
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.store.WalletManagersStore
+import com.tangem.data.walletmanager.utils.*
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
@@ -322,6 +322,16 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
             emptySet()
         }
+
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = currency.network,
+        )
+
+        requireNotNull(walletManager) {
+            "Unable to get a wallet manager for blockchain: ${currency.network}"
+        }
+
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
