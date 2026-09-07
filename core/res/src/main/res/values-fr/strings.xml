@@ -2161,7 +2161,7 @@
   <string name="tangempay_order_type_unavailable">Indisponible</string>
   <string name="tangempay_other_networks_header">Autres réseaux</string>
   <string name="tangempay_other_networks_subtitle">Puis échangez-le sans frais vers votre compte de paiement</string>
-  <string name="tangempay_other_networks_title">Envoyez des USDT/USDC sur n\'importe quelle chaîne vers votre Tangem Wallet</string>
+  <string name="tangempay_other_networks_title">Envoyez des USDT/USDC sur n\'importe quelle EVM-chaîne vers votre Tangem Wallet</string>
   <string name="tangempay_pay_support">Assistance</string>
   <string name="tangempay_payment_account">Compte de paiement</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay session expirée</string>
@@ -2213,7 +2213,7 @@
   <string name="tangempay_tangem_visa_card">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Recevoir des USD depuis un compte bancaire via ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Recevoir des USD depuis un compte bancaire via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">Depuis un compte bancaire</string>
   <string name="tangempay_topup_receive_body">Envoyez USDC Polygon à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_body_multichain">Envoyez des USDC ou USDT à l\'adresse de votre compte</string>
@@ -2260,6 +2260,7 @@
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
   <string name="token_receive_show_qr_code_title">Afficher le code QR</string>
   <string name="token_summary_galaxy_score_description">Le \"Galaxy Score\" combine la performance de marché et l\'activité sur les réseaux sociaux en un score unique de 0 à 100 qui reflète la santé globale de l\'actif. Source : LunarCrush.</string>
+  <string name="token_summary_go_to_swap_button">Vers l\'échange</string>
   <string name="token_summary_ma_cross_description">Le \"MA Cross\" compare les prix moyens sur 50 et 200 jours pour indiquer si l\'actif se négocie au-dessus ou en dessous de sa tendance long terme. Source : taapi.io.</string>
   <string name="token_summary_macd_description">Le \"MACD\" compare la dynamique des prix à court terme et à long terme pour indiquer si la dynamique d\'un actif se renforce ou s\'affaiblit. Source : taapi.io.</string>
   <string name="token_summary_outlook_is_not_available">Perspectives non disponibles pour ce token</string>
@@ -2499,6 +2500,7 @@
   <string name="warning_approval_in_progress_message">Le processus d\'octroi des autorisations est actuellement en cours et sera bientôt terminé</string>
   <string name="warning_approval_in_progress_title">Approbation en cours</string>
   <string name="warning_backup_error_add_funds_message">Ce portefeuille a un problème de sauvegarde. Contactez le support technique pour le résoudre.</string>
+  <string name="warning_backup_error_add_funds_message_v2">Le portefeuille que vous souhaitez approvisionner présente un problème de sauvegarde. Transférez vos fonds vers un autre portefeuille, puis réinitialisez-le.</string>
   <string name="warning_backup_error_add_funds_title">L\'ajout de fonds est désactivé</string>
   <string name="warning_backup_error_attention_message">Vos cartes n\'ont pas été activées correctement. Continuer à utiliser ce portefeuille peut aboutir à une perte d\'accès à vos fonds. Veuillez transférer vos fonds sur un autre portefeuille, réinitialisez vos cartes aux paramètres d\'usine et activez-les à nouveau avant de continuer.</string>
   <string name="warning_backup_error_attention_title">Action requise : réinitialisez votre portefeuille</string>
