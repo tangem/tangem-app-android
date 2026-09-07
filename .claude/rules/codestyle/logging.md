@@ -11,10 +11,12 @@ keeps:
 | Writer | Keeps | Where it goes |
 |---|---|---|
 | `FileLogWriter` (`app/.../common/log`) | **`Severity.Info` and `Severity.Error` only** | `AppLogsStore` → the on-device log file the user can export / attach to a bug report |
-| `LogcatLogWriter` | all severities | Logcat (console) — gone once the process/session ends |
+| `LogcatLogWriter` | all severities | Logcat (console), **only in `LOG_ENABLED` builds** (debug/mocked/internal) — gone once the process/session ends |
 
-So **`TangemLogger.i(...)` and `TangemLogger.e(...)` are the only levels that survive in the exported
-logs.** `v` / `d` / `w` / `a` reach Logcat only and are lost afterwards.
+`FileLogWriter` is always registered; `LogcatLogWriter` only in `LOG_ENABLED` builds. So
+**`TangemLogger.i(...)` and `TangemLogger.e(...)` are the only levels that survive in the exported
+logs.** `v` / `d` / `w` / `a` reach Logcat only in `LOG_ENABLED` builds (debug/mocked/internal) — in
+release/external builds they are dropped entirely — and never persist either way.
 
 **Rule of thumb:**
 
