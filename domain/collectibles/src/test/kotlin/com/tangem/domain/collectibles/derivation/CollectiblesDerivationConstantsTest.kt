@@ -1,6 +1,7 @@
 package com.tangem.domain.collectibles.derivation
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import org.junit.jupiter.api.Test
 
 internal class CollectiblesDerivationConstantsTest {
