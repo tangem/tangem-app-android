@@ -52,6 +52,21 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val addCardButton: KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_ADD_CARD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val paymentAccountTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_payment_account))
+        useUnmergedTree = true
+    }
+
+    val multinetworkSubtitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_multinetwork))
+        useUnmergedTree = true
+    }
+
     val topUpButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_card_details_add_funds)))
@@ -110,6 +125,17 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val emptyHistoryIcon: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val emptyHistoryText: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.TEXT)
+        hasText(getResourceString(CoreResR.string.transaction_history_empty_transactions))
+        useUnmergedTree = true
+    }
+
     val reloadHistoryButton: KNode = child {
         hasTestTag(TangemPayTestTags.TRANSACTION_HISTORY_RELOAD_BUTTON)
         useUnmergedTree = true
@@ -147,8 +173,9 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         performScrollToNode(withText(text))
     }
 
+    // The empty and the failed-to-load history states share this block, so both are reached with it.
     @OptIn(ExperimentalTestApi::class)
-    fun scrollToHistoryErrorBlock() = paymentAccountContent {
+    fun scrollToHistoryStateBlock() = paymentAccountContent {
         performScrollToNode(withTestTag(EmptyTransactionBlockTestTags.BLOCK))
     }
 }
