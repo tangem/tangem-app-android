@@ -54,12 +54,17 @@ internal class MarketCategoryListManager(
      *
      * `timestamp` is left unset: the categories response echoes no snapshot token, so there is no
      * value to hold stable across pages.
+     *
+     * @param searchText narrows the listing; `null` lists every category
      */
-    fun reload() {
+    fun reload(searchText: String? = null) {
         modelScope.launch {
             actionsFlow.emit(
                 BatchAction.Reload(
-                    requestParams = MarketCategoryListConfig(fiatCurrencySymbol = currentAppCurrencyCode()),
+                    requestParams = MarketCategoryListConfig(
+                        fiatCurrencySymbol = currentAppCurrencyCode(),
+                        searchText = searchText,
+                    ),
                 ),
             )
         }
