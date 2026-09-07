@@ -16,6 +16,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
@@ -54,7 +55,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN Pill TransactionType WHEN convert THEN result is Pill with expected kind`() {
         val cases = listOf(
-            TransactionType.Approve(amount = null, address = USER_ADDRESS) to TransactionItemUM.PillKind.APPROVE,
+            TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = USER_ADDRESS) to TransactionItemUM.PillKind.APPROVE,
             TransactionType.Staking.Stake to TransactionItemUM.PillKind.STAKING,
             TransactionType.Staking.Unstake to TransactionItemUM.PillKind.STAKING,
             TransactionType.Staking.Restake to TransactionItemUM.PillKind.STAKING,

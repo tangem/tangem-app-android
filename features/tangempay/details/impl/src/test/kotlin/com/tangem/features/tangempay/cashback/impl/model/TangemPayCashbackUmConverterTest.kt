@@ -15,6 +15,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import org.joda.time.DateTime
+import org.joda.time.LocalDate
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,7 +30,7 @@ internal class TangemPayCashbackUmConverterTest {
 
     private val defaultLocale = Locale.getDefault()
 
-    private val converter = TangemPayCashbackUmConverter()
+    private val converter = TangemPayCashbackUmConverter(today = { LocalDate.parse("2026-07-01") })
 
     @BeforeEach
     fun setup() {
@@ -52,7 +53,9 @@ internal class TangemPayCashbackUmConverterTest {
 
     @ParameterizedTest
     @MethodSource("emptyStateCashback")
-    fun `GIVEN null or zero amount WHEN convert THEN empty state without banner`(cashback: TangemPayCashback?) {
+    fun `GIVEN null or nothing earned without awaiting payout WHEN convert THEN empty state without banner`(
+        cashback: TangemPayCashback?,
+    ) {
         // Act
         val actual = converter.convert(cashback)
 
@@ -97,6 +100,131 @@ internal class TangemPayCashbackUmConverterTest {
             ),
         )
         assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN zero amount AND positive total earned AND awaiting payout WHEN convert THEN zero month state with banner`() {
+        // Arrange
+        val cashback = createCashback(
+            confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal("132.15"),
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-03"),
+                amount = BigDecimal("10.50"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        val expected = TangemPayCashbackUM(
+            title = resourceReference(
+                R.string.tangempay_cashback_earned_title,
+                wrappedList("$0.00", arrayItemReference(R.array.common_month_in, index = 5)),
+            ),
+            subtitle = resourceReference(R.string.tangempay_cashback_deposited_on, wrappedList(PAYOUT_WINDOW)),
+            isEmpty = false,
+            banner = TangemPayCashbackUM.Banner(
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList("$10.50", "June", "July 3"),
+                ),
+                type = TangemPayCashbackUM.Banner.Type.Info,
+            ),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN nothing earned AND awaiting previous payout WHEN convert THEN empty state with deposit banner`() {
+        // Arrange
+        val cashback = createCashback(
+            confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal.ZERO,
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-03"),
+                amount = BigDecimal("10.50"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        val expected = TangemPayCashbackUM(
+            title = resourceReference(R.string.tangempay_cashback_empty_title),
+            subtitle = resourceReference(R.string.tangempay_cashback_empty_subtitle),
+            isEmpty = true,
+            banner = TangemPayCashbackUM.Banner(
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList("$10.50", "June", "July 3"),
+                ),
+                type = TangemPayCashbackUM.Banner.Type.Info,
+            ),
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonPositivePayoutAmounts")
+    fun `GIVEN previous payout with non-positive amount WHEN convert THEN no deposit banner`(amount: BigDecimal) {
+        // Arrange
+        val cashback = createCashback(
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-03"),
+                amount = amount,
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        assertThat(actual.banner).isNull()
+    }
+
+    @Test
+    fun `GIVEN previous payout ended before today WHEN convert THEN no deposit banner`() {
+        // Arrange
+        val cashback = createCashback(
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-06-30"),
+                amount = BigDecimal("10.50"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        assertThat(actual.banner).isNull()
+    }
+
+    @Test
+    fun `GIVEN previous payout ending today WHEN convert THEN deposit banner kept`() {
+        // Arrange
+        val cashback = createCashback(
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-01"),
+                amount = BigDecimal("10.50"),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(cashback)
+
+        // Assert
+        assertThat(actual.banner).isEqualTo(
+            TangemPayCashbackUM.Banner(
+                text = resourceReference(
+                    id = R.string.tangempay_cashback_deposit_banner,
+                    formatArgs = wrappedList("$10.50", "June", "July 1"),
+                ),
+                type = TangemPayCashbackUM.Banner.Type.Info,
+            ),
+        )
     }
 
     @Test
@@ -223,11 +351,32 @@ internal class TangemPayCashbackUmConverterTest {
 
     private fun emptyStateCashback(): List<TangemPayCashback?> = listOf(
         null,
-        createCashback(confirmedAmount = BigDecimal.ZERO),
+        createCashback(confirmedAmount = BigDecimal.ZERO, totalEarnedAmount = BigDecimal.ZERO),
+        createCashback(confirmedAmount = BigDecimal("0.00"), totalEarnedAmount = BigDecimal("0.00")),
+        createCashback(confirmedAmount = BigDecimal.ZERO, totalEarnedAmount = null),
+        createCashback(
+            confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal.ZERO,
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-06-30"),
+                amount = BigDecimal("10.50"),
+            ),
+        ),
+        createCashback(
+            confirmedAmount = BigDecimal.ZERO,
+            totalEarnedAmount = BigDecimal.ZERO,
+            previousPayout = TangemPayCashback.PreviousPayout(
+                endDate = DateTime.parse("2026-07-03"),
+                amount = BigDecimal.ZERO,
+            ),
+        ),
     )
+
+    private fun nonPositivePayoutAmounts(): List<BigDecimal> = listOf(BigDecimal("-5.00"), BigDecimal.ZERO)
 
     private fun createCashback(
         confirmedAmount: BigDecimal = BigDecimal("22.54"),
+        totalEarnedAmount: BigDecimal? = BigDecimal("132.15"),
         currency: String = "USD",
         year: Int = 2026,
         month: Int = 6,
@@ -236,7 +385,7 @@ internal class TangemPayCashbackUmConverterTest {
         previousPayout: TangemPayCashback.PreviousPayout? = null,
     ): TangemPayCashback = TangemPayCashback(
         confirmedAmount = confirmedAmount,
-        totalEarnedAmount = BigDecimal("132.15"),
+        totalEarnedAmount = totalEarnedAmount,
         currency = currency,
         payoutCurrency = "USDC",
         period = TangemPayCashback.Period(

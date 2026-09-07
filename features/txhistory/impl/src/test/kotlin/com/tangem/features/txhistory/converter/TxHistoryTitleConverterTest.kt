@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.network.TxInfo.TransactionStatus
@@ -31,7 +32,7 @@ internal class TxHistoryTitleConverterTest {
     private fun provideTestModels() = listOf(
         // Pills resolve to the status-aware label text (no amount)
         TitleModel(
-            tx = txInfo(TransactionType.Approve(amount = null, address = "0xspender")),
+            tx = txInfo(TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "0xspender")),
             expected = resRef(R.string.common_approved),
         ),
         TitleModel(
