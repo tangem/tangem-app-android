@@ -42,5 +42,6 @@ dependencies {
 
     // region Test
     testImplementation(projects.test.core)
+    testImplementation(deps.moshi)
     // endregion
 }
