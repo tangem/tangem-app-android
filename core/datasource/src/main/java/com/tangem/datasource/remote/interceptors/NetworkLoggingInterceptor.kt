@@ -1,4 +1,4 @@
-package com.tangem.datasource.api.common
+package com.tangem.datasource.remote.interceptors
 
 import android.util.Log
 import com.ihsanbal.logging.Level
