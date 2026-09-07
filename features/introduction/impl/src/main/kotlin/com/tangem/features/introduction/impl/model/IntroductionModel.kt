@@ -83,7 +83,6 @@ internal class IntroductionModel @Inject constructor(
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
-        trackingContextProxy = trackingContextProxy,
         uiMessageSender = uiMessageSender,
     )
 
@@ -144,7 +143,6 @@ internal class IntroductionModel @Inject constructor(
 
     fun setVideoRunning(isRunning: Boolean) {
         isScreenResumed = isRunning
-        if (isRunning) haveWalletSheet.onScreenResumed()
         if (isRunning && isStoryDismissPendingResume) {
             // The viewer backed out of the flow that covered the ended story: welcome, without the sheet.
             isStoryDismissPendingResume = false
