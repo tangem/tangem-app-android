@@ -555,7 +555,6 @@ private fun SwapAmountEquivalent(
     }
 }
 
-@Suppress("MagicNumber")
 @Composable
 fun Token(currencyIconState: CurrencyIconState, tokenSymbol: TextReference) {
     Column(
@@ -566,12 +565,9 @@ fun Token(currencyIconState: CurrencyIconState, tokenSymbol: TextReference) {
             )
             .testTag(SwapTokenScreenTestTags.TOKEN),
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.End,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CurrencyIcon(
-            state = currencyIconState,
-            modifier = Modifier.padding(end = TangemTheme.dimens.spacing16),
-        )
+        CurrencyIcon(state = currencyIconState)
         SpacerH4()
         Text(
             text = tokenSymbol.resolveReference(),
