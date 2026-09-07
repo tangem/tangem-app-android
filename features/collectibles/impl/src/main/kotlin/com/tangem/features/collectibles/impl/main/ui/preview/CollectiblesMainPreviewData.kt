@@ -11,6 +11,7 @@ import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_mail_20
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_20
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -63,6 +64,12 @@ internal object CollectiblesMainPreviewData {
             menuItem(id = "deliveries", icon = Icons.ic_globe_20, title = "Deliveries"),
             menuItem(id = "how_it_works", icon = Icons.ic_info_20, title = "How it works", hasDividerAbove = true),
             menuItem(id = "get_assistance", icon = Icons.ic_mail_20, title = "Get assistance"),
+            menuItem(
+                id = "close_account",
+                icon = Icons.ic_trash_bin_20,
+                title = "Close account",
+                hasDividerAbove = true,
+            ),
         ),
         isShown = isShown,
         onMenuClick = {},
