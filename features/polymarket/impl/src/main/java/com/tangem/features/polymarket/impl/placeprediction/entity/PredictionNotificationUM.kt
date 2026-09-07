@@ -19,10 +19,6 @@ internal sealed interface PredictionNotificationUM {
         override val isBlocking = true
     }
 
-    data object BelowMinOrderSize : PredictionNotificationUM {
-        override val isBlocking = true
-    }
-
     data object MarketClosed : PredictionNotificationUM {
         override val isBlocking = true
     }
