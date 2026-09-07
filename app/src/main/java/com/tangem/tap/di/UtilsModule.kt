@@ -11,6 +11,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.navigation.url.DefaultAppStoreOpener
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.features.tester.api.TestPushEmitter
 import com.tangem.tap.ForegroundActivityObserver
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.finisher.AndroidAppFinisher
@@ -21,7 +22,6 @@ import com.tangem.tap.core.DefaultAppCoroutineScope
 import com.tangem.tap.common.pushes.DefaultTestPushEmitter
 import com.tangem.tap.data.DefaultAppInfoProvider
 import com.tangem.utils.info.AppInfoProvider
-import com.tangem.utils.notifications.TestPushEmitter
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
