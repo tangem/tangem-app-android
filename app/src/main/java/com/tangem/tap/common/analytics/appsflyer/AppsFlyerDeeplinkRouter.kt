@@ -2,7 +2,7 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -24,7 +24,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AppsFlyerDeeplinkRouter @Inject constructor(
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val appRouter: AppRouter,
@@ -32,7 +32,7 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
 
     fun observe(scope: CoroutineScope, currentRoute: Flow<AppRoute?>) {
         combine(
-            appsFlyerStore.observeNavigationDeeplink(),
+            appsFlyerRepository.observeNavigationDeeplink(),
             currentRoute.distinctUntilChanged(),
         ) { deepLinkValue, route ->
             if (deepLinkValue != null && route != null) deepLinkValue to route else null

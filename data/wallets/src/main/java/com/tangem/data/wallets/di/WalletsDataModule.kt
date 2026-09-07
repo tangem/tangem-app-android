@@ -15,7 +15,7 @@ import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.create
@@ -94,14 +94,14 @@ internal object WalletsDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
-        appsFlyerStore: AppsFlyerStore,
+        appsFlyerRepository: AppsFlyerRepository,
     ): WalletsPromoRepository {
         return DefaultWalletsPromoRepository(
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
-            appsFlyerStore = appsFlyerStore,
+            appsFlyerRepository = appsFlyerRepository,
         )
     }
 

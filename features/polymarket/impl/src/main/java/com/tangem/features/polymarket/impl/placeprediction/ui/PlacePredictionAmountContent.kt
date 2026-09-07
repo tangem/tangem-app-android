@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -26,21 +25,18 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.onboarding.OnboardingFooter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.payout
-import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSlippageRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
 
@@ -88,12 +84,10 @@ internal fun PlacePredictionAmountContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-                PredictionMarketBlock(state = state.market)
-            }
+            PredictionMarketBlock(state = state.market)
             PredictionAmountBlock(
                 amountValue = state.amountValue,
-                payout = state.quote.payout(),
+                amountCaption = state.amountCaption,
                 payment = state.payment,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
@@ -102,40 +96,12 @@ internal fun PlacePredictionAmountContent(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
             )
-            SlippageRow(slippage = state.slippage, onClick = intents::onSlippageClick)
+            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
+                PredictionSlippageRow(slippage = state.slippage, onClick = intents::onSlippageClick)
+            }
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
         }
     }
-}
-
-@Composable
-private fun SlippageRow(slippage: SlippageUM, onClick: () -> Unit) {
-    TangemSurface(color = TangemTheme.colors3.bg.secondary) {
-        TangemRow(
-            titleSlot = {
-                Text(
-                    text = stringResourceSafe(R.string.prediction_place_slippage),
-                    style = TangemTheme.typography3.body.medium,
-                    color = TangemTheme.colors3.text.primary,
-                )
-            },
-            valueSlot = {
-                Text(
-                    text = slippage.label(),
-                    style = TangemTheme.typography3.body.medium,
-                    color = TangemTheme.colors3.text.secondary,
-                )
-            },
-            onClick = onClick,
-        )
-    }
-}
-
-@Composable
-private fun SlippageUM.label(): String {
-    val formatted = "$percent%"
-
-    return if (isDefault) stringResourceSafe(R.string.prediction_place_slippage_default, formatted) else formatted
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)

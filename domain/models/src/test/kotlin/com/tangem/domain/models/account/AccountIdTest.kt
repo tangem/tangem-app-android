@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import com.google.common.truth.Truth
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -20,6 +21,19 @@ class AccountIdTest {
 
         // Assert
         Truth.assertThat(actual.value).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun forCollectiblesAccount() {
+        // Arrange
+        val userWalletId = UserWalletId("27163F47405CE73110837F24DF82607FF11C7AF9D78C93F409E4FEAFF3400C8F")
+
+        // Act
+        val actual = AccountId.forCollectiblesAccount(userWalletId = userWalletId)
+
+        // Assert
+        Truth.assertThat(actual.value).isEqualTo("collectibles_UserWalletId(271...C8F)")
+        Truth.assertThat(actual.userWalletId).isEqualTo(userWalletId)
     }
 
     private fun provideTestModels() = listOf(

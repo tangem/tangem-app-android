@@ -58,6 +58,7 @@ dependencies {
     api(projects.core.analytics)
     implementation(projects.core.local)
     api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.spend.datasource)
     api(projects.core.security)
     api(projects.core.utils)

@@ -137,7 +137,7 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> =
         real.checkCustomerEligibility()
 
-    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> =
+    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>? =
         real.getCustomerEligibility()
 
     override suspend fun fetchCustomerEligibility(

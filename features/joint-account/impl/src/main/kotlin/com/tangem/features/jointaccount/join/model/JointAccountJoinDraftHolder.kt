@@ -1,5 +1,6 @@
 package com.tangem.features.jointaccount.join.model
 
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,10 @@ internal class JointAccountJoinDraftHolder {
 
     fun setSelectedWallet(walletId: UserWalletId) {
         draft.update { it.copy(selectedWalletId = walletId) }
+    }
+
+    fun setConfig(config: JointAccountConfig) {
+        draft.update { it.copy(config = config) }
     }
 
     fun setDisplayName(displayName: String) {

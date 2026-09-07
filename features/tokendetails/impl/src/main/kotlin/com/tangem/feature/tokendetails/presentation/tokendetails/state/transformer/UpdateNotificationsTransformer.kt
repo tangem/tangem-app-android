@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.TangemButtonType
@@ -8,12 +9,14 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageButtonUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
@@ -45,13 +48,16 @@ internal class UpdateNotificationsTransformer(
         return when (warning) {
             is CryptoCurrencyWarning.SomeNetworksUnreachable -> TangemMessageUM(
                 id = "networks_unreachable",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_network_unreachable_title),
                 subtitle = resourceReference(CoreResR.string.warning_network_unreachable_message),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.status.attention },
-                ),
             )
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> createFeeWarning(
                 FeeWarningParams(
@@ -77,23 +83,29 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.BeaconChainShutdown -> TangemMessageUM(
                 id = "beacon_chain_shutdown",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_beacon_chain_retirement_title),
                 subtitle = resourceReference(CoreResR.string.warning_beacon_chain_retirement_content),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.status.attention },
-                ),
             )
             is HederaWarnings.AssociateWarning -> TangemMessageUM(
                 id = "hedera_associate",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_hedera_missing_token_association_title),
                 subtitle = resourceReference(CoreResR.string.warning_hedera_missing_token_association_message_brief),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.warning_hedera_missing_token_association_button_title),
@@ -104,6 +116,13 @@ internal class UpdateNotificationsTransformer(
             )
             is HederaWarnings.AssociateWarningWithFee -> TangemMessageUM(
                 id = "hedera_associate_fee",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_hedera_missing_token_association_title),
                 subtitle = resourceReference(
                     CoreResR.string.warning_hedera_missing_token_association_message,
@@ -113,10 +132,6 @@ internal class UpdateNotificationsTransformer(
                     ),
                 ),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.warning_hedera_missing_token_association_button_title),
@@ -127,6 +142,13 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.RequiredTrustline -> TangemMessageUM(
                 id = "required_trustline",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_token_trustline_title),
                 subtitle = resourceReference(
                     CoreResR.string.warning_token_trustline_subtitle,
@@ -136,10 +158,6 @@ internal class UpdateNotificationsTransformer(
                     ),
                 ),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.warning_token_trustline_button_title),
@@ -150,6 +168,13 @@ internal class UpdateNotificationsTransformer(
             )
             is KaspaWarnings.IncompleteTransaction -> TangemMessageUM(
                 id = "kaspa_incomplete",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_kaspa_unfinished_token_transaction_title),
                 subtitle = resourceReference(
                     CoreResR.string.warning_kaspa_unfinished_token_transaction_message,
@@ -159,10 +184,6 @@ internal class UpdateNotificationsTransformer(
                     ),
                 ),
                 messageEffect = TangemMessageEffect.Warning,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.common_cancel),
@@ -184,23 +205,29 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> TangemMessageUM(
                 id = "migration_matic_pol",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_matic_migration_title),
                 subtitle = resourceReference(CoreResR.string.warning_matic_migration_message),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.status.attention },
-                ),
             )
             is CryptoCurrencyWarning.MigrationClore -> TangemMessageUM(
                 id = "migration_clore",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_clore_migration_title),
                 subtitle = resourceReference(CoreResR.string.warning_clore_migration_description),
                 messageEffect = TangemMessageEffect.Warning,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.warning_clore_migration_button),
@@ -211,13 +238,16 @@ internal class UpdateNotificationsTransformer(
             )
             is DynamicAddressesWarnings.FundsFound -> TangemMessageUM(
                 id = "dynamic_addresses_funds_found",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.dynamic_addresses_notification_funds_found_title),
                 subtitle = resourceReference(CoreResR.string.dynamic_addresses_notification_funds_found_description),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_attention_default_24,
-                    tintReference = { TangemTheme.colors2.graphic.status.attention },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.common_learn_more),
@@ -228,19 +258,29 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.ExistentialDeposit -> TangemMessageUM(
                 id = "existential_deposit",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_info_20,
+                    tintReference = { TangemTheme.colors3.icon.primary },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_existential_deposit_title),
                 subtitle = resourceReference(
                     CoreResR.string.warning_existential_deposit_message,
                     wrappedList(warning.currencyName, warning.edStringValueWithSymbol),
                 ),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_warning_default_32,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
             )
             is CryptoCurrencyWarning.Rent -> TangemMessageUM(
                 id = "rent_info",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = true,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_info_20,
+                    tintReference = { TangemTheme.colors3.icon.primary },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_rent_fee_title),
                 subtitle = resourceReference(
                     CoreResR.string.warning_solana_rent_fee_message,
@@ -250,10 +290,6 @@ internal class UpdateNotificationsTransformer(
                     ),
                 ),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_warning_default_32,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = resourceReference(CoreResR.string.common_later),
@@ -264,6 +300,13 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.SomeNetworksNoAccount -> TangemMessageUM(
                 id = "networks_no_account",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_info_20,
+                    tintReference = { TangemTheme.colors3.icon.primary },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_no_account_title),
                 subtitle = resourceReference(
                     CoreResR.string.no_account_generic,
@@ -276,23 +319,29 @@ internal class UpdateNotificationsTransformer(
                     ),
                 ),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_warning_default_32,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TangemMessageUM(
                 id = "top_up_without_reserve",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_info_20,
+                    tintReference = { TangemTheme.colors3.icon.primary },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_no_account_title),
                 subtitle = resourceReference(CoreResR.string.no_account_send_to_create),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_warning_default_32,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
             )
             is CryptoCurrencyWarning.FeeResourceInfo -> TangemMessageUM(
                 id = "fee_resource_info",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_info_20,
+                    tintReference = { TangemTheme.colors3.icon.primary },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.koinos_mana_level_title),
                 subtitle = resourceReference(
                     CoreResR.string.koinos_mana_level_description,
@@ -307,20 +356,19 @@ internal class UpdateNotificationsTransformer(
                     ),
                 ),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_warning_default_32,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                ),
             )
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> TangemMessageUM(
                 id = "used_outdated_data",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_cloud_exclamation_20,
+                    tintReference = { TangemTheme.colors3.icon.primary },
+                ),
+                iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_outdated_data_title),
                 subtitle = resourceReference(CoreResR.string.warning_outdated_data_message),
                 messageEffect = TangemMessageEffect.None,
-                iconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_error_sync_default_32,
-                    tintReference = { TangemTheme.colors2.graphic.status.attention },
-                ),
             )
         }
     }
@@ -343,6 +391,13 @@ internal class UpdateNotificationsTransformer(
 
         return TangemMessageUM(
             id = params.id,
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = buttons.isNotEmpty(),
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
             title = resourceReference(
                 CoreResR.string.warning_send_blocked_funds_for_fee_title,
                 wrappedList(params.feeCurrencyName),
@@ -358,10 +413,6 @@ internal class UpdateNotificationsTransformer(
                 ),
             ),
             messageEffect = TangemMessageEffect.None,
-            iconUM = TangemIconUM.Icon(
-                iconRes = params.iconResId,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
             buttonsUM = buttons,
         )
     }
