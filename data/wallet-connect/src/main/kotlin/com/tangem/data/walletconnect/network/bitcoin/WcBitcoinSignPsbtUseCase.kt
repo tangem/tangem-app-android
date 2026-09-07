@@ -14,7 +14,7 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
