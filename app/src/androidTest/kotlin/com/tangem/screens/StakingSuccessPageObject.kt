@@ -2,7 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R
+import com.tangem.core.res.R
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
 import com.tangem.core.ui.test.TransactionSuccessScreenTestTags

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -66,7 +67,9 @@ internal class PlacePredictionComponent(
         Children(
             stack = stackValue,
             modifier = modifier,
-            animation = stackAnimation { slide() },
+            animation = stackAnimation { child ->
+                if (child.configuration is PlacePredictionRoute.Status) fade() else slide()
+            },
         ) { child ->
             child.instance.Content(Modifier.fillMaxSize())
         }

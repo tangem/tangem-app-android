@@ -41,7 +41,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -53,26 +52,17 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.JointAccountMembersUM.MemberUM
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointAccountMembersScreen(state: JointAccountMembersUM, modifier: Modifier = Modifier) {
-    val coroutineScope = rememberCoroutineScope()
-    val topSnackbarHostState = LocalTopSnackbarHostState.current
-
-    val archivedToastText = stringResourceSafe(CoreUiR.string.account_archive_success_message)
-
     TangemTopBarScaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             MembersTopBar(
                 canArchive = state.canArchive,
-                onArchiveClick = {
-                    state.onArchiveClick()
-                    coroutineScope.launch { topSnackbarHostState.showSnackbar(archivedToastText) }
-                },
+                onArchiveClick = state.onArchiveClick,
                 onCloseClick = state.onCloseClick,
             )
         },
@@ -166,11 +156,14 @@ private fun MembersContent(state: JointAccountMembersUM, contentPadding: Padding
     ) {
         item(key = "header") { MembersHeader(title = state.title, progress = state.progress) }
 
-        item(key = "share_safely") {
-            ShareSafelyBanner(
-                state = state.shareSafely,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
-            )
+        val shareSafely = state.shareSafely
+        if (shareSafely != null) {
+            item(key = "share_safely") {
+                ShareSafelyBanner(
+                    state = shareSafely,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+                )
+            }
         }
 
         val (joined, freeSlots) = state.members.partitionMembers()
@@ -361,6 +354,12 @@ private class JointAccountMembersPreviewProvider :
             previewState(title = "Invite members", canInvite = false, canArchive = false),
             previewState(title = "Members", canInvite = false, canArchive = false),
             previewState(title = "Invite members", canInvite = false, canArchive = true, canActivate = true),
+            previewState(
+                title = "Waiting for members",
+                canInvite = false,
+                canArchive = false,
+                showShareSafely = false,
+            ),
         ),
     )
 
@@ -369,6 +368,7 @@ private fun previewState(
     canInvite: Boolean,
     canArchive: Boolean,
     canActivate: Boolean = false,
+    showShareSafely: Boolean = true,
 ): JointAccountMembersUM {
     val creator = MemberUM.Joined(
         id = "creator",
@@ -389,13 +389,17 @@ private fun previewState(
     return JointAccountMembersUM(
         title = stringReference(title),
         progress = stringReference("1 of 5 joined, including you"),
-        shareSafely = JointAccountMembersUM.ShareSafelyUM(
-            title = stringReference("Share invites safely"),
-            description = stringReference(
-                "Anyone with the link can join and sign. Only share it with people you trust",
-            ),
-            onClick = {},
-        ),
+        shareSafely = if (showShareSafely) {
+            JointAccountMembersUM.ShareSafelyUM(
+                title = stringReference("Share invites safely"),
+                description = stringReference(
+                    "Anyone with the link can join and sign. Only share it with people you trust",
+                ),
+                onClick = {},
+            )
+        } else {
+            null
+        },
         members = (listOf(creator) + freeSlots).toImmutableList(),
         otherMembersLabel = stringReference("Other members"),
         canArchive = canArchive,

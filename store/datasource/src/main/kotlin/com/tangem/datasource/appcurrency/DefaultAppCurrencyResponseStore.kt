@@ -29,8 +29,8 @@ internal class DefaultAppCurrencyResponseStore(
         appPreferencesStore.storeObject(SELECTED_APP_CURRENCY_KEY, currency)
     }
 
-    private companion object {
+    companion object {
         // Keep the persisted name "selectedAppCurrency" so values survive the store moving out of core:datasource.
-        val SELECTED_APP_CURRENCY_KEY = stringPreferencesKey(name = "selectedAppCurrency")
+        internal val SELECTED_APP_CURRENCY_KEY = stringPreferencesKey(name = "selectedAppCurrency")
     }
 }
