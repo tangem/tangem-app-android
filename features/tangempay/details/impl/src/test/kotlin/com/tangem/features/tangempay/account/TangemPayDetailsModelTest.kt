@@ -41,7 +41,6 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
@@ -49,7 +48,6 @@ import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
-import com.tangem.features.tangempay.withdrawButton
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -67,7 +65,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -629,7 +626,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.statusBannerState?.state?.title)
+        assertThat(model.uiState.value.messageBanner?.state?.title)
             .isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
         verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
         model.onDestroy()
@@ -648,7 +645,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.statusBannerState).isNull()
+        assertThat(model.uiState.value.messageBanner).isNull()
         model.onDestroy()
     }
 
@@ -667,7 +664,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.statusBannerState).isNotNull()
+        assertThat(model.uiState.value.messageBanner).isNotNull()
         model.onDestroy()
     }
 
@@ -945,7 +942,6 @@ internal class TangemPayDetailsModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
-            urlOpener = mockk(relaxed = true),
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
             uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),

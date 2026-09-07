@@ -51,6 +51,7 @@ internal class PolymarketMainComponent(
             onLoadMore = model::onLoadMore,
             onVisibleEventsChange = model::onVisibleEventsChange,
             onScrollIdle = model::onScrollIdle,
+            onScrollPositionRestore = model::onScrollPositionRestore,
             modifier = modifier,
         )
     }

@@ -18,7 +18,7 @@ internal fun createWalletAccountDTO(
     iconColor: String? = null,
     derivationIndex: Int? = null,
     tokens: List<UserTokensResponse.Token>? = emptyList(),
-    type: String? = null,
+    type: WalletAccountDTO.Type? = null,
 ): WalletAccountDTO {
     val mainAccount = Account.Personal.createMainAccount(userWalletId = userWalletId)
 

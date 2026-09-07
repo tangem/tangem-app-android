@@ -16,6 +16,8 @@ import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
@@ -47,6 +49,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val polymarketBridgeRepository: PolymarketBridgeRepository,
+    private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
 
@@ -145,8 +149,28 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                     balance = balanceAllowance.balance,
                     fiatRate = null,
                     isTradingAllowed = isTradingAllowed(),
+                    cryptoCurrency = collateralCurrencyFactory.create(),
+                    depositAddress = resolveDepositAddress(addresses = addresses),
                 )
             },
+        )
+    }
+
+    /**
+     * The address funding arrives at. A failure leaves it unknown rather than stale: an address the bridge
+     * did not just confirm is one that a contract redeploy may already have retired, and money sent to a
+     * retired one is gone.
+     */
+    private suspend fun resolveDepositAddress(addresses: PolymarketAddresses): String? {
+        return polymarketBridgeRepository.createDepositAddresses(
+            walletId = addresses.userWalletId.stringValue,
+            depositWalletAddress = addresses.depositWalletAddress,
+        ).fold(
+            ifLeft = { error ->
+                logger.e("Prediction deposit address is unavailable: $error")
+                null
+            },
+            ifRight = { it.evm },
         )
     }
 

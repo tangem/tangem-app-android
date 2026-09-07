@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.models.StatusSource
@@ -11,6 +12,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
@@ -21,6 +23,9 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
+import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
@@ -56,6 +61,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val recordConfirmation: RecordPolymarketConfirmationUseCase = mockk(relaxUnitFun = true)
     private val polymarketRepository: PolymarketRepository = mockk()
+    private val polymarketBridgeRepository: PolymarketBridgeRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -63,6 +69,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
         every { userWallet.walletId } returns WALLET
+        coEvery { polymarketBridgeRepository.createDepositAddresses(any(), any()) } returns
+            PolymarketBridgeAddresses(evm = BRIDGE_ADDRESS, svm = null, btc = null, tron = null).right()
     }
 
     /**
@@ -102,12 +110,54 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
+    fun `GIVEN the bridge is unreachable WHEN invoke THEN the deposit address is left unknown`() = runTest {
+        // Arrange
+        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+        coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+        coEvery { getBalance.invoke(ADDRESSES) } returns
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
+        coEvery { checkGeoblock.invoke() } returns false.right()
+        coEvery { polymarketBridgeRepository.createDepositAddresses(any(), any()) } returns
+            PolymarketBridgeError.Network.left()
+        val store = createStore(testScope = this)
+
+        // Act
+        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+        // Assert
+        val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
+        assertThat(stored.balance).isEqualTo(BigDecimal("40"))
+        assertThat(stored.depositAddress).isNull()
+        assertThat(stored.cryptoCurrencyStatus).isNull()
+    }
+
+    @Test
+    fun `GIVEN a resolved deposit address WHEN invoke THEN the collateral carries it as its network address`() =
+        runTest {
+            // Arrange
+            coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
+            coEvery { getWalletStatus.invoke(ADDRESSES) } returns
+                walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
+            coEvery { getBalance.invoke(ADDRESSES) } returns
+                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
+            coEvery { checkGeoblock.invoke() } returns false.right()
+            val store = createStore(testScope = this)
+
+            // Act
+            createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
+
+            // Assert
+            val status = (store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active).cryptoCurrencyStatus
+            assertThat(status?.value?.networkAddress?.defaultAddress?.value).isEqualTo(BRIDGE_ADDRESS)
+        }
+
+    @Test
     fun `GIVEN a ready wallet WHEN invoke THEN the balance is stored`() = runTest {
         // Arrange
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
         coEvery { checkGeoblock.invoke() } returns false.right()
         val store = createStore(testScope = this)
 
@@ -121,6 +171,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 balance = BigDecimal("40"),
                 fiatRate = null,
                 isTradingAllowed = true,
+            cryptoCurrency = COLLATERAL,
+            depositAddress = BRIDGE_ADDRESS,
             ),
         )
     }
@@ -131,7 +183,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
         coEvery { checkGeoblock.invoke() } returns true.right()
         val store = createStore(testScope = this)
 
@@ -161,7 +213,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN an unreadable collateral WHEN invoke THEN the wallet total is not given a zero`() = runTest {
+    fun `GIVEN an unreadable collateral WHEN invoke THEN the wallet total is not blanked`() = runTest {
         // Arrange — the resolver answers KeyNotFound for any 404, so this is not only the missing-key case
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
@@ -172,7 +224,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
 
         // Assert
-        assertThat(store.getSyncOrNull(WALLET)?.totalFiatBalance).isEqualTo(TotalFiatBalance.Failed)
+        assertThat(store.getSyncOrNull(WALLET)?.totalFiatBalance)
+            .isEqualTo(TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL))
     }
 
     @Test
@@ -313,7 +366,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
         coEvery { checkGeoblock.invoke() } returns PolymarketOnboardingError.Unknown.left()
         val store = createStore(testScope = this)
 
@@ -325,6 +378,9 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     }
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
+        dtoConverter = PredictionAccountStatusValueDTOConverter(
+            collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
+        ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
         scope = TestAppCoroutineScope(testScope),
@@ -363,7 +419,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             coEvery { getWalletStatus.invoke(ADDRESSES) } returns
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
             coEvery { getBalance.invoke(ADDRESSES) } returns
-                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowance = null).right()
+                PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
             coEvery { checkGeoblock.invoke() } returns false.right()
 
             // Act
@@ -531,10 +587,16 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         checkPolymarketGeoblockUseCase = checkGeoblock,
         recordPolymarketConfirmation = recordConfirmation,
         polymarketRepository = polymarketRepository,
+        polymarketBridgeRepository = polymarketBridgeRepository,
+        collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     private companion object {
+        val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
+
+        const val BRIDGE_ADDRESS = "0xbridge0000000000000000000000000000000001"
+
         val WALLET = UserWalletId("011")
 
         val ACTIVE = PredictionAccountStatusValue.Active(
@@ -542,9 +604,10 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             balance = BigDecimal("40"),
             fiatRate = null,
             isTradingAllowed = true,
+            cryptoCurrency = COLLATERAL,
+            depositAddress = BRIDGE_ADDRESS,
         )
 
-        // The constructor is internal to the domain module, and the fetcher only passes the pair around
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
 
         fun walletState(status: PolymarketWalletStatus) = PolymarketWalletState(
