@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.main.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -31,6 +32,8 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.converter.JointAccountToMembersUMConverter
+import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.features.jointaccount.main.state.transformers.*
@@ -65,29 +68,34 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private var activationJob: Job? = null
 
-    /** The account currently shown, kept only so [onArchiveClick] knows which account to archive. */
-    private var currentCryptoAccountId: String? = null
-
     private val params = paramsContainer.require<JointAccountMembersComponent.Params>()
 
-    private val isInviteMode: Boolean
-        get() = params.mode == JointAccountMembersComponent.Mode.Invite
+    private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
+        onMemberInfoClick = { avatar, name, address ->
+            onMemberInfoClick(MemberCardConfig(avatar = avatar, name = name, address = address))
+        },
+        onInviteClick = ::shareInvite,
+        onActivateClick = ::onActivateClick,
+        onShareSafelyClick = ::onShareSafelyClick,
+        onArchiveClick = ::onArchiveClick,
+        onCloseClick = ::onCloseClick,
+    )
 
     val bottomSheetNavigation: SlotNavigation<MemberCardConfig> = SlotNavigation()
     val shareSafelyNavigation: SlotNavigation<Unit> = SlotNavigation()
+    val activationConfirmationNavigation: SlotNavigation<ActivationConfirmationConfig> = SlotNavigation()
+
+    val isConfirmingActivation: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     val uiState: StateFlow<JointAccountMembersUM>
         get() = stateController.uiState
 
+    /** The account a currently open [activationConfirmationNavigation] sheet, if any, was opened for. */
+    private var confirmedAccountId: String? = null
+
     init {
-        stateController.update(
-            UpdateMembersInitialStateTransformer(
-                isInviteMode = isInviteMode,
-                onShareSafelyClick = ::onShareSafelyClick,
-                onArchiveClick = ::onArchiveClick,
-                onCloseClick = ::onCloseClick,
-            ),
-        )
+        stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
         observeAccount()
     }
 
@@ -106,17 +114,14 @@ internal class JointAccountMembersModel @Inject constructor(
                 }
             }
             .onEach { accountWithInvites ->
-                currentCryptoAccountId = accountWithInvites?.first?.cryptoAccountId
+                dismissStaleActivationConfirmation(resolvedAccountId = accountWithInvites?.first?.cryptoAccountId)
 
                 val transformer = accountWithInvites
                     ?.let { (account, invites) ->
                         UpdateMembersAccountTransformer(
                             account = account,
                             invites = invites,
-                            isInviteMode = isInviteMode,
-                            onShareInviteClick = ::shareInvite,
-                            onMemberInfoClick = ::onMemberInfoClick,
-                            onActivateClick = ::onActivateClick,
+                            callbacks = converterCallbacks,
                         )
                     }
                     ?: ClearMembersAccountTransformer()
@@ -124,6 +129,22 @@ internal class JointAccountMembersModel @Inject constructor(
                 stateController.update(transformer)
             }
             .launchIn(modelScope)
+    }
+
+    /**
+     * A confirmation sheet only applies to the account it was opened for — if a fresh emission resolves to
+     * a different account (or none), its onConfirmClick would activate the wrong one, so the sheet is
+     * dropped. `params.cryptoAccountId == null` is the only case where the resolved account can change
+     * identity between emissions (legacy nav state falling back to "the wallet's first joint account").
+     */
+    private fun dismissStaleActivationConfirmation(resolvedAccountId: String?) {
+        val openConfirmationId = confirmedAccountId ?: return
+
+        if (openConfirmationId != resolvedAccountId) {
+            confirmedAccountId = null
+            isConfirmingActivation.value = false
+            activationConfirmationNavigation.dismiss()
+        }
     }
 
     /** The slot's own invite: a link issued for one slot cannot be redeemed for another */
@@ -134,22 +155,20 @@ internal class JointAccountMembersModel @Inject constructor(
     private fun onActivateClick(cryptoAccountId: String) {
         val userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId)
 
-        stateController.update(
-            SetActivationConfirmationTransformer(
-                confirmation = JointAccountMembersUM.ActivationUM.ConfirmationUM(
-                    walletInteractionIconRes = userWallet?.let(::walletInterationIcon),
-                    isConfirming = false,
-                    onConfirmClick = { onConfirmActivationClick(cryptoAccountId = cryptoAccountId) },
-                    onCancelClick = ::onCancelActivationClick,
-                ),
+        confirmedAccountId = cryptoAccountId
+        isConfirmingActivation.value = false
+        activationConfirmationNavigation.activate(
+            ActivationConfirmationConfig(
+                cryptoAccountId = cryptoAccountId,
+                walletInteractionIconRes = userWallet?.let(::walletInterationIcon),
             ),
         )
     }
 
-    private fun onConfirmActivationClick(cryptoAccountId: String) {
+    fun onConfirmActivationClick(cryptoAccountId: String) {
         // The loader shows even when a signing is already in flight — a re-opened sheet joins the running
         // attempt instead of silently ignoring the tap; its completion closes the sheet either way
-        stateController.update(SetActivationConfirmingTransformer(isConfirming = true))
+        isConfirmingActivation.value = true
 
         if (activationJob?.isActive == true) return
 
@@ -158,13 +177,13 @@ internal class JointAccountMembersModel @Inject constructor(
 
             if (account == null) {
                 TangemLogger.e("Joint account activation failed: no account behind the shown members list")
-                stateController.update(SetActivationConfirmationTransformer(confirmation = null))
+                activationConfirmationNavigation.dismiss()
                 showActivationError()
                 return@launch
             }
 
             val result = activateJointAccountUseCase(account = account)
-            stateController.update(SetActivationConfirmationTransformer(confirmation = null))
+            activationConfirmationNavigation.dismiss()
             result
                 .onLeft(::onActivationError)
                 .onRight { onActivated() }
@@ -222,10 +241,6 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
-    private fun onCancelActivationClick() {
-        stateController.update(SetActivationConfirmationTransformer(confirmation = null))
-    }
-
     private fun onShareSafelyClick() {
         shareSafelyNavigation.activate(Unit)
     }
@@ -244,9 +259,7 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
-    private fun onArchiveClick() {
-        val cryptoAccountId = currentCryptoAccountId ?: return
-
+    private fun onArchiveClick(cryptoAccountId: String) {
         uiMessageSender.send(
             DialogMessage(
                 title = resourceReference(CoreUiR.string.account_details_archive),
