@@ -4,7 +4,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.data.jointaccount.FIXTURE_ALICE_ADDRESS
 import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
-import com.tangem.datasource.api.jointaccount.models.JointAccountDto
+import com.tangem.data.jointaccount.createJointAccountInvitePreview
+import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.models.StatusSource
 import com.tangem.test.core.ProvideTestModels
@@ -17,6 +19,7 @@ internal class JointAccountConvertersTest {
 
     private val dtoConverter = JointAccountDtoConverter()
     private val dmConverter = JointAccountDMConverter()
+    private val invitePreviewConverter = JointAccountInvitePreviewDtoConverter()
 
     @ParameterizedTest
     @ProvideTestModels
@@ -81,6 +84,15 @@ internal class JointAccountConvertersTest {
 
         // Assert
         assertThat(restored.status).isEqualTo(JointAccount.Status.UNKNOWN)
+    }
+
+    @Test
+    fun `GIVEN invite preview dto WHEN convert THEN domain model is returned`() {
+        // Act
+        val actual = invitePreviewConverter.convert(dto = createJointAccountInvitePreviewDto())
+
+        // Assert
+        assertThat(actual).isEqualTo(createJointAccountInvitePreview())
     }
 
     data class DtoModel(

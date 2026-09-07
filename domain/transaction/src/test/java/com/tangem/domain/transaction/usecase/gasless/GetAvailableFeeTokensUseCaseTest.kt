@@ -295,7 +295,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
     private fun accountStatusList(statuses: List<CryptoCurrencyStatus>) = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = listOf(
-            AccountStatus.CryptoPortfolio(
+            AccountStatus.Personal(
                 account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,

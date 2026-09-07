@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.creation.composition.state.transformers
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.features.jointaccount.creation.composition.ui.state.JointAccountCompositionUM
 import org.junit.jupiter.api.Test
 
@@ -23,20 +24,20 @@ internal class UpdateCompositionInitialStateTransformerTest {
         // Assert
         val expected = JointAccountCompositionUM(
             totalMembers = JointAccountCompositionUM.StepperUM(
-                value = JointAccountCompositionUM.MIN_MEMBERS,
+                value = JointAccountConfig.MIN_MEMBERS_COUNT,
                 isDecrementEnabled = false,
                 isIncrementEnabled = true,
                 onDecrement = onTotalMembersDecrement,
                 onIncrement = onTotalMembersIncrement,
             ),
             requiredToSign = JointAccountCompositionUM.StepperUM(
-                value = JointAccountCompositionUM.MIN_MEMBERS,
+                value = JointAccountConfig.MIN_MEMBERS_COUNT,
                 isDecrementEnabled = true,
                 isIncrementEnabled = false,
                 onDecrement = onRequiredToSignDecrement,
                 onIncrement = onRequiredToSignIncrement,
             ),
-            maxMembers = JointAccountCompositionUM.MAX_MEMBERS,
+            maxMembers = JointAccountConfig.MAX_MEMBERS_COUNT,
             onContinueClick = onContinueClick,
             onBackClick = onBackClick,
         )
@@ -83,20 +84,20 @@ internal class UpdateCompositionInitialStateTransformerTest {
         /** The state the controller starts with, before the model wires the callbacks */
         val emptyState = JointAccountCompositionUM(
             totalMembers = JointAccountCompositionUM.StepperUM(
-                value = JointAccountCompositionUM.MIN_MEMBERS,
+                value = JointAccountConfig.MIN_MEMBERS_COUNT,
                 isDecrementEnabled = false,
                 isIncrementEnabled = true,
                 onDecrement = {},
                 onIncrement = {},
             ),
             requiredToSign = JointAccountCompositionUM.StepperUM(
-                value = JointAccountCompositionUM.MIN_MEMBERS,
+                value = JointAccountConfig.MIN_MEMBERS_COUNT,
                 isDecrementEnabled = true,
                 isIncrementEnabled = false,
                 onDecrement = {},
                 onIncrement = {},
             ),
-            maxMembers = JointAccountCompositionUM.MAX_MEMBERS,
+            maxMembers = JointAccountConfig.MAX_MEMBERS_COUNT,
             onContinueClick = {},
             onBackClick = {},
         )

@@ -65,7 +65,7 @@ class TangemShtorkaState internal constructor(
     internal var rawOverdrag: Float by mutableFloatStateOf(0f)
 
     /** Expand progress of the floating-card → edge-to-edge morph, written during layout. */
-    internal var expandProgress: Float = 0f
+    internal var expandProgress: Float by mutableFloatStateOf(0f)
 
     /** 1 at the collapsed detent, 0 at the next one up; drives the capsule corners. */
     internal var collapseProgress: Float = 0f
