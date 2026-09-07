@@ -18,7 +18,7 @@ import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
  */
 internal class JointAccountActionsFactory(
     walletManagersFacade: WalletManagersFacade,
-    private val rampStateManager: RampStateManager,
+    rampStateManager: RampStateManager,
 ) : BaseActionsFactory(walletManagersFacade, rampStateManager) {
 
     suspend fun create(
@@ -71,13 +71,10 @@ internal class JointAccountActionsFactory(
             )
             addHeldBack(natural = naturalBuy) { ActionState.Buy(unavailabilityReason = it) }
 
-            val naturalSell = rampStateManager.availableForSell(
-                userWalletId = userWallet.walletId,
+            val naturalSell = getSellUnavailabilityReason(
+                userWallet = userWallet,
                 status = cryptoCurrencyStatus,
-                sendUnavailabilityReason = null,
-            ).fold(
-                ifLeft = { it },
-                ifRight = { ScenarioUnavailabilityReason.None },
+                sendUnavailabilityReason = naturalSend,
             )
             addHeldBack(natural = naturalSell) { ActionState.Sell(unavailabilityReason = it) }
 
