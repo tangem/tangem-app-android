@@ -121,7 +121,6 @@ dependencies {
 
     // region Domain models
     api(projects.domain.models)
-    api(projects.domain.txhistory.models)
     // endregion
 
     // region Tests
