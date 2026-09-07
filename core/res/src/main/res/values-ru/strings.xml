@@ -2308,8 +2308,8 @@
   <string name="tangempay_order_type_title">Заказ новой карты</string>
   <string name="tangempay_order_type_unavailable">Недоступно</string>
   <string name="tangempay_other_networks_header">Другие сети</string>
-  <string name="tangempay_other_networks_subtitle">а затем переведите на платёжный счёт, без комиссии</string>
-  <string name="tangempay_other_networks_title">Отправьте USDT / USDC в любой сети на ваш Tangem Wallet</string>
+  <string name="tangempay_other_networks_subtitle">Затем переведите на платёжный счёт, без комиссии</string>
+  <string name="tangempay_other_networks_title">Отправьте USDT/USDC в любой EVM-сети на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Поддержка</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Cессия истекла</string>
@@ -2361,7 +2361,7 @@
   <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Получайте USD с банковского счёта через ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Получайте банковские переводы в USD через ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">С банковского счёта</string>
   <string name="tangempay_topup_receive_body">Отправьте USDC Polygon на адрес вашего аккаунта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
@@ -2608,6 +2608,7 @@
   <string name="warning_approval_in_progress_message">Процесс выдачи разрешения уже в работе и скоро будет завершен</string>
   <string name="warning_approval_in_progress_title">Выдача разрешения</string>
   <string name="warning_backup_error_add_funds_message">В этом кошельке возникла проблема с резервным копированием. Обратитесь в службу поддержки для её решения.</string>
+  <string name="warning_backup_error_add_funds_message_v2">У кошелька, который вы хотите пополнить, есть проблема с резервной копией. Переведите средства на другой кошелек и сбросьте его.</string>
   <string name="warning_backup_error_add_funds_title">Пополнение отключено</string>
   <string name="warning_backup_error_attention_message">Ваши карточки были активированы неправильно. Чтобы обезопасить средства, переведите их на другой кошелек, сбросьте карты до заводских настроек и активируйте заново.</string>
   <string name="warning_backup_error_attention_title">Требуется действие: сбросьте настройки кошелька</string>
