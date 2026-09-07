@@ -43,7 +43,7 @@ internal fun PolymarketEventCard(state: PolymarketEventUM, modifier: Modifier = 
         title = state.title,
         iconUrl = state.iconUrl,
         onClick = state.onClick,
-        meta = state.volume?.let { volume -> { VolumeMeta(volume = volume) } },
+        meta = { VolumeMeta(volume = state.volume) },
     ) {
         if (state.rows.isNotEmpty()) {
             Spacer(modifier = Modifier.size(16.dp))
@@ -106,15 +106,13 @@ private fun EventRow(state: PolymarketEventRowUM) {
                 overflow = TextOverflow.Ellipsis,
             )
 
-            state.probability?.let { probability ->
-                Text(
-                    text = probability.resolveReference(),
-                    color = TangemTheme.colors3.text.secondary,
-                    style = TangemTheme.typography3.caption.medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                text = state.probability.resolveReference(),
+                color = TangemTheme.colors3.text.secondary,
+                style = TangemTheme.typography3.caption.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
 
         Row(
@@ -209,7 +207,7 @@ private fun plainPreviewEvent(): PolymarketEventUM {
         id = "plain",
         title = stringReference("Will Ethereum reach $5,000 before the end of the year?"),
         iconUrl = null,
-        volume = null,
+        volume = stringReference("—"),
         rows = persistentListOf(
             PolymarketEventRowUM(
                 marketId = "probability",
