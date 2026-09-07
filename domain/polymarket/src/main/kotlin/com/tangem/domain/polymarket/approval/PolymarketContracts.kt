@@ -4,7 +4,17 @@ object PolymarketContracts {
 
     const val CHAIN_ID: Long = 137
 
+    /**
+     * The exchange's own settlement token (pUSD), which the wallet approves and which every order spends.
+     * It is not what a user tops the account up with — see [USDC_TOKEN_ADDRESS].
+     */
     const val COLLATERAL: String = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB"
+
+    /**
+     * Native USDC on Polygon, the asset the bridge is asked to accept for a deposit. Lower-cased because
+     * Express answers with lower-cased addresses and matches pairs by string equality.
+     */
+    const val USDC_TOKEN_ADDRESS: String = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
     const val CONDITIONAL_TOKENS: String = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
     const val EXCHANGE_DOMAIN_NAME: String = "Polymarket CTF Exchange"
     const val EXCHANGE_DOMAIN_VERSION: String = "2"
