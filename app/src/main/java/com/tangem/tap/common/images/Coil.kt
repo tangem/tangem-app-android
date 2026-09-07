@@ -13,6 +13,7 @@ import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.NullRequestDataException
 import com.tangem.utils.logging.TangemLogger
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 private const val COIL_LOG_TAG = "COIL"
 private const val COIL_MEMORY_CACHE_SIZE = 0.25
@@ -52,6 +53,28 @@ private class CoilErrorEventListener : EventListener {
         // otherwise report one, drowning the real failures.
         if (result.throwable is NullRequestDataException) return
 
-        logger.e("Failed to load image: ${request.data}", result.throwable)
+        logger.e("Failed to load image: ${request.data.redactQueryValues()}", result.throwable)
+    }
+
+    /**
+     * Query parameter values are dropped because a signed media url carries its credentials there and
+     * this line lands in the log file a user attaches to a support request — the log sanitizer masks
+     * hex-like sequences only, so a token would survive it. Parameter *names* are kept: whether a url
+     * arrived with its query intact is exactly what a broken-image report has to answer.
+     */
+    private fun Any?.redactQueryValues(): String {
+        val raw = toString()
+        val url = raw.toHttpUrlOrNull() ?: return raw.take(n = MAX_LOGGED_DATA_LENGTH)
+        val base = "${url.scheme}://${url.host}${url.encodedPath}"
+
+        return if (url.querySize == 0) {
+            base
+        } else {
+            url.queryParameterNames.joinToString(prefix = "$base?", separator = "&") { "$it=***" }
+        }
+    }
+
+    private companion object {
+        const val MAX_LOGGED_DATA_LENGTH = 512
     }
 }
