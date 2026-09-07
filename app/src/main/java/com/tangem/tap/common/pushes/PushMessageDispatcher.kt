@@ -3,6 +3,10 @@ package com.tangem.tap.common.pushes
 import android.content.Context
 import androidx.core.net.toUri
 import com.google.firebase.messaging.RemoteMessage
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.tap.common.pushes.PushMessageDispatcher.Companion.DATA_BODY_KEY
+import com.tangem.tap.common.pushes.PushMessageDispatcher.Companion.DATA_IMAGE_KEY
+import com.tangem.tap.common.pushes.PushMessageDispatcher.Companion.DATA_TITLE_KEY
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
 import javax.inject.Inject
@@ -11,10 +15,12 @@ import javax.inject.Singleton
 @Singleton
 internal class PushMessageDispatcher @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val pushMessageHandler: PushMessageHandler,
 ) {
-
-    private val pushNotificationDelegate: PushNotificationDelegate by lazy { PushNotificationDelegate(context) }
+    private val pushNotificationDelegate: PushNotificationDelegate by lazy {
+        PushNotificationDelegate(context, analyticsExceptionHandler)
+    }
 
     fun dispatch(message: RemoteMessage) {
         CustomerIOFirebaseMessagingService.onMessageReceived(
