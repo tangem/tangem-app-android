@@ -13,6 +13,7 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -55,7 +56,7 @@ class DefaultWalletAccountsFetcherTest {
         userTokensSaver = userTokensSaver,
         fetchWalletAccountsErrorHandler = fetchWalletAccountsErrorHandler,
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
-        eTagsStore = eTagsStore,
+        walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         dispatchers = TestingCoroutineDispatcherProvider(),
         mainAccountTokensMigration = tokensMigration,
         jointAccountFeatureToggles = jointAccountFeatureToggles,
