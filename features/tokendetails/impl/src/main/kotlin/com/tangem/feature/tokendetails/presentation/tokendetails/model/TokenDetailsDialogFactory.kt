@@ -67,7 +67,7 @@ internal class TokenDetailsDialogFactory @Inject constructor(
         )
     }
 
-    fun showError(text: TextReference) {
-        uiMessageSender.send(DialogMessage(message = text))
+    fun showError(text: TextReference, title: TextReference? = null) {
+        uiMessageSender.send(DialogMessage(message = text, title = title))
     }
 }
