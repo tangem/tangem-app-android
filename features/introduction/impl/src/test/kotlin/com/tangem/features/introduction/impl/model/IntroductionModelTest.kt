@@ -515,7 +515,7 @@ internal class IntroductionModelTest {
         private fun provideTestModels() = listOf(
             // TODO TWI-1555: the row acts once social login lands.
             InertRowModel(name = "sign in") { options, _ -> requireNotNull(options.socialLogin).onClick() },
-            // A canary meant to fail once [REDACTED_TASK_KEY] wires the cloud restore.
+            // A canary meant to fail once the cloud restore is wired.
             InertRowModel(name = "cloud backup") { options, model ->
                 options.importWallet.onClick()
                 model.currentImportStep().onCloudBackupClick()
