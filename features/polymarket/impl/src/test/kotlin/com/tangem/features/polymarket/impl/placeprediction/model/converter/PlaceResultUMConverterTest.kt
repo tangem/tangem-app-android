@@ -37,6 +37,7 @@ internal class PlaceResultUMConverterTest {
                     placedAt = PLACED_AT,
                     filledAmount = spent,
                     requestedAmount = QUOTED_AMOUNT,
+                    tokensBought = QUOTED_SHARES.half(),
                 ),
             ),
         )
@@ -51,9 +52,7 @@ internal class PlaceResultUMConverterTest {
         val actual = convert(result = result(makingAmount = truncated))
 
         // Assert
-        assertThat(actual).isEqualTo(
-            PlaceOutcome.Reportable(result = PlaceResultUM.Filled(placedAt = PLACED_AT, amount = QUOTED_AMOUNT)),
-        )
+        assertThat(actual).isEqualTo(PlaceOutcome.Reportable(result = filled(tokensBought = QUOTED_SHARES)))
     }
 
     internal data class ConvertModel(val result: PredictionPlaceOrderResult, val expected: PlaceOutcome)
@@ -61,15 +60,15 @@ internal class PlaceResultUMConverterTest {
     private fun provideTestModels() = listOf(
         ConvertModel(
             result = result(),
-            expected = PlaceOutcome.Reportable(PlaceResultUM.Filled(placedAt = PLACED_AT, amount = QUOTED_AMOUNT)),
+            expected = PlaceOutcome.Reportable(filled(tokensBought = QUOTED_SHARES)),
         ),
         ConvertModel(
             result = result(status = " MATCHED "),
-            expected = PlaceOutcome.Reportable(PlaceResultUM.Filled(placedAt = PLACED_AT, amount = QUOTED_AMOUNT)),
+            expected = PlaceOutcome.Reportable(filled(tokensBought = QUOTED_SHARES)),
         ),
         ConvertModel(
             result = result(shares = BigDecimal("97.9591840")),
-            expected = PlaceOutcome.Reportable(PlaceResultUM.Filled(placedAt = PLACED_AT, amount = QUOTED_AMOUNT)),
+            expected = PlaceOutcome.Reportable(filled(tokensBought = BigDecimal("97.9591840"))),
         ),
         ConvertModel(
             result = result(shares = QUOTED_SHARES - BigDecimal("0.000001"), makingAmount = BigDecimal("71.999999")),
@@ -78,6 +77,7 @@ internal class PlaceResultUMConverterTest {
                     placedAt = PLACED_AT,
                     filledAmount = BigDecimal("71.999999"),
                     requestedAmount = QUOTED_AMOUNT,
+                    tokensBought = QUOTED_SHARES - BigDecimal("0.000001"),
                 ),
             ),
         ),
@@ -125,6 +125,12 @@ internal class PlaceResultUMConverterTest {
         const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
 
         fun BigDecimal.half(): BigDecimal = divide(BigDecimal("2"))
+
+        fun filled(tokensBought: BigDecimal) = PlaceResultUM.Filled(
+            placedAt = PLACED_AT,
+            amount = QUOTED_AMOUNT,
+            tokensBought = tokensBought,
+        )
 
         fun result(
             status: String? = "matched",

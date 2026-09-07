@@ -17,7 +17,7 @@ import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes

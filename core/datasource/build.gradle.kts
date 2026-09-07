@@ -77,8 +77,6 @@ dependencies {
 
     // region Network
     api(deps.moshi)
-    implementation(deps.moshi.adapters)
-    implementation(deps.moshi.adapters.ext)
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.okHttp)
@@ -118,19 +116,12 @@ dependencies {
     api(projects.core.local)
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
-    implementation(projects.core.res)
     api(projects.core.remote)
     // endregion
 
     // region Domain models
     api(projects.domain.models)
-    api(projects.domain.nft.models)
-    api(projects.domain.onramp.models)
-    api(projects.domain.staking.models)
     api(projects.domain.txhistory.models)
-    api(projects.domain.walletConnect.models)
-    api(projects.domain.wallets.models)
-    api(projects.domain.yieldSupply.models)
     // endregion
 
     // region Tests
