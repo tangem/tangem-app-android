@@ -38,7 +38,6 @@ import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
-import com.tangem.utils.StringsSigns.DASH_SIGN
 
 @Suppress("LongParameterList")
 @Composable
@@ -77,7 +76,7 @@ internal fun PredictionAmountBlock(
                     Text(
                         text = stringResourceSafe(
                             R.string.common_balance,
-                            payment.balance?.formatPolymarketMoney() ?: DASH_SIGN,
+                            payment.balance.formatPolymarketMoney(),
                         ),
                         style = TangemTheme.typography3.caption.medium,
                         color = TangemTheme.colors3.text.secondary,
