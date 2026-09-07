@@ -12,6 +12,8 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHand
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
@@ -135,6 +137,14 @@ internal class DeepLinkFactoryTest {
             every { create(any(), any()) } returns mockk()
         }
 
+    private val jointAccountDeepLinkFactory = mockk<JointAccountDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any(), any()) } returns mockk()
+    }
+
+    private val jointAccountInviteDeepLinkFactory = mockk<JointAccountInviteDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val urlOpener = mockk<UrlOpener>(relaxed = true)
 
     private val mockedUri = mockk<Uri>(relaxed = true)
@@ -169,6 +179,8 @@ internal class DeepLinkFactoryTest {
         yieldDeepLink = yieldDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
+        jointAccountDeepLink = jointAccountDeepLinkFactory,
+        jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
         urlOpener = urlOpener,
     )
 
@@ -419,6 +431,29 @@ internal class DeepLinkFactoryTest {
 
         // Assert
         verify(exactly = 1) { tangemPayAccountDeepLink.create(eq(testScope), eq(mapOf("screen" to "cashback"))) }
+    }
+
+    @Test
+    fun `GIVEN joint_account deeplink WHEN handle THEN joint account handler created with params`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "joint_account"
+        every { mockedUri.query } returns "entry=overview&user_wallet_id=011&account_id=aaa"
+        every { mockedUri.queryParameterNames } returns setOf("entry", "user_wallet_id", "account_id")
+        every { mockedUri.getQueryParameter("entry") } returns "overview"
+        every { mockedUri.getQueryParameter("user_wallet_id") } returns "011"
+        every { mockedUri.getQueryParameter("account_id") } returns "aaa"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        verify {
+            jointAccountDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("entry" to "overview", "user_wallet_id" to "011", "account_id" to "aaa")),
+                eq(isFromOnNewIntent),
+            )
+        }
     }
 
     @Test

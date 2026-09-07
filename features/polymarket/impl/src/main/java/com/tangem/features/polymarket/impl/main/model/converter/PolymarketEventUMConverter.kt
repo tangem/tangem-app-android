@@ -34,7 +34,7 @@ internal class PolymarketEventUMConverter(
             id = value.id,
             title = stringReference(value.title),
             iconUrl = value.iconUrl,
-            volume = value.volume?.let { stringReference(it.formatPolymarketVolume()) },
+            volume = stringReference(value.volume.formatPolymarketVolume()),
             rows = value.markets
                 .map { convertRow(event = value, market = it) }
                 .toImmutableList(),
@@ -47,7 +47,7 @@ internal class PolymarketEventUMConverter(
         return PolymarketEventRowUM(
             marketId = market.id,
             title = convertRowTitle(event = event, market = market),
-            probability = market.outcomes.firstOrNull()?.probability?.let { stringReference(it.formatProbability()) },
+            probability = stringReference(market.outcomes.firstOrNull()?.probability.formatProbability()),
             outcomes = market.outcomes
                 .map { convertOutcome(event = event, market = market, outcome = it) }
                 .toImmutableList(),
@@ -88,7 +88,7 @@ internal class PolymarketEventUMConverter(
         return if (length > MAX_OUTCOME_LABEL_LENGTH) take(MAX_OUTCOME_LABEL_LENGTH) + ELLIPSIS else this
     }
 
-    private fun BigDecimal.formatProbability(): String = format {
+    private fun BigDecimal?.formatProbability(): String = format {
         percent(minFractionDigits = 0, maxFractionDigits = 0)
     }
 

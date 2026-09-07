@@ -3,7 +3,7 @@ package com.tangem.data.feedback.di
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.data.feedback.DefaultFeedbackRepository
 import com.tangem.datasource.local.logs.AppLogsStore
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -23,14 +23,14 @@ internal object FeedbackModule {
     fun provideFeedbackRepository(
         appLogsStore: AppLogsStore,
         userWalletsListRepository: UserWalletsListRepository,
-        walletManagersStore: WalletManagersStore,
+        walletManagersFacade: WalletManagersFacade,
         emailSender: EmailSender,
         appInfoProvider: AppInfoProvider,
         cloudBackupRepository: CloudBackupRepository,
     ): FeedbackRepository {
         return DefaultFeedbackRepository(
             appLogsStore = appLogsStore,
-            walletManagersStore = walletManagersStore,
+            walletManagersFacade = walletManagersFacade,
             emailSender = emailSender,
             appInfoProvider = appInfoProvider,
             userWalletsListRepository = userWalletsListRepository,
