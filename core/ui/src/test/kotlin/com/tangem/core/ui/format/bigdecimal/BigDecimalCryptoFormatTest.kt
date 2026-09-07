@@ -4,6 +4,8 @@ import androidx.compose.ui.text.SpanStyle
 import com.google.common.truth.Truth
 import com.tangem.core.ui.extensions.SpanStyleReference
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.text.DecimalFormat
@@ -16,6 +18,31 @@ internal class BigDecimalCryptoFormatTest {
     private val testLocale2 = Locale.GERMANY
     private val symbol = "BTC"
     private val spanStyleStub = SpanStyleReference { SpanStyle() }
+    private val arcCoin = CryptoCurrency.Coin(
+        id = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(rawId = "arc"),
+            suffix = CryptoCurrency.ID.Suffix.RawID(rawId = "usd-coin"),
+        ),
+        network = Network(
+            id = Network.ID(value = "arc", derivationPath = Network.DerivationPath.None),
+            name = "Arc",
+            currencySymbol = "USDC",
+            derivationPath = Network.DerivationPath.None,
+            isTestnet = false,
+            standardType = Network.StandardType.ERC20,
+            hasFiatFeeRate = true,
+            canHandleTokens = true,
+            transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
+        ),
+        name = "Arc",
+        symbol = "USDC",
+        decimals = 18,
+        iconUrl = null,
+        isCustom = false,
+        displayDecimals = 6,
+    )
 
     // === defaultAmount() ===
 
@@ -408,6 +435,40 @@ internal class BigDecimalCryptoFormatTest {
 
         Truth.assertThat(formatted)
             .isEqualTo("0.13".addSymbolWithSpaceLeft(symbol))
+    }
+
+    // === crypto(cryptoCurrency) ===
+
+    @Test
+    fun `GIVEN coin with fewer display decimals WHEN defaultAmount THEN value is rounded to display decimals`() {
+        // Arrange
+        val testValue = BigDecimal("17.999414123456789012")
+
+        // Act
+        val formatted = testValue.format {
+            crypto(cryptoCurrency = arcCoin, locale = testLocale).defaultAmount()
+        }
+
+        // Assert
+        Truth.assertThat(formatted)
+            .isEqualTo("17.999414".addSymbolWithSpaceLeft(arcCoin.symbol))
+    }
+
+    @Test
+    fun `GIVEN coin with fewer display decimals WHEN cryptoStyled THEN value is rounded to display decimals`() {
+        // Arrange
+        val testValue = BigDecimal("17.999414123456789012")
+
+        // Act
+        val formatted = testValue.formatStyled {
+            cryptoStyled(cryptoCurrency = arcCoin, spanStyleReference = spanStyleStub, locale = testLocale)
+        }
+
+        // Assert
+        val refs = (formatted as TextReference.Combined).refs.data
+        Truth.assertThat(refs).hasSize(2)
+        Truth.assertThat((refs[0] as TextReference.Str).value).isEqualTo("17".addSymbolWithSpaceLeft(arcCoin.symbol))
+        Truth.assertThat((refs[1] as TextReference.StyledStr).value).isEqualTo(".999414")
     }
 
     // === anyDecimals() ===

@@ -119,8 +119,9 @@ internal class TransactionDataToTxHistoryItemConverter(
                     is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit(
                         callData.tokenContractAddress,
                     )
+                    // An unlimited approval carries no allowance in the call data; the tx amount still names the token.
                     is ApprovalERC20TokenCallData -> TxInfo.TransactionType.Approve(
-                        amount = callData.amount?.toDomain(),
+                        amount = callData.amount?.toDomain() ?: transactionData.amount.toDomain().copy(value = null),
                         address = callData.spenderAddress,
                     )
                     else -> TxInfo.TransactionType.Transfer

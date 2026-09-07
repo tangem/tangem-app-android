@@ -11,8 +11,6 @@ interface TangemPayReissueCardRepository {
 
     suspend fun getReissueCardFee(userWalletId: UserWalletId): Either<VisaApiError, TangemPayReissueCardFee>
 
-    suspend fun getPlasticReissueCardFee(userWalletId: UserWalletId): Either<VisaApiError, TangemPayReissueCardFee>
-
     suspend fun reissueCard(userWalletId: UserWalletId, cardId: String): Either<VisaApiError, TangemPayOrderInfo>
 
     suspend fun storeReissueOrderId(cardId: String, orderId: String): Either<UniversalError, Unit>

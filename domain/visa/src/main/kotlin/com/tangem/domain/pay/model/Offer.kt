@@ -5,7 +5,8 @@ import java.util.Currency
 import java.util.Locale
 
 /**
- * Customer offer returned by `GET /v1/customer/offers`.
+ * Customer offer returned by `GET /v1/customer/offers` (account-wide) or by
+ * `GET /v1/product-instances/{id}/offers` (scoped to one product instance).
  *
  * Used to gate the issue-additional-card flow: the offer fee drives the popup amount, and the
  * presence of the offer enables the "+" action.
@@ -21,8 +22,10 @@ data class Offer(
 
     val isVirtual: Boolean get() = type == Type.CARD_ISSUE_VIRTUAL_RAIN
 
+    val isPlasticReissue: Boolean get() = type == Type.CARD_REISSUE_PLASTIC_RAIN
+
     data class Data(
-        val specificationName: String,
+        val specificationName: String?,
         val orderType: OrderType,
         val deliveryEta: DeliveryEta? = null,
     )
@@ -33,6 +36,7 @@ data class Offer(
     enum class Type(val wireValue: String) {
         CARD_ISSUE_VIRTUAL_RAIN("CARD_ISSUE_VIRTUAL_RAIN"),
         CARD_ISSUE_PLASTIC_RAIN("CARD_ISSUE_PLASTIC_RAIN"),
+        CARD_REISSUE_PLASTIC_RAIN("CARD_REISSUE_PLASTIC_RAIN"),
         UNKNOWN(""),
         ;
 
@@ -54,3 +58,5 @@ data class Offer(
 fun List<Offer>.plasticOffer(): Offer? = firstOrNull(Offer::isPlastic)
 
 fun List<Offer>.virtualOffer(): Offer? = firstOrNull(Offer::isVirtual)
+
+fun List<Offer>.plasticReissueOffer(): Offer? = firstOrNull(Offer::isPlasticReissue)

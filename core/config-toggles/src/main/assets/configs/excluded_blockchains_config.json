@@ -30,5 +30,9 @@
     {
         "name": "electroneum",
         "version": "6.3"
+    },
+    {
+        "name": "arc",
+        "version": "6.3"
     }
 ]
