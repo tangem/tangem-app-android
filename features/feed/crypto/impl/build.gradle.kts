@@ -56,6 +56,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
     implementation(deps.kotlin.immutable.collections)
 
     /* DI */
