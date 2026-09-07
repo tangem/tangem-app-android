@@ -89,13 +89,6 @@ class TangemLoggingInitializer(
         )
     }
 
-    /**
-     * Logcat and Chucker interceptors, both debugging aids restricted to builds with
-     * [BuildConfig.LOG_ENABLED]: the former writes raw request/response bodies straight to Logcat,
-     * the latter surfaces them in a notification. [NetworkLogsSaveInterceptor] is deliberately not
-     * among them — its output goes to the sanitized in-app log file that users attach to support
-     * requests, so it must stay installed in client builds too.
-     */
     private fun createConsoleInterceptors(application: Application): List<Interceptor> {
         return if (BuildConfig.LOG_ENABLED) {
             listOf(createNetworkLoggingInterceptor(), ChuckerInterceptor(application))
