@@ -84,7 +84,7 @@ internal class PredictionBalanceUMConverterTest {
         balance = BigDecimal(balance),
         fiatRate = BigDecimal.ONE,
         isTradingAllowed = isTradingAllowed,
-        cryptoCurrency = mockk(relaxed = true),
+        depositCurrency = mockk(relaxed = true),
         depositAddress = "0xbridge",
     )
 
