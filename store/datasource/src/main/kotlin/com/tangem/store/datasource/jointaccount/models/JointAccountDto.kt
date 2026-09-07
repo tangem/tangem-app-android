@@ -19,6 +19,8 @@ import com.squareup.moshi.JsonClass
  * `membersCount - members.size`
  * @property invites         one per free slot; present **only** in the `POST` create response — this is the only
  * place the backend ever returns them, so they must be persisted right away
+ * @property operations      the account's non-terminal operations (v1.3) — at most one per chain by the slot
+ * invariant. A finished operation simply disappears from here; absent in pre-v1.3 responses
  */
 @JsonClass(generateAdapter = true)
 data class JointAccountDto(
@@ -29,6 +31,7 @@ data class JointAccountDto(
     @Json(name = "status") val status: String,
     @Json(name = "members") val members: List<Member>,
     @Json(name = "invites") val invites: List<Invite>? = null,
+    @Json(name = "operations") val operations: List<JointOperationDto>? = null,
 ) {
 
     /**
