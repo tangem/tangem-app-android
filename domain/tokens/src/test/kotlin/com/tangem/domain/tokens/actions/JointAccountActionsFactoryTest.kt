@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.actions
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
@@ -8,18 +10,23 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
-import io.mockk.Called
+import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** A joint token belongs to a Safe: the wallet's own keys spend nothing from it, so only receiving stays available. */
+/**
+ * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, but every
+ * action a personal account could perform is held back with [ScenarioUnavailabilityReason.JointAccount].
+ */
 internal class JointAccountActionsFactoryTest {
 
     private val walletManagersFacade: WalletManagersFacade = mockk()
@@ -29,8 +36,67 @@ internal class JointAccountActionsFactoryTest {
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val userWallet: UserWallet = MockUserWalletFactory.create()
 
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(walletManagersFacade, rampStateManager)
+        coEvery { rampStateManager.availableForSell(any(), any(), any()) } returns Unit.right()
+        coEvery {
+            rampStateManager.getSendUnavailabilityReason(any(), any())
+        } returns ScenarioUnavailabilityReason.None
+    }
+
     @Test
-    fun `GIVEN a joint token with an address WHEN create THEN receive copy analytics and hide are active`() = runTest {
+    fun `GIVEN everything a personal account offers WHEN create THEN the same actions are held back as joint`() =
+        runTest {
+            // Arrange
+            val status = statusWithAddress(SAFE)
+
+            // Act
+            val actual = factory.create(
+                userWallet = userWallet,
+                cryptoCurrencyStatus = status,
+                stakingAvailability = StakingAvailability.Available(option = mockk()),
+                yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+            )
+
+            // Assert
+            assertThat(actual).containsExactly(
+                ActionState.Analytics(ScenarioUnavailabilityReason.None),
+                ActionState.CopyAddress(ScenarioUnavailabilityReason.None),
+                ActionState.Receive(ScenarioUnavailabilityReason.None),
+                ActionState.Stake(ScenarioUnavailabilityReason.JointAccount, option = null),
+                ActionState.Send(ScenarioUnavailabilityReason.JointAccount),
+                ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
+                ActionState.Buy(ScenarioUnavailabilityReason.JointAccount),
+                ActionState.Sell(ScenarioUnavailabilityReason.JointAccount),
+                ActionState.HideToken(ScenarioUnavailabilityReason.None),
+            ).inOrder()
+        }
+
+    @Test
+    fun `GIVEN an empty balance WHEN create THEN send keeps the natural reason`() = runTest {
+        // Arrange
+        val naturalReason = ScenarioUnavailabilityReason.EmptyBalance(
+            withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+        )
+        coEvery { rampStateManager.getSendUnavailabilityReason(any(), any()) } returns naturalReason
+        val status = statusWithAddress(SAFE)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.Send>().single().unavailabilityReason)
+            .isEqualTo(naturalReason)
+    }
+
+    @Test
+    fun `GIVEN staking unavailable for the currency WHEN create THEN there is no stake action at all`() = runTest {
         // Arrange
         val status = statusWithAddress(SAFE)
 
@@ -38,25 +104,50 @@ internal class JointAccountActionsFactoryTest {
         val actual = factory.create(
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
             yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
         // Assert
-        assertThat(actual).containsExactly(
-            ActionState.Analytics(ScenarioUnavailabilityReason.None),
-            ActionState.CopyAddress(ScenarioUnavailabilityReason.None),
-            ActionState.Receive(ScenarioUnavailabilityReason.None),
-            ActionState.HideToken(ScenarioUnavailabilityReason.None),
-            ActionState.Send(ScenarioUnavailabilityReason.JointAccount),
-            ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
-            ActionState.Buy(ScenarioUnavailabilityReason.JointAccount),
-            ActionState.Sell(ScenarioUnavailabilityReason.JointAccount),
-            ActionState.Stake(ScenarioUnavailabilityReason.JointAccount, option = null),
+        assertThat(actual.filterIsInstance<ActionState.Stake>()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN staking temporarily unavailable WHEN create THEN stake keeps the natural reason`() = runTest {
+        // Arrange
+        val status = statusWithAddress(SAFE)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.TemporaryUnavailable,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
-        verify {
-            walletManagersFacade wasNot Called
-            rampStateManager wasNot Called
-        }
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.Stake>().single().unavailabilityReason)
+            .isEqualTo(ScenarioUnavailabilityReason.StakingUnavailable(currency.name))
+    }
+
+    @Test
+    fun `GIVEN sell unavailable for the currency WHEN create THEN sell keeps the natural reason`() = runTest {
+        // Arrange
+        val naturalReason = ScenarioUnavailabilityReason.NotSupportedBySellService(currency.name)
+        coEvery { rampStateManager.availableForSell(any(), any(), any()) } returns naturalReason.left()
+        val status = statusWithAddress(SAFE)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.Sell>().single().unavailabilityReason)
+            .isEqualTo(naturalReason)
     }
 
     @Test
@@ -68,6 +159,7 @@ internal class JointAccountActionsFactoryTest {
         val actual = factory.create(
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
             yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 
@@ -79,7 +171,7 @@ internal class JointAccountActionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN yield supply available WHEN create THEN the yield button is disabled rather than hidden`() = runTest {
+    fun `GIVEN yield supply available WHEN create THEN the yield action is held back rather than hidden`() = runTest {
         // Arrange
         val status = statusWithAddress(SAFE)
 
@@ -87,16 +179,19 @@ internal class JointAccountActionsFactoryTest {
         val actual = factory.create(
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
             yieldSupplyAvailability = YieldSupplyAvailability.Available(apy = APY),
         )
 
         // Assert
         assertThat(actual.filterIsInstance<ActionState.YieldMode>().single())
-            .isEqualTo(ActionState.YieldMode(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount, apy = APY))
+            .isEqualTo(
+                ActionState.YieldMode(unavailabilityReason = ScenarioUnavailabilityReason.JointAccount, apy = APY),
+            )
     }
 
     @Test
-    fun `GIVEN yield supply unavailable WHEN create THEN there is no yield button at all`() = runTest {
+    fun `GIVEN yield supply unavailable WHEN create THEN there is no yield action at all`() = runTest {
         // Arrange
         val status = statusWithAddress(SAFE)
 
@@ -104,6 +199,7 @@ internal class JointAccountActionsFactoryTest {
         val actual = factory.create(
             userWallet = userWallet,
             cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
             yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
         )
 

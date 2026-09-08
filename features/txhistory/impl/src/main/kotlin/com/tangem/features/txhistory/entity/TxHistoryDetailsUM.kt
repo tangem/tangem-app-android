@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
@@ -262,6 +263,12 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
         /** User's own wallet — rendered as the wallet card [deviceIconUM]. */
         data class Wallet(val deviceIconUM: DeviceIconUM) : CounterpartyAvatar
+
+        /**
+         * Recipient saved in an address book — rendered as the contact avatar: the monogram of [name] for a letter
+         * [icon], the picked drawable otherwise.
+         */
+        data class Contact(val name: String, val icon: AccountIconUM.CryptoPortfolio) : CounterpartyAvatar
     }
 
     /**

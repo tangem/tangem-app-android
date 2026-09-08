@@ -15,7 +15,7 @@ import com.tangem.core.res.R
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -67,7 +67,7 @@ internal class DefaultUserWalletsListRepository(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletRepository: HotWalletRepository,
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
+    private val clearReferralInstallUseCase: ClearReferralInstallUseCase,
     private val userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
@@ -678,12 +678,12 @@ internal class DefaultUserWalletsListRepository(
 
     private suspend fun onFirstWalletCreated() {
         // reset the referral attribution (set from AF deeplink) after creating a new wallet
-        clearAppsFlyerDeeplinkUseCase()
+        clearReferralInstallUseCase()
     }
 
     private suspend fun onAllWalletsDeleted() {
         // reset the referral attribution (set from AF deeplink) after removing the last wallet
-        clearAppsFlyerDeeplinkUseCase()
+        clearReferralInstallUseCase()
         appPreferencesStore.editData { it.remove(PreferencesKeys.USEDESK_CLIENT_ID_KEY) }
     }
 }

@@ -1,7 +1,6 @@
 package com.tangem.features.jointaccount.main.state
 
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
@@ -21,18 +20,16 @@ internal class JointAccountMembersStateController @Inject constructor() {
     }
 
     private fun getInitialState(): JointAccountMembersUM = JointAccountMembersUM(
-        title = TextReference.EMPTY,
-        progress = TextReference.EMPTY,
-        shareSafely = JointAccountMembersUM.ShareSafelyUM(
-            title = TextReference.EMPTY,
-            description = TextReference.EMPTY,
-            onClick = {},
+        topBar = JointAccountMembersUM.TopBarUM.Dismissible(
+            canArchive = false,
+            onArchiveClick = {},
+            onCloseClick = {},
         ),
-        members = persistentListOf(),
+        header = null,
+        shareSafely = null,
+        joined = persistentListOf(),
+        freeSlots = persistentListOf(),
         otherMembersLabel = null,
-        canArchive = false,
-        activation = null,
-        onArchiveClick = {},
-        onCloseClick = {},
+        onActivateClick = null,
     )
 }

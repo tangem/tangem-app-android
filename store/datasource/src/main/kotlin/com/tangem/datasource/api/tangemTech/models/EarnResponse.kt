@@ -31,4 +31,6 @@ data class EarnTokenResponse(
 data class MetaEarnListResponse(
     @Json(name = "page") val page: Int,
     @Json(name = "limit") val limit: Int,
+    @Json(name = "total") val total: Int? = null,
+    @Json(name = "hasNext") val hasNext: Boolean? = null,
 )

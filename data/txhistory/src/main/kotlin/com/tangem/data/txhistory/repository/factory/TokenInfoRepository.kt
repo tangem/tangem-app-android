@@ -2,8 +2,8 @@ package com.tangem.data.txhistory.repository.factory
 
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.txhistory.db.dao.TokenInfoDao
-import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
+import com.tangem.store.datasource.txhistory.db.dao.TokenInfoDao
+import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency

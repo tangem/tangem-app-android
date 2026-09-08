@@ -14,7 +14,7 @@ class GetAvailableSocialLoginProvidersUseCase @Inject constructor(
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
 ) {
 
-    operator fun invoke(): List<SocialLoginProvider> {
+    suspend operator fun invoke(): List<SocialLoginProvider> {
         return if (socialLoginFeatureToggles.isSocialLoginEnabled) {
             socialLoginProviderRepository.getAvailableProviders()
         } else {

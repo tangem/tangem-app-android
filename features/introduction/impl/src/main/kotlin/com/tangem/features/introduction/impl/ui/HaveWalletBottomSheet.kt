@@ -90,7 +90,7 @@ private fun OptionsStep(step: HaveWalletUM.Step.Options) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         WalletOptionCard(option = step.cardOrRing)
-        WalletOptionCard(option = step.signIn)
+        step.socialLogin?.let { WalletOptionCard(option = it) }
         WalletOptionCard(option = step.importWallet)
     }
 }
@@ -177,7 +177,7 @@ private fun OptionsStepPreview() {
         OptionsStep(
             step = HaveWalletUM.Step.Options(
                 cardOrRing = previewOption(R.string.introduction_create_wallet_hardware_title),
-                signIn = previewOption(R.string.introduction_i_have_wallet_sign_in_google_title),
+                socialLogin = previewOption(R.string.introduction_i_have_wallet_sign_in_google_title),
                 importWallet = previewOption(R.string.hw_import_existing_wallet),
             ),
         )

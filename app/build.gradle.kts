@@ -314,6 +314,7 @@ dependencies {
     implementation(projects.features.feed.earn.impl)
     implementation(projects.features.feed.search.api)
     implementation(projects.features.feed.search.impl)
+    implementation(projects.features.feed.rwa.impl)
     implementation(projects.features.promoBanners.api)
     implementation(projects.features.promoBanners.impl)
     implementation(projects.features.onramp.api)
@@ -474,6 +475,9 @@ dependencies {
     implementation(deps.customerio.messaging)
     runtimeOnly("com.android.installreferrer:installreferrer:2.2")
     runtimeOnly(deps.spongecastle.core)
+    // Credential Manager resolves its providers at runtime, so this belongs to the app rather than to
+    // whichever feature happens to use credentials
+    runtimeOnly(deps.androidx.credentials.playServicesAuth)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
     // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown artifacts, so
