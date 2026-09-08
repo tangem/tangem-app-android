@@ -80,6 +80,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 paymentAccountTokens = PaymentAccountTokens.Hidden,
                 isAppBarShown = false,
                 isShowSingleCurrencyWallets = true,
+                isJointAccountsShown = true,
             )
         }
     }
