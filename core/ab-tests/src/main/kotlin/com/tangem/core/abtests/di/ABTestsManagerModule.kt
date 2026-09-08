@@ -1,11 +1,11 @@
 package com.tangem.core.abtests.di
 
 import android.app.Application
+import com.tangem.core.abtests.ABTestsConfig
 import com.tangem.core.abtests.BuildConfig
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.abtests.manager.impl.AmplitudeABTestsManager
 import com.tangem.core.abtests.manager.impl.StubABTestsManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
@@ -21,18 +21,18 @@ internal object ABTestsManagerModule {
     @Singleton
     fun provideABTestsManager(
         application: Application,
-        environmentConfig: EnvironmentConfig,
+        abTestsConfig: ABTestsConfig,
         appScope: AppCoroutineScope,
     ): ABTestsManager {
         return if (BuildConfig.AB_TESTS_ENABLED) {
             AmplitudeABTestsManager(
                 application = application,
                 apiKey = if (BuildConfig.TESTER_MENU_ENABLED) {
-                    requireNotNull(environmentConfig.amplitudeApiKeyDev) {
+                    requireNotNull(abTestsConfig.amplitudeApiKeyDev) {
                         "Amplitude api key not found in ${BuildConfig.BUILD_TYPE}"
                     }
                 } else {
-                    environmentConfig.amplitudeApiKey
+                    abTestsConfig.amplitudeApiKey
                 },
                 scope = appScope,
             )

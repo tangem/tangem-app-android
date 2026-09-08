@@ -101,6 +101,7 @@ arrow = "1.2.4" # 2.0.1 breaks the build
 reownCore = "1.4.11"
 reownWeb3 = "1.4.11"
 okHttp-prettyLogging = "3.1.0"
+orgJson = "20180130"
 chucker = "4.2.0"
 mlKit-barcodeScanning = "17.3.0"
 androidXCamera = "1.4.2"
@@ -309,6 +310,7 @@ moshi-adapters-ext = { module = "dev.onenowy.moshipolymorphicadapter:moshi-polym
 moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshi" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
+orgJson = { module = "org.json:json", version.ref = "orgJson" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 otel-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 otel-api = { module = "io.opentelemetry:opentelemetry-api" }
