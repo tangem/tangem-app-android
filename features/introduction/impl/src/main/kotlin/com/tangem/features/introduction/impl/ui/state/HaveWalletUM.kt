@@ -11,6 +11,7 @@ import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
  */
 internal data class HaveWalletUM(
     val step: Step,
+    val onCloseClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
     sealed interface Step {
