@@ -2,12 +2,10 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
-import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
-import com.tangem.domain.polymarket.interactor.GetPolymarketDepositTargetInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
@@ -200,16 +198,6 @@ internal object PolymarketDomainModule {
     ): GetPolymarketBalanceInteractor = GetPolymarketBalanceInteractor(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
-    )
-
-    @Provides
-    @Singleton
-    fun provideGetPolymarketDepositTargetInteractor(
-        bridgeRepository: PolymarketBridgeRepository,
-        deriveAddresses: DerivePolymarketAddressesUseCase,
-    ): GetPolymarketDepositTargetInteractor = GetPolymarketDepositTargetInteractor(
-        bridgeRepository = bridgeRepository,
-        deriveAddresses = deriveAddresses,
     )
 
     @Provides

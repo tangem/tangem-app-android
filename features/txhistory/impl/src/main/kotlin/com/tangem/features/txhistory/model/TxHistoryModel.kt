@@ -74,7 +74,7 @@ internal class TxHistoryModel @Inject constructor(
     private val params: TxHistoryComponent.Params = paramsContainer.require()
     val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
 
-    private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer()
+    private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer(params.userWalletId)
         .flowOn(dispatchers.default)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 

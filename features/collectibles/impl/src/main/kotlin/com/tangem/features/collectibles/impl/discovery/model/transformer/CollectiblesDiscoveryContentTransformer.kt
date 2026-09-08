@@ -1,7 +1,7 @@
 package com.tangem.features.collectibles.impl.discovery.model.transformer
 
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchListState
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.discovery.model.converter.CollectiblesDiscoveryPackConverter
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
