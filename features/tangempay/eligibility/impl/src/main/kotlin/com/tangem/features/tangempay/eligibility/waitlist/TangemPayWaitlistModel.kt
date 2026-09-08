@@ -35,10 +35,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
 
     private fun onEmailChange(email: String) {
         uiState.update { state ->
-            state.copy(
-                email = email,
-                isSaveEnabled = isSaveEnabled(email = email, isMarketingConsentGiven = state.isMarketingConsentGiven),
-            )
+            state.copy(email = email, isSaveEnabled = isEmailValid(email))
         }
     }
 
@@ -47,17 +44,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
     }
 
     private fun onMarketingConsentClick() {
-        uiState.update { state ->
-            val isMarketingConsentGiven = !state.isMarketingConsentGiven
-
-            state.copy(
-                isMarketingConsentGiven = isMarketingConsentGiven,
-                isSaveEnabled = isSaveEnabled(
-                    email = state.email,
-                    isMarketingConsentGiven = isMarketingConsentGiven,
-                ),
-            )
-        }
+        uiState.update { state -> state.copy(isMarketingConsentGiven = !state.isMarketingConsentGiven) }
     }
 
     private fun onPrivacyPolicyClick() {
@@ -67,10 +54,6 @@ internal class TangemPayWaitlistModel @Inject constructor(
     // TODO v_rodionov #[REDACTED_TASK_KEY]
     private fun onSaveClick() {
         uiMessageSender.send(ToastMessage(stringReference("Join waitlist: ${uiState.value.email}")))
-    }
-
-    private fun isSaveEnabled(email: String, isMarketingConsentGiven: Boolean): Boolean {
-        return isMarketingConsentGiven && isEmailValid(email)
     }
 
     private fun isEmailValid(email: String): Boolean = EMAIL_REGEX.matches(email.trim())
