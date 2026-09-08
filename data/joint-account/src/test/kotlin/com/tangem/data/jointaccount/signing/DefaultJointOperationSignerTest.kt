@@ -48,8 +48,10 @@ internal class DefaultJointOperationSignerTest {
     private val signUseCase: SignUseCase = mockk()
 
     private val signer = DefaultJointOperationSigner(
-        userWalletsListRepository = userWalletsListRepository,
-        derivationsRepository = derivationsRepository,
+        ownerKeyReader = JointOwnerKeyReader(
+            userWalletsListRepository = userWalletsListRepository,
+            derivationsRepository = derivationsRepository,
+        ),
         signUseCase = signUseCase,
         formatter = JointSignatureFormatter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
