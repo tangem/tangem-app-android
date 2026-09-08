@@ -32,6 +32,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
@@ -70,6 +71,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmInitialStateTransformer
+import com.tangem.features.send.send.confirm.model.transformers.SendConfirmJointOperationCreatedTransformer
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSendingStateTransformer
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
@@ -253,8 +255,55 @@ internal class SendConfirmModel @Inject constructor(
         backupErrorWarningSender.forAddress(
             scope = modelScope,
             address = { confirmData.enteredDestination },
-            onProceed = ::startSending,
+            onProceed = if (jointAccount != null) ::createJointOperation else ::startSending,
         )
+    }
+
+    private fun createJointOperation() {
+        val account = jointAccount ?: return
+        _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
+
+        modelScope.launch {
+            jointSendDelegate
+                .createOperation(
+                    account = account,
+                    currency = cryptoCurrency,
+                    amountUM = uiState.value.amountUM,
+                    destinationUM = uiState.value.destinationUM,
+                )
+                .fold(
+                    ifLeft = ::showJointOperationError,
+                    ifRight = {
+                        _uiState.update(
+                            SendConfirmJointOperationCreatedTransformer(createdAt = System.currentTimeMillis()),
+                        )
+                        params.callback.onResult(uiState.value)
+                        params.onSendTransaction()
+                    },
+                )
+        }
+    }
+
+    private fun showJointOperationError(error: JointOperationCreateError) {
+        _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+        when (error) {
+            is JointOperationCreateError.UserCancelled -> Unit
+            is JointOperationCreateError.SlotBusy -> alertFactory.getJointSlotBusyState()
+            is JointOperationCreateError.Failed -> {
+                TangemLogger.e("Unable to create the joint operation", error.cause)
+                alertFactory.getGenericErrorState(
+                    onFailedTxEmailClick = { onFailedTxEmailClick(error.cause.localizedMessage.orEmpty()) },
+                )
+            }
+            JointOperationCreateError.AccountNotReady,
+            JointOperationCreateError.CompositionMismatch,
+            JointOperationCreateError.InvalidPayload,
+            JointOperationCreateError.NetworkStateMoved,
+            -> {
+                TangemLogger.e("Unable to create the joint operation: $error")
+                alertFactory.getGenericErrorState(onFailedTxEmailClick = { onFailedTxEmailClick(error.toString()) })
+            }
+        }
     }
 
     private fun startSending() {
@@ -625,7 +674,7 @@ internal class SendConfirmModel @Inject constructor(
             textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),
             isIconVisible = isReadyToSend && !isHoldToConfirm,
-            isEnabled = confirmUM.isPrimaryButtonEnabled && jointAccount == null,
+            isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,
             isHoldToConfirm = isHoldToConfirm,
             onClick = {

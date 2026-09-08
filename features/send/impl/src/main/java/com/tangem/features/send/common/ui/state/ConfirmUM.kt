@@ -23,6 +23,7 @@ internal sealed class ConfirmUM {
     data class Success(
         val transactionDate: Long,
         val txUrl: String,
+        val signaturesUM: SendSignaturesUM? = null,
     ) : ConfirmUM() {
         override val isPrimaryButtonEnabled: Boolean = true
     }
