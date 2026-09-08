@@ -3,7 +3,7 @@ package com.tangem.domain.sociallogin.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.sociallogin.models.ProviderIdToken
+import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.repository.SocialBackupRepository
@@ -21,7 +21,7 @@ class RegisterSocialRecoveryUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
-        idToken: ProviderIdToken,
+        idToken: SocialProviderIdToken,
         walletId: UserWalletId,
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit> = either {
