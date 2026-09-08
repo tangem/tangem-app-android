@@ -394,6 +394,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.referral)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.virtualAccount)
     implementation(projects.domain.visa.models)
@@ -511,6 +512,7 @@ dependencies {
     androidTestImplementation(deps.arrow.core)
     androidTestImplementation(deps.kotlin.coroutines)
     androidTestImplementation(deps.kotlin.datetime)
+    androidTestImplementation(projects.domain.socialLogin)
     androidTestImplementation(deps.okHttp)
     androidTestImplementation(deps.jodatime)
     // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
