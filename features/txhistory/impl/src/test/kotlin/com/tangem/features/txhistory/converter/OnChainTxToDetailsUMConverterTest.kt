@@ -13,6 +13,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
@@ -199,12 +200,85 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
             action = TxHistoryDetailsUM.MenuItemUM.Action.Direct {},
         )
 
-        // Act
+        // Act — a tx with no counterparty card, so no "Copy address" row is prepended to the given menu.
         val header = onChainConverter(menu = persistentListOf(item))
             .convert(txInfo(type = TransactionType.Transfer)).header
 
         // Assert
         assertThat(header.menu).containsExactly(item)
+    }
+
+    @Test
+    fun `GIVEN external counterparty WHEN convert THEN Copy address leads the header menu`() {
+        // Arrange — the counterparty is none of the user's portfolios, so its address is copyable.
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val menu = converter.convert(tx).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+        assertThat(menu[0].icon).isEqualTo(Icons.ic_copy_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
+
+        (menu[0].action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN own account counterparty WHEN convert THEN Copy address is still offered`() {
+        // Arrange — the card reads "to <my account>", but the menu row copies that account's address all the same.
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val menu = ownConverter.convert(tx).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+
+        (menu[0].action as TxHistoryDetailsUM.MenuItemUM.Action.Direct).onClick()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN staking tx WHEN convert THEN neither counterparty card nor Copy address row`() {
+        // Arrange — a protocol interaction has no counterparty, so both entry points are dropped together.
+        val tx = txInfo(
+            type = TransactionType.Staking.Stake,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.Validator(VALIDATOR_ADDRESS),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN no counterparty address WHEN convert THEN neither counterparty card nor Copy address row`() {
+        // Arrange — an outgoing tx that reports no interaction address names no counterparty at all.
+        val tx = txInfo(type = TransactionType.Transfer, isOutgoing = true)
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.counterparty).isNull()
+        assertThat(details.header.menu).isEmpty()
     }
 
     // endregion
@@ -614,11 +688,13 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert — an own portfolio outranks the address book.
         assertThat(counterparty?.avatar).isInstanceOf(TxHistoryDetailsUM.CounterpartyAvatar.Account::class.java)
-        assertThat(counterparty?.onCopyClick).isNull()
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
-    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card without copy`() {
+    fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card copies its address`() {
         // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
@@ -632,10 +708,12 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Act
         val counterparty = ownConverter.convert(tx).counterparty
 
-        // Assert — resolved as own Payment account (not an external address): Visa avatar, name, no copy button.
+        // Assert — resolved as own Payment account (not an external address): Visa avatar and name, address still copied.
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount)
-        assertThat(counterparty?.onCopyClick).isNull()
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
@@ -677,7 +755,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
-    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card without copy`() {
+    fun `GIVEN Transfer to own account WHEN convert THEN account counterparty card copies its address`() {
         // Arrange — the counterparty resolves to the user's own account, so the card shows its name and avatar.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
@@ -692,17 +770,17 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
-        assertThat(counterparty).isEqualTo(
-            TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.send_recipient),
-                title = stringReference("Family"),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    iconResId = ownAccount.icon.value.getResId(),
-                    backgroundColor = ownAccount.icon.color.getUiColor(),
-                ),
-                onCopyClick = null,
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+        assertThat(counterparty?.title).isEqualTo(stringReference("Family"))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                iconResId = ownAccount.icon.value.getResId(),
+                backgroundColor = ownAccount.icon.color.getUiColor(),
             ),
         )
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
@@ -724,16 +802,16 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val counterparty = ownConverter.convert(tx).counterparty
 
         // Assert
-        assertThat(counterparty).isEqualTo(
-            TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.send_recipient),
-                title = stringReference("My Wallet"),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
-                    deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
-                ),
-                onCopyClick = null,
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+        assertThat(counterparty?.title).isEqualTo(stringReference("My Wallet"))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
+                deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
             ),
         )
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test
@@ -753,7 +831,9 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
-        assertThat(counterparty?.onCopyClick).isNotNull()
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     // endregion
@@ -774,15 +854,12 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         // Assert
         assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
         assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
-        assertThat(result.counterparty).isEqualTo(
-            TxHistoryDetailsUM.CounterpartyUM(
-                label = resourceReference(R.string.common_from_account),
-                title = stringReference("Family"),
-                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
-                    iconResId = ownAccount.icon.value.getResId(),
-                    backgroundColor = ownAccount.icon.color.getUiColor(),
-                ),
-                onCopyClick = null,
+        assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.common_from_account))
+        assertThat(result.counterparty?.title).isEqualTo(stringReference("Family"))
+        assertThat(result.counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                iconResId = ownAccount.icon.value.getResId(),
+                backgroundColor = ownAccount.icon.color.getUiColor(),
             ),
         )
     }
