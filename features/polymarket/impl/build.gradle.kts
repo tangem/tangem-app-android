@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.domain.core)
 
     /** Kotlin */
+    implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
 
