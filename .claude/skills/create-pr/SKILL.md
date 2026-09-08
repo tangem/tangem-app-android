@@ -27,7 +27,7 @@ This skill only adds what is **not** in git-rules.md:
 |---|---|
 | Default PR base | `develop` (hotfix → the relevant `releases/x.xx`) |
 | Protected branches | `develop`, `releases/*` — never commit directly; always branch off (Phase 2) |
-| Commit trailer | `Co-Authored-By: Claude Opus 4.8 (1M context) <[REDACTED_EMAIL]>` |
+| Commit trailer | `Co-Authored-By: Claude <model> <[REDACTED_EMAIL]>` — `<model>` is the name of the Claude model running the session (take it from the harness's own commit-trailer instruction or the model name in the system prompt; e.g. `Claude Fable 5.1`). Never hardcode a model name here or in the commit. |
 | PR body footer | `🤖 Generated with [Claude Code](https://claude.com/claude-code)` |
 | PR body length | **See [`.claude/rules/pr-review-writing.md`](../../rules/pr-review-writing.md)** — `## What` of 1–3 sentences, **≤ 500 characters** (footer and any over-limit justification excluded). No `## Changes` / `## Impact` / `## Testing` / `## Risk` sections, no per-file bullet list or summary table, unless they carry information the diff does not. |
 | PR body — no Jira keys | The PR **description/body must contain no Jira ticket key at all** (`AND-xxxxx`) — this holds for **both** kinds of PR. **Task-tied PR:** the PR's own `AND-xxxxx` belongs **only in the title**, never in the body; and no *other* ticket may be referenced anywhere. **Technical PR:** there is no Jira id at all — none in the title or the body. Either way: no "related to / part of / see / blocked by / follow-up of AND-…" and no `AND-xxxxx` in `## What` or any other body section. Strip or rephrase any such reference before creating the PR (describe the dependency in prose, without the key). |
@@ -228,9 +228,11 @@ approval does not carry over to a later run.
 
    <optional 1–3 line body>
 
-   Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+   Co-Authored-By: Claude <model> <noreply@anthropic.com>
    EOF
    ```
+   `<model>` is the model running this session (see the "Commit trailer" row above), e.g.
+   `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
    For a **Technical PR**, the commit subject (and PR title) is just `<Title>` with **no `AND-xxxxx`
    prefix**.
 4. **Push**: `git push -u origin <branch>`.

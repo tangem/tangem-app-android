@@ -49,9 +49,8 @@ internal class ResidencyListModel @Inject constructor(
     private fun showCountries() {
         step = Step.Countries
         uiState.update { state ->
-            // TODO v_rodionov: #[REDACTED_TASK_KEY]
             state.copy(
-                title = stringReference("Country of residence"),
+                title = resourceReference(R.string.tangempay_residency_title_country),
                 search = state.search.copy(query = "", isActive = false),
                 content = Content.Loading,
                 onBackClick = null,
@@ -72,8 +71,7 @@ internal class ResidencyListModel @Inject constructor(
         step = Step.States
         uiState.update { state ->
             state.copy(
-                // TODO v_rodionov: #[REDACTED_TASK_KEY]
-                title = stringReference("Select state"),
+                title = resourceReference(R.string.tangempay_residency_title_state),
                 search = state.search.copy(query = "", isActive = false),
                 content = Content.Loading,
                 onBackClick = ::showCountries,
@@ -151,7 +149,7 @@ internal class ResidencyListModel @Inject constructor(
         }
     }
 
-    // TODO v_rodionov
+    // TODO v_rodionov #[REDACTED_TASK_KEY]
     private fun openKycScreen() {
         updateContent()
         uiMessageSender.send(ToastMessage(stringReference("Open KYC")))
@@ -244,7 +242,7 @@ internal class ResidencyListModel @Inject constructor(
 
     private fun getInitialState(): ResidencyListUM {
         return ResidencyListUM(
-            title = resourceReference(R.string.tangempay_order_type_country_of_residence),
+            title = resourceReference(R.string.tangempay_residency_title_country),
             search = TangemSearch.State(
                 placeholderText = resourceReference(R.string.common_search),
                 query = "",
@@ -259,16 +257,14 @@ internal class ResidencyListModel @Inject constructor(
         )
     }
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY]
     private fun suggestedSectionTitle(): TextReference = when (step) {
-        Step.Countries -> stringReference("Suggested country")
-        Step.States -> stringReference("Suggested state")
+        Step.Countries -> resourceReference(R.string.tangempay_residency_suggested_country)
+        Step.States -> resourceReference(R.string.tangempay_residency_suggested_state)
     }
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY]
     private fun allSectionTitle(): TextReference = when (step) {
-        Step.Countries -> stringReference("Change country")
-        Step.States -> stringReference("Select another state")
+        Step.Countries -> resourceReference(R.string.tangempay_residency_all_country)
+        Step.States -> resourceReference(R.string.tangempay_residency_all_state)
     }
 
     private enum class Step { Countries, States }

@@ -96,6 +96,8 @@ object PreferencesKeys {
 
     val ADDED_WALLETS_WITH_RING_KEY by lazy { stringSetPreferencesKey(name = "addedWalletsWithRing") }
 
+    val GEO_USER_COUNTRY_CODE_KEY by lazy { stringPreferencesKey(name = "geoUserCountryCode") }
+
     val ONRAMP_DEFAULT_COUNTRY by lazy { stringPreferencesKey(name = "onrampDefaultCountry") }
 
     val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
