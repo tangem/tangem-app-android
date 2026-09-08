@@ -9,6 +9,7 @@ import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronTokenDto
 import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -91,7 +92,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         val error = runCatching { repository.estimate(params) }.exceptionOrNull()
 
         // Assert
-        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        assertThat(error).isInstanceOf(GaslessServiceException::class.java)
     }
 
     @Test
