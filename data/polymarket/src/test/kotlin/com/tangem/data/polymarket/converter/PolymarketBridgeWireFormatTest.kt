@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketBridgeAddressesDto
+import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositResponse
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositRequest
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketSupportedAssetsResponse
 import org.junit.jupiter.api.Test
@@ -26,7 +26,7 @@ internal class PolymarketBridgeWireFormatTest {
     fun `GIVEN the bridge's asset list WHEN decoded THEN the minimum is read as a number`() {
         // Arrange
         val json = """
-            {"supportedAssets":[{"chainId":137,"chainName":"Polygon",
+            {"supportedAssets":[{"chainId":"137","chainName":"Polygon",
             "token":{"name":"USD Coin","symbol":"USDC",
             "address":"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359","decimals":6},
             "minCheckoutUsd":2.0}]}
@@ -37,7 +37,7 @@ internal class PolymarketBridgeWireFormatTest {
 
         // Assert
         val asset = actual.supportedAssets.single()
-        assertThat(asset.chainId).isEqualTo(137L)
+        assertThat(asset.chainId).isEqualTo("137")
         assertThat(asset.chainName).isEqualTo("Polygon")
         assertThat(asset.token.symbol).isEqualTo("USDC")
         assertThat(asset.token.address).isEqualTo("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359")
@@ -49,7 +49,7 @@ internal class PolymarketBridgeWireFormatTest {
     fun `GIVEN the minimum arrives as a string WHEN decoded THEN it reads the same as a number`() {
         // Arrange
         val asNumber = """
-            {"supportedAssets":[{"chainId":137,"chainName":"Polygon",
+            {"supportedAssets":[{"chainId":"137","chainName":"Polygon",
             "token":{"name":"USD Coin","symbol":"USDC","address":"0x3c49","decimals":6},
             "minCheckoutUsd":2.50}]}
         """.trimIndent()
@@ -66,27 +66,37 @@ internal class PolymarketBridgeWireFormatTest {
     }
 
     @Test
-    fun `GIVEN an address payload naming Tron tvm WHEN decoded THEN evm survives and nothing throws`() {
-        // Arrange
-        val json = """{"evm":"0xabc","svm":"sol1","btc":"bc1","tvm":"T9y"}"""
+    fun `GIVEN the deposit payload the bridge answers with WHEN decoded THEN every family is read`() {
+        // Arrange — captured from bridge.polymarket.com on 03.09.2026
+        val json = """
+            {
+                "address": {
+                    "evm": "0x4038A7a1Bf34cbcB02528A23184d18f4AD631D2a",
+                    "svm": "8MhRonoqhv1X3P8jG17EJwvbkY9WWpR5qbxanRwWxWdt",
+                    "tron": "TMSM4Sy4V6faXVvry5Y9mHoEZf7oSjnM1Y",
+                    "btc": "bc1q9wshqzjuk3y8mf2mmnmk0vwutuy0y2ru7jtvyp"
+                },
+                "note": "Only certain chains and tokens are supported."
+            }
+        """.trimIndent()
 
         // Act
-        val actual = moshi.adapter(PolymarketBridgeAddressesDto::class.java).fromJson(json)!!
+        val actual = moshi.adapter(PolymarketDepositResponse::class.java).fromJson(json)!!.address
 
         // Assert
-        assertThat(actual.evm).isEqualTo("0xabc")
-        assertThat(actual.svm).isEqualTo("sol1")
-        assertThat(actual.btc).isEqualTo("bc1")
-        assertThat(actual.tron).isNull()
+        assertThat(actual.evm).isEqualTo("0x4038A7a1Bf34cbcB02528A23184d18f4AD631D2a")
+        assertThat(actual.svm).isEqualTo("8MhRonoqhv1X3P8jG17EJwvbkY9WWpR5qbxanRwWxWdt")
+        assertThat(actual.tron).isEqualTo("TMSM4Sy4V6faXVvry5Y9mHoEZf7oSjnM1Y")
+        assertThat(actual.btc).isEqualTo("bc1q9wshqzjuk3y8mf2mmnmk0vwutuy0y2ru7jtvyp")
     }
 
     @Test
-    fun `GIVEN an address payload carrying only evm WHEN decoded THEN the other families are absent`() {
+    fun `GIVEN a deposit payload carrying only evm WHEN decoded THEN the other families are absent`() {
         // Arrange
-        val json = """{"evm":"0xabc"}"""
+        val json = """{"address":{"evm":"0xabc"}}"""
 
         // Act
-        val actual = moshi.adapter(PolymarketBridgeAddressesDto::class.java).fromJson(json)!!
+        val actual = moshi.adapter(PolymarketDepositResponse::class.java).fromJson(json)!!.address
 
         // Assert
         assertThat(actual.evm).isEqualTo("0xabc")
