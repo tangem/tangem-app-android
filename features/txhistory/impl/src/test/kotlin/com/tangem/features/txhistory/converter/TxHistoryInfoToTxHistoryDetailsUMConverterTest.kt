@@ -9,6 +9,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_share_android_24
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_24
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -135,6 +136,38 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         assertThat(copiedTxId).isTrue()
         assertThat(explored).isTrue()
         assertThat(sharedTexts).containsExactly("resolved summary")
+    }
+
+    @Test
+    fun `GIVEN add-contact callback WHEN convert THEN header menu leads with a wired add-contact row`() {
+        // Arrange
+        var addedContact = false
+        val converter = dispatcher(
+            onCopyTxId = {},
+            onAddContact = { addedContact = true },
+        )
+
+        // Act
+        val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(2)
+        assertThat(menu[0].icon).isEqualTo(Icons.ic_user_plus_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.address_book_add_contact))
+        menu[0].clickDirect()
+        assertThat(addedContact).isTrue()
+    }
+
+    @Test
+    fun `GIVEN no add-contact callback WHEN convert THEN header menu has no add-contact row`() {
+        // Arrange — the counterparty is already a contact, or is not an address worth saving.
+        val converter = dispatcher(onCopyTxId = {}, onAddContact = null)
+
+        // Act
+        val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu.map { it.icon }).doesNotContain(Icons.ic_user_plus_24)
     }
 
     @Test
@@ -347,6 +380,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onExplore: (() -> Unit)? = null,
         lookup: TxHistoryLookupContext = lookupOf(),
         isBalanceHidden: Boolean = false,
+        onAddContact: (() -> Unit)? = null,
     ) = TxHistoryInfoToTxHistoryDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -357,6 +391,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onShare = onShare,
         onExplore = onExplore,
         lookup = lookup,
+        onAddContact = onAddContact,
     )
 
     private fun TxHistoryDetailsUM.MenuItemUM.clickDirect() {

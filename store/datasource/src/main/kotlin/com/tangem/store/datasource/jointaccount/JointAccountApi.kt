@@ -3,10 +3,13 @@ package com.tangem.store.datasource.jointaccount
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
+import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -93,4 +96,17 @@ interface JointAccountApi {
         @Path("walletId") walletId: String,
         @Body body: ActivateJointAccountRequest,
     ): ApiResponse<JointAccountDto>
+
+    @POST("api/v1/wallets/{walletId}/joint-accounts/operations")
+    suspend fun createJointOperation(
+        @Path("walletId") walletId: String,
+        @Body body: CreateJointOperationRequest,
+    ): ApiResponse<JointOperationDto>
+
+    @POST("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}/sign")
+    suspend fun signJointOperation(
+        @Path("walletId") walletId: String,
+        @Path("operationId") operationId: String,
+        @Body body: SignJointOperationRequest,
+    ): ApiResponse<JointOperationDto>
 }

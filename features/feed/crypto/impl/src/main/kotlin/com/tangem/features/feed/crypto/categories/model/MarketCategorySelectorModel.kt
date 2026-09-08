@@ -2,15 +2,14 @@ package com.tangem.features.feed.crypto.categories.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketCategoriesUseCase
 import com.tangem.domain.markets.GetMarketCategoryListFlowUseCase
 import com.tangem.domain.markets.MarketCategory
+import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
-import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.categories.model.transformer.MarketCategorySelectorTransformer
 import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorUM
 import com.tangem.pagination.PaginationStatus
@@ -26,14 +25,12 @@ private const val FEATURED_LIMIT = 20
 @ModelScoped
 internal class MarketCategorySelectorModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    paramsContainer: ParamsContainer,
+    private val filterController: MarketCategoryFilterController,
     private val router: Router,
     private val getMarketCategoriesUseCase: GetMarketCategoriesUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getMarketCategoryListFlowUseCase: GetMarketCategoryListFlowUseCase,
 ) : Model() {
-
-    private val params = paramsContainer.require<MarketCategorySelectorRoute>()
 
     private val appCurrency: StateFlow<AppCurrency> = getSelectedAppCurrencyUseCase.invokeOrDefault()
         .stateIn(modelScope, SharingStarted.Eagerly, AppCurrency.Default)
@@ -42,8 +39,11 @@ internal class MarketCategorySelectorModel @Inject constructor(
     private var categories: List<MarketCategory> = emptyList()
     private var listStatus: PaginationStatus<List<MarketCategory>> = PaginationStatus.None
 
-    /** Pending choice; [params] holds the applied one until [onApply] hands it back to the tab. */
-    private var draftSelection: MarketCategorySelection = params.selection
+    /** The filter as it stood when the screen opened; [onReset] returns here and the footer compares to it. */
+    private val appliedSelection: MarketCategorySelection = filterController.selection.value
+
+    /** Pending choice; [appliedSelection] stands until [onApply] publishes this one to the tab. */
+    private var draftSelection: MarketCategorySelection = appliedSelection
 
     private val listManager = MarketCategoryListManager(
         getMarketCategoryListFlowUseCase = getMarketCategoryListFlowUseCase,
@@ -97,12 +97,12 @@ internal class MarketCategorySelectorModel @Inject constructor(
     }
 
     private fun onReset() {
-        draftSelection = params.selection
+        draftSelection = appliedSelection
         render()
     }
 
     private fun onApply() {
-        params.callback.onCategorySelect(draftSelection)
+        filterController.onSelectionApplied(draftSelection)
         router.pop()
     }
 
@@ -119,7 +119,7 @@ internal class MarketCategorySelectorModel @Inject constructor(
                     categories = categories,
                     selection = draftSelection,
                     appCurrency = appCurrency.value,
-                    isEdited = draftSelection != params.selection,
+                    isEdited = draftSelection != appliedSelection,
                     isLoadingMore = listStatus is PaginationStatus.NextBatchLoading,
                     onLoadMore = listManager::loadMore,
                     onReset = ::onReset,
