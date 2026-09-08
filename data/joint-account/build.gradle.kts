@@ -50,6 +50,8 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.wallets)
     // endregion
 
     // region Tangem SDKs
@@ -62,5 +64,6 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(deps.web3j.core)
     // endregion
 }
