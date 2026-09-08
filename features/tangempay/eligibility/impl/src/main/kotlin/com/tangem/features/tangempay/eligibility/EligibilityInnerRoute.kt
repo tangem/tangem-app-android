@@ -10,5 +10,8 @@ internal sealed class EligibilityInnerRoute : Route {
     data object Residency : EligibilityInnerRoute()
 
     @Serializable
-    data object RegionUnavailable : EligibilityInnerRoute()
+    data class RegionUnavailable(
+        val countryCode: String,
+        val regionCode: String?,
+    ) : EligibilityInnerRoute()
 }
