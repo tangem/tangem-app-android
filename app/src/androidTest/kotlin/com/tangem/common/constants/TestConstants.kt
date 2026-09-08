@@ -38,6 +38,10 @@ object TestConstants {
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
     const val WAIT_UNTIL_TIMEOUT_VERY_LONG = 60_000L
+
+    // Hot-wallet creation derives keys for every supported network while the first balance scan is already
+    // in flight; on a cold emulator that regularly runs past a minute, so it gets its own ceiling.
+    const val WAIT_UNTIL_TIMEOUT_WALLET_CREATION = 180_000L
     const val HOLD_DURATION_MS = 2_000L
 
     const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
