@@ -166,5 +166,9 @@
     {
         "name": "AND_17352_CUSTOM_CARDS_COBRAND_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_17136_GEO_COUNTRY_CACHE_FALLBACK_ENABLED",
+        "version": "undefined"
     }
 ]
