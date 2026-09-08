@@ -21,6 +21,9 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
+import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
+import com.tangem.domain.card.analytics.IntroductionProcess.WelcomeMediaError
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
@@ -60,6 +63,7 @@ internal class IntroductionModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val cardScanner: IntroductionCardScanner,
     private val mobileWalletCreator: IntroductionMobileWalletCreator,
+    private val referral: IntroductionReferral,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host {
@@ -87,6 +91,7 @@ internal class IntroductionModel @Inject constructor(
         host = this,
         scope = modelScope,
         router = router,
+        analyticsEventHandler = analyticsEventHandler,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
         hotWalletFeatureToggles = hotWalletFeatureToggles,
         resolveCloudRestoreBackups = resolveCloudRestoreBackups,
@@ -125,7 +130,13 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(isVideoReady = true) }
     }
 
-    override fun onError() {
+    override fun onError(hasRenderedFrame: Boolean) {
+        val stage = if (hasRenderedFrame) {
+            WelcomeMediaError.Stage.Playback
+        } else {
+            WelcomeMediaError.Stage.Load
+        }
+        analyticsEventHandler.send(WelcomeMediaError(stage))
         // Errors arrive asynchronously, so one can land after the surface is gone; lifting the shutter then
         // would uncover a blank surface on the way back.
         if (!videoPlayer.isSurfaceAttached) return
@@ -165,15 +176,18 @@ internal class IntroductionModel @Inject constructor(
     private fun onCreateWalletClick() {
         if (isAnySheetShown()) return
         analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet())
-        // TODO [REDACTED_TASK_KEY]: send "Create Wallet Intro Screen Opened" here on every open — it needs the referral
-        //  id and a Screen Type the analyst has to pick, since this sheet offers both wallet types.
+        modelScope.launch {
+            analyticsEventHandler.send(
+                IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = referral.readId()),
+            )
+        }
         uiState.update { it.copy(bottomSheetConfig = createWalletBottomSheetConfig()) }
     }
 
     // TODO [REDACTED_TASK_KEY]: the icons of both sheets are placeholders until the design hands over the assets.
     private fun createWalletBottomSheetConfig() = TangemBottomSheetConfig(
         isShown = true,
-        onDismissRequest = ::onBottomSheetDismissed,
+        onDismissRequest = { onCreateWalletSheetDismissedByViewer(SheetDismissed.DismissReason.Dismissed) },
         content = CreateWalletUM(
             cardOrRing = WalletOptionUM(
                 iconRes = CoreUiR.drawable.ic_tangem_24,
@@ -189,8 +203,20 @@ internal class IntroductionModel @Inject constructor(
                 isLoading = isCreatingMobileWallet,
                 onClick = ::onCreateSeedPhraseWalletClick,
             ),
+            onCloseClick = {
+                onCreateWalletSheetDismissedByViewer(SheetDismissed.DismissReason.CloseButton)
+            },
         ),
     )
+
+    /** Only a viewer leaving without picking a row is a dismissal; rows dismiss programmatically and stay silent. */
+    private fun onCreateWalletSheetDismissedByViewer(reason: SheetDismissed.DismissReason) {
+        if (!isCreateWalletSheetShown()) return
+        analyticsEventHandler.send(
+            SheetDismissed(sheet = SheetDismissed.Sheet.CreateWallet, reason = reason),
+        )
+        onBottomSheetDismissed()
+    }
 
     /** Keeps the content so the sheet can play its exit animation instead of vanishing. */
     private fun onBottomSheetDismissed() {
@@ -199,9 +225,7 @@ internal class IntroductionModel @Inject constructor(
 
     private fun onTangemCardOrRingClick() {
         if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
-        // TODO [REDACTED_TASK_KEY]: report this tap once the analytics contract is settled. The mobile twin has
-        //  ButtonMobileWallet, but no event exists for picking the hardware option: CreateWalletSelectionModel
-        //  sends none either, and Settings.ButtonAddHardwareWallet is another category and needs a wallet.
+        analyticsEventHandler.send(IntroductionProcess.ButtonHardwareWallet())
         onBottomSheetDismissed()
         isStoryShown = true
         applyVideoRunning()
@@ -352,10 +376,7 @@ internal class IntroductionModel @Inject constructor(
 
     private fun onIHaveWalletClick() {
         if (isAnySheetShown() || isCreatingMobileWallet) return
-        // TODO [REDACTED_TASK_KEY]: report this tap once the analytics contract is settled. The spec asks for
-        //  "[Sign In] Button - Open Existing Account" and calls it an existing event, but the only event of
-        //  that name lives in the "Settings / Wallet Settings" category and is about accounts, and the
-        //  properties it is meant to keep are unknown.
+        analyticsEventHandler.send(IntroductionProcess.ButtonIHaveWallet())
         haveWalletSheet.open()
     }
 
@@ -373,8 +394,9 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(haveWalletBottomSheetConfig = transform(it.haveWalletBottomSheetConfig)) }
     }
 
+    /** The sheet row reports itself as `Button - Sign In With Card`; `Button - Scan Card` belongs to the story. */
     override fun scanCardForExistingWallet() {
-        scanCard(onNavigatedAway = {}, onFailed = {})
+        launchCardScan(onNavigatedAway = {}, onFailed = {})
     }
 
     override fun ensureHotWalletCreationSupported(): Boolean {
@@ -384,10 +406,12 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onTermsOfServiceClick() {
+        analyticsEventHandler.send(LegalOpened(LegalOpened.Document.TermsOfService))
         urlOpener.openUrl(TERMS_OF_SERVICE_URL)
     }
 
     private fun onPrivacyPolicyClick() {
+        analyticsEventHandler.send(LegalOpened(LegalOpened.Document.PrivacyPolicy))
         urlOpener.openUrl(PRIVACY_POLICY_URL)
     }
 
