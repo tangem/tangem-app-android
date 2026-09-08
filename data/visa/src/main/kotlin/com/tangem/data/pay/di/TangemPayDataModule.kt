@@ -69,10 +69,6 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindCustomerOffersRepository(repository: DefaultCustomerOffersRepository): CustomerOffersRepository
-
-    @Binds
-    @Singleton
     fun bindReissueCardRepository(repository: DefaultReissueCardRepository): TangemPayReissueCardRepository
 
     @Binds

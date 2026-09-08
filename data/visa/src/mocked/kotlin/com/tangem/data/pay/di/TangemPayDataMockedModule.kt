@@ -1,12 +1,14 @@
 package com.tangem.data.pay.di
 
 import com.tangem.data.pay.repository.MockAwareCashbackRepository
+import com.tangem.data.pay.repository.MockAwareCustomerOffersRepository
 import com.tangem.data.pay.repository.MockAwareCustomerOrderRepository
 import com.tangem.data.pay.repository.MockAwareOnboardingRepository
 import com.tangem.data.pay.repository.MockAwareTangemPayCampaignRepository
 import com.tangem.data.pay.repository.MockAwareTangemPayCardDetailsRepository
 import com.tangem.data.pay.repository.MockAwareTangemPayTxHistoryRepository
 import com.tangem.domain.pay.repository.CashbackRepository
+import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCampaignRepository
@@ -41,6 +43,10 @@ internal interface TangemPayDataMockedModule {
     @Binds
     @Singleton
     fun bindCustomerOrderRepository(repository: MockAwareCustomerOrderRepository): CustomerOrderRepository
+
+    @Binds
+    @Singleton
+    fun bindCustomerOffersRepository(repository: MockAwareCustomerOffersRepository): CustomerOffersRepository
 
     @Binds
     @Singleton
