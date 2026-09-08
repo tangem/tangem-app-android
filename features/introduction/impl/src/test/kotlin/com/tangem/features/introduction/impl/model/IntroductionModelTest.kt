@@ -3,6 +3,7 @@ package com.tangem.features.introduction.impl.model
 import android.view.SurfaceView
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -16,6 +17,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.core.analytics.models.Basic
@@ -81,6 +83,7 @@ internal class IntroductionModelTest {
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
     private val mobileWalletCreator: IntroductionMobileWalletCreator = mockk(relaxed = true)
     private val appsFlyerRepository: AppsFlyerRepository = mockk()
+    private val analyticsRepository: AnalyticsRepository = mockk(relaxed = true)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val surfaceView: SurfaceView = mockk(relaxed = true)
@@ -104,10 +107,12 @@ internal class IntroductionModelTest {
             cardScanner,
             mobileWalletCreator,
             appsFlyerRepository,
+            analyticsRepository,
             generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
         coEvery { appsFlyerRepository.getConversionData() } returns null
+        coEvery { analyticsRepository.checkIsEventSent(any()) } returns true
         every { isHotWalletCreationSupported() } returns true
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
@@ -248,6 +253,50 @@ internal class IntroductionModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EntryReason {
+
+        @Test
+        fun `GIVEN the welcome was never shown WHEN model created THEN the opening reports the first launch`() {
+            // Arrange
+            coEvery { analyticsRepository.checkIsEventSent("introduction_welcome_opened") } returns false
+
+            // Act
+            createModel()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.FirstLaunch),
+            )
+            coVerify(exactly = 1) { analyticsRepository.setIsEventSent("introduction_welcome_opened") }
+        }
+
+        @Test
+        fun `GIVEN the welcome was shown before WHEN model created THEN the opening reports no wallets`() {
+            // Act
+            createModel()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+            coVerify(exactly = 1) { analyticsRepository.setIsEventSent("introduction_welcome_opened") }
+        }
+
+        @Test
+        fun `GIVEN the last wallet was forgotten WHEN model created THEN the opening reports it regardless of history`() {
+            // Arrange
+            coEvery { analyticsRepository.checkIsEventSent(any()) } returns false
+
+            // Act
+            createModel(entryReason = HomeEntryReason.LastWalletForgotten)
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.LastWalletForgotten),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class LaunchMode {
 
         @Test
@@ -263,7 +312,7 @@ internal class IntroductionModelTest {
                     onFailed = any(),
                 )
             }
-            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
             assertThat(model.uiState.value.renderedFields()).isEqualTo(SHUTTER_DOWN)
         }
 
@@ -274,7 +323,7 @@ internal class IntroductionModelTest {
 
             // Assert
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
-            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
         }
 
         @Test
@@ -301,7 +350,7 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.bottomSheetConfig).isNull()
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
-            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
             verify { router wasNot Called }
         }
 
@@ -316,7 +365,7 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.bottomSheetConfig).isNull()
             assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
-            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
         }
 
         @Test
@@ -371,7 +420,7 @@ internal class IntroductionModelTest {
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
             assertThat(sentEvents)
                 .containsExactly(
-                    IntroductionProcess.ScreenOpened(),
+                    SCREEN_OPENED,
                     IntroductionProcess.ButtonCreateNewWallet(),
                     IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = null),
                 )
@@ -1524,12 +1573,16 @@ internal class IntroductionModelTest {
         every { videoPlayer.isSurfaceAttached } returns isAttached
     }
 
-    private fun createModel(launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard) = IntroductionModel(
+    private fun createModel(
+        launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+        entryReason: HomeEntryReason = HomeEntryReason.Launch,
+    ) = IntroductionModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode)),
+        paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode, entryReason)),
         videoPlayerFactory = videoPlayerFactory,
         urlOpener = urlOpener,
         analyticsEventHandler = analyticsEventHandler,
+        analyticsRepository = analyticsRepository,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
@@ -1544,6 +1597,7 @@ internal class IntroductionModelTest {
     )
 
     private companion object {
+        val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
