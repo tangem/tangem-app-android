@@ -96,6 +96,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         }
     }
 
+    @Suppress("LongMethod")
     private fun screenChild(
         config: TangemPayAccountDetailsInnerRoute,
         componentContext: ComponentContext,
@@ -152,8 +153,15 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayOrderCardComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
                 intent = config.intent,
+                onAddFundsRequested = ::openAddFundsOnAccountDetails,
             ),
         )
+    }
+
+    private fun openAddFundsOnAccountDetails() {
+        childStack.value.items
+            .firstNotNullOfOrNull { it.instance as? TangemPayDetailsComponent }
+            ?.openAddFunds()
     }
 
     private fun onChildBack() {
