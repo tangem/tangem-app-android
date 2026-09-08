@@ -19,4 +19,13 @@ internal class DefaultCustomerOffersRepository @Inject constructor(
             tangemPayApi.getCustomerOffers(authHeader = authHeader)
         }.map { response -> OfferConverter.convertList(response.result) }
     }
+
+    override suspend fun getProductInstanceOffers(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, List<Offer>> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getProductInstanceOffers(authHeader = authHeader, productInstanceId = productInstanceId)
+        }.map { response -> OfferConverter.convertList(response.result) }
+    }
 }

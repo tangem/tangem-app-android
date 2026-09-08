@@ -2,7 +2,7 @@ package com.tangem.domain.sociallogin.repository
 
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.sociallogin.models.ProviderIdToken
+import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 
@@ -22,7 +22,7 @@ interface SocialRecoveryRepository {
      * whether this login creates or restores a wallet: [SocialLoginError.BindingNotFound] means the
      * identity has no wallet yet and the caller must create one, not show an error (FR-02).
      */
-    suspend fun getRecoveryKey(idToken: ProviderIdToken): Either<SocialLoginError, RecoveryKey>
+    suspend fun getRecoveryKey(idToken: SocialProviderIdToken): Either<SocialLoginError, RecoveryKey>
 
     /**
      * Binds [walletId] to the identity behind [idToken] and stores [recoveryKey] encrypted for it.
@@ -32,7 +32,7 @@ interface SocialRecoveryRepository {
      * identity or the wallet is already bound to a different counterpart (FR-14).
      */
     suspend fun registerRecoveryKey(
-        idToken: ProviderIdToken,
+        idToken: SocialProviderIdToken,
         walletId: UserWalletId,
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit>

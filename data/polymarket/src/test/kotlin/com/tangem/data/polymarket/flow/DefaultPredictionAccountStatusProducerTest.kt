@@ -154,7 +154,7 @@ internal class DefaultPredictionAccountStatusProducerTest {
 
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
-            collateralCurrencyFactory = mockk { every { create() } returns COLLATERAL },
+            collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
         ),
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap()),
@@ -182,7 +182,7 @@ internal class DefaultPredictionAccountStatusProducerTest {
             balance = BigDecimal("40"),
             fiatRate = null,
             isTradingAllowed = true,
-            cryptoCurrency = COLLATERAL,
+            depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
         )
 

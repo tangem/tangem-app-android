@@ -59,6 +59,7 @@ internal object GeneratedEnvironmentConfigConverter {
             authServiceKey = GeneratedEnvironmentConfig.authServiceKey,
             // the JSON key was created with a typo ("otpl"), kept as is to match the deployed configs
             otlpApiKey = GeneratedEnvironmentConfig.otplApiKey,
+            googleWebClientId = GeneratedEnvironmentConfig.googleWebClientId,
         )
     }
 
@@ -110,6 +111,10 @@ internal object GeneratedEnvironmentConfigConverter {
             quickNodeXrpCredentials = QuickNodeCredentials(
                 apiKey = GeneratedEnvironmentConfig.quiknodeXRPLApiKey,
                 subdomain = GeneratedEnvironmentConfig.quiknodeXRPLSubdomain,
+            ),
+            quickNodeArcCredentials = QuickNodeCredentials(
+                apiKey = GeneratedEnvironmentConfig.quiknodeArcApiKey,
+                subdomain = GeneratedEnvironmentConfig.quiknodeArcSubdomain,
             ),
             infuraProjectId = GeneratedEnvironmentConfig.infuraProjectId,
             tronGridApiKey = GeneratedEnvironmentConfig.tronGridApiKey,

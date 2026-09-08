@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.common.card.EllipticCurve
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegateError
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,6 +27,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import com.tangem.domain.collectibles.CollectiblesAccountError
 
 internal class DefaultCollectiblesHotDelegateTest {
 
@@ -93,7 +93,7 @@ internal class DefaultCollectiblesHotDelegateTest {
         val actual = delegate.provision(ACCOUNT_ID)
 
         // Assert
-        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesHotDelegateError.KeyCreationFailed(cause))
+        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesAccountError.DelegateKeyCreationFailed(cause))
         coVerify(exactly = 0) { store.put(any(), any()) }
     }
 
@@ -110,7 +110,7 @@ internal class DefaultCollectiblesHotDelegateTest {
         val actual = delegate.provision(ACCOUNT_ID)
 
         // Assert
-        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesHotDelegateError.KeyCreationFailed(cause))
+        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesAccountError.DelegateKeyCreationFailed(cause))
         coVerify(exactly = 1) { tangemHotSdk.delete(HOT_WALLET_ID) }
         coVerify(exactly = 0) { store.put(any(), any()) }
     }
@@ -186,7 +186,7 @@ internal class DefaultCollectiblesHotDelegateTest {
         val actual = delegate.sign(ACCOUNT_ID, MESSAGE)
 
         // Assert
-        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesHotDelegateError.NotProvisioned)
+        assertThat(actual.leftOrNull()).isEqualTo(CollectiblesAccountError.DelegateNotProvisioned)
         coVerify(exactly = 0) { tangemHotSdk.signHashes(any(), any()) }
     }
 

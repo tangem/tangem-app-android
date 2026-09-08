@@ -1,8 +1,8 @@
 package com.tangem.data.txhistory.repository.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus

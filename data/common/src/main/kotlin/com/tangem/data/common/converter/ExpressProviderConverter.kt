@@ -1,6 +1,6 @@
 package com.tangem.data.common.converter
 
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.utils.converter.Converter
