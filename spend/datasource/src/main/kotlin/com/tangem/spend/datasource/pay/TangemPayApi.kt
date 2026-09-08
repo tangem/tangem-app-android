@@ -130,7 +130,10 @@ interface TangemPayApi {
 
     /** Customer offers — used to gate the issue-additional-card flow. */
     @GET("v1/customer/offers")
-    suspend fun getCustomerOffers(@Header("Authorization") authHeader: String): ApiResponse<CustomerOffersResponse>
+    suspend fun getCustomerOffers(
+        @Header("Authorization") authHeader: String,
+        @Query("deeplink_value") deeplinkValue: String?,
+    ): ApiResponse<CustomerOffersResponse>
 
     @GET("v1/product-instances/{product_instance_id}/offers")
     suspend fun getProductInstanceOffers(
