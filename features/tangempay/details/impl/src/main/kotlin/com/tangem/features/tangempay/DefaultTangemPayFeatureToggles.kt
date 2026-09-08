@@ -23,4 +23,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isBankOfframpEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16842_TANGEM_PAY_BANK_OFFRAMP_ENABLED)
+
+    override val isCustomCardsCobrandEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_17352_CUSTOM_CARDS_COBRAND_ENABLED)
 }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
@@ -44,12 +45,19 @@ internal data class MarketIndexCardUM(
 @Immutable
 internal data class MarketPulseUM(
     val title: TextReference,
-    val interval: TangemFilterItemUM,
+    val categoriesFilter: TangemFilterItemUM?,
+    val intervalMenu: MarketPulseIntervalUM,
     val categories: ImmutableList<MarketPulseCategoryUM>,
     val selectedCategoryIndex: Int,
     val onCategorySelect: (Int) -> Unit,
     val list: MarketPulseListUM,
     val onVisibleItemsChange: (List<String>) -> Unit,
+)
+
+@Immutable
+internal data class MarketPulseIntervalUM(
+    val selected: MarketPulseInterval,
+    val onOptionClick: (MarketPulseInterval) -> Unit,
 )
 
 @Immutable
