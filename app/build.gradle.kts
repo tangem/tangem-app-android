@@ -513,7 +513,6 @@ dependencies {
     androidTestImplementation(deps.kotlin.datetime)
     androidTestImplementation(deps.okHttp)
     androidTestImplementation(deps.jodatime)
-    androidTestImplementation(projects.domain.socialLogin)
     // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
     androidTestImplementation(deps.zxing.qrCore)
     kaptAndroidTest(deps.test.hilt.compiler)
