@@ -15,6 +15,11 @@ import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.createJointAccountInvitePreview
 import com.tangem.data.jointaccount.createJointAccountInvitePreviewDto
+import com.tangem.data.jointaccount.createSafeTx
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
+import com.tangem.store.datasource.jointaccount.models.JointOperationDto
+import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
@@ -59,6 +64,7 @@ internal class DefaultJointAccountRepositoryTest {
         invitesStore = invitesStore,
         converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
         previewConverter = JointAccountInvitePreviewDtoConverter(),
+        safeTxConverter = SafeTxConverter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -441,6 +447,108 @@ internal class DefaultJointAccountRepositoryTest {
         return ApiResponse.Error(cause = ApiResponseError.TimeoutException()) as ApiResponse<JointAccountDto>
     }
 
+    @Test
+    fun `GIVEN safe tx WHEN createOperation THEN the request carries it verbatim and Right is returned`() = runTest {
+        // Arrange
+        val bodySlot = slot<CreateJointOperationRequest>()
+        val safeTx = createSafeTx()
+        coEvery {
+            jointAccountApi.createJointOperation(walletId = WALLET_ID.stringValue, body = capture(bodySlot))
+        } returns ApiResponse.Success(createJointOperationDto())
+
+        // Act
+        val actual = repository.createOperation(
+            userWalletId = WALLET_ID,
+            safeAddress = SAFE_ADDRESS,
+            chainId = CHAIN_ID,
+            safeTx = safeTx,
+            signature = SIGNATURE,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(bodySlot.captured).isEqualTo(
+            CreateJointOperationRequest(
+                safeAddress = SAFE_ADDRESS,
+                chainId = CHAIN_ID,
+                safeTx = SafeTxConverter().convertBack(safeTx),
+                deadline = null,
+                signature = SIGNATURE,
+            ),
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideCreateErrorModels")
+    fun createOperationErrors(model: CreateErrorModel) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.createJointOperation(any(), any()) } returns operationErrorResponse(
+            code = model.code,
+            errorBody = model.errorBody,
+        )
+
+        // Act
+        val actual = repository.createOperation(
+            userWalletId = WALLET_ID,
+            safeAddress = SAFE_ADDRESS,
+            chainId = CHAIN_ID,
+            safeTx = createSafeTx(),
+            signature = SIGNATURE,
+        )
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(model.expected)
+    }
+
+    internal data class CreateErrorModel(
+        val code: ApiResponseError.HttpException.Code,
+        val errorBody: String?,
+        val expected: Class<out JointOperationCreateError>,
+    )
+
+    private fun provideCreateErrorModels() = listOf(
+        CreateErrorModel(
+            code = ApiResponseError.HttpException.Code.CONFLICT,
+            errorBody = null,
+            expected = JointOperationCreateError.SlotBusy::class.java,
+        ),
+        CreateErrorModel(
+            code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+            errorBody = """{"error":"NONCE_MISMATCH"}""",
+            expected = JointOperationCreateError.NetworkStateMoved::class.java,
+        ),
+        CreateErrorModel(
+            code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+            errorBody = """{"error":"bad payload"}""",
+            expected = JointOperationCreateError.Failed::class.java,
+        ),
+        CreateErrorModel(
+            code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
+            errorBody = null,
+            expected = JointOperationCreateError.Failed::class.java,
+        ),
+    )
+
+    private fun createJointOperationDto() = JointOperationDto(
+        operationId = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
+        chainId = CHAIN_ID,
+        safeTx = SafeTxConverter().convertBack(createSafeTx()),
+        status = "awaiting_signatures",
+        initiator = null,
+        deadline = null,
+        signatures = emptyList(),
+    )
+
+    private fun operationErrorResponse(
+        code: ApiResponseError.HttpException.Code,
+        errorBody: String?,
+    ): ApiResponse<JointOperationDto> {
+        val cause = ApiResponseError.HttpException(code = code, message = null, errorBody = errorBody)
+
+        @Suppress("UNCHECKED_CAST")
+        return ApiResponse.Error(cause = cause) as ApiResponse<JointOperationDto>
+    }
+
     private fun createPayload() = JointAccountCreationPayload(
         config = JointAccountConfig(
             name = " Family ",
@@ -494,6 +602,7 @@ internal class DefaultJointAccountRepositoryTest {
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
         const val SIGNATURE = "0xdeadbeef"
+        const val CHAIN_ID = 137L
         const val INVITE_A = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
         const val INVITE_B = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
     }
