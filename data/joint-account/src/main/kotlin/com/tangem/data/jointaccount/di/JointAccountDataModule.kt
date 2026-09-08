@@ -20,8 +20,10 @@ import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
+import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -69,6 +71,10 @@ internal interface JointAccountDataModule {
     fun bindJointAccountSupportedNetworksRepository(
         repository: DefaultJointAccountSupportedNetworksRepository,
     ): JointAccountSupportedNetworksRepository
+
+    @Binds
+    @Singleton
+    fun bindJointOperationSigner(signer: DefaultJointOperationSigner): JointOperationSigner
 
     companion object {
 
