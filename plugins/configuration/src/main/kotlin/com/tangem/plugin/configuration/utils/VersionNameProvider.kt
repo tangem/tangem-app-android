@@ -39,8 +39,8 @@ internal class VersionNameProvider(
             }
         }
 
-        // A 1.0.0 version disables every version-gated feature toggle, so the app under test stops
-        // resembling the shipping build — never let that pass unnoticed.
+        // The app strips the suffix before comparing, so this reads as 1.0.0 and disables every
+        // version-gated feature toggle — the build then stops resembling the shipping one.
         project.logger.warn(
             "Could not resolve a release version for branch '$currentBranch'; falling back to " +
                 "$FALLBACK_VERSION_NAME — all version-gated feature toggles will be DISABLED.",
