@@ -23,6 +23,7 @@ import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -113,6 +114,33 @@ internal class IntroductionCardScannerTest {
 
         // Assert
         assertThat(sentEvents.filterIsInstance<Basic.SignedIn>()).hasSize(1)
+        assertThat(isLeavingReported).isTrue()
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is already saved WHEN a card is scanned THEN it is unlocked by the scan and opened`() = runTest {
+        // Arrange
+        coEvery { saveWalletUseCase(any(), any(), any()) } returns
+            SaveWalletError.WalletAlreadySaved(messageId = 0).left()
+        coEvery { userWalletsListRepository.unlock(any(), any()) } returns Unit.right()
+        var isLeavingReported = false
+
+        // Act
+        scanner.scanAndOpenWallet(
+            analyticsSource = SOURCE,
+            onNavigatedAway = { isLeavingReported = true },
+            onFailed = { error("must not be called") },
+        )
+
+        // Assert
+        coVerify(exactly = 1) {
+            userWalletsListRepository.unlock(
+                userWalletId = userWallet.walletId,
+                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse = scanResponse, source = SOURCE),
+            )
+        }
+        assertThat(sentEvents).isEmpty()
         assertThat(isLeavingReported).isTrue()
         verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
     }

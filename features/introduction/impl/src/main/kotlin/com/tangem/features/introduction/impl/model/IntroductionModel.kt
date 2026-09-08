@@ -110,13 +110,8 @@ internal class IntroductionModel @Inject constructor(
 
     init {
         analyticsEventHandler.send(IntroductionProcess.ScreenOpened())
-
-        when (params.launchMode) {
-            // TODO [REDACTED_TASK_KEY]: start the card scan here and drop the WithCardScan exception in ChildFactory;
-            //  it needs the progress and error states the screen has no design for yet.
-            InitScreenLaunchMode.WithCardScan,
-            InitScreenLaunchMode.Standard,
-            -> Unit
+        if (params.launchMode == InitScreenLaunchMode.WithCardScan) {
+            launchCardScan(onNavigatedAway = {}, onFailed = {})
         }
     }
 
@@ -290,11 +285,14 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun scanCard(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
-        val analyticsSource = AnalyticsParam.ScreensSources.Intro
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(analyticsSource))
+        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
+        launchCardScan(onNavigatedAway = onNavigatedAway, onFailed = onFailed)
+    }
+
+    private fun launchCardScan(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
         modelScope.launch {
             cardScanner.scanAndOpenWallet(
-                analyticsSource = analyticsSource,
+                analyticsSource = AnalyticsParam.ScreensSources.Intro,
                 onNavigatedAway = onNavigatedAway,
                 onFailed = onFailed,
             )

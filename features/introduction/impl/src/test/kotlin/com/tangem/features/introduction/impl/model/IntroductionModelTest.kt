@@ -236,21 +236,86 @@ internal class IntroductionModelTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class LaunchMode {
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun launchMode(model: LaunchModeModel) {
+        @Test
+        fun `GIVEN an NFC launch WHEN model created THEN the scan starts without a tap being reported`() {
             // Act
-            val introductionModel = createModel(launchMode = model.launchMode)
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
 
-            // A canary meant to fail once [REDACTED_TASK_KEY] makes an NFC launch start the scan.
-            assertThat(introductionModel.uiState.value.renderedFields()).isEqualTo(SHUTTER_DOWN)
-            assertThat(sentEvents.map { it::class }).containsExactly(IntroductionProcess.ScreenOpened::class)
+            // Assert
+            coVerify(exactly = 1) {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = any(),
+                    onFailed = any(),
+                )
+            }
+            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(model.uiState.value.renderedFields()).isEqualTo(SHUTTER_DOWN)
         }
 
-        private fun provideTestModels() = listOf(
-            LaunchModeModel(InitScreenLaunchMode.Standard),
-            LaunchModeModel(InitScreenLaunchMode.WithCardScan),
-        )
+        @Test
+        fun `GIVEN a standard launch WHEN model created THEN no scan starts`() {
+            // Act
+            createModel(launchMode = InitScreenLaunchMode.Standard)
+
+            // Assert
+            coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
+            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+        }
+
+        @Test
+        fun `GIVEN an NFC launch WHEN the video is stopped and started again THEN the scan does not restart`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.setVideoRunning(false)
+            model.setVideoRunning(true)
+
+            // Assert
+            coVerify(exactly = 1) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the launch scan WHEN it fails THEN the viewer stays on the welcome screen without a sheet`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig).isNull()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the launch scan WHEN it leaves the screen THEN no sheet or story is touched`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.capturedScanCallbacks().onNavigatedAway()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig).isNull()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+        }
+
+        @Test
+        fun `GIVEN the launch scan is running WHEN create wallet clicked THEN the sheet opens as usual`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.uiState.value.onCreateWalletClick()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+        }
     }
 
     @Nested
@@ -1299,8 +1364,6 @@ internal class IntroductionModelTest {
     private fun IntroductionModel.closeHaveWalletSheet() {
         uiState.value.haveWalletBottomSheetConfig?.onDismissRequest?.invoke()
     }
-
-    internal data class LaunchModeModel(val launchMode: InitScreenLaunchMode)
 
     internal data class RunningModel(val isRunning: Boolean)
 
