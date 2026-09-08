@@ -98,6 +98,8 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
             size = AccountIconSize.Default,
             modifier = avatarModifier,
         )
+        // The raw modifier, not the pre-sized avatarModifier: AccountIcon sizes itself from ContactDefault (40dp),
+        // and an outer size() would pin that instead of following the design-system size.
         is CounterpartyAvatar.Contact -> AccountIcon(
             name = stringReference(avatar.name),
             icon = avatar.icon,
