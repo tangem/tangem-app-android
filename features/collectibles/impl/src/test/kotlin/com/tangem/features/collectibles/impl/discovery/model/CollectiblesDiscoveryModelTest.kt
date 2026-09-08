@@ -4,10 +4,10 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchAction
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchFlow
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchListState
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchingContext
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchFlow
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.domain.collectibles.models.CollectiblesError

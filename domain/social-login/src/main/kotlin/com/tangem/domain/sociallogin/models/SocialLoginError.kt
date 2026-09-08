@@ -9,6 +9,9 @@ sealed interface SocialLoginError {
     
     data class SignInFailed(val cause: Throwable? = null) : SocialLoginError
 
+    /** No provider account to sign in with — the way out is adding one, not retrying */
+    data object NoProviderAccount : SocialLoginError
+
     /** The provider cannot be used on this device — e.g. no Google services (FR-13) */
     data object ProviderUnavailable : SocialLoginError
 
