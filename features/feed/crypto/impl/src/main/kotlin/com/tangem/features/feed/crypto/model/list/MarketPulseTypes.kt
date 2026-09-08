@@ -1,6 +1,9 @@
 package com.tangem.features.feed.crypto.model.list
 
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.markets.TokenMarketListConfig
+import com.tangem.features.feed.crypto.impl.R
 
 /** Price-trend interval of the Market Pulse list. */
 internal enum class MarketPulseInterval {
@@ -15,6 +18,16 @@ internal enum class MarketPulseInterval {
             D7 -> TokenMarketListConfig.Interval.WEEK
             M1 -> TokenMarketListConfig.Interval.MONTH
         }
+    }
+
+    fun intervalTitle(): TextReference {
+        return resourceReference(
+            when (this) {
+                H24 -> R.string.markets_real_assets_interval_day
+                D7 -> R.string.markets_real_assets_interval_week
+                M1 -> R.string.markets_real_assets_interval_month
+            },
+        )
     }
 }
 
@@ -35,5 +48,17 @@ internal enum class MarketPulseCategory(val id: String) {
             TopGainers -> TokenMarketListConfig.Order.TopGainers
             TopLosers -> TokenMarketListConfig.Order.TopLosers
         }
+    }
+
+    fun categoryTitle(): TextReference {
+        return resourceReference(
+            when (this) {
+                MarketCap -> R.string.markets_sort_by_rating_title
+                TopGainers -> R.string.markets_sort_by_top_gainers_title
+                TopLosers -> R.string.markets_sort_by_top_losers_title
+                ExperiencedBuyers -> R.string.markets_sort_by_experienced_buyers_title
+                Trending -> R.string.markets_sort_by_trending_title
+            },
+        )
     }
 }
