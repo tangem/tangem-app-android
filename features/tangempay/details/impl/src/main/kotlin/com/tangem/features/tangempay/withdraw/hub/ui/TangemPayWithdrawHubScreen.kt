@@ -174,7 +174,8 @@ private class RecentsPreviewProvider : PreviewParameterProvider<RecentsUM> {
             onSeeAllClick = {},
         ),
         RecentsUM.Loading,
-        RecentsUM.Empty,
+        RecentsUM.Empty(onSeeAllClick = null),
+        RecentsUM.Empty(onSeeAllClick = {}),
         RecentsUM.Error(onRetryClick = {}),
     )
 }
