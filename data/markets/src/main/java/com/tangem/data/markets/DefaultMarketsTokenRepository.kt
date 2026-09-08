@@ -78,6 +78,7 @@ internal class DefaultMarketsTokenRepository(
                         showNetworks = request.params.shouldNetworks,
                         categoryId = request.params.categoryId,
                         sectorId = request.params.sectorId,
+                        geckoCategoryId = request.params.geckoCategoryId,
                     ).getOrThrow()
                 }
 
