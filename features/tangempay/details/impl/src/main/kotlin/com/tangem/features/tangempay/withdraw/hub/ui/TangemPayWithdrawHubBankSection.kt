@@ -90,7 +90,12 @@ private fun LazyListScope.recentsItems(recents: RecentsUM) {
                 radius = RecentsCardCornerRadius,
             )
         }
-        RecentsUM.Empty -> item(key = "recents_empty") { RecentsEmptyCard() }
+        is RecentsUM.Empty -> {
+            item(key = "recents_empty") { RecentsEmptyCard() }
+            recents.onSeeAllClick?.let { onSeeAllClick ->
+                item(key = "recents_see_all") { SeeAllCard(onClick = onSeeAllClick) }
+            }
+        }
         is RecentsUM.Error -> item(key = "recents_error") { RecentsErrorCard(onRetryClick = recents.onRetryClick) }
         is RecentsUM.Content -> {
             items(items = recents.recipients, key = { it.id }) { recipient ->
