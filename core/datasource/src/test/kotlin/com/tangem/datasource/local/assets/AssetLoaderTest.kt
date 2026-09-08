@@ -9,7 +9,6 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.local.assets.load
 import com.tangem.core.local.assets.loadList
 import com.tangem.core.local.assets.loadMap
-import com.tangem.grow.datasource.express.models.response.Asset
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
@@ -125,4 +124,11 @@ class AssetLoaderTest {
             }
         """.trimIndent()
     }
+
+    private data class Asset(
+        val contractAddress: String,
+        val network: String,
+        val exchangeAvailable: Boolean,
+        val onrampAvailable: Boolean,
+    )
 }
