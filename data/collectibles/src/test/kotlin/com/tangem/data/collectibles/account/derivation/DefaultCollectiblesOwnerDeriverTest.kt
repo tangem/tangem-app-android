@@ -1,4 +1,4 @@
-package com.tangem.data.collectibles.derivation
+package com.tangem.data.collectibles.account.derivation
 
 import arrow.core.left
 import arrow.core.right
@@ -9,8 +9,9 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.collectibles.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
-import com.tangem.domain.collectibles.derivation.CollectiblesDerivationError
+import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
+import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -54,8 +55,8 @@ internal class DefaultCollectiblesOwnerDeriverTest {
     private val userWalletId = UserWalletId("011")
     private val path = DerivationPath(rawPath = COLLECTIBLES_OWNER_DERIVATION_PATH)
     private val seedKey = "02AABB".hexToBytes()
-    private val seedKeyBAK = ByteArrayKey(seedKey)
-    private val derivations = mapOf(seedKeyBAK to listOf(path))
+    private val wrappedSeedKey = ByteArrayKey(seedKey)
+    private val derivations = mapOf(wrappedSeedKey to listOf(path))
 
     private val knownKey = ExtendedPublicKey(
         publicKey = "3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29".hexToBytes(),
@@ -117,7 +118,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
     fun `GIVEN derived key already stored WHEN deriveOwner THEN returns owner without deriving`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
             ExtendedPublicKeysMap(mapOf(path to knownKey))
 
         // Act
@@ -132,10 +133,10 @@ internal class DefaultCollectiblesOwnerDeriverTest {
     fun `GIVEN cold wallet without cache WHEN deriveOwner THEN derives via repository and returns owner`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
             ExtendedPublicKeysMap(emptyMap())
         coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } returns
-            mapOf(seedKeyBAK to ExtendedPublicKeysMap(mapOf(path to knownKey)))
+            mapOf(wrappedSeedKey to ExtendedPublicKeysMap(mapOf(path to knownKey)))
 
         // Act
         val result = deriver.deriveOwner(userWalletId)
@@ -149,10 +150,10 @@ internal class DefaultCollectiblesOwnerDeriverTest {
     fun `GIVEN hot wallet without cache WHEN deriveOwner THEN derives via repository and returns owner`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
             ExtendedPublicKeysMap(emptyMap())
         coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } returns
-            mapOf(seedKeyBAK to ExtendedPublicKeysMap(mapOf(path to knownKey)))
+            mapOf(wrappedSeedKey to ExtendedPublicKeysMap(mapOf(path to knownKey)))
 
         // Act
         val result = deriver.deriveOwner(userWalletId)
@@ -163,7 +164,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
     }
 
     @Test
-    fun `GIVEN cold firmware without HD WHEN deriveOwner THEN returns DerivationUnsupported`() = runTest {
+    fun `GIVEN cold firmware without HD WHEN deriveOwner THEN returns WalletUnavailable`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet(firmwareSupportsHd = false)
 
@@ -171,12 +172,12 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(CollectiblesDerivationError.DerivationUnsupported.left())
+        assertThat(result).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left())
         coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
     }
 
     @Test
-    fun `GIVEN cold wallet without Solana key WHEN deriveOwner THEN returns MissingWallet`() = runTest {
+    fun `GIVEN cold wallet without Solana key WHEN deriveOwner THEN returns WalletUnavailable`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet(hasEdWallet = false)
 
@@ -184,12 +185,12 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(CollectiblesDerivationError.MissingWallet.left())
+        assertThat(result).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left())
         coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
     }
 
     @Test
-    fun `GIVEN hot wallet without Solana key WHEN deriveOwner THEN returns MissingWallet`() = runTest {
+    fun `GIVEN hot wallet without Solana key WHEN deriveOwner THEN returns WalletUnavailable`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet(hasEdWallet = false)
 
@@ -197,15 +198,15 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(CollectiblesDerivationError.MissingWallet.left())
+        assertThat(result).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left())
         coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
     }
 
     @Test
-    fun `GIVEN derivation returns no key for the path WHEN deriveOwner THEN returns Unknown`() = runTest {
+    fun `GIVEN derivation returns no key for the path WHEN deriveOwner THEN returns Unexpected`() = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
             ExtendedPublicKeysMap(emptyMap())
         coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } returns emptyMap()
 
@@ -213,9 +214,9 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        val error = result.leftOrNull()
-        assertThat(error).isInstanceOf(CollectiblesDerivationError.Unknown::class.java)
-        assertThat((error as CollectiblesDerivationError.Unknown).cause)
+        val error = (result.leftOrNull() as CollectiblesAccountError.Vault).error
+        assertThat(error).isInstanceOf(GachaVaultError.Unexpected::class.java)
+        assertThat((error as GachaVaultError.Unexpected).cause)
             .hasMessageThat()
             .isEqualTo("No key derived for $COLLECTIBLES_OWNER_DERIVATION_PATH")
     }
@@ -225,7 +226,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
     fun `GIVEN derivation throws WHEN deriveOwner THEN maps the throwable`(model: DerivationFailureModel) = runTest {
         // Arrange
         every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet()
-        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+        coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
             ExtendedPublicKeysMap(emptyMap())
         coEvery { derivationsRepository.derivePublicKeys(userWalletId, derivations) } throws model.throwable
 
@@ -233,11 +234,11 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(model.expected(model.throwable).left())
+        assertThat(result).isEqualTo(model.expected.left())
     }
 
     @Test
-    fun `GIVEN the wallet is missing WHEN deriveOwner THEN returns Unknown`() = runTest {
+    fun `GIVEN the wallet is missing WHEN deriveOwner THEN returns Unexpected`() = runTest {
         // Arrange
         val throwable = IllegalStateException("UserWallet $userWalletId not found")
         every { userWalletsListRepository.getSyncStrict(userWalletId) } throws throwable
@@ -246,7 +247,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         val result = deriver.deriveOwner(userWalletId)
 
         // Assert
-        assertThat(result).isEqualTo(CollectiblesDerivationError.Unknown(cause = throwable).left())
+        assertThat(result).isEqualTo(CollectiblesAccountError.Vault(GachaVaultError.Unexpected(cause = throwable)).left())
     }
 
     @Nested
@@ -257,7 +258,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         fun `GIVEN the key is stored WHEN storedOwner THEN returns the owner without deriving`() = runTest {
             // Arrange
             every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns coldWallet()
-            coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+            coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
                 ExtendedPublicKeysMap(mapOf(path to knownKey))
 
             // Act
@@ -273,7 +274,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
             runTest {
                 // Arrange
                 every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns coldWallet()
-                coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+                coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } returns
                     ExtendedPublicKeysMap(emptyMap())
 
                 // Act
@@ -295,7 +296,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
 
                 // Assert
                 assertThat(result).isNull()
-                coVerify(exactly = 0) { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) }
+                coVerify(exactly = 0) { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) }
                 coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
             }
 
@@ -316,7 +317,7 @@ internal class DefaultCollectiblesOwnerDeriverTest {
         fun `GIVEN derivations lookup throws WHEN storedOwner THEN returns null`() = runTest {
             // Arrange
             every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns coldWallet()
-            coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } throws
+            coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, wrappedSeedKey) } throws
                 TangemSdkError.MissingPreflightRead()
 
             // Act
@@ -329,15 +330,26 @@ internal class DefaultCollectiblesOwnerDeriverTest {
 
     internal data class DerivationFailureModel(
         val throwable: Throwable,
-        val expected: (Throwable) -> CollectiblesDerivationError,
+        val expected: CollectiblesAccountError,
     )
 
-    private fun provideTestModels() = listOf(
-        DerivationFailureModel(TangemSdkError.UserCancelled()) { CollectiblesDerivationError.UserCancelled },
-        DerivationFailureModel(TangemSdkError.WalletNotFound()) { CollectiblesDerivationError.MissingWallet },
-        DerivationFailureModel(TangemSdkError.MissingPreflightRead()) {
-            CollectiblesDerivationError.CardError(cause = it)
-        },
-        DerivationFailureModel(IllegalStateException("boom")) { CollectiblesDerivationError.Unknown(cause = it) },
-    )
+    private fun provideTestModels(): List<DerivationFailureModel> {
+        val cardError = TangemSdkError.MissingPreflightRead()
+        val unknown = IllegalStateException("boom")
+
+        return listOf(
+            DerivationFailureModel(
+                throwable = TangemSdkError.UserCancelled(),
+                expected = CollectiblesAccountError.Cancelled,
+            ),
+            DerivationFailureModel(
+                throwable = cardError,
+                expected = CollectiblesAccountError.CardError(code = cardError.code, message = cardError.customMessage),
+            ),
+            DerivationFailureModel(
+                throwable = unknown,
+                expected = CollectiblesAccountError.Vault(GachaVaultError.Unexpected(cause = unknown)),
+            ),
+        )
+    }
 }
