@@ -377,7 +377,12 @@ internal class SwapModel @Inject constructor(
 
     internal val approvalSelectorCallback = object : SelectApprovalTypeComponent.Callback {
         override fun onApproveTypeSelected(spenderAddress: String, approveType: ApproveType) {
-            val (swapState, permission) = dataState.lastLoadedSwapStates.firstNotNullOfOrNull { (provider, state) ->
+            dataState = dataState.copy(
+                selectedApproveTypes = dataState.selectedApproveTypes + (spenderAddress to approveType),
+            )
+            approvalSlotNavigation.dismiss()
+
+            val (swapState, permission) = dataState.lastLoadedSwapStates.firstNotNullOfOrNull { (_, state) ->
                 if (state !is SwapState.QuotesLoadedState) return@firstNotNullOfOrNull null
                 val permissionState = state.permissionState
 
@@ -390,10 +395,8 @@ internal class SwapModel @Inject constructor(
                 }
             } ?: return
 
-            if (permission.type == approveType) {
-                approvalSlotNavigation.dismiss()
-                return
-            }
+            if (permission.type == approveType) return
+
             dataState = dataState.copy(
                 lastLoadedSwapStates = dataState.lastLoadedSwapStates.toMutableMap().apply {
                     put(
@@ -402,7 +405,6 @@ internal class SwapModel @Inject constructor(
                     )
                 },
             )
-            approvalSlotNavigation.dismiss()
             modelScope.launch {
                 feeSelectorRepository.state.value = FeeSelectorUM.Loading
                 feeSelectorReloadTrigger.triggerLoadingState()
@@ -1189,9 +1191,10 @@ internal class SwapModel @Inject constructor(
                     )
 
                     if (providersState.isNotEmpty()) {
+                        val restoredStates = providersState.withRememberedApproveTypes()
                         val (provider, state) = applyDeeplinkProviderOverride(
-                            selected = updateLoadedQuotes(providersState),
-                            loadedStates = providersState,
+                            selected = updateLoadedQuotes(restoredStates),
+                            loadedStates = restoredStates,
                         )
 
                         if (feeSelectorRepository.state.value is FeeSelectorUM.Content &&
@@ -1451,6 +1454,27 @@ internal class SwapModel @Inject constructor(
         if (override == null) return selected
         dataState = dataState.copy(selectedProvider = override)
         return override to (loadedStates[override] ?: selected.second)
+    }
+
+    /**
+     * Re-applies the approval types the user picked ([SwapProcessDataState.selectedApproveTypes]) to
+     * freshly loaded quotes.
+     */
+    internal fun Map<SwapProvider, SwapState>.withRememberedApproveTypes(): Map<SwapProvider, SwapState> {
+        val rememberedTypes = dataState.selectedApproveTypes
+        if (rememberedTypes.isEmpty()) return this
+
+        return mapValues { (_, state) ->
+            val permission = (state as? SwapState.QuotesLoadedState)?.permissionState
+            if (permission !is PermissionDataState.PermissionSettings) return@mapValues state
+
+            val remembered = rememberedTypes[permission.spenderAddress]
+            if (remembered == null || remembered == permission.type) {
+                state
+            } else {
+                state.copy(permissionState = permission.copy(type = remembered))
+            }
+        }
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {

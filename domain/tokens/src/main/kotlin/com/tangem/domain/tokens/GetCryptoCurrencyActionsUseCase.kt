@@ -68,14 +68,18 @@ class GetCryptoCurrencyActionsUseCase(
     ): Flow<TokenActionsState> {
         return when {
             cryptoCurrencyStatus.currency.network.derivationPath is Network.DerivationPath.Joint -> {
-                flow {
-                    val actions = jointAccountActionsFactory.create(
-                        userWallet = userWallet,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        yieldSupplyAvailability = yieldSupplyAvailability,
-                    )
-                    emit(actions)
-                }
+                getStakingAvailabilityFlow(
+                    userWalletId = userWallet.walletId,
+                    currency = cryptoCurrencyStatus.currency,
+                )
+                    .mapLatest { stakingAvailability ->
+                        jointAccountActionsFactory.create(
+                            userWallet = userWallet,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            stakingAvailability = stakingAvailability,
+                            yieldSupplyAvailability = yieldSupplyAvailability,
+                        )
+                    }
             }
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation -> {
                 flowOf(value = MissedDerivationsActionsFactory.create())

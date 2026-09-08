@@ -35,7 +35,7 @@ class GetPolymarketDepositTargetInteractor(
         }
 
     private companion object {
-        const val POLYGON_CHAIN_ID = 137L
+        const val POLYGON_CHAIN_ID = "137"
         const val COLLATERAL_SYMBOL = "USDC"
     }
 }

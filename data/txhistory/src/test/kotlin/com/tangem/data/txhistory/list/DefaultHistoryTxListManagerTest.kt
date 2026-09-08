@@ -206,6 +206,34 @@ internal class DefaultHistoryTxListManagerTest {
     }
 
     @Test
+    fun `GIVEN express lookup throws WHEN loading THEN on-chain content still loads and exception reported`() = runTest {
+        // Arrange: BSDK source resolves fine, the express asset lookup blows up instead of returning Either.
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
+            mockk<AccountCryptoCurrencyStatus>().some()
+        coEvery { expressServiceFetcher.getOrFetch(any(), any()) } throws RuntimeException("express boom")
+        every { bsdk.history() } returns flowOf(content())
+
+        // Act
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler))
+        val manager = createManager(scope)
+        val states = getEmittedValues(manager.state)
+        val sources = getEmittedValues(manager.historySources)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(states).containsExactly(HistoryState.Loading, content()).inOrder()
+        assertThat(sources).containsExactly(
+            HistorySources(
+                onChainSource = OnChainSource.BSDK,
+                isExchangeAvailable = false,
+                isOnrampAvailable = false,
+            ),
+        )
+        verify(exactly = 1) { analyticsExceptionHandler.sendException(any()) }
+        scope.cancel()
+    }
+
+    @Test
     fun `GIVEN load fails WHEN retried from UI THEN Error then Loading then Content`() = runTest {
         // Arrange: first load throws (DataError), retry succeeds with a content page.
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns

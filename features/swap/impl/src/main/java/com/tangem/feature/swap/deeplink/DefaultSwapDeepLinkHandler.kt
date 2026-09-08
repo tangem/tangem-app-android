@@ -14,6 +14,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TO_TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TO_USER_ACCOUNT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TO_USER_WALLET_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
+import com.tangem.common.routing.utils.pushOrReplaceCurrent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCase
 import com.tangem.domain.exchange.RampStateManager
@@ -51,14 +52,17 @@ import kotlin.time.Duration.Companion.seconds
  * Handles the `tangem://swap` deep link.
  *
  * Toggle OFF ([SwapFeatureToggles.isSwapDeeplinkEnabled]) preserves the v1 behavior: a bare
- * [AppRoute.Swap] is pushed for the currently selected wallet, ignoring all query params.
+ * [AppRoute.Swap] is opened for the currently selected wallet, ignoring all query params.
  *
  * Toggle ON resolves a target wallet from the AI-MCP / broadcast wallet id params (see
  * [resolveTargetWalletId]), switching the selected wallet if needed, then resolves concrete
  * FROM/TO tokens from the wallet's accounts (or leaves them null to let the model degrade — see
  * [resolveToken]), gates inconsistent inputs to a bare Main route, applies `from_amount` only for a
  * fully-resolved explicit pair, and pre-checks `provider_id` against the resolved pair's providers
- * (see [findPairProviderIds]) before pushing the final [AppRoute.Swap].
+ * (see [findPairProviderIds]) before opening the final [AppRoute.Swap].
+ *
+ * Every route is opened via [openSwap], which replaces an already opened swap screen rather than stacking
+ * over it, so re-opening the deeplink lands on a single swap screen instead of failing the navigation.
  */
 @Suppress("LongParameterList")
 internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
@@ -190,7 +194,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     }
 
     private fun navigateToSwap(userWalletId: UserWalletId) {
-        router.push(
+        openSwap(
             AppRoute.Swap(
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.Main.value,
@@ -199,11 +203,25 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
     }
 
     /**
+     * Opens [route] in place of an already opened swap screen (see [pushOrReplaceCurrent]), unless the current
+     * one backs an account top-up / withdraw flow: that is a different flow which merely reuses
+     * [AppRoute.Swap], so it is stacked over rather than closed.
+     */
+    private fun openSwap(route: AppRoute.Swap) {
+        val currentRoute = router.stack.lastOrNull()
+        if (currentRoute is AppRoute.Swap && currentRoute.accountFlow != null) {
+            router.push(route)
+        } else {
+            router.pushOrReplaceCurrent(route)
+        }
+    }
+
+    /**
      * Resolves FROM/TO concrete tokens from [targetWalletId]'s accounts (or leaves them `null` to let
      * the model degrade), gates inconsistent inputs to a bare Main [AppRoute.Swap], applies
      * `from_amount` only when both FROM and TO are explicitly requested AND both resolve to concrete
      * tokens, pre-checks `provider_id` against the resolved pair's providers when a concrete pair
-     * exists (unavailable -> Main, best-effort dropped otherwise), and pushes the resulting
+     * exists (unavailable -> Main, best-effort dropped otherwise), and opens the resulting
      * [AppRoute.Swap].
      */
     private suspend fun resolveTokensAndNavigate(targetWalletId: UserWalletId) {
@@ -254,7 +272,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
             null
         }
 
-        router.push(
+        openSwap(
             AppRoute.Swap(
                 userWalletId = targetWalletId,
                 fromCryptoCurrency = from?.currency,

@@ -370,11 +370,13 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideReissuePlasticCardUseCase(
             customerOrderRepository: CustomerOrderRepository,
+            reissueCardRepository: TangemPayReissueCardRepository,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
             appCoroutineScope: AppCoroutineScope,
         ): ReissuePlasticCardUseCase {
             return ReissuePlasticCardUseCase(
                 customerOrderRepository = customerOrderRepository,
+                reissueCardRepository = reissueCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
             )

@@ -868,9 +868,11 @@ class AppTransfersTest : BaseTestCase() {
                 chooseIdenticalReceiveToken(tokenName = token, receiveAccountName = receiveAccountName)
             }
             // Withdraw-entry swap keeps recalculating — use flakySafely rather than assertTransferReady's waitUntil.
+            // The account flow keeps the 'Withdraw' app-bar title, and with no amount entered the Transfer
+            // button is still disabled, so its label is the only Transfer-mode marker on screen.
             step("Assert Transfer mode is ready") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) {
-                    onSwapTokenScreen { transferTitle.assertIsDisplayed() }
+                    onSwapTokenScreen { transferButtonText.assertIsDisplayed() }
                 }
                 onSwapTokenScreen { providersBlock.assertIsNotDisplayed() }
             }

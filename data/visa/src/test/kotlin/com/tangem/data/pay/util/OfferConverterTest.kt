@@ -5,6 +5,7 @@ import com.tangem.spend.datasource.pay.models.response.CustomerOffersResponse
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.plasticOffer
+import com.tangem.domain.pay.model.plasticReissueOffer
 import com.tangem.domain.pay.model.virtualOffer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -41,6 +42,44 @@ internal class OfferConverterTest {
         // Assert
         assertThat(Offer.Type.CARD_ISSUE_PLASTIC_RAIN.wireValue).isEqualTo("CARD_ISSUE_PLASTIC_RAIN")
         assertThat(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN.wireValue).isEqualTo("CARD_ISSUE_VIRTUAL_RAIN")
+        assertThat(Offer.Type.CARD_REISSUE_PLASTIC_RAIN.wireValue).isEqualTo("CARD_REISSUE_PLASTIC_RAIN")
+    }
+
+    @Test
+    fun `GIVEN reissue type WHEN convert THEN offer is a plastic reissue and not a plastic issue`() {
+        // Act
+        val actual = OfferConverter.convert(createResponseOffer(type = "CARD_REISSUE_PLASTIC_RAIN"))
+
+        // Assert
+        assertThat(actual.type).isEqualTo(Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
+        assertThat(actual.isPlasticReissue).isTrue()
+        assertThat(actual.isPlastic).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a list with a reissue offer WHEN plasticReissueOffer THEN it is picked`() {
+        // Arrange
+        val offers = OfferConverter.convertList(
+            listOf(
+                createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN"),
+                createResponseOffer(type = "CARD_REISSUE_PLASTIC_RAIN"),
+            ),
+        )
+
+        // Act
+        val actual = offers.plasticReissueOffer()
+
+        // Assert
+        assertThat(actual?.isPlasticReissue).isTrue()
+    }
+
+    @Test
+    fun `GIVEN list without a reissue offer WHEN plasticReissueOffer THEN returns null`() {
+        // Arrange
+        val offers = OfferConverter.convertList(listOf(createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN")))
+
+        // Assert
+        assertThat(offers.plasticReissueOffer()).isNull()
     }
 
     @Test
@@ -211,6 +250,26 @@ internal class OfferConverterTest {
             ),
         ),
         ConvertModel(
+            name = "reissue offer has no spec name and carries fee and delivery eta",
+            response = createResponseOffer(
+                type = "CARD_REISSUE_PLASTIC_RAIN",
+                amount = "10.00",
+                specificationName = null,
+                orderType = "CARD_REISSUE_PLASTIC_RAIN",
+                deliveryEtaMinDays = 3,
+                deliveryEtaMaxDays = 20,
+            ),
+            expected = Offer(
+                type = Offer.Type.CARD_REISSUE_PLASTIC_RAIN,
+                fee = Offer.Fee(amount = BigDecimal("10.00"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(
+                    specificationName = null,
+                    orderType = OrderType.CARD_REISSUE_PLASTIC_RAIN,
+                    deliveryEta = Offer.DeliveryEta(minBusinessDays = 3, maxBusinessDays = 20),
+                ),
+            ),
+        ),
+        ConvertModel(
             name = "unknown type -> Type.UNKNOWN",
             response = createResponseOffer(type = "SOMETHING_NEW"),
             expected = Offer(
@@ -301,7 +360,7 @@ internal class OfferConverterTest {
             type: String = "CARD_ISSUE_VIRTUAL_RAIN",
             amount: String = "1.00",
             currency: String = "USD",
-            specificationName: String = "SP_000004",
+            specificationName: String? = "SP_000004",
             orderType: String = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
             deliveryEtaMinDays: Int? = null,
             deliveryEtaMaxDays: Int? = null,

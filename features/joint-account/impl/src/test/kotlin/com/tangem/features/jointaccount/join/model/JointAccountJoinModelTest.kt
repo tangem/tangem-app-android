@@ -5,7 +5,9 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -13,6 +15,7 @@ import com.tangem.domain.jointaccount.model.JointAccountJoinError
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -30,11 +33,13 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointAccountJoinModelTest {
 
     private val joinUseCase: JoinJointAccountUseCase = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(joinUseCase, uiMessageSender)
+        clearMocks(joinUseCase, singleAccountListSupplier, uiMessageSender)
+        coEvery { singleAccountListSupplier.getSyncOrNull(USER_WALLET_ID) } returns MockAccounts.onlyMainAccount
     }
 
     @Test
@@ -56,6 +61,42 @@ internal class JointAccountJoinModelTest {
         assertThat(message.captured.message)
             .isEqualTo(resourceReference(CoreUiR.string.account_create_success_message))
         assertThat(message.captured.startIconId).isEqualTo(CoreUiR.drawable.ic_success_20)
+    }
+
+    @Test
+    fun `GIVEN 20 active joint accounts WHEN join THEN the limit dialog is shown and nothing is signed`() = runTest {
+        // Arrange
+        val model = createModelWithDraft()
+        coEvery {
+            singleAccountListSupplier.getSyncOrNull(USER_WALLET_ID)
+        } returns MockAccounts.fullJointAccountList
+
+        // Act
+        val action = model.join(inviteId = INVITE_ID, memberName = NAME)
+
+        // Assert
+        assertThat(action).isEqualTo(JoinResultAction.None)
+        coVerify(exactly = 0) { joinUseCase(any(), any(), any(), any()) }
+        val message = slot<DialogMessage>()
+        verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+        assertThat(message.captured.title).isEqualTo(resourceReference(CoreUiR.string.account_add_limit_dialog_title))
+    }
+
+    @Test
+    fun `GIVEN no cached account list WHEN join THEN the limit does not block the join`() = runTest {
+        // Arrange
+        val model = createModelWithDraft()
+        coEvery { singleAccountListSupplier.getSyncOrNull(USER_WALLET_ID) } returns null
+        coEvery {
+            joinUseCase(userWalletId = any(), inviteId = any(), config = any(), memberName = any())
+        } returns joinedAccount.right()
+
+        // Act
+        val action = model.join(inviteId = INVITE_ID, memberName = NAME)
+
+        // Assert
+        assertThat(action).isEqualTo(JoinResultAction.CloseFlow)
+        coVerify(exactly = 1) { joinUseCase(any(), any(), any(), any()) }
     }
 
     @Test
@@ -131,6 +172,7 @@ internal class JointAccountJoinModelTest {
     private fun createModel(): JointAccountJoinModel = JointAccountJoinModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
         joinJointAccountUseCase = joinUseCase,
+        singleAccountListSupplier = singleAccountListSupplier,
         uiMessageSender = uiMessageSender,
     )
 

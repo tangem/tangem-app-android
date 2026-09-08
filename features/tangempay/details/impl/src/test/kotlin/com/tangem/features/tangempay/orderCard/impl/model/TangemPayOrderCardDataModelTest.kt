@@ -66,6 +66,7 @@ private const val SOURCE_CARD_ID = "card_source_0001"
 private const val SOURCE_CARD_EMBOSS_NAME = "V ARASAKA"
 private val REISSUE_INTENT = TangemPayOrderCardIntent.ReissuePlastic(
     sourceProductInstanceId = SOURCE_PRODUCT_INSTANCE_ID,
+    sourceCardId = SOURCE_CARD_ID,
     deliveryEtaMaxBusinessDays = 20,
 )
 
@@ -96,9 +97,9 @@ internal class TangemPayOrderCardDataModelTest {
             submittedKeys += thirdArg<String>()
             createdOrder().right()
         }
-        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } coAnswers {
-            submitted = thirdArg()
-            submittedKeys += arg<String>(n = 3)
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any(), any()) } coAnswers {
+            submitted = arg(n = 3)
+            submittedKeys += arg<String>(n = 4)
             createdOrder(productInstanceId = REISSUED_PRODUCT_INSTANCE_ID).right()
         }
     }
@@ -521,20 +522,20 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         coVerify(exactly = 1) {
-            reissuePlasticCard(userWalletId, SOURCE_PRODUCT_INSTANCE_ID, any(), any())
+            reissuePlasticCard(userWalletId, SOURCE_PRODUCT_INSTANCE_ID, SOURCE_CARD_ID, any(), any())
         }
         coVerify(exactly = 0) { issuePlasticCard(any(), any(), any()) }
         assertThat(acceptedEmail).isEqualTo(EMAIL)
     }
 
     @Test
-    fun `GIVEN the reissue intent WHEN the form loads THEN the emboss name is taken from the source card`() = runTest {
+    fun `GIVEN the reissue intent WHEN the form loads THEN the emboss name is prefilled and editable`() = runTest {
         // Act
         val model = createLoadedModel(intent = REISSUE_INTENT)
 
         // Assert
         assertThat(model.form.embossName.value).isEqualTo(SOURCE_CARD_EMBOSS_NAME)
-        assertThat(model.form.embossName.isEditable).isFalse()
+        assertThat(model.form.embossName.isEditable).isTrue()
     }
 
     @Test
@@ -548,18 +549,47 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     @Test
-    fun `GIVEN a source card without an emboss name WHEN the address is filled THEN order is enabled`() = runTest {
+    fun `GIVEN a source card without an emboss name WHEN the address is filled THEN order stays disabled`() =
+        runTest {
+            // Arrange
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+                customerInfo(sourceCardEmbossName = null).right()
+            val model = createLoadedModel(intent = REISSUE_INTENT)
+
+            // Act
+            model.fillValidForm(embossName = null)
+
+            // Assert
+            assertThat(model.form.embossName.value).isEmpty()
+            assertThat(model.form.isOrderEnabled).isFalse()
+        }
+
+    @Test
+    fun `GIVEN a source card without an emboss name WHEN a name is typed THEN order is enabled`() = runTest {
         // Arrange
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
             customerInfo(sourceCardEmbossName = null).right()
         val model = createLoadedModel(intent = REISSUE_INTENT)
 
         // Act
-        model.fillValidForm()
+        model.fillValidForm(embossName = "V ARASAKA")
 
         // Assert
-        assertThat(model.form.embossName.value).isEmpty()
         assertThat(model.form.isOrderEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the reissue intent WHEN the prefilled name is edited THEN the edited name is submitted`() = runTest {
+        // Arrange
+        val model = createLoadedModel(intent = REISSUE_INTENT)
+        model.fillValidForm(embossName = "JOHNNY SILVERHAND")
+
+        // Act
+        model.form.onOrderClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(submitted?.embossName).isEqualTo("JOHNNY SILVERHAND")
     }
 
     @Test
@@ -567,7 +597,7 @@ internal class TangemPayOrderCardDataModelTest {
         runTest {
             // Arrange
             val model = createLoadedModel(intent = REISSUE_INTENT)
-            model.fillValidForm()
+            model.fillValidForm(embossName = null)
 
             // Act
             model.form.onOrderClick()
@@ -594,7 +624,7 @@ internal class TangemPayOrderCardDataModelTest {
     @Test
     fun `GIVEN the reissue intent WHEN submit fails THEN nothing is accepted and the form stays editable`() = runTest {
         // Arrange
-        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } returns
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any(), any()) } returns
             VisaApiError.CardReissuePlasticActiveOrderExists.left()
         val model = createLoadedModel(intent = REISSUE_INTENT)
         model.fillValidForm()
@@ -622,7 +652,7 @@ internal class TangemPayOrderCardDataModelTest {
 
         // Assert
         coVerify(exactly = 1) { issuePlasticCard(userWalletId, any(), any()) }
-        coVerify(exactly = 0) { reissuePlasticCard(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { reissuePlasticCard(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -767,7 +797,7 @@ internal class TangemPayOrderCardDataModelTest {
         testModel: RejectionModel,
     ) = runTest {
         // Arrange
-        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } returns testModel.error.left()
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any(), any()) } returns testModel.error.left()
         val model = createLoadedModel(intent = REISSUE_INTENT)
         model.fillValidForm()
 
@@ -787,7 +817,7 @@ internal class TangemPayOrderCardDataModelTest {
         testModel: RejectionModel,
     ) = runTest {
         // Arrange
-        coEvery { reissuePlasticCard(userWalletId, any(), any(), any()) } returns testModel.error.left()
+        coEvery { reissuePlasticCard(userWalletId, any(), any(), any(), any()) } returns testModel.error.left()
         val model = createLoadedModel(intent = REISSUE_INTENT)
         model.fillValidForm()
         model.form.onOrderClick()
@@ -884,7 +914,7 @@ internal class TangemPayOrderCardDataModelTest {
     }
 
     private fun TangemPayOrderCardDataModel.fillValidForm(
-        embossName: String = "JOHNNY SILVERHAND",
+        embossName: String? = "JOHNNY SILVERHAND",
         firstName: String = "Johnny",
         lastName: String = "Silverhand",
         region: String = "California",
@@ -894,7 +924,7 @@ internal class TangemPayOrderCardDataModelTest {
         postalCode: String = "0000",
         phoneDigits: String = "2345678901",
     ) {
-        form.embossName.onValueChange(embossName)
+        embossName?.let(form.embossName.onValueChange)
         form.firstName.onValueChange(firstName)
         form.lastName.onValueChange(lastName)
         form.region.onValueChange(region)
@@ -1037,6 +1067,11 @@ internal class TangemPayOrderCardDataModelTest {
                 error = VisaApiError.CardReissuePlasticInvalidSourceCard,
                 title = R.string.tangempay_order_card_error_invalid_source_card,
             ),
+            RejectionModel(
+                error = VisaApiError.CardReissuePlasticInvalidEmbossName,
+                title = R.string.tangempay_order_card_error_invalid_emboss_name,
+                closesFlow = false,
+            ),
         )
 
         @JvmStatic
@@ -1044,6 +1079,11 @@ internal class TangemPayOrderCardDataModelTest {
             RejectionModel(
                 error = VisaApiError.CardIssueInvalidShippingAddress,
                 title = R.string.tangempay_order_card_error_invalid_address,
+                closesFlow = false,
+            ),
+            RejectionModel(
+                error = VisaApiError.CardIssueInvalidEmbossName,
+                title = R.string.tangempay_order_card_error_invalid_emboss_name,
                 closesFlow = false,
             ),
             RejectionModel(

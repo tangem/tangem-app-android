@@ -608,7 +608,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升級方案</string>
   <string name="tangempay_maximum_cards_issued_title">已達最大發卡數量</string>
   <string name="tangempay_multichain_show_qr">顯示 QR 碼</string>
-  <string name="tangempay_multinetwork">美元</string>
+  <string name="tangempay_multinetwork">多網絡</string>
   <string name="tangempay_newonboard_Q1_body">使用任何網路的 USDT 或 USDC 為您的支付帳戶加值，零手續費。在 Ethereum、Base、Polygon、BSC 和 Arbitrum 網路上，還可享有 1:1 匯率。</string>
   <string name="tangempay_newonboard_Q1_title">我可以使用哪些加密資產消費？</string>
   <string name="tangempay_newonboard_Q2_body">是的，使用受監管的 Visa 卡須完成身分驗證。身分驗證由我們的合規合作夥伴 Sumsub 提供。</string>

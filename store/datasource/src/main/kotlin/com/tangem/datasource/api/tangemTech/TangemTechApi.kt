@@ -55,6 +55,7 @@ interface TangemTechApi {
     suspend fun saveTokens(
         @Path(value = "walletId") userId: String,
         @Body userTokens: UserTokensResponse,
+        @Header("If-Match") eTag: String? = null,
     ): ApiResponse<Unit>
 
     @GET("/api/v1/notification-preferences/{wallet_id}")

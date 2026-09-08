@@ -66,6 +66,7 @@ import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.model.SendModel
+import com.tangem.features.send.send.model.TronDefaultFeeLoader
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
 import io.mockk.*
@@ -209,8 +210,11 @@ internal abstract class SendModelTestBase {
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
-            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-            sendFeatureToggles = sendFeatureToggles,
+            tronDefaultFeeLoader = TronDefaultFeeLoader(
+                getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+                isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+                sendFeatureToggles = sendFeatureToggles,
+            ),
         )
     }
 

@@ -98,7 +98,7 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currenciesRepository.isNetworkFeeZero(any(), any()) } returns false
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns false
         every { sendFeatureToggles.isTronGaslessEnabled } returns false
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns false
     }
 
     @AfterEach
@@ -297,7 +297,7 @@ class GetCurrencyWarningsUseCaseTest {
             // Arrange
             givenTokenWithEmptyCoin()
             every { sendFeatureToggles.isTronGaslessEnabled } returns true
-            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
@@ -312,7 +312,7 @@ class GetCurrencyWarningsUseCaseTest {
             // Arrange
             givenTokenWithEmptyCoin()
             every { sendFeatureToggles.isTronGaslessEnabled } returns false
-            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+            coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns true
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
@@ -326,7 +326,7 @@ class GetCurrencyWarningsUseCaseTest {
         // Arrange
         givenTokenWithEmptyCoin()
         every { sendFeatureToggles.isTronGaslessEnabled } returns true
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returns false
 
         // Act
         val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
