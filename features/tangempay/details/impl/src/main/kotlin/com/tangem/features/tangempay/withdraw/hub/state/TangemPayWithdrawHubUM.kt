@@ -30,7 +30,7 @@ internal data class TangemPayWithdrawHubUM(
 
         data object Loading : RecentsUM
 
-        data object Empty : RecentsUM
+        data class Empty(val onSeeAllClick: (() -> Unit)?) : RecentsUM
 
         data class Error(val onRetryClick: () -> Unit) : RecentsUM
 
