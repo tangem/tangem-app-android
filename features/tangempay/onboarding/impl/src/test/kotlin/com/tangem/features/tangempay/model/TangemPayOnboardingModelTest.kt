@@ -233,10 +233,19 @@ internal class TangemPayOnboardingModelTest {
             analytics = analytics,
             router = router,
             repository = repository,
-            produceInitialDataUseCase = produceInitialDataUseCase,
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
+            onboardingStarter = TangemPayOnboardingStarter(
+                router = router,
+                uiMessageSender = mockk(relaxed = true),
+                repository = repository,
+                produceInitialDataUseCase = produceInitialDataUseCase,
+                getCustomerOffersUseCase = mockk(relaxed = true),
+                createHotWalletUseCase = mockk(relaxed = true),
+                isHotWalletCreationSupported = mockk(relaxed = true),
+                clearAppsFlyerDeeplinkUseCase = mockk(relaxed = true),
+                tangemPayFeatureToggles = tangemPayFeatureToggles,
+            ),
         )
     }
 

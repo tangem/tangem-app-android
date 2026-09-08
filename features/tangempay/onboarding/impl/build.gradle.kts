@@ -32,6 +32,7 @@ dependencies {
     /** Domain */
     api(projects.domain.common)
     api(projects.domain.hotWallet)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.visa)
     api(projects.domain.visa.models)
     api(projects.domain.wallets)
@@ -45,12 +46,14 @@ dependencies {
 
     /** Compose */
     api(deps.compose.foundation)
+    implementation(deps.compose.coil)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.decompose.ext.compose)
 
     /** AndroidX */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)
