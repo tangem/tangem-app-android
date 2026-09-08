@@ -16,6 +16,9 @@ import com.tangem.domain.models.StatusSource
  * backend. Free slots are `membersCount - members.size`
  * @property source          freshness of this data: [StatusSource.ACTUAL] right after a successful fetch,
  * [StatusSource.CACHE] when restored from persistence, [StatusSource.ONLY_CACHE] when a refresh failed
+ * @property inFlightOperations the account's non-terminal operations keyed by chain — at most one per network
+ * by the slot invariant. A busy key blocks creating another operation in that network; the key frees itself
+ * when the operation stops arriving from the backend
  */
 data class JointAccount(
     val cryptoAccountId: String,
@@ -25,6 +28,7 @@ data class JointAccount(
     val status: Status,
     val members: List<Member>,
     val source: StatusSource,
+    val inFlightOperations: Map<Long, JointOperation> = emptyMap(),
 ) {
 
     /**

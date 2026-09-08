@@ -5,6 +5,8 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
+import com.tangem.data.jointaccount.converter.JointOperationConverter
+import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
 import com.tangem.data.jointaccount.store.JointAccountsStore
@@ -40,7 +42,7 @@ internal class DefaultSingleJointAccountListFetcherTest {
         return DefaultSingleJointAccountListFetcher(
             jointAccountApi = jointAccountApi,
             store = store,
-            converter = JointAccountDtoConverter(),
+            converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
     }
