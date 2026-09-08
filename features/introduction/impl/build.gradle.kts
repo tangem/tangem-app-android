@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.socialLogin)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -72,4 +73,5 @@ dependencies {
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.serialization.core)
     testImplementation(projects.test.core)
+    testImplementation(projects.domain.wallets.models)
 }
