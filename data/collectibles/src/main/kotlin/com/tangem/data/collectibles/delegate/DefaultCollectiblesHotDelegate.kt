@@ -9,7 +9,6 @@ import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.common.card.EllipticCurve
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegateError
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.models.account.AccountId
 import com.tangem.hot.sdk.TangemHotSdk
@@ -27,6 +26,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.tangem.domain.collectibles.CollectiblesAccountError
 
 /**
  * Drives the hot SDK directly with [HotAuth.NoAuth] instead of going through
@@ -48,7 +48,7 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
         }
     }
 
-    override suspend fun provision(accountId: AccountId): Either<CollectiblesHotDelegateError, HotDelegatePublicKey> {
+    override suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, HotDelegatePublicKey> {
         return withContext(dispatchers.io) {
             lock.withLock {
                 val stored = store.get(accountId)
@@ -77,19 +77,16 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
                         .getOrThrow()
                 }.fold(
                     onSuccess = { it.right() },
-                    onFailure = { CollectiblesHotDelegateError.KeyCreationFailed(it).left() },
+                    onFailure = { CollectiblesAccountError.DelegateKeyCreationFailed(it).left() },
                 )
             }
         }
     }
 
-    override suspend fun sign(
-        accountId: AccountId,
-        message: ByteArray,
-    ): Either<CollectiblesHotDelegateError, ByteArray> {
+    override suspend fun sign(accountId: AccountId, message: ByteArray): Either<CollectiblesAccountError, ByteArray> {
         return withContext(dispatchers.io) {
             val record = store.get(accountId)
-                ?: return@withContext CollectiblesHotDelegateError.NotProvisioned.left()
+                ?: return@withContext CollectiblesAccountError.DelegateNotProvisioned.left()
 
             runSuspendCatching {
                 val signed = tangemHotSdk.signHashes(
@@ -105,7 +102,7 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
                     ?: error("Hot SDK returned no signature for $CURVE")
             }.fold(
                 onSuccess = { it.right() },
-                onFailure = { CollectiblesHotDelegateError.SigningFailed(it).left() },
+                onFailure = { CollectiblesAccountError.DelegateSigningFailed(it).left() },
             )
         }
     }

@@ -2137,7 +2137,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升级套餐</string>
   <string name="tangempay_maximum_cards_issued_title">最大发卡量</string>
   <string name="tangempay_multichain_show_qr">显示二维码</string>
-  <string name="tangempay_multinetwork">美元</string>
+  <string name="tangempay_multinetwork">多网络</string>
   <string name="tangempay_newonboard_Q1_body">使用任意网络的 USDT 或 USDC 为您的支付账户充值，零手续费。在 Ethereum、Base、Polygon、BSC 和 Arbitrum 网络上，还可享受 1:1 汇率。</string>
   <string name="tangempay_newonboard_Q1_title">我可以花哪些加密资产？</string>
   <string name="tangempay_newonboard_Q2_body">是的，使用受监管的 Visa 卡需完成身份验证。身份验证由我们的合规合作伙伴 Sumsub 提供。</string>
@@ -2322,14 +2322,13 @@
   <string name="token_details_unable_hide_alert_title">无法隐藏 %s</string>
   <string name="token_market_metrics_no_data">不适用</string>
   <string name="token_receive_show_qr_code_title">显示二维码</string>
-  <string name="token_summary_galaxy_score_description">Galaxy Score™ 将资产表现、市场情绪和社交活跃度综合为 0 至 100 的单一评分，反映资产的整体健康状况。\n\nGalaxy Score™ 越高，说明该资产的参与度越强、情绪越正面。\n\n判定标准：\n正面 ≧70\n中性 31–69\n负面 ≦30\n\n数据来源：lunarcrush.com\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score 将市场表现与社交媒体活跃度结合起来，生成一个0到100分的综合评分，反映资产的整体健康状况。来源：LunarCrush。</string>
   <string name="token_summary_go_to_swap_button">去交换</string>
-  <string name="token_summary_ma_cross_description">MA Cross（均线交叉）是一项技术分析指标，用于比较资产价格的 50 日与 200 日简单移动平均线，显示资产当前处于长期趋势之上还是之下。\n\n判定标准：\n正面：50 日均线高于 200 日均线超过 0.5%\n中性：两者相差在 0.5% 以内\n负面：50 日均线低于 200 日均线超过 0.5%\n\n请注意：\n指标基于美元价格数据计算。\n无论所选时间范围如何，均采用 1 天周期。\n显示的是 50 日均线高于或低于 200 日均线的百分比。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
-  <string name="token_summary_macd_description">MACD（指数平滑异同移动平均线）是一项技术分析指标，用于显示资产的动能正在增强还是减弱。\n\nMACD 柱状图 = MACD 线 − 信号线。MACD 线为价格的 12 周期与 26 周期指数移动平均线之差，信号线为 9 周期指数移动平均线。\n\n判定标准：\n正面：柱状图 &gt; 0 且上升，或刚刚上穿 0\n负面：柱状图 &lt; 0 且下降，或刚刚下穿 0\n中性：其他情形\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n显示的是最新的 MACD 柱状图数值。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_ma_cross_description">MA Cross 通过对比 50 日均价和 200 日均价，来显示该资产的交易价格是高于还是低于其长期趋势。来源：taapi.io。</string>
+  <string name="token_summary_macd_description">MACD通过比较短期和长期的价格动能，来显示某项资产的动能是正在增强还是减弱。来源：taapi.io。</string>
   <string name="token_summary_outlook_is_not_available">该代币的展望信息不可用</string>
-  <string name="token_summary_rsi_description">RSI（相对强弱指数）是一项技术分析指标，用于衡量近期价格变动的速度与幅度。它可以反映资产在过去 14 个周期内是否被过度买入或卖出，提示潜在的超买或超卖状态。RSI 越低，潜在上行空间越大。\n\n判定标准：\n正面 ≦30\n中性 30–70\n负面 ≧70\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
-  <string name="token_summary_sentiment_description">Sentiment（市场情绪）以 0 至 100 的区间衡量社交媒体上关于该资产的讨论基调，并按互动量加权，分值越高表示讨论越正面。\n\n判定标准：\n正面 ≧70\n中性 31–69\n负面 ≦30\n\n数据来源：lunarcrush.com\n仅供参考，不构成投资建议。</string>
-  <string name="token_summary_title">市场指标 • beta</string>
+  <string name="token_summary_rsi_description">RSI（相对强弱指数）用于衡量某资产在过去14个周期内是否被过度买入或卖出，从而提示潜在的超买或超卖状况。来源：taapi.io。</string>
+  <string name="token_summary_sentiment_description">情绪评分以1到5的评分标准衡量社交媒体上关于该资产的帖子基调，分数越高意味着讨论越积极。来源：LunarCrush。</string>
   <string name="token_swap_changelly_promotion_message">从 2 月 %2$s-%3$s，兑换另一个代币的服务费为 %1$s 。</string>
   <string name="token_swap_changelly_promotion_title">用Changelly 兑换， %s 费用</string>
   <string name="token_swap_promotion_button">立即兑换</string>
