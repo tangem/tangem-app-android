@@ -2,41 +2,32 @@ package com.tangem.features.feed.crypto.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
+import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.crypto.ui.state.CryptoFeedTabUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseCategoryUM
+import com.tangem.features.feed.crypto.ui.state.MarketPulseIntervalUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseListUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseUM
 import kotlinx.collections.immutable.ImmutableList
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
@@ -80,8 +71,14 @@ internal fun CryptoFeedTabContent(
         }
         item(key = "marketPulseHeader") {
             MarketPulseHeader(
-                state = marketPulse,
+                title = marketPulse.title,
                 modifier = Modifier.padding(top = 16.dp),
+            )
+        }
+        item(key = "marketPulseControls") {
+            MarketPulseControls(
+                categoriesFilter = marketPulse.categoriesFilter,
+                intervalMenu = marketPulse.intervalMenu,
             )
         }
         item(key = "marketPulseCategories") {
@@ -136,20 +133,67 @@ private fun LazyListScope.marketPulseListItems(list: MarketPulseListUM) {
 }
 
 @Composable
-private fun MarketPulseHeader(state: MarketPulseUM, modifier: Modifier = Modifier) {
+private fun MarketPulseHeader(title: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        text = title.resolveReference(),
+        style = TangemTheme.typography3.heading.small,
+        color = TangemTheme.colors3.text.primary,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    )
+}
+
+@Composable
+private fun MarketPulseControls(
+    categoriesFilter: TangemFilterItemUM?,
+    intervalMenu: MarketPulseIntervalUM,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = state.title.resolveReference(),
-            style = TangemTheme.typography3.heading.small,
-            color = TangemTheme.colors3.text.primary,
+        if (categoriesFilter != null) {
+            TangemFilterItem(
+                state = categoriesFilter,
+                modifier = Modifier.weight(weight = 1f, fill = false),
+            )
+        } else {
+            Spacer(modifier = Modifier.weight(weight = 1f))
+        }
+        SpacerH(8.dp)
+        IntervalFilter(intervalMenu = intervalMenu)
+    }
+}
+
+@Composable
+private fun IntervalFilter(intervalMenu: MarketPulseIntervalUM, modifier: Modifier = Modifier) {
+    var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    val hapticManager = LocalHapticManager.current
+
+    Box(modifier = modifier) {
+        TangemFilterItem(
+            state = TangemFilterItemUM.Inactive(
+                id = "interval",
+                label = intervalMenu.selected.intervalTitle(),
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                    isMenuExpanded = true
+                },
+            ),
         )
-        TangemFilterItem(state = state.interval)
+        MarketPulseIntervalMenu(
+            um = intervalMenu,
+            expanded = isMenuExpanded,
+            onDismiss = { isMenuExpanded = false },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .hazeEffectTangem { blurRadius = 10.dp },
+        )
     }
 }
 
@@ -162,7 +206,7 @@ private fun MarketPulseCategories(
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
     ) {
         itemsIndexed(items = categories, key = { _, category -> category.id }) { index, category ->
