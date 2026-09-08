@@ -314,6 +314,7 @@ dependencies {
     implementation(projects.features.feed.earn.impl)
     implementation(projects.features.feed.search.api)
     implementation(projects.features.feed.search.impl)
+    implementation(projects.features.feed.rwa.impl)
     implementation(projects.features.promoBanners.api)
     implementation(projects.features.promoBanners.impl)
     implementation(projects.features.onramp.api)
