@@ -23,6 +23,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
@@ -584,6 +585,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class TangemPayEligibility(
         val userWalletId: UserWalletId,
+        val product: TangemPayProduct,
     ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
