@@ -9,7 +9,7 @@ package com.tangem.domain.sociallogin.models
  * hence the masked [toString].
  */
 @JvmInline
-value class ProviderIdToken(val value: String) {
+value class SocialProviderIdToken(val value: String) {
 
-    override fun toString(): String = "ProviderIdToken(***)"
+    override fun toString(): String = "SocialProviderIdToken(***)"
 }
