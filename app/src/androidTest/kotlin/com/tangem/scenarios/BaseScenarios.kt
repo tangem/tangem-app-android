@@ -4,7 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.res.R as CommonR
@@ -139,7 +139,7 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
             composeTestRule.waitUntilAtLeastOneExists(
                 matcher = hasText(getResourceString(CoreUiR.string.save_user_wallet_agreement_dont_allow))
                     or hasText(getResourceString(CommonR.string.common_finish)),
-                timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG,
+                timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION,
             )
             onBiometryDialog {
                 if (dontAllowButton.isDisplayedSafely()) {

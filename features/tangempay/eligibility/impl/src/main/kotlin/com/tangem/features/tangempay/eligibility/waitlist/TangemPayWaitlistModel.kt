@@ -51,7 +51,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
         urlOpener.openUrl(PRIVACY_POLICY_URL)
     }
 
-    // TODO v_rodionov
+    // TODO v_rodionov #[REDACTED_TASK_KEY]
     private fun onSaveClick() {
         uiMessageSender.send(ToastMessage(stringReference("Join waitlist: ${uiState.value.email}")))
     }

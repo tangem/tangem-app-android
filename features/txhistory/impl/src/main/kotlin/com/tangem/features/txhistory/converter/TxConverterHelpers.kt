@@ -13,6 +13,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_share_android_24
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_24
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.models.network.TxInfo
@@ -89,7 +90,8 @@ internal fun Amount.formatFiatAmount(): String = (value ?: BigDecimal.ZERO)
 
 /**
  * Header overflow context menu of the details card, shared by all transaction types. Each row is dropped when its data
- * is absent: "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped when
+ * is absent: "Add contact" (dropped when [onAddContact] is `null` — the counterparty is not a saveable address, or is
+ * saved already), "Transaction ID" (copy; dropped when [onCopyTxId] is `null` — no id to copy), "Share" (dropped when
  * [shareText] is `null` — only an express deal can describe itself as text) and "Explore" (dropped when [onExplore] is
  * `null` — no on-chain hash to link to). An empty list leaves the header with no "•••" button. Repeat / Hide are not
  * part of this iteration.
@@ -102,7 +104,17 @@ internal fun buildDetailsMenu(
     shareText: TextReference?,
     onShare: (String) -> Unit,
     onExplore: (() -> Unit)?,
+    onAddContact: (() -> Unit)? = null,
 ): ImmutableList<TxHistoryDetailsUM.MenuItemUM> = buildList {
+    onAddContact?.let { addContact ->
+        add(
+            TxHistoryDetailsUM.MenuItemUM(
+                icon = Icons.ic_user_plus_24,
+                title = resourceReference(R.string.address_book_add_contact),
+                action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(addContact),
+            ),
+        )
+    }
     onCopyTxId?.let { copy ->
         add(
             TxHistoryDetailsUM.MenuItemUM(
