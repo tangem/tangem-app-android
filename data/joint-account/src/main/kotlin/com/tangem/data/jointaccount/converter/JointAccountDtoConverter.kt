@@ -8,22 +8,25 @@ import javax.inject.Singleton
 
 /** Network DTO → domain. Freshly fetched data is always [StatusSource.ACTUAL]. */
 @Singleton
-internal class JointAccountDtoConverter @Inject constructor() {
+internal class JointAccountDtoConverter @Inject constructor(
+    private val operationConverter: JointOperationConverter,
+) {
 
     fun convert(dto: JointAccountDto): JointAccount = JointAccount(
         cryptoAccountId = dto.cryptoAccountId,
         membersCount = dto.membersCount,
         threshold = dto.threshold,
-        safeAddress = dto.safeAddress,
+        safeAddress = dto.safeAddress?.lowercase(),
         status = JointAccountFieldsConverter.convertStatus(dto.status),
         members = dto.members.map { member ->
             JointAccount.Member(
                 name = member.name,
-                address = member.address,
+                address = member.address.lowercase(),
                 role = JointAccountFieldsConverter.convertRole(member.role),
                 inviteId = member.inviteId,
             )
         },
         source = StatusSource.ACTUAL,
+        inFlightOperations = operationConverter.convertInFlight(dtos = dto.operations.orEmpty()),
     )
 }

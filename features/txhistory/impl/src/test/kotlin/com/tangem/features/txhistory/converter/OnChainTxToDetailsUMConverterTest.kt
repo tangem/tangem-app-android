@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.converter
 
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
@@ -17,11 +18,14 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TestContacts
+import com.tangem.test.mock.MockAccounts
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -593,6 +597,100 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
         // Assert
         assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+    }
+
+    private fun savedContact() = TestContacts.create(
+        name = "Binance",
+        address = USER_ADDRESS,
+        walletId = MockAccounts.userWalletId,
+        networkId = currency.network.id.rawId,
+    )
+
+    @Test
+    fun `GIVEN outgoing Transfer to a saved contact WHEN convert THEN contact card named after it`() {
+        // Arrange
+        val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = contactConverter.convert(tx).counterparty
+
+        // Assert — the name replaces the address, but the underlying address stays copyable.
+        assertThat(counterparty?.title).isEqualTo(stringReference("Binance"))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Contact(
+                name = "Binance",
+                icon = AccountIconUM.CryptoPortfolio(
+                    value = CryptoPortfolioIcon.Icon.Letter,
+                    color = CryptoPortfolioIcon.Color.Azure,
+                ),
+            ),
+        )
+        assertThat(counterparty?.onCopyClick).isNotNull()
+        assertThat(counterparty?.label).isEqualTo(resourceReference(R.string.send_recipient))
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN address counterparty card`() {
+        // Arrange
+        val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = contactConverter.convert(tx).counterparty
+
+        // Assert — contacts are matched for outgoing transfers only.
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+    }
+
+    @Test
+    fun `GIVEN outgoing Operation to a saved address WHEN convert THEN address counterparty card`() {
+        // Arrange
+        val contactConverter = onChainConverter(lookup = lookupOf(contacts = listOf(savedContact())))
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "Mint NFT"),
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = contactConverter.convert(tx).counterparty
+
+        // Assert — a contract call has no recipient to name, so it stays an address (as in the history list).
+        assertThat(counterparty?.avatar).isEqualTo(TxHistoryDetailsUM.CounterpartyAvatar.Address(USER_ADDRESS))
+    }
+
+    @Test
+    fun `GIVEN outgoing Transfer to own address also saved as a contact WHEN convert THEN own account card`() {
+        // Arrange
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(
+                currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount),
+                contacts = listOf(savedContact()),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert — an own portfolio outranks the address book.
+        assertThat(counterparty?.avatar).isInstanceOf(TxHistoryDetailsUM.CounterpartyAvatar.Account::class.java)
+
+        counterparty?.onCopyClick?.invoke()
+        assertThat(copiedAddresses).containsExactly(USER_ADDRESS)
     }
 
     @Test

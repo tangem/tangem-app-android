@@ -40,7 +40,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -63,8 +62,7 @@ internal class SelectProviderModel @Inject constructor(
     private var userCountry: UserCountry? = null
 
     init {
-        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
-            ?: UserCountry.Other(Locale.getDefault().country)
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
 
         analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened())
         getPaymentMethods()
