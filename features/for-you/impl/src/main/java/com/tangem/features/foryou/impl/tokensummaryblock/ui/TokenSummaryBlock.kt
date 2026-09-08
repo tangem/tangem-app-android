@@ -2,11 +2,7 @@ package com.tangem.features.foryou.impl.tokensummaryblock.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +18,6 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -57,45 +52,8 @@ internal fun TokenSummaryBlock(state: TokenSummaryBlockUM, modifier: Modifier = 
         TokenSentimentUM.Loading -> {
             LoadingContent(modifier = cardModifier.padding(16.dp))
         }
-        is TokenSentimentUM.Empty -> {
-            EmptyContent(
-                sentiment = sentiment,
-                modifier = cardModifier
-                    .conditional(condition = sentiment is TokenSentimentUM.Empty.NoOutlook) {
-                        clickableSingle(onClick = state.onClick)
-                    }
-                    .padding(16.dp),
-            )
+        is TokenSentimentUM.Empty -> { /* no-op */
         }
-    }
-}
-
-/** No-data placeholder — mirrors the full-screen token summary's empty state. */
-@Composable
-private fun EmptyContent(sentiment: TokenSentimentUM.Empty, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start,
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.token_summary_title),
-            color = TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.caption.medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        SpacerH(4.dp)
-
-        Text(
-            text = sentiment.message.resolveReference(),
-            color = TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.heading.small,
-        )
-
-        SpacerH(20.dp)
-
-        GradientScaleBar(state = GradientScaleBarState.NoData)
     }
 }
 

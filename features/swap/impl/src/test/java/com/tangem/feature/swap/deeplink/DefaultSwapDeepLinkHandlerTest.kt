@@ -925,4 +925,84 @@ internal class DefaultSwapDeepLinkHandlerTest {
         }
 
     // endregion
+
+    // region Re-entrant deeplink
+    @Test
+    fun `GIVEN swap route already on top WHEN handle THEN it is replaced instead of pushed`() = runTest {
+        // Arrange
+        val opened = bareSwap(walletId).copy(fromCryptoCurrency = currency("btc", "bitcoin"))
+        every { router.stack } returns listOf(AppRoute.Wallet, opened)
+        val expected = bareSwap(walletId)
+
+        // Act
+        createHandler(this, emptyMap())
+        advanceUntilIdle()
+
+        // Assert
+        verify { router.replaceCurrent(route = expected, onComplete = any()) }
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+    }
+
+    @Test
+    fun `GIVEN toggle OFF and swap route already on top WHEN handle THEN it is replaced instead of pushed`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isSwapDeeplinkEnabled } returns false
+            val opened = bareSwap(walletId).copy(fromCryptoCurrency = currency("btc", "bitcoin"))
+            every { router.stack } returns listOf(AppRoute.Wallet, opened)
+            val expected = bareSwap(walletId)
+
+            // Act
+            createHandler(this, emptyMap())
+            advanceUntilIdle()
+
+            // Assert
+            verify { router.replaceCurrent(route = expected, onComplete = any()) }
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN another screen on top WHEN handle THEN swap is pushed`() = runTest {
+        // Arrange
+        every { router.stack } returns listOf(AppRoute.Wallet)
+        val expected = bareSwap(walletId)
+
+        // Act
+        createHandler(this, emptyMap())
+        advanceUntilIdle()
+
+        // Assert
+        verify { router.push(route = expected, onComplete = any()) }
+        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+    }
+    @Test
+    fun `GIVEN the same swap route already on top WHEN handle THEN nothing is navigated and no error`() = runTest {
+        // Arrange
+        every { router.stack } returns listOf(AppRoute.Wallet, bareSwap(walletId))
+
+        // Act
+        createHandler(this, emptyMap())
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+    }
+
+    @Test
+    fun `GIVEN account flow swap on top WHEN handle THEN swap is pushed over it`() = runTest {
+        // Arrange
+        val accountFlowSwap = bareSwap(walletId).copy(accountFlow = AppRoute.Swap.AccountFlow.TopUp)
+        every { router.stack } returns listOf(AppRoute.Wallet, accountFlowSwap)
+        val expected = bareSwap(walletId)
+
+        // Act
+        createHandler(this, emptyMap())
+        advanceUntilIdle()
+
+        // Assert
+        verify { router.push(route = expected, onComplete = any()) }
+        verify(exactly = 0) { router.replaceCurrent(route = any(), onComplete = any()) }
+    }
+    // endregion
 }

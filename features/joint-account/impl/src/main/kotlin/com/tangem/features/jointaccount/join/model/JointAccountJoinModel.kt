@@ -5,11 +5,15 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountJoinError
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -20,6 +24,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointAccountJoinModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val joinJointAccountUseCase: JoinJointAccountUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -38,8 +43,11 @@ internal class JointAccountJoinModel @Inject constructor(
             return JoinResultAction.None
         }
 
-        // TODO([REDACTED_TASK_KEY]): gate joining on the 20 active joint accounts limit before signing — the backend
-        //  rejects the 21st with a 400, but the user must hear it from us before the tap, not after
+        if (isJointLimitReached(walletId = walletId)) {
+            showJointLimitReached()
+            return JoinResultAction.None
+        }
+
         return joinJointAccountUseCase(
             userWalletId = walletId,
             inviteId = inviteId,
@@ -51,6 +59,24 @@ internal class JointAccountJoinModel @Inject constructor(
                 showAccountAdded()
                 JoinResultAction.CloseFlow
             },
+        )
+    }
+
+    private suspend fun isJointLimitReached(walletId: UserWalletId): Boolean {
+        val accountList = singleAccountListSupplier.getSyncOrNull(userWalletId = walletId) ?: return false
+        return !accountList.canAddMoreJointAccounts
+    }
+
+    private fun showJointLimitReached() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreUiR.string.account_add_limit_dialog_title),
+                message = resourceReference(
+                    id = CoreUiR.string.account_add_limit_dialog_description,
+                    formatArgs = wrappedList(AccountList.MAX_JOINT_ACCOUNTS_COUNT.toString()),
+                ),
+                firstActionBuilder = { okAction() },
+            ),
         )
     }
 
