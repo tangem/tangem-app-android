@@ -26,22 +26,20 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
 
 /**
  * [GoogleIdTokenProvider] backed by Credential Manager and the Sign in with Google credential option.
- *
- * @param webClientId the OAuth web client the token audience is issued for, `null` in an environment
- * that has none configured.
  */
 @Singleton
 internal class CredentialManagerGoogleIdTokenProvider @Inject constructor(
     @ApplicationContext private val context: Context,
-    @Named("googleWebClientId") private val webClientId: String?,
+    googleAuthConfig: GoogleAuthConfig,
     private val foregroundActivityProvider: ForegroundActivityProvider,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : GoogleIdTokenProvider {
+
+    private val webClientId: String? = googleAuthConfig.webClientId
 
     private val logger = TangemLogger.withTag(TAG)
 
