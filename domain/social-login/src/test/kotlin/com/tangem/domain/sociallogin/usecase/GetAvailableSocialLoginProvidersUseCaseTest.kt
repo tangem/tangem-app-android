@@ -5,9 +5,11 @@ import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.repository.SocialLoginProviderRepository
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -27,10 +29,10 @@ internal class GetAvailableSocialLoginProvidersUseCaseTest {
     }
 
     @Test
-    fun `GIVEN feature enabled WHEN invoke THEN device providers are returned`() {
+    fun `GIVEN feature enabled WHEN invoke THEN device providers are returned`() = runTest {
         // Arrange
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
-        every { socialLoginProviderRepository.getAvailableProviders() } returns listOf(SocialLoginProvider.Google)
+        coEvery { socialLoginProviderRepository.getAvailableProviders() } returns listOf(SocialLoginProvider.Google)
 
         // Act
         val actual = useCase()
@@ -40,7 +42,7 @@ internal class GetAvailableSocialLoginProvidersUseCaseTest {
     }
 
     @Test
-    fun `GIVEN feature disabled WHEN invoke THEN no providers are returned`() {
+    fun `GIVEN feature disabled WHEN invoke THEN no providers are returned`() = runTest {
         // Arrange
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns false
 
@@ -49,6 +51,6 @@ internal class GetAvailableSocialLoginProvidersUseCaseTest {
 
         // Assert
         assertThat(actual).isEmpty()
-        verify(exactly = 0) { socialLoginProviderRepository.getAvailableProviders() }
+        coVerify(exactly = 0) { socialLoginProviderRepository.getAvailableProviders() }
     }
 }
