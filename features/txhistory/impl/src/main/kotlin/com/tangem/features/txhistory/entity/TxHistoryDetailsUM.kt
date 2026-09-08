@@ -225,23 +225,24 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * Counterparty ("Recipient" / "From") card of the single-asset detail: a leading [avatar], the section [label] over
-     * the counterparty [title], and — when [onCopyClick] is non-null — the whole card is clickable to copy.
+     * the counterparty [title], and a tap that copies the counterparty address.
      *
-     * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
-     * and whether copy is offered. The kind is resolved through the shared `TxHistoryLookupContext` — the same
-     * own-account / own-wallet resolution the history list applies to its row subtitle.
+     * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar]).
+     * The kind is resolved through the shared `TxHistoryLookupContext` — the same own-account / own-wallet resolution
+     * the history list applies to its row subtitle — but it only decides what the card *shows*: an own account or
+     * wallet renders its display name and still copies the address behind it.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
      * @property avatar Leading avatar.
-     * @property onCopyClick Copy action; `null` makes the card non-interactive (an own account / wallet shows a
-     * display name, not an address, so there is nothing to copy).
+     * @property onCopyClick Copies the counterparty address — the same address the header menu's "Copy address" row
+     * copies, so the two entry points never disagree.
      */
     data class CounterpartyUM(
         val label: TextReference,
         val title: TextReference,
         val avatar: CounterpartyAvatar,
-        val onCopyClick: (() -> Unit)?,
+        val onCopyClick: () -> Unit,
     )
 
     /** Leading avatar of the [CounterpartyUM] card — the only thing that differs between counterparty kinds. */
