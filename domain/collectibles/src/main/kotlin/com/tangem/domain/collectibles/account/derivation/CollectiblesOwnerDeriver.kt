@@ -1,6 +1,7 @@
-package com.tangem.domain.collectibles.derivation
+package com.tangem.domain.collectibles.account.derivation
 
 import arrow.core.Either
+import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -27,31 +28,10 @@ interface CollectiblesOwnerDeriver {
      * Derives the owner key, asking the card for it when it is not stored yet — which opens a card session.
      * Only ever reach this from an explicit user action.
      */
-    suspend fun deriveOwner(userWalletId: UserWalletId): Either<CollectiblesDerivationError, String>
+    suspend fun deriveOwner(userWalletId: UserWalletId): Either<CollectiblesAccountError, String>
 
     /**
      * The owner address if the key is already stored on this device, `null` otherwise. Never opens a card session.
      */
     suspend fun storedOwner(userWalletId: UserWalletId): String?
-}
-
-/** Reasons [CollectiblesOwnerDeriver.deriveOwner] can fail. */
-sealed interface CollectiblesDerivationError {
-
-    /** The card's firmware has no HD wallet support, so no key can be derived at all. */
-    data object DerivationUnsupported : CollectiblesDerivationError
-
-    /** The wallet has no ed25519 key to derive from. */
-    data object MissingWallet : CollectiblesDerivationError
-
-    /** The user dismissed the card session. */
-    data object UserCancelled : CollectiblesDerivationError
-
-    /**
-     * The card refused the derivation. Notably `NonHardenedDerivationNotSupported`, which an ed25519 wallet answers
-     * to any path carrying a non-hardened node.
-     */
-    data class CardError(val cause: Throwable) : CollectiblesDerivationError
-
-    data class Unknown(val cause: Throwable) : CollectiblesDerivationError
 }
