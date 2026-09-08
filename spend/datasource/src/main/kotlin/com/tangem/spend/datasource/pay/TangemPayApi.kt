@@ -91,6 +91,13 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
     ): ApiResponse<TangemPayEligibilityChannels>
 
+    @POST("v1/waitlist")
+    suspend fun joinWaitlist(
+        @Header("Authorization") authHeader: String?,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
+        @Body body: WaitlistRequest,
+    ): ApiResponse<WaitlistResponse>
+
     @GET("v1/order/{order_id}")
     suspend fun getOrder(
         @Header("Authorization") authHeader: String,
