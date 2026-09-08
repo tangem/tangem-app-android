@@ -84,7 +84,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import java.math.BigDecimal
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LargeClass", "LongParameterList")
@@ -336,8 +335,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         .distinctUntilChanged()
 
     init {
-        userCountry = getUserCountryUseCase.invokeSync().getOrNull()
-            ?: UserCountry.Other(Locale.getDefault().country)
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
         // reload screen if currency changed
         modelScope.launch {
             currentAppCurrency

@@ -141,7 +141,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -433,7 +432,7 @@ internal class SwapModel @Inject constructor(
             }
         }
 
-        userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.Other(Locale.getDefault().country)
+        userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
 
         initTokens()
 
