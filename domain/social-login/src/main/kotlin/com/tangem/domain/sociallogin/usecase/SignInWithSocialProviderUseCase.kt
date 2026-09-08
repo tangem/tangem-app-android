@@ -1,7 +1,7 @@
 package com.tangem.domain.sociallogin.usecase
 
 import arrow.core.Either
-import com.tangem.domain.sociallogin.models.ProviderIdToken
+import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.repository.SocialLoginProviderRepository
@@ -12,7 +12,7 @@ class SignInWithSocialProviderUseCase @Inject constructor(
     private val socialLoginProviderRepository: SocialLoginProviderRepository,
 ) {
 
-    suspend operator fun invoke(provider: SocialLoginProvider): Either<SocialLoginError, ProviderIdToken> {
+    suspend operator fun invoke(provider: SocialLoginProvider): Either<SocialLoginError, SocialProviderIdToken> {
         return socialLoginProviderRepository.signIn(provider)
     }
 }

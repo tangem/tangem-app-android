@@ -474,6 +474,9 @@ dependencies {
     implementation(deps.customerio.messaging)
     runtimeOnly("com.android.installreferrer:installreferrer:2.2")
     runtimeOnly(deps.spongecastle.core)
+    // Credential Manager resolves its providers at runtime, so this belongs to the app rather than to
+    // whichever feature happens to use credentials
+    runtimeOnly(deps.androidx.credentials.playServicesAuth)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
     // :data:wallet-connect excludes app.cash.sqldelight:android-driver from both reown artifacts, so

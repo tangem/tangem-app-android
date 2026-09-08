@@ -12,9 +12,14 @@ android {
 
 dependencies {
     implementation(projects.core.configToggles)
+    implementation(projects.core.utils)
+    implementation(projects.common.google)
 
     api(projects.domain.socialLogin)
 
+    implementation(deps.arrow.core)
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    testImplementation(projects.test.core)
 }
