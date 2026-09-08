@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.AddressBookOpenMode
+import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
@@ -42,6 +43,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Home(
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+        val entryReason: HomeEntryReason = HomeEntryReason.Launch,
     ) : AppRoute(path = "/home")
 
     @Serializable

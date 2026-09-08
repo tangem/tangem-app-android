@@ -4,6 +4,7 @@ import android.view.SurfaceView
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -20,6 +21,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
 import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
@@ -55,6 +57,7 @@ internal class IntroductionModel @Inject constructor(
     videoPlayerFactory: IntroductionVideoPlayer.Factory,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val analyticsRepository: AnalyticsRepository,
     private val router: Router,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
@@ -114,7 +117,7 @@ internal class IntroductionModel @Inject constructor(
     override val haveWalletSheetConfig: TangemBottomSheetConfig? get() = uiState.value.haveWalletBottomSheetConfig
 
     init {
-        analyticsEventHandler.send(IntroductionProcess.ScreenOpened())
+        reportScreenOpened()
         if (params.launchMode == InitScreenLaunchMode.WithCardScan) {
             launchCardScan(onNavigatedAway = {}, onFailed = {})
         }
@@ -123,6 +126,21 @@ internal class IntroductionModel @Inject constructor(
     override fun onDestroy() {
         videoPlayer.release()
         super.onDestroy()
+    }
+
+    private fun reportScreenOpened() {
+        modelScope.launch {
+            val entryReason = when (params.entryReason) {
+                HomeEntryReason.LastWalletForgotten -> IntroductionProcess.ScreenOpened.EntryReason.LastWalletForgotten
+                HomeEntryReason.Launch -> if (analyticsRepository.checkIsEventSent(WELCOME_OPENED_EVENT_ID)) {
+                    IntroductionProcess.ScreenOpened.EntryReason.NoWallets
+                } else {
+                    IntroductionProcess.ScreenOpened.EntryReason.FirstLaunch
+                }
+            }
+            analyticsRepository.setIsEventSent(WELCOME_OPENED_EVENT_ID)
+            analyticsEventHandler.send(IntroductionProcess.ScreenOpened(entryReason))
+        }
     }
 
     override fun onFirstFrameRendered() {
@@ -420,6 +438,7 @@ internal class IntroductionModel @Inject constructor(
         const val LEARN_MORE_ACTION_ID = "learn_more"
         const val SCAN_WALLET_ACTION_ID = "scan_wallet"
         const val TERMS_OF_SERVICE_URL = "https://tangem.com/terms-of-service/"
+        const val WELCOME_OPENED_EVENT_ID = "introduction_welcome_opened"
         const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy/"
     }
 }

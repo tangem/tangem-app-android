@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -285,7 +286,7 @@ internal class ResetCardModel @Inject constructor(
         if (newSelectedWallet != null) {
             appRouter.popTo<AppRoute.Wallet>()
         } else {
-            appRouter.replaceAll(AppRoute.Home())
+            appRouter.replaceAll(AppRoute.Home(entryReason = HomeEntryReason.LastWalletForgotten))
         }
     }
 
