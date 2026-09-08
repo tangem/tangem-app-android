@@ -24,6 +24,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: TangemPayEligibilityComponent.Params,
+    private val waitlistComponentFactory: TangemPayWaitlistComponent.Factory,
 ) : TangemPayEligibilityComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<EligibilityInnerRoute>()
@@ -55,15 +56,20 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
         route: EligibilityInnerRoute,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (route) {
-        EligibilityInnerRoute.Residency -> ResidencyListComponent(
+        is EligibilityInnerRoute.Residency -> ResidencyListComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
         )
-        EligibilityInnerRoute.RegionUnavailable -> RegionUnavailableComponent(
+        is EligibilityInnerRoute.RegionUnavailable -> RegionUnavailableComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = RegionUnavailableComponent.Params(
+                userWalletId = params.userWalletId,
+                product = params.product,
+                countryCode = route.countryCode,
+                regionCode = route.regionCode,
                 onSelectAnotherRegionClick = stackNavigation::pop,
             ),
+            waitlistComponentFactory = waitlistComponentFactory,
         )
     }
 
