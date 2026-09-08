@@ -366,10 +366,8 @@ internal class PlacePredictionModel @Inject constructor(
                 logger.e("Delayed order $orderId: the book gave no answer within the reads allowed")
                 returnToIdle()
                 showFailureDialog(
-                    title = stringReference(value = "Order is still being processed"),
-                    message = stringReference(
-                        value = "We couldn't confirm the order in time. Check your positions before placing it again.",
-                    ),
+                    title = resourceReference(R.string.prediction_place_delayed_timeout_title),
+                    message = resourceReference(R.string.prediction_place_delayed_timeout_description),
                 )
             }
         }
