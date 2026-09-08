@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.forgetwallet
 import arrow.core.getOrElse
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -125,7 +126,7 @@ internal class ForgetWalletModel @Inject constructor(
             if (hasUserWallets) {
                 router.popTo(AppRoute.Details::class)
             } else {
-                router.replaceAll(AppRoute.Home())
+                router.replaceAll(AppRoute.Home(entryReason = HomeEntryReason.LastWalletForgotten))
             }
         }
     }
