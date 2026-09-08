@@ -17,6 +17,8 @@ package com.tangem.core.error
  * `105` - Staking
  * `106` - NFT
  * `107` - WalletConnect
+ * `108` - Account
+ * `109` - Collectibles
  */
 interface UniversalError {
     val errorCode: Int

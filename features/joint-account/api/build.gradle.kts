@@ -24,6 +24,7 @@ dependencies {
 
     /** Compose */
     api(deps.compose.foundation)
+    implementation(deps.androidx.annotation)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
 
