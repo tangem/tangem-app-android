@@ -1,7 +1,6 @@
 package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
@@ -64,6 +63,7 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -373,17 +373,14 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                // An NFC launch stays on the legacy screen, which is the only one that auto-starts the card
-                // scan. Routing it to the redesign would consume the tag and do nothing.
-                val isRedesign = introductionFeatureToggles.isIntroductionRedesignEnabled &&
-                    route.launchMode != InitScreenLaunchMode.WithCardScan
-                if (isRedesign) {
+                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
                     createComponentChild(
                         context = context,
                         params = IntroductionComponent.Params(route.launchMode),
                         componentFactory = introductionComponentFactory,
                     )
                 } else {
+                    @RemoveWithToggle("TWI_1356_INTRODUCTION_REDESIGN_ENABLED")
                     createComponentChild(
                         context = context,
                         params = HomeComponent.Params(route.launchMode),
