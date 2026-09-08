@@ -8,6 +8,7 @@ import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.models.GaslessFeeRecipient
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -50,6 +51,14 @@ internal class DefaultGaslessTransactionRepositoryTest {
         @Suppress("UNCHECKED_CAST")
         val error = ApiResponse.Error(cause = ApiResponseError.NetworkException())
             as ApiResponse<GaslessServiceResponse<GaslessFeeRecipient>>
+        coEvery { gaslessTxServiceApi.getFeeRecipient() } returns error
+    }
+
+    private fun stubFeeRecipientHttpError(code: ApiResponseError.HttpException.Code) {
+        @Suppress("UNCHECKED_CAST")
+        val error = ApiResponse.Error(
+            cause = ApiResponseError.HttpException(code = code, message = null, errorBody = null),
+        ) as ApiResponse<GaslessServiceResponse<GaslessFeeRecipient>>
         coEvery { gaslessTxServiceApi.getFeeRecipient() } returns error
     }
 
@@ -107,6 +116,20 @@ internal class DefaultGaslessTransactionRepositoryTest {
 
         // Assert
         coVerify(exactly = 1) { gaslessTxServiceApi.getFeeRecipient() }
+    }
+
+    @Test
+    fun `GIVEN backend returns 503 WHEN getTokenFeeReceiverAddress THEN throws error with http code`() = runTest {
+        // Arrange
+        stubFeeRecipientHttpError(ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE)
+        val repository = createRepository()
+
+        // Act
+        val actual = runCatching { repository.getTokenFeeReceiverAddress() }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(GaslessServiceException::class.java)
+        assertThat((actual as GaslessServiceException).httpCode).isEqualTo(503)
     }
 
     private companion object {
