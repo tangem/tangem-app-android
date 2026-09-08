@@ -108,7 +108,7 @@ dependencies {
 
     // region Tangem
     api(tangemDeps.blockchain)
-    api(tangemDeps.card.core)
+    testImplementation(tangemDeps.card.core)
     // endregion
 
     // region Core modules
@@ -121,7 +121,6 @@ dependencies {
 
     // region Domain models
     api(projects.domain.models)
-    api(projects.domain.txhistory.models)
     // endregion
 
     // region Tests

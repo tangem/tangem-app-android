@@ -80,7 +80,7 @@ internal class CreateCloudBackupModel @Inject constructor(
     private var isConsentChecked = false
 
     val uiState: StateFlow<CreateCloudBackupUM>
-        field = MutableStateFlow<CreateCloudBackupUM>(CreateCloudBackupUM.Preparing(onBackClick = ::onBack))
+        field = MutableStateFlow<CreateCloudBackupUM>(buildPreparingUM())
 
     private val authJobHolder = JobHolder()
 
@@ -99,16 +99,34 @@ internal class CreateCloudBackupModel @Inject constructor(
     fun onBack() {
         when (val state = uiState.value) {
             is CreateCloudBackupUM.Preparing -> router.pop()
-            is CreateCloudBackupUM.SetPassword -> showCancelSetupDialog()
+            is CreateCloudBackupUM.SetPassword -> closeOrConfirmCancel()
             is CreateCloudBackupUM.ConfirmPassword -> if (!state.isLoading) uiState.value = buildSetPasswordUM()
             is CreateCloudBackupUM.Completed -> Unit
+        }
+    }
+
+    private fun onClose() {
+        when (val state = uiState.value) {
+            is CreateCloudBackupUM.Preparing -> router.pop()
+            is CreateCloudBackupUM.SetPassword -> closeOrConfirmCancel()
+            is CreateCloudBackupUM.ConfirmPassword -> if (!state.isLoading) closeOrConfirmCancel()
+            is CreateCloudBackupUM.Completed -> Unit
+        }
+    }
+
+    /** Nothing typed yet means there is nothing to lose, so the confirmation would only be noise. */
+    private fun closeOrConfirmCancel() {
+        if (password.isEmpty() && confirmPassword.isEmpty()) {
+            onCancelSetupConfirmed()
+        } else {
+            showCancelSetupDialog()
         }
     }
 
     private fun authorize() {
         if (authJobHolder.isActive) return
 
-        uiState.value = CreateCloudBackupUM.Preparing(onBackClick = ::onBack)
+        uiState.value = buildPreparingUM()
         modelScope.launch {
             cloudBackupRepository.getAccountInfo(interactive = true).fold(
                 ifLeft = ::onAuthError,
@@ -151,7 +169,7 @@ internal class CreateCloudBackupModel @Inject constructor(
                 },
                 secondActionBuilder = {
                     EventMessageAction(
-                        title = resourceReference(R.string.hw_cloud_backup_cancel_setup_cancel),
+                        title = resourceReference(R.string.common_cancel),
                         isWarning = true,
                         onClick = ::onCancelSetupConfirmed,
                     )
@@ -160,8 +178,14 @@ internal class CreateCloudBackupModel @Inject constructor(
         )
     }
 
+    private fun buildPreparingUM(): CreateCloudBackupUM.Preparing = CreateCloudBackupUM.Preparing(
+        onBackClick = ::onBack,
+        onCloseClick = ::onClose,
+    )
+
     private fun buildSetPasswordUM(): CreateCloudBackupUM.SetPassword = CreateCloudBackupUM.SetPassword(
         onBackClick = ::onBack,
+        onCloseClick = ::onClose,
         password = String(password),
         isPasswordVisible = isPasswordVisible,
         strength = PasswordStrengthEvaluator.evaluateRated(password),
@@ -175,6 +199,7 @@ internal class CreateCloudBackupModel @Inject constructor(
         val isMismatch = confirmPassword.isNotEmpty() && !password.contentEquals(confirmPassword)
         return CreateCloudBackupUM.ConfirmPassword(
             onBackClick = ::onBack,
+            onCloseClick = ::onClose,
             confirmPassword = String(confirmPassword),
             isPasswordVisible = isPasswordVisible,
             isMismatch = isMismatch,

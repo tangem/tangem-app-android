@@ -97,9 +97,16 @@ data class TxInfo(
         @Serializable
         data object Transfer : TransactionType
 
+        /**
+         * ERC-20 `approve` — the granted allowance rather than a transfer.
+         *
+         * @property amount  allowance in the approved token (its symbol, decimals and contract); a `null`
+         *                   [SdkAmount.value] is an unlimited approval
+         * @property address spender the allowance is granted to
+         */
         @Serializable
         data class Approve(
-            val amount: SdkAmount?,
+            val amount: SdkAmount,
             val address: String,
         ) : TransactionType
 

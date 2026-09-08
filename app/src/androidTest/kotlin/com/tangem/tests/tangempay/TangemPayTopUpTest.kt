@@ -66,18 +66,15 @@ class TangemPayTopUpTest : BaseTestCase() {
             step("Click on 'Close' button on Swap stories") {
                 onSwapStoriesScreen { closeButton.performClick() }
             }
-            step("Assert 'Swap' screen is displayed (USDC pre-filled as destination)") {
-                onSwapTokenScreen { title.assertIsDisplayed() }
+            step("Assert 'Add funds' screen is displayed (USDC pre-filled as destination)") {
+                onSwapTokenScreen { addFundsTitle.assertIsDisplayed() }
             }
-            step("Click on 'Choose token' button (from)") {
-                onSwapTokenScreen { chooseTokenButton.clickWithAssertion() }
-            }
-            step("Click on 'Main account'") {
-                onSwapSelectTokenScreen { tokenWithName("Main account").clickWithAssertion() }
-            }
-            step("Click on token 'Bitcoin'") {
-                waitForIdle()
-                onSwapSelectTokenScreen { tokenWithName("Bitcoin").clickWithAssertion() }
+            // A multichain account auto-fills FROM with the wallet's most-funded token (Bitcoin here),
+            // so there is nothing to pick — assert the pre-selection instead.
+            step("Assert 'Bitcoin' is pre-selected as the source token") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol("BTC").assertIsDisplayed() }
+                }
             }
             step("Enter swap amount '$swapFromAmount'") {
                 onSwapTokenScreen {
