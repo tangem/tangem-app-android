@@ -198,7 +198,7 @@ internal class ExpressTxToDetailsUMConverter(
             name = stringReference(walletInfo.name),
             deviceIconUM = walletInfo.deviceIconUM,
         )
-        is ResolvedOwner.External -> TxHistoryDetailsUM.AssetOwnerUM.Address(
+        is ResolvedOwner.Foreign -> TxHistoryDetailsUM.AssetOwnerUM.Address(
             name = stringReference(address.toBriefAddressFormat()),
             rawAddress = address,
         )
