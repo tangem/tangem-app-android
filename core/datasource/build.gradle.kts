@@ -8,7 +8,6 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.room)
     alias(deps.plugins.ksp)
     id("configuration")
 }
@@ -32,10 +31,6 @@ abstract class GenerateEnvironmentConfigTask : DefaultTask() {
 
 android {
     namespace = "com.tangem.datasource"
-
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
 }
 
 androidComponents {
@@ -87,12 +82,6 @@ dependencies {
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
-    // region Room
-    api(deps.room.runtime)
-    api(deps.room.ktx)
-    ksp(deps.room.compiler)
-    // endregion
-
     // region Other libraries
     api(deps.jodatime)
     runtimeOnly(deps.spongecastle.core)
@@ -108,7 +97,6 @@ dependencies {
 
     // region Tangem
     api(tangemDeps.blockchain)
-    testImplementation(tangemDeps.card.core)
     // endregion
 
     // region Core modules
@@ -125,6 +113,5 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
-    testImplementation(projects.grow.datasource)
     // endregion
 }
