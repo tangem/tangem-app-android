@@ -4,8 +4,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchAction
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchingContext
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineCategoriesUseCase

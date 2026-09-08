@@ -31,7 +31,7 @@ import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -237,9 +237,9 @@ private fun Preview_ResidencyListScreen_Loading() {
 }
 
 private fun previewState(content: ResidencyListUM.Content) = ResidencyListUM(
-    title = stringReference("Country of residence"),
+    title = resourceReference(R.string.tangempay_residency_title_country),
     search = TangemSearch.State(
-        placeholderText = stringReference("Search"),
+        placeholderText = resourceReference(R.string.common_search),
         query = "",
         onQueryChange = {},
         isActive = false,
@@ -254,7 +254,7 @@ private fun previewCountries() = ResidencyListUM.Content.Sections(
     sections = persistentListOf(
         ResidencyListUM.SectionUM(
             id = "suggested",
-            title = stringReference("Suggested country"),
+            title = resourceReference(R.string.tangempay_residency_suggested_country),
             items = persistentListOf(
                 ResidencyListUM.ItemUM(
                     id = "US",
@@ -267,7 +267,7 @@ private fun previewCountries() = ResidencyListUM.Content.Sections(
         ),
         ResidencyListUM.SectionUM(
             id = "all",
-            title = stringReference("Change country"),
+            title = resourceReference(R.string.tangempay_residency_all_country),
             items = persistentListOf(
                 ResidencyListUM.ItemUM(
                     id = "AD",

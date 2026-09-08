@@ -41,6 +41,37 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
     }
 
     @Test
+    fun `GIVEN the collateral WHEN it is created THEN its contract address is lower case`() {
+        // Act
+        val actual = factory.create().contractAddress
+
+        // Assert — Express answers with a lower-cased address and the swap matches pairs by string equality
+        assertThat(actual).isEqualTo(actual.lowercase())
+    }
+
+    @Test
+    fun `GIVEN both tokens WHEN created THEN a deposit is not made in the token the exchange settles in`() {
+        // Act
+        val settlement = factory.create().contractAddress
+        val deposit = factory.createDepositTarget().contractAddress
+
+        // Assert
+        assertThat(deposit).isNotEqualTo(settlement)
+        assertThat(settlement).isEqualTo(PolymarketContracts.COLLATERAL.lowercase())
+    }
+
+    @Test
+    fun `GIVEN the deposit target WHEN created THEN it is the USDC the bridge accepts on Polygon`() {
+        // Act
+        val actual = factory.createDepositTarget()
+
+        // Assert — the address the bridge lists for chain 137, lower-cased as Express answers it
+        assertThat(actual.contractAddress).isEqualTo("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359")
+        assertThat(actual.decimals).isEqualTo(PolymarketContracts.COLLATERAL_DECIMALS)
+        assertThat(actual.network).isEqualTo(expectedNetwork)
+    }
+
+    @Test
     fun `GIVEN the collateral WHEN it is created THEN it matches the token the shared factory would build`() {
         // Arrange
         val expected = CryptoCurrencyFactory(excludedBlockchains).createToken(
@@ -49,7 +80,7 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
             name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
             symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,
-            contractAddress = PolymarketContracts.COLLATERAL,
+            contractAddress = PolymarketContracts.COLLATERAL.lowercase(),
         )
 
         // Act

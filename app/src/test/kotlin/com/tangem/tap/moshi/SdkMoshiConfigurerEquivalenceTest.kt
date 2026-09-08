@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.core.local.moshi.SdkMoshiConfigurer
-import com.tangem.datasource.di.MoshiModule
+import com.tangem.datasource.common.di.MoshiModule
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
