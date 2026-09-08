@@ -9,6 +9,7 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -113,4 +114,16 @@ interface JointAccountRepository {
         safeTx: SafeTx,
         signature: String,
     ): Either<JointOperationCreateError, Unit>
+
+    /**
+     * A 404 (the operation finished or was removed while the sheet was open) comes back as
+     * [JointOperationSignError.OperationNotFound], a 409 (the threshold is already reached) as
+     * [JointOperationSignError.ThresholdReached]. The function never throws.
+     */
+    suspend fun signOperation(
+        userWalletId: UserWalletId,
+        operationId: String,
+        safeTx: SafeTx,
+        signature: String,
+    ): Either<JointOperationSignError, Unit>
 }
