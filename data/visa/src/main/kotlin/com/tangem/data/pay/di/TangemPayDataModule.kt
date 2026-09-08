@@ -131,6 +131,10 @@ internal interface TangemPayDataModule {
         repository: DefaultTariffPlanTransitionsRepository,
     ): TangemPayTariffPlanTransitionsRepository
 
+    @Binds
+    @Singleton
+    fun bindWaitlistRepository(repository: DefaultTangemPayWaitlistRepository): TangemPayWaitlistRepository
+
     @Suppress("TooManyFunctions", "LargeClass")
     companion object {
 
@@ -293,6 +297,13 @@ internal interface TangemPayDataModule {
                 appCoroutineScope = appCoroutineScope,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             )
+        }
+
+        @Provides
+        fun provideJoinTangemPayWaitlistUseCase(
+            waitlistRepository: TangemPayWaitlistRepository,
+        ): JoinTangemPayWaitlistUseCase {
+            return JoinTangemPayWaitlistUseCase(waitlistRepository)
         }
 
         @Provides

@@ -25,9 +25,9 @@ internal class TangemPayErrorConverter @Inject constructor(
 
             val errorBody = value.errorBody ?: return VisaApiError.UnknownWithoutCode
             runCatching {
-                tangemPayErrorAdapter.fromJson(errorBody)?.error?.code ?: value.code.numericCode
-            }.map {
-                VisaApiError.fromBackendError(it)
+                val error = tangemPayErrorAdapter.fromJson(errorBody)?.error
+                VisaApiError.fromBackendName(error?.name)
+                    ?: VisaApiError.fromBackendError(error?.code ?: value.code.numericCode)
             }.getOrElse {
                 VisaApiError.UnknownWithoutCode
             }
