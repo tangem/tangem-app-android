@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
 import arrow.core.right
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.account.AccountStatus
@@ -19,6 +21,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -36,6 +39,7 @@ internal class TangemPayOrderCardModelTest {
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val onAddFundsRequested: () -> Unit = mockk(relaxed = true)
 
     private val status: AccountStatus.Payment = mockk {
         every { value } returns PaymentAccountStatusValue.Loading
@@ -81,13 +85,41 @@ internal class TangemPayOrderCardModelTest {
     }
 
     @Test
-    fun `GIVEN add funds requested WHEN callback THEN flow closed`() = runTest {
-        // Act
+    fun `GIVEN issue popup shown WHEN onAddFundsForCardIssue THEN popup dismissed and add funds requested`() =
+        runTest {
+            // Arrange
+            coEvery { getCustomerOffers.additionalCardOffer(WALLET_ID) } returns virtualOffer().right()
+            val model = createModel(testScope = this)
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            model.onSelectVirtual()
+            advanceUntilIdle()
+
+            // Act
+            model.onAddFundsForCardIssue()
+
+            // Assert
+            assertThat(openedSheets.filterIsInstance<TangemPayOrderCardNavigation.IssueVirtual>()).hasSize(1)
+            assertThat(openedSheets.last()).isNull()
+            verifyOrder {
+                onAddFundsRequested()
+                router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
+            }
+            verify(exactly = 1) { onAddFundsRequested() }
+            verify(exactly = 0) { router.pop() }
+        }
+
+    @Test
+    fun `GIVEN add funds already requested WHEN onAddFundsForCardIssue again THEN request is not repeated`() = runTest {
+        // Arrange
         val model = createModel(testScope = this)
+
+        // Act
+        model.onAddFundsForCardIssue()
         model.onAddFundsForCardIssue()
 
         // Assert
-        verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { onAddFundsRequested() }
+        verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) }
     }
 
     @Test
@@ -117,8 +149,19 @@ internal class TangemPayOrderCardModelTest {
             verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) }
         }
 
+    private fun SlotNavigation<TangemPayOrderCardNavigation>.trackSlot(): List<TangemPayOrderCardNavigation?> {
+        val tracked = mutableListOf<TangemPayOrderCardNavigation?>()
+        subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
+        return tracked
+    }
+
     private fun createModel(testScope: TestScope) = TangemPayOrderCardModel(
-        paramsContainer = MutableParamsContainer(TangemPayOrderCardComponent.Params(userWalletId = WALLET_ID)),
+        paramsContainer = MutableParamsContainer(
+            TangemPayOrderCardComponent.Params(
+                userWalletId = WALLET_ID,
+                onAddFundsRequested = onAddFundsRequested,
+            ),
+        ),
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         getCustomerOffers = getCustomerOffers,
