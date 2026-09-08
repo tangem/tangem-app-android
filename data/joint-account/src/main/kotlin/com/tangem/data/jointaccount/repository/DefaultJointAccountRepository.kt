@@ -69,7 +69,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
                         invites = response.invites.orEmpty().map { it.id },
                     )
 
-                    JointAccountCreationResult.Created(account = converter.convert(dto = response))
+                    JointAccountCreationResult.Created(account = converter.convert(value = response))
                 },
                 onError = { error ->
                     // The HTTP code stays in the data layer: the domain branches on the result, not on 409
@@ -96,7 +96,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
                         body = JoinJointAccountRequestConverter(signature = signature).convert(value = payload),
                     ).bind()
 
-                    JointAccountJoinResult.Joined(account = converter.convert(dto = response))
+                    JointAccountJoinResult.Joined(account = converter.convert(value = response))
                 },
                 onError = { error ->
                     // The HTTP code stays in the data layer: the domain branches on the result, not on 409
