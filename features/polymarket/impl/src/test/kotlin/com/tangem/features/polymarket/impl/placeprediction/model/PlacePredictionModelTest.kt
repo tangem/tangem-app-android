@@ -878,7 +878,7 @@ internal class PlacePredictionModelTest {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
             coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
-                DelayedPredictionOrderOutcome.TimedOut
+                DelayedPredictionOrderOutcome.Unconfirmed
             model.onScreenHidden()
 
             // Act
@@ -904,7 +904,7 @@ internal class PlacePredictionModelTest {
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
         coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } coAnswers {
             delay(timeMillis = 30_000)
-            DelayedPredictionOrderOutcome.TimedOut
+            DelayedPredictionOrderOutcome.Unconfirmed
         }
         model.onScreenHidden()
         model.onPlaceClick()

@@ -362,8 +362,8 @@ internal class PlacePredictionModel @Inject constructor(
             is DelayedPredictionOrderOutcome.Failed -> {
                 showPlaceFailure(reason = "Delayed order $orderId did not fill: ${outcome.detail}")
             }
-            is DelayedPredictionOrderOutcome.TimedOut -> {
-                logger.e("Delayed order $orderId: the book gave no answer within the reads allowed")
+            is DelayedPredictionOrderOutcome.Unconfirmed -> {
+                logger.e("Delayed order $orderId: the book did not say whether it matched within the reads allowed")
                 returnToIdle()
                 showFailureDialog(
                     title = resourceReference(R.string.prediction_place_delayed_timeout_title),
