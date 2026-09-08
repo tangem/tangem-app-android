@@ -19,6 +19,7 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -48,7 +49,7 @@ internal fun TangemPayWaitlistBottomSheet(state: TangemPayWaitlistUM) {
             content = state,
         ),
         isExpanded = true,
-        scrollableContent = false,
+        scrollableContent = true,
         title = {
             TangemTopNavigation(
                 windowInsets = WindowInsets(0),
@@ -89,7 +90,7 @@ private fun Header(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .padding(top = 12.dp, bottom = 24.dp),
+            .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
@@ -143,14 +144,14 @@ private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier
                 else -> TangemTheme.colors3.border.tertiary
             },
         )
-        if (state.emailError != null) {
-            Text(
-                modifier = Modifier.padding(top = 8.dp),
-                text = state.emailError.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.status.error,
-            )
-        }
+        Text(
+            modifier = Modifier.padding(top = 8.dp),
+            text = state.emailError?.resolveReference().orEmpty(),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.status.error,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
