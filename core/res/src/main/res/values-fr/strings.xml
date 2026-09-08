@@ -828,7 +828,7 @@
   <string name="hw_cloud_backup_restore_password_navtitle">Restaurer le portefeuille</string>
   <string name="hw_cloud_backup_restore_password_title">Saisir le mot de passe</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Importer la phrase de récupération</string>
-  <string name="hw_cloud_backup_restore_wrong_password">Mot de passe incorrect. Veuillez réessayer.</string>
+  <string name="hw_cloud_backup_restore_wrong_password">Mot de passe incorrect</string>
   <string name="hw_cloud_backup_retry">Réessayer</string>
   <string name="hw_cloud_backup_set_password_button">Définir mot de passe</string>
   <string name="hw_cloud_backup_set_password_description">Un mot de passe est requis pour chiffrer votre phrase de récupération sur %s.</string>
@@ -1966,7 +1966,7 @@
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">Nous traitons les achats sous 5 jours et comptons seulement les transactions terminées</string>
   <string name="tangempay_cashback_accruals_calc_title">Comment calculons-nous le cashback ?</string>
-  <string name="tangempay_cashback_accruals_exceptions_description">Le cashback n’est pas disponible pour les paiements en magasin par terminal dans l’UE. Il ne s’applique pas non plus aux retraits, au quasi-cash, aux recharges mobiles, aux services publics et à certaines autres catégories.</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Temporairement, le cashback n’est pas disponible pour les paiements sans contact en magasin dans l’UE. Il ne s’applique pas non plus aux retraits, au quasi-cash, aux recharges mobiles, aux services publics et à certaines autres catégories.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
   <string name="tangempay_cashback_accruals_pay_description">Du 2 au 5 du mois suivant</string>
   <string name="tangempay_cashback_accruals_pay_title">Comment versons-nous le cashback ?</string>
@@ -1980,7 +1980,7 @@
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s pour %2$s versé avant le %3$s</string>
   <string name="tangempay_cashback_deposited_on">Versé le %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s max/mois</string>
-  <string name="tangempay_cashback_details_eu_excluded">Pas de cashback pour achats en magasin dans l\'UE</string>
+  <string name="tangempay_cashback_details_eu_excluded">Temporairement, le cashback n’est pas disponible pour les paiements sans contact en magasin dans l’UE</string>
   <string name="tangempay_cashback_details_paid_in">Payé en %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% sur achats avec cartes %2$s, achat min. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s gagné en %2$s</string>
