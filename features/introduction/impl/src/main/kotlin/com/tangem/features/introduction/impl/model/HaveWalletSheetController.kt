@@ -132,7 +132,10 @@ internal class HaveWalletSheetController(
         showStep { importStep(isCloudLoading = true) }
         cloudResolveJob = scope.launch {
             val result = resolveCloudRestoreBackups()
-            if (!isShown) return@launch
+            if (!isShown) {
+                cloudResolveJob = null
+                return@launch
+            }
             result.fold(
                 ifLeft = { error ->
                     val message = CloudRestoreErrorMessage.of(error)
@@ -144,6 +147,7 @@ internal class HaveWalletSheetController(
                     router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
                 },
             )
+            cloudResolveJob = null
         }
     }
 
