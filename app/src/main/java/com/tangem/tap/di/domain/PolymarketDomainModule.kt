@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -7,6 +8,9 @@ import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PredictionDepositAddressWriter
+import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
@@ -216,5 +220,19 @@ internal object PolymarketDomainModule {
         syncBalanceAllowance = syncBalanceAllowance,
         polymarketOnboardedStore = polymarketOnboardedStore,
         checkGeoblock = checkGeoblock,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRefreshPredictionDepositRequisitesInteractor(
+        bridgeRepository: PolymarketBridgeRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        requisitesStore: PredictionDepositRequisitesStore,
+        depositAddressWriter: PredictionDepositAddressWriter,
+    ): RefreshPredictionDepositRequisitesInteractor = RefreshPredictionDepositRequisitesInteractor(
+        bridgeRepository = bridgeRepository,
+        deriveAddresses = deriveAddresses,
+        requisitesStore = requisitesStore,
+        depositAddressWriter = depositAddressWriter,
     )
 }
