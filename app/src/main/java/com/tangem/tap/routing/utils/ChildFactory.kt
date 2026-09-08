@@ -48,6 +48,7 @@ import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
@@ -128,6 +129,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
+    private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
     private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
@@ -782,6 +784,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = tangemPayWalletOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayCampaign -> {
+                createComponentChild(
+                    context = context,
+                    params = TangemPayCampaignComponent.Params(campaignKey = route.campaignKey),
+                    componentFactory = tangemPayCampaignComponentFactory,
                 )
             }
             is AppRoute.VirtualAccountOnboarding -> {
