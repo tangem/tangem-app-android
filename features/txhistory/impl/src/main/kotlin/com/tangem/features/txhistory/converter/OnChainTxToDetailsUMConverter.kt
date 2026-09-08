@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
@@ -20,6 +21,7 @@ import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.core.ui.res.generated.icons.ic_stack_20
 import com.tangem.core.ui.res.generated.icons.ic_success_20
+import com.tangem.domain.addressbook.model.portfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -28,9 +30,10 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.isPlainTransfer
 import com.tangem.features.txhistory.model.mayCarryStakingTarget
 import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
-import com.tangem.features.txhistory.model.resolveOwner
+import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.toBriefAddressFormat
@@ -172,7 +175,7 @@ internal class OnChainTxToDetailsUMConverter(
     /** A transfer whose counterparty resolves to one of the user's own accounts/wallets reads "Transfer". */
     private fun TxInfo.isOwnTransfer(): Boolean = when (resolvedCounterparty()) {
         is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount, is ResolvedOwner.OwnWallet -> true
-        is ResolvedOwner.External, null -> false
+        is ResolvedOwner.Foreign, null -> false
     }
 
     /**
@@ -195,7 +198,13 @@ internal class OnChainTxToDetailsUMConverter(
      */
     private fun TxInfo.resolvedCounterparty(): ResolvedOwner? {
         val address = counterpartyAddress() ?: return null
-        return lookup.resolveOwner(address = address, networkRawId = currency.network.id.rawId)
+        return lookup.resolveCounterparty(
+            address = address,
+            networkRawId = currency.network.id.rawId,
+            // Only a plain transfer's recipient is matched against the address book, so the card agrees with the
+            // history list: an unrecognized contract call talks to a contract, not to a recipient.
+            isOutgoing = isOutgoing && isPlainTransfer(),
+        )
     }
 
     /** The raw counterparty address [resolvedCounterparty] resolves, before the [lookup] turns it into an owner. */
@@ -313,6 +322,15 @@ internal class OnChainTxToDetailsUMConverter(
                 label = counterpartyLabel(incoming = R.string.common_from_wallet),
                 title = stringReference(owner.walletInfo.name),
                 avatar = TxHistoryDetailsUM.CounterpartyAvatar.Wallet(deviceIconUM = owner.walletInfo.deviceIconUM),
+                onCopyClick = copyAddress,
+            )
+            is ResolvedOwner.SavedContact -> TxHistoryDetailsUM.CounterpartyUM(
+                label = counterpartyLabel(incoming = R.string.common_from_address),
+                title = stringReference(owner.contact.name.value),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Contact(
+                    name = owner.contact.name.value,
+                    icon = CryptoPortfolioIconConverter.convert(owner.contact.portfolioIcon()),
+                ),
                 onCopyClick = copyAddress,
             )
             is ResolvedOwner.External -> TxHistoryDetailsUM.CounterpartyUM(

@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
@@ -295,7 +297,7 @@ internal open class TxDetailsConverterTestBase {
         cryptoCurrency = cryptoCurrency,
     )
 
-    /** Builds a details lookup with the given per-network own-address maps. */
+    /** Builds a details lookup with the given per-network own-address maps and, optionally, saved [contacts]. */
     protected fun lookupOf(
         vararg networks: Pair<Network.RawID, Map<String, Account>>,
         isAccountsModeEnabled: Boolean = true,
@@ -305,10 +307,13 @@ internal open class TxDetailsConverterTestBase {
                 deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
             ),
         ),
+        contacts: List<Contact> = emptyList(),
     ): TxHistoryLookupContext = TxHistoryLookupContext(
         ownAccountByNetwork = networks.toMap(),
         isAccountsModeEnabled = isAccountsModeEnabled,
         walletInfoById = walletInfoById,
+        contacts = ContactAddressLookup.of(contacts),
+        viewedWalletId = MockAccounts.userWalletId,
     )
 
     /** A `walletInfoById` with the own [MockAccounts.userWalletId] plus a second wallet, so an own-wallet leg has

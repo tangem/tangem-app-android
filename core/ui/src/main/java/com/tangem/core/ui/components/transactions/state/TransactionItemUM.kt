@@ -108,6 +108,28 @@ sealed interface TransactionItemUM {
         ) : ContentSubtitle
 
         /**
+         * Counterparty saved in one of the user's address books — renders as "to: <avatar> <contactName>" in place of
+         * the address. Outgoing transfers only; an incoming transfer's sender keeps showing its address.
+         */
+        data class Contact(
+            val direction: Direction,
+            val contactName: String,
+            val avatar: ContactAvatar,
+        ) : ContentSubtitle
+
+        /**
+
+         * app carries a letter [Monogram], while an icon picked in the contact editor renders as [Resource].
+         */
+        @Immutable
+        sealed interface ContactAvatar {
+
+            data class Monogram(val char: Char, val color: Color) : ContactAvatar
+
+            data class Resource(@DrawableRes val resId: Int, val color: Color) : ContactAvatar
+        }
+
+        /**
          * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
          * portfolio it settled in ("… in <owner>"). Used for express rows (swap counterparty currency / onramp fiat),
          * e.g. "to: ◎ POL", "from: 🇸🇪 SEK", or the cross-portfolio "to: ◎ POL in 🟦 Main".

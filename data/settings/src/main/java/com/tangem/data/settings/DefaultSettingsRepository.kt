@@ -9,6 +9,7 @@ import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
@@ -26,6 +27,7 @@ internal class DefaultSettingsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val appLogsStore: AppLogsStore,
     private val tangemTechApi: TangemTechApi,
+    private val settingsFeatureToggles: SettingsFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SettingsRepository {
 
@@ -134,41 +136,70 @@ internal class DefaultSettingsRepository(
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_SHOW_MARKETS_TOOLTIP_KEY, value = !value)
     }
 
-    override fun getUserCountryCodeSync(): UserCountry? {
-        // If user country code is already set, return it
-        val countryCode = userCountryFlow.value
-        if (countryCode != null) return countryCode
-
-        return null
-    }
+    override fun getUserCountryCodeSync(): UserCountry? = userCountryFlow.value
 
     override fun getUserCountryCode(): StateFlow<UserCountry?> = userCountryFlow
 
     override suspend fun fetchUserCountryCode() {
         TangemLogger.i("Start fetching user country code")
 
+        if (!settingsFeatureToggles.isGeoCountryCacheFallbackEnabled) {
+            fetchUserCountryCodeLegacy()
+            return
+        }
+
+        withContext(dispatchers.io) {
+            val geoCode = runSuspendCatching { tangemTechApi.getUserCountryCode() }
+                .getOrNull()
+                ?.code
+                ?.takeIf(String::isNotBlank)
+
+            val country = if (geoCode == null) {
+                appPreferencesStore.getSyncOrNull(key = PreferencesKeys.GEO_USER_COUNTRY_CODE_KEY)
+                    ?.takeIf(String::isNotBlank)
+                    ?.let(UserCountry::from)
+                    ?: UserCountry.fromDeviceLocale()
+            } else {
+                UserCountry.from(code = geoCode)
+            }
+
+            TangemLogger.i("User code country is $country")
+
+            userCountryFlow.value = country
+
+            if (geoCode != null) cacheUserCountryCode(country)
+        }
+    }
+
+    /** Caching must not discard an already resolved country, so a failed write is only reported */
+    private suspend fun cacheUserCountryCode(country: UserCountry) {
+        runSuspendCatching {
+            appPreferencesStore.store(key = PreferencesKeys.GEO_USER_COUNTRY_CODE_KEY, value = country.code)
+        }
+            .onFailure { TangemLogger.e("Unable to cache the user country code", it) }
+    }
+
+    private suspend fun fetchUserCountryCodeLegacy() {
         // for GB locale avoid request geo and use device default (FCA fixes)
         if (Locale.getDefault().country == GB_COUNTRY.code) {
+            TangemLogger.i("User code country is $GB_COUNTRY")
+
             userCountryFlow.value = GB_COUNTRY
             return
         }
 
         withContext(dispatchers.io) {
-            val country = runSuspendCatching { tangemTechApi.getUserCountryCode() }
+            val code = runSuspendCatching { tangemTechApi.getUserCountryCode() }
                 .fold(
                     onSuccess = GeoResponse::code,
                     onFailure = { Locale.getDefault().country },
                 )
-                .lowercase()
 
-            val code = when (country) {
-                UserCountry.Russia.code -> UserCountry.Russia
-                else -> UserCountry.Other(code = country)
-            }
+            val country = UserCountry.from(code = code)
 
-            TangemLogger.i("User code country is $code")
+            TangemLogger.i("User code country is $country")
 
-            userCountryFlow.value = code
+            userCountryFlow.value = country
         }
     }
 
