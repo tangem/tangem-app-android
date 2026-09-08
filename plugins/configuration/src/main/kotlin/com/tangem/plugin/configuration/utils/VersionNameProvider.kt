@@ -39,8 +39,13 @@ internal class VersionNameProvider(
             }
         }
 
-        // Fallback to default if nothing works
-        return "1.0.0-SNAPSHOT"
+        // A 1.0.0 version disables every version-gated feature toggle, so the app under test stops
+        // resembling the shipping build — never let that pass unnoticed.
+        project.logger.warn(
+            "Could not resolve a release version for branch '$currentBranch'; falling back to " +
+                "$FALLBACK_VERSION_NAME — all version-gated feature toggles will be DISABLED.",
+        )
+        return FALLBACK_VERSION_NAME
     }
 
     /**
@@ -94,7 +99,11 @@ internal class VersionNameProvider(
                 // HEAD always resolves to the current commit, even in CI's detached checkout, so the
                 // script can compute which release branch this build descends from without relying on
                 // a local branch ref existing.
-                commandLine("sh", scriptPath.absolutePath, "HEAD")
+                //
+                // bash, not sh: the script needs `set -o pipefail`, which dash (/bin/sh on the CI
+                // Docker image) rejects with exit 2 — that silently fell back to 1.0.0-SNAPSHOT and
+                // disabled every version-gated feature toggle in CI builds.
+                commandLine("bash", scriptPath.absolutePath, "HEAD")
             }.standardOutput.asText.get()
 
             if (!outputFile.exists()) {
@@ -137,5 +146,6 @@ internal class VersionNameProvider(
 
     private companion object {
         const val DETACHED_HEAD = "HEAD"
+        const val FALLBACK_VERSION_NAME = "1.0.0-SNAPSHOT"
     }
 }
