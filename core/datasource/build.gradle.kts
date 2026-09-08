@@ -101,8 +101,8 @@ dependencies {
     // region Chucker
     debugImplementation(deps.chucker)
     mockedImplementation(deps.chucker)
+    internalImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
-    internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
     // endregion
 
