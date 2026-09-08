@@ -39,9 +39,9 @@ internal sealed interface HotWalletImportError {
  *
  * Extracted verbatim from the seed-import flow so the recovery-phrase import and the cloud-backup
  * restore converge on the exact same save/sync/analytics sequence: import via the Hot SDK, build the
- * wallet, persist it as already `backedUp = true`, kick off the remote sync + assets discovery, and
- * send the identical onboarding analytics ([AnalyticsParam.WalletCreationType.SeedImport]). Callers own
- * only their progress UI and the navigation callback.
+ * wallet, persist it, kick off the remote sync + assets discovery, and send the identical onboarding
+ * analytics ([AnalyticsParam.WalletCreationType.SeedImport]). Callers own only their progress UI, the
+ * navigation callback and the seed-phrase backup state they import with.
  */
 @Suppress("LongParameterList")
 internal class HotWalletImporter @Inject constructor(
@@ -57,12 +57,15 @@ internal class HotWalletImporter @Inject constructor(
 
     /**
      * @param scope outlives this call: the remote sync it starts must survive the caller's screen
+     * @param isSeedPhraseBackedUp whether the user already holds the recovery phrase. True when they typed
+     * it in themselves, false when the phrase came from a backup they never saw (e.g. a cloud restore).
      */
     suspend fun import(
         scope: CoroutineScope,
         mnemonic: Mnemonic,
         passphrase: CharArray?,
         name: String? = null,
+        isSeedPhraseBackedUp: Boolean,
     ): Either<HotWalletImportError, UserWalletId> = either {
         val userWallet = runSuspendCatching {
             val hotWalletId = tangemHotSdk.importWallet(mnemonic, passphrase, HotAuth.NoAuth)
@@ -72,15 +75,18 @@ internal class HotWalletImporter @Inject constructor(
             raise(HotWalletImportError.Unknown(error))
         }
 
-        save(userWallet).bind()
+        save(userWallet, isSeedPhraseBackedUp).bind()
         startRemoteSync(scope, userWallet.walletId)
         sendWalletCreatedEvents(mnemonic, passphrase)
 
         userWallet.walletId
     }
 
-    private suspend fun save(userWallet: UserWallet.Hot): Either<HotWalletImportError, Unit> =
-        saveUserWalletUseCase.invoke(userWallet.copy(backedUp = true)).mapLeft { error ->
+    private suspend fun save(
+        userWallet: UserWallet.Hot,
+        isSeedPhraseBackedUp: Boolean,
+    ): Either<HotWalletImportError, Unit> =
+        saveUserWalletUseCase.invoke(userWallet.copy(backedUp = isSeedPhraseBackedUp)).mapLeft { error ->
             when (error) {
                 is SaveWalletError.DataError -> {
                     TangemLogger.e("Unable to save user wallet: $error")
