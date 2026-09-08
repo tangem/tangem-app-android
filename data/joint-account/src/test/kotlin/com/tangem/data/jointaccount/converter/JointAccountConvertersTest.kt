@@ -31,7 +31,7 @@ internal class JointAccountConvertersTest {
     fun convertDto(model: DtoModel) {
         // Act
         val actual = dtoConverter.convert(
-            dto = createJointAccountDto(
+            value = createJointAccountDto(
                 status = model.rawStatus,
                 members = listOf(
                     JointAccountDto.Member(name = "Alice", address = FIXTURE_ALICE_ADDRESS, role = model.rawRole),
@@ -73,7 +73,7 @@ internal class JointAccountConvertersTest {
         )
 
         // Act
-        val restored = dmConverter.convertBack(dm = dmConverter.convert(account = original))
+        val restored = dmConverter.convertBack(value = dmConverter.convert(value = original))
 
         // Assert
         assertThat(restored).isEqualTo(original.copy(source = StatusSource.CACHE))
@@ -95,7 +95,7 @@ internal class JointAccountConvertersTest {
         )
 
         // Act
-        val restored = dmConverter.convertBack(dm = dmConverter.convert(account = original))
+        val restored = dmConverter.convertBack(value = dmConverter.convert(value = original))
 
         // Assert
         assertThat(restored).isEqualTo(original.copy(source = StatusSource.CACHE))
@@ -107,7 +107,7 @@ internal class JointAccountConvertersTest {
         val original = createJointAccount(status = JointAccount.Status.UNKNOWN)
 
         // Act
-        val restored = dmConverter.convertBack(dm = dmConverter.convert(account = original))
+        val restored = dmConverter.convertBack(value = dmConverter.convert(value = original))
 
         // Assert
         assertThat(restored.status).isEqualTo(JointAccount.Status.UNKNOWN)
@@ -116,7 +116,7 @@ internal class JointAccountConvertersTest {
     @Test
     fun `GIVEN invite preview dto WHEN convert THEN domain model is returned`() {
         // Act
-        val actual = invitePreviewConverter.convert(dto = createJointAccountInvitePreviewDto())
+        val actual = invitePreviewConverter.convert(value = createJointAccountInvitePreviewDto())
 
         // Assert
         assertThat(actual).isEqualTo(createJointAccountInvitePreview())
