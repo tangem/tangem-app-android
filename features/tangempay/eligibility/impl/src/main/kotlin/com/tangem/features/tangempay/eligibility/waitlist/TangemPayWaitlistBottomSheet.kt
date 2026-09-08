@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.ImeAction
@@ -20,6 +21,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.ds2.button.Close
@@ -29,12 +32,13 @@ import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_circle_24_filled
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun TangemPayWaitlistBottomSheet(state: TangemPayWaitlistUM) {
@@ -88,15 +92,13 @@ private fun Header(modifier: Modifier = Modifier) {
             .padding(top = 12.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY]
         Text(
-            text = "Join the waitlist",
+            text = stringResourceSafe(R.string.tangempay_waitlist_title),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
         )
-        // TODO v_rodionov: #[REDACTED_TASK_KEY]
         Text(
-            text = "We'll email you the moment it's available in your region",
+            text = stringResourceSafe(R.string.tangempay_waitlist_description),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
         )
@@ -106,10 +108,13 @@ private fun Header(modifier: Modifier = Modifier) {
 @Composable
 private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
     var isFocused by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        delay(300.milliseconds)
         focusRequester.requestFocus()
+        keyboardController?.show()
     }
 
     Column(
@@ -117,16 +122,16 @@ private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .padding(top = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            text = "E-mail",
+            text = stringResourceSafe(R.string.common_email),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
         )
-
+        SpacerH4()
         Row(
-            modifier = Modifier.padding(vertical = 2.dp),
+            modifier = Modifier
+                .heightIn(min = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -136,7 +141,7 @@ private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState -> isFocused = focusState.isFocused },
                 value = state.email,
-                placeholder = stringReference("satoshi.nakamoto@tangem.com"),
+                placeholder = resourceReference(R.string.tangempay_waitlist_email_placeholder),
                 textStyle = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,
                 placeholderColor = TangemTheme.colors3.text.tertiary,
@@ -147,7 +152,6 @@ private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier
                 ),
                 onValueChange = state.onEmailChange,
             )
-
             if (state.email.isNotEmpty()) {
                 Icon(
                     modifier = Modifier
@@ -159,9 +163,8 @@ private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier
                 )
             }
         }
-
+        SpacerH(14.dp)
         HorizontalDivider(
-            modifier = Modifier.padding(top = 10.dp),
             thickness = 1.dp,
             color = if (isFocused) {
                 TangemTheme.colors3.border.brand
@@ -193,16 +196,19 @@ private fun MarketingConsent(state: TangemPayWaitlistUM, modifier: Modifier = Mo
 @Composable
 private fun MarketingConsentText(onPrivacyPolicyClick: () -> Unit, modifier: Modifier = Modifier) {
     val privacyPolicyTitle = stringResourceSafe(R.string.common_privacy_policy)
+    val fullText = stringResourceSafe(R.string.tangempay_waitlist_marketing_consent, privacyPolicyTitle)
+    val linkIndex = fullText.indexOf(privacyPolicyTitle)
     val linkStyle = SpanStyle(
         color = TangemTheme.colors3.text.primary,
         textDecoration = TextDecoration.None,
     )
     val text = buildAnnotatedString {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY]
-        append(
-            "I'd also like to receive marketing communications from Tangem. " +
-                "You can withdraw this consent at any time — see our ",
-        )
+        if (linkIndex < 0) {
+            append(fullText)
+            return@buildAnnotatedString
+        }
+
+        append(fullText.substring(0, linkIndex))
         withLink(
             LinkAnnotation.Clickable(
                 tag = privacyPolicyTitle,
@@ -211,6 +217,7 @@ private fun MarketingConsentText(onPrivacyPolicyClick: () -> Unit, modifier: Mod
         ) {
             withStyle(linkStyle) { append(privacyPolicyTitle) }
         }
+        append(fullText.substring(linkIndex + privacyPolicyTitle.length))
     }
 
     Text(
@@ -224,7 +231,7 @@ private fun MarketingConsentText(onPrivacyPolicyClick: () -> Unit, modifier: Mod
 @Preview(widthDp = 402, heightDp = 874, showBackground = true)
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TangemPayWaitlistBottomSheet_Empty() {
+private fun Preview_Empty() {
     TangemThemePreviewRedesign(alwaysShowBottomSheets = true) {
         TangemPayWaitlistBottomSheet(state = previewState(email = "", isSaveEnabled = false))
     }
@@ -232,7 +239,7 @@ private fun Preview_TangemPayWaitlistBottomSheet_Empty() {
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TangemPayWaitlistBottomSheet_Filled() {
+private fun Preview_Filled() {
     TangemThemePreviewRedesign(alwaysShowBottomSheets = true) {
         TangemPayWaitlistBottomSheet(
             state = previewState(
