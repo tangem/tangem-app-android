@@ -19,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.sdk.storage.AndroidSecureStorageV2
+import com.tangem.spend.datasource.pay.store.TangemPayPreferencesKeys
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.firstOrNull
@@ -312,6 +313,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
             preferences.remove(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId))
             preferences.remove(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId))
             preferences.remove(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId))
+            preferences.remove(TangemPayPreferencesKeys.bankOfframpRecents(userWalletId))
             // Both withdraw stores live inside a single preference holding a map, so the wallet's entry is
             // removed from it rather than the key itself.
             preferences.deleteActiveWithdrawOrderInternal(userWalletId)

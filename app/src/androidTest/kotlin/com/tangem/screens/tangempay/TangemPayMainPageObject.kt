@@ -57,6 +57,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    /** Every card tile carries the same tag, so a specific one is addressed by its position in the row. */
+    fun cardButtonAt(index: Int): KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON)
+        hasPosition(index)
+        useUnmergedTree = true
+    }
+
     val paymentAccountTitle: KNode = child {
         hasText(getResourceString(CoreResR.string.tangempay_payment_account))
         useUnmergedTree = true
@@ -138,6 +145,22 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val reloadHistoryButton: KNode = child {
         hasTestTag(TangemPayTestTags.TRANSACTION_HISTORY_RELOAD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val issuingCardBanner: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_issuing_new_digital_card_title),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
+
+    val issuingCardBannerDescription: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress_description),
+            substring = true,
+        )
         useUnmergedTree = true
     }
 

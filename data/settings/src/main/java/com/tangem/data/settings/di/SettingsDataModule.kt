@@ -1,9 +1,11 @@
 package com.tangem.data.settings.di
 
 import android.content.Context
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.settings.BuildConfig
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultPermissionRepository
+import com.tangem.data.settings.DefaultSettingsFeatureToggles
 import com.tangem.data.settings.DefaultSettingsRepository
 import com.tangem.data.settings.DevHotWalletRestrictionManager
 import com.tangem.data.settings.DevUsedeskTokenTtlManager
@@ -13,6 +15,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.settings.HotWalletRestrictionManager
+import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
@@ -35,14 +38,22 @@ internal object SettingsDataModule {
         appPreferencesStore: AppPreferencesStore,
         appLogsStore: AppLogsStore,
         tangemTechApi: TangemTechApi,
+        settingsFeatureToggles: SettingsFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): SettingsRepository {
         return DefaultSettingsRepository(
             appPreferencesStore = appPreferencesStore,
             appLogsStore = appLogsStore,
             tangemTechApi = tangemTechApi,
+            settingsFeatureToggles = settingsFeatureToggles,
             dispatchers = dispatchers,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsFeatureToggles(featureTogglesManager: FeatureTogglesManager): SettingsFeatureToggles {
+        return DefaultSettingsFeatureToggles(featureTogglesManager)
     }
 
     @Provides
