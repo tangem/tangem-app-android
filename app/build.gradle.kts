@@ -133,6 +133,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.appUpdate)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
