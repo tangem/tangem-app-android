@@ -1,9 +1,9 @@
-package com.tangem.data.collectibles.derivation
+package com.tangem.data.collectibles.account.derivation
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.card.EllipticCurve
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.collectibles.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
+import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.lib.crypto.derivation.supportsDerivationPath
 import org.junit.jupiter.api.Test
 
