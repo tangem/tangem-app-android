@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 
-/** [isWarning] tells an account without backups from a failure to list them. */
+/** [isWarning] distinguishes an account without backups from a failure to list them. */
 data class CloudRestoreErrorMessage(
     val title: TextReference,
     val body: TextReference,
