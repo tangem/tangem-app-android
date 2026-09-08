@@ -65,7 +65,9 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
-    val cardFrozenBadge: KNode = child {
+    // CARD_FROZEN_BADGE is the Pending-state spinner (TangemPayCardDetailsBlock) — a settled Frozen card
+    // renders no badge at all, so assert [unfreezeCardRow] for that instead.
+    val cardPendingFreezeSpinner: KNode = child {
         hasTestTag(TangemPayTestTags.CARD_FROZEN_BADGE)
         useUnmergedTree = true
     }

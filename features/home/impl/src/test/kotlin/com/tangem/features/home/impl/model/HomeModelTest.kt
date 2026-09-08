@@ -2,13 +2,16 @@ package com.tangem.features.home.impl.model
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.appsflyer.usecase.IsReferralInstallUseCase
+import com.tangem.domain.appsflyer.AppsFlyerDeeplink
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.appsflyer.usecase.GetAppsFlyerDeeplinkUseCase
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -45,7 +48,8 @@ internal class HomeModelTest {
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory = mockk(relaxed = true)
     private val saveWalletUseCase: SaveWalletUseCase = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
-    private val isReferralInstallUseCase: IsReferralInstallUseCase = mockk(relaxed = true)
+    private val getAppsFlyerDeeplinkUseCase: GetAppsFlyerDeeplinkUseCase = mockk()
+    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val homeFeatureToggles: HomeFeatureToggles = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -54,6 +58,7 @@ internal class HomeModelTest {
     @BeforeEach
     fun setUp() {
         every { homeFeatureToggles.isStoriesContainerEnabled } returns false
+        coEvery { getAppsFlyerDeeplinkUseCase() } returns null
         every { getUserCountryUseCase.invoke() } returns emptyFlow()
         coEvery { settingsRepository.shouldSaveAccessCodes() } returns false
         coEvery {
@@ -169,6 +174,73 @@ internal class HomeModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN tpay deeplink WHEN get started clicked THEN pay onboarding becomes root and deeplink consumed`() =
+        runTest {
+            // Arrange
+            coEvery { getAppsFlyerDeeplinkUseCase() } returns AppsFlyerDeeplink.TangemPayMobileOnboarding
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onGetStartedClick()
+            advanceUntilIdle()
+
+            // Assert — the onboarding stays the stack root, so its fallback to Home cannot stack a second Home.
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            verify(exactly = 1) {
+                router.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any())
+            }
+            verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN referral deeplink WHEN get started clicked THEN hot wallet creation opened`() = runTest {
+        // Arrange
+        coEvery { getAppsFlyerDeeplinkUseCase() } returns AppsFlyerDeeplink.Referral
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGetStartedClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(
+                route = AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+                onComplete = any(),
+            )
+        }
+        coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no deeplink WHEN get started clicked THEN cold wallet creation opened`() = runTest {
+        // Arrange
+        coEvery { getAppsFlyerDeeplinkUseCase() } returns null
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onGetStartedClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(
+                route = AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.ColdWallet),
+                onComplete = any(),
+            )
+        }
+
+        model.onDestroy()
+    }
+
     private fun createModel(
         testScope: TestScope,
         launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
@@ -188,7 +260,8 @@ internal class HomeModelTest {
             coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
             saveWalletUseCase = saveWalletUseCase,
             userWalletsListRepository = userWalletsListRepository,
-            isReferralInstallUseCase = isReferralInstallUseCase,
+            getAppsFlyerDeeplinkUseCase = getAppsFlyerDeeplinkUseCase,
+            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             homeFeatureToggles = homeFeatureToggles,
             uiMessageSender = uiMessageSender,
         )

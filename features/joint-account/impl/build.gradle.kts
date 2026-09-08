@@ -24,7 +24,6 @@ dependencies {
     api(projects.features.jointAccount.api)
 
     /** Common */
-    implementation(projects.common)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
