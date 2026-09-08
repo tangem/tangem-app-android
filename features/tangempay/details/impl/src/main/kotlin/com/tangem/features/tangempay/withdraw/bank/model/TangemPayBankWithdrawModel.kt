@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
@@ -30,6 +31,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     init {
         loadSavedRecipient()
+    }
+
+    fun onRecipientSelected(account: BankAccount) {
+        draft.update { it.copy(recipient = account) }
     }
 
     fun onAmountConfirmed(result: BankWithdrawAmountResult) {
