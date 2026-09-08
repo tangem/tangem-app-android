@@ -3,7 +3,7 @@ package com.tangem.data.collectibles
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.domain.collectibles.model.CollectibleGachaMachinesBatchAction
+import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
 import com.tangem.domain.collectibles.models.CollectibleTransaction
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.GenerateTxParams

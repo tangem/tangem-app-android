@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketBridgeAddressesDto
+import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositResponse
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketBridgeTokenDto
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositRequest
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketSupportedAssetDto
@@ -45,7 +46,9 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         // Arrange
         coEvery { polymarketRepository.getBuilderCode(any()) } returns Either.Right(BUILDER_CODE)
         coEvery { bridgeApi.createDepositAddresses(any(), any()) } returns ApiResponse.Success(
-            PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = "sol", btc = "bc1", tron = null),
+            PolymarketDepositResponse(
+                address = PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = "sol", btc = "bc1", tron = null),
+            ),
         )
 
         // Act
@@ -86,7 +89,9 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         // Arrange
         coEvery { polymarketRepository.getBuilderCode(any()) } returns Either.Right(BUILDER_CODE)
         coEvery { bridgeApi.createDepositAddresses(any(), any()) } returns ApiResponse.Success(
-            PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = null, btc = null, tron = null),
+            PolymarketDepositResponse(
+                address = PolymarketBridgeAddressesDto(evm = BRIDGE_ADDRESS, svm = null, btc = null, tron = null),
+            ),
         )
 
         // Act
@@ -119,7 +124,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
             PolymarketSupportedAssetsResponse(
                 supportedAssets = listOf(
                     PolymarketSupportedAssetDto(
-                        chainId = 137,
+                        chainId = "137",
                         chainName = "Polygon",
                         token = PolymarketBridgeTokenDto(
                             name = "USD Coin",
@@ -138,7 +143,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
 
         // Assert
         val asset = actual.getOrNull()!!.single()
-        assertThat(asset.chainId).isEqualTo(137L)
+        assertThat(asset.chainId).isEqualTo("137")
         assertThat(asset.chainName).isEqualTo("Polygon")
         assertThat(asset.tokenSymbol).isEqualTo("USDC")
         assertThat(asset.tokenAddress).isEqualTo("0x3c49")
@@ -146,9 +151,58 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         assertThat(asset.minCheckoutUsd).isEqualTo(BigDecimal("2.50"))
     }
 
+    @Test
+    fun `GIVEN catalogue already fetched WHEN asked again THEN the api is called once`() = runTest {
+        // Arrange
+        coEvery { bridgeApi.getSupportedAssets() } returns responseWithOneAsset()
+
+        // Act
+        repository.getSupportedAssets()
+        repository.getSupportedAssets()
+
+        // Assert
+        coVerify(exactly = 1) { bridgeApi.getSupportedAssets() }
+    }
+
+    @Test
+    fun `GIVEN catalogue call failed WHEN asked again THEN the api is called again`() = runTest {
+        // Arrange
+        coEvery { bridgeApi.getSupportedAssets() } returnsMany listOf(
+            networkError(),
+            responseWithOneAsset(),
+        )
+
+        // Act
+        val first = repository.getSupportedAssets()
+        val second = repository.getSupportedAssets()
+
+        // Assert
+        assertThat(first).isEqualTo(Either.Left(PolymarketBridgeError.Network))
+        assertThat(second.getOrNull()).hasSize(1)
+        coVerify(exactly = 2) { bridgeApi.getSupportedAssets() }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> networkError(): ApiResponse<T> =
         ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<T>
+
+    private fun responseWithOneAsset() = ApiResponse.Success(
+        PolymarketSupportedAssetsResponse(
+            supportedAssets = listOf(
+                PolymarketSupportedAssetDto(
+                    chainId = "137",
+                    chainName = "Polygon",
+                    token = PolymarketBridgeTokenDto(
+                        name = "USD Coin",
+                        symbol = "USDC",
+                        address = "0x3c49",
+                        decimals = 6,
+                    ),
+                    minCheckoutUsd = BigDecimal("2.50"),
+                ),
+            ),
+        ),
+    )
 
     private companion object {
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
