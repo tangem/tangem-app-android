@@ -237,6 +237,9 @@
   <string name="bitcoin_promo_no_address">A Bitcoin address is required to receive the bonus. Please add one to your wallet and retry the activation.</string>
   <string name="bitcoin_promo_no_address_title">Bitcoin address required</string>
   <string name="button_start_backup_process">Start backup process</string>
+  <string name="buy_swap_region_restriction_description">Buy and swap are currently not available in your region</string>
+  <string name="buy_swap_region_restriction_description_region">Buy and swap are currently not available in your region: %s</string>
+  <string name="buy_swap_region_restriction_title">Regional restrictions</string>
   <string name="buy_token_description">Use a bank card or other payment methods</string>
   <plurals name="card_label_card_count">
     <item quantity="one">%d device</item>
@@ -367,6 +370,7 @@
   <string name="common_enabled">Enabled</string>
   <string name="common_enabling">Enabling</string>
   <string name="common_error">Error</string>
+  <string name="common_error_email_incorrect_format">Incorrect email format</string>
   <string name="common_estimated_fee">Top-up network fee</string>
   <string name="common_exchange">Swap</string>
   <string name="common_explore">Explore</string>
@@ -884,7 +888,7 @@
   <string name="hw_cloud_backup_completed_title">Backup completed</string>
   <string name="hw_cloud_backup_confirm_password_description">A password is required to encrypt your recovery phrase on %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirm password</string>
-  <string name="hw_cloud_backup_consent">I understand that if I lose or forget this password I will lose access to my crypto.</string>
+  <string name="hw_cloud_backup_consent">I understand Tangem cannot recover my backup password. Losing it, or losing my Apple ID, means my backup is unrecoverable. Without my recovery phrase, my crypto is unrecoverable too.</string>
   <string name="hw_cloud_backup_delete_confirm_message">You won\'t be able to restore this wallet from %s. You can create a new backup anytime.</string>
   <string name="hw_cloud_backup_error_network">No internet connection. Check your network and try again.</string>
   <string name="hw_cloud_backup_error_title">Something went wrong</string>
@@ -915,11 +919,11 @@
   <string name="hw_cloud_backup_restore_passphrase_description">Enter the exact passphrase for this wallet. It is case sensitive, so a different one opens a different set of addresses.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Enter passphrase</string>
   <string name="hw_cloud_backup_restore_password_button">Restore</string>
-  <string name="hw_cloud_backup_restore_password_description">You\'re restoring “%1$s” from a %2$s backup created on %3$s</string>
+  <string name="hw_cloud_backup_restore_password_description">You\'re restoring %1$s from %2$s backup created on %3$s</string>
   <string name="hw_cloud_backup_restore_password_navtitle">Restore wallet</string>
   <string name="hw_cloud_backup_restore_password_title">Enter password</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Import recovery phrase</string>
-  <string name="hw_cloud_backup_restore_wrong_password">Wrong password. Please try again.</string>
+  <string name="hw_cloud_backup_restore_wrong_password">Wrong password</string>
   <string name="hw_cloud_backup_retry">Try again</string>
   <string name="hw_cloud_backup_service_name" translatable="false">Google Drive</string>
   <string name="hw_cloud_backup_set_password_button">Set password</string>
@@ -1098,6 +1102,12 @@
   <string name="joint_account_onboarding_shared_description">Use it with your friends, family, or partners.</string>
   <string name="joint_account_onboarding_shared_title">Shared account.</string>
   <string name="joint_account_onboarding_subtitle">A simple way to manage crypto together — for personal or business needs.</string>
+  <string name="joint_account_send_create_request">Create request</string>
+  <string name="joint_account_send_footer_text">You\'re creating a request to send %1$s, including a %2$s network fee. It won\'t send until %3$s of %4$s members sign.</string>
+  <string name="joint_account_send_sends_automatically">Sends automatically once collected</string>
+  <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
+  <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one.</string>
+  <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
@@ -1643,6 +1653,8 @@
   <string name="prediction_onboarding_title">Open your Polymarket account</string>
   <string name="prediction_place_at_least">At least %s</string>
   <string name="prediction_place_button">Place predict</string>
+  <string name="prediction_place_delayed_timeout_description">We couldn\'t confirm the order in time. Check your positions before placing it again.</string>
+  <string name="prediction_place_delayed_timeout_title">Order is still being processed</string>
   <string name="prediction_place_error_description">We couldn\'t place the order. Please try again later.</string>
   <string name="prediction_place_fee">Fee</string>
   <string name="prediction_place_insufficient_balance_bet">Insufficient Balance – add fund to bet</string>
@@ -2253,7 +2265,13 @@
   <string name="tangempay_bank_transfer_terms_of_use">Terms of Service</string>
   <string name="tangempay_campaign_error_description">Something went wrong. Please try again</string>
   <string name="tangempay_campaign_error_title">Couldn’t load page</string>
+  <string name="tangempay_campaign_fees_description">There are no additional fees for purchases</string>
+  <string name="tangempay_campaign_fees_title">Pay exactly what you see</string>
+  <string name="tangempay_campaign_issue_button">Issue</string>
+  <string name="tangempay_campaign_issue_card_title">Issue special card</string>
+  <string name="tangempay_campaign_issue_time">Issue time</string>
   <string name="tangempay_campaign_landing_title">Get your special Tangem Pay Card</string>
+  <string name="tangempay_campaign_pay_description">With digital card that works with Apple Pay and Google Pay</string>
   <string name="tangempay_campaign_unavailable_description">You can order a usual one</string>
   <string name="tangempay_campaign_unavailable_title">Unable to get special card</string>
   <string name="tangempay_cancel_kyc">Hide verification from the main screen</string>
@@ -2628,6 +2646,18 @@
   <string name="tangempay_waitlist_email_placeholder">satoshi.nakamoto@tangem.com</string>
   <string name="tangempay_waitlist_marketing_consent">I\'d also like to receive marketing communications from Tangem. You can withdraw this consent at any time — see our %s</string>
   <string name="tangempay_waitlist_title"> Join the waitlist</string>
+  <string name="tangempay_withdraw_bank_amount_error_range">Please set amount from %1$s to %2$s</string>
+  <string name="tangempay_withdraw_bank_amount_not_enough_funds">Not enough funds</string>
+  <plurals name="tangempay_withdraw_bank_eta_business_days">
+    <item quantity="one">%d business day</item>
+    <item quantity="other">%d business days</item>
+  </plurals>
+  <string name="tangempay_withdraw_bank_eta_same_business_day">Same business day</string>
+  <string name="tangempay_withdraw_bank_offramp_unavailable">Off-ramp unavailable</string>
+  <string name="tangempay_withdraw_bank_select_route">Select route</string>
+  <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
+  <string name="tangempay_withdraw_bank_step_counter">%1$d of %2$d</string>
+  <string name="tangempay_withdraw_bank_title_to_recipient">To %s</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle">Send to another bank using ACH or FedWire</string>
   <string name="tangempay_withdraw_hub_bank_section_title">Bank transfer</string>
   <string name="tangempay_withdraw_hub_recents_empty">Your recent transfers will be here</string>
@@ -3294,6 +3324,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
   <string name="yield_module_promo_screen_cash_out_title">No lock-ups</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">How it works?</string>
+  <string name="yield_module_promo_screen_incentivised_chip">Incentivised %s</string>
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is an onchain protocol that offers non-custodial liquidity markets, enabling users to accrue yield at variable rates.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using this service, you agree with provider\n%1$s and %2$s</string>
