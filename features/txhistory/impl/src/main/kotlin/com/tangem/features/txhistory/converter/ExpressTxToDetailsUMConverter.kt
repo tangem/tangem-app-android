@@ -55,6 +55,7 @@ import java.math.RoundingMode
  */
 internal class ExpressTxToDetailsUMConverter(
     private val onGoToProvider: (String) -> Unit,
+    private val onCopyAddress: (String) -> Unit,
     private val lookup: TxHistoryLookupContext,
     private val menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
     private val isBalanceHidden: Boolean,
@@ -92,7 +93,7 @@ internal class ExpressTxToDetailsUMConverter(
                     failed = R.string.transaction_history_status_swap_failed,
                 ),
                 subtitle = headerSubtitle(swap.timestampMillis),
-                menu = menu,
+                menu = menu.withCopyAddress(swap.tx.payoutAddress, onCopyAddress),
             ),
             isBalanceHidden = isBalanceHidden,
             from = swap.tx.fromAsset.toAssetUM(
@@ -162,7 +163,7 @@ internal class ExpressTxToDetailsUMConverter(
                     failed = R.string.transaction_history_status_top_up_failed,
                 ),
                 subtitle = headerSubtitle(onramp.timestampMillis),
-                menu = menu,
+                menu = menu.withCopyAddress(onramp.tx.payoutAddress, onCopyAddress),
             ),
             isBalanceHidden = isBalanceHidden,
             from = onramp.tx.fromFiat.toFiatAssetUM(

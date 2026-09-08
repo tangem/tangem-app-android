@@ -95,6 +95,9 @@ internal fun Amount.formatFiatAmount(): String = (value ?: BigDecimal.ZERO)
  * [shareText] is `null` — only an express deal can describe itself as text) and "Explore" (dropped when [onExplore] is
  * `null` — no on-chain hash to link to). An empty list leaves the header with no "•••" button. Repeat / Hide are not
  * part of this iteration.
+ *
+ * The counterparty-dependent "Copy address" row is not built here — it is prepended per transaction shape by
+ * [withCopyAddress], which knows the resolved counterparty.
  */
 internal fun buildDetailsMenu(
     onCopyTxId: (() -> Unit)?,
@@ -140,6 +143,25 @@ internal fun buildDetailsMenu(
         )
     }
 }.toImmutableList()
+
+/**
+ * The shared [buildDetailsMenu] list with a leading "Copy address" row for [address] — the transaction's counterparty:
+ * the recipient / sender of an on-chain transfer, or an express deal's payout address. Whether that address belongs to
+ * one of the user's own portfolios makes no difference — the row copies it either way, exactly like the counterparty
+ * card it accompanies. A `null` or blank [address] (no counterparty to name) leaves the menu untouched.
+ */
+internal fun ImmutableList<TxHistoryDetailsUM.MenuItemUM>.withCopyAddress(
+    address: String?,
+    onCopyAddress: (String) -> Unit,
+): ImmutableList<TxHistoryDetailsUM.MenuItemUM> {
+    val copyable = address?.ifBlank { null } ?: return this
+    val copyAddress = TxHistoryDetailsUM.MenuItemUM(
+        icon = Icons.ic_copy_24,
+        title = resourceReference(R.string.common_copy_address),
+        action = TxHistoryDetailsUM.MenuItemUM.Action.Direct { onCopyAddress(copyable) },
+    )
+    return (listOf(copyAddress) + this).toImmutableList()
+}
 
 internal fun headerSubtitle(timestampMillis: Long): TextReference {
     val dateTime = DateTime(timestampMillis)

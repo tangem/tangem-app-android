@@ -27,7 +27,6 @@ import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.topFade
@@ -35,10 +34,11 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_eye_cross_24
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
@@ -293,10 +293,11 @@ private fun TokenDetailsScreen_Preview() {
                     subtitle = stringReference("ERC-20 in Ethereum network"),
                     onBackClick = {},
                     menuItems = persistentListOf(
-                        TangemDropdownMenuItem(
-                            title = stringReference("Hide Token"),
-                            textColor = themedColor { TangemTheme.colors.text.warning },
+                        TokenDetailsTopAppBarUM.MenuItemUM(
+                            title = stringReference("Hide token"),
+                            icon = Icons.ic_eye_cross_24,
                             onClick = {},
+                            isDestructive = true,
                         ),
                     ),
                 ),
