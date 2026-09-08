@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,17 +67,14 @@ internal class AddressBookAnalyticsSenderTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideAddContactModels")
-    fun sendAddContactTapped(model: AddContactModel) = runTest {
+    @EnumSource(AddContactTapped.Source::class)
+    fun sendAddContactTapped(source: AddContactTapped.Source) = runTest {
         // Act
-        sender.sendAddContactTapped(fromSendSuccess = model.fromSendSuccess, scope = this)
+        sender.sendAddContactTapped(source = source, scope = this)
         advanceUntilIdle()
 
         // Assert
-        val expected = AddContactTapped(
-            walletId = EXPECTED_WALLET_ID_HASH,
-            source = model.expectedSource,
-        )
+        val expected = AddContactTapped(walletId = EXPECTED_WALLET_ID_HASH, source = source)
         verify(exactly = 1) { analyticsEventHandler.send(expected) }
     }
 
@@ -227,8 +225,6 @@ internal class AddressBookAnalyticsSenderTest {
 
     internal data class ScreenOpenedModel(val source: Source, val contactsCount: Int)
 
-    internal data class AddContactModel(val fromSendSuccess: Boolean, val expectedSource: AddContactTapped.Source)
-
     internal data class ContactSavedModel(val isEdit: Boolean, val expectedMode: ContactSaved.Mode)
 
     internal data class SaveErrorModel(val error: SaveContactError, val expectedType: ErrorType?)
@@ -236,11 +232,6 @@ internal class AddressBookAnalyticsSenderTest {
     private fun provideTestModels() = listOf(
         ScreenOpenedModel(source = Source.Settings, contactsCount = 0),
         ScreenOpenedModel(source = Source.SendFlow, contactsCount = 3),
-    )
-
-    private fun provideAddContactModels() = listOf(
-        AddContactModel(fromSendSuccess = false, expectedSource = AddContactTapped.Source.Settings),
-        AddContactModel(fromSendSuccess = true, expectedSource = AddContactTapped.Source.SendSuccess),
     )
 
     private fun provideContactSavedModels() = listOf(
