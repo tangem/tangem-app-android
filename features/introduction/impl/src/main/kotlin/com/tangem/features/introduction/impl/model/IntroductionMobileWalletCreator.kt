@@ -10,11 +10,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
-import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import com.tangem.core.res.R as CoreResR
@@ -22,7 +20,7 @@ import com.tangem.core.res.R as CoreResR
 @ModelScoped
 internal class IntroductionMobileWalletCreator @Inject constructor(
     private val createHotWalletUseCase: CreateHotWalletUseCase,
-    private val appsFlyerRepository: AppsFlyerRepository,
+    private val referral: IntroductionReferral,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
@@ -30,6 +28,9 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
 
     suspend fun createAndOpen(source: AnalyticsParam.ScreensSources, onFailed: () -> Unit) {
         analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started(source = source))
+        // The legacy mobile wallet screen reported these two; its rows stay alive although the sheet replaced it.
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = source))
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet())
         createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12).fold(
             ifLeft = { error ->
                 TangemLogger.e("Failed to create mobile wallet from Introduction", error)
@@ -42,7 +43,7 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
                 onFailed()
             },
             ifRight = {
-                val referralId = readReferralId()
+                val referralId = referral.readId()
                 analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = source))
                 analyticsEventHandler.send(
                     OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
@@ -57,11 +58,6 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
             },
         )
     }
-
-    private suspend fun readReferralId(): String? =
-        runSuspendCatching { appsFlyerRepository.getConversionData()?.refcode }
-            .onFailure { error -> TangemLogger.e("Failed to read the referral of the created mobile wallet", error) }
-            .getOrNull()
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12
