@@ -22,6 +22,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawA
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.stub.TangemPayBankWithdrawStepStubComponent
 
 internal class TangemPayBankWithdrawComponent(
@@ -59,6 +60,16 @@ internal class TangemPayBankWithdrawComponent(
         config: TangemPayBankWithdrawInnerRoute,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
+        TangemPayBankWithdrawInnerRoute.Recipients -> TangemPayBankWithdrawRecipientsComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayBankWithdrawRecipientsComponent.Params(
+                userWalletId = params.userWalletId,
+                onRecipientSelected = { account ->
+                    model.onRecipientSelected(account)
+                    pushNext(from = config)
+                },
+            ),
+        )
         TangemPayBankWithdrawInnerRoute.Amount -> TangemPayBankWithdrawAmountComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawAmountComponent.Params(
@@ -70,7 +81,6 @@ internal class TangemPayBankWithdrawComponent(
                 },
             ),
         )
-        TangemPayBankWithdrawInnerRoute.Recipients,
         TangemPayBankWithdrawInnerRoute.TransferType,
         TangemPayBankWithdrawInnerRoute.AccountType,
         TangemPayBankWithdrawInnerRoute.RecipientDetails,

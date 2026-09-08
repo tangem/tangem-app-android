@@ -130,7 +130,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val account = bankAccount(id = "acc-1", beneficiary = model.beneficiary, accountNumber = "1234567890")
 
         // Act
-        val actual = factory.createRecents(listOf(account)) as RecentsUM.Content
+        val actual = factory.createRecents(recents = listOf(account), hasSavedAccounts = true) as RecentsUM.Content
 
         // Assert
         val recipient = actual.recipients.single()
@@ -146,12 +146,22 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN no accounts WHEN createRecents THEN empty`() {
+    fun `GIVEN no recents and no saved accounts WHEN createRecents THEN empty without see all`() {
         // Act
-        val actual = factory.createRecents(emptyList())
+        val actual = factory.createRecents(recents = emptyList(), hasSavedAccounts = false)
 
         // Assert
-        assertThat(actual).isEqualTo(RecentsUM.Empty)
+        assertThat(actual).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
+    }
+
+    @Test
+    fun `GIVEN no recents but saved accounts WHEN createRecents THEN empty with see all callback`() {
+        // Act
+        val actual = factory.createRecents(recents = emptyList(), hasSavedAccounts = true) as RecentsUM.Empty
+        requireNotNull(actual.onSeeAllClick).invoke()
+
+        // Assert
+        verify(exactly = 1) { onSeeAllClick() }
     }
 
     @Test
@@ -163,7 +173,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         )
 
         // Act
-        val actual = factory.createRecents(accounts) as RecentsUM.Content
+        val actual = factory.createRecents(recents = accounts, hasSavedAccounts = true) as RecentsUM.Content
 
         // Assert
         assertThat(actual.recipients.map { it.id }).containsExactly("acc-2", "acc-1").inOrder()
@@ -175,8 +185,8 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val account = bankAccount(id = "acc-42")
 
         // Act
-        val first = factory.createRecents(listOf(account)) as RecentsUM.Content
-        val second = factory.createRecents(listOf(account)) as RecentsUM.Content
+        val first = factory.createRecents(recents = listOf(account), hasSavedAccounts = true) as RecentsUM.Content
+        val second = factory.createRecents(recents = listOf(account), hasSavedAccounts = true) as RecentsUM.Content
 
         // Assert
         assertThat(first.recipients.single().accent).isEqualTo(second.recipients.single().accent)
@@ -185,7 +195,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN content WHEN recipient clicked THEN callback receives account id`() {
         // Arrange
-        val content = factory.createRecents(listOf(bankAccount(id = "acc-7"))) as RecentsUM.Content
+        val content = factory.createRecents(recents = listOf(bankAccount(id = "acc-7")), hasSavedAccounts = true) as RecentsUM.Content
 
         // Act
         content.onRecipientClick("acc-7")
@@ -197,7 +207,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN content WHEN see all clicked THEN callback invoked`() {
         // Arrange
-        val content = factory.createRecents(listOf(bankAccount())) as RecentsUM.Content
+        val content = factory.createRecents(recents = listOf(bankAccount()), hasSavedAccounts = true) as RecentsUM.Content
 
         // Act
         content.onSeeAllClick()
