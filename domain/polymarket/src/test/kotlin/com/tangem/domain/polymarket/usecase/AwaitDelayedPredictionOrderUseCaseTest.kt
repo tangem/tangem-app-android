@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -59,13 +60,16 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
             coVerify(exactly = 1) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
         }
 
-    @Test
-    fun `GIVEN reads time out before the match WHEN invoked THEN the timed-out reads are tried again`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideUnknownStatusErrors")
+    fun `GIVEN reads leave the status unknown before the match WHEN invoked THEN those reads are tried again`(
+        error: PredictionOrderStateError,
+    ) = runTest {
         // Arrange
         val matched = order(status = PredictionOrderStatus.Matched)
         coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returnsMany listOf(
-            PredictionOrderStateError.Timeout.left(),
-            PredictionOrderStateError.Timeout.left(),
+            error.left(),
+            error.left(),
             matched.right(),
         )
 
@@ -78,19 +82,29 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         coVerify(exactly = 3) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
     }
 
-    @Test
-    fun `GIVEN every read times out WHEN invoked THEN the wait ends timed out after the last read`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideUnknownStatusErrors")
+    fun `GIVEN every read leaves the status unknown WHEN invoked THEN the order stays unconfirmed after the last read`(
+        error: PredictionOrderStateError,
+    ) = runTest {
         // Arrange
-        coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returns PredictionOrderStateError.Timeout.left()
+        coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returns error.left()
 
         // Act
         val actual = useCase(addresses = ADDRESSES, orderId = ORDER_ID)
 
         // Assert
-        assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.TimedOut)
+        assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.Unconfirmed)
         assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS * MAX_READS)
         coVerify(exactly = MAX_READS) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
     }
+
+    private fun provideUnknownStatusErrors() = listOf(
+        PredictionOrderStateError.Timeout,
+        PredictionOrderStateError.Network,
+        PredictionOrderStateError.Unknown(httpCode = 500, detail = null),
+        PredictionOrderStateError.Unknown(httpCode = 503, detail = "upstream unavailable"),
+    )
 
     @ParameterizedTest
     @ProvideTestModels
@@ -127,10 +141,13 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         ),
         FinalAnswerModel(name = "no status", answer = order(status = PredictionOrderStatus.Other(raw = null)).right()),
         FinalAnswerModel(name = "404", answer = PredictionOrderStateError.NotFound.left()),
-        FinalAnswerModel(name = "no connection", answer = PredictionOrderStateError.Network.left()),
         FinalAnswerModel(
-            name = "5xx",
-            answer = PredictionOrderStateError.Unknown(httpCode = 503, detail = null).left(),
+            name = "4xx",
+            answer = PredictionOrderStateError.Unknown(httpCode = 400, detail = "bad request").left(),
+        ),
+        FinalAnswerModel(
+            name = "no http code",
+            answer = PredictionOrderStateError.Unknown(httpCode = null, detail = "unreadable body").left(),
         ),
         FinalAnswerModel(
             name = "refused credentials",

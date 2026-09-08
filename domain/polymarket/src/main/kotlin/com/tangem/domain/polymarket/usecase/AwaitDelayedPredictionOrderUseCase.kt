@@ -12,9 +12,10 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Waits for an order the exchange accepted as `delayed` to be matched, reading it back a fixed number of times.
  *
- * Only a read that times out is tried again: the book has not answered, so the order may still be matching.
- * Every other answer is final — a match, a status that is not a match, an id the book does not know, or a
- * transport failure — and the wait ends with it. The wait also ends when the reads run out.
+ * A read that leaves the status unknown — a timeout, a dropped connection, a 5xx — is tried again: the book
+ * has not answered, so the order may still be matching. Every actual answer is final — a match, a status that
+ * is not a match, an id the book does not know, refused credentials — and the wait ends with it. When the
+ * reads run out without an answer the order stays [DelayedPredictionOrderOutcome.Unconfirmed].
  */
 class AwaitDelayedPredictionOrderUseCase(
     private val polymarketRepository: PolymarketRepository,
@@ -38,19 +39,26 @@ class AwaitDelayedPredictionOrderUseCase(
             if (outcome != null) return outcome
         }
 
-        return DelayedPredictionOrderOutcome.TimedOut
+        return DelayedPredictionOrderOutcome.Unconfirmed
     }
 
-    private fun PredictionOrderStateError.toOutcome(orderId: String): DelayedPredictionOrderOutcome? = when (this) {
-        PredictionOrderStateError.Timeout -> {
-            TangemLogger.v("Delayed order $orderId: read timed out, reading again")
+    private fun PredictionOrderStateError.toOutcome(orderId: String): DelayedPredictionOrderOutcome? {
+        return if (leavesStatusUnknown()) {
+            TangemLogger.v("Delayed order $orderId: read failed with $this, reading again")
             null
+        } else {
+            DelayedPredictionOrderOutcome.Failed(detail = "Read failed with $this")
         }
+    }
+
+    private fun PredictionOrderStateError.leavesStatusUnknown(): Boolean = when (this) {
         PredictionOrderStateError.Network,
+        PredictionOrderStateError.Timeout,
+        -> true
+        is PredictionOrderStateError.Unknown -> httpCode in SERVER_ERROR_CODES
         PredictionOrderStateError.NotFound,
         is PredictionOrderStateError.Unauthorized,
-        is PredictionOrderStateError.Unknown,
-        -> DelayedPredictionOrderOutcome.Failed(detail = "Read failed with $this")
+        -> false
     }
 
     private fun PredictionOrderState.toOutcome(orderId: String): DelayedPredictionOrderOutcome {
@@ -65,6 +73,7 @@ class AwaitDelayedPredictionOrderUseCase(
     private companion object {
         const val MAX_READS = 3
         val READ_INTERVAL = 10.seconds
+        val SERVER_ERROR_CODES = 500..599
     }
 }
 
@@ -75,6 +84,6 @@ sealed interface DelayedPredictionOrderOutcome {
     /** The book answered, and the answer is not a match. */
     data class Failed(val detail: String?) : DelayedPredictionOrderOutcome
 
-    /** The reads ran out without an answer from the book. */
-    data object TimedOut : DelayedPredictionOrderOutcome
+    /** The reads ran out without the book saying whether the order matched; it may still have. */
+    data object Unconfirmed : DelayedPredictionOrderOutcome
 }
