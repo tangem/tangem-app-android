@@ -68,7 +68,7 @@ internal class DefaultCustomerOffersRepositoryTest {
                 is ApiResponse.Error -> VisaApiError.Unspecified.left()
             }
         }
-        coEvery { tangemPayApi.getCustomerOffers(any()) } returns ApiResponse.Success(offersResponse)
+        coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returns ApiResponse.Success(offersResponse)
         coEvery {
             tangemPayApi.getProductInstanceOffers(any(), any())
         } returns ApiResponse.Success(reissueOffersResponse)
@@ -86,13 +86,13 @@ internal class DefaultCustomerOffersRepositoryTest {
         // Assert
         assertThat(first.isRight()).isTrue()
         assertThat(second).isEqualTo(first)
-        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any()) }
+        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any(), any()) }
     }
 
     @Test
     fun `GIVEN backend error WHEN getOffers called again THEN backend is hit again`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getCustomerOffers(any()) } returnsMany listOf(
+        coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returnsMany listOf(
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerOffersResponse>,
             ApiResponse.Success(offersResponse),
         )
@@ -105,7 +105,33 @@ internal class DefaultCustomerOffersRepositoryTest {
         // Assert
         assertThat(first.isLeft()).isTrue()
         assertThat(second.isRight()).isTrue()
-        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any()) }
+        coVerify(exactly = 2) { tangemPayApi.getCustomerOffers(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no deeplink value WHEN getOffers THEN query is sent without deeplink_value`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        repository.getOffers(userWalletId)
+
+        // Assert
+        coVerify(exactly = 1) { tangemPayApi.getCustomerOffers(authHeader = AUTH_HEADER, deeplinkValue = null) }
+    }
+
+    @Test
+    fun `GIVEN deeplink value WHEN getOffers THEN it is passed as deeplink_value query`() = runTest {
+        // Arrange
+        val repository = createRepository()
+
+        // Act
+        repository.getOffers(userWalletId, deeplinkValue = DEEPLINK_VALUE)
+
+        // Assert
+        coVerify(exactly = 1) {
+            tangemPayApi.getCustomerOffers(authHeader = AUTH_HEADER, deeplinkValue = DEEPLINK_VALUE)
+        }
     }
 
     @Test
@@ -143,5 +169,6 @@ internal class DefaultCustomerOffersRepositoryTest {
     private companion object {
         const val AUTH_HEADER = "auth-header"
         const val PRODUCT_INSTANCE_ID = "pi_source_0001"
+        const val DEEPLINK_VALUE = "tpay_for_oxford"
     }
 }
