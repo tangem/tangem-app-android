@@ -17,6 +17,7 @@ import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -452,6 +453,111 @@ fun BaseTestCase.pullToRefreshTangemPay() {
     }
     composeTestRule.mainClock.advanceTimeBy(2_000L)
     waitForIdle()
+}
+
+/**
+ * From the open payment account screen, taps '+' and walks the 'Order new card' type step to land on
+ * the 'Issue an additional card?' bottom sheet.
+ */
+fun BaseTestCase.openTangemPayIssueCardSheet() {
+    step("Click on 'Add card' button") {
+        awaitSuccess { onTangemPayMainScreen { addCardButton.assertIsDisplayed() } }
+        onTangemPayMainScreen { addCardButton.performClick() }
+    }
+    step("Assert 'Order new card' screen is displayed with 'Virtual' selected") {
+        awaitSuccess { onTangemPayOrderCardTypeScreen { title.assertIsDisplayed() } }
+        onTangemPayOrderCardTypeScreen { virtualTab.assertIsDisplayed() }
+    }
+    step("Click on 'Select' button") {
+        // The button stays disabled until the offers request resolves the virtual issue fee.
+        awaitSuccess { onTangemPayOrderCardTypeScreen { selectButton.assertIsEnabled() } }
+        onTangemPayOrderCardTypeScreen { selectButton.performClick() }
+    }
+    step("Assert 'Issue an additional card?' sheet is displayed") {
+        awaitSuccess { onTangemPayIssueCardSheet { title.assertIsDisplayed() } }
+    }
+}
+
+/** On the open issue sheet, asserts the header block and the issue fee value. */
+fun BaseTestCase.assertTangemPayIssueCardSheetContent(expectedFee: String) {
+    step("Assert issue sheet title and description are displayed") {
+        onTangemPayIssueCardSheet {
+            title.assertIsDisplayed()
+            description.assertIsDisplayed()
+        }
+    }
+    step("Assert issue fee equals '$expectedFee'") {
+        awaitSuccess { onTangemPayIssueCardSheet { feeValue.assertTextEquals(expectedFee) } }
+    }
+}
+
+/** On the open issue sheet, asserts the insufficient-funds block with the issue action out of reach. */
+fun BaseTestCase.assertTangemPayIssueCardUnableToCoverFee() {
+    step("Assert 'Unable to cover fee' notification is displayed") {
+        awaitSuccess { onTangemPayIssueCardSheet { insufficientFundsTitle.assertIsDisplayed() } }
+        onTangemPayIssueCardSheet { insufficientFundsSubtitle.assertIsDisplayed() }
+    }
+    step("Assert 'Issue card' button is disabled and 'Add funds' button is displayed") {
+        onTangemPayIssueCardSheet {
+            issueCardButton.assertIsNotEnabled()
+            addFundsButton.assertIsDisplayed()
+        }
+    }
+}
+
+/** Confirms the issue on the open sheet and waits for the payment account 'Issuing' banner. */
+fun BaseTestCase.confirmTangemPayCardIssue() {
+    step("Click on 'Issue card' button") {
+        onTangemPayIssueCardSheet { issueCardButton.clickWithAssertion() }
+    }
+    step("Assert 'Issuing a new digital card' banner is displayed on the payment account") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { issuingCardBanner.assertIsDisplayed() }
+        }
+    }
+}
+
+/**
+ * From the Main screen, issues one additional card end to end and comes back to Main. [cardsStateAfterIssue]
+ * is the `tangem_pay_card_issue` state that surfaces the freshly issued card in `customer/me`.
+ */
+fun BaseTestCase.issueAdditionalCardFromMainScreen(cardsStateAfterIssue: String) {
+    val cardIssueScenario = "tangem_pay_card_issue"
+    val issueOrderScenario = "tangem_pay_card_issue_order"
+    val issueOrderStartedState = "Started"
+    val issueOrderCompletedState = "Completed"
+    val issueOrdersScenario = "tangem_pay_card_issue_orders"
+    val issueOrdersEmptyState = "Empty"
+
+    step("Click on Tangem Pay tile") {
+        onTangemPayMainScreen { mainScreenTile.performClick() }
+    }
+    step("Assert payment account balance is displayed") {
+        awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
+    }
+    openTangemPayIssueCardSheet()
+    confirmTangemPayCardIssue()
+    step("Switch WireMock scenario '$cardIssueScenario' to '$cardsStateAfterIssue'") {
+        setWireMockScenarioState(cardIssueScenario, cardsStateAfterIssue)
+    }
+    step("Switch WireMock scenario '$issueOrderScenario' to '$issueOrderCompletedState'") {
+        setWireMockScenarioState(issueOrderScenario, issueOrderCompletedState)
+    }
+    step("Refresh until the issuing banner is gone") {
+        // Pull-to-refresh is idempotent, so it is repeated per iteration until the completed order lands.
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            pullToRefreshTangemPay()
+            runCatching { onTangemPayMainScreen { issuingCardBanner.assertDoesNotExist() } }.isSuccess
+        }
+    }
+    step("Re-arm the issue scenarios for the next card") {
+        setWireMockScenarioState(issueOrderScenario, issueOrderStartedState)
+        setWireMockScenarioState(issueOrdersScenario, issueOrdersEmptyState)
+    }
+    step("Return to the Main screen") {
+        Espresso.pressBack()
+        awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
+    }
 }
 
 /** From the open payment account screen, opens the 'Add funds' bottom sheet. */
