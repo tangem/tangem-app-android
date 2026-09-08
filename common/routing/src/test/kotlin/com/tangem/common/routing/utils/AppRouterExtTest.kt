@@ -73,6 +73,71 @@ internal class AppRouterExtTest {
         assertThat(router.errors).isEmpty()
     }
 
+    @Test
+    fun `GIVEN route of the same class on top WHEN pushOrReplaceCurrent THEN current route replaced`() {
+        // Arrange
+        val router = FakeAppRouter(wallet, tetherDetails)
+
+        // Act
+        router.pushOrReplaceCurrent(tronDetails)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet, tronDetails).inOrder()
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN equal route on top WHEN pushOrReplaceCurrent THEN stack unchanged without error`() {
+        // Arrange
+        val router = FakeAppRouter(wallet, tetherDetails)
+
+        // Act
+        router.pushOrReplaceCurrent(tetherDetails)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN route of another class on top WHEN pushOrReplaceCurrent THEN pushed on top`() {
+        // Arrange
+        val router = FakeAppRouter(wallet, send)
+
+        // Act
+        router.pushOrReplaceCurrent(tetherDetails)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet, send, tetherDetails).inOrder()
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN equal route deeper in stack WHEN pushOrReplaceCurrent THEN popped to it without error`() {
+        // Arrange
+        val router = FakeAppRouter(wallet, tetherDetails, send)
+
+        // Act
+        router.pushOrReplaceCurrent(tetherDetails)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN equal route deeper and same class on top WHEN pushOrReplaceCurrent THEN popped to it without error`() {
+        // Arrange
+        val router = FakeAppRouter(wallet, tetherDetails, tronDetails)
+
+        // Act
+        router.pushOrReplaceCurrent(tetherDetails)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
+        assertThat(router.errors).isEmpty()
+    }
+
     /**
      * Mirrors the Decompose-backed router: pushing a route that is already in the stack fails –
      * silently when it is on top, with an exception when it is deeper.
@@ -115,7 +180,12 @@ internal class AppRouterExtTest {
             if (!isSuccess) errors += errorMessage
         }
 
-        override fun replaceCurrent(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) = Unit
+        override fun replaceCurrent(route: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
+            val newStack = stack.dropLast(n = 1) + route
+            if (newStack.count { it == route } > 1) error("Configurations must be unique: $route")
+            stack = newStack
+            onComplete(true)
+        }
 
         override fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) = Unit
 

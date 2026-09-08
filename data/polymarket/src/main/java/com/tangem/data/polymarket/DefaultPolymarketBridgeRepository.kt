@@ -55,12 +55,12 @@ internal class DefaultPolymarketBridgeRepository @Inject constructor(
                     builderCode = builderCode,
                     body = PolymarketDepositRequest(address = depositWalletAddress),
                 ).bind()
-                    .let { dto ->
+                    .let { response ->
                         PolymarketBridgeAddresses(
-                            evm = dto.evm,
-                            svm = dto.svm,
-                            btc = dto.btc,
-                            tron = dto.tron,
+                            evm = response.address.evm,
+                            svm = response.address.svm,
+                            btc = response.address.btc,
+                            tron = response.address.tron,
                         )
                     }
                     .right()

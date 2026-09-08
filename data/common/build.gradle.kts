@@ -32,7 +32,6 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.datasource)
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.grow.datasource)
@@ -61,6 +60,8 @@ dependencies {
     api(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
     // endregion
+
+    implementation(projects.features.jointAccount.api)
 
     // region Test
     testImplementation(projects.common.test)

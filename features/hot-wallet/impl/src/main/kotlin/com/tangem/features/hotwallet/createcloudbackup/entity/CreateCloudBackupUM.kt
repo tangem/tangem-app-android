@@ -6,14 +6,17 @@ import com.tangem.domain.cloudbackup.password.PasswordStrengthHint
 internal sealed interface CreateCloudBackupUM {
 
     val onBackClick: () -> Unit
+    val onCloseClick: () -> Unit
 
     /** Google authorization runs before any password input; the screen shows a plain progress */
     data class Preparing(
         override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
     ) : CreateCloudBackupUM
 
     data class SetPassword(
         override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
         val password: String,
         val isPasswordVisible: Boolean,
         val strength: PasswordStrength?,
@@ -30,6 +33,7 @@ internal sealed interface CreateCloudBackupUM {
 
     data class ConfirmPassword(
         override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
         val confirmPassword: String,
         val isPasswordVisible: Boolean,
         val isMismatch: Boolean,
@@ -51,5 +55,6 @@ internal sealed interface CreateCloudBackupUM {
         val onFinishClick: () -> Unit,
     ) : CreateCloudBackupUM {
         override val onBackClick: () -> Unit = {}
+        override val onCloseClick: () -> Unit = {}
     }
 }

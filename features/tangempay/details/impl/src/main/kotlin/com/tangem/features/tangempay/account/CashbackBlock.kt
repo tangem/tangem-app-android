@@ -38,9 +38,9 @@ import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.R as CoreUiR
 
 /**
- * Cashback block shown on the Payment account screen. Renders a tappable row card with the accrued
- * cashback amount, a banner when cashback has been deactivated, or a tap-to-reload error row
- * (with an in-flight progress indicator) when the cashback summary could not be loaded.
+ * Cashback block shown on the Payment account screen. Renders a compact tappable row card (a "Cashback"
+ * caption above the accrued amount), a banner when cashback has been deactivated, or a tap-to-reload
+ * error row (with an in-flight progress indicator) when the cashback summary could not be loaded.
  */
 @Composable
 internal fun CashbackBlock(state: CashbackBlockUM, modifier: Modifier = Modifier) {
@@ -55,9 +55,9 @@ internal fun CashbackBlock(state: CashbackBlockUM, modifier: Modifier = Modifier
 private fun WidgetRow(state: CashbackBlockUM.Widget, modifier: Modifier = Modifier) {
     CashbackRow(
         modifier = modifier,
-        title = { TangemRowText(text = state.title, role = TangemRowTextRole.Title) },
-        subtitle = state.subtitle,
+        caption = resourceReference(CoreUiR.string.tangempay_cashback_title),
         onClick = state.onClick,
+        title = { TangemRowText(text = state.title, role = TangemRowTextRole.Title) },
         startIcon = {
             val colors = TangemTheme.colors3
             CircledIcon(
@@ -82,6 +82,8 @@ private fun WidgetRow(state: CashbackBlockUM.Widget, modifier: Modifier = Modifi
 private fun ErrorRow(state: CashbackBlockUM.Error, modifier: Modifier = Modifier) {
     CashbackRow(
         modifier = modifier,
+        caption = resourceReference(CoreUiR.string.tangempay_cashback_widget_error_description),
+        onClick = state.onReload.takeUnless { state.isReloading },
         title = {
             Text(
                 text = stringResourceSafe(CoreUiR.string.tangempay_cashback_widget_error_title),
@@ -91,8 +93,6 @@ private fun ErrorRow(state: CashbackBlockUM.Error, modifier: Modifier = Modifier
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        subtitle = resourceReference(CoreUiR.string.tangempay_cashback_widget_error_description),
-        onClick = state.onReload.takeUnless { state.isReloading },
         startIcon = {
             CircledIcon(
                 imageVector = Icons.ic_error_20,
@@ -124,9 +124,13 @@ private fun ErrorRow(state: CashbackBlockUM.Error, modifier: Modifier = Modifier
     )
 }
 
+/**
+ * The compact layout stacks a small [caption] above the main [title], so the caption goes into the
+ * row's title slot and the title into its subtitle slot.
+ */
 @Composable
 private fun CashbackRow(
-    subtitle: TextReference?,
+    caption: TextReference,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     title: @Composable RowScope.() -> Unit,
@@ -140,16 +144,8 @@ private fun CashbackRow(
     ) {
         TangemRow(
             verticalAlignment = TangemRowVerticalAlignment.Center,
-            titleSlot = title,
-            subtitleSlot = subtitle?.let {
-                {
-                    TangemRowText(
-                        text = it,
-                        role = TangemRowTextRole.Subtitle,
-                        maxLines = 5,
-                    )
-                }
-            },
+            titleSlot = { TangemRowText(text = caption, role = TangemRowTextRole.Subtitle) },
+            subtitleSlot = title,
             startSlot = startIcon,
             endSlot = endIcon,
             onClick = onClick,
@@ -213,16 +209,17 @@ private fun CircledIcon(
 private class CashbackBlockStateProvider : PreviewParameterProvider<CashbackBlockUM> {
     override val values = sequenceOf(
         CashbackBlockUM.Widget(
-            title = stringReference("$32.15 cashback in June"),
-            subtitle = stringReference("Will be deposited on July 2–5"),
+            title = stringReference("$32.15 in June"),
             isNegative = false,
             onClick = {},
         ),
         CashbackBlockUM.Widget(
-            title = stringReference("-$2.15 cashback in August"),
-            subtitle = stringReference(
-                "We received a refund for a purchase for which cashback had previously been awarded",
-            ),
+            title = stringReference("$0.00 in June"),
+            isNegative = false,
+            onClick = {},
+        ),
+        CashbackBlockUM.Widget(
+            title = stringReference("-$3.55 in June"),
             isNegative = true,
             onClick = {},
         ),
