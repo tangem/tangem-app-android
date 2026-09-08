@@ -8,6 +8,8 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.jointaccount.FIXTURE_CRYPTO_ACCOUNT_ID
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
+import com.tangem.data.jointaccount.converter.JointOperationConverter
+import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
 import com.tangem.data.jointaccount.createJointAccount
 import com.tangem.data.jointaccount.createJointAccountDto
@@ -55,7 +57,7 @@ internal class DefaultJointAccountRepositoryTest {
         jointAccountApi = jointAccountApi,
         walletAccountsFetcher = walletAccountsFetcher,
         invitesStore = invitesStore,
-        converter = JointAccountDtoConverter(),
+        converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
