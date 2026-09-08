@@ -279,7 +279,7 @@
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_account">Аккаунт</string>
   <string name="common_accounts">Аккаунты</string>
-  <string name="common_action_failed">%s не удалось</string>
+  <string name="common_action_failed">Операция «%s» не выполнена</string>
   <string name="common_activate">Активировать</string>
   <string name="common_add">Добавить</string>
   <string name="common_add_funds">Пополнить</string>
@@ -440,7 +440,7 @@
     <item>ноябре</item>
     <item>декабре</item>
   </string-array>
-  <string name="common_more">Еще</string>
+  <string name="common_more">Ещё</string>
   <string name="common_network">Сеть</string>
   <string name="common_network_fee_title">Комиссия сети</string>
   <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
@@ -685,7 +685,7 @@
   <string name="express_exchange_notification_long_transaction_time_title">Долгое время транзакции</string>
   <string name="express_exchange_notification_refund_text">Отправленные средства были возвращены в %1$s на ваш кошелек в соответствии с правилами OKX или моста обмена. %2$s</string>
   <string name="express_exchange_notification_refund_title">Сумма была возвращена в %1$s (%2$s сети)</string>
-  <string name="express_exchange_notification_refunded_in_text">Средства возвращены в %1$s на ваш кошелек в сети %2$s согласно правилам OKX.</string>
+  <string name="express_exchange_notification_refunded_in_text">Средства возвращены в %1$s на ваш кошелёк в сети %2$s согласно правилам OKX.</string>
   <string name="express_exchange_notification_refunded_in_title">Возвращено в %s</string>
   <string name="express_exchange_notification_verification_text">Перейдите на сайт провайдера для верификации</string>
   <string name="express_exchange_notification_verification_title">Провайдеру требуется KYC-верификация</string>
@@ -704,7 +704,7 @@
   <string name="express_exchange_status_received">Депозит получен</string>
   <string name="express_exchange_status_receiving">Ожидание депозита</string>
   <string name="express_exchange_status_receiving_active">Ожидание пополнения...</string>
-  <string name="express_exchange_status_refunded">Возврат завершен</string>
+  <string name="express_exchange_status_refunded">Возврат завершён</string>
   <string name="express_exchange_status_refunding">Ожидание возврата</string>
   <string name="express_exchange_status_sending">Отправка средств</string>
   <string name="express_exchange_status_sending_active">Отправка средств...</string>
@@ -772,7 +772,9 @@
   <string name="feedback_token_description_error">Ошибка в описании монеты</string>
   <string name="for_you_description">Обзор портфеля и возможности для заработка</string>
   <string name="for_you_earn_opportunities">Возможности для заработка</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">Все активы уже работают, изучите новые возможности для заработка</string>
   <string name="for_you_earn_opportunities_explore">Посмотреть все токены</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">Получайте до %1$s в год</string>
   <string name="for_you_earn_opportunities_tokens_rewards">Максимальное возможное вознаграждение: %1$s</string>
   <string name="for_you_earn_per_year">%1$s/год</string>
   <string name="for_you_portfolio_review_title">Обзор портфеля</string>
@@ -897,7 +899,7 @@
   <string name="hw_cloud_backup_restore_password_navtitle">Восстановить кошелёк</string>
   <string name="hw_cloud_backup_restore_password_title">Введите пароль</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Импортировать фразу восстановления</string>
-  <string name="hw_cloud_backup_restore_wrong_password">Неверный пароль. Пожалуйста, повторите.</string>
+  <string name="hw_cloud_backup_restore_wrong_password">Неверный пароль</string>
   <string name="hw_cloud_backup_retry">Повторить</string>
   <string name="hw_cloud_backup_set_password_button">Задать пароль</string>
   <string name="hw_cloud_backup_set_password_description">Пароль необходим для шифрования фразы восстановления в %s.</string>
@@ -1981,7 +1983,7 @@
   <string name="tangem_pay_transaction_details_cashback_below_min">Ниже мин.суммы</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Достигнут лимит</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC исключён</string>
-  <string name="tangem_pay_transaction_details_cashback_none">Без кэшбэка</string>
+  <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Возврат покупки</string>
   <string name="tangem_pay_transaction_details_cashback_region_excluded">Регион исключён</string>
   <string name="tangem_pay_transaction_details_category">Категория</string>
@@ -2012,7 +2014,7 @@
   <string name="tangempay_bank_transfer_success_title">Подготовка ваших банковских реквизитов</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT-переводы не принимаются и будут возвращены</string>
   <string name="tangempay_bank_transfer_terms_of_use">Условия обслуживания</string>
-  <string name="tangempay_cancel_kyc">Скрыть KYC с главной</string>
+  <string name="tangempay_cancel_kyc">Скрыть верификацию с главной</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Обратитесь в поддержку</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Вы исчерпали попытки активации</string>
   <string name="tangempay_card_activation_description">Введите последние 4 цифры номера карты</string>
@@ -2107,7 +2109,7 @@
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">Мы обрабатываем покупки в течение 5 дней после операции и учитываем только завершённые транзакции</string>
   <string name="tangempay_cashback_accruals_calc_title">Как мы рассчитываем кэшбэк?</string>
-  <string name="tangempay_cashback_accruals_exceptions_description">Кэшбэк не начисляется за покупки в офлайн-магазинах у продавцов из ЕС; также за снятие наличных, переводы, квази-наличные операции, оплату мобильной связи, госуслуги и некоторые другие категории</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Пока не начисляем кэшбэк за покупки в офлайн-магазинах в ЕС. Также кэшбэка не будет за снятие наличных, квази-кэш операции, оплату мобильной связи, госуслуги и некоторые другие категории</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Исключения</string>
   <string name="tangempay_cashback_accruals_pay_description">Со 2 по 5 число следующего месяца</string>
   <string name="tangempay_cashback_accruals_pay_title">Как мы выплачиваем кэшбэк?</string>
@@ -2121,7 +2123,7 @@
   <string name="tangempay_cashback_deposit_banner">Кэшбэк %1$s за %2$s зачислим на счёт до %3$s</string>
   <string name="tangempay_cashback_deposited_on">Зачислим на счёт %1$s</string>
   <string name="tangempay_cashback_details_cap">Максимум %1$s в месяц</string>
-  <string name="tangempay_cashback_details_eu_excluded">Кэшбэк не начисляется за офлайн-покупки у продавцов из ЕС</string>
+  <string name="tangempay_cashback_details_eu_excluded">Пока не начисляем кэшбэк за офлайн-покупки у продавцов из ЕС</string>
   <string name="tangempay_cashback_details_paid_in">Платим в %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% за все покупки по %2$s-картам, мин. покупка %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s заработано в %2$s</string>
@@ -2149,7 +2151,7 @@
   <string name="tangempay_choose_network_row_loading">Подготовка адреса…</string>
   <string name="tangempay_come_back_if_forget_pin">Можно посмотреть здесь, если забудете его.</string>
   <string name="tangempay_common_card">Карта</string>
-  <string name="tangempay_common_error_loading">Ошибка загрузки</string>
+  <string name="tangempay_common_error_loading">—</string>
   <string name="tangempay_current_plan_active_till_notification">Ваш тариф %1$s активен до %2$s, после чего мы переведём вас на %3$s. %4$s не будет списано.</string>
   <string name="tangempay_current_plan_awaiting_deposit_notification">Переводим вас на тариф %s, ожидается оплата</string>
   <string name="tangempay_current_plan_change">Сменить тариф</string>
@@ -2188,7 +2190,7 @@
   <string name="tangempay_failed_to_issue_card_support_description">Техническая ошибка, свяжитесь с поддержкой</string>
   <string name="tangempay_feature_will_be_available_soon">Скоро будет доступно</string>
   <string name="tangempay_feature_will_be_available_soon_description">Вы сможете выпускать дополнительные карты к счёту</string>
-  <string name="tangempay_get_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
+  <string name="tangempay_get_banner_description">Бесплатная карта Tangem Pay с кэшбэком до 2%</string>
   <string name="tangempay_get_tangem_pay">Получить Tangem Pay</string>
   <string name="tangempay_go_to_support">Написать в поддержку</string>
   <string name="tangempay_issue_additional_card_description">Это сгенерирует новые реквизиты карты</string>
@@ -2204,16 +2206,16 @@
   <string name="tangempay_issuing_your_card_description">Обычно это занимает не больше 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Подтвердите отмену</string>
-  <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените KYC сейчас, вы сможете потом начать его заново</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените верификацию сейчас, вы сможете потом начать его заново</string>
   <string name="tangempay_kyc_failed_description">Не удалось подтвердить ваш профиль. Если у вас есть вопросы, обратитесь в службу поддержки.</string>
   <string name="tangempay_kyc_failed_title">К сожалению, нам не удалось подтвердить вашу личность</string>
-  <string name="tangempay_kyc_has_failed">KYC отклонено</string>
-  <string name="tangempay_kyc_in_progress">KYC в процессе</string>
+  <string name="tangempay_kyc_has_failed">Верификация отклонена</string>
+  <string name="tangempay_kyc_in_progress">Верификация в процессе</string>
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
-  <string name="tangempay_kyc_in_progress_notification_title">KYC в процессе для Tangem Pay</string>
+  <string name="tangempay_kyc_in_progress_notification_title">Идёт верификация для Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_rejected">Отклонено</string>
-  <string name="tangempay_kyc_rejected_button_text">Скрыть KYC с главной</string>
+  <string name="tangempay_kyc_rejected_button_text">Скрыть верификацию</string>
   <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
   <string name="tangempay_kyc_rejected_description_span">ваш профиль.</string>
   <string name="tangempay_main_select_plan">Выбрать тариф</string>
@@ -2223,15 +2225,15 @@
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Улучшить тариф</string>
   <string name="tangempay_maximum_cards_issued_title">Выпущено максимальное количество карт</string>
   <string name="tangempay_multichain_show_qr">Показать QR-код</string>
-  <string name="tangempay_multinetwork">Мультисеть</string>
-  <string name="tangempay_newonboard_Q1_body">Да — для использования регулируемой карты Visa нужна обязательная проверка личности. KYC проводит Sumsub, комплаенс-партнёр.</string>
-  <string name="tangempay_newonboard_Q1_title">Нужно предоставить документы?</string>
-  <string name="tangempay_newonboard_Q2_body">Нет. KYC привязывается только к Tangem Pay. Сам Tangem Wallet остаётся полностью отдельной self-custodial средой без KYC.</string>
-  <string name="tangempay_newonboard_Q2_title">KYC будет связан с моим кошельком?</string>
-  <string name="tangempay_newonboard_Q3_body">Sumsub — глобально регулируемый KYC-провайдер, которому доверяют более 4,000 финансовых организаций, — проверяет личность и безопасно хранит результаты по стандартам ISO 27001 и SOC 2.</string>
-  <string name="tangempay_newonboard_Q3_title">Кто хранит мои персональные данные и как они защищены?</string>
-  <string name="tangempay_newonboard_Q4_body">Баланс карты работает на USDC в сети Polygon, но пополнить его можно любым активом (USDT, SOL, ETH, BTC, XRP и др.) через удобные встроенные свопы Tangem.</string>
-  <string name="tangempay_newonboard_Q4_title">Какую крипту можно тратить?</string>
+  <string name="tangempay_multinetwork">Доллары США</string>
+  <string name="tangempay_newonboard_Q1_body">Пополняйте платёжный аккаунт USDT или USDC в любой сети без комиссии. В сетях Ethereum, Base, Polygon, BSC и Arbitrum также действует курс 1:1.</string>
+  <string name="tangempay_newonboard_Q1_title">Какую крипту можно тратить?</string>
+  <string name="tangempay_newonboard_Q2_body">Да, для использования регулируемой карты Visa необходимо пройти проверку личности. Верификацию проводит наш комплаенс-партнёр Sumsub.</string>
+  <string name="tangempay_newonboard_Q2_title">Нужно предоставить документы?</string>
+  <string name="tangempay_newonboard_Q3_body">Нет. Верификация применяется только к аккаунту Tangem Pay. Ваш Tangem Wallet остаётся отдельным, некастодиальным и не связанным с вашей личностью. Он используется только как ключ доступа к платёжному счёту.</string>
+  <string name="tangempay_newonboard_Q3_title">Верификация будет привязана к моему кошельку, активам или адресам?</string>
+  <string name="tangempay_newonboard_Q4_body">Sumsub — глобально регулируемый KYC-провайдер, которому доверяют более 4,000 финансовых организаций, — проверяет личность и безопасно хранит результаты по стандартам ISO 27001 и SOC 2.</string>
+  <string name="tangempay_newonboard_Q4_title">Кто хранит мои персональные данные и как они защищены?</string>
   <string name="tangempay_newonboard_body">Тратьте крипту где угодно — без банков, бирж и посредников. Сила self-custody для повседневных платежей.</string>
   <string name="tangempay_newonboard_bottomleft_body">Онлайн и c Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">Принимается везде</string>
@@ -2240,15 +2242,15 @@
   <string name="tangempay_newonboard_title">Откройте Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Без комиссии за покупки</string>
-  <string name="tangempay_newonboard_topright_body">Без сюрпризов</string>
-  <string name="tangempay_newonboard_topright_title">$0 в месяц, \n$0 за пополнение</string>
-  <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
-  <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
+  <string name="tangempay_newonboard_topright_body">В USDC, а не в непонятных токенах</string>
+  <string name="tangempay_newonboard_topright_title">Кэшбэк до 2%</string>
+  <string name="tangempay_onboarding_banner_description">Бесплатная карта Tangem Pay с кэшбэком до 2%</string>
+  <string name="tangempay_onboarding_banner_title">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
-  <string name="tangempay_onboarding_pay_description">Виртуальную карту можно добавить в Apple Pay и Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">С виртуальной картой в Apple Pay / Google Pay, без комиссий за покупки</string>
   <string name="tangempay_onboarding_pay_title">Покупайте где угодно</string>
-  <string name="tangempay_onboarding_purchases_description">Никаких дополнительных комиссий за покупки</string>
-  <string name="tangempay_onboarding_purchases_title">Сколько видишь – столько платишь</string>
+  <string name="tangempay_onboarding_purchases_description">За все покупки. Платим в USDC, а не баллах или неизвестных токенах</string>
+  <string name="tangempay_onboarding_purchases_title">Кэшбэк до 2%</string>
   <string name="tangempay_onboarding_security_description">Мы создадим отдельный платежный счет без раскрытия ваших активов \nи их адресов</string>
   <string name="tangempay_onboarding_security_title">Абсолютная приватность</string>
   <string name="tangempay_onboarding_setup_wallet_description">И привяжем Tangem Pay к нему</string>
@@ -2308,8 +2310,8 @@
   <string name="tangempay_order_type_title">Заказ новой карты</string>
   <string name="tangempay_order_type_unavailable">Недоступно</string>
   <string name="tangempay_other_networks_header">Другие сети</string>
-  <string name="tangempay_other_networks_subtitle">а затем переведите на платёжный счёт, без комиссии</string>
-  <string name="tangempay_other_networks_title">Отправьте USDT / USDC в любой сети на ваш Tangem Wallet</string>
+  <string name="tangempay_other_networks_subtitle">Затем переведите на платёжный счёт, без комиссии</string>
+  <string name="tangempay_other_networks_title">Отправьте USDT/USDC в любой EVM-сети на ваш Tangem Wallet</string>
   <string name="tangempay_pay_support">Поддержка</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Cессия истекла</string>
@@ -2358,10 +2360,10 @@
   <string name="tangempay_sync_needed_body">Используйте карту или кольцо для обновления сессии</string>
   <string name="tangempay_sync_needed_button">Обновить сессию</string>
   <string name="tangempay_sync_needed_title">Tangem Pay · Cессия истекла</string>
-  <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
+  <string name="tangempay_tangem_visa_card">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Получайте USD с банковского счёта через ACH</string>
+  <string name="tangempay_topup_bank_transfer_body">Получайте банковские переводы в USD через ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">С банковского счёта</string>
   <string name="tangempay_topup_receive_body">Отправьте USDC Polygon на адрес вашего аккаунта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
@@ -2414,13 +2416,19 @@
   <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Показать QR код</string>
-  <string name="token_summary_galaxy_score_description">Galaxy Score объединяет рыночные показатели и активность в соцсетях в единую оценку от 0 до 100, которая отражает общее состояние актива. Источник: LunarCrush.</string>
+  <string name="token_summary_can_not_load_token">Не загружены данные токена</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score™ объединяет динамику актива, настроения и социальную активность в единую оценку от 0 до 100, которая отражает общее состояние актива.\n\nЧем выше Galaxy Score™, тем сильнее интерес к активу и позитивнее настроения вокруг него.\n\nКак читать значение:\nПозитивно ≧70\nНейтрально 31–69\nНегативно ≦30\n\nИсточник: lunarcrush.com\nТолько для справки. Не является инвестиционной рекомендацией.</string>
   <string name="token_summary_go_to_swap_button">Перейти к обмену</string>
-  <string name="token_summary_ma_cross_description">MA Cross сравнивает средние цены за 50 и 200 дней и показывает, торгуется ли актив выше или ниже своего долгосрочного тренда. Источник: taapi.io.</string>
-  <string name="token_summary_macd_description">MACD сравнивает краткосрочный и долгосрочный ценовой импульс и показывает, усиливается он или ослабевает. Источник: taapi.io.</string>
+  <string name="token_summary_last_update_subtitle">Последнее обновление:</string>
+  <string name="token_summary_ma_cross_description">MA Cross (пересечение скользящих средних) — индикатор технического анализа, который сравнивает 50-дневную (SMA 50) и 200-дневную (SMA 200) простые скользящие средние цены актива. Он показывает, торгуется ли актив выше или ниже своего долгосрочного тренда.\n\nКак читать значение:\nПозитивно: SMA 50 выше SMA 200 более чем на 0,5%\nНейтрально: расхождение в пределах 0,5%\nНегативно: SMA 50 ниже SMA 200 более чем на 0,5%\n\nОбратите внимание:\nИндикатор рассчитывается по ценам в USD.\nНезависимо от выбранного периода используются дневные значения.\nОтображается, на сколько процентов SMA 50 выше или ниже SMA 200.\n\nИсточник: taapi.io\nТолько для справки. Не является инвестиционной рекомендацией.</string>
+  <string name="token_summary_macd_description">MACD (Moving Average Convergence Divergence, схождение и расхождение скользящих средних) - индикатор технического анализа, который показывает, усиливается или ослабевает импульс актива.\n\nГистограмма MACD: это линия MACD минус сигнальная линия. Линия MACD: разница между 12- и 26-периодной экспоненциальными скользящими средними цены. Сигнальная линия: 9-периодная экспоненциальная скользящая средняя.\n\nКак читать значение:\nПозитивно: гистограмма &gt; 0 и растёт или только что поднялась выше 0\nНегативно: гистограмма &lt; 0 и снижается или только что опустилась ниже 0\nНейтрально: любое другое состояние\n\nКак рассчитывается:\nИндикатор рассчитывается по ценам в USD.\nИспользуемые периоды: день — 1 ч, неделя — 4 ч, месяц — 1 д.\nОтображается последнее значение гистограммы MACD.\n\nИсточник: taapi.io\nТолько для справки. Не является инвестиционной рекомендацией.</string>
+  <string name="token_summary_negative_outlook_title">Негативная оценка</string>
+  <string name="token_summary_neutral_outlook_title">Нейтральная оценка</string>
   <string name="token_summary_outlook_is_not_available">Прогноз для этого токена недоступен</string>
-  <string name="token_summary_rsi_description">RSI (индекс относительной силы) показывает, не слишком ли интенсивно покупали или продавали актив за последние 14 периодов, и сигнализирует о возможной перекупленности или перепроданности. Источник: taapi.io.</string>
-  <string name="token_summary_sentiment_description">Sentiment (настроение) оценивает тональность постов об активе в соцсетях по шкале от 1 до 5: чем выше оценка, тем позитивнее обсуждение. Источник: LunarCrush.</string>
+  <string name="token_summary_positive_outlook_title">Положительная оценка</string>
+  <string name="token_summary_rsi_description">RSI (Relative Strength Index, индекс относительной силы) — индикатор технического анализа, который измеряет скорость и величину недавних изменений цены. Он показывает, не покупали ли актив и не продавали ли его слишком активно за последние 14 периодов, и указывает на возможную перекупленность или перепроданность. Чем ниже RSI, тем выше потенциал роста.\n\nКак читать значение:\nПозитивно ≦30\nНейтрально 30–70\nНегативно ≧70\n\nКак рассчитывается:\nИндикатор рассчитывается по ценам в USD.\nИспользуемые периоды: день — 1 ч, неделя — 4 ч, месяц — 1 д.\n\nИсточник: taapi.io\nТолько для справки. Не является инвестиционной рекомендацией.</string>
+  <string name="token_summary_sentiment_description">Sentiment оценивает тональность постов об активе в социальных сетях по шкале от 0 до 100 с учётом вовлечённости: чем выше значение, тем позитивнее обсуждение.\n\nКак читать значение:\nПозитивно ≧70\nНейтрально 31–69\nНегативно ≦30\n\nИсточник: lunarcrush.com\nТолько для справки. Не является инвестиционной рекомендацией.</string>
+  <string name="token_summary_title">Рыночные индикаторы • бета</string>
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>
   <string name="token_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="token_swap_promotion_button">Обменять</string>
@@ -2469,6 +2477,7 @@
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
   <string name="tx_history_onramp_top_up">Пополнение</string>
   <string name="tx_history_onramp_topped_up">Пополнено</string>
+  <string name="tx_history_you_paid">Вы заплатили</string>
   <string name="unexpected_error_description">Пожалуйста, попробуйте позже. Если проблема сохранится, обратитесь в поддержку.</string>
   <string name="unexpected_error_title">Что-то пошло не так</string>
   <string name="universal_error">Произошла ошибка. Код ошибки: %s. Попробуйте, пожалуйста, снова. Если проблема будет продолжать возникать — обратитесь в службу поддержки.</string>
@@ -2608,7 +2617,7 @@
   <string name="warning_approval_in_progress_message">Процесс выдачи разрешения уже в работе и скоро будет завершен</string>
   <string name="warning_approval_in_progress_title">Выдача разрешения</string>
   <string name="warning_backup_error_add_funds_message">В этом кошельке возникла проблема с резервным копированием. Обратитесь в службу поддержки для её решения.</string>
-  <string name="warning_backup_error_add_funds_message_v2">У кошелька, который вы хотите пополнить, есть проблема с резервной копией. Переведите средства на другой кошелек и сбросьте его.</string>
+  <string name="warning_backup_error_add_funds_message_v2">У кошелька, который вы хотите пополнить, возникла проблема с резервной копией. Прежде чем сбросить этот кошелёк, переведите средства из него в другой.</string>
   <string name="warning_backup_error_add_funds_title">Пополнение отключено</string>
   <string name="warning_backup_error_attention_message">Ваши карточки были активированы неправильно. Чтобы обезопасить средства, переведите их на другой кошелек, сбросьте карты до заводских настроек и активируйте заново.</string>
   <string name="warning_backup_error_attention_title">Требуется действие: сбросьте настройки кошелька</string>
@@ -2954,14 +2963,16 @@
   <string name="yield_module_token_details_earn_notification_processing">Включение режима доходности</string>
   <string name="yield_module_token_details_earn_notification_subtitle">Режим доходности • %1$s%% APY</string>
   <string name="yield_module_token_details_earn_notification_title">Режим доходности</string>
-  <string name="yield_module_transaction_deploy_contract">Установка контракта режима доходности</string>
+  <string name="yield_module_transaction_deploy_contract">Развёртывание контракта режима доходности</string>
   <string name="yield_module_transaction_enter">Режим доходности подключен</string>
   <string name="yield_module_transaction_enter_subtitle">%1$s отправлено в Aave</string>
   <string name="yield_module_transaction_exit">Режим доходности отключен</string>
   <string name="yield_module_transaction_exit_subtitle">%1$s выведено из Aave</string>
   <string name="yield_module_transaction_initialize">Режим доходности инициализирован</string>
-  <string name="yield_module_transaction_reactivate">Режим доходности реактивирован</string>
-  <string name="yield_module_transaction_topup">Перевод в Aave</string>
+  <string name="yield_module_transaction_reactivate">Режим доходности снова активирован</string>
+  <string name="yield_module_transaction_returned">Возвращено</string>
+  <string name="yield_module_transaction_supplied">Внесено</string>
+  <string name="yield_module_transaction_topup">Внесение в Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s отправлено в Aave</string>
   <string name="yield_module_transaction_withdraw">Вывод из Aave</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
