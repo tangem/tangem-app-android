@@ -4,7 +4,8 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /**
- * CLOB `GET /data/order/{id}`. [status] is `ORDER_STATUS_*`; sizes are share base units (6 decimals), [price]
+ * CLOB `GET /data/order/{id}`. [status] and the size units are described by
+ * [com.tangem.grow.datasource.polymarket.clob.PolymarketClobOrderFormat]; [price]
  * is a decimal string.
  */
 @JsonClass(generateAdapter = true)
