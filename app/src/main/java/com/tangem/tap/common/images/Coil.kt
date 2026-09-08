@@ -13,6 +13,7 @@ import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.NullRequestDataException
 import com.tangem.utils.logging.TangemLogger
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 private const val COIL_LOG_TAG = "COIL"
@@ -65,8 +66,14 @@ private class CoilErrorEventListener : EventListener {
      */
     private fun Any?.redactQueryValues(): String {
         val raw = toString()
-        val url = raw.toHttpUrlOrNull() ?: return raw.take(n = MAX_LOGGED_DATA_LENGTH)
-        val base = url.newBuilder()
+        val redacted = raw.toHttpUrlOrNull()?.redactCredentials() ?: raw
+
+        // A long path, a long parameter list or a data: uri would otherwise bloat the log file.
+        return redacted.take(n = MAX_LOGGED_DATA_LENGTH)
+    }
+
+    private fun HttpUrl.redactCredentials(): String {
+        val base = newBuilder()
             .username("")
             .password("")
             .query(null)
@@ -74,10 +81,10 @@ private class CoilErrorEventListener : EventListener {
             .build()
             .toString()
 
-        return if (url.querySize == 0) {
+        return if (querySize == 0) {
             base
         } else {
-            url.queryParameterNames.joinToString(prefix = "$base?", separator = "&") { "$it=***" }
+            queryParameterNames.joinToString(prefix = "$base?", separator = "&") { "$it=***" }
         }
     }
 
