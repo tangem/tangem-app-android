@@ -367,7 +367,7 @@
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Piano superiore</string>
   <string name="tangempay_maximum_cards_issued_title">Numero massimo di carte emesse</string>
   <string name="tangempay_multichain_show_qr">Mostra QR</string>
-  <string name="tangempay_multinetwork">Multireti</string>
+  <string name="tangempay_multinetwork">Dollari USA</string>
   <string name="tangempay_newonboard_Q1_body">Ricarica il tuo conto di pagamento con USDT o USDC su qualsiasi rete, senza commissioni. Su Ethereum, Base, Polygon, BSC e Arbitrum, il tasso di cambio è anche 1:1.</string>
   <string name="tangempay_newonboard_Q1_title">Quali crypto posso spendere?</string>
   <string name="tangempay_newonboard_Q2_body">Sì, per utilizzare una carta Visa regolamentata è richiesta la verifica dell’identità. La verifica è gestita dal nostro partner di conformità, Sumsub.</string>
