@@ -42,47 +42,23 @@ internal fun createJointAccount(
 )
 
 internal fun createMembersUM(
-    title: TextReference = TextReference.EMPTY,
-    progress: TextReference = TextReference.EMPTY,
-    shareSafely: JointAccountMembersUM.ShareSafelyUM = JointAccountMembersUM.ShareSafelyUM(
-        title = TextReference.EMPTY,
-        description = TextReference.EMPTY,
-        onClick = {},
+    topBar: JointAccountMembersUM.TopBarUM = JointAccountMembersUM.TopBarUM.Dismissible(
+        canArchive = false,
+        onArchiveClick = {},
+        onCloseClick = {},
     ),
-    members: ImmutableList<JointAccountMembersUM.MemberUM> = persistentListOf(),
+    header: JointAccountMembersUM.HeaderUM? = null,
+    shareSafely: JointAccountMembersUM.ShareSafelyUM? = null,
+    joined: ImmutableList<JointAccountMembersUM.MemberUM.Joined> = persistentListOf(),
+    freeSlots: ImmutableList<JointAccountMembersUM.MemberUM.FreeSlot> = persistentListOf(),
     otherMembersLabel: TextReference? = null,
-    canArchive: Boolean = false,
-    activation: JointAccountMembersUM.ActivationUM? = null,
-    onArchiveClick: () -> Unit = {},
-    onCloseClick: () -> Unit = {},
+    onActivateClick: (() -> Unit)? = null,
 ): JointAccountMembersUM = JointAccountMembersUM(
-    title = title,
-    progress = progress,
+    topBar = topBar,
+    header = header,
     shareSafely = shareSafely,
-    members = members,
+    joined = joined,
+    freeSlots = freeSlots,
     otherMembersLabel = otherMembersLabel,
-    canArchive = canArchive,
-    activation = activation,
-    onArchiveClick = onArchiveClick,
-    onCloseClick = onCloseClick,
-)
-
-internal fun createActivation(
-    confirmation: JointAccountMembersUM.ActivationUM.ConfirmationUM? = null,
-    onActivateClick: () -> Unit = {},
-): JointAccountMembersUM.ActivationUM = JointAccountMembersUM.ActivationUM(
     onActivateClick = onActivateClick,
-    confirmation = confirmation,
-)
-
-internal fun createConfirmation(
-    walletInteractionIconRes: Int? = null,
-    isConfirming: Boolean = false,
-    onConfirmClick: () -> Unit = {},
-    onCancelClick: () -> Unit = {},
-): JointAccountMembersUM.ActivationUM.ConfirmationUM = JointAccountMembersUM.ActivationUM.ConfirmationUM(
-    walletInteractionIconRes = walletInteractionIconRes,
-    isConfirming = isConfirming,
-    onConfirmClick = onConfirmClick,
-    onCancelClick = onCancelClick,
 )
