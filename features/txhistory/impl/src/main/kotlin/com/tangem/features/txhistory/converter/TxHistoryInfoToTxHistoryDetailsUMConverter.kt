@@ -36,6 +36,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     ),
     targetsByAddress: Map<String, StakingTarget> = emptyMap(),
     onOpenValidator: (String) -> Unit = {},
+    onAddContact: (() -> Unit)? = null,
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
     private val menu = buildDetailsMenu(
@@ -43,6 +44,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         shareText = shareText,
         onShare = onShare,
         onExplore = onExplore,
+        onAddContact = onAddContact,
     )
 
     private val onChainConverter = OnChainTxToDetailsUMConverter(
