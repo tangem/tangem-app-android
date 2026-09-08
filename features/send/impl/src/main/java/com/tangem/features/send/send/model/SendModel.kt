@@ -367,7 +367,6 @@ internal class SendModel @Inject constructor(
                 sentStatus = cryptoCurrencyStatusFlow.value,
                 nativeStatus = feeCryptoCurrencyStatusFlow.value,
                 transactionData = transferTransaction,
-                sentAmount = sentAmount,
                 loadNativeFee = { loadFeeForGasless(transferTransaction, sentAmount) },
             )
             maybeToken == null -> loadFeeForGasless(transferTransaction, sentAmount)

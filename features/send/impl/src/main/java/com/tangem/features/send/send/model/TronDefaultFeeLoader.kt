@@ -36,13 +36,11 @@ internal class TronDefaultFeeLoader @Inject constructor(
     ): Boolean =
         sendFeatureToggles.isTronGaslessEnabled && isTronGaslessSupportedUseCase(userWalletId, network, feeToken)
 
-    @Suppress("LongParameterList")
     suspend fun load(
         userWalletId: UserWalletId,
         sentStatus: CryptoCurrencyStatus,
         nativeStatus: CryptoCurrencyStatus,
         transactionData: TransactionData,
-        sentAmount: BigDecimal?,
         loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
     ): Either<GetFeeError, TransactionFeeExtended> {
         if (isPinnedToNative) return loadNativeFee()
@@ -58,18 +56,15 @@ internal class TronDefaultFeeLoader @Inject constructor(
             sentStatus = sentStatus,
             nativeStatus = nativeStatus,
             transactionData = transactionData,
-            sentAmount = sentAmount,
             loadNativeFee = loadNativeFee,
         )
     }
 
-    @Suppress("LongParameterList")
     private suspend fun loadGaslessFee(
         token: CryptoCurrency.Token,
         sentStatus: CryptoCurrencyStatus,
         nativeStatus: CryptoCurrencyStatus,
         transactionData: TransactionData,
-        sentAmount: BigDecimal?,
         loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended>,
     ): Either<GetFeeError, TransactionFeeExtended> {
         val gaslessFee = getTronGaslessFeeUseCase(transactionData, token).getOrElse { error ->
@@ -77,20 +72,21 @@ internal class TronDefaultFeeLoader @Inject constructor(
             return loadNativeFee().onRight { pinToNativeIfPayable(nativeStatus, it) }
         }
 
-        if (!isSentTokenShort(sentStatus, sentAmount, gaslessFee)) return gaslessFee.right()
+        if (coversGaslessFee(sentStatus, gaslessFee)) return gaslessFee.right()
 
         val nativeFee = loadNativeFee().getOrElse { return gaslessFee.right() }
         return if (pinToNativeIfPayable(nativeStatus, nativeFee)) nativeFee.right() else gaslessFee.right()
     }
 
-    private fun isSentTokenShort(
-        sentStatus: CryptoCurrencyStatus,
-        sentAmount: BigDecimal?,
-        gaslessFee: TransactionFeeExtended,
-    ): Boolean {
-        val compensation = gaslessFee.feeValue() ?: return false
-        val sentBalance = sentStatus.value.amount ?: return false
-        return sentAmount != null && sentBalance < sentAmount + compensation
+    /**
+     * Only the compensation itself is weighed against the balance: a balance that pays the fee but not the
+     * whole transfer keeps the gasless fee, and the send reduces the transferred amount by that fee instead.
+     * The comparison is strict because a balance equal to the fee leaves nothing to transfer.
+     */
+    private fun coversGaslessFee(sentStatus: CryptoCurrencyStatus, gaslessFee: TransactionFeeExtended): Boolean {
+        val compensation = gaslessFee.feeValue() ?: return true
+        val sentBalance = sentStatus.value.amount ?: return true
+        return sentBalance > compensation
     }
 
     private fun pinToNativeIfPayable(nativeStatus: CryptoCurrencyStatus, nativeFee: TransactionFeeExtended): Boolean {
