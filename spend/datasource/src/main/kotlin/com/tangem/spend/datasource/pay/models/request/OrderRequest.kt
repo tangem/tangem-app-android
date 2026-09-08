@@ -21,6 +21,7 @@ data class OrderRequest(
         @Json(name = "product_instance_id") val productInstanceId: String? = null,
         @Json(name = "source_product_instance_id") val sourceProductInstanceId: String? = null,
         @Json(name = "last_four_digits") val lastFourDigits: String? = null,
+        @Json(name = "deeplink_value") val deeplinkValue: String? = null,
     )
 
     @JsonClass(generateAdapter = true)

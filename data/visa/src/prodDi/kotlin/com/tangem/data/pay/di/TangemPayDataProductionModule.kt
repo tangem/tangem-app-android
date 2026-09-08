@@ -3,11 +3,13 @@ package com.tangem.data.pay.di
 import com.tangem.data.pay.repository.DefaultCashbackRepository
 import com.tangem.data.pay.repository.DefaultCustomerOrderRepository
 import com.tangem.data.pay.repository.DefaultOnboardingRepository
+import com.tangem.data.pay.repository.DefaultTangemPayCampaignRepository
 import com.tangem.data.pay.repository.DefaultTangemPayCardDetailsRepository
 import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.repository.TangemPayCampaignRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import dagger.Binds
@@ -39,4 +41,8 @@ internal interface TangemPayDataProductionModule {
     @Binds
     @Singleton
     fun bindCustomerOrderRepository(repository: DefaultCustomerOrderRepository): CustomerOrderRepository
+
+    @Binds
+    @Singleton
+    fun bindTangemPayCampaignRepository(repository: DefaultTangemPayCampaignRepository): TangemPayCampaignRepository
 }
