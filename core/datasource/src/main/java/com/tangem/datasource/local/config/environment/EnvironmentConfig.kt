@@ -39,4 +39,5 @@ data class EnvironmentConfig(
     val surveySparrowSwapRating: SurveySparrowSwapRatingConfig? = null,
     val authServiceKey: String? = null,
     val otlpApiKey: String? = null,
+    val googleWebClientId: String? = null,
 )
