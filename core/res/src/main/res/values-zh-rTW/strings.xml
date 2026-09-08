@@ -506,7 +506,7 @@
   <string name="tangempay_cashback_deposit_banner">%2$s 的現金回饋 %1$s 將於 %3$s 前存入</string>
   <string name="tangempay_cashback_deposited_on">將於 %1$s 存入</string>
   <string name="tangempay_cashback_details_cap">每月最高 %1$s</string>
-  <string name="tangempay_cashback_details_eu_excluded">在歐盟商戶的線下消費不享有現金回饋</string>
+  <string name="tangempay_cashback_details_eu_excluded">暫不支援歐盟實體店消費回饋</string>
   <string name="tangempay_cashback_details_paid_in">以 %1$s 支付</string>
   <string name="tangempay_cashback_details_tier">使用您的 %2$s 卡片消費可享 %1$s%%，最低消費 %3$s</string>
   <string name="tangempay_cashback_earned_title">%2$s 已賺取 %1$s</string>
