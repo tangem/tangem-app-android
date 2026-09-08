@@ -23,7 +23,8 @@ internal interface IntroductionVideoPlayer {
         /** Fires on every pass of the loop, not only on the first one. */
         fun onFirstFrameRendered()
 
-        fun onError()
+        /** @param hasRenderedFrame whether the failure interrupted playback or the video never got on screen. */
+        fun onError(hasRenderedFrame: Boolean)
     }
 
     interface Factory {
