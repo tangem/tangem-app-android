@@ -7,11 +7,11 @@ import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
+import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
@@ -95,9 +95,9 @@ internal class SwapDataModule {
     @Singleton
     internal fun provideSwapFeedbackRepository(
         api: SurveySparrowApi,
-        environmentConfig: EnvironmentConfig,
+        storeEnvironmentConfig: StoreEnvironmentConfig,
     ): SwapFeedbackRepository {
-        val config = environmentConfig.surveySparrowSwapRating
+        val config = storeEnvironmentConfig.surveySparrowSwapRating
         val remoteSource = if (config != null) {
             SurveySparrowSwapFeedbackRemoteSource(api = api, config = config)
         } else {
