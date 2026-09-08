@@ -10,6 +10,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.pay.TangemPayWithdrawState
+import com.tangem.spend.datasource.pay.store.TangemPayPreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -90,6 +91,19 @@ internal class DefaultTangemPayStorageTest {
         // Assert
         assertThat(storage.getHideMainOnboardingBanner(WALLET)).isFalse()
         assertThat(prefs.data.first()[PreferencesKeys.getTangemPayHideOnboardingKey(WALLET)]).isNull()
+    }
+
+    @Test
+    fun `GIVEN bank offramp recents WHEN clearAll THEN the recents key is removed`() = runTest {
+        // Arrange
+        val key = TangemPayPreferencesKeys.bankOfframpRecents(WALLET)
+        prefs.editData { preferences -> preferences[key] = """{"acc-1":{"usedAtMillis":1}}""" }
+
+        // Act
+        storage.clearAll(userWalletId = WALLET, customerWalletAddress = null)
+
+        // Assert
+        assertThat(prefs.data.first()[key]).isNull()
     }
 
     @Test
