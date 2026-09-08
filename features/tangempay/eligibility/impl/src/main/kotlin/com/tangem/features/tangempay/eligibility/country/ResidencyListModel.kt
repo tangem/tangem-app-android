@@ -99,7 +99,7 @@ internal class ResidencyListModel @Inject constructor(
             when {
                 country.hasStates -> showStates(country)
                 isEligible -> openKycScreen()
-                else -> openEligibilityDeniedScreen()
+                else -> openEligibilityDeniedScreen(countryCode = country.code, regionCode = null)
             }
         }
     }
@@ -113,7 +113,7 @@ internal class ResidencyListModel @Inject constructor(
             if (isEligible) {
                 openKycScreen()
             } else {
-                openEligibilityDeniedScreen()
+                openEligibilityDeniedScreen(countryCode = country.code, regionCode = state.code)
             }
         }
     }
@@ -155,9 +155,11 @@ internal class ResidencyListModel @Inject constructor(
         uiMessageSender.send(ToastMessage(stringReference("Open KYC")))
     }
 
-    private fun openEligibilityDeniedScreen() {
+    private fun openEligibilityDeniedScreen(countryCode: String, regionCode: String?) {
         updateContent()
-        router.push(EligibilityInnerRoute.RegionUnavailable)
+        router.push(
+            EligibilityInnerRoute.RegionUnavailable(countryCode = countryCode, regionCode = regionCode),
+        )
     }
 
     private fun onQueryChange(query: String) {
