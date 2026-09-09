@@ -53,11 +53,22 @@ internal fun CryptoCurrency.forYouEarnAssetKey(): Pair<String, String> =
 /**
  * Computes this fiat amount as a share of [totalFiatBalance]. Returns `null` when the share cannot be
  * computed (no amount, or a zero total / amount).
+ *
+ * The scale is pinned to [SHARE_SCALE] rather than inherited from the fiat amount (which is what a
+ * two-argument `divide` would do): the donut's slice weights come from here, and their summed rounding
+ * error decides whether an all-in portfolio reads as a closed ring or grows a phantom grey gap.
  */
 internal fun BigDecimal?.toForYouPercent(totalFiatBalance: BigDecimal): BigDecimal? {
     if (this == null || totalFiatBalance.isZero() || isZero()) return null
-    return divide(totalFiatBalance, RoundingMode.HALF_UP)
+    return divide(totalFiatBalance, SHARE_SCALE, RoundingMode.HALF_UP)
 }
+
+/**
+ * Scale of a portfolio share. Over the ten donut slices the summed rounding drift stays two orders of
+ * magnitude under the angle at which `DonutChart` stops calling its ring closed, so a portfolio whose
+ * assets are all shown individually never reserves a grey gap it has no balance for.
+ */
+private const val SHARE_SCALE = 6
 
 /**
  * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
