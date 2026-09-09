@@ -515,9 +515,6 @@ sealed class AppRoute(val path: String) : Route {
     )
 
     @Serializable
-    data object JointSupportedNetworks : AppRoute(path = "/joint_account_supported_networks")
-
-    @Serializable
     data class EditAccount(
         val account: Account.Personal,
     ) : AppRoute(path = "/edit_account/${account.accountId.value}")
