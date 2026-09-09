@@ -2,7 +2,7 @@ package com.tangem.tap.network.express
 
 import com.tangem.common.CardIdRangeDec
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.grow.datasource.express.ExpressUtils
@@ -10,6 +10,7 @@ import javax.inject.Inject
 
 internal class DefaultExpressUtils @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : ExpressUtils {
 
     override suspend fun getRefCode(userWallet: UserWallet?): String? {
@@ -26,7 +27,7 @@ internal class DefaultExpressUtils @Inject constructor(
 
     private suspend fun isRing(selectedUserWallet: UserWallet.Cold): Boolean {
         val addedWalletsWithRings = appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY,
+            key = storePreferencesKeys.addedWalletsWithRingKey,
             default = emptySet(),
         )
 
