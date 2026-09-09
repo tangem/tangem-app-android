@@ -120,7 +120,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
-        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
     private fun onGetCardClick() {
