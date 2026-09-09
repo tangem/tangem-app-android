@@ -797,7 +797,8 @@
   <string name="hw_cloud_backup_completed_title">Sauvegarde effectuée</string>
   <string name="hw_cloud_backup_confirm_password_description">Un mot de passe est requis pour chiffrer votre phrase de récupération sur %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirmer le mot de passe</string>
-  <string name="hw_cloud_backup_consent">Je comprends que si je perds ou oublie ce mot de passe, je perdrai l\'accès à mes cryptos.</string>
+  <string name="hw_cloud_backup_consent">Je comprends que Tangem ne peut pas récupérer mon mot de passe de sauvegarde. Si je le perds, ou si je perds mon Apple ID, ma sauvegarde sera irrécupérable. Sans ma phrase de récupération, mes cryptomonnaies ne pourront pas non plus être récupérées.</string>
+  <string name="hw_cloud_backup_consent_v2">Je comprends que Tangem ne peut pas récupérer mon mot de passe de sauvegarde. Si je le perds, ou si je perds mon %1$s, ma sauvegarde sera irrécupérable. Sans ma phrase de récupération, mes cryptomonnaies ne pourront pas non plus être récupérées.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Vous ne pourrez pas restaurer ce portefeuille depuis %s. Vous pouvez créer une nouvelle sauvegarde à tout moment.</string>
   <string name="hw_cloud_backup_error_network">Aucune connexion Internet. Vérifiez votre connexion au réseau et réessayez.</string>
   <string name="hw_cloud_backup_error_title">Une erreur est survenue</string>
