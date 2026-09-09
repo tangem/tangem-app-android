@@ -40,6 +40,9 @@ internal class HaveWalletSheetController(
 
         fun scanCardForExistingWallet()
 
+        /** The sheet is handing the viewer over to a flow that returns to a fresh screen. */
+        fun onTerminalFlowEntered()
+
         /** Shows the unsupported-device warning when it returns `false`. */
         fun ensureHotWalletCreationSupported(): Boolean
     }
@@ -139,6 +142,7 @@ internal class HaveWalletSheetController(
         if (importStepOrNull()?.isCloudLoading != false) return
         dismiss()
         if (!host.ensureHotWalletCreationSupported()) return
+        host.onTerminalFlowEntered()
         router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
     }
 
@@ -167,6 +171,7 @@ internal class HaveWalletSheetController(
                 ifRight = {
                     cloudResolveJob = null
                     dismiss()
+                    host.onTerminalFlowEntered()
                     router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
                 },
             )

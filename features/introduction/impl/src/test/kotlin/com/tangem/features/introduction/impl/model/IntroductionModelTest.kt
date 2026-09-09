@@ -1218,7 +1218,9 @@ internal class IntroductionModelTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun sheetReturns(model: StoryReturnModel) {
+        fun `GIVEN the story shown WHEN it ends THEN the welcome returns without a sheet and the video goes`(
+            model: StoryReturnModel,
+        ) {
             // Arrange
             val introductionModel = createModel()
             introductionModel.openStory()
@@ -1228,8 +1230,9 @@ internal class IntroductionModelTest {
             introductionModel.onStoryResult(model.result)
 
             // Assert
-            assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
             verify(exactly = 1) { videoPlayer.setRunning(isRunning = true) }
+            verify(exactly = 0) { videoPlayer.restart() }
         }
 
         private fun provideTestModels() = listOf(
@@ -1302,23 +1305,21 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the story closed during a scan WHEN the scan fails THEN the sheet returns instead`() {
+        fun `GIVEN the story closed during a scan WHEN the scan fails THEN the welcome stays without a sheet`() {
             // Arrange
             val model = createModel()
             model.openStory()
             val action = pendingAction(actionId = "scan_wallet")
             model.onStoryAction(action)
             model.onStoryResult(StoriesV2Result.Dismissed)
-            val openingsBefore = sentEvents.count { it is IntroductionProcess.CreateWalletIntroScreenOpened }
 
             // Act
             model.capturedScanCallbacks().onFailed()
 
             // Assert
             verify(exactly = 0) { action.resume() }
-            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
-            assertThat(sentEvents.count { it is IntroductionProcess.CreateWalletIntroScreenOpened })
-                .isEqualTo(openingsBefore + 1)
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
         }
 
         @Test
@@ -1389,6 +1390,58 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 1) { action.resume() }
             verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the story closed WHEN the screen pauses and resumes THEN the video keeps its position`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            model.onStoryResult(StoriesV2Result.Dismissed)
+
+            // Act
+            model.setVideoRunning(isRunning = false)
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 0) { videoPlayer.restart() }
+        }
+
+        @Test
+        fun `GIVEN the scan left the screen WHEN the screen resumes THEN the video restarts from the beginning`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            model.onStoryAction(pendingAction(actionId = "scan_wallet"))
+            model.capturedScanCallbacks().onNavigatedAway()
+            model.setVideoRunning(isRunning = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+            model.setVideoRunning(isRunning = false)
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.restart() }
+        }
+
+        @Test
+        fun `GIVEN the recovery phrase import left the screen WHEN the screen resumes THEN the video restarts`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+            model.currentImportStep().onRecoveryPhraseClick()
+            model.setVideoRunning(isRunning = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.restart() }
+            verify(exactly = 1) {
+                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+            }
         }
 
         private fun pendingAction(actionId: String): StoriesV2PendingAction {
