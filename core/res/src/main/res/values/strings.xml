@@ -1049,6 +1049,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <string name="joint_account_invite_members_member">Member</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
