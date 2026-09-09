@@ -24,6 +24,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.nav.FeedTabContributor
@@ -45,12 +46,14 @@ internal class FeedHomeComponent(
     tabSet: FeedTabSet,
     isPredictionsEntryVisible: Boolean,
     isCollectiblesVisible: Boolean,
+    portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     private val topBlocksComponent = FeedTopBlocksComponent(
         context = child("feedTopBlocks"),
         isPredictionsEntryVisible = isPredictionsEntryVisible,
         isCollectiblesVisible = isCollectiblesVisible,
+        portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
     )
 
     private val contributors: List<FeedTabContributor> = tabSet.tabs

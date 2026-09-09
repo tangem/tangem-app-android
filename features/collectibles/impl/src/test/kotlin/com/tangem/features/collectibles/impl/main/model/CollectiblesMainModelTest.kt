@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
@@ -11,13 +12,19 @@ import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -37,10 +44,16 @@ internal class CollectiblesMainModelTest {
 
     private val coldWallet = MockUserWalletFactory.create()
 
+    /** The app-selected wallet, deliberately not the one the screen was opened for. */
+    private val selectedWallet = coldWallet.copy(walletId = UserWalletId("bb"))
+
+    private lateinit var walletsFlow: MutableStateFlow<List<UserWallet>?>
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(router, messageSender, userWalletsListRepository, closeCollectiblesVaultUseCase)
-        coEvery { userWalletsListRepository.selectedUserWalletSync() } returns coldWallet
+        walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
+        every { userWalletsListRepository.userWallets } returns walletsFlow
     }
 
     @Nested
@@ -140,10 +153,28 @@ internal class CollectiblesMainModelTest {
         }
 
         @Test
+        fun `GIVEN another wallet is selected WHEN close account clicked THEN the screen's wallet is closed`() =
+            runTest {
+                // Arrange
+                val model = createModel(testScope = this)
+                coEvery { closeCollectiblesVaultUseCase(any()) } returns Unit.right()
+
+                // Act
+                model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { closeCollectiblesVaultUseCase(coldWallet) }
+                coVerify(exactly = 0) { closeCollectiblesVaultUseCase(selectedWallet) }
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN the card refuses WHEN close account clicked THEN the account is kept`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
-            coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns CollectiblesAccountError.CardError(code = 50002, message = "50002").left()
+            coEvery { closeCollectiblesVaultUseCase(coldWallet) } returns
+                CollectiblesAccountError.CardError(code = 50002, message = "50002").left()
 
             // Act
             model.uiState.value.menu.items.single { it.id == "close_account" }.onClick()
@@ -170,7 +201,7 @@ internal class CollectiblesMainModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                    verify(exactly = 0) { router.pop(onComplete = any()) }
+                verify(exactly = 0) { router.pop(onComplete = any()) }
                 verify(exactly = 1) { messageSender.send(any()) }
                 model.onDestroy()
             }
@@ -178,6 +209,9 @@ internal class CollectiblesMainModelTest {
 
     private fun createModel(testScope: TestScope): CollectiblesMainModel {
         return CollectiblesMainModel(
+            paramsContainer = MutableParamsContainer(
+                CollectiblesMainComponent.Params(userWalletId = coldWallet.walletId),
+            ),
             router = router,
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,

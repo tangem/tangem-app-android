@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -13,16 +14,20 @@ import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAcco
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -41,6 +46,8 @@ internal class CollectiblesOnboardingModelTest {
 
     private val coldWallet = MockUserWalletFactory.create()
 
+    private lateinit var walletsFlow: MutableStateFlow<List<UserWallet>?>
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(
@@ -50,12 +57,13 @@ internal class CollectiblesOnboardingModelTest {
             userWalletsListRepository,
             createOrReactivateCollectiblesAccountUseCase,
         )
+        walletsFlow = MutableStateFlow(listOf(coldWallet))
+        every { userWalletsListRepository.userWallets } returns walletsFlow
     }
 
     @Test
     fun `GIVEN account prepared WHEN create account clicked THEN stories open on top of main`() = runTest {
         // Arrange
-        coEvery { userWalletsListRepository.selectedUserWalletSync() } returns coldWallet
         coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns Unit.right()
         val model = createModel(testScope = this)
 
@@ -65,35 +73,39 @@ internal class CollectiblesOnboardingModelTest {
 
         // Assert
         verify(exactly = 1) {
-            router.replaceAll(CollectiblesRoute.Main, CollectiblesRoute.Stories, onComplete = any())
+            router.replaceAll(
+                CollectiblesRoute.Main(userWalletId = coldWallet.walletId),
+                CollectiblesRoute.Stories,
+                onComplete = any(),
+            )
         }
         assertThat(model.uiState.value.isCreatingAccount).isFalse()
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no selected wallet WHEN create account clicked THEN a dialog is shown over the screen`() = runTest {
-        // Arrange
-        coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
-        val model = createModel(testScope = this)
-        val message = slot<UiMessage>()
+    fun `GIVEN the settled wallet is gone WHEN create account clicked THEN a dialog is shown over the screen`() =
+        runTest {
+            // Arrange
+            walletsFlow.value = emptyList()
+            val model = createModel(testScope = this)
+            val message = slot<UiMessage>()
 
-        // Act
-        model.uiState.value.onCreateAccountClick()
-        advanceUntilIdle()
+            // Act
+            model.uiState.value.onCreateAccountClick()
+            advanceUntilIdle()
 
-        // Assert
-        verify(exactly = 1) { messageSender.send(capture(message)) }
-        assertThat(message.captured).isInstanceOf(DialogMessage::class.java)
-        verify { router wasNot Called }
-        coVerify(exactly = 0) { createOrReactivateCollectiblesAccountUseCase(any()) }
-        model.onDestroy()
-    }
+            // Assert
+            verify(exactly = 1) { messageSender.send(capture(message)) }
+            assertThat(message.captured).isInstanceOf(DialogMessage::class.java)
+            verify { router wasNot Called }
+            coVerify(exactly = 0) { createOrReactivateCollectiblesAccountUseCase(any()) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN card prompt dismissed WHEN create account clicked THEN the screen is kept for a retry`() = runTest {
         // Arrange
-        coEvery { userWalletsListRepository.selectedUserWalletSync() } returns coldWallet
         coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns CollectiblesAccountError.Cancelled.left()
         val model = createModel(testScope = this)
 
@@ -111,7 +123,6 @@ internal class CollectiblesOnboardingModelTest {
     @Test
     fun `GIVEN the card reported the failure WHEN create account clicked THEN no message is shown`() = runTest {
         // Arrange
-        coEvery { userWalletsListRepository.selectedUserWalletSync() } returns coldWallet
         coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns
             CollectiblesAccountError.CardError(code = 40002, message = "wallet not found").left()
         val model = createModel(testScope = this)
@@ -131,8 +142,7 @@ internal class CollectiblesOnboardingModelTest {
     fun `GIVEN the chain refuses WHEN create account clicked THEN a message is shown and the screen is kept`() =
         runTest {
             // Arrange
-            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns coldWallet
-            coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns
+                coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns
                 CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
             val model = createModel(testScope = this)
 
@@ -149,7 +159,6 @@ internal class CollectiblesOnboardingModelTest {
     @Test
     fun `GIVEN a click is in flight WHEN clicked again THEN the use case runs once`() = runTest {
         // Arrange
-        coEvery { userWalletsListRepository.selectedUserWalletSync() } returns coldWallet
         coEvery { createOrReactivateCollectiblesAccountUseCase(any()) } returns Unit.right()
         val model = createModel(testScope = this)
 
@@ -178,6 +187,9 @@ internal class CollectiblesOnboardingModelTest {
 
     private fun createModel(testScope: TestScope): CollectiblesOnboardingModel {
         return CollectiblesOnboardingModel(
+            paramsContainer = MutableParamsContainer(
+                CollectiblesOnboardingComponent.Params(userWalletId = coldWallet.walletId),
+            ),
             router = router,
             urlOpener = urlOpener,
             messageSender = messageSender,
