@@ -193,12 +193,14 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     }.flowOn(dispatchers.io)
 
     /**
-     * the default one plus the dynamic (UTXO) addresses already used,
+     * Every address the currency is watched under: all of the wallet's address types plus the dynamic (UTXO)
+     * addresses already used. A payout may land on a non-default type — a swap paid out to the wallet's own
+     * legacy P2PKH BTC address is still its incoming leg — so the default address alone is not enough.
      */
     private suspend fun getAddresses(userWalletId: UserWalletId, network: Network): List<String> {
-        val defaultAddress = walletManagersFacade.getDefaultAddress(userWalletId, network)
+        val walletAddresses = walletManagersFacade.getAddresses(userWalletId, network).map { it.value }
         val dynamicAddresses = walletManagersFacade.usedDynamicAddresses(userWalletId, network).orEmpty()
-        return (listOfNotNull(defaultAddress) + dynamicAddresses).distinct()
+        return (walletAddresses + dynamicAddresses).distinct()
     }
 
     private data class IndexWindow(val fromCreatedAtMillis: Long, val hasMore: Boolean)
