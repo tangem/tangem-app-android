@@ -62,13 +62,13 @@ internal object MockBankOfframpSeed {
         destinations = listOf(
             OfframpDestination(
                 rail = BankRail.ACH,
-                fee = OfframpFee(amount = BigDecimal("1.50"), currency = "USD", description = "ACH transfer fee"),
+                fee = OfframpFee(amount = BigDecimal("1.00"), currency = "USD", description = "ACH transfer fee"),
                 eta = OfframpEta(minDays = 1, maxDays = ACH_MAX_DAYS),
             ),
             OfframpDestination(
                 rail = BankRail.WIRE,
-                fee = OfframpFee(amount = BigDecimal("15.00"), currency = "USD", description = "FedWire transfer fee"),
-                eta = OfframpEta(minDays = 0, maxDays = 1),
+                fee = OfframpFee(amount = BigDecimal("11.00"), currency = "USD", description = "FedWire transfer fee"),
+                eta = OfframpEta(minDays = 0, maxDays = 0),
             ),
         ),
         amountLimits = AmountLimits(min = BigDecimal("1.00"), max = BigDecimal("10000.00")),
