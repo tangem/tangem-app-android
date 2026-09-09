@@ -9,6 +9,7 @@ import com.tangem.data.yield.supply.promo.DefaultYieldPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.promotion.PromotionsSupplier
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.data.yield.supply.store.YieldBoostPromoStore
@@ -60,6 +61,7 @@ internal object YieldSupplyDataModule {
         dispatchers: CoroutineDispatcherProvider,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
     ): YieldSupplyRepository {
         return DefaultYieldSupplyRepository(
             yieldSupplyApi = yieldSupplyApi,
@@ -68,6 +70,7 @@ internal object YieldSupplyDataModule {
             walletManagersFacade = walletManagersFacade,
             analyticsExceptionHandler = analyticsExceptionHandler,
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
         )
     }
 
