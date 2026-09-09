@@ -201,6 +201,9 @@ object PreferencesKeys {
     fun getTangemPayOrderIdKey(customerWalletAddress: String) =
         stringPreferencesKey("tangem_pay_order_id_key_$customerWalletAddress")
 
+    fun getTangemPayCampaignOrderKey(customerWalletAddress: String) =
+        booleanPreferencesKey("tangem_pay_campaign_order_key_$customerWalletAddress")
+
     fun getTangemPayVirtualAccountOrderIdKey(customerWalletAddress: String) =
         stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
 

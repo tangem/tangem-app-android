@@ -103,13 +103,22 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
-    override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) {
-        appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), orderId)
+    override suspend fun storeOrderId(customerWalletAddress: String, orderId: String, isCampaignOrder: Boolean) {
+        appPreferencesStore.editData { preferences ->
+            preferences[PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress)] = orderId
+            preferences[PreferencesKeys.getTangemPayCampaignOrderKey(customerWalletAddress)] = isCampaignOrder
+        }
     }
 
     override suspend fun getOrderId(customerWalletAddress: String): String? {
         return appPreferencesStore.getSyncOrNull(key = PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress))
             .takeIf { !it.isNullOrEmpty() }
+    }
+
+    override suspend fun isCampaignOrder(customerWalletAddress: String): Boolean {
+        return appPreferencesStore.getSyncOrNull(
+            key = PreferencesKeys.getTangemPayCampaignOrderKey(customerWalletAddress),
+        ) == true
     }
 
     override suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean {
@@ -136,7 +145,10 @@ internal class DefaultTangemPayStorage @Inject constructor(
     }
 
     override suspend fun clearOrderId(customerWalletAddress: String) {
-        appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
+        appPreferencesStore.editData { preferences ->
+            preferences[PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress)] = ""
+            preferences.remove(PreferencesKeys.getTangemPayCampaignOrderKey(customerWalletAddress))
+        }
     }
 
     override suspend fun storeVirtualAccountOrderId(customerWalletAddress: String, vaOrderId: String) {
@@ -306,6 +318,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
         appPreferencesStore.editData { preferences ->
             if (customerWalletAddress != null) {
                 preferences.remove(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress))
+                preferences.remove(PreferencesKeys.getTangemPayCampaignOrderKey(customerWalletAddress))
                 preferences.remove(PreferencesKeys.getTangemPayVirtualAccountOrderIdKey(customerWalletAddress))
                 preferences.remove(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress))
                 preferences.remove(PreferencesKeys.getTangemPayCashbackDeactivationDismissedKey(customerWalletAddress))
