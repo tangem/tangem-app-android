@@ -2,6 +2,7 @@ package com.tangem.domain.markets.repositories
 
 import arrow.core.Either
 import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.markets.MarketIndicators
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
  *
 [REDACTED_AUTHOR]
  */
-interface CoinIndicatorsRepository {
+interface MarketIndicatorsRepository {
 
     /** Flow of session-cached indicator readings keyed by uppercase coin symbol. Starts with an empty map */
     fun getCoinIndicatorsUpdates(): Flow<Map<String, CoinIndicators>>
@@ -29,4 +30,15 @@ interface CoinIndicatorsRepository {
         symbols: List<String>? = null,
         indicators: List<CoinIndicators.Reading.Type>? = null,
     ): Either<Throwable, Unit>
+
+    /**
+     * Fetches the current market indicators.
+     *
+     * A successful response with no data at all is a [MarketIndicators] whose every field is `null`,
+     * not a [Either.Left] — only a transport or parsing failure is a `Left`.
+     */
+    suspend fun getMarketIndicators(
+        fiatCurrencyCode: String,
+        languageCode: String,
+    ): Either<Throwable, MarketIndicators>
 }
