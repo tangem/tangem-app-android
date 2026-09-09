@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.transactions
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,9 +51,11 @@ import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -62,6 +65,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.core.ui.res.generated.icons.ic_clock_12
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 
@@ -98,18 +102,16 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                 vertical = 12.dp,
             ),
         ) {
-            StatusCircle(
+            StatusIcon(
                 icon = state.icon,
                 status = state.status,
-                modifier = Modifier
-                    .layoutId(TangemRowLayoutId.HEAD)
-                    .padding(end = 12.dp)
-                    .size(40.dp)
-                    .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
+                isPendingSignature = state.isPendingSignature,
+                modifier = Modifier.layoutId(TangemRowLayoutId.HEAD).padding(end = 12.dp),
             )
-            TitleText(
+            TitleRow(
                 title = state.title,
                 status = state.status,
+                isPendingSignature = state.isPendingSignature,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
                     .testTag(TransactionHistoryItemTestTags.TITLE),
@@ -126,6 +128,7 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
                     amount = amount,
                     status = state.status,
                     isBalanceHidden = isBalanceHidden,
+                    isPendingSignature = state.isPendingSignature,
                     modifier = Modifier
                         .layoutId(TangemRowLayoutId.END_TOP)
                         .testTag(TransactionHistoryItemTestTags.AMOUNT),
@@ -178,6 +181,40 @@ private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
 // region Status circle
 
 @Composable
+private fun StatusIcon(icon: TxIcon, status: Status, isPendingSignature: Boolean, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(40.dp)) {
+        StatusCircle(
+            icon = icon,
+            status = status,
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + status.testTagSuffix),
+        )
+        if (isPendingSignature) {
+            PendingSignatureBadge(modifier = Modifier.align(Alignment.BottomEnd))
+        }
+    }
+}
+
+@Composable
+private fun PendingSignatureBadge(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(16.dp)
+            .border(width = 2.dp, color = TangemTheme.colors3.bg.primary, shape = CircleShape)
+            .background(color = TangemTheme.colors3.bg.status.warningSubtle, shape = CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.ic_clock_12,
+            contentDescription = null,
+            tint = TangemTheme.colors3.icon.status.warning,
+            modifier = Modifier.size(12.dp),
+        )
+    }
+}
+
+@Composable
 private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
@@ -220,6 +257,30 @@ private val Status.testTagSuffix: String
 // endregion
 
 // region Title / Subtitle
+
+@Composable
+private fun TitleRow(
+    title: TextReference,
+    status: Status,
+    isPendingSignature: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier,
+    ) {
+        TitleText(title = title, status = status, modifier = Modifier.weight(weight = 1f, fill = false))
+        if (isPendingSignature) {
+            TangemBadge(
+                text = resourceReference(R.string.transaction_history_pending),
+                variant = TangemBadge.Variant.Tinted,
+                status = TangemBadge.Status.Warning,
+                size = TangemBadge.Size.X4,
+            )
+        }
+    }
+}
 
 @Composable
 private fun TitleText(title: TextReference, status: Status, modifier: Modifier = Modifier) {
@@ -571,11 +632,17 @@ private fun ContentSubtitle.Direction.plainTemplateResId(): Int = when (this) {
 // region Amount
 
 @Composable
-private fun AmountText(amount: String, status: Status, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+private fun AmountText(
+    amount: String,
+    status: Status,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+    isPendingSignature: Boolean = false,
+) {
     val display = if (status is Status.Failed) amount.stripLeadingSign() else amount
     Text(
         text = display.orMaskWithStars(isBalanceHidden),
-        color = if (status is Status.Confirmed) {
+        color = if (status is Status.Confirmed && !isPendingSignature) {
             TangemTheme.colors3.text.primary
         } else {
             TangemTheme.colors3.text.secondary
@@ -617,6 +684,7 @@ private fun previewContent(
     subtitle: String,
     amount: String,
     currencySymbol: String = "USDT",
+    isPendingSignature: Boolean = false,
 ): TransactionItemUM.Content = TransactionItemUM.Content(
     txHash = txHash,
     amount = amount,
@@ -629,6 +697,7 @@ private fun previewContent(
     title = stringReference(title),
     subtitle = ContentSubtitle.Plain(stringReference(subtitle)),
     timestamp = 0L,
+    isPendingSignature = isPendingSignature,
 )
 
 @Composable
@@ -765,6 +834,29 @@ private fun Preview_TransactionItem_Send_Contact() {
                         ),
                     ),
                     timestamp = 0L,
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_PendingSignature() {
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                previewContent(
+                    txHash = "snd-pending",
+                    icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+                    direction = Direction.OUTGOING,
+                    status = Status.Confirmed,
+                    title = "Send",
+                    subtitle = "to: 33BdfS...ga2B",
+                    amount = "-0.3212",
+                    currencySymbol = "ETH",
+                    isPendingSignature = true,
                 ),
             ),
         )
