@@ -836,7 +836,7 @@
   <string name="hw_cloud_backup_completed_title">Copia de seguridad completada</string>
   <string name="hw_cloud_backup_confirm_password_description">Se requiere una contraseña para cifrar su frase secreta en %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirmar contraseña</string>
-  <string name="hw_cloud_backup_consent">Entiendo que si pierdo u olvido esta contraseña, perderé el acceso a mis criptomonedas.</string>
+  <string name="hw_cloud_backup_consent">Entiendo que Tangem no puede recuperar mi contraseña de copia de seguridad. Si la pierdo, o si pierdo mi Apple ID, mi copia de seguridad será irrecuperable. Sin mi frase de recuperación, mis criptomonedas tampoco se podrán recuperar.</string>
   <string name="hw_cloud_backup_delete_confirm_message">No podrá restaurar esta billetera desde %s. Puede crear una nueva copia de seguridad en cualquier momento.</string>
   <string name="hw_cloud_backup_error_network">No hay conexión a internet. Compruebe su conexión de red e inténtelo de nuevo.</string>
   <string name="hw_cloud_backup_error_title">Ha surgido un problema</string>
@@ -871,7 +871,7 @@
   <string name="hw_cloud_backup_restore_password_navtitle">Restaurar billetera</string>
   <string name="hw_cloud_backup_restore_password_title">Introduzca la contraseña</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Importar frase de recuperación</string>
-  <string name="hw_cloud_backup_restore_wrong_password">Contraseña incorrecta. Inténtelo de nuevo.</string>
+  <string name="hw_cloud_backup_restore_wrong_password">Contraseña incorrecta</string>
   <string name="hw_cloud_backup_retry">Inténtelo de nuevo</string>
   <string name="hw_cloud_backup_set_password_button">Establecer contraseña</string>
   <string name="hw_cloud_backup_set_password_description">Se requiere una contraseña para cifrar su frase de recuperación en %s.</string>
@@ -1904,7 +1904,7 @@
   <string name="tangem_pay_freeze_card_alert_body">Mantén tu dinero seguro. Puedes desbloquear en cualquier momento.</string>
   <string name="tangem_pay_freeze_card_alert_title">¿Congelar tu tarjeta?</string>
   <string name="tangem_pay_freeze_card_failed">No se pudo congelar la tarjeta. Inténtalo de nuevo más tarde.</string>
-  <string name="tangem_pay_freeze_card_freeze">Mantén tu dinero seguro. Puedes desbloquear en cualquier momento.</string>
+  <string name="tangem_pay_freeze_card_freeze">Congelar</string>
   <string name="tangem_pay_freeze_card_success">Tu tarjeta está congelada.</string>
   <string name="tangem_pay_freeze_card_unfreeze">Descongelar</string>
   <string name="tangem_pay_get_help">Obtener ayuda</string>
@@ -2064,7 +2064,7 @@
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s</string>
   <string name="tangempay_cashback_deposited_on">Se deposita el %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máx/mes</string>
-  <string name="tangempay_cashback_details_eu_excluded">Sin cashback por compras presenciales en la UE</string>
+  <string name="tangempay_cashback_details_eu_excluded">Actualmente, sin cashback por compras presenciales en la UE</string>
   <string name="tangempay_cashback_details_paid_in">Pagado en %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% en compras con tarjetas %2$s, compra mín. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s ganado en %2$s</string>
