@@ -5,6 +5,9 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.CardSession
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.run
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.isRing
 import com.tangem.operations.sign.SignData
@@ -19,40 +22,28 @@ class TangemSigner(
     private val initialMessage: Message,
     private val twinKey: TwinKey?,
     private val signerCallback: (TangemSignerResponse) -> Unit,
+    private val session: CardSession? = null,
 ) : TransactionSigner {
 
     override suspend fun sign(
         hashes: List<ByteArray>,
         publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
-        return suspendCancellableCoroutine { continuation ->
-            val task = SignHashesTask(hashes, publicKey, twinKey?.getPairKey(publicKey.seedKey))
+        val task = SignHashesTask(hashes, publicKey, twinKey?.getPairKey(publicKey.seedKey))
 
-            tangemSdk.startSessionWithRunnable(
-                runnable = task,
-                cardId = cardId,
-                initialMessage = initialMessage,
-            ) { result ->
-                when (result) {
-                    is CompletionResult.Success -> {
-                        signerCallback(
-                            TangemSignerResponse(
-                                totalSignedHashes = result.data.totalSignedHashes,
-                                remainingSignatures = result.data.remainingSignatures,
-                                isRing = result.data.batchId?.let(::isRing) == true,
-                                signedWalletPublicKey = publicKey.seedKey,
-                            ),
-                        )
-                        if (continuation.isActive) {
-                            continuation.resume(CompletionResult.Success(result.data.signatures))
-                        }
-                    }
-                    is CompletionResult.Failure ->
-                        if (continuation.isActive) {
-                            continuation.resume(CompletionResult.Failure(result.error))
-                        }
-                }
+        return when (val result = runTask(task)) {
+            is CompletionResult.Success -> {
+                signerCallback(
+                    TangemSignerResponse(
+                        totalSignedHashes = result.data.totalSignedHashes,
+                        remainingSignatures = result.data.remainingSignatures,
+                        isRing = result.data.batchId?.let(::isRing) == true,
+                        signedWalletPublicKey = publicKey.seedKey,
+                    ),
+                )
+                CompletionResult.Success(result.data.signatures)
             }
+            is CompletionResult.Failure -> CompletionResult.Failure(result.error)
         }
     }
 
@@ -72,35 +63,35 @@ class TangemSigner(
         dataToSign: List<SignData>,
         publicKey: Wallet.PublicKey,
     ): CompletionResult<Map<ByteArray, ByteArray>> {
-        return suspendCancellableCoroutine { continuation ->
-            val task = MultiSignHashTask(dataToSign, publicKey, twinKey?.getPairKey(publicKey.seedKey))
+        val result = runTask(MultiSignHashTask(dataToSign, publicKey, twinKey?.getPairKey(publicKey.seedKey)))
 
-            tangemSdk.startSessionWithRunnable(
-                runnable = task,
-                cardId = cardId,
-                initialMessage = initialMessage,
-            ) { result ->
-                when (result) {
-                    is CompletionResult.Success -> {
-                        signerCallback(
-                            TangemSignerResponse(
-                                totalSignedHashes = result.data.totalSignedHashes,
-                                remainingSignatures = result.data.remainingSignatures,
-                                isRing = result.data.batchId?.let(::isRing) == true,
-                                signedWalletPublicKey = publicKey.seedKey,
-                            ),
-                        )
-                        if (continuation.isActive) {
-                            continuation.resume(CompletionResult.Success(result.data.signatures))
-                        }
-                    }
-                    is CompletionResult.Failure ->
-                        if (continuation.isActive) {
-                            continuation.resume(CompletionResult.Failure(result.error))
-                        }
+        return when (result) {
+            is CompletionResult.Success -> {
+                signerCallback(
+                    TangemSignerResponse(
+                        totalSignedHashes = result.data.totalSignedHashes,
+                        remainingSignatures = result.data.remainingSignatures,
+                        isRing = result.data.batchId?.let(::isRing) == true,
+                        signedWalletPublicKey = publicKey.seedKey,
+                    ),
+                )
+                CompletionResult.Success(result.data.signatures)
+            }
+            is CompletionResult.Failure -> CompletionResult.Failure(result.error)
+        }
+    }
+
+    private suspend fun <T> runTask(task: CardSessionRunnable<T>): CompletionResult<T> {
+        return session?.let { task.run(session = it) }
+            ?: suspendCancellableCoroutine { continuation ->
+                tangemSdk.startSessionWithRunnable(
+                    runnable = task,
+                    cardId = cardId,
+                    initialMessage = initialMessage,
+                ) { result ->
+                    if (continuation.isActive) continuation.resume(result)
                 }
             }
-        }
     }
 }
 
