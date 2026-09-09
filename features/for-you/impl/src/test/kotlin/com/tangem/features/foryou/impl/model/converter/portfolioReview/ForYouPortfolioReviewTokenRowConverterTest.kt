@@ -23,6 +23,7 @@ import com.tangem.features.foryou.impl.createUnreachableValue
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.THREE_STARS
+import com.tangem.utils.extensions.orZero
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -68,6 +69,42 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
             val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
             assertThat(topEnd.text).isEqualTo(BigDecimal("400").expectedFiatText())
             assertThat(bottomEnd.text).isEqualTo(BigDecimal("400").expectedPercentText(BigDecimal("1000")))
+        }
+
+        @Test
+        fun `GIVEN a dust holding WHEN convert THEN the share reads as less than the smallest shown percent`() {
+            // Arrange — 0.0004% of the portfolio: too small for the display, but not nothing
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal("2"), fiatAmount = BigDecimal("0.004"))),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert — the threshold itself is rendered, prefixed, rather than the share rounded away to zero
+            val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            assertThat(bottomEnd.text).isEqualTo(
+                stringReference(StringsSigns.LOWER_SIGN + BigDecimal("0.0001").format { percent() }),
+            )
+        }
+
+        @Test
+        fun `GIVEN an empty holding WHEN convert THEN the share stays zero rather than reading as dust`() {
+            // Arrange
+            val currency = createCurrency(id = "coin-eth", symbol = "ETH", networkName = "Ethereum")
+            val statuses = listOf(
+                createStatus(currency, loadedValue(amount = BigDecimal.ZERO, fiatAmount = BigDecimal.ZERO)),
+            )
+            val converter = createConverter(totalFiatBalance = BigDecimal("1000"))
+
+            // Act
+            val result = converter.convert(statuses) as TangemTokenRowUM.Content
+
+            // Assert
+            val bottomEnd = result.bottomEndContentUM as TangemTokenRowUM.EndContentUM.Content
+            assertThat(bottomEnd.text).isEqualTo(stringReference(BigDecimal.ZERO.format { percent() }))
         }
 
         @Test
@@ -470,7 +507,7 @@ internal class ForYouPortfolioReviewTokenRowConverterTest {
 
     /** Mirrors the production percent-share rendering of [ForYouPortfolioReviewTokenRowConverter]. */
     private fun BigDecimal.expectedPercentText(total: BigDecimal): TextReference = stringReference(
-        toForYouPercent(total).format { percent() },
+        toForYouPercent(total).orZero().format { percent(canBeLower = true) },
     )
 
     private fun createStatus(currency: CryptoCurrency, value: CryptoCurrencyStatus.Value) = CryptoCurrencyStatus(
