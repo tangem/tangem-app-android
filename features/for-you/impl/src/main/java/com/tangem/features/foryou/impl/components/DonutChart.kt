@@ -578,7 +578,7 @@ private fun PreviewDonutChartEmpty() {
                 segments = persistentListOf(),
             ) {
                 Text(
-                    text = stringResourceSafe(R.string.market_chart_bubble_no_data),
+                    text = stringResourceSafe(R.string.markets_loading_no_data_title),
                     color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography3.heading.medium,
                 )
