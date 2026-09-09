@@ -64,9 +64,8 @@ internal class ForYouPortfolioReviewMarketChartConverter(
      * other slice.
      *
      * Its weight is the **exact complement** of the top slices, not `otherAssetsBalance / totalAmount`:
-     * that closes the ring precisely, which both keeps the drawn remainder identical to the bare track it
-     * replaces and stops `visualSweepAngles` reserving its minimum-share grey gap on top of it over a
-     * fraction of a degree of rounding drift.
+     * that closes the ring precisely, which stops `visualSweepAngles` reserving its minimum-share grey gap
+     * on top of the slice over a fraction of a degree of rounding drift.
      */
     private fun createSegments(totalAmount: BigDecimal): ImmutableList<DonutSegmentUM> {
         val topSegments = topAssets.mapIndexed { index, (currencies, segmentBalance) ->

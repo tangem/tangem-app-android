@@ -18,11 +18,11 @@ import java.math.BigDecimal
  *   Also doubles as the slice's share for the selection tooltip (rendered as `weight * 100%`).
  *   A producer that wants the remainder to be selectable closes the ring itself with a trailing [Grey]
  *   slice weighted at the exact complement, instead of leaving the track to show through — the track is
- *   not hit-testable, a slice is.
+ *   not hit-testable, a slice is, and a slice reads at its true share rather than as bare background.
  * @param color Palette entry for the slice's solid fill. Assigned by the producer in segment order, so the
- *   slice's colour follows its rank; [DonutChart] resolves it to a themed [Color] in composition. [Grey]
- *   resolves to the same colour as [DonutChart]'s default track, so a trailing grey slice is
- *   indistinguishable from the bare track it replaces.
+ *   slice's colour follows its rank; [DonutChart] resolves it to a themed [Color] in composition. Every
+ *   entry, [Grey] included, is opaque: the chart re-draws the last slice's round cap over slice 0 to close
+ *   the wrap seam, and a translucent slice there would read as a darkened slice 0 rather than as itself.
  * @param title Human-readable name of the asset this slice represents (e.g. `"Ethereum"`). Shown in the
  *   selection tooltip. Empty by default for slices that don't need a label.
  * @param fiatValue Pre-formatted fiat value of the slice (e.g. `"$5,720.22"`). Shown in the selection
@@ -69,7 +69,7 @@ internal enum class DonutSegmentColor {
             RedLight -> TangemColorPalette.Red.`30`
             VioletLight -> TangemColorPalette.Violet.`30`
             OrangeLight -> TangemColorPalette.Orange.`30`
-            Grey -> TangemTheme.colors3.border.tertiary
+            Grey -> TangemTheme.colors3.border.accent.neutral
         }
     }
 }
