@@ -16,7 +16,6 @@ import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Store for saving app logs
@@ -26,12 +25,11 @@ import javax.inject.Singleton
  *
 [REDACTED_AUTHOR]
  */
-@Singleton
-class AppLogsStore @Inject constructor(
+internal class DefaultAppLogsStore @Inject constructor(
     @ApplicationContext private val applicationContext: Context,
     private val dispatchers: CoroutineDispatcherProvider,
     private val scope: AppCoroutineScope,
-) {
+) : AppLogsStore {
 
     private val mutex = Mutex()
     private val zipMutex = Mutex()
@@ -59,9 +57,9 @@ class AppLogsStore @Inject constructor(
         .toFormatter()
 
     /** Get log file */
-    fun getFile(): File? = if (logFile.exists()) logFile else null
+    override fun getFile(): File? = if (logFile.exists()) logFile else null
 
-    suspend fun getZipFile(): File? {
+    override suspend fun getZipFile(): File? {
         return zipMutex.withLock {
             if (logFile.exists()) {
                 zip(filesToCompress = listOf(logFile), outputZipFile = logFileZip)
@@ -79,7 +77,12 @@ class AppLogsStore @Inject constructor(
      * since stack traces routinely contain hex-like sequences that the sanitizer would
      * otherwise destroy.
      */
-    fun saveLogMessage(tag: String, message: String, throwable: Throwable? = null, shouldSanitize: Boolean = true) {
+    override fun saveLogMessage(
+        tag: String,
+        message: String,
+        throwable: Throwable?,
+        shouldSanitize: Boolean,
+    ) {
         launchWithLock {
             createFileIfNotExist()
 
@@ -88,7 +91,7 @@ class AppLogsStore @Inject constructor(
     }
 
     /** Save log that consists from [messages] */
-    fun saveLogMessage(tag: String, vararg messages: String) {
+    override fun saveLogMessage(tag: String, vararg messages: String) {
         launchWithLock {
             createFileIfNotExist()
 
@@ -97,7 +100,7 @@ class AppLogsStore @Inject constructor(
     }
 
     /** Delete deprecated logs if file size exceeds [maxSize] */
-    fun deleteDeprecatedLogs(maxSize: Int) {
+    override fun deleteDeprecatedLogs(maxSize: Int) {
         launchWithLock {
             if (logFile.exists() && logFile.length() > maxSize) {
                 logFile.delete()
