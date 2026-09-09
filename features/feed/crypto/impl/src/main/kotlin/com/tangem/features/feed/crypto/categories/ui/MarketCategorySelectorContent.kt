@@ -2,7 +2,6 @@ package com.tangem.features.feed.crypto.categories.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,6 +25,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.row.*
+import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -39,46 +39,18 @@ import kotlinx.collections.immutable.toImmutableList
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 10
 
-/** The hosting chrome — feed modal and header — is owned by the feed host and the component. */
+/**
+ * The hosting chrome — feed modal and header — is owned by the feed host and the component; the
+ * search field lives in that header, not here.
+ */
 @Composable
 internal fun MarketCategorySelectorContent(state: MarketCategorySelectorUM, modifier: Modifier = Modifier) {
-    when (state) {
-        is MarketCategorySelectorUM.Loading -> LoadingSkeleton(modifier = modifier)
-        is MarketCategorySelectorUM.Content -> SectionsContent(state = state, modifier = modifier)
-        is MarketCategorySelectorUM.Error -> LoadError(onRetry = state.onRetry, modifier = modifier)
-    }
-}
-
-@Composable
-private fun SectionsContent(state: MarketCategorySelectorUM.Content, modifier: Modifier = Modifier) {
-    val listState = rememberLazyListState()
-    val categories = state.categories
-
     Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-            item(key = "topSpacer") { SpacerH(22.dp) }
-
-            if (state.featured != null) {
-                item(key = "featuredSection") {
-                    FeaturedSection(section = state.featured)
-                    SpacerH(34.dp)
-                }
-            }
-
-            item(key = "categoriesHeader") {
-                SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
-                SpacerH(8.dp)
-            }
-
-            items(items = categories.items, key = MarketCategoryItemUM::id) { item ->
-                CategoryRow(item = item)
-            }
-
-            if (categories.isLoadingMore) {
-                item(key = "loadingMore") { LoadingMoreRow() }
-            }
-
-            item(key = "footerSpacer") { SpacerH(128.dp) }
+        when (val content = state.content) {
+            is MarketCategorySelectorUM.ContentUM.Loading -> LoadingSkeleton()
+            is MarketCategorySelectorUM.ContentUM.Content -> SectionsContent(state = content)
+            is MarketCategorySelectorUM.ContentUM.Empty -> NoResults()
+            is MarketCategorySelectorUM.ContentUM.Error -> LoadError(onRetry = content.onRetry)
         }
 
         Footer(
@@ -86,6 +58,38 @@ private fun SectionsContent(state: MarketCategorySelectorUM.Content, modifier: M
             isEnabled = state.isEdited,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+    }
+}
+
+@Composable
+private fun SectionsContent(state: MarketCategorySelectorUM.ContentUM.Content, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+    val categories = state.categories
+
+    LazyColumn(state = listState, modifier = modifier.fillMaxSize()) {
+        item(key = "topSpacer") { SpacerH(22.dp) }
+
+        if (state.featured != null) {
+            item(key = "featuredSection") {
+                FeaturedSection(section = state.featured)
+                SpacerH(34.dp)
+            }
+        }
+
+        item(key = "categoriesHeader") {
+            SectionHeader(title = categories.title, modifier = Modifier.padding(horizontal = 16.dp))
+            SpacerH(8.dp)
+        }
+
+        items(items = categories.items, key = MarketCategoryItemUM::id) { item ->
+            CategoryRow(item = item)
+        }
+
+        if (categories.isLoadingMore) {
+            item(key = "loadingMore") { LoadingMoreRow() }
+        }
+
+        item(key = "footerSpacer") { SpacerH(128.dp) }
     }
 
     InfiniteListHandler(
@@ -186,11 +190,9 @@ private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, mo
     AnimatedVisibility(
         visible = isEnabled,
         modifier = modifier
-            .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.secondary),
+            .fillMaxWidth(),
     ) {
         Box {
-            // TODO replace with DS3
             TangemFade(
                 position = TangemFade.Position.Bottom,
                 variant = TangemFade.Variant.Hard,
@@ -216,6 +218,23 @@ private fun Footer(state: MarketCategorySelectorFooterUM, isEnabled: Boolean, mo
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun NoResults(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResourceSafe(R.string.common_no_results),
+            textAlign = TextAlign.Center,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.secondary,
+        )
     }
 }
 
@@ -293,25 +312,45 @@ private fun MarketCategorySelectorContent_Preview(
     @PreviewParameter(MarketCategorySelectorPreviewProvider::class) params: MarketCategorySelectorUM,
 ) {
     TangemThemePreviewRedesign {
-        MarketCategorySelectorContent(params, modifier = Modifier.background(TangemTheme.colors3.bg.secondary))
+        MarketCategorySelectorContent(params)
     }
 }
 
 private class MarketCategorySelectorPreviewProvider : PreviewParameterProvider<MarketCategorySelectorUM> {
     override val values: Sequence<MarketCategorySelectorUM>
         get() = sequenceOf(
-            previewBody(withFeatured = true, isEdited = true),
-            previewBody(withFeatured = false, isEdited = false),
-            MarketCategorySelectorUM.Loading,
-            MarketCategorySelectorUM.Error(onRetry = {}),
+            previewState(body = previewBody(withFeatured = true), isEdited = true),
+            previewState(body = previewBody(withFeatured = false), isEdited = false),
+            previewState(body = previewBody(withFeatured = false, query = "mem"), query = "mem"),
+            previewState(body = MarketCategorySelectorUM.ContentUM.Empty, query = "zzz"),
+            previewState(body = MarketCategorySelectorUM.ContentUM.Loading),
+            previewState(body = MarketCategorySelectorUM.ContentUM.Error(onRetry = {})),
         )
 }
 
-private fun previewBody(withFeatured: Boolean, isEdited: Boolean): MarketCategorySelectorUM.Content {
+private fun previewState(
+    body: MarketCategorySelectorUM.ContentUM,
+    isEdited: Boolean = false,
+    query: String = "",
+): MarketCategorySelectorUM = MarketCategorySelectorUM(
+    search = TangemSearch.State(
+        placeholderText = resourceReference(R.string.common_search),
+        query = query,
+        onQueryChange = {},
+        isActive = query.isNotEmpty(),
+        onActiveChange = {},
+    ),
+    isEdited = isEdited,
+    footer = MarketCategorySelectorFooterUM(onReset = {}, onApply = {}),
+    content = body,
+)
+
+private fun previewBody(withFeatured: Boolean, query: String = ""): MarketCategorySelectorUM.ContentUM.Content {
     val featured = listOf("AI", "Meme", "Real world assets", "Gaming", "Layer 1")
     val all = listOf("AI", "DeFi", "Gaming", "Meme", "Layer 1", "AI 2", "DeFi 2", "Gaming 2", "Meme 2", "Layer 2")
+    val isSearching = query.isNotEmpty()
 
-    return MarketCategorySelectorUM.Content(
+    return MarketCategorySelectorUM.ContentUM.Content(
         featured = FeaturedCategoriesUM(
             title = resourceReference(R.string.common_featured),
             items = featured.mapIndexed { index, label ->
@@ -322,26 +361,28 @@ private fun previewBody(withFeatured: Boolean, isEdited: Boolean): MarketCategor
                     onItemClick = {},
                 )
             }.toImmutableList(),
-        ).takeIf { withFeatured },
+        ).takeIf { withFeatured && !isSearching },
         categories = MarketCategoryListUM(
             title = resourceReference(R.string.market_categories),
             items = buildList {
-                add(
-                    MarketCategoryItemUM(
-                        id = "__all__",
-                        title = resourceReference(R.string.common_all),
-                        subtitle = null,
-                        caption = null,
-                        isSelected = false,
-                        onItemClick = {},
-                    ),
-                )
-                all.forEach { name ->
+                if (!isSearching) {
+                    add(
+                        MarketCategoryItemUM(
+                            id = "__all__",
+                            title = resourceReference(R.string.common_all),
+                            subtitle = null,
+                            caption = null,
+                            isSelected = false,
+                            onItemClick = {},
+                        ),
+                    )
+                }
+                all.filter { it.contains(other = query, ignoreCase = true) }.forEach { name ->
                     add(
                         MarketCategoryItemUM(
                             id = name,
                             title = stringReference(name),
-                            subtitle = stringReference("\$ 352.899 B "),
+                            subtitle = stringReference("$ 352.899 B "),
                             caption = stringReference("212 coins"),
                             isSelected = name == "Meme",
                             onItemClick = {},
@@ -352,8 +393,6 @@ private fun previewBody(withFeatured: Boolean, isEdited: Boolean): MarketCategor
             isLoadingMore = false,
             loadMore = {},
         ),
-        isEdited = isEdited,
-        footer = MarketCategorySelectorFooterUM(onReset = {}, onApply = {}),
     )
 }
 // endregion
