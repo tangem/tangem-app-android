@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
@@ -121,6 +122,8 @@ internal class PolymarketMainModel @Inject constructor(
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
+                onActivePositionsClick = { openPositions(PolymarketPositionsTab.ACTIVE) },
+                onFinishedPositionsClick = { openPositions(PolymarketPositionsTab.FINISHED) },
             ),
         )
 
@@ -189,6 +192,10 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onSearchClick() {
         router.push(PolymarketRoute.Search(userWalletId = params.userWalletId))
+    }
+
+    private fun openPositions(tab: PolymarketPositionsTab) {
+        router.push(PolymarketRoute.Positions(userWalletId = params.userWalletId, initialTab = tab))
     }
 
     fun onLoadMore() {
