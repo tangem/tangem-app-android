@@ -21,9 +21,6 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
-import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
-import com.tangem.domain.card.analytics.IntroductionProcess.WelcomeMediaError
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
@@ -130,12 +127,7 @@ internal class IntroductionModel @Inject constructor(
 
     /** Not cancellable: an NFC launch can open the wallet before the reason resolves, and the opening still counts. */
     private fun reportScreenOpened() {
-        modelScope.launch {
-            withContext(NonCancellable) {
-                val entryReason = entryReasonTracker.consume(params.entryReason) ?: return@withContext
-                analyticsEventHandler.send(IntroductionProcess.ScreenOpened(entryReason))
-            }
-        }
+        modelScope.launch { withContext(NonCancellable) { entryReasonTracker.reportOpening(params.entryReason) } }
     }
 
     override fun onFirstFrameRendered() {
@@ -145,11 +137,11 @@ internal class IntroductionModel @Inject constructor(
 
     override fun onError(hasRenderedFrame: Boolean) {
         val stage = if (hasRenderedFrame) {
-            WelcomeMediaError.Stage.Playback
+            IntroductionProcess.WelcomeMediaError.Stage.Playback
         } else {
-            WelcomeMediaError.Stage.Load
+            IntroductionProcess.WelcomeMediaError.Stage.Load
         }
-        analyticsEventHandler.send(WelcomeMediaError(stage))
+        analyticsEventHandler.send(IntroductionProcess.WelcomeMediaError(stage))
         // Errors arrive asynchronously, so one can land after the surface is gone; lifting the shutter then
         // would uncover a blank surface on the way back.
         if (!videoPlayer.isSurfaceAttached) return
@@ -189,18 +181,21 @@ internal class IntroductionModel @Inject constructor(
     private fun onCreateWalletClick() {
         if (isAnySheetShown()) return
         analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet())
-        modelScope.launch {
-            analyticsEventHandler.send(
-                IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = referral.readId()),
-            )
-        }
+        reportCreateWalletSheetOpened()
         uiState.update { it.copy(bottomSheetConfig = createWalletBottomSheetConfig()) }
+    }
+
+    private fun reportCreateWalletSheetOpened() {
+        modelScope.launch {
+            val referralId = referral.readId()
+            analyticsEventHandler.send(IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId))
+        }
     }
 
     // TODO [REDACTED_TASK_KEY]: the icons of both sheets are placeholders until the design hands over the assets.
     private fun createWalletBottomSheetConfig() = TangemBottomSheetConfig(
         isShown = true,
-        onDismissRequest = { onCreateWalletSheetDismissedByViewer(SheetDismissed.DismissReason.Dismissed) },
+        onDismissRequest = ::onCreateWalletSheetDismissRequested,
         content = CreateWalletUM(
             cardOrRing = WalletOptionUM(
                 iconRes = CoreUiR.drawable.ic_tangem_24,
@@ -216,17 +211,25 @@ internal class IntroductionModel @Inject constructor(
                 isLoading = isCreatingMobileWallet,
                 onClick = ::onCreateSeedPhraseWalletClick,
             ),
-            onCloseClick = {
-                onCreateWalletSheetDismissedByViewer(SheetDismissed.DismissReason.CloseButton)
-            },
+            onCloseClick = ::onCreateWalletSheetCloseClicked,
         ),
     )
 
-    /** Only a viewer leaving without picking a row is a dismissal; rows dismiss programmatically and stay silent. */
-    private fun onCreateWalletSheetDismissedByViewer(reason: SheetDismissed.DismissReason) {
+    private fun onCreateWalletSheetDismissRequested() {
+        reportCreateWalletSheetDismissed(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
+    }
+
+    private fun onCreateWalletSheetCloseClicked() {
+        reportCreateWalletSheetDismissed(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
+    }
+
+    private fun reportCreateWalletSheetDismissed(reason: IntroductionProcess.SheetDismissed.DismissReason) {
         if (!isCreateWalletSheetShown()) return
         analyticsEventHandler.send(
-            SheetDismissed(sheet = SheetDismissed.Sheet.CreateWallet, reason = reason),
+            IntroductionProcess.SheetDismissed(
+                sheet = IntroductionProcess.SheetDismissed.Sheet.CreateWallet,
+                reason = reason,
+            ),
         )
         onBottomSheetDismissed()
     }
@@ -308,22 +311,17 @@ internal class IntroductionModel @Inject constructor(
      * enough to replay its open animation; the config still holds the callbacks bound to this model.
      */
     private fun reopenCreateWalletSheet() {
+        reportCreateWalletSheetOpened()
         uiState.update { state ->
-            state.copy(
-                bottomSheetConfig = state.bottomSheetConfig?.copy(isShown = true)
-                    ?: createWalletBottomSheetConfig(),
-            )
+            val restored = state.bottomSheetConfig?.copy(isShown = true) ?: createWalletBottomSheetConfig()
+            state.copy(bottomSheetConfig = restored)
         }
     }
 
     private fun startCardScan(action: StoriesV2PendingAction) {
         pendingScanStoryAction = action
-        scanCard(onNavigatedAway = ::onScanNavigatedAway, onFailed = ::onScanFailed)
-    }
-
-    private fun scanCard(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
-        launchCardScan(onNavigatedAway = onNavigatedAway, onFailed = onFailed)
+        launchCardScan(onNavigatedAway = ::onScanNavigatedAway, onFailed = ::onScanFailed)
     }
 
     private fun launchCardScan(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
@@ -345,12 +343,8 @@ internal class IntroductionModel @Inject constructor(
     private fun onScanFailed() {
         val action = pendingScanStoryAction
         pendingScanStoryAction = null
-        if (action != null) {
-            action.resume()
-        } else {
-            // The viewer closed the story while the scan ran; the sheet is where they act from now.
-            reopenCreateWalletSheet()
-        }
+        // Without a story to resume, the viewer closed it while the scan ran: the sheet is where they act from now.
+        if (action != null) action.resume() else reopenCreateWalletSheet()
     }
 
     private fun onCreateSeedPhraseWalletClick() {
@@ -419,13 +413,16 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onTermsOfServiceClick() {
-        analyticsEventHandler.send(LegalOpened(LegalOpened.Document.TermsOfService))
-        urlOpener.openUrl(TERMS_OF_SERVICE_URL)
+        openLegalDocument(IntroductionProcess.LegalOpened.Document.TermsOfService, TERMS_OF_SERVICE_URL)
     }
 
     private fun onPrivacyPolicyClick() {
-        analyticsEventHandler.send(LegalOpened(LegalOpened.Document.PrivacyPolicy))
-        urlOpener.openUrl(PRIVACY_POLICY_URL)
+        openLegalDocument(IntroductionProcess.LegalOpened.Document.PrivacyPolicy, PRIVACY_POLICY_URL)
+    }
+
+    private fun openLegalDocument(document: IntroductionProcess.LegalOpened.Document, url: String) {
+        analyticsEventHandler.send(IntroductionProcess.LegalOpened(document))
+        urlOpener.openUrl(url)
     }
 
     private companion object {

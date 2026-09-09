@@ -179,6 +179,35 @@ internal class IntroductionCardScannerTest {
     }
 
     @Test
+    fun `GIVEN the scan fails for another reason WHEN the processor reports it THEN no cancellation is reported`() = runTest {
+        // Arrange
+        coEvery {
+            scanCardProcessor.scan(
+                analyticsSource = any(),
+                shouldCheckIsAlreadyActivated = any(),
+                cardId = any(),
+                onProgressStateChange = any(),
+                onWalletNotCreated = any(),
+                onCancel = any(),
+                onFailure = any(),
+                onSuccess = any(),
+            )
+        } coAnswers { arg<suspend (TangemError) -> Unit>(n = 6).invoke(TangemSdkError.NfcFeatureIsUnavailable()) }
+        var isFailureReported = false
+
+        // Act
+        scanner.scanAndOpenWallet(
+            analyticsSource = SOURCE,
+            onNavigatedAway = { error("must not be called") },
+            onFailed = { isFailureReported = true },
+        )
+
+        // Assert
+        assertThat(sentEvents).isEmpty()
+        assertThat(isFailureReported).isTrue()
+    }
+
+    @Test
     fun `GIVEN saving fails WHEN a card is scanned THEN the error is shown and the caller is told`() = runTest {
         // Arrange
         coEvery { saveWalletUseCase(any(), any(), any()) } returns
