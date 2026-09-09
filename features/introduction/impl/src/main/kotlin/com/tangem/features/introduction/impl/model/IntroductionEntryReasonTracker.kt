@@ -1,6 +1,6 @@
 package com.tangem.features.introduction.impl.model
 
-import com.tangem.common.routing.entity.HomeEntryReason
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
@@ -23,19 +23,19 @@ internal class IntroductionEntryReasonTracker @Inject constructor(
 
     private val hasReportedInThisProcess = AtomicBoolean(false)
 
-    suspend fun reportOpening(routeReason: HomeEntryReason) {
+    suspend fun reportOpening(routeReason: AppRoute.Home.EntryReason) {
         val entryReason = consume(routeReason) ?: return
         analyticsEventHandler.send(IntroductionProcess.ScreenOpened(entryReason))
     }
 
-    private suspend fun consume(routeReason: HomeEntryReason): EntryReason? {
+    private suspend fun consume(routeReason: AppRoute.Home.EntryReason): EntryReason? {
         val isFirstInThisProcess = hasReportedInThisProcess.compareAndSet(false, true)
         return when (routeReason) {
-            HomeEntryReason.LastWalletForgotten -> {
+            AppRoute.Home.EntryReason.LastWalletForgotten -> {
                 markShown()
                 EntryReason.LastWalletForgotten
             }
-            HomeEntryReason.Launch -> when {
+            AppRoute.Home.EntryReason.Launch -> when {
                 !isFirstInThisProcess -> null
                 markShown() -> EntryReason.NoWallets
                 else -> EntryReason.FirstLaunch

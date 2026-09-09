@@ -81,6 +81,7 @@ internal class IntroductionModel @Inject constructor(
     /** An ended story kept on screen because navigation is covering it; dismissed on the next resume. */
     private var isStoryDismissPendingResume = false
     private var isCreatingMobileWallet = false
+    private var hasRenderedFrame = false
 
     private val videoPlayer = videoPlayerFactory.create(
         videoRes = R.raw.introduction_background,
@@ -131,11 +132,12 @@ internal class IntroductionModel @Inject constructor(
     }
 
     override fun onFirstFrameRendered() {
+        hasRenderedFrame = true
         if (!videoPlayer.isSurfaceAttached || uiState.value.isVideoReady) return
         uiState.update { it.copy(isVideoReady = true) }
     }
 
-    override fun onError(hasRenderedFrame: Boolean) {
+    override fun onError() {
         val stage = if (hasRenderedFrame) {
             IntroductionProcess.WelcomeMediaError.Stage.Playback
         } else {

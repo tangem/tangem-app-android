@@ -2,7 +2,6 @@ package com.tangem.features.introduction.impl.engine
 
 import android.view.SurfaceView
 import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import com.google.common.truth.Truth.assertThat
 import io.mockk.clearMocks
@@ -176,36 +175,6 @@ internal class DefaultIntroductionVideoPlayerTest {
 
         // Assert
         assertThat(videoPlayer.isSurfaceAttached).isFalse()
-    }
-
-    @Test
-    fun `GIVEN no frame rendered yet WHEN the player fails THEN the failure is reported as a load failure`() {
-        // Arrange
-        val playerListener = slot<Player.Listener>()
-        createPlayer()
-        verify { player.addListener(capture(playerListener)) }
-
-        // Act
-        playerListener.captured.onPlayerError(mockk<PlaybackException>())
-
-        // Assert
-        verify(exactly = 1) { listener.onError(hasRenderedFrame = false) }
-    }
-
-    @Test
-    fun `GIVEN a frame rendered WHEN the player fails THEN the failure is reported as a playback failure`() {
-        // Arrange
-        val playerListener = slot<Player.Listener>()
-        createPlayer()
-        verify { player.addListener(capture(playerListener)) }
-        playerListener.captured.onRenderedFirstFrame()
-
-        // Act
-        playerListener.captured.onPlayerError(mockk<PlaybackException>())
-
-        // Assert
-        verify(exactly = 1) { listener.onFirstFrameRendered() }
-        verify(exactly = 1) { listener.onError(hasRenderedFrame = true) }
     }
 
     private fun createPlayer(isMotionEnabled: Boolean = true) = DefaultIntroductionVideoPlayer(

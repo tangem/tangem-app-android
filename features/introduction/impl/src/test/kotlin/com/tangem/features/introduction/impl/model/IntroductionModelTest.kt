@@ -3,7 +3,6 @@ package com.tangem.features.introduction.impl.model
 import android.view.SurfaceView
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -173,7 +172,7 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
-        model.onError(hasRenderedFrame = true)
+        model.onError()
         assertThat(model.uiState.value.isVideoReady).isTrue()
     }
 
@@ -185,7 +184,7 @@ internal class IntroductionModelTest {
         model.attachSurface(surfaceView)
 
         // Act
-        model.onError(hasRenderedFrame = false)
+        model.onError()
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
@@ -203,7 +202,7 @@ internal class IntroductionModelTest {
         model.detachSurface(surfaceView)
 
         // Act
-        model.onError(hasRenderedFrame = true)
+        model.onError()
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isFalse()
@@ -301,7 +300,7 @@ internal class IntroductionModelTest {
             createModel()
 
             // Act
-            createModel(entryReason = HomeEntryReason.LastWalletForgotten)
+            createModel(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten)
 
             // Assert
             assertThat(sentEvents).containsExactly(
@@ -316,7 +315,7 @@ internal class IntroductionModelTest {
             coEvery { analyticsRepository.checkIsEventSent(any()) } returns false
 
             // Act
-            createModel(entryReason = HomeEntryReason.LastWalletForgotten)
+            createModel(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten)
 
             // Assert
             assertThat(sentEvents).containsExactly(
@@ -1674,7 +1673,7 @@ internal class IntroductionModelTest {
 
     private fun createModel(
         launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
-        entryReason: HomeEntryReason = HomeEntryReason.Launch,
+        entryReason: AppRoute.Home.EntryReason = AppRoute.Home.EntryReason.Launch,
     ) = IntroductionModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode, entryReason)),
