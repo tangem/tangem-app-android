@@ -11,6 +11,7 @@ import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -149,6 +150,23 @@ internal class TangemPayBankWithdrawModelTest {
         // Assert
         assertThat(model.draft.value.newRecipient)
             .isEqualTo(NewRecipientDraft(isThirdParty = true, accountType = BankAccountType.SAVINGS))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN filled recipient details WHEN bank details filled THEN draft merges both forms`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onDetailsFilled(mapOf(BankWithdrawFormField.AccountNumber to "4830019271"))
+
+        // Act
+        model.onDetailsFilled(mapOf(BankWithdrawFormField.BankName to "Test Bank"))
+
+        // Assert
+        assertThat(model.draft.value.newRecipient.fields).containsExactly(
+            BankWithdrawFormField.AccountNumber, "4830019271",
+            BankWithdrawFormField.BankName, "Test Bank",
+        )
         model.onDestroy()
     }
 

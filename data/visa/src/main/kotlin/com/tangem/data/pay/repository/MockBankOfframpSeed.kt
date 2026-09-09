@@ -19,9 +19,6 @@ import java.math.BigDecimal
 internal object MockBankOfframpSeed {
 
     const val ACCOUNT_ID_PREFIX = "mock-bank-account-"
-    private const val POLYGON_CHAIN_ID = 137L
-    private const val BASE_CHAIN_ID = 8453L
-    private const val ARBITRUM_CHAIN_ID = 42161L
     private const val ACH_MAX_DAYS = 3
 
     val accounts: List<BankAccount> = listOf(
@@ -37,7 +34,7 @@ internal object MockBankOfframpSeed {
             OfframpSource(
                 networkName = "Polygon",
                 isTestnet = false,
-                chainId = POLYGON_CHAIN_ID,
+                chainId = 137L,
                 tokens = listOf(
                     OfframpToken(symbol = "USDC", contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"),
                 ),
@@ -45,15 +42,23 @@ internal object MockBankOfframpSeed {
             OfframpSource(
                 networkName = "Base",
                 isTestnet = false,
-                chainId = BASE_CHAIN_ID,
+                chainId = 84532L,
                 tokens = listOf(
-                    OfframpToken(symbol = "USDC", contractAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+                    OfframpToken(symbol = "USDC", contractAddress = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"),
+                ),
+            ),
+            OfframpSource(
+                networkName = "Base",
+                isTestnet = false,
+                chainId = 84532L,
+                tokens = listOf(
+                    OfframpToken(symbol = "USDC", contractAddress = "0x10b5be494c2962a7b318afb63f0ee30b959d000b"),
                 ),
             ),
             OfframpSource(
                 networkName = "Arbitrum One",
                 isTestnet = false,
-                chainId = ARBITRUM_CHAIN_ID,
+                chainId = 42161L,
                 tokens = listOf(
                     OfframpToken(symbol = "USDC", contractAddress = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
                 ),
