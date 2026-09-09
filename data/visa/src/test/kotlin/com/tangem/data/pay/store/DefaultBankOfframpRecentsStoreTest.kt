@@ -6,6 +6,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.datastore.MockStateDataStore
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
@@ -19,7 +20,11 @@ internal class DefaultBankOfframpRecentsStoreTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = MockStateDataStore(default = emptyPreferences()),
     )
-    private val store = DefaultBankOfframpRecentsStore(prefs = prefs, currentTimeMillis = { nowMillis })
+    private val store = DefaultBankOfframpRecentsStore(
+        prefs = prefs,
+        spendPreferencesKeys = SpendPreferencesKeys(),
+        currentTimeMillis = { nowMillis },
+    )
 
     @Test
     fun `GIVEN empty store WHEN getUsage THEN empty map`() = runTest {

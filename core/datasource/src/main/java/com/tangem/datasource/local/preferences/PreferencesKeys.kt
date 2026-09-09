@@ -13,7 +13,6 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_K
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_APPLICATION_STOPPED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
-import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * All preferences keys that DataStore<Preferences> is stored.
@@ -159,12 +158,6 @@ object PreferencesKeys {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
 
-    val TANGEM_PAY_WITHDRAW_ORDERS_KEY by lazy { stringPreferencesKey(name = "tangemPayWithdrawOrdersKey") }
-    val TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY by lazy {
-        stringPreferencesKey(name = "tangemPayActiveWithdrawOrdersKey")
-    }
-    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityListV3") }
-
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
 
@@ -191,33 +184,6 @@ object PreferencesKeys {
 
     fun getHotWalletUnlockDeadlineKey(attemptId: String) =
         longPreferencesKey(name = "hotWalletUnlockDeadline_$attemptId")
-
-    fun getTangemPayAddToWalletKey(customerWalletAddress: String) =
-        booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
-
-    fun getTangemPayCashbackDeactivationDismissedKey(customerWalletAddress: String) =
-        booleanPreferencesKey("tangem_pay_cashback_deactivation_dismissed_key_$customerWalletAddress")
-
-    fun getTangemPayOrderIdKey(customerWalletAddress: String) =
-        stringPreferencesKey("tangem_pay_order_id_key_$customerWalletAddress")
-
-    fun getTangemPayCampaignOrderKey(customerWalletAddress: String) =
-        booleanPreferencesKey("tangem_pay_campaign_order_key_$customerWalletAddress")
-
-    fun getTangemPayVirtualAccountOrderIdKey(customerWalletAddress: String) =
-        stringPreferencesKey("tangem_pay_va_order_id_key_$customerWalletAddress")
-
-    fun getTangemPayCustomerWalletAddressKey(userWalletId: UserWalletId) =
-        stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")
-
-    fun getTangemPayCheckCustomerByWalletId(userWalletId: UserWalletId) =
-        booleanPreferencesKey("tangem_pay_check_customer_by_wallet_id_$userWalletId")
-
-    fun getTangemPayHideOnboardingKey(userWalletId: UserWalletId) =
-        booleanPreferencesKey("tangem_pay_hide_onboarding_key_$userWalletId")
-
-    fun getTangemPayDeactivatedKey(userWalletId: UserWalletId) =
-        booleanPreferencesKey("tangem_pay_deactivated_$userWalletId")
 
     // endregion
 }
