@@ -38,7 +38,7 @@ internal class EarnFeedTabComponent @AssistedInject constructor(
     private val promoBannersBlockComponent: PromoBannersBlockComponent = promoBannersBlockComponentFactory.create(
         context = child("promoBannersBlockComponent"),
         params = PromoBannersBlockComponent.Params(
-            placeholder = PromoBannersBlockComponent.Placeholder.FEED,
+            placeholder = PromoBannersBlockComponent.Placeholder.EARN,
             isInitiallyVisibleOnScreen = false,
         ),
     )
