@@ -866,6 +866,7 @@
   <string name="hw_cloud_backup_confirm_password_description">Пароль потрібен для шифрування секретної фрази в %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Підтвердьте пароль</string>
   <string name="hw_cloud_backup_consent">Я розумію, що Tangem не може відновити пароль моєї резервної копії. Якщо я втрачу цей пароль або свій Apple ID, мою резервну копію буде неможливо відновити. Без фрази відновлення я також не зможу відновити доступ до своїх криптоактивів.</string>
+  <string name="hw_cloud_backup_consent_v2">Я розумію, що Tangem не може відновити пароль моєї резервної копії. Якщо я втрачу цей пароль або свій %1$s, мою резервну копію буде неможливо відновити. Без фрази відновлення я також не зможу відновити доступ до своїх криптоактивів.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Ви не зможете відновити цей гаманець із %s. Нову резервну копію можна створити будь-коли.</string>
   <string name="hw_cloud_backup_error_network">Немає підключення до інтернету. Перевірте мережу та спробуйте ще раз.</string>
   <string name="hw_cloud_backup_error_title">Щось пішло не так</string>
