@@ -204,7 +204,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     }
 
     private fun onTermsClick() {
-        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
     private fun setCtaLoading(isLoading: Boolean) {
