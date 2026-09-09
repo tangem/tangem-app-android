@@ -25,8 +25,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 
 /**
- * The scenes are composed on top of each other and only their alpha and offset move, so a scene change never
- * recomposes anything: the position is read inside the draw phase. Without a playing video the first scene stays.
+ * The scenes are composed on top of each other; animation frames read the position inside the draw phase, while the
+ * active scene recomposes when it changes to keep only that scene in accessibility semantics. When animation is disabled,
+ * the first scene stays.
  */
 @Composable
 internal fun WelcomeTextScenes(isAnimated: Boolean, videoPositionMs: () -> Long, modifier: Modifier = Modifier) {
