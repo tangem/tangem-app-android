@@ -880,7 +880,7 @@
   <string name="hw_cloud_backup_completed_title">Backup concluído</string>
   <string name="hw_cloud_backup_confirm_password_description">É necessária uma senha para criptografar sua frase de recuperação em %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirmar senha</string>
-  <string name="hw_cloud_backup_consent">Entendo que, se eu perder ou esquecer esta senha, perderei o acesso às minhas criptomoedas.</string>
+  <string name="hw_cloud_backup_consent">Entendo que a Tangem não pode recuperar minha senha de backup. Se eu perder minha senha de backup ou meu Apple ID, meu backup não poderá ser recuperado. Sem minha frase de recuperação, meus criptoativos também não poderão ser recuperados.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Você não poderá restaurar esta carteira a partir de %s. Você pode criar um novo backup a qualquer momento.</string>
   <string name="hw_cloud_backup_error_network">Sem conexão com a internet. Verifique sua conexão de rede e tente novamente.</string>
   <string name="hw_cloud_backup_error_title">Algo deu errado</string>
@@ -2065,8 +2065,8 @@
   <string name="staking_title_stake">Stake %s</string>
   <string name="staking_title_unstake">Desvincule %s</string>
   <string name="staking_transaction_in_progress_text">A transação está sendo processada! A validação está em andamento na blockchain. Isso pode levar alguns minutos.</string>
-  <string name="staking_transaction_validation_unsafe">%s O staking está proibido devido a verificações de segurança.</string>
-  <string name="staking_transaction_validation_warning">%s Apostar é suspeito. Aposte por sua conta e risco.</string>
+  <string name="staking_transaction_validation_unsafe">O staking de %s está proibido devido às verificações de segurança</string>
+  <string name="staking_transaction_validation_warning">O staking de %s é suspeito. Faça staking por sua conta e risco</string>
   <string name="staking_unbonding">Desvinculação</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unlocking">Desbloqueando</string>
