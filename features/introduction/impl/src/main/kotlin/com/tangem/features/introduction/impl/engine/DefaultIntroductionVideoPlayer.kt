@@ -60,6 +60,10 @@ internal class DefaultIntroductionVideoPlayer(
         if (isRunning && isMotionEnabled) player.play() else player.pause()
     }
 
+    override fun restart() {
+        player.seekTo(0L)
+    }
+
     override fun release() {
         attachedSurfaceView = null
         player.removeListener(playerListener)
