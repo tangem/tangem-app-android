@@ -93,9 +93,12 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         val contract = (currency as? CryptoCurrency.Token)?.contractAddress
             ?: ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
 
-        // bound filters the window directly in SQL. Generated in the same UTC/'Z' shape as stored values.
+        // bound filters the window directly in SQL. Printed as the start of its second with an explicit
+        // `.000` fraction: a bound truncated to `ss'Z'` sorts *after* a same-second row stored as
+        // `ss.SSS'Z'` ('.' < 'Z'), which dropped the very row the bound was taken from.
         val fromCreatedAtIso = DateTime(fromCreatedAtMillis, DateTimeZone.UTC)
-            .toString(ISODateTimeFormat.dateTimeNoMillis())
+            .withMillisOfSecond(0)
+            .toString(ISODateTimeFormat.dateTime())
         val addresses = getAddresses(userWalletId, currency.network)
 
         val flow = combine(

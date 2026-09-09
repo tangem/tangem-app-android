@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.CapturingSlot
 import io.mockk.clearMocks
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
 
@@ -81,7 +83,7 @@ internal class RefactoredTxHistoryRepositoryTest {
                 repository.getExpressHistory(USER_WALLET_ID, currency, iso("2026-08-12T12:00:00Z")).first()
 
                 // Assert
-                assertThat(bound.captured).isEqualTo("2026-08-11T12:00:00Z")
+                assertThat(bound.captured).isEqualTo("2026-08-11T12:00:00.000Z")
             }
 
         @Test
@@ -126,9 +128,34 @@ internal class RefactoredTxHistoryRepositoryTest {
                 repository.getIndexedExpressHistory(USER_WALLET_ID, currency, limit = 50).first()
 
                 // Assert
-                assertThat(bound.captured).isEqualTo("2026-08-12T12:00:00Z")
+                assertThat(bound.captured).isEqualTo("2026-08-12T12:00:00.000Z")
             }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun boundaryRow(model: BoundaryRowModel) = runTest {
+            // Arrange
+            val bound = stubQueries()
+            every {
+                historyIndexDao.observePage(any(), any<HistoryIndexDao.Cursor>(), any())
+            } returns flowOf(listOf(createIndexEntity(sortTimeMillis = iso(model.storedCreatedAt))))
+
+            // Act
+            repository.getIndexedExpressHistory(USER_WALLET_ID, currency, limit = 50).first()
+
+            // Assert — SQL keeps the row via `created_at >= bound`, compared lexicographically
+            assertThat(bound.captured).isAtMost(model.storedCreatedAt)
+        }
+
+        /** The `created_at` of the page's oldest row — the one the bound is taken from, so it must survive it. */
+        private fun provideTestModels() = listOf(
+            BoundaryRowModel(storedCreatedAt = "2026-08-12T12:00:00.789Z"),
+            BoundaryRowModel(storedCreatedAt = "2026-08-12T12:00:00.000Z"),
+            BoundaryRowModel(storedCreatedAt = "2026-08-12T12:00:00Z"),
+        )
     }
+
+    data class BoundaryRowModel(val storedCreatedAt: String)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -349,7 +376,7 @@ internal class RefactoredTxHistoryRepositoryTest {
         const val ADDRESS = "addr"
         const val DYNAMIC_ADDRESS = "addr-dynamic"
         const val NO_LOWER_BOUND = 0L
-        const val EPOCH_ISO = "1970-01-01T00:00:00Z"
+        const val EPOCH_ISO = "1970-01-01T00:00:00.000Z"
         const val TX_ID = "tx-1"
         const val CREATED_AT = "2026-06-01T00:00:00Z"
     }
