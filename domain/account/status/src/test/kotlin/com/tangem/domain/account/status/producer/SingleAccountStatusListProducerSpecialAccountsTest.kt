@@ -59,7 +59,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal.TEN,
                 fiatRate = BigDecimal.ONE,
-                isTradingAllowed = true,
                 depositCurrency = mockk(relaxed = true),
                 depositAddress = "0xbridge0000000000000000000000000000000001",
             )
