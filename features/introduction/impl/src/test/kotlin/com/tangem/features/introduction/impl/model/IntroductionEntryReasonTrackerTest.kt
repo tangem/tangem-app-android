@@ -1,7 +1,7 @@
 package com.tangem.features.introduction.impl.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.entity.HomeEntryReason
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.analytics.repository.AnalyticsRepository
@@ -43,7 +43,7 @@ internal class IntroductionEntryReasonTrackerTest {
             coEvery { analyticsRepository.checkIsEventSent(any()) } returns false
 
             // Act
-            tracker.reportOpening(HomeEntryReason.Launch)
+            tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
             // Assert
             assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened(EntryReason.FirstLaunch))
@@ -54,7 +54,7 @@ internal class IntroductionEntryReasonTrackerTest {
     fun `GIVEN the screen was shown before WHEN the first opening is consumed THEN it is no wallets and nothing is written`() =
         runTest {
             // Act
-            tracker.reportOpening(HomeEntryReason.Launch)
+            tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
             // Assert
             assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened(EntryReason.NoWallets))
@@ -64,10 +64,10 @@ internal class IntroductionEntryReasonTrackerTest {
     @Test
     fun `GIVEN an opening was reported WHEN the screen is rebuilt in the same process THEN it stays silent`() = runTest {
         // Arrange
-        tracker.reportOpening(HomeEntryReason.Launch)
+        tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
         // Act
-        tracker.reportOpening(HomeEntryReason.Launch)
+        tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
         // Assert
         assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened(EntryReason.NoWallets))
@@ -76,10 +76,10 @@ internal class IntroductionEntryReasonTrackerTest {
     @Test
     fun `GIVEN an opening was reported WHEN the last wallet is forgotten THEN it is reported again`() = runTest {
         // Arrange
-        tracker.reportOpening(HomeEntryReason.Launch)
+        tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
         // Act
-        tracker.reportOpening(HomeEntryReason.LastWalletForgotten)
+        tracker.reportOpening(AppRoute.Home.EntryReason.LastWalletForgotten)
 
         // Assert
         assertThat(sentEvents).containsExactly(
@@ -94,7 +94,7 @@ internal class IntroductionEntryReasonTrackerTest {
         coEvery { analyticsRepository.checkIsEventSent(any()) } throws IllegalStateException("corrupt store")
 
         // Act
-        tracker.reportOpening(HomeEntryReason.Launch)
+        tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
         // Assert
         assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened(EntryReason.NoWallets))

@@ -12,16 +12,11 @@ internal class DefaultIntroductionVideoPlayer(
     private val listener: IntroductionVideoPlayer.Listener,
 ) : IntroductionVideoPlayer {
 
-    private var hasRenderedFrame = false
-
     private val playerListener = object : Player.Listener {
 
-        override fun onRenderedFirstFrame() {
-            hasRenderedFrame = true
-            listener.onFirstFrameRendered()
-        }
+        override fun onRenderedFirstFrame() = listener.onFirstFrameRendered()
 
-        override fun onPlayerError(error: PlaybackException) = listener.onError(hasRenderedFrame)
+        override fun onPlayerError(error: PlaybackException) = listener.onError()
     }
 
     private var isPrepared = false

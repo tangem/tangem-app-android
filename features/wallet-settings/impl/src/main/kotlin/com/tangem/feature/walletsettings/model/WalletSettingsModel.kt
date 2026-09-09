@@ -7,7 +7,6 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
-import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off
@@ -269,7 +268,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
-            router.replaceAll(AppRoute.Home(entryReason = HomeEntryReason.LastWalletForgotten))
+            router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
         }
     }
 
