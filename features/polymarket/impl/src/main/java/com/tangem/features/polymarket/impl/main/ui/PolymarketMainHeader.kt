@@ -45,6 +45,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -57,6 +58,7 @@ internal fun PolymarketMainHeader(
     withdraw: TangemButtonUM,
     onBalanceClick: () -> Unit,
     modifier: Modifier = Modifier,
+    positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Content(persistentListOf()),
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -74,10 +76,15 @@ internal fun PolymarketMainHeader(
             modifier = Modifier.padding(top = 32.dp),
         )
 
+        PolymarketPositionsPreview(
+            state = positions,
+            modifier = Modifier.padding(top = 48.dp),
+        )
+
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 72.dp, start = 16.dp, end = 16.dp),
+                .padding(top = if (positions.isVisible) 32.dp else 72.dp, start = 16.dp, end = 16.dp),
             text = stringResourceSafe(R.string.prediction_main_explore_events),
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.heading.small,
