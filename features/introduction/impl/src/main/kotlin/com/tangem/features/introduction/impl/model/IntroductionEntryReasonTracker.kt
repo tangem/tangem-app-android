@@ -1,7 +1,9 @@
 package com.tangem.features.introduction.impl.model
 
 import com.tangem.common.routing.entity.HomeEntryReason
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.analytics.repository.AnalyticsRepository
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.ScreenOpened.EntryReason
 import com.tangem.utils.coroutines.runSuspendCatching
 import java.util.concurrent.atomic.AtomicBoolean
@@ -16,12 +18,17 @@ import javax.inject.Singleton
 @Singleton
 internal class IntroductionEntryReasonTracker @Inject constructor(
     private val analyticsRepository: AnalyticsRepository,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     private val hasReportedInThisProcess = AtomicBoolean(false)
 
-    /** The reason to report, or `null` when this opening must stay silent. */
-    suspend fun consume(routeReason: HomeEntryReason): EntryReason? {
+    suspend fun reportOpening(routeReason: HomeEntryReason) {
+        val entryReason = consume(routeReason) ?: return
+        analyticsEventHandler.send(IntroductionProcess.ScreenOpened(entryReason))
+    }
+
+    private suspend fun consume(routeReason: HomeEntryReason): EntryReason? {
         val isFirstInThisProcess = hasReportedInThisProcess.compareAndSet(false, true)
         return when (routeReason) {
             HomeEntryReason.LastWalletForgotten -> {

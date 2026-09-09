@@ -9,7 +9,6 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -127,9 +126,9 @@ internal class HaveWalletSheetController(
     private fun onImportBack() {
         if (importStepOrNull() == null) return
         analyticsEventHandler.send(
-            SheetDismissed(
-                sheet = SheetDismissed.Sheet.ImportExisting,
-                reason = SheetDismissed.DismissReason.BackButton,
+            IntroductionProcess.SheetDismissed(
+                sheet = IntroductionProcess.SheetDismissed.Sheet.ImportExisting,
+                reason = IntroductionProcess.SheetDismissed.DismissReason.BackButton,
             ),
         )
         cancelCloudResolve()
@@ -196,19 +195,21 @@ internal class HaveWalletSheetController(
         }
     }
 
-    private fun onCloseClick() = dismissByViewer(SheetDismissed.DismissReason.CloseButton)
+    private fun onCloseClick() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
 
-    private fun onDismissRequest() = dismissByViewer(SheetDismissed.DismissReason.Dismissed)
+    private fun onDismissRequest() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
 
     /** Only a viewer leaving without picking a row is a dismissal; rows dismiss programmatically and stay silent. */
-    private fun dismissByViewer(reason: SheetDismissed.DismissReason) {
+    private fun dismissByViewer(reason: IntroductionProcess.SheetDismissed.DismissReason) {
         if (!isShown) return
-        val sheet = if (currentStep() is HaveWalletUM.Step.Options) {
-            SheetDismissed.Sheet.IHaveWallet
-        } else {
-            SheetDismissed.Sheet.ImportExisting
+        val sheet = when (currentStep()) {
+            is HaveWalletUM.Step.Options -> IntroductionProcess.SheetDismissed.Sheet.IHaveWallet
+            is HaveWalletUM.Step.Import,
+            is HaveWalletUM.Step.Error,
+            null,
+            -> IntroductionProcess.SheetDismissed.Sheet.ImportExisting
         }
-        analyticsEventHandler.send(SheetDismissed(sheet = sheet, reason = reason))
+        analyticsEventHandler.send(IntroductionProcess.SheetDismissed(sheet = sheet, reason = reason))
         dismiss()
     }
 
