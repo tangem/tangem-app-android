@@ -2,15 +2,23 @@ package com.tangem.features.polymarket.impl.positiondetails.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -30,8 +38,12 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
+import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
+import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.positiondetails.ui.preview.PolymarketPositionDetailsPreviewProvider
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
+import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Content
+import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Pnl
 
 @Composable
 internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM, modifier: Modifier = Modifier) {
@@ -40,18 +52,47 @@ internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM,
             modifier = modifier,
             topBar = { TangemTopNavigation(endButton = { TangemButton.Close(onClick = state.onCloseClick) }) },
         ) { contentPadding ->
-            Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                    .padding(contentPadding).padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                PolymarketPositionSummary(state.summary, modifier = Modifier.padding(bottom = 20.dp))
-                state.event?.let { PositionEvent(it) }
-                PolymarketPositionMetrics(state.metrics)
-                PositionInformation(state.information)
+            when (val content = state.content) {
+                is Content.Data -> PositionDetailsContent(content, contentPadding)
+                else -> Box(
+                    modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    when (content) {
+                        Content.Loading -> PolymarketLoadingState()
+                        Content.Unavailable -> Text(
+                            text = stringResourceSafe(R.string.prediction_positions_unavailable),
+                            style = TangemTheme.typography3.subheading.medium,
+                            color = TangemTheme.colors3.text.secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                        is Content.Error -> PolymarketReloadPrompt(
+                            text = resourceReference(R.string.common_something_went_wrong),
+                            onReloadClick = content.onRetry,
+                        )
+                        is Content.Data -> Unit
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun PositionDetailsContent(state: Content.Data, contentPadding: PaddingValues) {
+    var explanation by rememberSaveable { mutableStateOf<Pnl?>(null) }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(contentPadding).padding(horizontal = 16.dp).padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PolymarketPositionSummary(state.summary, modifier = Modifier.padding(bottom = 20.dp))
+        state.notice?.let { PolymarketPositionNotice(it) }
+        state.event?.let { PositionEvent(it) }
+        PolymarketPositionMetrics(state = state.metrics, onPnlClick = { explanation = it })
+        PositionInformation(state.information)
+    }
+    PolymarketPositionPnlSheet(pnl = explanation, onDismiss = { explanation = null })
 }
 
 @Composable
@@ -108,7 +149,9 @@ private fun PositionInfoRow(title: TextReference, value: TextReference, divider:
 @Preview(name = "Large text", widthDp = 320, heightDp = 800, fontScale = 1.5f)
 @Composable
 private fun PolymarketPositionDetailsScreenPreview(
-    @PreviewParameter(PolymarketPositionDetailsPreviewProvider::class) state: PolymarketPositionDetailsUM,
+    @PreviewParameter(PolymarketPositionDetailsPreviewProvider::class) content: Content,
 ) {
-    TangemThemePreviewRedesign { PolymarketPositionDetailsScreen(state) }
+    TangemThemePreviewRedesign(alwaysShowBottomSheets = false) {
+        PolymarketPositionDetailsScreen(PolymarketPositionDetailsUM(content = content, onCloseClick = {}))
+    }
 }
