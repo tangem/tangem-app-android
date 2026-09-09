@@ -123,7 +123,6 @@ sealed class PredictionAccountStatusValue {
      * @property fiatRate Exchange rate of the collateral to the app's selected fiat currency, or `null` if the
      *                    quote has never been available. When `null`, [totalFiatBalance] resolves to
      *                    [TotalFiatBalance.Failed].
-     * @property isTradingAllowed Whether the user may trade, as opposed to only viewing and withdrawing.
      * @property depositCurrency The token a deposit is made in, which is not the token [balance] is
      *                           denominated in.
      * @property depositAddress Address a deposit is sent to for it to credit this account, or `null` until the
@@ -134,7 +133,6 @@ sealed class PredictionAccountStatusValue {
         override val source: StatusSource,
         val balance: SerializedBigDecimal,
         val fiatRate: SerializedBigDecimal?,
-        val isTradingAllowed: Boolean,
         val depositCurrency: CryptoCurrency.Token,
         val depositAddress: String?,
     ) : PredictionAccountStatusValue() {
