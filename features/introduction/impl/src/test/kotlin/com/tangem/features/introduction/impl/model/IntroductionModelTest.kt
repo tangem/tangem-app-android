@@ -188,6 +188,7 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
         assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
     }
 
@@ -206,6 +207,7 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
         assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
     }
 

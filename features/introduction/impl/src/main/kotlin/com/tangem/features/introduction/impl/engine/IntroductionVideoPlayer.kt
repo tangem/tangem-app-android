@@ -9,6 +9,7 @@ internal interface IntroductionVideoPlayer {
 
     val isSurfaceAttached: Boolean
 
+    /** Position inside the current pass of the loop: media3 counts per item, so it starts over at every wrap. */
     val positionMs: Long
 
     fun attachSurface(surfaceView: SurfaceView)
