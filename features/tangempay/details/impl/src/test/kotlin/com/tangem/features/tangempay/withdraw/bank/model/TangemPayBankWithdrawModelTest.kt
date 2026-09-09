@@ -71,6 +71,22 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
+    fun `GIVEN see all entry WHEN recipient selected THEN draft keeps recipient`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.SeeAll)
+        val recipient = bankAccount(id = "acc-3")
+
+        // Act
+        model.onRecipientSelected(recipient)
+
+        // Assert
+        assertThat(model.draft.value)
+            .isEqualTo(BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll, recipient = recipient))
+        coVerify(exactly = 0) { getBankAccountsUseCase(any()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN draft WHEN amount confirmed THEN draft keeps amount source and destination`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.NewBusiness)

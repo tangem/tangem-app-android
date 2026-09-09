@@ -18,6 +18,7 @@ import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
@@ -46,6 +47,7 @@ internal class TangemPayWithdrawHubModelTest {
     private val withdrawRepository: TangemPayWithdrawRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase = mockk()
+    private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -59,11 +61,13 @@ internal class TangemPayWithdrawHubModelTest {
             withdrawRepository,
             uiMessageSender,
             getRecentBankAccountsUseCase,
+            getBankAccountsUseCase,
             markBankAccountUsedUseCase,
         )
         every { currencyFactory.create(userWalletId) } returns token
         coEvery { withdrawRepository.hasWithdrawOrder(userWalletId) } returns false
         coEvery { getRecentBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
+        coEvery { getBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
     }
 
     @Test
@@ -133,16 +137,46 @@ internal class TangemPayWithdrawHubModelTest {
         val recents = model.uiState.value.bankSection.recents
         assertThat(recents).isInstanceOf(RecentsUM.Content::class.java)
         assertThat((recents as RecentsUM.Content).recipients.map { it.id }).containsExactly("acc-2", "acc-1").inOrder()
+        coVerify(exactly = 0) { getBankAccountsUseCase(any()) }
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no recent accounts WHEN model created THEN recents empty`() {
+    fun `GIVEN no recent and no saved accounts WHEN model created THEN recents empty without see all`() {
         // Act
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.bankSection.recents).isEqualTo(RecentsUM.Empty)
+        assertThat(model.uiState.value.bankSection.recents).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no recent but saved accounts WHEN model created THEN recents empty with see all`() {
+        // Arrange
+        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(bankAccount(id = "acc-1")).right()
+        val model = createModel()
+
+        // Act
+        requireNotNull((model.uiState.value.bankSection.recents as RecentsUM.Empty).onSeeAllClick).invoke()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(TangemPayAccountDetailsInnerRoute.BankWithdraw(entry = BankWithdrawEntry.SeeAll))
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no recent accounts and saved accounts fail WHEN model created THEN recents empty without see all`() {
+        // Arrange
+        coEvery { getBankAccountsUseCase(userWalletId) } returns loadFailure
+
+        // Act
+        val model = createModel()
+
+        // Assert
+        assertThat(model.uiState.value.bankSection.recents).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
         model.onDestroy()
     }
 
@@ -250,6 +284,7 @@ internal class TangemPayWithdrawHubModelTest {
         tangemPayWithdrawRepository = withdrawRepository,
         uiMessageSender = uiMessageSender,
         getRecentBankAccountsUseCase = getRecentBankAccountsUseCase,
+        getBankAccountsUseCase = getBankAccountsUseCase,
         markBankAccountUsedUseCase = markBankAccountUsedUseCase,
     )
 }
