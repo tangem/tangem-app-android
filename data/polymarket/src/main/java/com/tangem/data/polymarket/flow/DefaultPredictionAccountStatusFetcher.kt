@@ -14,7 +14,6 @@ import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -47,7 +46,6 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val polymarketRepository: PolymarketRepository,
     private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
-    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
@@ -149,7 +147,6 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                     source = StatusSource.ACTUAL,
                     balance = balanceAllowance.balance,
                     fiatRate = null,
-                    isTradingAllowed = isTradingAllowed(),
                     depositCurrency = collateralCurrencyFactory.createDepositTarget(),
                     depositAddress = storedDepositAddress(userWalletId = userWalletId),
                 )
@@ -166,16 +163,6 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
         val stored = statusStore.getSyncOrNull(userWalletId = userWalletId)
 
         return (stored as? PredictionAccountStatusValue.Active)?.depositAddress
-    }
-
-    private suspend fun isTradingAllowed(): Boolean {
-        return checkPolymarketGeoblockUseCase().fold(
-            ifLeft = { error ->
-                logger.e("Prediction region check failed, trading is left allowed: $error")
-                true
-            },
-            ifRight = { isBlocked -> !isBlocked },
-        )
     }
 
     /** A wallet this device never derived an address for: the backend still knows it by its Tangem wallet id. */

@@ -36,7 +36,7 @@ internal class PredictionBalanceUMConverter(
                 text = resourceReference(id = R.string.common_add_funds),
                 icon = Icons.ic_arrow_down_24,
                 isEnabled = active?.cryptoCurrencyStatus != null &&
-                    active.isTradingAllowed &&
+                    value.isTradingAllowed &&
                     value.depositTarget != null,
                 isLoading = isLoading,
                 onClick = onAddFundsClick,
@@ -69,5 +69,9 @@ internal class PredictionBalanceUMConverter(
         onClick = onClick,
     )
 
-    data class Input(val status: PredictionAccountStatusValue, val depositTarget: PolymarketDepositTarget?)
+    data class Input(
+        val status: PredictionAccountStatusValue,
+        val depositTarget: PolymarketDepositTarget?,
+        val isTradingAllowed: Boolean,
+    )
 }

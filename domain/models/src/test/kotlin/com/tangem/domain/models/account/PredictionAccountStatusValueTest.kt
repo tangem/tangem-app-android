@@ -193,12 +193,10 @@ internal class PredictionAccountStatusValueTest {
             balance: BigDecimal,
             fiatRate: BigDecimal?,
             source: StatusSource = StatusSource.ACTUAL,
-            isTradingAllowed: Boolean = true,
         ) = PredictionAccountStatusValue.Active(
             source = source,
             balance = balance,
             fiatRate = fiatRate,
-            isTradingAllowed = isTradingAllowed,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge",
         )

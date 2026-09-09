@@ -21,6 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -58,6 +59,9 @@ internal class PolymarketMainComponentTest {
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk(relaxed = true)
+    private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk<CheckPolymarketGeoblockUseCase>().also {
+        coEvery { it() } returns false.right()
+    }
 
     private val userWalletId = UserWalletId("011")
 
@@ -135,5 +139,7 @@ internal class PolymarketMainComponentTest {
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
         predictionAccountStatusSupplier = predictionAccountStatusSupplier,
         refreshPredictionDepositRequisitesInteractor = refreshRequisites,
+        checkPolymarketGeoblockUseCase = checkGeoblock,
+        predictionAccountStatusFetcher = mockk(relaxed = true),
     )
 }
