@@ -10,6 +10,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
@@ -88,10 +89,16 @@ internal class AddExistingWalletImportModel @Inject constructor(
             result.fold(
                 ifLeft = { error ->
                     val message = when (error) {
-                        HotWalletImportError.AlreadySaved -> R.string.hw_import_seed_phrase_already_imported
-                        is HotWalletImportError.Unknown -> R.string.common_unknown_error
+                        HotWalletImportError.AlreadySaved -> resourceReference(
+                            R.string.hw_import_seed_phrase_already_imported,
+                        )
+                        is HotWalletImportError.PassphraseTooLong -> resourceReference(
+                            R.string.hw_import_seed_phrase_passphrase_too_long,
+                            wrappedList(error.maxByteCount),
+                        )
+                        is HotWalletImportError.Unknown -> resourceReference(R.string.common_unknown_error)
                     }
-                    uiMessageSender.send(SnackbarMessage(resourceReference(message)))
+                    uiMessageSender.send(SnackbarMessage(message))
                 },
                 ifRight = { userWalletId -> params.callbacks.onWalletImported(userWalletId) },
             )
