@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.features.collectibles.api)
 
     /** Project - Common */
+    implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Project - Core */
