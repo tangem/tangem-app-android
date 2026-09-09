@@ -18,8 +18,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery

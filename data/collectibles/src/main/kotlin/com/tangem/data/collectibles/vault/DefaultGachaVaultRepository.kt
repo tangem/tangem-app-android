@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.CardSession
 import com.tangem.core.error.ext.tangemError
 import com.tangem.data.collectibles.account.derivation.DeriveCollectiblesOwnerAndSetUpVaultTask
 import com.tangem.data.collectibles.account.derivation.solanaSeedKey
@@ -61,7 +62,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = withContext(dispatchers.io) {
         either {
-            val network = networkProvider.create(userWallet).mapLeft { error -> error.asFailure() }.bind()
+            val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
 
             initOrUpdateVaultInternal(
                 userWalletId = userWallet.walletId,
@@ -87,9 +88,11 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         userWallet: UserWallet,
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
-    ): Either<CollectiblesAccountError, Unit> = when (userWallet) {
-        is UserWallet.Cold -> deriveAndInitInCardSession(userWallet, hotDelegate, limits)
-        is UserWallet.Hot -> deriveAndInitLocally(userWallet, hotDelegate, limits)
+    ): Either<CollectiblesAccountError, Unit> = withContext(dispatchers.io) {
+        when (userWallet) {
+            is UserWallet.Cold -> deriveAndInitInCardSession(userWallet, hotDelegate, limits)
+            is UserWallet.Hot -> deriveAndInitLocally(userWallet, hotDelegate, limits)
+        }
     }
 
     private suspend fun deriveAndInitInCardSession(
@@ -100,59 +103,71 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         val seedKey = userWallet.solanaSeedKey()
 
         if (seedKey == null) {
-            TangemLogger.d(
-                messageString = "GachaVaultRepository: deriveOwnerAndSetUpVault: the wallet has no Solana key",
-            )
+            TangemLogger.d("GachaVaultRepository: deriveOwnerAndSetUpVault: the wallet has no Solana key")
             return GachaVaultError.WalletUnavailable.asFailure().left()
         }
 
         val cardId = userWallet.sessionCardId()
+        val task = DeriveCollectiblesOwnerAndSetUpVaultTask(
+            userWallet = userWallet,
+            seedKey = seedKey,
+            derivationsRepository = derivationsRepository,
+            setUpVault = { session ->
+                setUpVault(
+                    userWallet = userWallet,
+                    hotDelegate = hotDelegate,
+                    limits = limits,
+                    session = session,
+                )
+            },
+        )
 
-        // The vault read and the broadcast run inside the session, and the blockchain SDK's Solana RPC blocks
-        return withContext(dispatchers.io) {
-            val task = DeriveCollectiblesOwnerAndSetUpVaultTask(
-                userWallet = userWallet,
-                seedKey = seedKey,
-                coroutineScope = this,
-                derivationsRepository = derivationsRepository,
-                setUpVault = { signer ->
-                    either {
-                        val network = networkProvider.create(userWallet)
-                            .mapLeft { error -> error.tangemError }
-                            .bind()
+        val result = tangemSdkManager.runTaskAsync(
+            runnable = task,
+            preflightReadFilter = if (cardId == null) {
+                UserWalletIdPreflightReadFilter(expectedUserWalletId = userWallet.walletId)
+            } else {
+                null
+            },
+            cardId = cardId,
+        )
 
-                        initOrUpdateVaultInternal(
-                            userWalletId = userWallet.walletId,
-                            network = network,
-                            hotDelegate = hotDelegate,
-                            limits = limits,
-                            signer = signer,
-                        )
-                            .mapLeft { error -> error.toTangemError() }
-                            .bind()
-                    }
-                },
-            )
-
-            val result = tangemSdkManager.runTaskAsync(
-                runnable = task,
-                preflightReadFilter = if (cardId == null) {
-                    UserWalletIdPreflightReadFilter(expectedUserWalletId = userWallet.walletId)
-                } else {
-                    null
-                },
-                cardId = cardId,
-            )
-
-            val value = when (result) {
-                is CompletionResult.Success -> Unit.right()
-                is CompletionResult.Failure -> result.error.toVaultFailure().left()
-            }
-            TangemLogger.d(messageString = "GachaVaultRepository: deriveOwnerAndSetUpVault: done, result=$value")
-
-            value
+        return when (result) {
+            is CompletionResult.Success -> Unit.right()
+            is CompletionResult.Failure -> result.error.toVaultFailure().left()
+        }.also {
+            TangemLogger.d(messageString = "GachaVaultRepository: deriveOwnerAndSetUpVault: done, result=$it")
         }
     }
+
+    private suspend fun setUpVault(
+        userWallet: UserWallet.Cold,
+        hotDelegate: HotDelegatePublicKey,
+        limits: GachaVaultLimits,
+        session: CardSession,
+    ): CompletionResult<Unit> = either {
+        val network = networkProvider.create(userWallet).mapLeft { it.tangemError }.bind()
+
+        initOrUpdateVaultInternal(
+            userWalletId = userWallet.walletId,
+            network = network,
+            hotDelegate = hotDelegate,
+            limits = limits,
+            signer = userWallet.signer(session = session),
+        )
+            .onLeft { error ->
+                TangemLogger.e(
+                    messageString = "GachaVaultRepository: the one-tap set-up failed: " +
+                        "${error::class.simpleName}(code=${error.code}) ${error.customMessage}",
+                    throwable = (error as? BlockchainSdkError)?.cause,
+                )
+            }
+            .mapLeft { error -> error.toTangemError() }
+            .bind()
+    }.fold(
+        ifLeft = { error -> CompletionResult.Failure(error) },
+        ifRight = { CompletionResult.Success(Unit) },
+    )
 
     private suspend fun deriveAndInitLocally(
         userWallet: UserWallet.Hot,
@@ -228,6 +243,14 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         )
         is UserWallet.Hot -> hotWalletSignerFactory.create(this)
     }
+
+    private fun UserWallet.Cold.signer(session: CardSession): TransactionSigner =
+        cardSdkConfigRepository.getCommonSigner(
+            cardId = sessionCardId(),
+            twinKey = TwinKey.getOrNull(scanResponse = scanResponse),
+            userWalletId = walletId,
+            session = session,
+        )
 
     /** A card that is not backed up must answer with that very card, so the session is pinned to its id. */
     private fun UserWallet.Cold.sessionCardId(): String? {
