@@ -19,11 +19,11 @@ import org.junit.jupiter.api.TestInstance
 internal class PolymarketAddFundsModelTest {
 
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val listener: PolymarketAddFundsComponent.Listener = mockk(relaxed = true)
+    private val callback: PolymarketAddFundsComponent.ModelCallback = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(analytics, listener)
+        clearMocks(analytics, callback)
     }
 
     @Test
@@ -70,7 +70,7 @@ internal class PolymarketAddFundsModelTest {
     }
 
     @Test
-    fun `GIVEN a created model WHEN swap row tapped THEN listener called and event sent`() {
+    fun `GIVEN a created model WHEN swap row tapped THEN callback called and event sent`() {
         // Arrange
         val model = createModel()
 
@@ -78,14 +78,14 @@ internal class PolymarketAddFundsModelTest {
         model.uiState.items[0].onClick()
 
         // Assert
-        verify(exactly = 1) { listener.onSwapClick() }
+        verify(exactly = 1) { callback.onSwapClick() }
         verify(exactly = 1) {
             analytics.send(match<PredictionAddFundsAnalyticsEvent> { it.event == "Button - Swap" })
         }
     }
 
     @Test
-    fun `GIVEN a created model WHEN receive row tapped THEN listener called and event sent`() {
+    fun `GIVEN a created model WHEN receive row tapped THEN callback called and event sent`() {
         // Arrange
         val model = createModel()
 
@@ -93,14 +93,14 @@ internal class PolymarketAddFundsModelTest {
         model.uiState.items[1].onClick()
 
         // Assert
-        verify(exactly = 1) { listener.onReceiveClick() }
+        verify(exactly = 1) { callback.onReceiveClick() }
         verify(exactly = 1) {
             analytics.send(match<PredictionAddFundsAnalyticsEvent> { it.event == "Button - Receive" })
         }
     }
 
     private fun createModel() = PolymarketAddFundsModel(
-        paramsContainer = MutableParamsContainer(PolymarketAddFundsComponent.Params(listener = listener)),
+        paramsContainer = MutableParamsContainer(PolymarketAddFundsComponent.Params(callback = callback)),
         dispatchers = TestingCoroutineDispatcherProvider(),
         analytics = analytics,
     )
