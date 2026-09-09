@@ -1,12 +1,9 @@
 package com.tangem.data.collectibles.account.derivation
 
-import arrow.core.Either
-import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
-import com.tangem.common.core.TangemError
 import com.tangem.common.core.run
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.core.error.ext.tangemError
@@ -20,33 +17,26 @@ import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Derives the owner key at [COLLECTIBLES_OWNER_DERIVATION_PATH], stores it and runs [setUpVault] — all on the
- * session this task was started with, so onboarding costs a single tap. The derivation runs as a nested runnable,
- * the way `TangemPayGenerateAddressAndSignChallengeTask` does it, because `DerivationsRepository.derivePublicKeys`
- * would open a session of its own.
- *
- * The key is persisted before [setUpVault] runs: the wallet manager the vault is read and signed through is
- * resolved from the wallet's stored derivations. It stays persisted when the rest fails, so a retry still costs
- * one tap.
- *
- * @property setUpVault the caller's work, handed a signer that runs on this very session
+ * Derives the owner key at [COLLECTIBLES_OWNER_DERIVATION_PATH], stores it and runs [setUpVault], all on the
+ * session it was started with — one tap. The derivation is a nested runnable because
+ * `DerivationsRepository.derivePublicKeys` would open a session of its own, and the key is stored before
+ * [setUpVault] because the wallet manager it signs through resolves the key from stored derivations. It stays
+ * stored when the rest fails, so a retry is still one tap.
  */
 internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
     private val userWallet: UserWallet.Cold,
     private val seedKey: ByteArray,
-    private val coroutineScope: CoroutineScope,
     private val derivationsRepository: DerivationsRepository,
-    private val setUpVault: suspend (signer: TransactionSigner) -> Either<TangemError, Unit>,
+    private val setUpVault: suspend (session: CardSession) -> CompletionResult<Unit>,
 ) : CardSessionRunnable<Unit> {
 
     private val path = DerivationPath(rawPath = COLLECTIBLES_OWNER_DERIVATION_PATH)
 
     override fun run(session: CardSession, callback: CompletionCallback<Unit>) {
-        coroutineScope.launch {
+        session.scope.launch {
             callback(deriveAndSetUpVault(session))
         }
     }
@@ -57,31 +47,18 @@ internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
             is CompletionResult.Success -> result.data
         }
 
-        // Without the stored key there is no wallet manager to sign with, so a failed write aborts everything
-        storeOwner(owner)
+        derivationsRepository.storeDerivedKeys(
+            userWalletId = userWallet.walletId,
+            derivedKeys = mapOf(ByteArrayKey(seedKey) to ExtendedPublicKeysMap(mapOf(path to owner))),
+        )
 
-        setUpVaultInSession(session)
+        setUpVault(session)
     }.getOrElse { error ->
         TangemLogger.e("Collectibles vault: the one-tap set-up threw", error)
         CompletionResult.Failure(GachaVaultError.Unexpected(cause = error).tangemError)
     }
 
-    private suspend fun setUpVaultInSession(session: CardSession): CompletionResult<Unit> {
-        return setUpVault(InSessionTransactionSigner(session)).fold(
-            // Every failure leaves as one: a Success would end the session with the success animation
-            ifLeft = { error -> CompletionResult.Failure(error) },
-            ifRight = { CompletionResult.Success(Unit) },
-        )
-    }
-
     private suspend fun deriveOwner(session: CardSession): CompletionResult<ExtendedPublicKey> {
         return DeriveWalletPublicKeyTask(walletPublicKey = seedKey, derivationPath = path).run(session = session)
-    }
-
-    private suspend fun storeOwner(owner: ExtendedPublicKey) {
-        derivationsRepository.storeDerivedKeys(
-            userWalletId = userWallet.walletId,
-            derivedKeys = mapOf(ByteArrayKey(seedKey) to ExtendedPublicKeysMap(mapOf(path to owner))),
-        )
     }
 }
