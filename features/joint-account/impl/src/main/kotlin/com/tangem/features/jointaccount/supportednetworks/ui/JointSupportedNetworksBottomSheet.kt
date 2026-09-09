@@ -4,20 +4,16 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,29 +80,31 @@ internal fun JointSupportedNetworksBottomSheet(state: JointSupportedNetworksUM) 
 private fun JointSupportedNetworksContent(state: JointSupportedNetworksUM, modifier: Modifier = Modifier) {
     val bottomInset = LocalTangemBottomSheetContentBottomInset.current
     val contentScrollable = LocalBottomSheetContentScrollable.current
-    val lazyListState = rememberLazyListState()
+    val scrollState = rememberScrollState()
 
     if (contentScrollable != null) {
-        val isScrollable by remember {
-            derivedStateOf { lazyListState.canScrollForward || lazyListState.canScrollBackward }
-        }
-
-        LaunchedEffect(isScrollable) {
-            contentScrollable.value = isScrollable
+        LaunchedEffect(scrollState) {
+            snapshotFlow { scrollState.canScrollForward || scrollState.canScrollBackward }
+                .collect { isScrollable -> contentScrollable.value = isScrollable }
         }
     }
 
-    LazyColumn(
-        state = lazyListState,
+    Column(
         modifier = modifier
             .fillMaxWidth()
+            .verticalScroll(scrollState)
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(color = TangemTheme.colors3.bg.tertiary),
-        contentPadding = PaddingValues(bottom = bottomInset.coerceAtLeast(16.dp)),
+            .padding(bottom = bottomInset.coerceAtLeast(16.dp)),
     ) {
-        items(items = state.networks, key = NetworkItemUM::id) { item ->
-            NetworkRow(item = item)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(color = TangemTheme.colors3.bg.tertiary),
+        ) {
+            state.networks.forEach { item ->
+                NetworkRow(item = item)
+            }
         }
     }
 }
