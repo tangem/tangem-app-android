@@ -1,53 +1,46 @@
 package com.tangem.features.polymarket.impl.main.addfunds.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.res.R
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsUM
 
 @Composable
 internal fun PolymarketAddFundsBottomSheet(state: PolymarketAddFundsUM) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = state.onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = state.onDismiss,
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
+        scrollableContent = false,
         title = {
-            TangemTopBar(
+            TangemTopNavigation(
                 title = resourceReference(R.string.common_add_funds),
-                type = TangemTopBarType.BottomSheet,
-                endContent = null,
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                windowInsets = WindowInsets(0),
+                fadeEnabled = false,
             )
         },
         content = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 state.items.fastForEach { item ->
                     key(item.iconRes) {
                         TangemRow(
