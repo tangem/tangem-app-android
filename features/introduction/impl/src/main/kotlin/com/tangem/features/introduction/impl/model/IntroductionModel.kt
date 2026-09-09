@@ -4,7 +4,6 @@ import android.view.SurfaceView
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -21,7 +20,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
-import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
 import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
@@ -41,6 +39,7 @@ import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -48,6 +47,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
+import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -57,7 +57,7 @@ internal class IntroductionModel @Inject constructor(
     videoPlayerFactory: IntroductionVideoPlayer.Factory,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val analyticsRepository: AnalyticsRepository,
+    private val entryReasonTracker: IntroductionEntryReasonTracker,
     private val router: Router,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
@@ -128,18 +128,13 @@ internal class IntroductionModel @Inject constructor(
         super.onDestroy()
     }
 
+    /** Not cancellable: an NFC launch can open the wallet before the reason resolves, and the opening still counts. */
     private fun reportScreenOpened() {
         modelScope.launch {
-            val entryReason = when (params.entryReason) {
-                HomeEntryReason.LastWalletForgotten -> IntroductionProcess.ScreenOpened.EntryReason.LastWalletForgotten
-                HomeEntryReason.Launch -> if (analyticsRepository.checkIsEventSent(WELCOME_OPENED_EVENT_ID)) {
-                    IntroductionProcess.ScreenOpened.EntryReason.NoWallets
-                } else {
-                    IntroductionProcess.ScreenOpened.EntryReason.FirstLaunch
-                }
+            withContext(NonCancellable) {
+                val entryReason = entryReasonTracker.consume(params.entryReason) ?: return@withContext
+                analyticsEventHandler.send(IntroductionProcess.ScreenOpened(entryReason))
             }
-            analyticsRepository.setIsEventSent(WELCOME_OPENED_EVENT_ID)
-            analyticsEventHandler.send(IntroductionProcess.ScreenOpened(entryReason))
         }
     }
 
@@ -438,7 +433,6 @@ internal class IntroductionModel @Inject constructor(
         const val LEARN_MORE_ACTION_ID = "learn_more"
         const val SCAN_WALLET_ACTION_ID = "scan_wallet"
         const val TERMS_OF_SERVICE_URL = "https://tangem.com/terms-of-service/"
-        const val WELCOME_OPENED_EVENT_ID = "introduction_welcome_opened"
         const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy/"
     }
 }
