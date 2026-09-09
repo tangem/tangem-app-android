@@ -2445,6 +2445,7 @@
   <string name="tangempay_choose_network_row_loading">Preparing address…</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
+  <string name="tangempay_common_error_list_loading">Failed to load the list.\nTap to reload</string>
   <string name="tangempay_common_error_loading">—</string>
   <string name="tangempay_current_plan_active_till_notification">Your %1$s plan is active till %2$s, then we will move you to %3$s. %4$s won\'t be charged.</string>
   <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
