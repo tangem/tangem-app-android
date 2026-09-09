@@ -49,6 +49,7 @@ dependencies {
     // region Domain models
     implementation(projects.domain.demo.models)
     implementation(projects.domain.transaction.models)
+    implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.walletManager.models)
     // endregion

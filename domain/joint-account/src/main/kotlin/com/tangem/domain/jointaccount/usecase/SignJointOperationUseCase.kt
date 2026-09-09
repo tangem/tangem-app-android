@@ -25,9 +25,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.firstOrNull
 
 /**
- * Co-signs the in-flight operation of a joint account in [Network]: the operation is taken from the
- * store, the [JointOperationVerifier] pipeline and the Blockaid gate both stand between it and the card,
- * and only then the signature is collected and sent.
+ * Co-signs the operation of a joint account in [Network]: the operation is taken from the store by the id the
+ * caller showed, the [JointOperationVerifier] pipeline and the Blockaid gate both stand between it and the card,
+ * and only then the signature is collected and sent. An operation the slot no longer holds under that id — it
+ * finished, was cancelled, or was replaced by another one — is [JointOperationSignError.OperationNotFound].
  */
 @Suppress("LongParameterList")
 class SignJointOperationUseCase(
@@ -44,6 +45,7 @@ class SignJointOperationUseCase(
     suspend operator fun invoke(
         account: Account.Joint,
         network: Network,
+        operationId: String,
         displayed: JointTransferIntent,
     ): Either<JointOperationSignError, Unit> = either {
         val userWalletId = account.accountId.userWalletId
@@ -59,9 +61,11 @@ class SignJointOperationUseCase(
             .mapLeft(JointOperationSignError::Failed)
             .bind()
 
-        val operation = ensureNotNull(jointAccount.inFlightOperations[chainId]) {
-            JointOperationSignError.OperationNotFound
-        }
+        // The slot holds one operation at a time, and the signature is bound to the one the screen showed: a
+        // replacement with the same payload must not be signed instead of it
+        val operation = ensureNotNull(
+            value = jointAccount.inFlightOperations[chainId]?.takeIf { it.operationId == operationId },
+        ) { JointOperationSignError.OperationNotFound }
         when (operation.status) {
             JointOperation.Status.AWAITING_SIGNATURES -> Unit
             JointOperation.Status.PENDING -> raise(JointOperationSignError.ThresholdReached)
