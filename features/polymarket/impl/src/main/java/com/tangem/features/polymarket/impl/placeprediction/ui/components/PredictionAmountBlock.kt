@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
 
@@ -49,7 +50,7 @@ internal fun PredictionAmountBlock(
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary) {
+    TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             AmountSection(
                 amountValue = amountValue,
