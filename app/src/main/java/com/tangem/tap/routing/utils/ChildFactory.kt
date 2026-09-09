@@ -376,7 +376,10 @@ internal class ChildFactory @Inject constructor(
                 if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
                     createComponentChild(
                         context = context,
-                        params = IntroductionComponent.Params(route.launchMode, route.entryReason),
+                        params = IntroductionComponent.Params(
+                            launchMode = route.launchMode,
+                            entryReason = route.entryReason,
+                        ),
                         componentFactory = introductionComponentFactory,
                     )
                 } else {
