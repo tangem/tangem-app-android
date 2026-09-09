@@ -834,7 +834,7 @@
   <string name="hw_cloud_backup_completed_title">バックアップが完了しました</string>
   <string name="hw_cloud_backup_confirm_password_description">%s上のシードフレーズを暗号化するには、パスワードが必要です。</string>
   <string name="hw_cloud_backup_confirm_password_title">パスワードを確認</string>
-  <string name="hw_cloud_backup_consent">このパスワードを紛失または忘れると、暗号資産にアクセスできなくなることを理解しました。</string>
+  <string name="hw_cloud_backup_consent">Tangemはバックアップ用パスワードを復元できないことを理解しています。パスワードまたはApple IDを失うと、バックアップを復元できなくなります。リカバリーフレーズがない場合、暗号資産も復元できません。</string>
   <string name="hw_cloud_backup_delete_confirm_message">%sからこのウォレットを復元できなくなります。新しいバックアップはいつでも作成できます。</string>
   <string name="hw_cloud_backup_error_network">インターネットに接続されていません。ネットワーク接続を確認して、もう一度お試しください。</string>
   <string name="hw_cloud_backup_error_title">問題が発生しました</string>

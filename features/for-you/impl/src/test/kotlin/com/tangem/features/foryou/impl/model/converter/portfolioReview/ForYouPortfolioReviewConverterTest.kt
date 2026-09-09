@@ -23,9 +23,11 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.isRingClosed
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.components.visualSweepAngles
 import com.tangem.features.foryou.impl.createLoadedValue
 import com.tangem.features.foryou.impl.createStakedBalance
 import com.tangem.features.foryou.impl.createUnreachableValue
@@ -567,6 +569,31 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
+        fun `GIVEN shares that do not divide evenly WHEN convert THEN the slice weights still close the ring`() {
+            // Arrange — seven equal holdings, so every share is 0.142857... A share rounded to the fiat
+            // amount's own two decimals would be 0.14, and the seven together would fall 2% short of the
+            // circle: enough for the donut to reserve a grey wedge with no balance behind it.
+            val assetCount = 7
+            val balance = BigDecimal("100.00")
+            val statuses = (1..assetCount).map { rank ->
+                createStatus(
+                    createCoin(rawCurrencyId = "asset-$rank", symbol = "A$rank", networkId = "net-$rank"),
+                    loadedValue(BigDecimal.ONE, balance),
+                )
+            }
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = balance * assetCount.toBigDecimal())
+
+            // Assert — nothing was collapsed, so there is no grey slice to close the ring and the shares
+            // themselves have to, within the angle at which DonutChart stops calling the ring closed.
+            val segments = donutSegments(result)
+            assertThat(segments.map { it.color }).doesNotContain(DonutSegmentColor.Grey)
+            val sweeps = visualSweepAngles(weights = segments.map { it.weight.toFloat() }, capDeg = 0f)
+            assertThat(isRingClosed(sweeps)).isTrue()
+        }
+
+        @Test
         fun `GIVEN balance hidden WHEN convert THEN the grey Other slice value is masked`() {
             // Arrange
             val (statuses, total) = descendingAssets(topHoldingsCount + 1)
@@ -1006,10 +1033,10 @@ internal class ForYouPortfolioReviewConverterTest {
 
     /**
      * Fiat balance of the [rank]-th asset from [descendingAssets] — rank 1 is the largest. Scaled like a
-     * real fiat amount (`amount x rate`) rather than a bare integer, because `toForYouPercent` divides at
-     * the amount's own scale: a scale-0 balance would round every share to 0 or 1.
+     * fiat amount a backend would actually hand over, so the shares derived from it are exercised at a
+     * realistic precision rather than one chosen to flatter the arithmetic.
      */
-    private fun assetFiatBalance(rank: Int): BigDecimal = BigDecimal(100 - rank).setScale(8)
+    private fun assetFiatBalance(rank: Int): BigDecimal = BigDecimal(100 - rank).setScale(2)
 
     private fun selectedPortfolio(
         currencies: List<CryptoCurrencyStatus>,
