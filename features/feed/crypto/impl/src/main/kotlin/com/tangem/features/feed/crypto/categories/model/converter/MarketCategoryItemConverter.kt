@@ -17,7 +17,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Builds the rows of the full category list, prepending the synthetic "All" row.
+ * Builds the rows of the full category list, prepending the synthetic "All" row unless a search narrows it.
  *
  * "All" stands for *no* category filter, so it emits the empty [MarketCategorySelection] and checks
  * itself when nothing is applied — the in-screen counterpart of the tab chip's clear button. Its id
@@ -25,22 +25,18 @@ import kotlinx.collections.immutable.toImmutableList
  *
  * Re-tapping the selected row republishes the selection unchanged rather than clearing it: clearing
  * has a dedicated row, and a row that both selects and deselects reads as a broken radio group.
+ *
+ * @property shouldIncludeAllRow false while a search is applied — the list is then a result set, and
+ * "no filter" is not one of the results
  */
 internal class MarketCategoryItemConverter(
     private val selection: MarketCategorySelection,
     private val appCurrency: AppCurrency,
+    private val shouldIncludeAllRow: Boolean,
     private val onSelectionChange: (MarketCategorySelection) -> Unit,
 ) : Converter<List<MarketCategory>, ImmutableList<MarketCategoryItemUM>> {
 
     override fun convert(value: List<MarketCategory>): ImmutableList<MarketCategoryItemUM> {
-        val allRow = MarketCategoryItemUM(
-            id = ALL_CATEGORIES_ID,
-            title = resourceReference(R.string.common_all),
-            subtitle = null,
-            caption = null,
-            isSelected = selection.category == null,
-            onItemClick = { onSelectionChange(MarketCategorySelection()) },
-        )
         val categoryRows = value.map { category ->
             val isSelected = selection.category?.id == category.id
 
@@ -78,8 +74,21 @@ internal class MarketCategoryItemConverter(
             )
         }
 
-        return (listOf(allRow) + categoryRows).toImmutableList()
+        return if (shouldIncludeAllRow) {
+            (listOf(createAllRow()) + categoryRows).toImmutableList()
+        } else {
+            categoryRows.toImmutableList()
+        }
     }
+
+    private fun createAllRow() = MarketCategoryItemUM(
+        id = ALL_CATEGORIES_ID,
+        title = resourceReference(R.string.common_all),
+        subtitle = null,
+        caption = null,
+        isSelected = selection.category == null,
+        onItemClick = { onSelectionChange(MarketCategorySelection()) },
+    )
 
     private companion object {
         const val ALL_CATEGORIES_ID = "__all__"

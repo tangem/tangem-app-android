@@ -155,6 +155,39 @@ internal class MarketCategoryListManagerTest {
     }
 
     @Test
+    fun `GIVEN a search query WHEN reload is called THEN the request carries it`() = runTest {
+        // Arrange
+        val actions = mutableListOf<BatchAction<Int, MarketCategoryListConfig, Nothing>>()
+        val manager = createManager(testScope = this, actions = actions)
+        advanceUntilIdle()
+
+        // Act
+        manager.reload(searchText = "meme")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.reloadConfigs().map(MarketCategoryListConfig::searchText)).containsExactly("meme")
+    }
+
+    @Test
+    fun `GIVEN a query then none WHEN reloaded twice THEN the second request drops it`() = runTest {
+        // Arrange
+        val actions = mutableListOf<BatchAction<Int, MarketCategoryListConfig, Nothing>>()
+        val manager = createManager(testScope = this, actions = actions)
+        advanceUntilIdle()
+        manager.reload(searchText = "meme")
+        advanceUntilIdle()
+
+        // Act
+        manager.reload()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.reloadConfigs().map(MarketCategoryListConfig::searchText))
+            .containsExactly("meme", null).inOrder()
+    }
+
+    @Test
     fun `GIVEN a loaded list WHEN load more is called THEN the next page is requested`() = runTest {
         // Arrange
         val actions = mutableListOf<BatchAction<Int, MarketCategoryListConfig, Nothing>>()
