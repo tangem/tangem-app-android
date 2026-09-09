@@ -50,7 +50,7 @@ private const val CATEGORIES_FILTER_ID = "rwa_categories"
 
 /**
  * Model of the Real assets tab. The Featured rail and the main list are two independent requests
- * against the same endpoint: the rail is pinned to the reserved `featured_assets` category, the list
+ * against the same endpoint: the rail is pinned to the reserved `featured-assets` category, the list
  * follows whatever the user picks in the Category selector.
  *
  * The list is never requested unscoped — with no user filter it falls back to the `real-world-assets`
@@ -62,7 +62,6 @@ internal class RwaFeedTabModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
     private val router: Router,
 ) : Model(), CategorySelectorComponent.ModelCallback {
@@ -99,7 +98,8 @@ internal class RwaFeedTabModel @Inject constructor(
     )
 
     private val featuredManager = RwaFeaturedAssetsManager(
-        getTopFiveMarketTokenUseCase = getTopFiveMarketTokenUseCase,
+        getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+        request = listRequest,
         appCurrency = currentAppCurrency,
         onItemClick = ::openTokenDetails,
         modelScope = modelScope,
@@ -293,7 +293,7 @@ internal class RwaFeedTabModel @Inject constructor(
     }
 
     private fun openTokenDetails(id: CryptoCurrency.RawID) {
-        val token = listManager.getTokenById(id) ?: return
+        val token = listManager.getTokenById(id) ?: featuredManager.getTokenById(id) ?: return
         router.push(
             route = FeedRoute.MarketsTokenDetails(
                 token = token.toSerializableParam(),
