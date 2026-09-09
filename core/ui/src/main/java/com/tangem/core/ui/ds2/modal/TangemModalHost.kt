@@ -197,7 +197,15 @@ internal fun OverlayModalScaffold(
                     }
                 },
         )
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                // The sheet must be laid out to produce its drag anchors, but until those exist
+                // the card's in-box pin can't resolve against the sheet's own position — stay
+                // invisible for that one pass instead of flashing a misplaced card.
+                .graphicsLayer { alpha = if (sheetState.hasExpandedState) 1f else 0f },
+            contentAlignment = Alignment.TopCenter,
+        ) {
             CustomBottomSheet(
                 state = sheetState,
                 peekHeight = 0.dp,
