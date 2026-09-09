@@ -50,4 +50,12 @@ sealed class TechAnalyticsEvent(
             "Patch" to patch,
         ),
     )
+
+    class UnexpectedWalletCurve(userWalletId: String, cardId: String) : TechAnalyticsEvent(
+        event = "Unexpected Wallet Curve",
+        params = mapOf(
+            "User Wallet Id" to userWalletId,
+            "Card Id" to cardId,
+        ),
+    )
 }
