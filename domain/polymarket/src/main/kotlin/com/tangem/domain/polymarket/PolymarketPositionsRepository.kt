@@ -6,9 +6,14 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
+import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 
 /** Read-only portfolio. Every request carries the Tangem wallet id and its deposit-wallet address. */
 interface PolymarketPositionsRepository {
+
+    /** Each invocation owns its pagination state, independently of other wallets or tabs. */
+    fun getPositionsBatchFlow(context: PolymarketPositionsBatchingContext, batchSize: Int): PolymarketPositionsBatchFlow
 
     /** Open holdings sorted by endDate ascending; undated holdings come first. Limit is 1..30. */
     suspend fun getOpenPositions(
