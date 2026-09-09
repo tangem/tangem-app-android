@@ -1,15 +1,15 @@
-package com.tangem.features.introduction.impl.ui
+package com.tangem.core.ui.components.legal
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class LegalCaptionPartsTest {
 
     @ParameterizedTest
-    @ProvideTestModels
+    @MethodSource("provideTestModels")
     fun splitLegalCaption(model: SplitModel) {
         // Act
         val actual = splitLegalCaption(caption = model.caption, titles = model.titles)
