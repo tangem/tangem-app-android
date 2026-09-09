@@ -33,7 +33,7 @@ import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
@@ -69,6 +69,7 @@ internal class DefaultOnrampRepository(
     private val expressApi: TangemExpressApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
     private val expressUtils: ExpressUtils,
     private val paymentMethodsStore: OnrampPaymentMethodsStore,
     private val onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
@@ -174,39 +175,39 @@ internal class DefaultOnrampRepository(
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
         val country = getDefaultCountrySync() ?: return@withContext
         appPreferencesStore.storeObject<OnrampCountryDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            key = growPreferencesKeys.onrampDefaultCountryKey,
             value = countryConverter.convertBack(country.copy(defaultCurrency = currency)),
         )
     }
 
     override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObjectSyncOrNull<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             ?.let(countryConverter::convert)?.defaultCurrency
     }
 
     override fun getDefaultCurrency(): Flow<OnrampCurrency?> {
         return appPreferencesStore
-            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObject<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             .map { it?.let(countryConverter::convert)?.defaultCurrency }
     }
 
     override suspend fun saveDefaultCountry(country: OnrampCountry) = withContext(dispatchers.io) {
         appPreferencesStore.storeObject<OnrampCountryDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            key = growPreferencesKeys.onrampDefaultCountryKey,
             value = countryConverter.convertBack(country),
         )
     }
 
     override suspend fun getDefaultCountrySync(): OnrampCountry? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObjectSyncOrNull<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             ?.let(countryConverter::convert)
     }
 
     override fun getDefaultCountry(): Flow<OnrampCountry?> {
         return appPreferencesStore
-            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .getObject<OnrampCountryDTO>(growPreferencesKeys.onrampDefaultCountryKey)
             .map { it?.let(countryConverter::convert) }
     }
 
