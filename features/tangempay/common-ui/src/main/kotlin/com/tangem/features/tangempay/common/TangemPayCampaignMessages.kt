@@ -1,11 +1,11 @@
-package com.tangem.features.tangempay.campaign
+package com.tangem.features.tangempay.common
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 
-internal object TangemPayCampaignMessages {
+object TangemPayCampaignMessages {
 
     fun unavailableDialog(onDismiss: () -> Unit): DialogMessage {
         return DialogMessage(
