@@ -1,19 +1,11 @@
 package com.tangem.features.tangempay.campaign.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.campaign.TangemPayCampaignUM
 
@@ -36,27 +28,6 @@ private fun TangemPayCampaignScreenPreview(
         TangemPayCampaignScreen(state = state)
     }
 }
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun TangemPayCampaignCardArtPreview() {
-    TangemThemePreviewRedesign {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            TangemPayCampaignCardArt(cardArtUrl = PREVIEW_CARD_ART_URL)
-            TangemPayCampaignCardArtLoading(modifier = previewCardArtModifier())
-            TangemPayCampaignCardArtError(onRetryClick = {}, modifier = previewCardArtModifier())
-        }
-    }
-}
-
-private fun previewCardArtModifier(): Modifier = Modifier
-    .width(CampaignCardArtWidth)
-    .aspectRatio(CAMPAIGN_CARD_ART_ASPECT_RATIO)
-    .clip(RoundedCornerShape(CampaignCardArtCornerRadius))
 
 private const val PREVIEW_CARD_ART_URL = "https://app.tangem.com/cards/card_default.png"
 
