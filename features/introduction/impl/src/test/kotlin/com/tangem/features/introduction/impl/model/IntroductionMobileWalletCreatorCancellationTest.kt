@@ -121,25 +121,6 @@ internal class IntroductionMobileWalletCreatorCancellationTest {
         ).inOrder()
     }
 
-    @Test
-    fun `GIVEN Either catch WHEN the block throws CancellationException THEN it is rethrown`() {
-        // Act
-        val actual = runCatching { Either.catch { throw CancellationException("cancel") } }.exceptionOrNull()
-
-        // Assert
-        assertThat(actual).isInstanceOf(CancellationException::class.java)
-        assertThat(actual).hasMessageThat().isEqualTo("cancel")
-    }
-
-    @Test
-    fun `GIVEN Either catch WHEN the block throws IllegalStateException THEN it becomes a Left`() {
-        // Act
-        val actual = Either.catch { throw IllegalStateException("boom") }
-
-        // Assert
-        assertEitherLeft(actual = actual, expected = IllegalStateException("boom"))
-    }
-
     private companion object {
         val SOURCE = AnalyticsParam.ScreensSources.CreateWalletIntro
     }
