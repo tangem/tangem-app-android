@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -48,6 +49,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.TangemColorPalette
+import com.tangem.core.ui.test.StatusScreenTestTags
 import com.tangem.core.ui.utils.rememberScreenCornerRadius
 
 /**
@@ -191,6 +193,7 @@ private fun Header(
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .testTag(StatusScreenTestTags.TITLE)
                     .graphicsLayer {
                         translationY = (-17).dp.toPx() *
                             (1f - entrance.segment(startMs = 400, endMs = 700, easing = SpringEase))
@@ -204,6 +207,7 @@ private fun Header(
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .testTag(StatusScreenTestTags.DESCRIPTION)
                         .graphicsLayer {
                             alpha = entrance.segment(startMs = 550, endMs = 850, easing = SpringEase)
                             translationY = (-16).dp.toPx() *
