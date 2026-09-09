@@ -150,6 +150,8 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(isVideoReady = true) }
     }
 
+    fun videoPositionMs(): Long = videoPlayer.positionMs
+
     fun attachSurface(surfaceView: SurfaceView) {
         videoPlayer.attachSurface(surfaceView)
     }
