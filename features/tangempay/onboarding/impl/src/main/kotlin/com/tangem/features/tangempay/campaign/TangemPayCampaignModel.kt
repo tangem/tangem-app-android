@@ -138,7 +138,8 @@ internal class TangemPayCampaignModel @Inject constructor(
             mode = mode,
             isCtaLoading = false,
             onGetCardClick = ::onGetCardClick,
-            onTermsClick = ::onTermsClick,
+            onTermsOfServiceClick = ::onTermsOfServiceClick,
+            onPrivacyPolicyClick = ::onPrivacyPolicyClick,
             onCloseClick = ::onClose,
         )
     }
@@ -179,8 +180,12 @@ internal class TangemPayCampaignModel @Inject constructor(
         }
     }
 
-    private fun onTermsClick() {
-        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
+    private fun onTermsOfServiceClick() {
+        router.push(AppRoute.Disclaimer(isTosAccepted = true))
+    }
+
+    private fun onPrivacyPolicyClick() {
+        urlOpener.openUrl(TangemPayConstants.PRIVACY_POLICY_LINK)
     }
 
     private fun setCtaLoading(isLoading: Boolean) {

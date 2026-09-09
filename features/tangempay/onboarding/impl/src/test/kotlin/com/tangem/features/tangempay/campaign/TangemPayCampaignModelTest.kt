@@ -353,16 +353,30 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
-        fun `GIVEN landing WHEN terms clicked THEN terms link opened`() = runTest {
+        fun `GIVEN NoWallet landing WHEN terms of service clicked THEN disclaimer opened`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Act
-            (model.uiState.value as TangemPayCampaignUM.Landing).onTermsClick()
+            (model.uiState.value as TangemPayCampaignUM.Landing).onTermsOfServiceClick()
 
             // Assert
-            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
+            verify(exactly = 1) { router.push(AppRoute.Disclaimer(isTosAccepted = true)) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN NoWallet landing WHEN privacy policy clicked THEN privacy policy link opened`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Landing).onPrivacyPolicyClick()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(TangemPayConstants.PRIVACY_POLICY_LINK) }
             model.onDestroy()
         }
 
