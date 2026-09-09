@@ -400,7 +400,7 @@ internal class TangemPayCampaignModelTest {
             (model.uiState.value as TangemPayCampaignUM.Landing).onTermsClick()
 
             // Assert
-            verify(exactly = 1) { urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK) }
+            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
             model.onDestroy()
         }
 
