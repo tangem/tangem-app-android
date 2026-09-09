@@ -3,15 +3,14 @@ package com.tangem.features.tangempay.campaign.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.shimmers.ProvideTangemShimmer
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.features.tangempay.common.TangemPayCampaignCardArtPlaceholder
 
 private val FooterReservedHeight = 136.dp
 
@@ -21,14 +20,7 @@ internal fun TangemPayCampaignSkeleton(modifier: Modifier = Modifier) {
         TangemPayCampaignLayout(
             modifier = modifier,
             topBar = { TangemPayCampaignTopBar(onCloseClick = null) },
-            card = {
-                TangemShimmer(
-                    modifier = Modifier
-                        .width(CampaignCardArtWidth)
-                        .aspectRatio(CAMPAIGN_CARD_ART_ASPECT_RATIO),
-                    radius = CampaignCardArtCornerRadius,
-                )
-            },
+            card = { TangemPayCampaignCardArtPlaceholder() },
             footer = { Spacer(modifier = Modifier.height(FooterReservedHeight)) },
             texts = {
                 TangemShimmer(modifier = Modifier.size(width = 236.dp, height = 28.dp), radius = 8.dp)
