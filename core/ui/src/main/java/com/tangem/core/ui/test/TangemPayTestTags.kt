@@ -6,6 +6,9 @@ object TangemPayTestTags {
     const val MAIN_SCREEN_TILE_BALANCE = "TANGEM_PAY_MAIN_SCREEN_TILE_BALANCE"
     const val MAIN_SCREEN_TILE_CACHE_ICON = "TANGEM_PAY_MAIN_SCREEN_TILE_CACHE_ICON"
 
+    // KYC (Sumsub) loading screen the onboarding hands over to
+    const val KYC_SCREEN = "TANGEM_PAY_KYC_SCREEN"
+
     // Payment account details screen
     const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
     const val PAYMENT_ACCOUNT_BALANCE = "TANGEM_PAY_PAYMENT_ACCOUNT_BALANCE"
