@@ -14,7 +14,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.analytics.IntroductionProcess.ScanCancelled
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -144,10 +144,12 @@ internal class IntroductionCardScanner @Inject constructor(
 
     private fun onScanFailure(error: TangemError, analyticsSource: AnalyticsParam.ScreensSources) {
         // Card verification failures and repeated-scan prompts are shown by the sdk and the app-global scan-fail
-        // requester, so only the missing-nfc case is left for the caller.
+        // requester, so the caller only surfaces the missing nfc and reports a cancellation.
         when (error) {
             is TangemSdkError.NfcFeatureIsUnavailable -> messageSender.send(Dialogs.nfcFeatureUnavailable())
-            is TangemSdkError.UserCancelled -> analyticsEventHandler.send(ScanCancelled(analyticsSource))
+            is TangemSdkError.UserCancelled -> {
+                analyticsEventHandler.send(IntroductionProcess.ScanCancelled(analyticsSource))
+            }
             else -> TangemLogger.e("Card scan failed: $error")
         }
     }
