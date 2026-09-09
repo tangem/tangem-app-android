@@ -38,6 +38,9 @@ dependencies {
     implementation(projects.common.ui)
     implementation(projects.common.routing)
 
+    /** Features */
+    implementation(projects.features.jointAccount.api)
+
     /** AndroidX libraries */
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
@@ -57,6 +60,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
     implementation(deps.firebase.crashlytics)
 
     /** DI */
