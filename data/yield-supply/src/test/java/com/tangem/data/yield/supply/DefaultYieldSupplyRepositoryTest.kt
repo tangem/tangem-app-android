@@ -13,7 +13,7 @@ import com.tangem.grow.datasource.yield.models.YieldModuleStatusResponse
 import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
 import com.tangem.grow.datasource.yield.models.YieldTokenChartResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
@@ -48,6 +48,7 @@ internal class DefaultYieldSupplyRepositoryTest {
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val analyticsExceptionHandler: AnalyticsExceptionHandler = mockk(relaxed = true)
     private val appPreferencesStore: AppPreferencesStore = mockk()
+    private val growPreferencesKeys = GrowPreferencesKeys()
 
     private val repository = DefaultYieldSupplyRepository(
         yieldSupplyApi = yieldSupplyApi,
@@ -56,6 +57,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         analyticsExceptionHandler = analyticsExceptionHandler,
         appPreferencesStore = appPreferencesStore,
+        growPreferencesKeys = growPreferencesKeys,
     )
 
     private val userWalletId = UserWalletId("abcdef012345")
@@ -367,7 +369,7 @@ internal class DefaultYieldSupplyRepositoryTest {
         mockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
         try {
             every {
-                appPreferencesStore.get(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, true)
+                appPreferencesStore.get(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, true)
             } returns flowOf(false)
 
             // Act
@@ -386,14 +388,14 @@ internal class DefaultYieldSupplyRepositoryTest {
         mockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
         try {
             coEvery {
-                appPreferencesStore.store(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, false)
+                appPreferencesStore.store(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, false)
             } returns Unit
 
             // Act
             repository.setShouldShowYieldPromoBanner(false)
 
             // Assert
-            coVerify { appPreferencesStore.store(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, false) }
+            coVerify { appPreferencesStore.store(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, false) }
         } finally {
             unmockkStatic("com.tangem.datasource.local.preferences.utils.PreferencesDataStoreExtKt")
         }
