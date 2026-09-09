@@ -77,12 +77,7 @@ internal class DefaultAppLogsStore @Inject constructor(
      * since stack traces routinely contain hex-like sequences that the sanitizer would
      * otherwise destroy.
      */
-    override fun saveLogMessage(
-        tag: String,
-        message: String,
-        throwable: Throwable?,
-        shouldSanitize: Boolean,
-    ) {
+    override fun saveLogMessage(tag: String, message: String, throwable: Throwable?, shouldSanitize: Boolean) {
         launchWithLock {
             createFileIfNotExist()
 
