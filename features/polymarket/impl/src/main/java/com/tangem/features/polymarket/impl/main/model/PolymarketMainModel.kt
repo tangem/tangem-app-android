@@ -34,11 +34,14 @@ import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanc
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.model.transformer.PolymarketFeedContentTransformer
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -56,6 +59,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -73,6 +78,8 @@ internal class PolymarketMainModel @Inject constructor(
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
+    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -85,6 +92,13 @@ internal class PolymarketMainModel @Inject constructor(
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
 
     private val requisitesState = MutableStateFlow<RequisitesState>(RequisitesState.Loading)
+
+    private val tradingAllowance = PredictionTradingAllowance(
+        checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
+        dispatchers = dispatchers,
+    )
+
+    private val refreshJobHolder = JobHolder()
 
     private val requisitesJobHolder = JobHolder()
 
@@ -99,10 +113,12 @@ internal class PolymarketMainModel @Inject constructor(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
                         depositTarget = null,
+                        isTradingAllowed = false,
                     ),
                 ),
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
             ),
         )
 
@@ -119,13 +135,15 @@ internal class PolymarketMainModel @Inject constructor(
         combine(
             predictionAccountStatusSupplier(userWalletId = params.userWalletId),
             requisitesState,
-        ) { status, requisites ->
+            tradingAllowance.isAllowed,
+        ) { status, requisites, isTradingAllowed ->
             activeStatus.value = status as? PredictionAccountStatusValue.Active
 
             balanceConverter.convert(
                 PredictionBalanceUMConverter.Input(
                     status = status,
                     depositTarget = requisites.depositTarget,
+                    isTradingAllowed = isTradingAllowed,
                 ),
             )
         }
@@ -154,6 +172,7 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         observeEvents()
         loadCategories()
+        loadTradingAllowance()
     }
 
     fun onBackClick() {
@@ -304,6 +323,29 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(
             PolymarketRoute.EventDetails(eventId = eventId, userWalletId = params.userWalletId),
         )
+    }
+
+    private fun loadTradingAllowance() {
+        modelScope.launch { tradingAllowance.refresh() }
+    }
+
+    private fun onRefresh() {
+        setRefreshing(isRefreshing = true)
+
+        modelScope.launch {
+            listOf(
+                async { tradingAllowance.refresh() },
+                async { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(params.userWalletId)) },
+            ).awaitAll()
+
+            setRefreshing(isRefreshing = false)
+        }.saveIn(refreshJobHolder)
+    }
+
+    private fun setRefreshing(isRefreshing: Boolean) {
+        uiState.update {
+            it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
+        }
     }
 
     private fun prefetchRequisites() {
