@@ -249,7 +249,7 @@ internal class TangemPayCurrentPlanModelTest {
 
         // THEN
         verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.TermsAndLimitsClicked>()) }
-        verify(exactly = 1) { urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK) }
+        verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
     }
 
     private fun createModel(planState: TangemPayTariffPlanState): TangemPayCurrentPlanModel {
