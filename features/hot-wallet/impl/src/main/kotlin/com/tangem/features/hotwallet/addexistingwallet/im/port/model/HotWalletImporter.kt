@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.hot.sdk.exception.PassphraseTooLongException
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -30,6 +31,9 @@ internal sealed interface HotWalletImportError {
 
     /** The very same wallet is already in the wallets list */
     data object AlreadySaved : HotWalletImportError
+
+    /** The passphrase exceeds [maxByteCount] UTF-8 bytes in NFKD form */
+    data class PassphraseTooLong(val maxByteCount: Int) : HotWalletImportError
 
     data class Unknown(val cause: Throwable? = null) : HotWalletImportError
 }
@@ -72,7 +76,12 @@ internal class HotWalletImporter @Inject constructor(
             hotUserWalletBuilderFactory.create(hotWalletId).build(name = name)
         }.getOrElse { error ->
             TangemLogger.e("Unable to import the wallet", error)
-            raise(HotWalletImportError.Unknown(error))
+            when (error) {
+                is PassphraseTooLongException -> raise(
+                    HotWalletImportError.PassphraseTooLong(maxByteCount = error.maxByteCount),
+                )
+                else -> raise(HotWalletImportError.Unknown(error))
+            }
         }
 
         save(userWallet, isSeedPhraseBackedUp).bind()
