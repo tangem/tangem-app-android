@@ -237,6 +237,49 @@ internal class AccountDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN joint account WHEN status is active THEN networks info is shown`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+        givenWallet(isMultiCurrency = true)
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.networksInfo).isNotNull()
+
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN joint account WHEN status is not active THEN networks info is hidden`(
+        testModel: InactiveJointModel,
+    ) = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        val status = AccountStatus.Joint(
+            account = account,
+            value = testModel.statusValue,
+            tokenList = TokenList.Empty,
+            priceChangeLce = lceLoading(),
+        )
+        every { singleAccountStatusSupplier(any()) } returns flowOf(status)
+        givenWallet(isMultiCurrency = true)
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.networksInfo).isNull()
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN joint account WHEN archive confirmed THEN account archived and screen closed`() = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
