@@ -41,7 +41,7 @@ available. Both are `"version": "undefined"` in `feature_toggles_config.json` �
 RwaFeedTabComponent                   (FeedTabComponent; owns LazyListState — see Gotchas)
   ├─ PromoBannersBlockComponent       child("promoBannersBlockComponent")
   └─ RwaFeedTabModel                  uiState: StateFlow<RwaFeedTabUM>
-       ├─ RwaFeaturedAssetsManager    → RwaFeaturedUM   (rail; GetTopFiveMarketTokenUseCase, 5 items)
+       ├─ RwaFeaturedAssetsManager    → RwaFeaturedUM   (rail; BatchFlowType.Featured, whole bucket)
        └─ RwaBatchFlowManager         → RwaListUM       (paginated list)
             └─ BatchListStateManager  → RwaListItemConverter → RwaListItemUM
 
@@ -62,7 +62,7 @@ state holder and the receiver of the category-selector result.
 Nothing renders until categories are fetched, because two category **codes** are reserved rather than
 offered as filters (`ReservedCategoryCodes`):
 
-- `featured_assets` — backs the Featured rail; its id is passed to `RwaFeaturedAssetsManager.load()`.
+- `featured-assets` — backs the Featured rail; its id is passed to `RwaFeaturedAssetsManager.load()`.
 - `real-world-assets` — the umbrella scope, surfaced in the selector as "All", and the tab's default
   list scope.
 
@@ -76,7 +76,7 @@ The same rule applies to the sector rail: "All" there unfilters the sector and l
 **The list is never requested unscoped.** With no user filter `orUmbrella` substitutes the umbrella
 category at request time, and `reloadList()` re-runs the categories fetch when the umbrella id isn't
 resolved yet — an unscoped request would return the entire coin universe rather than real-world assets.
-A missing code degrades rather than throws: no `featured_assets` → `RwaFeaturedUM.Empty` (rail hidden);
+A missing code degrades rather than throws: no `featured-assets` → `RwaFeaturedUM.Empty` (rail hidden);
 no `real-world-assets` → the list renders `RwaListUM.Error`.
 
 ## Search tab
@@ -147,6 +147,17 @@ applied is deliberately not uniform:
 - **Interval change under gainers/losers** — reloads; those orders are *ranked by* the interval, so the
   row set itself changes.
 
+The **Featured rail is a second, independent request** against the same endpoint, and the only caller in
+the app that sends `TokenMarketListConfig.Order.ByCategory` (`order=category`) — the curated order is the
+whole point of the rail, and any other order re-sorts the bucket and discards it. It is one batch
+(`BatchFlowType.Featured`, `nextBatchSize = 0`) and never pages, so the bucket's size is the backend's
+decision.
+
+**An interval change never reloads the rail.** A token carries the change percent for *every* interval at
+once (`price_change_percentage` holds `24h`/`1w`/`30d` regardless of the `interval` param), so the rail
+re-maps what it already has — the same reason the list skips its reload under `RwaSort.MarketCap`. The rail
+also ignores the applied category/sector filter, which scopes only the list below it.
+
 ## Gotchas
 
 **Everything under `impl/.../model/list/` has a twin in `features/feed/crypto/impl`.** This module was
@@ -164,12 +175,18 @@ predicate reading a value outside its own upstream only recomputes when the batc
 and so stays stale across the whole gap between a new query and its reload.
 
 **`RwaBatchFlowManager.request` is a `StateFlow` that is never collected.** It is only `.value`-read
-inside `reload()`. Writing to `RwaFeedTabModel.listRequest` therefore does nothing on its own — the
-model must call `reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
+inside `reload()`. Writing to `RwaFeedTabModel.listRequest` therefore does nothing to the list on its own —
+the model must call `reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
 
-**The reserved category codes are backend contract strings, and they disagree on convention.**
-`featured_assets` is snake_case, `real-world-assets` is kebab-case (TWI-1477). Neither is derived from
-the other, and a rename on either side silently empties the rail or the whole list with no error.
+`RwaFeaturedAssetsManager` takes the *same* `listRequest` flow but does collect it — only
+`interval`, and only to re-map the rail. So a write to `listRequest` moves the rail and not the list, which
+is intended; keep the rail's dependency narrowed to `map { it.interval }.distinctUntilChanged()` rather
+than the whole request, or every filter change re-allocates the rail's cards.
+
+**The reserved category codes are backend contract strings** (`featured-assets`, `real-world-assets`,
+TWI-1477). Neither is derived from the other, and a rename on either side silently empties the rail or the
+whole list with no error — the rail has no error state and no retry, so a wrong code is indistinguishable
+from a category the backend does not serve.
 
 **Nothing on the feed stack is serialized.** Every v2 navigation call passes `serializer = null`
 (`DefaultFeedV2Component.kt`, `FeedHomeComponent.kt`), so feed state does not survive process death and
