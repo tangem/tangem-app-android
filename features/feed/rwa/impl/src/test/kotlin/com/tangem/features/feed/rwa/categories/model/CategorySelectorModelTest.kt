@@ -8,6 +8,7 @@ import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
+import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent.ModelCallback
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorSectionUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
@@ -275,7 +276,12 @@ internal class CategorySelectorModelTest {
             sectors = listOf(CoinCategory.Sector(id = "government", displayName = "Government", tokensCount = 7)),
         )
 
-        val featured = createCategory(id = "4", code = "featured_assets", displayName = "Featured", displayOrder = 4)
+        val featured = createCategory(
+            id = "4",
+            code = ReservedCategoryCodes.FEATURED_ASSETS,
+            displayName = "Featured",
+            displayOrder = 4,
+        )
 
         val hidden = createCategory(
             id = "5",
