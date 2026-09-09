@@ -9,6 +9,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
@@ -39,6 +40,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val uiMessageSender: UiMessageSender,
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase,
+    private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
 ) : Model() {
 
@@ -72,11 +74,22 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         modelScope.launch {
             val recents = getRecentBankAccountsUseCase(params.userWalletId).fold(
                 ifLeft = { umFactory.createRecentsError() },
-                ifRight = umFactory::createRecents,
+                ifRight = { recents ->
+                    umFactory.createRecents(
+                        recents = recents,
+                        hasSavedAccounts = recents.isNotEmpty() || hasSavedAccounts(),
+                    )
+                },
             )
             updateRecents(recents)
         }.saveIn(recentsJobHolder)
     }
+
+    /** With an empty usage log "See all" is the only way to reach recipients saved earlier or on another device. */
+    private suspend fun hasSavedAccounts(): Boolean = getBankAccountsUseCase(params.userWalletId).fold(
+        ifLeft = { false },
+        ifRight = { accounts -> accounts.isNotEmpty() },
+    )
 
     private fun updateRecents(recents: TangemPayWithdrawHubUM.RecentsUM) {
         uiState.update { it.copy(bankSection = it.bankSection.copy(recents = recents)) }
