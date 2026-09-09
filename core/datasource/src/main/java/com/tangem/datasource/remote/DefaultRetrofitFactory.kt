@@ -14,7 +14,6 @@ import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.ApiEnvironmentConfig
 import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.remote.response.ApiResponseCallAdapterFactory
 import com.tangem.core.remote.ConnectTimeout
 import com.tangem.core.remote.ReadTimeout
@@ -26,6 +25,7 @@ import com.tangem.datasource.local.logs.SensitiveUrlMasker
 import com.tangem.datasource.remote.interceptors.NetworkLogsSaveInterceptor
 import com.tangem.datasource.remote.interceptors.SwitchEnvironmentInterceptor
 import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
+import com.tangem.datasource.remote.interceptors.createNetworkLoggingInterceptor
 import com.tangem.utils.JsonStringValuesExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
