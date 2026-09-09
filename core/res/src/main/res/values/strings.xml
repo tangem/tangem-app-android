@@ -2308,6 +2308,8 @@
   <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT transfers are not accepted and will be returned</string>
   <string name="tangempay_bank_transfer_terms_of_use">Terms of Service</string>
+  <string name="tangempay_campaign_cashback_description">For all purchases. Paid in USDC — not in points or obscure tokens</string>
+  <string name="tangempay_campaign_cashback_title">Cashback up to 2%</string>
   <string name="tangempay_campaign_error_description">Something went wrong. Please try again</string>
   <string name="tangempay_campaign_error_title">Couldn’t load page</string>
   <string name="tangempay_campaign_fees_description">There are no additional fees for purchases</string>
@@ -2317,6 +2319,7 @@
   <string name="tangempay_campaign_issue_time">Issue time</string>
   <string name="tangempay_campaign_landing_title">Get your special Tangem Pay Card</string>
   <string name="tangempay_campaign_pay_description">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_campaign_spend_description">With digital card via Apple Pay or Google Pay, no additional fees for purchases</string>
   <string name="tangempay_campaign_unavailable_description">You can order a usual one</string>
   <string name="tangempay_campaign_unavailable_title">Unable to get special card</string>
   <string name="tangempay_cancel_kyc">Hide verification from the main screen</string>
