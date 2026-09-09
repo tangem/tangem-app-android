@@ -104,6 +104,7 @@ sealed class AnalyticsParam {
         Staking("Staking"),
         Earn("Earn"),
         ForYou("For You"),
+        Predictions("Predictions"),
     }
 
     sealed class TxSentFrom(val value: String) {
