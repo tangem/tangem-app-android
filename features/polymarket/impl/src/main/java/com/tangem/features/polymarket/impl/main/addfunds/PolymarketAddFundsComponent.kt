@@ -23,10 +23,10 @@ internal class PolymarketAddFundsComponent(
     }
 
     data class Params(
-        val listener: Listener,
+        val callback: ModelCallback,
     )
 
-    interface Listener {
+    interface ModelCallback {
         fun onSwapClick()
         fun onReceiveClick()
         fun onDismissAddFunds()
