@@ -17,7 +17,7 @@ dependencies {
     implementation(deps.androidx.datastore)
 
     /** Project*/
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.grow.datasource)
     api(projects.core.utils)
     api(projects.features.swap.api)
