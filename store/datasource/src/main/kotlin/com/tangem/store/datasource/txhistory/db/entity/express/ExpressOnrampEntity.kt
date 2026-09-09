@@ -23,8 +23,14 @@ data class ExpressOnrampEntity(
     @ColumnInfo(name = "provider_id")
     val providerId: String,
 
-    /** Address that received the target assets — the key incoming onramps are looked up by. */
-    @ColumnInfo(name = "payout_address")
+    /**
+     * Address that received the target assets — the key incoming onramps are looked up by.
+     *
+     * Compared case-insensitively: the wallet derives EVM addresses ERC-55 checksummed while the express backend
+     * stores whatever casing the provider reported, and a case variant of another valid address would fail its
+     * checksum — the same tolerance the off-database address matching in the history merger applies.
+     */
+    @ColumnInfo(name = "payout_address", collate = ColumnInfo.NOCASE)
     val payoutAddress: String,
 
     /**
