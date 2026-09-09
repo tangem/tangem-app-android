@@ -88,13 +88,10 @@ private fun LazyListScope.tokenMarketDetailsBodyBlock(
 
             marketingBannerItem(marketingBanner)
 
-            if (tokenSummaryBlock != null) {
-                tokenSummaryBlockItem(tokenSummaryBlock)
-            }
-
             infoBlocksList(
                 state = state.infoBlocks,
                 relatedNews = relatedNews,
+                tokenSummaryBlock = tokenSummaryBlock,
             )
         }
         is MarketsTokenDetailsUM.Body.Error -> {
@@ -135,11 +132,19 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
     }
 }
 
-internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.InformationBlocks, relatedNews: RelatedNews) {
+internal fun LazyListScope.infoBlocksList(
+    state: MarketsTokenDetailsUM.InformationBlocks,
+    relatedNews: RelatedNews,
+    tokenSummaryBlock: @Composable ((Modifier) -> Unit)?,
+) {
     if (relatedNews.articles.isNotEmpty()) {
         relatedNews(relatedNews)
     } else {
         sectionStub(RelatedNews.SECTION_KEY)
+    }
+
+    if (tokenSummaryBlock != null) {
+        tokenSummaryBlockItem(tokenSummaryBlock)
     }
 
     if (state.insights != null) {
