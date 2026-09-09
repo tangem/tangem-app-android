@@ -49,10 +49,12 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
         onBackClick = callbacks.onBackClick,
     )
 
-    fun createRecents(accounts: List<BankAccount>): RecentsUM {
-        if (accounts.isEmpty()) return RecentsUM.Empty
+    fun createRecents(recents: List<BankAccount>, hasSavedAccounts: Boolean): RecentsUM {
+        if (recents.isEmpty()) {
+            return RecentsUM.Empty(onSeeAllClick = callbacks.onSeeAllClick.takeIf { hasSavedAccounts })
+        }
         return RecentsUM.Content(
-            recipients = accounts.map(::toRecipient).toImmutableList(),
+            recipients = recents.map(::toRecipient).toImmutableList(),
             onRecipientClick = callbacks.onRecentRecipientClick,
             onSeeAllClick = callbacks.onSeeAllClick,
         )
