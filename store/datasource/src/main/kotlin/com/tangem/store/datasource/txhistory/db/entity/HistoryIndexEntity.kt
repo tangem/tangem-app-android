@@ -26,8 +26,11 @@ data class HistoryIndexEntity(
     @ColumnInfo(name = "entity_id")
     val entityId: String,
 
-    /** Address the row is loaded under on the token-details screen. */
-    @ColumnInfo(name = "address")
+    /**
+     * Address the row is loaded under on the token-details screen. Part of the identity, and compared
+     * case-insensitively — so a case variant of the same address is one row, not two.
+     */
+    @ColumnInfo(name = "address", collate = ColumnInfo.NOCASE)
     val address: String,
 
     /** Time the unified timeline is sorted by (newest first). */
