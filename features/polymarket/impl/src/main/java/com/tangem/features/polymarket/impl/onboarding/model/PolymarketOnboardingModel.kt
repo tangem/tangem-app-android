@@ -12,10 +12,11 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.model.PolymarketEntry
-import com.tangem.domain.polymarket.model.PolymarketOnboardingError
+import com.tangem.domain.polymarket.model.PolymarketNewAccountAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
@@ -47,6 +48,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val messageSender: UiMessageSender,
+    private val checkNewPolymarketAccountAllowed: CheckNewPolymarketAccountAllowedInteractor,
     private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor,
     private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -109,6 +111,23 @@ internal class PolymarketOnboardingModel @Inject constructor(
         uiState.value = current.copyInProgress(isInProgress = true)
 
         modelScope.launch {
+            val allowance = checkNewPolymarketAccountAllowed(userWalletId)
+
+            ensureActive()
+
+            when (allowance) {
+                PolymarketNewAccountAllowance.ALLOWED -> Unit
+                PolymarketNewAccountAllowance.REGION_BLOCKED -> {
+                    showRegionRestrictions()
+                    return@launch
+                }
+                PolymarketNewAccountAllowance.UNDETERMINED -> {
+                    stopStarting()
+                    reportFailure()
+                    return@launch
+                }
+            }
+
             val result = resolvePolymarketEntryInteractor(userWalletId)
 
             ensureActive()
@@ -137,8 +156,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
         updateWelcome { it.copy(isRegionRestrictionsShown = false) }
     }
 
-    private fun isRegionRestrictionsApplicable(): Boolean = uiState.value is PolymarketOnboardingUM.Welcome
-
     private suspend fun CoroutineScope.runOnboarding() {
         runPolymarketOnboardingInteractor(userWalletId).collect { progress ->
             ensureActive()
@@ -153,13 +170,10 @@ internal class PolymarketOnboardingModel @Inject constructor(
             is PolymarketOnboardingProgress.Working,
             -> updateAction { it.copyInProgress(isInProgress = true) }
             PolymarketOnboardingProgress.Ready -> openFeed()
-            is PolymarketOnboardingProgress.Failed ->
-                if (progress.error == PolymarketOnboardingError.RegionBlocked && isRegionRestrictionsApplicable()) {
-                    showRegionRestrictions()
-                } else {
-                    stopStarting()
-                    reportFailure()
-                }
+            is PolymarketOnboardingProgress.Failed -> {
+                stopStarting()
+                reportFailure()
+            }
         }
     }
 
