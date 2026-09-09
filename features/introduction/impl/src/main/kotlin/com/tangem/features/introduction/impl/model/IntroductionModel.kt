@@ -22,9 +22,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.R
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
@@ -54,6 +56,8 @@ internal class IntroductionModel @Inject constructor(
     private val router: Router,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val cardScanner: IntroductionCardScanner,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
@@ -80,10 +84,11 @@ internal class IntroductionModel @Inject constructor(
 
     private val haveWalletSheet = HaveWalletSheetController(
         host = this,
+        scope = modelScope,
         router = router,
-        isHotWalletCreationSupported = isHotWalletCreationSupported,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
-        uiMessageSender = uiMessageSender,
+        hotWalletFeatureToggles = hotWalletFeatureToggles,
+        resolveCloudRestoreBackups = resolveCloudRestoreBackups,
     )
 
     val uiState: StateFlow<IntroductionUM>
@@ -319,11 +324,8 @@ internal class IntroductionModel @Inject constructor(
                 source = AnalyticsParam.ScreensSources.CreateWalletIntro.value,
             ),
         )
-        if (!isHotWalletCreationSupported()) {
+        if (!ensureHotWalletCreationSupported()) {
             trackingContextProxy.removeContext()
-            uiMessageSender.send(
-                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
-            )
             return
         }
         // TODO [REDACTED_TASK_KEY]: returning from this terminal flow has to replay the video and the scene text from
@@ -356,6 +358,12 @@ internal class IntroductionModel @Inject constructor(
 
     override fun scanCardForExistingWallet() {
         scanCard(onNavigatedAway = {}, onFailed = {})
+    }
+
+    override fun ensureHotWalletCreationSupported(): Boolean {
+        if (isHotWalletCreationSupported()) return true
+        uiMessageSender.send(hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()))
+        return false
     }
 
     private fun onTermsOfServiceClick() {
