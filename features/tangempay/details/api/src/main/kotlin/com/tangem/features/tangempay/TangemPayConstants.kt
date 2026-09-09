@@ -4,6 +4,8 @@ import androidx.annotation.VisibleForTesting
 
 object TangemPayConstants {
 
+    const val PRIVACY_POLICY_LINK = "https://tangem.com/privacy-policy/"
+
     @VisibleForTesting
     const val TERMS_AND_LIMITS_URL = "https://tangem.com/docs/en/tangem-visa-tariffs.pdf"
 
