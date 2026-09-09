@@ -12,6 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.model.PolymarketEntry
@@ -98,6 +99,7 @@ internal class PolymarketOnboardingComponentTest {
         router = router,
         urlOpener = urlOpener,
         messageSender = mockk(relaxed = true),
+        checkNewPolymarketAccountAllowed = mockk(relaxed = true),
         resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
         runPolymarketOnboardingInteractor = runPolymarketOnboardingInteractor,
         dispatchers = TestingCoroutineDispatcherProvider(),
