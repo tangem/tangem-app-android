@@ -11,12 +11,14 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
@@ -56,10 +58,34 @@ internal class TangemPayBankWithdrawComponent(
     private fun screenChild(
         config: TangemPayBankWithdrawInnerRoute,
         componentContext: ComponentContext,
-    ): ComposableContentComponent = TangemPayBankWithdrawStepStubComponent(
-        appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-        params = TangemPayBankWithdrawStepStubComponent.Params(draft = model.draft, step = config),
-    )
+    ): ComposableContentComponent = when (config) {
+        TangemPayBankWithdrawInnerRoute.Amount -> TangemPayBankWithdrawAmountComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayBankWithdrawAmountComponent.Params(
+                userWalletId = params.userWalletId,
+                draft = model.draft,
+                onContinue = { result ->
+                    model.onAmountConfirmed(result)
+                    pushNext(from = config)
+                },
+            ),
+        )
+        TangemPayBankWithdrawInnerRoute.Recipients,
+        TangemPayBankWithdrawInnerRoute.TransferType,
+        TangemPayBankWithdrawInnerRoute.AccountType,
+        TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        TangemPayBankWithdrawInnerRoute.BankDetails,
+        TangemPayBankWithdrawInnerRoute.Preview,
+        -> TangemPayBankWithdrawStepStubComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayBankWithdrawStepStubComponent.Params(draft = model.draft, step = config),
+        )
+    }
+
+    private fun pushNext(from: TangemPayBankWithdrawInnerRoute) {
+        val next = BankWithdrawFlow.nextStep(entry = params.entry, current = from) ?: return
+        stackNavigation.pushNew(next)
+    }
 
     private fun onChildBack() {
         if (childStack.value.backStack.isEmpty()) {
