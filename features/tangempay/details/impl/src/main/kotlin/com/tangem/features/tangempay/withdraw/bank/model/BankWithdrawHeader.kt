@@ -18,27 +18,33 @@ internal object BankWithdrawHeaderFactory {
     fun create(draft: BankWithdrawDraft, step: TangemPayBankWithdrawInnerRoute): BankWithdrawHeaderUM {
         val counter = BankWithdrawFlow.stepCounter(entry = draft.entry, step = step)
         return BankWithdrawHeaderUM(
-            title = title(draft),
+            title = title(draft = draft, step = step),
             subtitle = counter?.let {
                 resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(it.current, it.total))
             },
         )
     }
 
-    private fun title(draft: BankWithdrawDraft): TextReference = when (draft.entry) {
-        BankWithdrawEntry.NewPersonal -> resourceReference(R.string.tangempay_withdraw_hub_to_personal_account)
-        BankWithdrawEntry.NewBusiness -> resourceReference(R.string.tangempay_withdraw_hub_to_business_account)
-        is BankWithdrawEntry.Saved,
-        BankWithdrawEntry.SeeAll,
-        -> {
-            val recipient = draft.recipient
-            if (recipient == null) {
-                resourceReference(R.string.tangempay_card_details_withdraw)
-            } else {
-                resourceReference(
-                    R.string.tangempay_withdraw_bank_title_to_recipient,
-                    wrappedList(recipient.details.beneficiary.toShortName()),
-                )
+    /** Figma titles the account type step by its action, every other step by the recipient. */
+    private fun title(draft: BankWithdrawDraft, step: TangemPayBankWithdrawInnerRoute): TextReference {
+        if (step == TangemPayBankWithdrawInnerRoute.AccountType) {
+            return resourceReference(R.string.tangempay_withdraw_bank_account_type_screen_title)
+        }
+        return when (draft.entry) {
+            BankWithdrawEntry.NewPersonal -> resourceReference(R.string.tangempay_withdraw_hub_to_personal_account)
+            BankWithdrawEntry.NewBusiness -> resourceReference(R.string.tangempay_withdraw_hub_to_business_account)
+            is BankWithdrawEntry.Saved,
+            BankWithdrawEntry.SeeAll,
+            -> {
+                val recipient = draft.recipient
+                if (recipient == null) {
+                    resourceReference(R.string.tangempay_card_details_withdraw)
+                } else {
+                    resourceReference(
+                        R.string.tangempay_withdraw_bank_title_to_recipient,
+                        wrappedList(recipient.details.beneficiary.toShortName()),
+                    )
+                }
             }
         }
     }
