@@ -52,6 +52,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private val currency: CryptoCurrency,
     private val txHistoryUiActions: TxHistoryUiActions,
     private val lookupContext: TxHistoryLookupContext? = null,
+    private val pendingSignatureTxIds: Set<String> = emptySet(),
 ) : Converter<TxInfo, TransactionItemUM> {
 
     private val titleConverter = TxHistoryTitleConverter()
@@ -272,6 +273,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         title = title,
         subtitle = subtitle,
         timestamp = tx.timestampInMillis,
+        isPendingSignature = tx.txHash in pendingSignatureTxIds,
         onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
     )
 }

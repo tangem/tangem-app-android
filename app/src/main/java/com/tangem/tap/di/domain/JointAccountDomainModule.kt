@@ -8,6 +8,8 @@ import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
+import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
@@ -160,6 +162,16 @@ internal object JointAccountDomainModule {
         payloadCodec = payloadCodec,
         safeAddressCalculator = safeAddressCalculator,
     )
+
+    @Provides
+    @Singleton
+    fun provideJointOperationTransferResolver(
+        payloadCodec: JointTransferPayloadCodec,
+    ): JointOperationTransferResolver = JointOperationTransferResolver(payloadCodec = payloadCodec)
+
+    @Provides
+    @Singleton
+    fun provideJointOperationSignersResolver(): JointOperationSignersResolver = JointOperationSignersResolver()
 
     @Provides
     @Singleton

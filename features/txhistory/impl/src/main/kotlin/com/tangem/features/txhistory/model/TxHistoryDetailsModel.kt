@@ -26,6 +26,7 @@ import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.staking.GetStakingTargetsByAddressUseCase
@@ -38,6 +39,7 @@ import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
+import com.tangem.domain.txhistory.model.txHashOfIdentityKey
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
@@ -50,6 +52,10 @@ import com.tangem.features.txhistory.converter.TxHistoryInfoToTxHistoryDetailsUM
 import com.tangem.features.txhistory.converter.fiatCode
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.joint.JointCosignBlockConverter
+import com.tangem.features.txhistory.joint.JointCosignDelegate
+import com.tangem.features.txhistory.joint.JointCosignErrorMessage
+import com.tangem.features.txhistory.joint.JointCosignState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
@@ -86,6 +92,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
+    private val jointCosignDelegate: JointCosignDelegate,
     private val router: Router,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
@@ -159,7 +166,17 @@ internal class TxHistoryDetailsModel @Inject constructor(
         flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
     ) { lookup, isCompatible -> lookup to isCompatible }
 
-    val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
+    private val operationId = params.txId.txHashOfIdentityKey()
+
+    private val cosignState: StateFlow<JointCosignState?> = jointCosignDelegate
+        .observe(userWalletId = params.userWalletId, currency = params.currency, operationId = operationId)
+        .flowOn(dispatchers.io)
+        .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
+
+    private val isSigning = MutableStateFlow(false)
+    private val hasAnswered = MutableStateFlow(false)
+
+    private val baseUiState: Flow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
         flow2 = lookupWithAddressBook,
         flow3 = targetsByAddress,
@@ -198,7 +215,47 @@ internal class TxHistoryDetailsModel @Inject constructor(
         ).convert(txInfo)
     }
         .flowOn(dispatchers.default)
+
+    val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
+        flow = baseUiState,
+        flow2 = cosignState,
+        flow3 = isSigning,
+        flow4 = hasAnswered,
+    ) { state, cosign, isSigning, hasAnswered ->
+        JointCosignBlockConverter(onSignClick = ::onSignClick).convert(
+            value = JointCosignBlockConverter.Input(
+                state = state,
+                cosign = cosign,
+                isSigning = isSigning,
+                hasAnswered = hasAnswered,
+            ),
+        )
+    }
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
+
+    private fun onSignClick() {
+        val cosign = cosignState.value ?: return
+        if (!cosign.canSign || isSigning.value) return
+
+        modelScope.launch {
+            isSigning.value = true
+            try {
+                jointCosignDelegate
+                    .sign(state = cosign, network = params.currency.network, operationId = operationId)
+                    .onRight { hasAnswered.value = true }
+                    .onLeft(::showSignError)
+            } finally {
+                isSigning.value = false
+            }
+        }
+    }
+
+    private fun showSignError(error: JointOperationSignError) {
+        val message = JointCosignErrorMessage().convert(error) ?: return
+
+        TangemLogger.e("Unable to sign the joint operation: $error")
+        uiMessageSender.send(message)
+    }
 
     /** Opens the contact editor prefilled with the counterparty address and its network. */
     private fun openContactCreation(candidate: ContactCandidate) {
