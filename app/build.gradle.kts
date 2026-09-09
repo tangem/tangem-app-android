@@ -395,6 +395,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.referral)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.virtualAccount)
     implementation(projects.domain.visa.models)
