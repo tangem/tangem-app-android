@@ -9,10 +9,12 @@ import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.nav.FeedTabContributor
 import com.tangem.features.feed.nav.FeedTabId
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 internal class RwaFeedTabContributor @Inject constructor(
     private val feedFeatureToggles: FeedFeatureToggles,
     private val componentFactory: RwaFeedTabComponent.Factory,
+    private val searchComponentFactory: RwaFeedSearchTabComponent.Factory,
 ) : FeedTabContributor {
 
     override val id: FeedTabId = FeedTabId.RealAssets
@@ -25,5 +27,12 @@ internal class RwaFeedTabContributor @Inject constructor(
 
     override fun createTab(context: AppComponentContext): FeedTabComponent {
         return componentFactory.create(context = context, params = Unit)
+    }
+
+    override fun createSearchTab(context: AppComponentContext, query: StateFlow<String>): FeedTabComponent {
+        return searchComponentFactory.create(
+            context = context,
+            params = RwaFeedSearchTabComponent.Params(query = query),
+        )
     }
 }

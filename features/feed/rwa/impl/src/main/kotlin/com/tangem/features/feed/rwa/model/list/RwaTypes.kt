@@ -36,8 +36,14 @@ internal enum class RwaSort(val id: String, val title: TextReference) {
     }
 }
 
+/**
+ * One list request. [searchText] is the search tab's only extra dimension — the feed tab leaves it null,
+ * and carrying it here rather than as a `reload()` argument is what keeps the query and the rest of the
+ * config from ever disagreeing.
+ */
 internal data class RwaListRequest(
     val interval: RwaInterval = RwaInterval.H24,
     val sort: RwaSort = RwaSort.MarketCap,
     val selection: CategorySelection = CategorySelection(),
+    val searchText: String? = null,
 )
