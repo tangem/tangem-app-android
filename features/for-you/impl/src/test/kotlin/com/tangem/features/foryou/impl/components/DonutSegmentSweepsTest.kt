@@ -157,36 +157,128 @@ internal class DonutSegmentSweepsTest {
         // Act
         val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
 
-        // Assert — segments give up FLOOR_DEG + CAP_DEG so the visible grey reads as the floor; the last
-        // slice itself is not bumped (free end), so the two keep their 0.6 : 0.39 proportion.
+        // Assert — segments give up the grey's floor plus CAP_DEG so the visible grey reads as the floor;
+        // the last slice itself is not bumped (free end), so the two keep their 0.6 : 0.39 proportion.
         assertThat(actual.sum()).isWithin(TOLERANCE).of(360f - (FLOOR_DEG + CAP_DEG))
         assertThat(actual[0] / actual[1]).isWithin(TOLERANCE).of(0.6f / (1f - 0.6f - BELOW_FLOOR))
     }
 
     @Test
-    fun `GIVEN a full ring and capDeg WHEN visualSweepAngles THEN only the last floored slice is bumped`() {
-        // Arrange — two below-floor slices on a full ring; index 2 is the last active.
-        val weights = listOf(1f - 2f * BELOW_FLOOR, BELOW_FLOOR, BELOW_FLOOR)
-
-        // Act
-        val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
-
-        // Assert — the non-last floored slice sits at the plain floor, the last one is bumped above it.
-        assertThat(actual[1]).isWithin(TOLERANCE).of(FLOOR_DEG)
-        assertThat(actual[2]).isGreaterThan(actual[1])
-        assertThat(actual.sum()).isWithin(TOLERANCE).of(360f)
-    }
-
-    @Test
-    fun `GIVEN a gap wider than capDeg WHEN visualSweepAngles THEN the last slice is not bumped`() {
+    fun `GIVEN capDeg WHEN visualSweepAngles THEN the last slice sits at the plain floor like any other`() {
         // Arrange — filled sum well below the circle, so the gap far exceeds capDeg.
         val weights = listOf(ABOVE_FLOOR * 2f, BELOW_FLOOR)
 
         // Act
         val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
 
-        // Assert — no compensation: the last floored slice stays at the plain floor.
+        // Assert — no slice is ever widened to pay for a cap; a cap only ever extends forward.
         assertThat(actual[1]).isWithin(TOLERANCE).of(FLOOR_DEG)
+    }
+
+    @Test
+    fun `GIVEN more slices than the floor allows WHEN visualSweepAngles THEN falls back to an equal split`() {
+        // Arrange — 72 equal slices, so an equal share is narrower than the minimum share: the floor has
+        // to be clamped back to 360 / 72 and the split must still come out even.
+        val count = 72
+        val weights = List(count) { 1f / count }
+
+        // Act
+        val actual = visualSweepAngles(weights, capDeg = CAP_DEG)
+
+        // Assert
+        actual.forEach { assertThat(it).isWithin(TOLERANCE).of(360f / count) }
+        assertThat(actual.sum()).isWithin(TOLERANCE).of(360f)
+    }
+
+    @Test
+    fun `GIVEN an unfilled remainder WHEN slicePaintOrder THEN slices are painted back to front`() {
+        // Act
+        val actual = slicePaintOrder(listOf(180f, 108f))
+
+        // Assert
+        assertThat(actual).containsExactly(1, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a closed ring WHEN slicePaintOrder THEN the order is unchanged`() {
+        // Arrange — closing the ring must not reorder anything; the wrap is closed by a cap instead.
+        val sweeps = listOf(180f, 108f, 72f)
+
+        // Act
+        val actual = slicePaintOrder(sweeps)
+
+        // Assert
+        assertThat(actual).containsExactly(2, 1, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN zero-weight slices WHEN slicePaintOrder THEN they are not painted`() {
+        // Act
+        val actual = slicePaintOrder(listOf(200f, 0f, 160f, 0f))
+
+        // Assert
+        assertThat(actual).containsExactly(2, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN nothing drawn WHEN slicePaintOrder THEN nothing is painted`() {
+        // Act
+        val actual = slicePaintOrder(listOf(0f, 0f))
+
+        // Assert
+        assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN an unfilled remainder WHEN freeStartSliceIndex THEN the first drawn slice rounds the tail`() {
+        // Act
+        val actual = freeStartSliceIndex(listOf(180f, 108f))
+
+        // Assert
+        assertThat(actual).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN leading zero-weight slices WHEN freeStartSliceIndex THEN the first drawn slice is returned`() {
+        // Act
+        val actual = freeStartSliceIndex(listOf(0f, 0f, 180f, 108f))
+
+        // Assert
+        assertThat(actual).isEqualTo(2)
+    }
+
+    @Test
+    fun `GIVEN a closed ring WHEN freeStartSliceIndex THEN there is no free end to round`() {
+        // Arrange — the last slice's forward cap covers that point instead.
+        val sweeps = listOf(180f, 108f, 72f)
+
+        // Act & Assert
+        assertThat(freeStartSliceIndex(sweeps)).isNull()
+    }
+
+    @Test
+    fun `GIVEN nothing drawn WHEN freeStartSliceIndex THEN there is no free end to round`() {
+        // Act & Assert
+        assertThat(freeStartSliceIndex(listOf(0f, 0f))).isNull()
+    }
+
+    @Test
+    fun `GIVEN sweeps a hair short of the circle WHEN isRingClosed THEN the ring still counts as closed`() {
+        // Arrange — the running fold of start angles accumulates float error; a shortfall this small is
+        // noise, not a remainder.
+        val sweeps = listOf(180f, 179.999f)
+
+        // Act & Assert
+        assertThat(isRingClosed(sweeps)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a remainder wider than float noise WHEN isRingClosed THEN the ring counts as open`() {
+        // Arrange
+        val sweeps = listOf(180f, 179f)
+
+        // Act & Assert
+        assertThat(isRingClosed(sweeps)).isFalse()
     }
 
     private companion object {
@@ -201,5 +293,6 @@ internal class DonutSegmentSweepsTest {
 
         /** A share safely above the floor, so it is never floored — nor squeezed below it by a neighbour. */
         const val ABOVE_FLOOR = MIN_VISUAL_SWEEP_FRACTION * 4f
+
     }
 }
