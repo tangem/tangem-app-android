@@ -12,6 +12,7 @@ import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import java.util.concurrent.ConcurrentHashMap
@@ -73,12 +74,22 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         userWalletId: UserWalletId,
     ): Either<VisaApiError, List<TangemPayOnrampFee>> = real.getOnrampFees(userWalletId)
 
-    override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> {
+    override suspend fun createOrder(
+        userWalletId: UserWalletId,
+        deeplinkValue: String?,
+        specificationName: String,
+        type: OrderType,
+    ): Either<VisaApiError, String> {
         if (isMockMode) {
             mockOrderIds.add(userWalletId)
             return MOCK_ORDER_ID.right()
         }
-        return real.createOrder(userWalletId)
+        return real.createOrder(
+            userWalletId = userWalletId,
+            deeplinkValue = deeplinkValue,
+            specificationName = specificationName,
+            type = type,
+        )
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
