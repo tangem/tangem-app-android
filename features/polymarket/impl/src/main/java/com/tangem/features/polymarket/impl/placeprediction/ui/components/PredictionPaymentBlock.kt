@@ -25,6 +25,7 @@ import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 
@@ -36,7 +37,7 @@ internal fun PredictionPaymentBlock(
     payment: PaymentSourceUM,
     modifier: Modifier = Modifier,
 ) {
-    TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary) {
+    TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column(
             modifier = Modifier.padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 24.dp),
