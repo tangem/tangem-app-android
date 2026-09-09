@@ -82,6 +82,9 @@ interface TangemPayApi {
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
 
+    @GET("v1/images")
+    suspend fun getImages(@Query("deeplink_value") deeplinkValue: String): ApiResponse<ImagesResponse>
+
     @GET("v1/eligibility/channels")
     suspend fun getEligibilityChannels(): ApiResponse<TangemPayEligibilityChannels>
 
