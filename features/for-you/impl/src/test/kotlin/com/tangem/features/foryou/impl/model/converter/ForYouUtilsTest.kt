@@ -230,7 +230,7 @@ internal class ForYouUtilsTest {
             val result = amount.toForYouPercent(BigDecimal("3"))
 
             // Assert
-            assertThat(result).isEqualTo(BigDecimal("0.333333"))
+            assertThat(result).isEqualTo(BigDecimal("0.33333333"))
         }
 
         @Test
@@ -243,7 +243,20 @@ internal class ForYouUtilsTest {
             val result = amount.toForYouPercent(BigDecimal("10000"))
 
             // Assert
-            assertThat(result).isEqualTo(BigDecimal("0.123456"))
+            assertThat(result).isEqualTo(BigDecimal("0.12345600"))
+        }
+
+        @Test
+        fun `GIVEN a dust amount WHEN toForYouPercent THEN the share keeps its sign`() {
+            // Arrange — 0.00005% of the portfolio: far below what the display can render, but the share has to
+            // stay positive so `percent(canBeLower = true)` can tell it apart from an empty holding.
+            val amount = BigDecimal("0.005")
+
+            // Act
+            val result = amount.toForYouPercent(BigDecimal("10000"))
+
+            // Assert
+            assertThat(result?.signum()).isEqualTo(1)
         }
     }
 
