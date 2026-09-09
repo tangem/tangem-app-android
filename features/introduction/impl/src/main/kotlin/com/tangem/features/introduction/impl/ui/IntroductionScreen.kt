@@ -110,7 +110,7 @@ internal fun IntroductionScreen(
                         .padding(bottom = 12.dp),
                 ) {
                     WelcomeTextScenes(
-                        isMotionEnabled = state.isMotionEnabled,
+                        isAnimated = state.isMotionEnabled && !state.isVideoFailed,
                         videoPositionMs = videoPositionMs,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -222,7 +222,8 @@ private fun IntroductionScreenPreview() {
             videoPositionMs = { 0L },
             state = IntroductionUM(
                 isVideoReady = true,
-                isMotionEnabled = true,
+                isVideoFailed = false,
+                isMotionEnabled = false,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},

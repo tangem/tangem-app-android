@@ -40,7 +40,6 @@ internal class HaveWalletSheetController(
 
         fun scanCardForExistingWallet()
 
-        /** The sheet is handing the viewer over to a flow that returns to a fresh screen. */
         fun onTerminalFlowEntered()
 
         /** Shows the unsupported-device warning when it returns `false`. */

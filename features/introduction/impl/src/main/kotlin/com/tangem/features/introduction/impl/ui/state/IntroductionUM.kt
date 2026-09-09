@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 
 internal data class IntroductionUM(
     val isVideoReady: Boolean,
+    val isVideoFailed: Boolean,
     val isMotionEnabled: Boolean,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val haveWalletBottomSheetConfig: TangemBottomSheetConfig?,
