@@ -76,6 +76,27 @@ fun BaseTestCase.openTokenDetails(tokenName: String) {
     }
 }
 
+/** Creates a brand-new mobile (hot) wallet from the intro stories and lands on Main. */
+fun BaseTestCase.openMainScreenWithNewHotWallet() {
+    step("Click on 'Get started' button") {
+        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    }
+    step("Click on 'Start with Mobile Wallet' button") {
+        onCreateWalletStartScreen { startWithMobileWalletButton.performClick() }
+    }
+    step("Click on 'Create wallet' button") {
+        onCreateMobileWalletScreen { createWalletButton.clickWithAssertion() }
+    }
+    step("Assert 'Main' screen is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION) {
+            onMainScreen { screenContainer.assertIsDisplayed() }
+        }
+    }
+    step("Dismiss Market Tooltip by clicking close button") {
+        onMarketsTooltipScreen { closeButton.clickWithAssertion() }
+    }
+}
+
 @OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
     step("Click on 'Get started' button") {

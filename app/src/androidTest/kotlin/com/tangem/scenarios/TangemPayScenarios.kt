@@ -56,6 +56,24 @@ fun BaseTestCase.openMainScreenWithTangemPayTile() {
     }
 }
 
+/**
+ * Waits for the KYC screen the card-issuing flow hands over to and leaves it back to Main. The Sumsub SDK
+ * never launches under WireMock — its access-token endpoint is unmocked — so the screen stays on its loader.
+ */
+fun BaseTestCase.exitTangemPayKycScreen(timeoutMillis: Long = WAIT_UNTIL_TIMEOUT_LONG) {
+    step("Assert KYC screen is displayed") {
+        awaitSuccess(timeoutMillis = timeoutMillis) {
+            onTangemPayKycScreen { screenContainer.assertIsDisplayed() }
+        }
+    }
+    step("Click on 'Back' button") {
+        onTangemPayKycScreen { backButton.clickWithAssertion() }
+    }
+    step("Assert 'Main' screen is displayed") {
+        awaitSuccess { onMainScreen { screenContainer.assertIsDisplayed() } }
+    }
+}
+
 /** Scrolls the payment-account list down to the [name] transaction row and asserts it is displayed. */
 fun BaseTestCase.assertTangemPayTransactionRowDisplayed(name: String) {
     step("Assert '$name' transaction row is displayed") {

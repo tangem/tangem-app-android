@@ -7,6 +7,7 @@ import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayOnrampFee
 import com.tangem.domain.models.pay.TangemPayEligibilityType
@@ -20,7 +21,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * In MOCK env only skips the local-storage / NFC-signing enrollment steps (order ids, initial data). The
+ * In MOCK env only skips the NFC-signing enrollment steps (order ids, initial credentials). The
  * customer-facing state — whether a wallet has Tangem Pay ([hasTangemPayInWallet]), KYC status, ACTIVE /
  * INACTIVE, balances ([getCustomerInfo]) — is driven by the WireMock test scenario (authenticated with the
  * synthetic tokens from [com.tangem.data.pay.store.MockAwareTangemPayStorage]) rather than hardcoded:
@@ -33,6 +34,7 @@ import javax.inject.Singleton
 internal class MockAwareOnboardingRepository @Inject constructor(
     private val real: DefaultOnboardingRepository,
     private val apiConfigsManager: ApiConfigsManager,
+    private val tangemPayStorage: TangemPayStorage,
 ) : OnboardingRepository {
 
     private val mockOrderIds: MutableSet<UserWalletId> = ConcurrentHashMap.newKeySet()
@@ -54,7 +56,13 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     }
 
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
-        if (isMockMode) return
+        if (isMockMode) {
+            // Credentials come from MockAwareTangemPayStorage, but the "this wallet is a Paera customer" flag
+            // is the real thing the enrollment writes — without it the wallet keeps the cached 404 answer and
+            // no Payment account ever appears after accepting the offer.
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer = true)
+            return
+        }
         real.produceInitialData(userWalletId)
     }
 
