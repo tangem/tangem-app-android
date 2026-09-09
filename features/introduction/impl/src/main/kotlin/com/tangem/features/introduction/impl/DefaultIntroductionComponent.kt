@@ -75,6 +75,7 @@ internal class DefaultIntroductionComponent @AssistedInject constructor(
                 state = state,
                 onSurfaceAvailable = model::attachSurface,
                 onSurfaceRelease = model::detachSurface,
+                videoPositionMs = model::videoPositionMs,
                 modifier = modifier,
             )
         }
