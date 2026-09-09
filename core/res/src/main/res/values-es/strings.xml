@@ -836,7 +836,7 @@
   <string name="hw_cloud_backup_completed_title">Copia de seguridad completada</string>
   <string name="hw_cloud_backup_confirm_password_description">Se requiere una contraseña para cifrar su frase secreta en %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirmar contraseña</string>
-  <string name="hw_cloud_backup_consent">Entiendo que si pierdo u olvido esta contraseña, perderé el acceso a mis criptomonedas.</string>
+  <string name="hw_cloud_backup_consent">Entiendo que Tangem no puede recuperar mi contraseña de copia de seguridad. Si la pierdo, o si pierdo mi Apple ID, mi copia de seguridad será irrecuperable. Sin mi frase de recuperación, mis criptomonedas tampoco se podrán recuperar.</string>
   <string name="hw_cloud_backup_delete_confirm_message">No podrá restaurar esta billetera desde %s. Puede crear una nueva copia de seguridad en cualquier momento.</string>
   <string name="hw_cloud_backup_error_network">No hay conexión a internet. Compruebe su conexión de red e inténtelo de nuevo.</string>
   <string name="hw_cloud_backup_error_title">Ha surgido un problema</string>
