@@ -67,6 +67,12 @@ sealed interface TxHistoryItemsUM {
             val itemKey: String,
         ) : TxHistoryItemUM
 
+        /**
+         * Header of the group that holds the joint operations still collecting signatures. They have no date of
+         * their own — they are not on chain yet — so the title is a fixed label the UI resolves.
+         */
+        data object PendingGroupTitle : TxHistoryItemUM
+
         data class Transaction(val state: TransactionItemUM) : TxHistoryItemUM
     }
 }
