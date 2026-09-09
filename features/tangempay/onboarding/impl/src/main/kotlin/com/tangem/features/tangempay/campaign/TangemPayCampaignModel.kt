@@ -25,6 +25,7 @@ import com.tangem.domain.pay.repository.TangemPayCampaignRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.WalletSelectorListener
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
