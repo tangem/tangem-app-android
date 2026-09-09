@@ -225,7 +225,7 @@ private fun DonutSegmentTooltipBlock(
         positionProvider = positionProvider,
         title = shownSegment.title,
         fiatValue = shownSegment.fiatValue,
-        percent = shownSegment.weight.format { percent() },
+        percent = shownSegment.weight.format { percent(canBeLower = true) },
         onDismissRequest = onDismissRequest,
     )
 }
