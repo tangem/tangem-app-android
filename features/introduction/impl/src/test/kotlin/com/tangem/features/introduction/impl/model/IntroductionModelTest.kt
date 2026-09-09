@@ -84,6 +84,7 @@ internal class IntroductionModelTest {
     private val mobileWalletCreator: IntroductionMobileWalletCreator = mockk(relaxed = true)
     private val appsFlyerRepository: AppsFlyerRepository = mockk()
     private val analyticsRepository: AnalyticsRepository = mockk(relaxed = true)
+    private var entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val surfaceView: SurfaceView = mockk(relaxed = true)
@@ -113,6 +114,7 @@ internal class IntroductionModelTest {
         )
         coEvery { appsFlyerRepository.getConversionData() } returns null
         coEvery { analyticsRepository.checkIsEventSent(any()) } returns true
+        entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository)
         every { isHotWalletCreationSupported() } returns true
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
@@ -277,7 +279,34 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(sentEvents).containsExactly(SCREEN_OPENED)
-            coVerify(exactly = 1) { analyticsRepository.setIsEventSent("introduction_welcome_opened") }
+            coVerify(exactly = 0) { analyticsRepository.setIsEventSent(any()) }
+        }
+
+        @Test
+        fun `GIVEN the opening was reported WHEN the screen is rebuilt in the same process THEN it is not reported again`() {
+            // Arrange
+            createModel()
+
+            // Act
+            createModel()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+        }
+
+        @Test
+        fun `GIVEN the opening was reported WHEN the last wallet is forgotten THEN the new opening is reported`() {
+            // Arrange
+            createModel()
+
+            // Act
+            createModel(entryReason = HomeEntryReason.LastWalletForgotten)
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.LastWalletForgotten),
+            ).inOrder()
         }
 
         @Test
@@ -1582,7 +1611,7 @@ internal class IntroductionModelTest {
         videoPlayerFactory = videoPlayerFactory,
         urlOpener = urlOpener,
         analyticsEventHandler = analyticsEventHandler,
-        analyticsRepository = analyticsRepository,
+        entryReasonTracker = entryReasonTracker,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
