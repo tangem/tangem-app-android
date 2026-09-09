@@ -103,6 +103,7 @@ internal class IntroductionModel @Inject constructor(
         field = MutableStateFlow(
             IntroductionUM(
                 isVideoReady = false,
+                isVideoFailed = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
@@ -147,8 +148,8 @@ internal class IntroductionModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.WelcomeMediaError(stage))
         // Errors arrive asynchronously, so one can land after the surface is gone; lifting the shutter then
         // would uncover a blank surface on the way back.
-        if (!videoPlayer.isSurfaceAttached) return
-        uiState.update { it.copy(isVideoReady = true) }
+        val isSurfaceAttached = videoPlayer.isSurfaceAttached
+        uiState.update { it.copy(isVideoFailed = true, isVideoReady = it.isVideoReady || isSurfaceAttached) }
     }
 
     fun videoPositionMs(): Long = videoPlayer.positionMs
