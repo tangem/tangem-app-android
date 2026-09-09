@@ -23,7 +23,7 @@ import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -59,6 +59,8 @@ abstract class BaseTestCase : TestCase(
 
     @Inject
     lateinit var appPreferencesStore: AppPreferencesStore
+
+    private val storePreferencesKeys = StorePreferencesKeys()
 
     @Inject
     lateinit var walletManagersFacade: WalletManagersFacade
@@ -137,19 +139,19 @@ abstract class BaseTestCase : TestCase(
         runBlocking {
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
-                    key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+                    key = storePreferencesKeys.notificationsUserAllowSendAddressesKey,
                     value = false
                 )
             }
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
-                    key = PreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
+                    key = storePreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
                     value = false
                 )
             }
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
-                    key = PreferencesKeys.getShouldShowInitialPermissionScreen(PUSH_PERMISSION),
+                    key = storePreferencesKeys.getShouldShowInitialPermissionScreen(PUSH_PERMISSION),
                     value = false
                 )
             }
