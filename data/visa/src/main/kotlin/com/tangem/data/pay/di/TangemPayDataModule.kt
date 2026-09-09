@@ -134,6 +134,10 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
+    fun bindResidencyRepository(repository: DefaultTangemPayResidencyRepository): TangemPayResidencyRepository
+
+    @Binds
+    @Singleton
     fun bindWaitlistRepository(repository: DefaultTangemPayWaitlistRepository): TangemPayWaitlistRepository
 
     @Suppress("TooManyFunctions", "LargeClass")
@@ -298,6 +302,34 @@ internal interface TangemPayDataModule {
                 appCoroutineScope = appCoroutineScope,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             )
+        }
+
+        @Provides
+        fun provideGetTangemPayCountriesUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): GetTangemPayCountriesUseCase {
+            return GetTangemPayCountriesUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideGetTangemPayRegionsUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): GetTangemPayRegionsUseCase {
+            return GetTangemPayRegionsUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideCheckTangemPayEligibilityUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): CheckTangemPayEligibilityUseCase {
+            return CheckTangemPayEligibilityUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideCheckTangemPayEligibilityByKycUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): CheckTangemPayEligibilityForCustomerUseCase {
+            return CheckTangemPayEligibilityForCustomerUseCase(residencyRepository)
         }
 
         @Provides
