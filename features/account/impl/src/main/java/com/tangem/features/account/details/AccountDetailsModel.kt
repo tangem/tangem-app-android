@@ -1,5 +1,7 @@
 package com.tangem.features.account.details
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
@@ -56,6 +58,8 @@ internal class AccountDetailsModel @Inject constructor(
         ?.isMultiCurrency == true
 
     private val accountId = params.account.accountId
+
+    val jointSupportedNetworksNavigation: SlotNavigation<Unit> = SlotNavigation()
 
     val uiState: StateFlow<AccountDetailsUM>
         field = MutableStateFlow(
@@ -189,6 +193,7 @@ internal class AccountDetailsModel @Inject constructor(
             )
         }
         return AccountDetailsUM(
+            title = resourceReference(R.string.account_details_title),
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
@@ -202,6 +207,7 @@ internal class AccountDetailsModel @Inject constructor(
     private fun buildJointUI(account: Account.Joint, status: AccountStatus.Joint?): AccountDetailsUM {
         val isActive = status?.value is JointAccountStatusValue.Active
         return AccountDetailsUM(
+            title = resourceReference(R.string.common_joint_account),
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
@@ -214,6 +220,15 @@ internal class AccountDetailsModel @Inject constructor(
             isManageTokensAvailable = isActive && isMultiCurrency,
             isPendingActivation = !isActive,
             members = status?.value?.toMembersRowUM(onClick = { onMembersClick() }),
+            networksInfo = if (isActive) {
+                AccountDetailsUM.NetworksInfoUM(
+                    text = resourceReference(R.string.account_details_joint_networks_info),
+                    linkText = resourceReference(R.string.common_more_info),
+                    onLinkClick = { jointSupportedNetworksNavigation.activate(Unit) },
+                )
+            } else {
+                null
+            },
         )
     }
 

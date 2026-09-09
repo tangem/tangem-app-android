@@ -33,8 +33,6 @@ import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.TangemSwitch
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.block.BlockItemColors
@@ -43,11 +41,12 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.AccountReorderUM
@@ -65,28 +64,26 @@ internal fun WalletSettingsScreen(
     modifier: Modifier = Modifier,
     dialog: @Composable () -> Unit,
 ) {
-    val backgroundColor = TangemTheme.colors3.bg.primary
-
-    Scaffold(
+    TangemTopBarScaffold(
         modifier = modifier,
-        containerColor = backgroundColor,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
-            TangemTopAppBar(
-                modifier = Modifier.statusBarsPadding(),
-                startButton = TopAppBarButtonUM.Back(state.popBack),
+            TangemTopNavigation(
+                title = resourceReference(R.string.wallet_settings_title),
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                onBack = state.popBack,
             )
         },
-        content = { paddingValues ->
-            Content(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .testTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER),
-                state = state,
-            )
+    ) { contentPadding ->
+        Content(
+            modifier = Modifier
+                .padding(contentPadding)
+                .testTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER),
+            state = state,
+        )
 
-            dialog()
-        },
-    )
+        dialog()
+    }
 }
 
 @Suppress("LongMethod")
@@ -105,14 +102,6 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             bottom = TangemTheme.dimens.spacing16,
         ),
     ) {
-        item {
-            Text(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                text = stringResourceSafe(id = R.string.wallet_settings_title),
-                style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
-        }
         items(
             items = state.items,
             key = WalletSettingsItemUM::id,
@@ -519,7 +508,7 @@ private val walletSettingsBlockItemColors: BlockItemColors
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_WalletSettingsScreen() {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         PreviewWalletSettingsComponent().Content(modifier = Modifier.fillMaxSize())
     }
 }

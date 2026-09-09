@@ -26,7 +26,6 @@ import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
-import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
@@ -134,7 +133,6 @@ internal class ChildFactory @Inject constructor(
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
-    private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val tangemPayEligibilityComponentFactory: TangemPayEligibilityComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
@@ -712,13 +710,6 @@ internal class ChildFactory @Inject constructor(
                         cryptoAccountId = route.cryptoAccountId,
                     ),
                     componentFactory = jointAccountMembersComponentFactory,
-                )
-            }
-            is AppRoute.JointSupportedNetworks -> {
-                createComponentChild(
-                    context = context,
-                    params = Unit,
-                    componentFactory = jointSupportedNetworksComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {
