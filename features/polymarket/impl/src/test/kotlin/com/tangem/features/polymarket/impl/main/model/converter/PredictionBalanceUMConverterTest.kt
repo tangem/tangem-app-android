@@ -33,7 +33,11 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, depositTarget = DEPOSIT_TARGET),
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                depositTarget = DEPOSIT_TARGET,
+                isTradingAllowed = model.isTradingAllowed,
+            ),
         )
 
         // Assert
@@ -46,10 +50,12 @@ internal class PredictionBalanceUMConverterTest {
     @Test
     fun `GIVEN a funded account WHEN converted THEN the balance is stated`() {
         // Arrange
-        val status = active(balance = "12.5", isTradingAllowed = true)
+        val status = active(balance = "12.5")
 
         // Act
-        val actual = converter.convert(PredictionBalanceUMConverter.Input(status = status, depositTarget = null))
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(status = status, depositTarget = null, isTradingAllowed = true),
+        )
 
         // Assert
         assertThat(actual.balance).isNotEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
@@ -61,7 +67,9 @@ internal class PredictionBalanceUMConverterTest {
         val status = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
 
         // Act
-        val actual = converter.convert(PredictionBalanceUMConverter.Input(status = status, depositTarget = null))
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(status = status, depositTarget = null, isTradingAllowed = true),
+        )
 
         // Assert
         assertThat(actual.balance).isEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
@@ -73,7 +81,9 @@ internal class PredictionBalanceUMConverterTest {
         val status = PredictionAccountStatusValue.Loading
 
         // Act
-        val actual = converter.convert(PredictionBalanceUMConverter.Input(status = status, depositTarget = null))
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(status = status, depositTarget = null, isTradingAllowed = true),
+        )
 
         // Assert
         assertThat(actual.balance).isEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
@@ -82,7 +92,11 @@ internal class PredictionBalanceUMConverterTest {
     @Test
     fun `GIVEN no deposit target WHEN converted THEN add funds is disabled and not loading`() {
         // Arrange
-        val input = PredictionBalanceUMConverter.Input(status = ACTIVE, depositTarget = null)
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE,
+            depositTarget = null,
+            isTradingAllowed = true,
+        )
 
         // Act
         val actual = converter.convert(input)
@@ -95,7 +109,11 @@ internal class PredictionBalanceUMConverterTest {
     @Test
     fun `GIVEN a deposit target WHEN converted THEN add funds is enabled`() {
         // Arrange
-        val input = PredictionBalanceUMConverter.Input(status = ACTIVE, depositTarget = DEPOSIT_TARGET)
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE,
+            depositTarget = DEPOSIT_TARGET,
+            isTradingAllowed = true,
+        )
 
         // Act
         val actual = converter.convert(input)
@@ -108,8 +126,9 @@ internal class PredictionBalanceUMConverterTest {
     fun `GIVEN trading not allowed WHEN a deposit target exists THEN add funds stays disabled`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
-            status = ACTIVE.copy(isTradingAllowed = false),
+            status = ACTIVE,
             depositTarget = DEPOSIT_TARGET,
+            isTradingAllowed = false,
         )
 
         // Act
@@ -125,6 +144,7 @@ internal class PredictionBalanceUMConverterTest {
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
             depositTarget = DEPOSIT_TARGET,
+            isTradingAllowed = true,
         )
 
         // Act
@@ -139,6 +159,7 @@ internal class PredictionBalanceUMConverterTest {
         val addFundsEnabled: Boolean,
         val withdrawEnabled: Boolean,
         val isLoading: Boolean = false,
+        val isTradingAllowed: Boolean = true,
     )
 
     private fun provideTestModels() = listOf(
@@ -149,22 +170,24 @@ internal class PredictionBalanceUMConverterTest {
             isLoading = true,
         ),
         GatingModel(
-            status = active(balance = "12.5", isTradingAllowed = true),
+            status = active(balance = "12.5"),
             addFundsEnabled = true,
             withdrawEnabled = true,
         ),
         GatingModel(
-            status = active(balance = "0", isTradingAllowed = true),
+            status = active(balance = "0"),
             addFundsEnabled = true,
             withdrawEnabled = false,
         ),
         GatingModel(
-            status = active(balance = "12.5", isTradingAllowed = false),
+            status = active(balance = "12.5"),
+            isTradingAllowed = false,
             addFundsEnabled = false,
             withdrawEnabled = true,
         ),
         GatingModel(
-            status = active(balance = "0", isTradingAllowed = false),
+            status = active(balance = "0"),
+            isTradingAllowed = false,
             addFundsEnabled = false,
             withdrawEnabled = false,
         ),
@@ -200,16 +223,15 @@ internal class PredictionBalanceUMConverterTest {
 
     private companion object {
 
-        fun active(balance: String, isTradingAllowed: Boolean) = PredictionAccountStatusValue.Active(
+        fun active(balance: String) = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
             fiatRate = BigDecimal.ONE,
-            isTradingAllowed = isTradingAllowed,
             depositCurrency = mockk(relaxed = true),
             depositAddress = "0xbridge",
         )
 
-        val ACTIVE = active(balance = "12.5", isTradingAllowed = true)
+        val ACTIVE = active(balance = "12.5")
 
         val DEPOSIT_TARGET = PolymarketDepositTarget(
             network = PolymarketDepositNetwork(
