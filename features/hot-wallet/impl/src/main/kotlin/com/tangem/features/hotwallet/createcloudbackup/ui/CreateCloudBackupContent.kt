@@ -38,14 +38,12 @@ import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
-import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
@@ -61,11 +59,11 @@ import com.tangem.features.hotwallet.common.ui.CloudBackupPasswordField
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.features.hotwallet.impl.R
 
-private val ContentHorizontalPadding = 24.dp
+private const val ACCOUNT_NAME = "Google Account"
 
-/** Height the footer overlay takes, reserved at the end of the scrollable content. */
-private val ButtonFooterHeight = 88.dp
-private val ConsentFooterHeight = 154.dp
+private val ContentHorizontalPadding = 24.dp
+private val FooterHorizontalPadding = 16.dp
+private val ContentFooterGap = 20.dp
 
 @Composable
 private fun footerInsets(): WindowInsets = WindowInsets.ime.union(WindowInsets.navigationBars)
@@ -75,22 +73,13 @@ internal fun CreateCloudBackupContent(state: CreateCloudBackupUM, modifier: Modi
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = { TopBar(state) },
-        overlay = { _ ->
-            StepAnimatedContent(
-                state = state,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                label = "CreateCloudBackupFooter",
-            ) { step ->
-                if (step !is CreateCloudBackupUM.Preparing) Footer(step)
-            }
-        },
     ) { contentPadding ->
         StepAnimatedContent(state = state, label = "CreateCloudBackupContent") { step ->
             when (step) {
                 is CreateCloudBackupUM.Preparing -> PreparingScreen(contentPadding)
                 is CreateCloudBackupUM.SetPassword -> SetPasswordScreen(step, contentPadding)
                 is CreateCloudBackupUM.ConfirmPassword -> ConfirmPasswordScreen(step, contentPadding)
-                is CreateCloudBackupUM.Completed -> CompletedScreen(contentPadding)
+                is CreateCloudBackupUM.Completed -> CompletedScreen(step, contentPadding)
             }
         }
     }
@@ -104,12 +93,10 @@ internal fun CreateCloudBackupContent(state: CreateCloudBackupUM, modifier: Modi
 private fun StepAnimatedContent(
     state: CreateCloudBackupUM,
     label: String,
-    modifier: Modifier = Modifier,
     content: @Composable (CreateCloudBackupUM) -> Unit,
 ) {
     AnimatedContent(
         targetState = state,
-        modifier = modifier,
         contentKey = { it.stepOrder },
         transitionSpec = {
             val isForward = targetState.stepOrder >= initialState.stepOrder
@@ -180,65 +167,12 @@ private fun NavigationSlot(content: @Composable BoxScope.() -> Unit) {
 }
 
 @Composable
-private fun Footer(state: CreateCloudBackupUM, modifier: Modifier = Modifier) {
-    Box(
+private fun Footer(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .windowInsetsPadding(footerInsets()),
-    ) {
-        TangemFade(
-            modifier = Modifier.matchParentSize(),
-            position = TangemFade.Position.Bottom,
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            when (state) {
-                is CreateCloudBackupUM.Preparing -> Unit
-                is CreateCloudBackupUM.SetPassword -> TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.hw_cloud_backup_set_password_button),
-                    isEnabled = state.isContinueEnabled,
-                    onClick = state.onContinueClick,
-                )
-                is CreateCloudBackupUM.ConfirmPassword -> ConfirmFooter(state)
-                is CreateCloudBackupUM.Completed -> TangemButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_finish),
-                    onClick = state.onFinishClick,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ConfirmFooter(state: CreateCloudBackupUM.ConfirmPassword) {
-    val autofillManager = LocalAutofillManager.current
-
-    ConsentRow(
-        checked = state.isConsentChecked,
-        onCheckedChange = state.onConsentChange,
-        enabled = !state.isLoading,
-    )
-    SpacerH(10.dp)
-    TangemButton(
-        modifier = Modifier.fillMaxWidth(),
-        size = TangemButton.Size.X12,
-        text = resourceReference(R.string.common_confirm),
-        isEnabled = state.isConfirmEnabled && !state.isLoading,
-        isLoading = state.isLoading,
-        onClick = {
-            // FR-13: offers saving the freshly set password to the platform password manager,
-            // while both fields are still composed and the autofill session is open
-            autofillManager?.commit()
-            state.onConfirmClick()
-        },
+            .padding(horizontal = FooterHorizontalPadding, vertical = 12.dp),
+        content = content,
     )
 }
 
@@ -263,7 +197,19 @@ private fun SetPasswordScreen(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    ScrollableContent(contentPadding = contentPadding, modifier = modifier) {
+    ScrollableContent(
+        contentPadding = contentPadding,
+        modifier = modifier,
+        button = {
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.hw_cloud_backup_set_password_button),
+                isEnabled = state.isContinueEnabled,
+                onClick = state.onContinueClick,
+            )
+        },
+    ) {
         TitleBlock(
             title = stringResourceSafe(R.string.hw_cloud_backup_set_password_title),
             description = stringResourceSafe(
@@ -294,10 +240,33 @@ private fun ConfirmPasswordScreen(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
+    val autofillManager = LocalAutofillManager.current
+
     ScrollableContent(
         contentPadding = contentPadding,
         modifier = modifier,
-        footerHeight = ConsentFooterHeight,
+        button = {
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_confirm),
+                isEnabled = state.isConfirmEnabled && !state.isLoading,
+                isLoading = state.isLoading,
+                onClick = {
+                    // FR-13: offers saving the freshly set password to the platform password manager,
+                    // while both fields are still composed and the autofill session is open
+                    autofillManager?.commit()
+                    state.onConfirmClick()
+                },
+            )
+        },
+        bottomContent = {
+            ConsentRow(
+                checked = state.isConsentChecked,
+                onCheckedChange = state.onConsentChange,
+                enabled = !state.isLoading,
+            )
+        },
     ) {
         TitleBlock(
             title = stringResourceSafe(R.string.hw_cloud_backup_confirm_password_title),
@@ -322,54 +291,89 @@ private fun ConfirmPasswordScreen(
 }
 
 @Composable
-private fun CompletedScreen(contentPadding: PaddingValues, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(horizontal = ContentHorizontalPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_success_blue_76),
-            contentDescription = null,
-        )
-        Text(
-            text = stringResourceSafe(R.string.hw_cloud_backup_completed_title),
-            style = TangemTheme.typography3.heading.medium,
-            color = TangemTheme.colors3.text.primary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 24.dp),
-        )
-        Text(
-            text = stringResourceSafe(R.string.hw_cloud_backup_completed_description),
-            style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.secondary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+private fun CompletedScreen(
+    state: CreateCloudBackupUM.Completed,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+                .padding(horizontal = ContentHorizontalPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_success_blue_76),
+                contentDescription = null,
+            )
+            Text(
+                text = stringResourceSafe(R.string.hw_cloud_backup_completed_title),
+                style = TangemTheme.typography3.heading.medium,
+                color = TangemTheme.colors3.text.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 24.dp),
+            )
+            Text(
+                text = stringResourceSafe(R.string.hw_cloud_backup_completed_description),
+                style = TangemTheme.typography3.subheading.medium,
+                color = TangemTheme.colors3.text.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        Footer(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(footerInsets()),
+        ) {
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_finish),
+                onClick = state.onFinishClick,
+            )
+        }
     }
 }
 
+/**
+ * [button] stays pinned, the rest scrolls above it. The weighted spacer holds [bottomContent] at the
+ * bottom while the content fits and collapses once it doesn't, so nothing ever overlaps.
+ */
 @Composable
 private fun ScrollableContent(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    footerHeight: Dp = ButtonFooterHeight,
+    bottomContent: @Composable ColumnScope.() -> Unit = {},
+    button: @Composable () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .windowInsetsPadding(footerInsets())
-            .verticalScroll(rememberScrollState())
-            .padding(top = contentPadding.calculateTopPadding())
-            .padding(horizontal = ContentHorizontalPadding),
+            .windowInsetsPadding(footerInsets()),
     ) {
-        SpacerH(20.dp)
-        content()
-        SpacerH(footerHeight)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(top = contentPadding.calculateTopPadding()),
+        ) {
+            Column(modifier = Modifier.padding(horizontal = ContentHorizontalPadding)) {
+                SpacerH(20.dp)
+                content()
+            }
+            SpacerH(ContentFooterGap)
+            Spacer(modifier = Modifier.weight(1f))
+            Column(
+                modifier = Modifier.padding(horizontal = FooterHorizontalPadding),
+                content = bottomContent,
+            )
+        }
+        Footer { button() }
     }
 }
 
@@ -516,12 +520,18 @@ private fun ConsentRow(
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
             .clickable(enabled = enabled) { onCheckedChange(!checked) },
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        TangemCheckbox(checked = checked, onCheckedChange = onCheckedChange, isEnabled = enabled)
+        TangemCheckbox(
+            modifier = Modifier
+                .padding(top = 4.dp),
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            isEnabled = enabled,
+        )
         Text(
-            text = stringResourceSafe(R.string.hw_cloud_backup_consent),
-            style = TangemTheme.typography3.subheading.medium,
+            text = stringResourceSafe(R.string.hw_cloud_backup_consent_v2, ACCOUNT_NAME),
+            style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(start = 12.dp),
         )
