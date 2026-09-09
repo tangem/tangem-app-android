@@ -1,11 +1,10 @@
-package com.tangem.data.walletconnect.sign
+package com.tangem.blockchainsdk.utils
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.models.network.Network
 import com.tangem.utils.converter.Converter
 
-internal object BlockAidChainNameConverter : Converter<Network, String?> {
+object BlockAidChainNameConverter : Converter<Network, String?> {
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: Network): String? {
