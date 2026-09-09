@@ -16,8 +16,10 @@ import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 
 @Composable
 internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig) {
+    val isCreatingWallet = (config.content as? CreateWalletUM)?.isCreatingWallet == true
     TangemModal<CreateWalletUM>(
         config = config,
+        dismissOnClickOutside = !isCreatingWallet,
         // The glass material samples the video behind the screen, which washes the card out and leaves a
         // sheen across its top. A dialog window cannot blur across windows, so the card stays flat and opaque.
         presentation = TangemModal.Presentation.Dialog,
@@ -28,7 +30,7 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig) {
                 windowInsets = WindowInsets(0.dp),
                 fadeEnabled = false,
                 onBack = null,
-                onClose = config.onDismissRequest,
+                onClose = if (isCreatingWallet) null else config.onDismissRequest,
             )
         },
     ) { content ->
