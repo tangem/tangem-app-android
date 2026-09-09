@@ -278,6 +278,14 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    // The banner's buttons carry no tag of their own, and no matcher binds one to its own banner, so the
+    // CTA is told apart by its label — sound while no other Main banner offers a 'Learn more'.
+    val getTangemPayBannerLearnMoreButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.common_learn_more)))
+        useUnmergedTree = true
+    }
+
     val promoBannerButton: KNode = child {
         hasText(getResourceString(CoreResR.string.wallet_promo_banner_button_title))
         hasClickAction()
