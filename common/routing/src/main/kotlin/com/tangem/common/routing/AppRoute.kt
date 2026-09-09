@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.AddressBookOpenMode
+import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
@@ -127,7 +128,10 @@ sealed class AppRoute(val path: String) : Route {
     data object AppSettings : AppRoute(path = "/app_settings")
 
     @Serializable
-    data object Collectibles : AppRoute(path = "/collectibles")
+    data class Collectibles(
+        val userWalletId: UserWalletId,
+        val startRoute: CollectiblesStartRoute,
+    ) : AppRoute(path = "/collectibles")
 
     /**
      * Reset to factory
