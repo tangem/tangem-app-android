@@ -19,6 +19,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -205,6 +206,10 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(PolymarketRoute.Positions(userWalletId = params.userWalletId, initialTab = tab))
     }
 
+    private fun openPosition(id: PolymarketPositionId) {
+        router.push(PolymarketRoute.PositionDetails(params.userWalletId, id))
+    }
+
     fun onLoadMore() {
         val feed = activeFeed.value ?: return
 
@@ -237,7 +242,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onResume() {
         isScreenResumed = true
-        positionsPreviewLoader.resume(modelScope, params.userWalletId)
+        positionsPreviewLoader.resume(modelScope, params.userWalletId, ::openPosition)
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
