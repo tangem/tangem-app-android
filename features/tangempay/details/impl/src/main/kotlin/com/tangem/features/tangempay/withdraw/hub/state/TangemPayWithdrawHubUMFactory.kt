@@ -6,12 +6,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.ActionCardUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
+import com.tangem.features.tangempay.withdraw.toShortName
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
@@ -69,15 +69,6 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
             name = name,
             accountNumber = account.details.accountNumber,
         )
-    }
-
-    /** Figma shows individuals as "First L." and businesses by their registered name. */
-    private fun Beneficiary.toShortName(): String = when (this) {
-        is Beneficiary.Individual -> {
-            val lastInitial = lastName.trim().firstOrNull()?.uppercaseChar()
-            if (lastInitial == null) firstName else "$firstName $lastInitial."
-        }
-        is Beneficiary.Business -> name
     }
 
     data class Callbacks(
