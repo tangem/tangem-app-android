@@ -95,8 +95,6 @@ object TangemPayTestTags {
     const val VIEW_PIN_CHANGE_BUTTON = "TANGEM_PAY_VIEW_PIN_CHANGE_BUTTON"
 
     // PIN success screen
-    const val PIN_SUCCESS_TITLE = "TANGEM_PAY_PIN_SUCCESS_TITLE"
-    const val PIN_SUCCESS_DESCRIPTION = "TANGEM_PAY_PIN_SUCCESS_DESCRIPTION"
     const val PIN_DONE_BUTTON = "TANGEM_PAY_PIN_DONE_BUTTON"
 
     // Daily limit block (card page)
@@ -108,7 +106,6 @@ object TangemPayTestTags {
     const val DAILY_LIMIT_SET_BUTTON = "TANGEM_PAY_DAILY_LIMIT_SET_BUTTON"
 
     // Daily limit success screen
-    const val DAILY_LIMIT_SUCCESS_TITLE = "TANGEM_PAY_DAILY_LIMIT_SUCCESS_TITLE"
     const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
 
     // Bank transfer (virtual account) deposit bottom sheet
@@ -116,7 +113,6 @@ object TangemPayTestTags {
     const val VA_DEPOSIT_FEE_ERROR_BANNER = "TANGEM_PAY_VA_DEPOSIT_FEE_ERROR_BANNER"
 
     // Virtual account order success screen
-    const val VA_DEPOSIT_SUCCESS_TITLE = "TANGEM_PAY_VA_DEPOSIT_SUCCESS_TITLE"
     const val VA_DEPOSIT_SUCCESS_CLOSE_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SUCCESS_CLOSE_BUTTON"
 
     fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
