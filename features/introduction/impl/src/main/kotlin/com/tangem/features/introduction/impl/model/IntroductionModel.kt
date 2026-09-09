@@ -80,6 +80,7 @@ internal class IntroductionModel @Inject constructor(
 
     /** An ended story kept on screen because navigation is covering it; dismissed on the next resume. */
     private var isStoryDismissPendingResume = false
+    private var isVideoRestartPendingResume = false
     private var isCreatingMobileWallet = false
     private var hasRenderedFrame = false
 
@@ -117,7 +118,7 @@ internal class IntroductionModel @Inject constructor(
     init {
         reportScreenOpened()
         if (params.launchMode == InitScreenLaunchMode.WithCardScan) {
-            launchCardScan(onNavigatedAway = {}, onFailed = {})
+            launchCardScan(onNavigatedAway = ::onTerminalFlowEntered, onFailed = {})
         }
     }
 
@@ -170,6 +171,10 @@ internal class IntroductionModel @Inject constructor(
             isStoryShown = false
             storiesNavigation.dismiss()
         }
+        if (isRunning && isVideoRestartPendingResume) {
+            isVideoRestartPendingResume = false
+            videoPlayer.restart()
+        }
         applyVideoRunning()
     }
 
@@ -185,17 +190,13 @@ internal class IntroductionModel @Inject constructor(
     private fun onCreateWalletClick() {
         if (isAnySheetShown()) return
         analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet())
-        reportCreateWalletSheetOpened()
-        uiState.update { it.copy(bottomSheetConfig = createWalletBottomSheetConfig()) }
-    }
-
-    private fun reportCreateWalletSheetOpened() {
         modelScope.launch {
             val referralId = referral.readId()
             analyticsEventHandler.send(
                 IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = referralId),
             )
         }
+        uiState.update { it.copy(bottomSheetConfig = createWalletBottomSheetConfig()) }
     }
 
     // TODO [REDACTED_TASK_KEY]: the icons of both sheets are placeholders until the design hands over the assets.
@@ -260,15 +261,13 @@ internal class IntroductionModel @Inject constructor(
      */
     fun onStoryResult(result: StoriesV2Result) {
         when (result) {
-            // A looping story reports neither on its own; both mean the viewer left it alone. Unavailable draws
-            // no frame at all, so as far as the viewer can tell they never left the sheet.
+            // A looping story reports neither on its own; both mean the viewer left it alone.
             StoriesV2Result.Dismissed,
             StoriesV2Result.Completed,
             is StoriesV2Result.Unavailable,
             -> {
                 pendingScanStoryAction = null
                 closeStory()
-                reopenCreateWalletSheet()
             }
             // A scan that navigated away is covered by the next screen: tearing the player down now would flash
             // the welcome screen behind the closing NFC sheet, so that teardown waits for the next resume.
@@ -312,18 +311,6 @@ internal class IntroductionModel @Inject constructor(
         }
     }
 
-    /**
-     * The screen is torn down while the story is up, so the modal's own remembered state is gone and the flag is
-     * enough to replay its open animation; the config still holds the callbacks bound to this model.
-     */
-    private fun reopenCreateWalletSheet() {
-        reportCreateWalletSheetOpened()
-        uiState.update { state ->
-            val restored = state.bottomSheetConfig?.copy(isShown = true) ?: createWalletBottomSheetConfig()
-            state.copy(bottomSheetConfig = restored)
-        }
-    }
-
     private fun startCardScan(action: StoriesV2PendingAction) {
         pendingScanStoryAction = action
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
@@ -344,13 +331,13 @@ internal class IntroductionModel @Inject constructor(
         // The closing analytics must beat the navigation that kills the tree.
         pendingScanStoryAction?.end()
         pendingScanStoryAction = null
+        onTerminalFlowEntered()
     }
 
     private fun onScanFailed() {
         val action = pendingScanStoryAction
         pendingScanStoryAction = null
-        // Without a story to resume, the viewer closed it while the scan ran: the sheet is where they act from now.
-        if (action != null) action.resume() else reopenCreateWalletSheet()
+        action?.resume()
     }
 
     private fun onCreateSeedPhraseWalletClick() {
@@ -409,7 +396,11 @@ internal class IntroductionModel @Inject constructor(
 
     /** The sheet row reports itself as `Button - Sign In With Card`; `Button - Scan Card` belongs to the story. */
     override fun scanCardForExistingWallet() {
-        launchCardScan(onNavigatedAway = {}, onFailed = {})
+        launchCardScan(onNavigatedAway = ::onTerminalFlowEntered, onFailed = {})
+    }
+
+    override fun onTerminalFlowEntered() {
+        isVideoRestartPendingResume = true
     }
 
     override fun ensureHotWalletCreationSupported(): Boolean {
