@@ -9,7 +9,13 @@ android {
 }
 
 dependencies {
+    /** Project - Common */
+    api(projects.common.routing)
+
     /** Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+
+    /** Project - Domain */
+    api(projects.domain.models)
 }
