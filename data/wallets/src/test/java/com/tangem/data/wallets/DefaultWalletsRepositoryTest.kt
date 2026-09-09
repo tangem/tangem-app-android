@@ -11,7 +11,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -41,8 +41,11 @@ class DefaultWalletsRepositoryTest {
         preferencesDataStore = preferencesDataStore,
     )
 
+    private val storePreferencesKeys = StorePreferencesKeys()
+
     private val repository = DefaultWalletsRepository(
         appPreferencesStore = appPreferenceStore,
+        storePreferencesKeys = storePreferencesKeys,
         tangemTechApi = tangemTechApi,
         userWalletsListRepository = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -67,7 +70,7 @@ class DefaultWalletsRepositoryTest {
             val expectedPreferences = """{"${testWalletId.stringValue}":true}"""
             val preferences = mockk<Preferences>()
             coEvery { preferencesDataStore.data } returns flowOf(preferences)
-            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns expectedPreferences
+            coEvery { preferences[storePreferencesKeys.notificationsEnabledStatesKey] } returns expectedPreferences
 
             // Act
             val result = repository.isNotificationsEnabled(testWalletId)
@@ -81,7 +84,7 @@ class DefaultWalletsRepositoryTest {
             // Arrange
             val preferences = mockk<Preferences>()
             coEvery { preferencesDataStore.data } returns flowOf(preferences)
-            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+            coEvery { preferences[storePreferencesKeys.notificationsEnabledStatesKey] } returns "{}"
 
             // Act
             val result = repository.isNotificationsEnabled(testWalletId)
@@ -100,7 +103,7 @@ class DefaultWalletsRepositoryTest {
             // Arrange
             val preferences = mockk<Preferences>()
             coEvery { preferencesDataStore.data } returns flowOf(preferences)
-            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+            coEvery { preferences[storePreferencesKeys.notificationsEnabledStatesKey] } returns "{}"
             coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
             // Act
@@ -115,7 +118,7 @@ class DefaultWalletsRepositoryTest {
             // Arrange
             val preferences = mockk<Preferences>()
             coEvery { preferencesDataStore.data } returns flowOf(preferences)
-            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+            coEvery { preferences[storePreferencesKeys.notificationsEnabledStatesKey] } returns "{}"
             coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
             // Act

@@ -2,6 +2,7 @@ package com.tangem.datasource.local.preferences.utils
 
 import android.content.Context
 import androidx.datastore.core.DataMigration
+import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.Preferences
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.datasource.local.preferences.migration.SharedPreferencesKeyMigrationFactory
@@ -20,6 +21,14 @@ internal class DefaultSharedPreferencesKeyMigrationFactory @Inject constructor(
             legacyKeyName = legacyKeyName,
             keyName = keyName,
             analyticsExceptionHandler = analyticsExceptionHandler,
+        )
+    }
+
+    override fun createBulk(legacyPrefsName: String, keyNames: Set<String>): DataMigration<Preferences> {
+        return SharedPreferencesMigration(
+            context = context,
+            sharedPreferencesName = legacyPrefsName,
+            keysToMigrate = keyNames,
         )
     }
 }
