@@ -73,5 +73,4 @@ dependencies {
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.serialization.core)
     testImplementation(projects.test.core)
-    testImplementation(projects.domain.wallets.models)
 }
