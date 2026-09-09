@@ -189,6 +189,7 @@ internal class AccountDetailsModel @Inject constructor(
             )
         }
         return AccountDetailsUM(
+            title = resourceReference(R.string.account_details_title),
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
@@ -202,6 +203,7 @@ internal class AccountDetailsModel @Inject constructor(
     private fun buildJointUI(account: Account.Joint, status: AccountStatus.Joint?): AccountDetailsUM {
         val isActive = status?.value is JointAccountStatusValue.Active
         return AccountDetailsUM(
+            title = resourceReference(R.string.common_joint_account),
             accountName = account.accountName.toUM().value,
             accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
