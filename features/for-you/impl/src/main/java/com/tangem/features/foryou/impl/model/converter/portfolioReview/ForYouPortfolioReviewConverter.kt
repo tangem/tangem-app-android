@@ -320,7 +320,9 @@ internal class ForYouPortfolioReviewConverter(
                     ),
                 ),
                 bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
-                    text = stringReference(otherAssetsBalance.toForYouPercent(totalFiatBalance).format { percent() }),
+                    text = stringReference(
+                        otherAssetsBalance.toForYouPercent(totalFiatBalance).format { percent(canBeLower = true) },
+                    ),
                 ),
                 onItemClick = null,
                 onItemLongClick = null,
