@@ -4,10 +4,8 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.format.bigdecimal.price
-import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.GetTopFiveMarketTokenUseCase
+import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
@@ -22,19 +20,27 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 /**
- * Reuses [GetTopFiveMarketTokenUseCase] (`firstBatchSize = 5`, `nextBatchSize = 0`) rather than a
- * dedicated endpoint, the same way the legacy feed builds its top-tokens rail.
+ * The tab's Featured rail: the reserved `featured-assets` category rendered in full, in the order the
+ * backend curates.
+ *
+ * [TokenMarketListConfig.Order.ByCategory] is what surfaces that curation — any other order re-sorts the
+ * bucket and discards it. The rail is one batch ([GetMarketsTokenListFlowUseCase.BatchFlowType.Featured])
+ * and never pages.
+ *
+ * Only [RwaListRequest.interval] is read from [request]; the rail deliberately ignores the tab's
+ * category/sector filter, which scopes the list below it. A changed interval re-maps the loaded tokens
+ * instead of reloading, because a token carries the change percent for every interval at once.
  */
 internal class RwaFeaturedAssetsManager(
-    getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
+    getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
+    private val request: StateFlow<RwaListRequest>,
     private val appCurrency: StateFlow<AppCurrency>,
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
@@ -42,27 +48,29 @@ internal class RwaFeaturedAssetsManager(
 
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
 
-    private val batchFlow = getTopFiveMarketTokenUseCase(
+    private val batchFlow = getMarketsTokenListFlowUseCase(
         batchingContext = TokenListBatchingContext(
             actionsFlow = actionsFlow,
             coroutineScope = modelScope,
         ),
-        order = TokenMarketListConfig.Order.ByRating,
+        batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Featured,
     )
 
-    val state: StateFlow<RwaFeaturedUM> = batchFlow.state
-        .map { batchState ->
-            val tokens = batchState.data.flatMap { it.data }
+    val state: StateFlow<RwaFeaturedUM> = combine(
+        flow = batchFlow.state,
+        flow2 = request.map { it.interval }.distinctUntilChanged(),
+    ) { batchState, interval ->
+        val tokens = batchState.data.flatMap { it.data }
 
-            when {
-                tokens.isNotEmpty() -> RwaFeaturedUM.Content(
-                    assets = tokens.map(::toFeaturedAsset).toImmutableList(),
-                )
-                batchState.status is PaginationStatus.InitialLoadingError -> RwaFeaturedUM.Empty
-                batchState.status is PaginationStatus.EndOfPagination -> RwaFeaturedUM.Empty
-                else -> RwaFeaturedUM.Loading
-            }
+        when {
+            tokens.isNotEmpty() -> RwaFeaturedUM.Content(
+                assets = tokens.map { token -> toFeaturedAsset(token, interval) }.toImmutableList(),
+            )
+            batchState.status is PaginationStatus.InitialLoadingError -> RwaFeaturedUM.Empty
+            batchState.status is PaginationStatus.EndOfPagination -> RwaFeaturedUM.Empty
+            else -> RwaFeaturedUM.Loading
         }
+    }
         .distinctUntilChanged()
         .stateIn(
             scope = modelScope,
@@ -77,8 +85,8 @@ internal class RwaFeaturedAssetsManager(
                     requestParams = TokenMarketListConfig(
                         fiatPriceCurrency = appCurrency.value.code,
                         searchText = null,
-                        priceChangeInterval = TokenMarketListConfig.Interval.H24,
-                        order = TokenMarketListConfig.Order.ByRating,
+                        priceChangeInterval = request.value.interval.toBatchRequestInterval(),
+                        order = TokenMarketListConfig.Order.ByCategory,
                         categoryId = categoryId,
                     ),
                 ),
@@ -86,36 +94,28 @@ internal class RwaFeaturedAssetsManager(
         }
     }
 
-    private fun toFeaturedAsset(token: TokenMarket): RwaFeaturedAssetUM {
-        val currency = appCurrency.value
-        val changePercent = token.tokenQuotesShort.h24ChangePercent
+    /** The rail's tokens are absent from the list's batches whenever the curation and the list scope differ. */
+    fun getTokenById(id: CryptoCurrency.RawID): TokenMarket? {
+        return batchFlow.state.value.data
+            .asSequence()
+            .flatMap { it.data }
+            .firstOrNull { it.id == id }
+    }
+
+    private fun toFeaturedAsset(token: TokenMarket, interval: RwaInterval): RwaFeaturedAssetUM {
+        val changePercent = token.trendChangePercent(interval)
 
         return RwaFeaturedAssetUM(
             id = token.id.value,
             iconUrl = token.imageUrlLarge,
             name = stringReference(token.name),
             ticker = stringReference(token.symbol),
-            price = stringReference(
-                token.tokenQuotesShort.currentPrice.format {
-                    fiat(fiatCurrencyCode = currency.code, fiatCurrencySymbol = currency.symbol).price()
-                },
-            ),
+            price = stringReference(token.formatPrice(appCurrency.value)),
             priceChange = TangemPriceChange.State(
                 value = stringReference(changePercent.format { percent() }),
-                direction = changePercent.toDirection(),
+                direction = changePercent.toPriceChangeDirection(),
             ),
             onClick = { onItemClick(token.id) },
         )
-    }
-
-    @Suppress("MagicNumber")
-    private fun BigDecimal?.toDirection(): TangemPriceChange.Direction {
-        val scaled = this?.setScale(4, RoundingMode.HALF_UP)
-        return when {
-            scaled == null -> TangemPriceChange.Direction.Neutral
-            scaled > BigDecimal.ZERO -> TangemPriceChange.Direction.Up
-            scaled < BigDecimal.ZERO -> TangemPriceChange.Direction.Down
-            else -> TangemPriceChange.Direction.Neutral
-        }
     }
 }
