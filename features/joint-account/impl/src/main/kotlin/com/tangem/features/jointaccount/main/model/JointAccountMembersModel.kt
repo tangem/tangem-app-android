@@ -195,6 +195,7 @@ internal class JointAccountMembersModel @Inject constructor(
             SnackbarMessage(
                 message = resourceReference(CoreUiR.string.joint_account_activated_snackbar),
                 startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
             ),
         )
         router.pop()

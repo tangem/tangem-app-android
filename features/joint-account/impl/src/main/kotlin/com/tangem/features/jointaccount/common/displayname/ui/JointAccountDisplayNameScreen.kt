@@ -17,6 +17,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -109,9 +110,15 @@ internal fun JointAccountDisplayNameScreen(
 private fun NameField(state: JointAccountDisplayNameUM, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+    }
+
+    // The card session takes over the screen: the field must not pull the keyboard back once the dialog closes
+    LaunchedEffect(state.isButtonLoading) {
+        if (state.isButtonLoading) keyboardController?.hide()
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -133,6 +140,7 @@ private fun NameField(state: JointAccountDisplayNameUM, modifier: Modifier = Mod
             textStyle = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
             singleLine = true,
+            readOnly = state.isButtonLoading,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             onValueChange = state.onNameChange,
         )
