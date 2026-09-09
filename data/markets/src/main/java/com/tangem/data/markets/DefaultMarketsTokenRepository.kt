@@ -344,6 +344,7 @@ internal class DefaultMarketsTokenRepository(
                 limit = request.limit,
                 timestamp = request.params.timestamp,
                 featured = request.params.featuredFilter.isFeatured,
+                search = request.params.searchText?.takeIf(String::isNotBlank),
             ).getOrThrow()
 
             BatchFetchResult.Success(
