@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -67,6 +68,10 @@ internal fun ResidencyListScreen(state: ResidencyListUM, modifier: Modifier = Mo
             when (content) {
                 is ResidencyListUM.Content.Loading -> LoadingContent(contentPadding = contentPadding)
                 is ResidencyListUM.Content.Empty -> EmptyContent(contentPadding = contentPadding)
+                is ResidencyListUM.Content.Error -> ErrorContent(
+                    content = content,
+                    contentPadding = contentPadding,
+                )
                 is ResidencyListUM.Content.Sections -> SectionsContent(
                     content = content,
                     contentPadding = contentPadding,
@@ -152,6 +157,7 @@ private fun ResidencyFlag(flagUrl: String, modifier: Modifier = Modifier) {
     )
 }
 
+// TODO v_rodionov: #[REDACTED_TASK_KEY]
 @Composable
 private fun LoadingContent(contentPadding: PaddingValues, modifier: Modifier = Modifier) {
     ProvideTangemShimmer {
@@ -179,6 +185,46 @@ private fun LoadingContent(contentPadding: PaddingValues, modifier: Modifier = M
                 )
             }
         }
+    }
+}
+
+// TODO v_rodionov: #[REDACTED_TASK_KEY]
+@Composable
+private fun ErrorContent(
+    content: ResidencyListUM.Content.Error,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            modifier = Modifier.padding(top = 32.dp),
+            text = stringResourceSafe(R.string.common_something_went_wrong),
+            textAlign = TextAlign.Center,
+            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography3.heading.small,
+        )
+        Text(
+            modifier = Modifier.padding(top = 8.dp),
+            text = stringResourceSafe(R.string.common_try_again_later),
+            textAlign = TextAlign.Center,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.subheading.medium,
+        )
+        TangemButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            variant = TangemButton.Variant.Primary,
+            text = resourceReference(R.string.common_retry),
+            onClick = content.onRetryClick,
+        )
     }
 }
 
@@ -233,6 +279,15 @@ private fun Preview_ResidencyListScreen_Countries() {
 private fun Preview_ResidencyListScreen_Loading() {
     TangemThemePreviewRedesign {
         ResidencyListScreen(state = previewState(content = ResidencyListUM.Content.Loading))
+    }
+}
+
+@Preview(widthDp = 402, heightDp = 874, showBackground = true)
+@Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ResidencyListScreen_Error() {
+    TangemThemePreviewRedesign {
+        ResidencyListScreen(state = previewState(content = ResidencyListUM.Content.Error(onRetryClick = {})))
     }
 }
 
