@@ -46,16 +46,16 @@ internal class PolymarketAddFundsModel @Inject constructor(
     }
 
     fun onDismiss() {
-        params.listener.onDismissAddFunds()
+        params.callback.onDismissAddFunds()
     }
 
     private fun onSwapClick() {
         analytics.send(PredictionAddFundsAnalyticsEvent.ButtonSwap())
-        params.listener.onSwapClick()
+        params.callback.onSwapClick()
     }
 
     private fun onReceiveClick() {
         analytics.send(PredictionAddFundsAnalyticsEvent.ButtonReceive())
-        params.listener.onReceiveClick()
+        params.callback.onReceiveClick()
     }
 }

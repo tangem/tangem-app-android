@@ -104,8 +104,6 @@ sealed class AnalyticsParam {
         Staking("Staking"),
         Earn("Earn"),
         ForYou("For You"),
-
-        // TODO [REDACTED_TASK_KEY]: confirm the wording with analytics before the sheet ships
         Predictions("Predictions"),
     }
 
