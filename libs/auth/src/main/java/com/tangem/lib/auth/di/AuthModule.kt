@@ -31,6 +31,8 @@ import com.tangem.lib.auth.nonce.internal.DisabledAuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.performance.FirebaseNonceRequestPerformanceTracker
+import com.tangem.lib.auth.performance.NonceRequestPerformanceTracker
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
 import com.tangem.lib.auth.session.internal.DefaultDeviceRegistrar
@@ -253,6 +255,7 @@ internal object AuthModule {
         attestationProvider: AttestationProvider,
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
+        nonceRequestPerformanceTracker: NonceRequestPerformanceTracker,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletRegistrar {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledWalletRegistrar
@@ -266,9 +269,15 @@ internal object AuthModule {
             attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
+            nonceRequestPerformanceTracker = nonceRequestPerformanceTracker,
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideNonceRequestPerformanceTracker(): NonceRequestPerformanceTracker =
+        FirebaseNonceRequestPerformanceTracker()
 
     @Provides
     @Singleton
