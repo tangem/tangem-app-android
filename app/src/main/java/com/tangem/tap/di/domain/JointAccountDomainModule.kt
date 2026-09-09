@@ -1,5 +1,7 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
@@ -17,6 +19,8 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCas
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
+import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.tap.domain.jointaccount.DefaultJointAccountSigner
 import dagger.Module
@@ -131,6 +135,34 @@ internal object JointAccountDomainModule {
             supplier = supplier,
             gasBuilder = gasBuilder,
             compositionChecker = compositionChecker,
+            networkReader = networkReader,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideJointOperationVerifier(): JointOperationVerifier = JointOperationVerifier()
+
+    @Provides
+    @Singleton
+    fun provideSignJointOperationUseCase(
+        repository: JointAccountRepository,
+        signer: JointOperationSigner,
+        fetcher: SingleJointAccountListFetcher,
+        supplier: SingleJointAccountListSupplier,
+        verifier: JointOperationVerifier,
+        blockaidGate: JointOperationBlockaidGate,
+        ownerAddressResolver: JointOwnerAddressResolver,
+        networkReader: JointNetworkReader,
+    ): SignJointOperationUseCase {
+        return SignJointOperationUseCase(
+            repository = repository,
+            signer = signer,
+            fetcher = fetcher,
+            supplier = supplier,
+            verifier = verifier,
+            blockaidGate = blockaidGate,
+            ownerAddressResolver = ownerAddressResolver,
             networkReader = networkReader,
         )
     }
