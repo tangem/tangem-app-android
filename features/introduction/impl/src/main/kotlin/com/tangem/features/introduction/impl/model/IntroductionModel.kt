@@ -190,7 +190,9 @@ internal class IntroductionModel @Inject constructor(
     private fun reportCreateWalletSheetOpened() {
         modelScope.launch {
             val referralId = referral.readId()
-            analyticsEventHandler.send(IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = referralId))
+            analyticsEventHandler.send(
+                IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = referralId),
+            )
         }
     }
 
