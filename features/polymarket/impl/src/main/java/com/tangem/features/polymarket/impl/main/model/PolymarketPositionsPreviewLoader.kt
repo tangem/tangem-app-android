@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
@@ -30,16 +31,20 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
 
     private val refreshJob = JobHolder()
     private var isResumed = false
-    private val converter = PolymarketPositionUMConverter()
 
-    fun resume(scope: CoroutineScope, userWalletId: UserWalletId) {
+    fun resume(
+        scope: CoroutineScope,
+        userWalletId: UserWalletId,
+        onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+    ) {
         isResumed = true
+        val converter = PolymarketPositionUMConverter(onPositionClick)
         scope.launch {
-            val onRetry = { if (isResumed) resume(scope, userWalletId) }
+            val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
             }
-            refresh(userWalletId, onRetry)
+            refresh(userWalletId, onRetry, converter)
         }.saveIn(refreshJob)
     }
 
@@ -48,7 +53,11 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
         refreshJob.cancel()
     }
 
-    private suspend fun refresh(userWalletId: UserWalletId, onRetry: () -> Unit) {
+    private suspend fun refresh(
+        userWalletId: UserWalletId,
+        onRetry: () -> Unit,
+        converter: PolymarketPositionUMConverter,
+    ) {
         val result = withContext(dispatchers.default) {
             val addresses = deriveAddresses.stored(userWalletId) ?: return@withContext null
             repository.getOpenPositions(addresses = addresses, limit = PREVIEW_SIZE, offset = 0)

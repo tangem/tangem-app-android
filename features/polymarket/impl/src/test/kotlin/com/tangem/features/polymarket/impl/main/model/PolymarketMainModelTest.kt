@@ -22,6 +22,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
@@ -1183,8 +1184,27 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(model.uiState.value.positions).isEqualTo(positions)
-        verify(exactly = 1) { positionsPreviewLoader.resume(any(), USER_WALLET_ID) }
+        verify(exactly = 1) { positionsPreviewLoader.resume(any(), USER_WALLET_ID, any()) }
         verify(exactly = 1) { positionsPreviewLoader.pause() }
+    }
+
+    @Test
+    fun `GIVEN main preview WHEN position tapped THEN details receives resolved wallet and outcome`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val click = slot<(PolymarketPositionId) -> Unit>()
+        model.onResume()
+        verify { positionsPreviewLoader.resume(any(), USER_WALLET_ID, capture(click)) }
+        val id = PolymarketPositionId("condition", "asset")
+
+        // Act
+        click.captured(id)
+        model.onPause()
+
+        // Assert
+        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(USER_WALLET_ID, id), any()) }
     }
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {

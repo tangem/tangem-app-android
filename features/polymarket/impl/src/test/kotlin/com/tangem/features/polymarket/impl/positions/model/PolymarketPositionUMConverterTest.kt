@@ -7,10 +7,15 @@ import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import io.mockk.mockk
+import io.mockk.verify
 import com.tangem.test.core.ProvideTestModels
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -77,6 +82,33 @@ internal class PolymarketPositionUMConverterTest {
         ResultModel(PolymarketPositionResult.SPLIT, "Split", TangemBadge.Status.Neutral),
         ResultModel(PolymarketPositionResult.UNKNOWN, "Unknown", TangemBadge.Status.Neutral),
     )
+
+    @ParameterizedTest
+    @EnumSource(PolymarketResolutionStatus::class)
+    fun `GIVEN resolution state WHEN card tapped THEN only unresolved positions open details`(status: PolymarketResolutionStatus) {
+        // Arrange
+        val onClick: (PolymarketPositionId) -> Unit = mockk(relaxed = true)
+        val position = createPolymarketPosition(resolutionStatus = status)
+
+        // Act
+        val card = PolymarketPositionUMConverter(onClick).convert(position)
+        card.onClick?.invoke()
+
+        // Assert
+        verify(exactly = if (status == PolymarketResolutionStatus.RESOLVED) 0 else 1) { onClick(position.id) }
+    }
+
+    @Test
+    fun `GIVEN finished history WHEN converted with callback THEN has no details action`() {
+        // Arrange
+        val onClick: (PolymarketPositionId) -> Unit = mockk(relaxed = true)
+
+        // Act
+        val card = PolymarketPositionUMConverter(onClick).convert(createClosedPolymarketPosition())
+
+        // Assert
+        assertThat(card.onClick).isNull()
+    }
 
     data class ResultModel(val result: PolymarketPositionResult, val text: String, val status: TangemBadge.Status)
 }
