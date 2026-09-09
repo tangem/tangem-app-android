@@ -91,6 +91,25 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
     ): ApiResponse<TangemPayEligibilityChannels>
 
+    @GET("v1/geo/countries")
+    suspend fun getGeoCountries(): ApiResponse<GeoCountriesResponse>
+
+    @GET("v1/geo/countries/{country_code}/regions")
+    suspend fun getGeoRegions(@Path("country_code") countryCode: String): ApiResponse<GeoRegionsResponse>
+
+    @GET("v1/eligibility/check")
+    suspend fun checkEligibilityForCountry(
+        @Query("product") product: String,
+        @Query("country") country: String,
+        @Query("region") region: String?,
+    ): ApiResponse<EligibilityCheckResponse>
+
+    @GET("v1/eligibility/check")
+    suspend fun checkEligibilityForCustomer(
+        @Header("Authorization") authHeader: String,
+        @Query("product") product: String,
+    ): ApiResponse<EligibilityCheckResponse>
+
     @POST("v1/waitlist")
     suspend fun joinWaitlist(
         @Header("Authorization") authHeader: String?,
