@@ -830,7 +830,7 @@
   <string name="hw_cloud_backup_completed_title">备份已完成</string>
   <string name="hw_cloud_backup_confirm_password_description">在 %s上，需要输入密码才能对您的种子助记词进行加密。</string>
   <string name="hw_cloud_backup_confirm_password_title">确认密码</string>
-  <string name="hw_cloud_backup_consent">我明白，如果我丢失或忘记了这个密码，我就无法访问我的加密货币了。</string>
+  <string name="hw_cloud_backup_consent">我明白Tangem无法恢复我的备份密码。一旦丢失该密码或Apple ID，我的备份就无法恢复了。如果没有我的恢复短语，我的加密资产也无法恢复。</string>
   <string name="hw_cloud_backup_delete_confirm_message">您将无法通过 %s恢复此钱包。您可以随时创建新的备份。</string>
   <string name="hw_cloud_backup_error_network">没有互联网连接。请检查网络连接，然后重试。</string>
   <string name="hw_cloud_backup_error_title">出现了一些问题</string>
@@ -2327,9 +2327,9 @@
   <string name="token_summary_ma_cross_description">MA Cross（均线交叉）是一项技术分析指标，用于比较资产价格的 50 日与 200 日简单移动平均线，显示资产当前处于长期趋势之上还是之下。\n\n判定标准：\n正面：50 日均线高于 200 日均线超过 0.5%\n中性：两者相差在 0.5% 以内\n负面：50 日均线低于 200 日均线超过 0.5%\n\n请注意：\n指标基于美元价格数据计算。\n无论所选时间范围如何，均采用 1 天周期。\n显示的是 50 日均线高于或低于 200 日均线的百分比。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
   <string name="token_summary_macd_description">MACD（指数平滑异同移动平均线）是一项技术分析指标，用于显示资产的动能正在增强还是减弱。\n\nMACD 柱状图 = MACD 线 − 信号线。MACD 线为价格的 12 周期与 26 周期指数移动平均线之差，信号线为 9 周期指数移动平均线。\n\n判定标准：\n正面：柱状图 &gt; 0 且上升，或刚刚上穿 0\n负面：柱状图 &lt; 0 且下降，或刚刚下穿 0\n中性：其他情形\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n显示的是最新的 MACD 柱状图数值。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
   <string name="token_summary_outlook_is_not_available">该代币的展望信息不可用</string>
-  <string name="token_summary_rsi_description">RSI（相对强弱指数）是一项技术分析指标，用于衡量近期价格变动的速度与幅度。它可以反映资产在过去 14 个周期内是否被过度买入或卖出，提示潜在的超买或超卖状态。RSI 越低，潜在上行空间越大。\n\n判定标准：\n正面 ≦30\n中性 30–70\n负面 ≧70\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_rsi_description">RSI（相对强弱指数）是一项技术分析指标，用于衡量近期价格变动的速度与幅度。它可以反映资产在过去 14 个周期内是否被过度买入或卖出，潜在的超买或超卖状态。RSI 越低，潜在上行空间越大。\n\n判定标准：\n正面 ≦30\n中性 30–70\n负面 ≧70\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
   <string name="token_summary_sentiment_description">Sentiment（市场情绪）以 0 至 100 的区间衡量社交媒体上关于该资产的讨论基调，并按互动量加权，分值越高表示讨论越正面。\n\n判定标准：\n正面 ≧70\n中性 31–69\n负面 ≦30\n\n数据来源：lunarcrush.com\n仅供参考，不构成投资建议。</string>
-  <string name="token_summary_title">市场指标 • beta</string>
+  <string name="token_summary_title">市场指标 • β</string>
   <string name="token_swap_changelly_promotion_message">从 2 月 %2$s-%3$s，兑换另一个代币的服务费为 %1$s 。</string>
   <string name="token_swap_changelly_promotion_title">用Changelly 兑换， %s 费用</string>
   <string name="token_swap_promotion_button">立即兑换</string>
