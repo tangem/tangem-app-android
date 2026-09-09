@@ -5,11 +5,13 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.cosign.CosignRequestRowUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import kotlinx.collections.immutable.ImmutableList
@@ -45,6 +47,13 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val rows: ImmutableList<InfoRowUM>,
         /** Warning plaque under the amount block (currently: the unlimited-approval "High Risk" notice). */
         val statusBanner: StatusBannerUM? = null,
+        /**
+         * Joint-account cosigning row ("Signatures X of Y"), shown while the transaction awaits member signatures.
+         * `null` for a non-joint transaction or once it has left the awaiting-signatures state.
+         */
+        val cosign: CosignRequestRowUM? = null,
+        /** Sign/Signed/Rejected action and its caption, shown together with [cosign]. `null` alongside it. */
+        val cosignAction: CosignActionUM? = null,
     ) : TxHistoryDetailsUM
 
     /**
@@ -102,6 +111,23 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class ProviderButtonUM(
         val text: TextReference,
+        val onClick: () -> Unit,
+    )
+
+    /**
+     * Bottom CTA of a joint-account pending transaction: "Sign" ([isEnabled] — mine to act on) or the terminal
+     * "Signed" / "Rejected" ( `!isEnabled` — reflects my own past action). [caption] explains the auto-send
+     * threshold ("Auto-sends once 3 of 5 members sign") or the outcome of a decline.
+     *
+     * @property isLoading `true` while the signing action (e.g. NFC card scan) is in flight.
+     * @property iconEnd Optional trailing glyph on the button (e.g. a scan/NFC icon on "Sign").
+     */
+    data class CosignActionUM(
+        val buttonText: TextReference,
+        val caption: TextReference,
+        val isEnabled: Boolean,
+        val isLoading: Boolean = false,
+        val iconEnd: TangemIconUM? = null,
         val onClick: () -> Unit,
     )
 
@@ -276,6 +302,10 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * Shared bottom-sheet top bar. The icon glyph and [title] text come from the transaction type; [status] drives
      * the three visual states (in-progress / confirmed / failed) — recoloring the icon circle and the title.
      *
+     * [subtitle] is normally the transaction date; [subtitleStyle] recolors it independently of [status] — e.g. a
+     * joint-account transaction awaiting member signatures shows "Pending" there instead of a date, in
+     * [SubtitleStyle.Warning], regardless of the on-chain [status].
+     *
      * [menu] is the header's overflow context-menu content; empty leaves the trailing menu button inert.
      */
     data class HeaderUM(
@@ -283,9 +313,14 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val status: TransactionItemUM.Content.Status,
         val title: TextReference,
         val subtitle: TextReference,
+        val subtitleStyle: SubtitleStyle = SubtitleStyle.Default,
         val menu: ImmutableList<MenuItemUM> = persistentListOf(),
         val debugModel: TxHistoryInfo? = null,
-    )
+    ) {
+
+        /** Visual identity of [HeaderUM.subtitle], independent of the on-chain [HeaderUM.status]. */
+        enum class SubtitleStyle { Default, Warning }
+    }
 
     /**
      * One row of the header's overflow context menu: a leading [icon] glyph and a [title] label. [isDestructive]

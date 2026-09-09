@@ -82,7 +82,7 @@ internal fun TxHistoryDetailsTopNavigation(
             Text(
                 text = header.subtitle.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
+                color = header.subtitleStyle.color,
             )
         },
     )
@@ -250,6 +250,12 @@ private val Status.titleColor: Color
         is Status.Confirmed -> TangemTheme.colors3.text.primary
         is Status.Unconfirmed -> TangemTheme.colors3.text.brand
         is Status.Failed -> TangemTheme.colors3.text.status.error
+    }
+
+private val TxHistoryDetailsUM.HeaderUM.SubtitleStyle.color: Color
+    @Composable get() = when (this) {
+        TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Default -> TangemTheme.colors3.text.secondary
+        TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning -> TangemTheme.colors3.text.status.warning
     }
 
 // endregion
