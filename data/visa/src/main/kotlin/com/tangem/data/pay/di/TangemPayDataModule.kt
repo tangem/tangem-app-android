@@ -20,6 +20,7 @@ import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -529,8 +530,11 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideBankOfframpRecentsStore(prefs: AppPreferencesStore): BankOfframpRecentsStore {
-            return DefaultBankOfframpRecentsStore(prefs = prefs)
+        fun provideBankOfframpRecentsStore(
+            prefs: AppPreferencesStore,
+            spendPreferencesKeys: SpendPreferencesKeys,
+        ): BankOfframpRecentsStore {
+            return DefaultBankOfframpRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
         }
 
         @Provides
