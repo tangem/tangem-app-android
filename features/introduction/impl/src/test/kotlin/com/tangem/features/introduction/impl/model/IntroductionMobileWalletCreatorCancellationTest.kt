@@ -1,6 +1,5 @@
 package com.tangem.features.introduction.impl.model
 
-import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -17,7 +16,6 @@ import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
-import com.tangem.test.core.assertEitherLeft
 import com.tangem.utils.coroutines.AppCoroutineScope
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -28,7 +26,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
