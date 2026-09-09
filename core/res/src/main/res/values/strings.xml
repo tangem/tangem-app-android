@@ -41,6 +41,7 @@
     <item quantity="other">%d people</item>
   </plurals>
   <string name="account_details_joint_members_progress">%1$s/%2$s people</string>
+  <string name="account_details_joint_networks_info">Text about networks.</string>
   <string name="account_details_joint_pending_description">The account is still being populated with members</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
@@ -443,6 +444,7 @@
     <item>December</item>
   </string-array>
   <string name="common_more">More</string>
+  <string name="common_more_info">More info</string>
   <string name="common_negative">Negative</string>
   <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>
