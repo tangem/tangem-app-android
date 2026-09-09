@@ -47,6 +47,7 @@ dependencies {
     api(projects.domain.wallets)
     implementation(projects.domain.account)
     implementation(projects.domain.addressBook)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.express.models)
     implementation(projects.domain.onramp.models)
