@@ -891,6 +891,7 @@
   <string name="hw_cloud_backup_confirm_password_description">A password is required to encrypt your recovery phrase on %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirm password</string>
   <string name="hw_cloud_backup_consent">I understand Tangem cannot recover my backup password. Losing it, or losing my Apple ID, means my backup is unrecoverable. Without my recovery phrase, my crypto is unrecoverable too.</string>
+  <string name="hw_cloud_backup_consent_v2">I understand Tangem cannot recover my backup password. Losing it, or losing my %1$s, means my backup is unrecoverable. Without my recovery phrase, my crypto is unrecoverable too.</string>
   <string name="hw_cloud_backup_delete_confirm_message">You won\'t be able to restore this wallet from %s. You can create a new backup anytime.</string>
   <string name="hw_cloud_backup_error_network">No internet connection. Check your network and try again.</string>
   <string name="hw_cloud_backup_error_title">Something went wrong</string>
@@ -959,6 +960,7 @@
   <string name="hw_import_restore_cloud_backup">Restore %s backup</string>
   <string name="hw_import_restore_cloud_backup_not_found">%s backup not found</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
+  <string name="hw_import_seed_phrase_passphrase_too_long">The passphrase must be at most %d bytes long.</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_remove_wallet_action_forget_title">Forget wallet</string>
   <string name="hw_remove_wallet_attention_description">This wallet will be permanently removed from your device</string>
@@ -985,6 +987,8 @@
   <string name="hw_upgrade_backup_title">Same Addresses</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can\'t upgrade. A wallet already exists on this device.</string>
   <string name="hw_upgrade_error_card_key_import">Pick another device. This one can\'t be used for the upgrade.</string>
+  <string name="hw_upgrade_error_passphrase_message">Your passphrase isn\'t compatible with hardware wallets — they would generate a different set of addresses. This wallet can only be used in the app.</string>
+  <string name="hw_upgrade_error_passphrase_title">Can\'t upgrade this wallet</string>
   <string name="hw_upgrade_error_wallet2_card_required">An error occurred during the operation.</string>
   <string name="hw_upgrade_funds_access_description">Your funds remain safe and fully accessible during the process</string>
   <string name="hw_upgrade_funds_access_title">Access to funds</string>
@@ -1027,6 +1031,10 @@
   <string name="introduction_import_icloud_restore">Restore iCloud backup</string>
   <string name="introduction_import_icloud_retry">Retry iCloud backup</string>
   <string name="introduction_legal">By continuing, you agree with %1$s and %2$s</string>
+  <string name="introduction_scene_three_subtitle">Earn up to 4% cashback in US dollars</string>
+  <string name="introduction_scene_three_title">Pay anywhere</string>
+  <string name="introduction_scene_two_subtitle">Zero fees to buy crypto and stocks</string>
+  <string name="introduction_scene_two_title">Grow your portfolio</string>
   <string name="introduction_stories_button_primary">Scan your wallet</string>
   <string name="introduction_stories_button_secondary">Learn more or buy</string>
   <string name="introduction_stories_four_subtitle">Join the self-custody wallet used worldwide</string>
@@ -1093,6 +1101,7 @@
   <string name="joint_account_members_title">Members</string>
   <string name="joint_account_members_total_subtitle">Max %1$s people, including you</string>
   <string name="joint_account_members_total_title">Total members</string>
+  <string name="joint_account_more_info">More info</string>
   <string name="joint_account_name_display_name">Display name</string>
   <string name="joint_account_name_fill_validation_error">Unsupported characters</string>
   <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you</string>
@@ -1111,7 +1120,17 @@
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one.</string>
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
+  <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
+  <string name="joint_operation_auto_sends_footer">Auto-sends once %1$s of %2$s members sign</string>
+  <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
+  <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>
+  <string name="joint_operation_created_at">Created at %s</string>
+  <string name="joint_operation_declined">Declined</string>
+  <string name="joint_operation_signatures_progress">Signatures %1$s of %2$s</string>
+  <string name="joint_operation_signed_at">Signed at %s</string>
+  <string name="joint_operation_signers_title">Signers</string>
+  <string name="joint_operation_waiting_to_sign">Waiting to sign</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Not enough balance</string>
@@ -1162,11 +1181,12 @@
   <string name="market_chart_can_not_load_data">Can’t load data</string>
   <string name="market_chart_no_amount">You don’t have any tokens with amount</string>
   <string name="market_chart_top_holding">%s of your portfolio</string>
-  <string name="market_crypto_total_cap_altcoin_index_info">The Altcoin Season Index is a daily market metric from 0 to 100 that measures whether money is moving into Bitcoin or altcoins. It tracks if 75% of the top altcoins beat Bitcoin over 90 days to signal an \"Altcoin Season\"</string>
+  <string name="market_crypto_total_cap_altcoin_index_info">The Altcoin Season Index shows whether money is moving into Bitcoin or into altcoins. It takes the top 100 coins on CoinMarketCap - excluding stablecoins and wrapped tokens - and compares each one’s rolling 90-day performance against Bitcoin.\n\nThe share of those coins that outperformed Bitcoin is scaled to a value from 1 to 100 and refreshed daily.\n\nSource: coinmarketcap.com\nFor reference only. Not investment advice.</string>
   <string name="market_crypto_total_cap_altcoin_index_title">Altcoin index</string>
-  <string name="market_crypto_total_cap_fear_greed_info">The CMC Fear and Greed Index is a proprietary tool developed by CoinMarketCap that measures the prevailing sentiment in the cryptocurrency market. This index ranges from 0 to 100, where a lower value indicates extreme fear, and a higher value indicates extreme greed.</string>
+  <string name="market_crypto_total_cap_fear_greed_info">The Fear and Greed Index measures the prevailing sentiment in the crypto market on a scale of 0 to 100. It combines price and trading data for the most popular coins with CoinMarketCap’s own user behaviour data.\n\nLow values mean investors are fearful and may have sold off more than the fundamentals justify. High values mean investors are greedy, a state that has often preceded a market correction.\n\nSource: coinmarketcap.com\nFor reference only. Not investment advice.</string>
   <string name="market_crypto_total_cap_fear_greed_title_full">Fear and greed</string>
   <string name="market_crypto_total_cap_fear_greed_title_short">Fear &amp; greed</string>
+  <string name="market_crypto_total_cap_info">Crypto market capitalization is the total dollar value of all cryptocurrencies, calculated by multiplying their current price by circulating supply.\nSource: coinmarketcap.com</string>
   <string name="market_crypto_total_market_cap_title">Total market cap</string>
   <string name="market_failed_to_load_filters">Failed to load filter. \nTap to reload</string>
   <string name="markets_about_coin_header">About coin</string>
@@ -2301,6 +2321,8 @@
   <string name="tangempay_bank_transfer_success_title">Preparing your banking details</string>
   <string name="tangempay_bank_transfer_swift_warning">SWIFT transfers are not accepted and will be returned</string>
   <string name="tangempay_bank_transfer_terms_of_use">Terms of Service</string>
+  <string name="tangempay_campaign_cashback_description">For all purchases. Paid in USDC — not in points or obscure tokens</string>
+  <string name="tangempay_campaign_cashback_title">Cashback up to 2%</string>
   <string name="tangempay_campaign_error_description">Something went wrong. Please try again</string>
   <string name="tangempay_campaign_error_title">Couldn’t load page</string>
   <string name="tangempay_campaign_fees_description">There are no additional fees for purchases</string>
@@ -2310,6 +2332,7 @@
   <string name="tangempay_campaign_issue_time">Issue time</string>
   <string name="tangempay_campaign_landing_title">Get your special Tangem Pay Card</string>
   <string name="tangempay_campaign_pay_description">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_campaign_spend_description">With digital card via Apple Pay or Google Pay, no additional fees for purchases</string>
   <string name="tangempay_campaign_unavailable_description">You can order a usual one</string>
   <string name="tangempay_campaign_unavailable_title">Unable to get special card</string>
   <string name="tangempay_cancel_kyc">Hide verification from the main screen</string>
@@ -2447,6 +2470,7 @@
   <string name="tangempay_choose_network_row_loading">Preparing address…</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_common_card">Card</string>
+  <string name="tangempay_common_error_list_loading">Failed to load the list.\nTap to reload</string>
   <string name="tangempay_common_error_loading">—</string>
   <string name="tangempay_current_plan_active_till_notification">Your %1$s plan is active till %2$s, then we will move you to %3$s. %4$s won\'t be charged.</string>
   <string name="tangempay_current_plan_awaiting_deposit_notification">We are in process of moving you to %s plan and awaiting payment for plan fee</string>
