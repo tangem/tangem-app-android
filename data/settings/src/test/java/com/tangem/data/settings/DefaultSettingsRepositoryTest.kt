@@ -9,7 +9,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.GeoResponse
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.SettingsFeatureToggles
@@ -197,8 +197,11 @@ internal class DefaultSettingsRepositoryTest {
         }
     }
 
+    private val storePreferencesKeys = StorePreferencesKeys()
+
     private fun createRepository(preferencesStore: AppPreferencesStore = appPreferencesStore) = DefaultSettingsRepository(
         appPreferencesStore = preferencesStore,
+        storePreferencesKeys = storePreferencesKeys,
         appLogsStore = appLogsStore,
         tangemTechApi = tangemTechApi,
         settingsFeatureToggles = settingsFeatureToggles,
@@ -287,6 +290,6 @@ internal class DefaultSettingsRepositoryTest {
     )
 
     private companion object {
-        val GEO_COUNTRY_KEY = PreferencesKeys.GEO_USER_COUNTRY_CODE_KEY
+        val GEO_COUNTRY_KEY = StorePreferencesKeys().geoUserCountryCodeKey
     }
 }
