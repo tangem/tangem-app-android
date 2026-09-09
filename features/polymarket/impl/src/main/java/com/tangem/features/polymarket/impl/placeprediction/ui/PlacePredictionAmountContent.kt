@@ -31,6 +31,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
@@ -96,7 +97,7 @@ internal fun PlacePredictionAmountContent(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
             )
-            TangemSurface(color = TangemTheme.colors3.bg.secondary) {
+            TangemSurface(color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
                 PredictionSlippageRow(slippage = state.slippage, onClick = intents::onSlippageClick)
             }
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
