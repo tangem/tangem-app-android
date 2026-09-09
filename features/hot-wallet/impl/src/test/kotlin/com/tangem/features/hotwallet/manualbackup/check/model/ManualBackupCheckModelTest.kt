@@ -48,7 +48,8 @@ internal class ManualBackupCheckModelTest {
     private val mnemonic: Mnemonic = mockk {
         every { mnemonicComponents } returns words
     }
-    private val privateInfo = SeedPhrasePrivateInfo(mnemonic = mnemonic, passphrase = null)
+    private val privateInfo =
+        SeedPhrasePrivateInfo(mnemonic = mnemonic, passphrase = null, shouldNormalizePassphrase = true)
 
     @BeforeEach
     fun setUp() {

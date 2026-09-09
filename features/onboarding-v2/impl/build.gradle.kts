@@ -60,6 +60,7 @@ dependencies {
     api(tangemDeps.card.core)
     api(projects.libs.tangemSdkApi)
     implementation(tangemDeps.hot.core)
+    implementation(tangemDeps.hot.android)
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }

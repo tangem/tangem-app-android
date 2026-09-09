@@ -958,6 +958,7 @@
   <string name="hw_import_restore_cloud_backup">Restore %s backup</string>
   <string name="hw_import_restore_cloud_backup_not_found">%s backup not found</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
+  <string name="hw_import_seed_phrase_passphrase_too_long">The passphrase must be at most %d bytes long.</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_remove_wallet_action_forget_title">Forget wallet</string>
   <string name="hw_remove_wallet_attention_description">This wallet will be permanently removed from your device</string>
@@ -984,6 +985,8 @@
   <string name="hw_upgrade_backup_title">Same Addresses</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can\'t upgrade. A wallet already exists on this device.</string>
   <string name="hw_upgrade_error_card_key_import">Pick another device. This one can\'t be used for the upgrade.</string>
+  <string name="hw_upgrade_error_passphrase_message">Your passphrase isn\'t compatible with hardware wallets — they would generate a different set of addresses. This wallet can only be used in the app.</string>
+  <string name="hw_upgrade_error_passphrase_title">Can\'t upgrade this wallet</string>
   <string name="hw_upgrade_error_wallet2_card_required">An error occurred during the operation.</string>
   <string name="hw_upgrade_funds_access_description">Your funds remain safe and fully accessible during the process</string>
   <string name="hw_upgrade_funds_access_title">Access to funds</string>
@@ -1050,6 +1053,7 @@
   <string name="joint_account_invite_load_failed_subtitle">Failed to load invite page.\nTap to reload</string>
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <string name="joint_account_invite_members_member">Member</string>
   <string name="joint_account_invite_members_member_info">Member info</string>
   <string name="joint_account_invite_members_new_member">New member</string>
   <string name="joint_account_invite_members_not_invited">Not invited</string>
@@ -1091,6 +1095,7 @@
   <string name="joint_account_members_title">Members</string>
   <string name="joint_account_members_total_subtitle">Max %1$s people, including you</string>
   <string name="joint_account_members_total_title">Total members</string>
+  <string name="joint_account_more_info">More info</string>
   <string name="joint_account_name_display_name">Display name</string>
   <string name="joint_account_name_fill_validation_error">Unsupported characters</string>
   <string name="joint_account_name_hint">Enter your name and surname, or a signer type, so the other members can identify you</string>
@@ -1109,6 +1114,7 @@
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one.</string>
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
+  <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
