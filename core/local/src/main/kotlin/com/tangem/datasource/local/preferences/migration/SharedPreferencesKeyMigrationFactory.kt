@@ -18,4 +18,10 @@ import androidx.datastore.preferences.core.Preferences
 interface SharedPreferencesKeyMigrationFactory {
 
     fun create(legacyPrefsName: String, legacyKeyName: String, keyName: String): DataMigration<Preferences>
+
+    /**
+     * Creates a [DataMigration] that moves the given [keyNames] from a legacy `SharedPreferences` file
+     * (keeping the same names) into the preferences DataStore.
+     */
+    fun createBulk(legacyPrefsName: String, keyNames: Set<String>): DataMigration<Preferences>
 }
