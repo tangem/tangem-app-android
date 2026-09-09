@@ -12,6 +12,7 @@ dependencies {
     api(projects.common.routing)
 
     /* Project - Domain */
+    api(projects.domain.cloudBackup)
     api(projects.domain.models)
     api(projects.domain.wallets)
 
