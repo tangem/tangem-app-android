@@ -19,7 +19,13 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.core.analytics.models.Basic
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.cloudbackup.models.CloudBackupError
+import com.tangem.domain.cloudbackup.models.CloudBackupInfo
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
@@ -33,6 +39,8 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
+import arrow.core.left
+import arrow.core.right
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -42,6 +50,8 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -59,6 +69,8 @@ internal class IntroductionModelTest {
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
+    private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
@@ -78,6 +90,8 @@ internal class IntroductionModelTest {
             router,
             isHotWalletCreationSupported,
             socialLoginFeatureToggles,
+            hotWalletFeatureToggles,
+            resolveCloudRestoreBackups,
             trackingContextProxy,
             cardScanner,
             generateBuyTangemCardLinkUseCase,
@@ -85,6 +99,7 @@ internal class IntroductionModelTest {
         )
         every { isHotWalletCreationSupported() } returns true
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
         sentEvents.clear()
         every { videoPlayer.isMotionEnabled } returns true
         surfaceAttached(isAttached = false)
@@ -497,30 +512,20 @@ internal class IntroductionModelTest {
             assertThat(config?.content).isInstanceOf(HaveWalletUM::class.java)
         }
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun inertRows(model: InertRowModel) {
+        @Test
+        fun `GIVEN the options step WHEN sign in picked THEN nothing happens yet`() {
             // Arrange
-            val introductionModel = createModel()
-            val options = introductionModel.openHaveWallet()
+            val model = createModel()
+            val options = model.openHaveWallet()
 
             // Act
-            model.pick(options, introductionModel)
+            // TODO TWI-1555: the row acts once social login lands.
+            requireNotNull(options.socialLogin).onClick()
 
             // Assert
             verify { router wasNot Called }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
-
-        private fun provideTestModels() = listOf(
-            // TODO TWI-1555: the row acts once social login lands.
-            InertRowModel(name = "sign in") { options, _ -> requireNotNull(options.socialLogin).onClick() },
-            // A canary meant to fail once the cloud restore is wired.
-            InertRowModel(name = "cloud backup") { options, model ->
-                options.importWallet.onClick()
-                model.currentImportStep().onCloudBackupClick()
-            },
-        )
 
         @Test
         fun `GIVEN the options step WHEN card or ring picked THEN the sheet closes and the scan starts`() {
@@ -608,6 +613,210 @@ internal class IntroductionModelTest {
             }
             // The import flow owns the hot wallet analytics context; a second push here would overwrite its parent.
             verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
+        }
+
+        @Test
+        fun `GIVEN backups found WHEN cloud backup picked THEN the restore opens`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudRestoreResult(listOf(BACKUP), "user@gmail.com").right()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            verify(exactly = 1) {
+                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the listing fails WHEN cloud backup picked THEN the error step replaces the import step`(
+            model: CloudFailureModel,
+        ) {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns model.error.left()
+            val introductionModel = createModel()
+            introductionModel.openHaveWallet().importWallet.onClick()
+
+            // Act
+            introductionModel.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            val step = introductionModel.haveWalletStep() as HaveWalletUM.Step.Error
+            assertThat(step.message).isEqualTo(requireNotNull(CloudRestoreErrorMessage.of(model.error)))
+            assertThat(step.message.isWarning).isEqualTo(model.isWarning)
+            assertThat(introductionModel.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+            verify { router wasNot Called }
+        }
+
+        private fun provideTestModels() = listOf(
+            CloudFailureModel(error = CloudBackupError.BackupNotFound, isWarning = true),
+            CloudFailureModel(error = CloudBackupError.AuthPermissionsMissing, isWarning = false),
+            CloudFailureModel(error = CloudBackupError.NetworkError, isWarning = false),
+        )
+
+        @Test
+        fun `GIVEN the account picker left WHEN cloud backup picked THEN the import step returns without loading`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.AuthCanceled.left()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.currentImportStep().isCloudLoading).isFalse()
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the error step WHEN got it tapped THEN the whole sheet closes`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.NetworkError.left()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Error).onGotItClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN backups loading WHEN the buttons are tapped again THEN the taps are ignored`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } coAnswers { awaitCancellation() }
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+            model.currentImportStep().onRecoveryPhraseClick()
+
+            // Assert
+            assertThat(model.currentImportStep().isCloudLoading).isTrue()
+            coVerify(exactly = 1) { resolveCloudRestoreBackups() }
+            verify { router wasNot Called }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN backups loading WHEN back pressed THEN the listing is dropped and a new one can start`() {
+            // Arrange
+            val listing = CompletableDeferred<Unit>()
+            coEvery { resolveCloudRestoreBackups() } coAnswers {
+                listing.await()
+                CloudRestoreResult(listOf(BACKUP), null).right()
+            }
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            model.currentImportStep().onBack()
+            listing.complete(Unit)
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the error step WHEN the outgoing import buttons are tapped THEN they are inert`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.NetworkError.left()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            val importStep = model.currentImportStep()
+            importStep.onCloudBackupClick()
+
+            // Act
+            importStep.onRecoveryPhraseClick()
+            importStep.onCloudBackupClick()
+            importStep.onBack()
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Error::class.java)
+            coVerify(exactly = 1) { resolveCloudRestoreBackups() }
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN backups loading WHEN the sheet is closed THEN the listing is dropped`() {
+            // Arrange
+            val listing = CompletableDeferred<Unit>()
+            coEvery { resolveCloudRestoreBackups() } coAnswers {
+                listing.await()
+                CloudRestoreResult(listOf(BACKUP), null).right()
+            }
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            model.closeHaveWalletSheet()
+            listing.complete(Unit)
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the import step dismissed WHEN back pressed during the collapse THEN the sheet stays closed`() {
+            // Arrange
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            val step = model.currentImportStep()
+            model.closeHaveWalletSheet()
+
+            // Act
+            step.onBack()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN an unsupported device WHEN cloud backup picked THEN a warning replaces the sheet before any listing`() {
+            // Arrange
+            every { isHotWalletCreationSupported() } returns false
+            every { isHotWalletCreationSupported.getLeastVersionName() } returns LEAST_OS_VERSION
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+            coVerify(exactly = 0) { resolveCloudRestoreBackups() }
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN cloud backups unavailable WHEN the import step opens THEN the cloud button is absent and inert`() {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.currentImportStep().cloudBackupButtonText).isNull()
+            coVerify(exactly = 0) { resolveCloudRestoreBackups() }
         }
 
         @Test
@@ -916,14 +1125,9 @@ internal class IntroductionModelTest {
 
     internal data class ScanCallbacks(val onNavigatedAway: () -> Unit, val onFailed: () -> Unit)
 
-    internal data class StoryReturnModel(val name: String, val result: StoriesV2Result) {
-        override fun toString(): String = name
-    }
+    internal data class CloudFailureModel(val error: CloudBackupError, val isWarning: Boolean)
 
-    internal data class InertRowModel(
-        val name: String,
-        val pick: (HaveWalletUM.Step.Options, IntroductionModel) -> Unit,
-    ) {
+    internal data class StoryReturnModel(val name: String, val result: StoriesV2Result) {
         override fun toString(): String = name
     }
 
@@ -1005,6 +1209,8 @@ internal class IntroductionModelTest {
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
+        hotWalletFeatureToggles = hotWalletFeatureToggles,
+        resolveCloudRestoreBackups = resolveCloudRestoreBackups,
         trackingContextProxy = trackingContextProxy,
         cardScanner = cardScanner,
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
@@ -1015,5 +1221,6 @@ internal class IntroductionModelTest {
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
+        val BACKUP = CloudBackupInfo(fileId = "file-1", walletName = "My Wallet", createdAtMillis = 0L, walletId = "011")
     }
 }
