@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tangempay.campaign.TangemPayCampaignUM
+import com.tangem.features.tangempay.common.TangemPayCampaignCardArt
 import com.tangem.features.tangempay.ui.TangemPayOnboardingBlock
 
 @Composable
