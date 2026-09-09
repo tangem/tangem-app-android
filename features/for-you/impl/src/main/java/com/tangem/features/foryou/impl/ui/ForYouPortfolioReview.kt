@@ -86,8 +86,8 @@ internal fun ForYouPortfolioReview(
             TangemButton(
                 text = resourceReference(R.string.common_add_funds),
                 onClick = portfolioReviewUM.onAddFundsClick,
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X9,
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
