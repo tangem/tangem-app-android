@@ -28,7 +28,7 @@ internal fun KycLoadingScreen(onBack: () -> Unit, modifier: Modifier = Modifier)
         },
         content = { paddingValues ->
             Box(
-                modifier = modifier
+                modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center,
