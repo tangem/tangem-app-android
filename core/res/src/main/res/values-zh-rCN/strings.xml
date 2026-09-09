@@ -863,7 +863,7 @@
   <string name="hw_cloud_backup_restore_password_navtitle">恢复钱包</string>
   <string name="hw_cloud_backup_restore_password_title">输入密码</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">导入恢复短语</string>
-  <string name="hw_cloud_backup_restore_wrong_password">密码错误。请重试。</string>
+  <string name="hw_cloud_backup_restore_wrong_password">密码错误</string>
   <string name="hw_cloud_backup_retry">请重试</string>
   <string name="hw_cloud_backup_set_password_button">设置密码</string>
   <string name="hw_cloud_backup_set_password_description">在 %s上，您需要输入密码才能对恢复短语进行加密。</string>
@@ -2035,7 +2035,7 @@
   <string name="tangempay_cashback_deposit_banner">%2$s 的返现 %1$s 将于 %3$s 前存入</string>
   <string name="tangempay_cashback_deposited_on">将于 %1$s 存入</string>
   <string name="tangempay_cashback_details_cap">每月最高 %1$s</string>
-  <string name="tangempay_cashback_details_eu_excluded">在欧盟商户的线下消费不享受返现</string>
+  <string name="tangempay_cashback_details_eu_excluded">暂不支持欧盟线下门店消费返现</string>
   <string name="tangempay_cashback_details_paid_in">以 %1$s 支付</string>
   <string name="tangempay_cashback_details_tier">使用您的 %2$s 卡片消费可享 %1$s%%，最低消费 %3$s</string>
   <string name="tangempay_cashback_earned_title">%2$s 已赚取 %1$s</string>
