@@ -195,7 +195,7 @@ internal class DefaultJointAccountSignerTest {
             derivedKeys = mapOf(seedPublicKey.toMapKey() to ExtendedPublicKeysMap(mapOf(derivationPath to ownerKey))),
         )
         coEvery {
-            tangemSdkManager.runTaskAsync(runnable = task, preflightReadFilter = any())
+            tangemSdkManager.runTaskAsync(runnable = task, preflightReadFilter = any(), registerColdWallet = false)
         } returns CompletionResult.Success(expected)
 
         // Act
