@@ -210,12 +210,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         )
     }
 
-    override fun newImageLoader(): ImageLoader {
-        return createCoilImageLoader(
-            context = this,
-            logEnabled = LogConfig.imageLoader,
-        )
-    }
+    override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)
 
     private fun loadNativeLibraries() {
         System.loadLibrary("TrustWalletCore")
