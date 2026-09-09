@@ -243,8 +243,12 @@ internal class TxHistoryModel @Inject constructor(
     fun reload() {
         if (stateController.isNotSupported) return
 
-        stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
-        historyTxListManager?.reload()
+        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) {
+            historyTxListManager?.reload()
+        } else {
+            stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
+        }
+
         modelScope.launch {
             txHistoryListManager?.let { legacy ->
                 txHistoryItemsCountUseCase.invoke(userWalletId = params.userWalletId, currency = params.currency)
