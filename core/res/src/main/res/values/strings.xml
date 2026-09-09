@@ -889,6 +889,7 @@
   <string name="hw_cloud_backup_confirm_password_description">A password is required to encrypt your recovery phrase on %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirm password</string>
   <string name="hw_cloud_backup_consent">I understand Tangem cannot recover my backup password. Losing it, or losing my Apple ID, means my backup is unrecoverable. Without my recovery phrase, my crypto is unrecoverable too.</string>
+  <string name="hw_cloud_backup_consent_v2">I understand Tangem cannot recover my backup password. Losing it, or losing my %1$s, means my backup is unrecoverable. Without my recovery phrase, my crypto is unrecoverable too.</string>
   <string name="hw_cloud_backup_delete_confirm_message">You won\'t be able to restore this wallet from %s. You can create a new backup anytime.</string>
   <string name="hw_cloud_backup_error_network">No internet connection. Check your network and try again.</string>
   <string name="hw_cloud_backup_error_title">Something went wrong</string>
