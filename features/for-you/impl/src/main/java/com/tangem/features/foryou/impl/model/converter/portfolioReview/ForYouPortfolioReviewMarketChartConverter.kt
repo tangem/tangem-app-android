@@ -13,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.state.*
 import com.tangem.features.foryou.impl.model.converter.toForYouPercent
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
@@ -45,7 +46,7 @@ internal class ForYouPortfolioReviewMarketChartConverter(
                 aiInsight = AiInsightUM.Hide,
                 topHoldingPercent = resourceReference(
                     id = R.string.market_chart_top_holding,
-                    formatArgs = wrappedList(topBalance.toForYouPercent(value.amount).format { percent() }),
+                    formatArgs = wrappedList(topBalance.toForYouPercent(value.amount).toTopHoldingText()),
                 ),
             )
             TotalFiatBalance.Loading,
@@ -87,6 +88,22 @@ internal class ForYouPortfolioReviewMarketChartConverter(
             fiatValue = stringReference(otherAssetsBalance.toFiat()),
         )
         return (topSegments + otherSegment).toPersistentList()
+    }
+
+    /**
+     * The top assets' share of the portfolio, prefixed with [StringsSigns.TILDE_SIGN] when the rendering would
+     * otherwise present an incomplete portfolio as a whole one: assets were collapsed into "Other", so the top
+     * assets are mathematically below 100%, yet the displayed precision rounds up to exactly it.
+     */
+    private fun BigDecimal?.toTopHoldingText(): String {
+        val formatted = format { percent(canBeLower = true) }
+        val isRenderedAsWholePortfolio = formatted == BigDecimal.ONE.format { percent() }
+
+        return if (otherAssetsBalance.isPositive() && isRenderedAsWholePortfolio) {
+            StringsSigns.TILDE_SIGN + formatted
+        } else {
+            formatted
+        }
     }
 
     private fun BigDecimal.toFiat(): String = format {
