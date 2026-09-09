@@ -20,6 +20,7 @@ import kotlin.collections.firstOrNull
 import kotlin.collections.mapValues
 import kotlin.collections.plus
 import kotlin.error
+import kotlin.requireNotNull
 import kotlin.to
 
 /**
@@ -54,10 +55,11 @@ internal class MockApiConfigsManager(
     override suspend fun changeEnvironment(id: String, environment: ApiEnvironment) {
         // The config key set is fixed at construction (getInitialConfigs); only mapped environments
         // change, so this lookup can't go stale between reading configs.value and update {}.
-        val apiConfig = configs.value.keys.firstOrNull { it.id.name == id }
-            ?: error("Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI")
+        val apiConfig = requireNotNull(configs.value.keys.firstOrNull { it.id.name == id }) {
+            "Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI"
+        }
 
-        configs.update { apiConfigs -> apiConfigs + (apiConfig to environment) }
+        configs.update { currentConfigs -> currentConfigs + (apiConfig to environment) }
     }
 
     override suspend fun changeEnvironment(environment: ApiEnvironment) {
