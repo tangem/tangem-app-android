@@ -27,6 +27,7 @@ dependencies {
     /** Features api */
     api(projects.features.tangempay.onboarding.api)
     api(projects.features.wallet.api)
+    implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
 
     /** Domain */
@@ -46,7 +47,6 @@ dependencies {
 
     /** Compose */
     api(deps.compose.foundation)
-    implementation(deps.compose.coil)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)

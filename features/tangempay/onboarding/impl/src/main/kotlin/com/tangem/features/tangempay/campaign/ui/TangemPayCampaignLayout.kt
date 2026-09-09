@@ -13,16 +13,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-
-internal val CampaignCardArtWidth: Dp = 264.dp
-internal const val CAMPAIGN_CARD_ART_ASPECT_RATIO = 264f / 172f
-internal val CampaignCardArtCornerRadius: Dp = 16.dp
 
 @Composable
 internal fun TangemPayCampaignLayout(
