@@ -18,6 +18,8 @@ internal interface IntroductionVideoPlayer {
     /** Ignored while [isMotionEnabled] is `false`. */
     fun setRunning(isRunning: Boolean)
 
+    fun restart()
+
     fun release()
 
     interface Listener {
