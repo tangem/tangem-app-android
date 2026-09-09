@@ -30,6 +30,7 @@ import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsSto
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -54,6 +55,7 @@ internal object OnrampDataModule {
         expressApi: TangemExpressApi,
         dispatchers: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
         expressUtils: ExpressUtils,
         paymentMethodsStore: OnrampPaymentMethodsStore,
         pairsStore: OnrampPairsStore,
@@ -74,6 +76,7 @@ internal object OnrampDataModule {
             expressApi = expressApi,
             dispatchers = dispatchers,
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
             expressUtils = expressUtils,
             paymentMethodsStore = paymentMethodsStore,
             onrampCurrentCountryByIPStore = onrampCurrentCountryByIPStore,
@@ -101,10 +104,12 @@ internal object OnrampDataModule {
     @Singleton
     fun provideOnrampTransactionRepository(
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
         dispatchers: CoroutineDispatcherProvider,
     ): OnrampTransactionRepository {
         return DefaultOnrampTransactionRepository(
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
             dispatchers = dispatchers,
         )
     }

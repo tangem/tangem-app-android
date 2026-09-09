@@ -64,8 +64,6 @@ object PreferencesKeys {
 
     val WALLETS_BALANCES_STATES_KEY by lazy { stringPreferencesKey(name = "walletsBalancesStates") }
 
-    val SWAP_UI_MODE_KEY by lazy { stringPreferencesKey(name = "swapUiMode") }
-
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
 
     val IS_TANGEM_TOS_ACCEPTED_KEY by lazy { booleanPreferencesKey(name = "tangem_tos_accepted") }
@@ -90,19 +88,11 @@ object PreferencesKeys {
 
     val IS_WALLET_NAMES_MIGRATION_DONE_KEY by lazy { booleanPreferencesKey(name = "isWalletNamesMigrationDone") }
 
-    val UNSUBMITTED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "unsubmittedTransactions") }
-
     val apiConfigsEnvironmentKey by lazy { stringPreferencesKey(name = "apiConfigsEnvironment") }
 
     val ADDED_WALLETS_WITH_RING_KEY by lazy { stringSetPreferencesKey(name = "addedWalletsWithRing") }
 
     val GEO_USER_COUNTRY_CODE_KEY by lazy { stringPreferencesKey(name = "geoUserCountryCode") }
-
-    val ONRAMP_DEFAULT_COUNTRY by lazy { stringPreferencesKey(name = "onrampDefaultCountry") }
-
-    val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
-
-    val ONRAMP_HANDLED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "onrampHandledTransactions") }
 
     val ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY by lazy { stringPreferencesKey(name = "onboardingFinalizeScanResponse") }
 
@@ -115,12 +105,6 @@ object PreferencesKeys {
     val SEED_FIRST_NOTIFICATION_SHOW_TIME by lazy { longPreferencesKey("seedFirstNotificationTime") }
 
     val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
-
-    val YIELD_SUPPLY_WARNINGS_STATES_KEY by lazy { stringPreferencesKey(name = "yieldSupplyWarningsStates") }
-
-    val YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY by lazy {
-        booleanPreferencesKey(name = "yieldSupplyShouldShowMainPromo")
-    }
 
     val ACCESS_CODE_SKIPPED_STATES_KEY by lazy { stringPreferencesKey(name = "accessCodeSkippedStates") }
 
@@ -166,10 +150,6 @@ object PreferencesKeys {
     val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityListV3") }
 
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
-    // endregion
-
-    // region Promo
-    fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
     // endregion
 
     // region Permission
