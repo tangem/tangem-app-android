@@ -445,7 +445,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Collectibles -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = CollectiblesEntryComponent.Params(
+                        userWalletId = route.userWalletId,
+                        startRoute = route.startRoute,
+                    ),
                     componentFactory = collectiblesEntryComponentFactory,
                 )
             }

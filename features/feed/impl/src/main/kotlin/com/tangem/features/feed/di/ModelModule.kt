@@ -12,6 +12,7 @@ import com.tangem.features.feed.model.market.list.MarketsListModel
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.model.news.list.NewsListModel
 import com.tangem.features.feed.model.search.SearchModel
+import com.tangem.features.feed.model.v2.FeedTopBlocksModel
 import com.tangem.features.feed.model.search.SearchTokenSelectorModel
 import dagger.Binds
 import dagger.Module
@@ -77,4 +78,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(SearchTokenSelectorModel::class)
     fun provideSearchTokenSelectorModel(model: SearchTokenSelectorModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(FeedTopBlocksModel::class)
+    fun provideFeedTopBlocksModel(model: FeedTopBlocksModel): Model
 }
