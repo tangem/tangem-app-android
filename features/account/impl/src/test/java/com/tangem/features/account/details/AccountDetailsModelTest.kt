@@ -220,6 +220,23 @@ internal class AccountDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN joint account WHEN model loads THEN title is joint account`() = runTest {
+        // Arrange
+        val account = MockAccounts.createJointAccount()
+        every { singleAccountStatusSupplier(any()) } returns flowOf(activeStatus(account))
+        givenWallet(isMultiCurrency = true)
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.title).isEqualTo(resourceReference(R.string.common_joint_account))
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN joint account WHEN archive confirmed THEN account archived and screen closed`() = runTest {
         // Arrange
         val account = MockAccounts.createJointAccount()
@@ -297,6 +314,29 @@ internal class AccountDetailsModelTest {
         // Assert
         val expected = ActivationUM(isManageTokensAvailable = true, isPendingActivation = false)
         assertThat(model.uiState.value.toActivationUM()).isEqualTo(expected)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN personal account WHEN model loads THEN title is account details title`() = runTest {
+        // Arrange
+        val account = MockAccounts.createAccount(derivationIndex = 1)
+        val status = AccountStatus.Personal(
+            account = account,
+            tokenList = TokenList.Empty,
+            priceChangeLce = PriceChange(value = BigDecimal.ZERO, source = StatusSource.ACTUAL).lceContent(),
+        )
+        every { singleAccountSupplier.filterPersonalAccount(any()) } returns flowOf(account)
+        every { singleAccountStatusSupplier(any()) } returns flowOf(status)
+        givenWallet(isMultiCurrency = true)
+
+        // Act
+        val model = createModel(account = account, testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.title).isEqualTo(resourceReference(R.string.account_details_title))
 
         model.onDestroy()
     }
