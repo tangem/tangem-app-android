@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -17,6 +18,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
@@ -36,6 +39,8 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
+import com.tangem.hot.sdk.exception.PassphraseNulCharacterException
+import com.tangem.hot.sdk.exception.PassphraseTooLongException
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -281,12 +286,32 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
                         // show should reset dialog
                         handleActivationError()
+                    } else {
+                        showPassphraseErrorIfNeeded(result.error)
                     }
                 }
             }
         }
     }
     // =============================================
+
+    /**
+     * The passphrase is rejected by the SDK manager before the card session starts (the card itself has no
+     * length limit, but a wallet the mobile wallet cannot reproduce would break the upgrade between them),
+     * so the failure arrives without any NFC dialog having been shown — surface it here.
+     */
+    private fun showPassphraseErrorIfNeeded(error: TangemError) {
+        val message = when (val cause = (error as? TangemSdkError.ExceptionError)?.cause) {
+            is PassphraseTooLongException -> resourceReference(
+                R.string.hw_import_seed_phrase_passphrase_too_long,
+                wrappedList(cause.maxByteCount),
+            )
+            is PassphraseNulCharacterException -> resourceReference(R.string.common_unknown_error)
+            else -> return
+        }
+
+        uiMessageSender.send(DialogMessage(message))
+    }
 
     private fun handleActivationError() {
         updateDialog(
