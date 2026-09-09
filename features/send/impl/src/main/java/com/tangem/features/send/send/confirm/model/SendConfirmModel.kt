@@ -460,11 +460,6 @@ internal class SendConfirmModel @Inject constructor(
                 )
             },
             ifRight = { txHash ->
-                if (feeExtended?.tronGaslessQuote != null) {
-                    analyticsEventHandler.send(
-                        CommonSendAnalyticEvents.GaslessTransactionUsed(categoryName = analyticsCategoryName),
-                    )
-                }
                 updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
