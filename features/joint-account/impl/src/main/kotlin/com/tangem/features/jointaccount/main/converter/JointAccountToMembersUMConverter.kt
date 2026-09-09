@@ -168,7 +168,7 @@ internal class JointAccountToMembersUMConverter(
     ): JointAccountMembersUM.MemberUM.FreeSlot {
         return JointAccountMembersUM.MemberUM.FreeSlot(
             id = "slot_$index",
-            title = resourceReference(CoreUiR.string.joint_account_invite_members_new_member),
+            title = resourceReference(CoreUiR.string.joint_account_invite_members_member),
             status = resourceReference(CoreUiR.string.joint_account_invite_members_not_invited),
             canInvite = phase.stage != MembersScreenPhase.Stage.Completed &&
                 phase.isThisDeviceCreator &&
