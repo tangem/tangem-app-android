@@ -20,7 +20,7 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.campaign.TangemPayCampaignMessages
+import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.logging.TangemLogger
