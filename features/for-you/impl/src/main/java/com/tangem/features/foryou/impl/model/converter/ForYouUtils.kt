@@ -64,11 +64,17 @@ internal fun BigDecimal?.toForYouPercent(totalFiatBalance: BigDecimal): BigDecim
 }
 
 /**
- * Scale of a portfolio share. Over the ten donut slices the summed rounding drift stays two orders of
- * magnitude under the angle at which `DonutChart` stops calling its ring closed, so a portfolio whose
- * assets are all shown individually never reserves a grey gap it has no balance for.
+ * Scale of a portfolio share, bounded from both sides.
+ *
+ * From above: over the ten donut slices the summed rounding drift stays orders of magnitude under the angle
+ * at which `DonutChart` stops calling its ring closed, so a portfolio whose assets are all shown individually
+ * never reserves a grey gap it has no balance for.
+ *
+ * From below: the share must keep its sign well past the point where the display gives up on it, or a dust
+ * holding would quantise to an exact zero here and render as `0.00%` instead of the `<0.01%` a positive share
+ * earns from `percent(canBeLower = true)`.
  */
-private const val SHARE_SCALE = 6
+private const val SHARE_SCALE = 8
 
 /**
  * Builds the sentiment badge of an asset row from the asset's [coinIndicators] for the selected
