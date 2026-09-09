@@ -20,6 +20,7 @@ class ResolveCloudRestoreBackupsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(): Either<CloudBackupError, CloudRestoreResult> = either {
+        cloudRestoreResultHolder.clear()
         cloudBackupRepository.signOut()
         val backups = cloudBackupRepository.findBackups(interactive = true, validateContent = true).bind()
         ensure(backups.isNotEmpty()) { CloudBackupError.BackupNotFound }
