@@ -28,6 +28,7 @@ dependencies {
     // region Core modules
     api(projects.core.datasource)
     implementation(projects.store.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     // endregion
 

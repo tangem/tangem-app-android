@@ -14,7 +14,7 @@ import com.tangem.grow.datasource.express.models.response.TxDetails
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.express.models.ExpressOperationType
@@ -50,6 +50,7 @@ internal class DefaultSwapRepository(
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
+    private val growPreferencesKeys: GrowPreferencesKeys,
     private val expressUtils: ExpressUtils,
     private val expressHistoryRepository: ExpressHistoryRepository,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
@@ -318,10 +319,10 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun getStoredSwapUiMode(): SwapUIMode? {
-        return appPreferencesStore.getObjectSyncOrNull(PreferencesKeys.SWAP_UI_MODE_KEY)
+        return appPreferencesStore.getObjectSyncOrNull(growPreferencesKeys.swapUiModeKey)
     }
 
     override suspend fun storeSwapUiMode(mode: SwapUIMode) {
-        appPreferencesStore.storeObject(PreferencesKeys.SWAP_UI_MODE_KEY, mode)
+        appPreferencesStore.storeObject(growPreferencesKeys.swapUiModeKey, mode)
     }
 }

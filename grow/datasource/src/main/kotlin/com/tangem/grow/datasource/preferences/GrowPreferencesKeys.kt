@@ -1,6 +1,7 @@
 package com.tangem.grow.datasource.preferences
 
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import javax.inject.Inject
 
@@ -22,4 +23,25 @@ class GrowPreferencesKeys @Inject constructor() {
 
     val lastSwappedCryptoCurrencyIdKey: Preferences.Key<String> =
         stringPreferencesKey(name = "lastSwappedCryptoCurrency")
+
+    val swapUiModeKey: Preferences.Key<String> = stringPreferencesKey(name = "swapUiMode")
+
+    val unsubmittedTransactionsKey: Preferences.Key<String> = stringPreferencesKey(name = "unsubmittedTransactions")
+
+    val onrampDefaultCountryKey: Preferences.Key<String> = stringPreferencesKey(name = "onrampDefaultCountry")
+
+    val onrampTransactionsStatusesKey: Preferences.Key<String> =
+        stringPreferencesKey(name = "onrampTransactionsStatuses")
+
+    val onrampHandledTransactionsKey: Preferences.Key<String> =
+        stringPreferencesKey(name = "onrampHandledTransactions")
+
+    val yieldSupplyWarningsStatesKey: Preferences.Key<String> =
+        stringPreferencesKey(name = "yieldSupplyWarningsStates")
+
+    val yieldSupplyShouldShowMainPromoKey: Preferences.Key<Boolean> =
+        booleanPreferencesKey(name = "yieldSupplyShouldShowMainPromo")
+
+    fun getShouldShowStoriesKey(storyId: String): Preferences.Key<Boolean> =
+        booleanPreferencesKey("shouldShowStories_$storyId")
 }
