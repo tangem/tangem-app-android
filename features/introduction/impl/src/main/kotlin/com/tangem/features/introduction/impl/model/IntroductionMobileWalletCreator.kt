@@ -28,7 +28,7 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
 
     suspend fun createAndOpen(source: AnalyticsParam.ScreensSources, onFailed: () -> Unit) {
         analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started(source = source))
-        // The legacy mobile wallet screen reported these two; its rows stay alive although the sheet replaced it.
+        // No mobile wallet screen opens any more, but the funnel the analysts read still starts with these two.
         analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = source))
         analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet())
         createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12).fold(

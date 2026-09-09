@@ -28,10 +28,6 @@ sealed class IntroductionProcess(
         }
     }
 
-    class ButtonIHaveWallet : IntroductionProcess("Button - I Have Wallet")
-    class ButtonHardwareWallet : IntroductionProcess("Button - Hardware Wallet")
-    class ButtonSignInWithCard : IntroductionProcess("Button - Sign In With Card")
-
     class SheetDismissed(
         sheet: Sheet,
         reason: DismissReason,
@@ -85,10 +81,14 @@ sealed class IntroductionProcess(
             Playback("Playback"),
         }
     }
+
     /**
      * Tracks the user starting wallet creation from the Introduction screen.
      */
     class ButtonCreateNewWallet : IntroductionProcess("Button - Create New Wallet")
+    class ButtonIHaveWallet : IntroductionProcess("Button - I Have Wallet")
+    class ButtonHardwareWallet : IntroductionProcess("Button - Hardware Wallet")
+    class ButtonSignInWithCard : IntroductionProcess("Button - Sign In With Card")
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
