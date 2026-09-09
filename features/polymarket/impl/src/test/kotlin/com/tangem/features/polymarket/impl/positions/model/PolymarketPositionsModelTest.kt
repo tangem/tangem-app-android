@@ -5,12 +5,15 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Tab
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +37,7 @@ internal class PolymarketPositionsModelTest {
     private val finishedState = MutableStateFlow<Content>(Content.Empty)
     private val wallet = UserWalletId("022")
     private var model: PolymarketPositionsModel? = null
+    private val positionClick = slot<(PolymarketPositionId) -> Unit>()
 
     @AfterEach
     fun tearDown() {
@@ -65,7 +69,7 @@ internal class PolymarketPositionsModelTest {
         runCurrent()
         val newActive: PolymarketPositionsLoader.Feed = mockk(relaxed = true)
         every { newActive.state } returns MutableStateFlow<Content>(Content.Loading)
-        every { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE) } returns newActive
+        every { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) } returns newActive
 
         // Act
         model.uiState.value.onTabSelect(Tab.Finished)
@@ -81,7 +85,7 @@ internal class PolymarketPositionsModelTest {
         verify(exactly = 1) { finished.dispose() }
         verify(exactly = 1) { active.resume(any()) }
         verify(exactly = 1) { newActive.resume(any()) }
-        verify(exactly = 2) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE) }
+        verify(exactly = 2) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) }
     }
 
     @Test
@@ -99,7 +103,7 @@ internal class PolymarketPositionsModelTest {
 
         // Assert
         assertThat(model.uiState.value.content).isSameInstanceAs(initial)
-        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE) }
+        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) }
         verify(exactly = 0) { active.dispose() }
     }
 
@@ -157,7 +161,7 @@ internal class PolymarketPositionsModelTest {
     }
 
     private fun TestScope.createModel(initialTab: PolymarketPositionsTab = PolymarketPositionsTab.ACTIVE): PolymarketPositionsModel {
-        every { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE) } returns active
+        every { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, capture(positionClick)) } returns active
         every { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED) } returns finished
         every { active.state } returns activeState
         every { finished.state } returns finishedState
@@ -168,5 +172,18 @@ internal class PolymarketPositionsModelTest {
             dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
             loader = loader,
         ).also { model = it }
+    }
+
+    @Test
+    fun `GIVEN active position WHEN tapped THEN passes wallet and outcome to details`() = runTest {
+        // Arrange
+        createModel()
+        val id = createPolymarketPosition().id
+
+        // Act
+        positionClick.captured(id)
+
+        // Assert
+        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(wallet, id), any()) }
     }
 }
