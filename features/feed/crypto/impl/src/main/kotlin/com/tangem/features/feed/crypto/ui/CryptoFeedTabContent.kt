@@ -24,10 +24,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.crypto.ui.state.CryptoFeedTabUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseCategoryUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseIntervalUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseListUM
+import com.tangem.features.feed.crypto.ui.state.*
 import kotlinx.collections.immutable.ImmutableList
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
@@ -51,6 +48,7 @@ internal fun CryptoFeedTabContent(
 ) {
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
     val marketPulse = state.marketPulse
+    val totalMarketCap = state.totalMarketCap
 
     LazyColumn(
         state = listState,
@@ -63,11 +61,13 @@ internal fun CryptoFeedTabContent(
         item(key = "promoBanners") {
             promoBanners(Modifier.padding(vertical = 8.dp))
         }
-        item(key = "totalMarketCap") {
-            TotalMarketCapBlock(
-                state = state.totalMarketCap,
-                modifier = Modifier.padding(top = 16.dp),
-            )
+        if (totalMarketCap !is TotalMarketCapUM.Empty) {
+            item(key = "totalMarketCap") {
+                TotalMarketCapBlock(
+                    state = totalMarketCap,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 32.dp),
+                )
+            }
         }
         item(key = "marketPulseHeader") {
             MarketPulseHeader(
