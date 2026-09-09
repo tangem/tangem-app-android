@@ -12,6 +12,7 @@ android {
 
 dependencies {
     /** Project - API */
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.introduction.api)
     implementation(projects.features.storiesV2.api)
 
@@ -28,6 +29,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.card)
+    implementation(projects.domain.cloudBackup)
     implementation(projects.domain.common)
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.models)
