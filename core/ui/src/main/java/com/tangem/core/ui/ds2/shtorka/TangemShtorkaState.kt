@@ -230,9 +230,9 @@ internal fun TangemShtorkaState.shtorkaNestedScrollConnection(): NestedScrollCon
         override suspend fun onPreFling(available: Velocity): Velocity {
             val toFling = available.y
             val minPosition = anchoredDraggableState.anchors.minPosition()
-            return if (toFling < 0 && requireOffset() > minPosition) {
+            return if (toFling != 0f && requireOffset() > minPosition) {
                 startSettle(toFling)
-                available
+                Velocity(x = 0f, y = toFling)
             } else {
                 Velocity.Zero
             }
