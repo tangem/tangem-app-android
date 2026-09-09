@@ -1,7 +1,6 @@
 package com.tangem.features.welcome.impl.model
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.entity.HomeEntryReason
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -109,7 +108,8 @@ internal class WelcomeModel @Inject constructor(
                 walletsFetcher.userWallets
                     .collectLatest {
                         if (it.isEmpty()) {
-                            router.replaceAll(AppRoute.Home(entryReason = HomeEntryReason.LastWalletForgotten))
+                            val reason = AppRoute.Home.EntryReason.LastWalletForgotten
+                            router.replaceAll(AppRoute.Home(entryReason = reason))
                         }
 
                         wallets.value = it
