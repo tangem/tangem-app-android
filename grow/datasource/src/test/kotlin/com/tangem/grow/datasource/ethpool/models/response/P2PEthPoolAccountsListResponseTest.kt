@@ -1,13 +1,11 @@
-package com.tangem.datasource.api.ethpool
+package com.tangem.grow.datasource.ethpool.models.response
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.common.json.TangemSdkAdapter
-import com.tangem.datasource.common.BigDecimalAdapter
-import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountsListResponse
-import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -16,7 +14,6 @@ internal class P2PEthPoolAccountsListResponseTest {
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
         .add(BigDecimalAdapter())
-        .add(TangemSdkAdapter.ByteArrayAdapter())
         .build()
 
     private val adapter = moshi.adapter<P2PEthPoolResponse<P2PEthPoolAccountsListResponse>>(
@@ -41,6 +38,14 @@ internal class P2PEthPoolAccountsListResponseTest {
 
         val bad = list.first { it.account == null }
         assertThat(requireNotNull(bad.error).code).isEqualTo(127108)
+    }
+
+    private class BigDecimalAdapter {
+        @FromJson
+        fun fromJson(value: String) = BigDecimal(value)
+
+        @ToJson
+        fun toJson(value: BigDecimal) = value.toString()
     }
 
     private companion object {
