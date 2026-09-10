@@ -162,6 +162,40 @@ internal class PredictionBalancePollerTest {
     }
 
     @Test
+    fun `GIVEN stale subscriber of a dead loop WHEN it cancels after a fresh loop started THEN the fresh loop keeps ticking`() =
+        runTest {
+            // Arrange
+            coEvery { refresher.refresh(WALLET_ID) } throws IllegalStateException("boom") andThen Unit.right()
+            val poller = PredictionBalancePoller(
+                refresher = refresher,
+                config = config,
+                appScope = TestAppCoroutineScope(
+                    coroutineContext = StandardTestDispatcher(testScheduler) +
+                        SupervisorJob() +
+                        CoroutineExceptionHandler { _, _ -> },
+                ),
+            )
+
+            // Act
+            val stale = poller.subscribe(WALLET_ID).launchIn(this)
+            runCurrent()
+            val fresh = poller.subscribe(WALLET_ID).launchIn(this)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 2) { refresher.refresh(WALLET_ID) }
+
+            stale.cancel()
+            runCurrent()
+            advanceTimeBy(30.seconds)
+            runCurrent()
+            coVerify(exactly = 3) { refresher.refresh(WALLET_ID) }
+
+            fresh.cancel()
+            runCurrent()
+        }
+
+    @Test
     fun `GIVEN refresh returns a Left WHEN interval passes THEN the loop keeps ticking`() = runTest {
         // Arrange
         coEvery { refresher.refresh(WALLET_ID) } returns IllegalStateException("x").left()
