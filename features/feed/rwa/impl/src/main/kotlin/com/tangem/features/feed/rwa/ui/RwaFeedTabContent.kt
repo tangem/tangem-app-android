@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.R
@@ -121,50 +120,11 @@ internal fun RwaFeedTabContent(
 
 private fun LazyListScope.listItems(list: RwaListUM) {
     when (list) {
-        is RwaListUM.Loading -> items(count = SKELETON_ROW_COUNT, key = { "skeleton_$it" }) {
-            ListRowShimmer()
-        }
+        is RwaListUM.Loading -> rwaTokenShimmers()
         is RwaListUM.Error -> item(key = "listError") {
             ListError(onRetry = list.onRetry)
         }
-        is RwaListUM.Content -> {
-            items(items = list.items, key = { TOKEN_KEY_PREFIX + it.id }) { item ->
-                TangemTokenRowMarket(
-                    state = item.row,
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    chart = {
-                        item.chartData?.let { chartData ->
-                            MarketChartMini(
-                                rawData = chartData,
-                                type = item.chartType,
-                                modifier = Modifier.size(width = 24.dp, height = 32.dp),
-                            )
-                        }
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun VisibleTokensTracker(
-    listState: LazyListState,
-    isTrackingEnabled: Boolean,
-    onVisibleItemsChange: (List<String>) -> Unit,
-) {
-    val visibleItems by remember(listState) {
-        derivedStateOf {
-            listState.layoutInfo.visibleItemsInfo.mapNotNull { itemInfo ->
-                (itemInfo.key as? String)
-                    ?.takeIf { it.startsWith(TOKEN_KEY_PREFIX) }
-                    ?.removePrefix(TOKEN_KEY_PREFIX)
-            }
-        }
-    }
-
-    LaunchedEffect(listState.isScrollInProgress, visibleItems, isTrackingEnabled) {
-        onVisibleItemsChange(if (isTrackingEnabled) visibleItems else emptyList())
+        is RwaListUM.Content -> rwaTokenItems(list.items)
     }
 }
 
@@ -319,19 +279,6 @@ private fun TagPill(tag: RwaTagUM, isSelected: Boolean, onClick: () -> Unit, mod
 }
 
 @Composable
-private fun ListRowShimmer(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        TangemShimmer(modifier = Modifier.size(width = 184.dp, height = 12.dp))
-    }
-}
-
-@Composable
 private fun ListError(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -354,8 +301,6 @@ private fun ListError(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-private const val TOKEN_KEY_PREFIX = "token:"
-private const val SKELETON_ROW_COUNT = 8
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
 private const val SKELETON_CARD_COUNT = 3
 

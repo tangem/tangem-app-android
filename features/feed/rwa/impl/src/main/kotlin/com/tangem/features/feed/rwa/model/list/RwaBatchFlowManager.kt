@@ -19,10 +19,12 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -35,6 +37,10 @@ import kotlinx.coroutines.launch
  * Paginated list for the Real world assets block: the crypto tab's Market Pulse manager plus the
  * category/sector filter. The config is read from [request] on every [reload], so a changed filter
  * only needs a `reload()`.
+ *
+ * The search tab uses a second instance with [batchFlowType] `Search` and a [request] carrying a
+ * `searchText`; the two modes never share an instance, because their request configs differ and a single
+ * batch flow would thrash between them.
  */
 internal class RwaBatchFlowManager(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
@@ -43,6 +49,7 @@ internal class RwaBatchFlowManager(
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
+    batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
     private val updateStateJob = JobHolder()
@@ -52,7 +59,7 @@ internal class RwaBatchFlowManager(
             actionsFlow = actionsFlow,
             coroutineScope = modelScope,
         ),
-        batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
+        batchFlowType = batchFlowType,
     )
 
     private val batchConverter = object : BatchItemConverter<TokenMarket, RwaListItemUM> {
@@ -114,6 +121,39 @@ internal class RwaBatchFlowManager(
             initialValue = false,
         )
 
+    val initialLoadingError: Flow<Throwable> = batchFlow.state
+        .map { it.status }
+        .distinctUntilChanged()
+        .filterIsInstance<PaginationStatus.InitialLoadingError>()
+        .map { it.throwable }
+
+    /** The source's own result count, which can exceed the number of batches loaded so far. */
+    val totalCount: StateFlow<Int?> = batchFlow.state
+        .map { it.totalCount }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
+        )
+
+    /**
+     * True only once the source is exhausted with nothing in it, so an in-flight request never renders as
+     * "not found".
+     *
+     * Deliberately does not consult [request] — a predicate reading a value that is not in this flow's
+     * upstream only recomputes when the batch state happens to move, and so stays stale across the whole
+     * gap between a new query and its reload. Callers that care about the query already gate on it.
+     */
+    val isEmptyResultState: StateFlow<Boolean> = batchFlow.state
+        .map { it.status is PaginationStatus.EndOfPagination && it.data.isEmpty() }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
+
     init {
         batchFlow.state
             .map { it.data }
@@ -144,7 +184,7 @@ internal class RwaBatchFlowManager(
                 BatchAction.Reload(
                     requestParams = TokenMarketListConfig(
                         fiatPriceCurrency = appCurrency.value.code,
-                        searchText = null,
+                        searchText = currentRequest.searchText,
                         priceChangeInterval = currentRequest.interval.toBatchRequestInterval(),
                         order = currentRequest.sort.toRequestOrder(),
                         categoryId = currentRequest.selection.category?.id,
@@ -152,6 +192,12 @@ internal class RwaBatchFlowManager(
                     ),
                 ),
             )
+        }
+    }
+
+    fun clearStateAndStopAllActions() {
+        modelScope.launch {
+            actionsFlow.emit(BatchAction.Reset)
         }
     }
 
