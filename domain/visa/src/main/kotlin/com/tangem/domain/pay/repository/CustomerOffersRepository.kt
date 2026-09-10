@@ -14,7 +14,7 @@ import com.tangem.domain.visa.error.VisaApiError
  */
 interface CustomerOffersRepository {
 
-    suspend fun getOffers(userWalletId: UserWalletId): Either<VisaApiError, List<Offer>>
+    suspend fun getOffers(userWalletId: UserWalletId, deeplinkValue: String? = null): Either<VisaApiError, List<Offer>>
 
     suspend fun getProductInstanceOffers(
         userWalletId: UserWalletId,

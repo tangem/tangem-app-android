@@ -798,6 +798,7 @@
   <string name="hw_cloud_backup_confirm_password_description">Un mot de passe est requis pour chiffrer votre phrase de récupération sur %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirmer le mot de passe</string>
   <string name="hw_cloud_backup_consent">Je comprends que si je perds ou oublie ce mot de passe, je perdrai l\'accès à mes cryptos.</string>
+  <string name="hw_cloud_backup_consent_v2">Je comprends que Tangem ne peut pas récupérer mon mot de passe de sauvegarde. Si je le perds, ou si je perds mon %1$s, ma sauvegarde sera irrécupérable. Sans ma phrase de récupération, mes cryptos ne pourront pas non plus être récupérées.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Vous ne pourrez pas restaurer ce portefeuille depuis %s. Vous pouvez créer une nouvelle sauvegarde à tout moment.</string>
   <string name="hw_cloud_backup_error_network">Aucune connexion Internet. Vérifiez votre connexion au réseau et réessayez.</string>
   <string name="hw_cloud_backup_error_title">Une erreur est survenue</string>
@@ -1966,7 +1967,7 @@
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">Nous traitons les achats sous 5 jours et comptons seulement les transactions terminées</string>
   <string name="tangempay_cashback_accruals_calc_title">Comment calculons-nous le cashback ?</string>
-  <string name="tangempay_cashback_accruals_exceptions_description">Le cashback n’est pas disponible pour les paiements en magasin par terminal dans l’UE. Il ne s’applique pas non plus aux retraits, au quasi-cash, aux recharges mobiles, aux services publics et à certaines autres catégories.</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Temporairement, le cashback n’est pas disponible pour les paiements sans contact en magasin dans l’UE. Il ne s’applique pas non plus aux retraits, au quasi-cash, aux recharges mobiles, aux services publics et à certaines autres catégories.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Exceptions</string>
   <string name="tangempay_cashback_accruals_pay_description">Du 2 au 5 du mois suivant</string>
   <string name="tangempay_cashback_accruals_pay_title">Comment versons-nous le cashback ?</string>
@@ -1980,7 +1981,7 @@
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s pour %2$s versé avant le %3$s</string>
   <string name="tangempay_cashback_deposited_on">Versé le %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s max/mois</string>
-  <string name="tangempay_cashback_details_eu_excluded">Pas de cashback pour achats en magasin dans l\'UE</string>
+  <string name="tangempay_cashback_details_eu_excluded">Temporairement, le cashback n’est pas disponible pour les paiements sans contact en magasin dans l’UE</string>
   <string name="tangempay_cashback_details_paid_in">Payé en %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% sur achats avec cartes %2$s, achat min. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s gagné en %2$s</string>

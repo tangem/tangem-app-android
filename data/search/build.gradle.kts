@@ -28,6 +28,8 @@ dependencies {
     // endregion
 
     // region Project - Core
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
     api(projects.core.utils)
     // endregion
 

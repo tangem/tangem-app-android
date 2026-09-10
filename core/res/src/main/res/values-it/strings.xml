@@ -265,7 +265,7 @@
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s per %2$s accreditato entro il %3$s</string>
   <string name="tangempay_cashback_deposited_on">Accreditato il %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s max/mese</string>
-  <string name="tangempay_cashback_details_eu_excluded">Nessun cashback per acquisti in negozio nell\'UE</string>
+  <string name="tangempay_cashback_details_eu_excluded">Il cashback non è attualmente attivo per i pagamenti su POS nei negozi fisici nell’UE</string>
   <string name="tangempay_cashback_details_paid_in">Pagato in %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% su acquisti con carte %2$s, acquisto min. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s guadagnato in %2$s</string>

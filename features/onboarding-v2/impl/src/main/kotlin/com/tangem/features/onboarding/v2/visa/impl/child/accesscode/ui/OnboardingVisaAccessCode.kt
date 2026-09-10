@@ -26,12 +26,15 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifier: Modifier = Modifier) {
+    DisableAutofillEffect()
+
     Column(
         modifier
             .fillMaxSize()
