@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -320,6 +319,42 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN same-named backup exists WHEN uploadBackup for a new wallet THEN backupName is incremented`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } answers {
+            val query = secondArg<String>()
+            val files = if (query.contains("mimeType")) {
+                listOf(DriveFile(id = "folder-id", name = "Tangem"))
+            } else {
+                listOf(
+                    DriveFile(
+                        id = "existing-id",
+                        name = "Wallet.backup.json",
+                        appProperties = mapOf("walletId" to "other-wallet"),
+                    ),
+                )
+            }
+            Response.success(DriveFileListResponse(files = files))
+        }
+        coEvery { api.createFile(any(), any(), any()) } returns Response.success(DriveFile(id = "new-id"))
+        coEvery {
+            api.uploadFileContent(any(), any(), any(), any(), any())
+        } returns Response.success(DriveFile(id = "new-id"))
+
+        // Act
+        val result = repository.uploadBackup(
+            walletId = "new-wallet",
+            walletName = "Wallet",
+            createdAtMillis = 0L,
+            secret = secret,
+            password = "p".toCharArray(),
+        )
+
+        // Assert
+        assertThat(result.getOrNull()?.backupName).isEqualTo("Wallet (1)")
+    }
+
+    @Test
     fun `GIVEN backup exists for wallet WHEN uploadBackup THEN metadata is refreshed instead of created`() = runTest {
         // Arrange
         coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
@@ -414,31 +449,31 @@ internal class DefaultCloudBackupRepositoryTest {
 
     @Test
     fun `GIVEN no files WHEN resolveUniqueBackupName THEN base name`() {
-        assertThat(resolveUniqueBackupName("Wallet", "backup.json", emptySet())).isEqualTo("Wallet.backup.json")
+        assertThat(resolveUniqueBackupName("Wallet", "backup.json", emptySet())).isEqualTo("Wallet")
     }
 
     @Test
     fun `GIVEN base name taken WHEN resolveUniqueBackupName THEN first increment`() {
         assertThat(resolveUniqueBackupName("Wallet", "backup.json", setOf("Wallet.backup.json")))
-            .isEqualTo("Wallet (1).backup.json")
+            .isEqualTo("Wallet (1)")
     }
 
     @Test
     fun `GIVEN base and first increment taken WHEN resolveUniqueBackupName THEN second increment`() {
         val existing = setOf("Wallet.backup.json", "Wallet (1).backup.json")
-        assertThat(resolveUniqueBackupName("Wallet", "backup.json", existing)).isEqualTo("Wallet (2).backup.json")
+        assertThat(resolveUniqueBackupName("Wallet", "backup.json", existing)).isEqualTo("Wallet (2)")
     }
 
     @Test
     fun `GIVEN only increment taken but base free WHEN resolveUniqueBackupName THEN base name`() {
         assertThat(resolveUniqueBackupName("Wallet", "backup.json", setOf("Wallet (1).backup.json")))
-            .isEqualTo("Wallet.backup.json")
+            .isEqualTo("Wallet")
     }
 
     @Test
     fun `GIVEN a different name taken WHEN resolveUniqueBackupName THEN unaffected`() {
         assertThat(resolveUniqueBackupName("Other", "backup.json", setOf("Wallet.backup.json")))
-            .isEqualTo("Other.backup.json")
+            .isEqualTo("Other")
     }
 
     @Test
@@ -450,8 +485,8 @@ internal class DefaultCloudBackupRepositoryTest {
         val actual = resolveUniqueBackupName(walletName, "backup.json", emptySet())
 
         // Assert
-        assertThat(actual).isEqualTo("W".repeat(n = 243) + ".backup.json")
-        assertThat(actual.toByteArray(Charsets.UTF_8)).hasLength(255)
+        assertThat(actual).isEqualTo("W".repeat(n = 243))
+        assertThat("$actual.backup.json".toByteArray(Charsets.UTF_8)).hasLength(255)
     }
 
     @Test
@@ -463,22 +498,22 @@ internal class DefaultCloudBackupRepositoryTest {
         val actual = resolveUniqueBackupName(walletName, "backup.json", emptySet())
 
         // Assert
-        assertThat(actual).isEqualTo("Ж".repeat(n = 121) + ".backup.json")
-        assertThat(actual.toByteArray(Charsets.UTF_8).size).isAtMost(255)
+        assertThat(actual).isEqualTo("Ж".repeat(n = 121))
+        assertThat("$actual.backup.json".toByteArray(Charsets.UTF_8).size).isAtMost(255)
     }
 
     @Test
     fun `GIVEN truncated name taken WHEN resolveUniqueBackupName THEN increment also fits into 255 bytes`() {
         // Arrange
         val walletName = "W".repeat(n = 300)
-        val existing = setOf(resolveUniqueBackupName(walletName, "backup.json", emptySet()))
+        val existing = setOf(resolveUniqueBackupName(walletName, "backup.json", emptySet()) + ".backup.json")
 
         // Act
         val actual = resolveUniqueBackupName(walletName, "backup.json", existing)
 
         // Assert
-        assertThat(actual).isEqualTo("W".repeat(n = 239) + " (1).backup.json")
-        assertThat(actual.toByteArray(Charsets.UTF_8)).hasLength(255)
+        assertThat(actual).isEqualTo("W".repeat(n = 239) + " (1)")
+        assertThat("$actual.backup.json".toByteArray(Charsets.UTF_8)).hasLength(255)
     }
 
     @Test
@@ -510,15 +545,13 @@ internal class DefaultCloudBackupRepositoryTest {
     @Test
     fun `GIVEN backup without createdAt appProperty WHEN findBackups THEN createdAtMillis from createdTime`() = runTest {
         // Arrange
-        val createdTime = "2024-01-15T10:30:00Z"
         coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
             DriveFileListResponse(
                 files = listOf(
                     DriveFile(
                         id = "f1",
                         name = "Wallet.backup.json",
-                        createdTime = createdTime,
-                        appProperties = mapOf("walletId" to "w1"),
+                        appProperties = mapOf("walletId" to "w1", "createdAt" to "1705314600000"),
                     ),
                 ),
             ),
@@ -528,8 +561,29 @@ internal class DefaultCloudBackupRepositoryTest {
         val result = repository.findBackups(interactive = false)
 
         // Assert
-        assertThat(result.getOrNull()?.single()?.createdAtMillis)
-            .isEqualTo(Instant.parse(createdTime).toEpochMilliseconds())
+        assertThat(result.getOrNull()?.single()?.createdAtMillis).isEqualTo(1_705_314_600_000L)
+    }
+
+    @Test
+    fun `GIVEN incremented file name WHEN findBackups THEN backupName drops the extension`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(
+                files = listOf(
+                    DriveFile(
+                        id = "f1",
+                        name = "Wallet (1).backup.json",
+                        appProperties = mapOf("walletId" to "w1", "walletName" to "Wallet"),
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val result = repository.findBackups(interactive = false)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.backupName).isEqualTo("Wallet (1)")
     }
 
     @Test
@@ -660,7 +714,6 @@ internal class DefaultCloudBackupRepositoryTest {
     private fun driveFile(id: String): DriveFile = DriveFile(
         id = id,
         name = "Wallet.backup.json",
-        createdTime = "2024-01-15T10:30:00Z",
         appProperties = mapOf("walletId" to "w1"),
     )
 
