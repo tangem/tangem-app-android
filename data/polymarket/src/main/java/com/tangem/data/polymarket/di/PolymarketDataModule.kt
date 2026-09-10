@@ -22,8 +22,10 @@ import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionBalanceRefresher
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -101,5 +103,17 @@ internal interface PolymarketDataModule {
         @Provides
         @Singleton
         fun providePredictionBalancePollingConfig(): PredictionBalancePollingConfig = PredictionBalancePollingConfig()
+
+        @Provides
+        @Singleton
+        fun providePredictionBalancePoller(
+            refresher: PredictionBalanceRefresher,
+            config: PredictionBalancePollingConfig,
+            appScope: AppCoroutineScope,
+        ): PredictionBalancePoller = PredictionBalancePoller(
+            refresher = refresher,
+            config = config,
+            appScope = appScope,
+        )
     }
 }
