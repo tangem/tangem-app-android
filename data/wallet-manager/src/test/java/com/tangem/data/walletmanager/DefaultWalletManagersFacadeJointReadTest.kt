@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.transactionhistory.TransactionHistoryState
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
+import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.walletmanager.store.WalletManagersStore
@@ -15,8 +16,10 @@ import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -123,6 +126,50 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         assertThat(transactions).isEmpty()
         verify { sdkFactory wasNot Called }
     }
+
+    @Test
+    fun `GIVEN no Safe address yet WHEN getTxHistoryState THEN the address is pending instead of a failure`() =
+        runTest {
+            // Arrange
+            coEvery { safeAddressResolver.resolve(userWalletId, setOf(jointNetwork)) } returns emptyMap()
+
+            // Act
+            val actual = facade.getTxHistoryState(userWalletId, jointEthereum)
+
+            // Assert
+            assertThat(actual).isEqualTo(TxHistoryState.AddressNotReady)
+            verify { sdkFactory wasNot Called }
+        }
+
+    @Test
+    fun `GIVEN no Safe address yet WHEN getTxHistoryItems THEN it is refused as pending, not as a data error`() =
+        runTest {
+            // Arrange
+            coEvery { safeAddressResolver.resolve(userWalletId, setOf(jointNetwork)) } returns emptyMap()
+
+            // Act
+            val actual = runCatching {
+                facade.getTxHistoryItems(userWalletId, jointEthereum, Page.Initial, pageSize = 20)
+            }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(TxHistoryStateError.AddressNotReady::class.java)
+        }
+
+    @Test
+    fun `GIVEN a personal network without a wallet manager WHEN getTxHistoryState THEN it still fails loudly`() =
+        runTest {
+            // Arrange
+            val personal = cryptoCurrencyFactory.ethereum
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
+            coEvery { walletManagersStore.getSyncOrNull(any(), any(), any()) } returns null
+
+            // Act
+            val actual = runCatching { facade.getTxHistoryState(userWalletId, personal) }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
+        }
 
     @Test
     fun `GIVEN a cached provider WHEN getExploreUrl THEN the explorer link of the Safe address`() = runTest {
