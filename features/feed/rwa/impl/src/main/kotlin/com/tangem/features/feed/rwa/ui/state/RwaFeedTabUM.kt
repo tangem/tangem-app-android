@@ -45,7 +45,7 @@ internal sealed interface RwaFeaturedUM {
     @Immutable
     data class Content(val assets: ImmutableList<RwaFeaturedAssetUM>) : RwaFeaturedUM
 
-    /** Nothing to show — a failed fetch or a backend without the `featured_assets` category. */
+    /** Nothing to show — a failed fetch or a backend without the `featured-assets` category. */
     data object Empty : RwaFeaturedUM
 }
 
