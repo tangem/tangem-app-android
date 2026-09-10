@@ -23,7 +23,6 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -55,13 +54,12 @@ internal class DefaultPredictionAccountStatusFetcherTest {
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val getWalletStatus: GetPolymarketWalletStatusUseCase = mockk()
     private val getBalance: GetPolymarketBalanceInteractor = mockk()
-    private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val recordConfirmation: RecordPolymarketConfirmationUseCase = mockk(relaxUnitFun = true)
     private val polymarketRepository: PolymarketRepository = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, checkGeoblock, recordConfirmation, polymarketRepository)
+        clearMocks(userWalletsListRepository, userWallet, deriveAddresses, getWalletStatus, getBalance, recordConfirmation, polymarketRepository)
         every { userWallet.isLocked } returns false
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
         every { userWallet.walletId } returns WALLET
@@ -110,7 +108,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-        coEvery { checkGeoblock.invoke() } returns false.right()
         val store = createStore(testScope = this)
 
         // Act
@@ -127,7 +124,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-        coEvery { checkGeoblock.invoke() } returns false.right()
         val store = createStore(testScope = this)
         store.store(userWalletId = WALLET, value = ACTIVE.copy(depositAddress = BRIDGE_ADDRESS))
 
@@ -147,7 +143,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
         coEvery { getBalance.invoke(ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-        coEvery { checkGeoblock.invoke() } returns false.right()
         val store = createStore(testScope = this)
 
         // Act
@@ -159,30 +154,10 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal("40"),
                 fiatRate = null,
-                isTradingAllowed = true,
                 depositCurrency = COLLATERAL,
                 depositAddress = null,
             ),
         )
-    }
-
-    @Test
-    fun `GIVEN a blocked region WHEN invoke THEN the balance is kept and trading is not allowed`() = runTest {
-        // Arrange
-        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
-        coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
-        coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-        coEvery { checkGeoblock.invoke() } returns true.right()
-        val store = createStore(testScope = this)
-
-        // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
-
-        // Assert
-        val actual = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-        assertThat(actual.isTradingAllowed).isFalse()
-        assertThat(actual.balance).isEqualTo(BigDecimal("40"))
     }
 
     @Test
@@ -349,23 +324,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         assertThat(store.getSyncOrNull(WALLET)).isEqualTo(ACTIVE.copy(source = StatusSource.ONLY_CACHE))
     }
 
-    @Test
-    fun `GIVEN the region check fails WHEN invoke THEN trading stays allowed`() = runTest {
-        // Arrange
-        coEvery { deriveAddresses.stored(WALLET) } returns ADDRESSES
-        coEvery { getWalletStatus.invoke(ADDRESSES) } returns walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
-        coEvery { getBalance.invoke(ADDRESSES) } returns
-            PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-        coEvery { checkGeoblock.invoke() } returns PolymarketOnboardingError.Unknown.left()
-        val store = createStore(testScope = this)
-
-        // Act
-        createFetcher(store).invoke(PredictionAccountStatusFetcher.Params(WALLET))
-
-        // Assert — the trading screens run their own check, so guessing "blocked" would only hide the user's money
-        assertThat((store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active).isTradingAllowed).isTrue()
-    }
-
     private fun createStore(testScope: TestScope) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
             collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
@@ -409,7 +367,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
                 walletState(PolymarketWalletStatus.READY_TO_TRADE).right()
             coEvery { getBalance.invoke(ADDRESSES) } returns
                 PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
-            coEvery { checkGeoblock.invoke() } returns false.right()
 
             // Act
             createFetcher(createStore(testScope = this)).invoke(PredictionAccountStatusFetcher.Params(WALLET))
@@ -573,7 +530,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         derivePolymarketAddressesUseCase = deriveAddresses,
         getPolymarketWalletStatusUseCase = getWalletStatus,
         getPolymarketBalanceInteractor = getBalance,
-        checkPolymarketGeoblockUseCase = checkGeoblock,
         recordPolymarketConfirmation = recordConfirmation,
         polymarketRepository = polymarketRepository,
         collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
@@ -591,7 +547,6 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal("40"),
             fiatRate = null,
-            isTradingAllowed = true,
             depositCurrency = COLLATERAL,
             depositAddress = BRIDGE_ADDRESS,
         )

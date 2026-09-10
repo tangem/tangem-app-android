@@ -3,6 +3,8 @@ package com.tangem.features.introduction.impl.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -12,6 +14,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -23,6 +26,7 @@ import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -115,6 +119,92 @@ internal class IntroductionCardScannerTest {
         assertThat(sentEvents.filterIsInstance<Basic.SignedIn>()).hasSize(1)
         assertThat(isLeavingReported).isTrue()
         verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is already saved WHEN a card is scanned THEN it is unlocked by the scan and opened`() = runTest {
+        // Arrange
+        coEvery { saveWalletUseCase(any(), any(), any()) } returns
+            SaveWalletError.WalletAlreadySaved(messageId = 0).left()
+        coEvery { userWalletsListRepository.unlock(any(), any()) } returns Unit.right()
+        var isLeavingReported = false
+
+        // Act
+        scanner.scanAndOpenWallet(
+            analyticsSource = SOURCE,
+            onNavigatedAway = { isLeavingReported = true },
+            onFailed = { error("must not be called") },
+        )
+
+        // Assert
+        coVerify(exactly = 1) {
+            userWalletsListRepository.unlock(
+                userWalletId = userWallet.walletId,
+                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse = scanResponse, source = SOURCE),
+            )
+        }
+        assertThat(sentEvents).isEmpty()
+        assertThat(isLeavingReported).isTrue()
+        verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+    }
+
+    @Test
+    fun `GIVEN the viewer cancels the scan WHEN the processor reports it THEN the cancellation is reported`() = runTest {
+        // Arrange
+        coEvery {
+            scanCardProcessor.scan(
+                analyticsSource = any(),
+                shouldCheckIsAlreadyActivated = any(),
+                cardId = any(),
+                onProgressStateChange = any(),
+                onWalletNotCreated = any(),
+                onCancel = any(),
+                onFailure = any(),
+                onSuccess = any(),
+            )
+        } coAnswers { arg<suspend (TangemError) -> Unit>(n = 6).invoke(TangemSdkError.UserCancelled()) }
+        var isFailureReported = false
+
+        // Act
+        scanner.scanAndOpenWallet(
+            analyticsSource = SOURCE,
+            onNavigatedAway = { error("must not be called") },
+            onFailed = { isFailureReported = true },
+        )
+
+        // Assert
+        assertThat(sentEvents).containsExactly(IntroductionProcess.ScanCancelled(SOURCE))
+        assertThat(isFailureReported).isTrue()
+        verify { router wasNot Called }
+    }
+
+    @Test
+    fun `GIVEN the scan fails for another reason WHEN the processor reports it THEN no cancellation is reported`() = runTest {
+        // Arrange
+        coEvery {
+            scanCardProcessor.scan(
+                analyticsSource = any(),
+                shouldCheckIsAlreadyActivated = any(),
+                cardId = any(),
+                onProgressStateChange = any(),
+                onWalletNotCreated = any(),
+                onCancel = any(),
+                onFailure = any(),
+                onSuccess = any(),
+            )
+        } coAnswers { arg<suspend (TangemError) -> Unit>(n = 6).invoke(TangemSdkError.NfcFeatureIsUnavailable()) }
+        var isFailureReported = false
+
+        // Act
+        scanner.scanAndOpenWallet(
+            analyticsSource = SOURCE,
+            onNavigatedAway = { error("must not be called") },
+            onFailed = { isFailureReported = true },
+        )
+
+        // Assert
+        assertThat(sentEvents).isEmpty()
+        assertThat(isFailureReported).isTrue()
     }
 
     @Test
