@@ -19,7 +19,7 @@ internal class TangemPayCashbackDateFormatter {
 
     fun formatWindow(start: DateTime?, end: DateTime?): String? {
         if (start == null || end == null) return null
-        return DateTimeFormatters.formatDateRange(start, end, MONTH_DAY_SKELETON)
+        return DateTimeFormatters.formatDateRange(start.toLocalDate(), end.toLocalDate(), MONTH_DAY_SKELETON)
     }
 
     private companion object {

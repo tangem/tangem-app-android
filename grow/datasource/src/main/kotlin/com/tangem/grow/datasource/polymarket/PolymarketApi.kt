@@ -8,6 +8,9 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketEventsResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketSearchResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketPositionsResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketClosedPositionsResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketPositionResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationResponse
@@ -25,6 +28,30 @@ import retrofit2.http.Query
  * Provided in [com.tangem.grow.datasource.di.GrowDatasourceModule].
  */
 interface PolymarketApi {
+
+    @GET("api/predictions/v1/positions?sort=endDate&ascending=true")
+    suspend fun getPositions(
+        @Header("wallet-id") walletId: String,
+        @Query("depositWalletAddress") depositWalletAddress: String,
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int,
+    ): ApiResponse<PolymarketPositionsResponse>
+
+    @GET("api/predictions/v1/positions/closed?sort=closedAt&ascending=false")
+    suspend fun getClosedPositions(
+        @Header("wallet-id") walletId: String,
+        @Query("depositWalletAddress") depositWalletAddress: String,
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int,
+    ): ApiResponse<PolymarketClosedPositionsResponse>
+
+    @GET("api/predictions/v1/positions/outcome")
+    suspend fun getPosition(
+        @Header("wallet-id") walletId: String,
+        @Query("depositWalletAddress") depositWalletAddress: String,
+        @Query("conditionId") conditionId: String,
+        @Query("assetId") assetId: String,
+    ): ApiResponse<PolymarketPositionResponse>
 
     /**
      * BFF-owned UI categories shown as Discovery feed tabs.
