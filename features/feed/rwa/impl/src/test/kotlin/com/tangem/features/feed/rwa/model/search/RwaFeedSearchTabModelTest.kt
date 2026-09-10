@@ -41,6 +41,7 @@ import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
+import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.features.feed.rwa.components.RwaFeedSearchTabComponent
 import com.tangem.features.feed.rwa.ui.state.RwaSearchListUM
 import com.tangem.features.feed.rwa.ui.state.RwaSearchPortfolioUM
@@ -90,6 +91,7 @@ internal class RwaFeedSearchTabModelTest {
     // never relaxed: a relaxed Either invokes neither fold branch, so the umbrella would stay unresolved
     // and every reload assertion would pass for the wrong reason
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase = mockk()
+    private val userCountryResolver: UserCountryResolver = mockk()
     private val getSearchResultsUseCase: GetSearchResultsUseCase = mockk()
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
@@ -111,6 +113,7 @@ internal class RwaFeedSearchTabModelTest {
             getBalanceHidingSettingsUseCase,
             userWalletsListRepository,
             getCoinCategoriesUseCase,
+            userCountryResolver,
             getSearchResultsUseCase,
             router,
             analyticsEventHandler,
@@ -120,11 +123,12 @@ internal class RwaFeedSearchTabModelTest {
         actions.clear()
         batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.None)
 
+        coEvery { userCountryResolver.resolve() } returns "DE"
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns flowOf(AppCurrency.Default)
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
         every { getSearchResultsUseCase(any()) } returns flowOf(searchResult())
-        coEvery { getCoinCategoriesUseCase() } returns Either.Right(listOf(umbrellaCategory()))
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(listOf(umbrellaCategory()))
         every { getMarketsTokenListFlowUseCase(any(), any()) } answers {
             val context = firstArg<TokenListBatchingContext>()
             // undispatched: the actions flow is a rendezvous SharedFlow, which drops emissions made
@@ -148,7 +152,7 @@ internal class RwaFeedSearchTabModelTest {
 
         // Assert
         assertThat(reloads()).isEmpty()
-        coVerify(exactly = 0) { getCoinCategoriesUseCase() }
+        coVerify(exactly = 0) { getCoinCategoriesUseCase(country = "DE") }
         verify(exactly = 0) { getSearchResultsUseCase(any()) }
 
         model.onDestroy()
@@ -207,7 +211,7 @@ internal class RwaFeedSearchTabModelTest {
     fun `GIVEN the categories fetch resolves late WHEN a query is searched THEN the reload waits for it`() = runTest {
         // Arrange
         val pendingCategories = CompletableDeferred<List<CoinCategory>>()
-        coEvery { getCoinCategoriesUseCase() } coAnswers { Either.Right(pendingCategories.await()) }
+        coEvery { getCoinCategoriesUseCase(country = "DE") } coAnswers { Either.Right(pendingCategories.await()) }
         val query = MutableStateFlow("")
         val model = createModel(testScope = this, query = query)
         model.becomeVisible()
@@ -233,7 +237,7 @@ internal class RwaFeedSearchTabModelTest {
     fun `GIVEN the categories fetch fails WHEN a query is searched THEN the list errors and nothing is requested`() =
         runTest {
             // Arrange
-            coEvery { getCoinCategoriesUseCase() } returns Either.Left(IllegalStateException("boom"))
+            coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Left(IllegalStateException("boom"))
             val query = MutableStateFlow("")
             val model = createModel(testScope = this, query = query)
             model.becomeVisible()
@@ -252,7 +256,7 @@ internal class RwaFeedSearchTabModelTest {
     @Test
     fun `GIVEN the response has no umbrella code WHEN a query is searched THEN the list errors`() = runTest {
         // Arrange
-        coEvery { getCoinCategoriesUseCase() } returns Either.Right(
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(
             listOf(umbrellaCategory().copy(code = "something-else")),
         )
         val query = MutableStateFlow("")
@@ -274,7 +278,7 @@ internal class RwaFeedSearchTabModelTest {
     fun `GIVEN the categories fetch failed WHEN retry is pressed THEN it refetches and the request is scoped`() =
         runTest {
             // Arrange
-            coEvery { getCoinCategoriesUseCase() } returns Either.Left(IllegalStateException("boom"))
+            coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Left(IllegalStateException("boom"))
             val query = MutableStateFlow("")
             val model = createModel(testScope = this, query = query)
             model.becomeVisible()
@@ -282,7 +286,7 @@ internal class RwaFeedSearchTabModelTest {
             advanceUntilIdle()
 
             // Act
-            coEvery { getCoinCategoriesUseCase() } returns Either.Right(listOf(umbrellaCategory()))
+            coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(listOf(umbrellaCategory()))
             (model.uiState.value.list as RwaSearchListUM.Error).onRetry()
             advanceUntilIdle()
 
@@ -319,7 +323,7 @@ internal class RwaFeedSearchTabModelTest {
         runTest {
             // Arrange
             val pendingCategories = CompletableDeferred<List<CoinCategory>>()
-            coEvery { getCoinCategoriesUseCase() } coAnswers { Either.Right(pendingCategories.await()) }
+            coEvery { getCoinCategoriesUseCase(country = "DE") } coAnswers { Either.Right(pendingCategories.await()) }
             val query = MutableStateFlow("")
             val model = createModel(testScope = this, query = query)
             model.becomeVisible()
@@ -334,7 +338,7 @@ internal class RwaFeedSearchTabModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { getCoinCategoriesUseCase() }
+            coVerify(exactly = 1) { getCoinCategoriesUseCase(country = "DE") }
             assertThat(reloads().map { it.searchText }).containsExactly("tsla")
 
             model.onDestroy()
@@ -609,6 +613,7 @@ internal class RwaFeedSearchTabModelTest {
             getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             userWalletsListRepository = userWalletsListRepository,
             getCoinCategoriesUseCase = getCoinCategoriesUseCase,
+            userCountryResolver = userCountryResolver,
             getSearchResultsUseCase = getSearchResultsUseCase,
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
