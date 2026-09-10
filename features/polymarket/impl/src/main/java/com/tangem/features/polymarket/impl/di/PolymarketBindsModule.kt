@@ -4,6 +4,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
@@ -13,6 +14,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -110,6 +112,16 @@ internal object PolymarketFeatureTogglesModule {
 @Module
 @InstallIn(SingletonComponent::class)
 internal object PolymarketDomainUseCasesModule {
+
+    @Provides
+    @Singleton
+    fun provideCheckNewPolymarketAccountAllowedInteractor(
+        getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
+        checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    ): CheckNewPolymarketAccountAllowedInteractor = CheckNewPolymarketAccountAllowedInteractor(
+        getWalletStatus = getPolymarketWalletStatusUseCase,
+        checkGeoblock = checkPolymarketGeoblockUseCase,
+    )
 
     @Provides
     @Singleton
