@@ -20,14 +20,17 @@ internal object CoinCategoryConverter : Converter<CoinCategoriesResponse.Categor
             tokensCount = value.tokensCount,
             isRestricted = value.isRestricted,
             isVisible = value.isVisible,
-            sectors = value.sectors.map(::convertSector),
+            sectors = value.sectors.sortedBy(CoinCategoriesResponse.Category.Sector::displayOrder)
+                .map(::convertSector),
         )
     }
 
     private fun convertSector(value: CoinCategoriesResponse.Category.Sector): CoinCategory.Sector {
         return CoinCategory.Sector(
             id = value.id,
+            code = value.code,
             displayName = value.displayName,
+            displayOrder = value.displayOrder,
             tokensCount = value.tokensCount,
         )
     }
