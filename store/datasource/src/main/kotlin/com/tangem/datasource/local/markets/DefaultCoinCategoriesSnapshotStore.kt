@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.markets
 
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
@@ -34,7 +35,8 @@ internal class DefaultCoinCategoriesSnapshotStore(
 
 @JsonClass(generateAdapter = true)
 internal data class CoinCategoriesSnapshot(
-    val country: String,
-    val environment: String,
-    val categories: List<Category>,
+    // pinned: the keys are what is already on disk, so a property rename must not orphan the snapshot
+    @Json(name = "country") val country: String,
+    @Json(name = "environment") val environment: String,
+    @Json(name = "categories") val categories: List<Category>,
 )
