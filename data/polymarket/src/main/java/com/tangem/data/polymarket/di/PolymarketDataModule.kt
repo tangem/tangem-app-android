@@ -8,6 +8,7 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
+import com.tangem.data.polymarket.flow.DefaultPredictionBalanceRefresher
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -21,6 +22,8 @@ import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalanceRefresher
+import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -78,6 +81,10 @@ internal interface PolymarketDataModule {
     @Singleton
     fun bindPredictionDepositAddressWriter(impl: DefaultPredictionDepositAddressWriter): PredictionDepositAddressWriter
 
+    @Binds
+    @Singleton
+    fun bindPredictionBalanceRefresher(impl: DefaultPredictionBalanceRefresher): PredictionBalanceRefresher
+
     companion object {
 
         @Provides
@@ -90,5 +97,9 @@ internal interface PolymarketDataModule {
                 keyCreator = { params -> "prediction_account_status_${params.userWalletId.stringValue}" },
             ) {}
         }
+
+        @Provides
+        @Singleton
+        fun providePredictionBalancePollingConfig(): PredictionBalancePollingConfig = PredictionBalancePollingConfig()
     }
 }
