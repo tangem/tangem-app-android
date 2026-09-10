@@ -17,7 +17,12 @@ RWA-specific bindings are listed here.
   error log.
 - **`CategorySelectorScreenFactory`** — `@Binds @IntoMap @ClassKey(CategorySelectorRoute::class)` into
   the feed screen registry, in `CategorySelectorModule`.
-- **`ModelModule`** — `RwaFeedTabModel` and `CategorySelectorModel` into `ModelComponent`.
+- **`ModelModule`** — `RwaFeedTabModel`, `RwaFeedSearchTabModel` and `CategorySelectorModel` into
+  `ModelComponent`. The *components* need no binding of their own: a bare nested `@AssistedFactory` is
+  bound by Hilt automatically (the Crypto tab declares one only because its factory type lives in an
+  `api` module).
+- **`RwaFeedTabContributor.createSearchTab`** — implementing that method is the *only* declaration that a
+  tab participates in search; see the contract KDoc in `FeedTabContributor`.
 - `app/build.gradle.kts` carries the Hilt aggregation line (`projects.features.feed.rwa.impl`).
 
 **Two toggles are required to see the tab.** `isNewShtorkaEnabled` (TWI-1608) selects the v2 feed over
@@ -36,10 +41,18 @@ available. Both are `"version": "undefined"` in `feature_toggles_config.json` �
 RwaFeedTabComponent                   (FeedTabComponent; owns LazyListState — see Gotchas)
   ├─ PromoBannersBlockComponent       child("promoBannersBlockComponent")
   └─ RwaFeedTabModel                  uiState: StateFlow<RwaFeedTabUM>
-       ├─ RwaFeaturedAssetsManager    → RwaFeaturedUM   (rail; GetTopFiveMarketTokenUseCase, 5 items)
+       ├─ RwaFeaturedAssetsManager    → RwaFeaturedUM   (rail; BatchFlowType.Featured, whole bucket)
        └─ RwaBatchFlowManager         → RwaListUM       (paginated list)
             └─ BatchListStateManager  → RwaListItemConverter → RwaListItemUM
+
+RwaFeedSearchTabComponent             (FeedTabComponent; the search screen's page — see Search tab)
+  └─ RwaFeedSearchTabModel            uiState: StateFlow<RwaSearchUM>
+       ├─ GetSearchResultsUseCase     → RwaSearchPortfolioUM  ("My portfolio" sections)
+       └─ RwaBatchFlowManager         → RwaSearchListUM       (same manager, BatchFlowType.Search)
 ```
+
+Row rendering is shared by both through `ui/RwaListItems.kt` (`rwaTokenItems` / `rwaTokenShimmers`), which
+also owns `VisibleTokensTracker` and the `"token:"` item-key prefix it parses.
 
 `RwaFeedTabModel` also implements `CategorySelectorComponent.ModelCallback`, so it is both the tab's
 state holder and the receiver of the category-selector result.
@@ -49,7 +62,7 @@ state holder and the receiver of the category-selector result.
 Nothing renders until categories are fetched, because two category **codes** are reserved rather than
 offered as filters (`ReservedCategoryCodes`):
 
-- `featured_assets` — backs the Featured rail; its id is passed to `RwaFeaturedAssetsManager.load()`.
+- `featured-assets` — backs the Featured rail; its id is passed to `RwaFeaturedAssetsManager.load()`.
 - `real-world-assets` — the umbrella scope, surfaced in the selector as "All", and the tab's default
   list scope.
 
@@ -63,8 +76,44 @@ The same rule applies to the sector rail: "All" there unfilters the sector and l
 **The list is never requested unscoped.** With no user filter `orUmbrella` substitutes the umbrella
 category at request time, and `reloadList()` re-runs the categories fetch when the umbrella id isn't
 resolved yet — an unscoped request would return the entire coin universe rather than real-world assets.
-A missing code degrades rather than throws: no `featured_assets` → `RwaFeaturedUM.Empty` (rail hidden);
+A missing code degrades rather than throws: no `featured-assets` → `RwaFeaturedUM.Empty` (rail hidden);
 no `real-world-assets` → the list renders `RwaListUM.Error`.
+
+## Search tab
+
+A second, separate component rather than a mode of the tab: the two share only the asset row, and one
+component would build the Featured rail and the filters on the search screen. The host
+(`DefaultFeedSearchComponent`) constructs *every* tab's search page when the search screen opens and hands
+each one the raw query, so this model owns trimming, the 500 ms debounce, and the rule that nothing is
+fetched while the query is blank (`isOnScreen` gate + a blank-query early return).
+
+Search is fixed at the legacy scope — 24h trend, rating order, no sector — and **ignores the tab's applied
+category/sector filter**, mirroring the Crypto tab. What it cannot ignore is the umbrella: an unscoped
+request answers with the entire coin universe, so `RwaFeedSearchTabModel` resolves
+`ReservedCategoryCodes.REAL_WORLD_ASSETS` before any request leaves.
+
+That resolution is the one piece with non-obvious sequencing:
+
+- `loadCategories()` runs on `modelScope`, never inside the query collector — `collectLatest` cancels its
+  scope on every keystroke, and a fetch started there would be restarted, and never finish, for a user
+  typing faster than it completes. An in-flight guard makes repeated calls free; a cancel-and-restart would
+  reintroduce the same starvation from the other side.
+- `scheduleReload()` is the only place a request is issued, and it is held in a `JobHolder`. The wait for
+  the umbrella is open-ended: a failed fetch leaves it suspended until a retry resolves it, and without
+  superseding, the retry's own request **and** the revived original both fire — two identical requests.
+- A failed or code-less categories response is a UM state, not a hang: `isCategoriesFailed` feeds the list
+  combine and outranks "not found", because a query that never reached the network must not read as
+  "no results". `retry()` re-resolves the umbrella before reloading; a bare `listManager.reload()` would go
+  out unscoped.
+
+Chrome shared with the other search tabs (section header, "no results") lives in
+`:features:feed:search:api` as `FeedSearchSections.kt`, so the tabs cannot drift apart visually.
+
+> **Unverified backend contract.** `GET v1/coins/list` is sent `search` *and* `categoryId` together, which
+> no other caller in the app does — Crypto search sends `search` alone, the RWA tab `categoryId` alone. If
+> the server treats `search` as a global full-text branch and ignores `categoryId`, this tab silently
+> returns crypto results; if it ANDs them but the umbrella is not text-indexed, everything reads as
+> `NotFound`. Confirm against a live request before trusting the results.
 
 ## Category selector screen
 
@@ -98,21 +147,46 @@ applied is deliberately not uniform:
 - **Interval change under gainers/losers** — reloads; those orders are *ranked by* the interval, so the
   row set itself changes.
 
+The **Featured rail is a second, independent request** against the same endpoint, and the only caller in
+the app that sends `TokenMarketListConfig.Order.ByCategory` (`order=category`) — the curated order is the
+whole point of the rail, and any other order re-sorts the bucket and discards it. It is one batch
+(`BatchFlowType.Featured`, `nextBatchSize = 0`) and never pages, so the bucket's size is the backend's
+decision.
+
+**An interval change never reloads the rail.** A token carries the change percent for *every* interval at
+once (`price_change_percentage` holds `24h`/`1w`/`30d` regardless of the `interval` param), so the rail
+re-maps what it already has — the same reason the list skips its reload under `RwaSort.MarketCap`. The rail
+also ignores the applied category/sector filter, which scopes only the list below it.
+
 ## Gotchas
 
 **Everything under `impl/.../model/list/` has a twin in `features/feed/crypto/impl`.** This module was
-created by cloning the Crypto (Market Pulse) tab. `BatchListStateManager` is byte-identical to
-`crypto/impl/.../model/list/BatchListStateManager.kt` — same md5 below the `package` line — and
-`RwaBatchFlowManager` / `RwaListItemConverter` / `RwaTypes` are near-copies of the `MarketPulse*` files.
-A fix here almost always belongs there too — extracting a shared kernel is still open.
+created by cloning the Crypto (Market Pulse) tab. `BatchListStateManager` is statement-for-statement
+identical to `crypto/impl/.../model/list/BatchListStateManager.kt` (the KDoc differs, so a raw checksum
+comparison reports a false negative), and `RwaBatchFlowManager` / `RwaListItemConverter` / `RwaTypes` are
+near-copies of the `MarketPulse*` files. A fix here almost always belongs there too — extracting a shared
+kernel is still open.
+
+The two managers have deliberately diverged in **how the search text arrives**. Crypto passes a
+`currentSearchText: () -> String?` lambda *and* a `reload(searchText)` argument, and needs a guard so the
+two cannot disagree; here `searchText` is a field on `RwaListRequest`, so `reload()` stays argument-free
+and the disagreement is unrepresentable. `isEmptyResultState` likewise drops Crypto's query term: a
+predicate reading a value outside its own upstream only recomputes when the batch state happens to move,
+and so stays stale across the whole gap between a new query and its reload.
 
 **`RwaBatchFlowManager.request` is a `StateFlow` that is never collected.** It is only `.value`-read
-inside `reload()`. Writing to `RwaFeedTabModel.listRequest` therefore does nothing on its own — the
-model must call `reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
+inside `reload()`. Writing to `RwaFeedTabModel.listRequest` therefore does nothing to the list on its own —
+the model must call `reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
 
-**The reserved category codes are backend contract strings, and they disagree on convention.**
-`featured_assets` is snake_case, `real-world-assets` is kebab-case (TWI-1477). Neither is derived from
-the other, and a rename on either side silently empties the rail or the whole list with no error.
+`RwaFeaturedAssetsManager` takes the *same* `listRequest` flow but does collect it — only
+`interval`, and only to re-map the rail. So a write to `listRequest` moves the rail and not the list, which
+is intended; keep the rail's dependency narrowed to `map { it.interval }.distinctUntilChanged()` rather
+than the whole request, or every filter change re-allocates the rail's cards.
+
+**The reserved category codes are backend contract strings** (`featured-assets`, `real-world-assets`,
+TWI-1477). Neither is derived from the other, and a rename on either side silently empties the rail or the
+whole list with no error — the rail has no error state and no retry, so a wrong code is indistinguishable
+from a category the backend does not serve.
 
 **Nothing on the feed stack is serialized.** Every v2 navigation call passes `serializer = null`
 (`DefaultFeedV2Component.kt`, `FeedHomeComponent.kt`), so feed state does not survive process death and
