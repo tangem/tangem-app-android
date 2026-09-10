@@ -59,7 +59,7 @@ class SubmitPredictionWithdrawalInteractor(
      * holds the recipient and amount as read out of the calldata
      */
     suspend fun prepare(params: Params): Either<PredictionWithdrawalFailure, PreparedPredictionWithdrawal> = either {
-        ensure(store.get(params.userWalletId) == null) { PredictionWithdrawalFailure.AlreadyInFlight }
+        ensure(readRecord(params.userWalletId) == null) { PredictionWithdrawalFailure.AlreadyInFlight }
 
         val amountBaseUnits = PredictionCollateralAmount.toBaseUnits(params.amount)
             .getOrNull() ?: raise(PredictionWithdrawalFailure.AmountRejected)
@@ -133,7 +133,7 @@ class SubmitPredictionWithdrawalInteractor(
         userWalletId: UserWalletId,
         walletId: String,
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
-        val record = store.get(userWalletId) ?: raise(PredictionWithdrawalFailure.NothingToResend)
+        val record = readRecord(userWalletId) ?: raise(PredictionWithdrawalFailure.NothingToResend)
 
         send(userWalletId = userWalletId, walletId = walletId, batch = record.batch)
     }
@@ -143,8 +143,10 @@ class SubmitPredictionWithdrawalInteractor(
         walletId: String,
         batch: PredictionWithdrawalBatch,
     ): PredictionWithdrawalReceipt {
-        val receipt = withdrawRepository.submit(walletId = walletId, batch = batch)
-            .getOrElse { raise(PredictionWithdrawalFailure.Rejected(it)) }
+        val receipt = withdrawRepository.submit(walletId = walletId, batch = batch).getOrElse { error ->
+            if (error.recordedNothing()) clearRecord(userWalletId)
+            raise(PredictionWithdrawalFailure.Rejected(error))
+        }
 
         runSuspendCatching {
             store.save(userWalletId, PredictionWithdrawalRecord(batch = batch, transactionId = receipt.transactionId))
@@ -152,6 +154,19 @@ class SubmitPredictionWithdrawalInteractor(
 
         return receipt
     }
+
+    private suspend fun Raise<PredictionWithdrawalFailure>.readRecord(
+        userWalletId: UserWalletId,
+    ): PredictionWithdrawalRecord? = runSuspendCatching { store.get(userWalletId) }
+        .getOrElse { raise(PredictionWithdrawalFailure.PersistenceFailed(it)) }
+
+    private suspend fun clearRecord(userWalletId: UserWalletId) {
+        runSuspendCatching { store.clear(userWalletId) }
+            .onFailure { TangemLogger.e("Failed to clear the withdrawal the relayer did not record", it) }
+    }
+
+    private fun PredictionWithdrawError.recordedNothing(): Boolean =
+        this is PredictionWithdrawError.RelayerRejected || this is PredictionWithdrawError.InvalidRequest
 
     data class Params(
         val userWalletId: UserWalletId,

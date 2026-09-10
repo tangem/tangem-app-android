@@ -33,14 +33,17 @@ internal class DefaultPredictionWithdrawalStore(
 
     private val preloaded = CompletableDeferred<Unit>()
 
+    private var preloadFailure: Throwable? = null
+
     init {
         scope.launch {
             try {
-                val cached = runSuspendCatching { persistenceDataStore.data.first() }
-                    .onFailure { logger.e("Failed to read the stored prediction withdrawals", it) }
-                    .getOrDefault(emptyMap())
-
-                runtimeStore.store(cached.mapValues { (_, dto) -> dto.toDomain() })
+                runSuspendCatching { persistenceDataStore.data.first() }
+                    .onSuccess { cached -> runtimeStore.store(cached.mapValues { (_, dto) -> dto.toDomain() }) }
+                    .onFailure { cause ->
+                        logger.e("Failed to read the stored prediction withdrawals", cause)
+                        preloadFailure = cause
+                    }
             } finally {
                 preloaded.complete(Unit)
             }
@@ -54,8 +57,10 @@ internal class DefaultPredictionWithdrawalStore(
         runtimeStore.update(default = emptyMap()) { stored -> stored + (userWalletId.stringValue to record) }
     }
 
+    /** @throws PredictionWithdrawalStoreUnreadableException when the persisted records could not be read */
     override suspend fun get(userWalletId: UserWalletId): PredictionWithdrawalRecord? {
         preloaded.await()
+        preloadFailure?.let { throw PredictionWithdrawalStoreUnreadableException(it) }
 
         return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
     }
@@ -73,3 +78,7 @@ internal class DefaultPredictionWithdrawalStore(
         const val TAG = "PredictionWithdrawalStore"
     }
 }
+
+internal class PredictionWithdrawalStoreUnreadableException(
+    cause: Throwable,
+) : IllegalStateException("The stored prediction withdrawals could not be read", cause)
