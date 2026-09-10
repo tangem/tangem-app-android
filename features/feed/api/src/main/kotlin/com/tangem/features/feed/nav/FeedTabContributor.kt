@@ -1,5 +1,6 @@
 package com.tangem.features.feed.nav
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,8 @@ interface FeedTabContributor {
     val id: FeedTabId
 
     val title: TextReference
+
+    val icon: ImageVector
 
     /**
      * Read once, synchronously, for the initial page set — repo feature toggles are sync vals.

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -38,6 +39,7 @@ internal fun PolymarketEventCardFrame(
     iconUrl: String?,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    titleMetaSpacing: Dp = 4.dp,
     meta: (@Composable () -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
@@ -59,7 +61,7 @@ internal fun PolymarketEventCardFrame(
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(titleMetaSpacing),
                 ) {
                     Text(
                         text = title.resolveReference(),

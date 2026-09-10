@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -204,6 +205,104 @@ internal class UpdateWalletManagerResultFactoryTest {
     }
 
     data class GetResultTestModel(val wallet: Wallet, val expected: UpdateWalletManagerResult.Verified)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetResultForAddress {
+
+        @Test
+        fun `GIVEN coin and token amounts with a pending transaction WHEN getResult THEN one primary address`() {
+            // Arrange: the fixture transactions leave "0x1", so the Safe sits there for them to count as outgoing
+            val safeAddress = "0x1"
+            val amounts = mapOf<AmountType, Amount>(
+                AmountType.Coin to Amount(BigDecimal.ONE, Blockchain.Ethereum),
+                AmountType.Token(usdtToken) to Amount(BigDecimal.TEN, Blockchain.Ethereum, AmountType.Token(usdtToken)),
+            )
+            val transactions = listOf(
+                createRecentTransaction(
+                    amount = Amount(BigDecimal.ONE, Blockchain.Ethereum),
+                    status = TransactionStatus.Unconfirmed,
+                ),
+                createRecentTransaction(
+                    amount = Amount(BigDecimal.ONE, Blockchain.Ethereum),
+                    status = TransactionStatus.Confirmed,
+                ),
+            )
+
+            // Act
+            val actual = factory.getResult(
+                blockchain = Blockchain.Ethereum,
+                address = safeAddress,
+                amounts = amounts,
+                recentTransactions = transactions,
+            )
+
+            // Assert
+            val addresses = setOf(
+                UpdateWalletManagerResult.Address(safeAddress, UpdateWalletManagerResult.Address.Type.Primary),
+            )
+            val expected = UpdateWalletManagerResult.Verified(
+                selectedAddress = safeAddress,
+                addresses = addresses,
+                currenciesAmounts = setOf(
+                    UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(BigDecimal.ONE),
+                    UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
+                        value = BigDecimal.TEN,
+                        currencyRawId = CryptoCurrency.RawID(usdtToken.id!!),
+                        contractAddress = usdtToken.contractAddress,
+                    ),
+                ),
+                currentTransactions = setOf(
+                    UpdateWalletManagerResult.CryptoCurrencyTransaction.Coin(
+                        txInfo = createTxInfo(status = TxInfo.TransactionStatus.Unconfirmed, amount = BigDecimal.ONE),
+                    ),
+                ),
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN no amounts WHEN getResult THEN verified with the address and nothing else`() {
+            // Act
+            val actual = factory.getResult(
+                blockchain = Blockchain.Ethereum,
+                address = "0xSafe",
+                amounts = emptyMap(),
+                recentTransactions = emptyList(),
+            )
+
+            // Assert
+            val expected = UpdateWalletManagerResult.Verified(
+                selectedAddress = "0xSafe",
+                addresses = setOf(
+                    UpdateWalletManagerResult.Address("0xSafe", UpdateWalletManagerResult.Address.Type.Primary),
+                ),
+                currenciesAmounts = emptySet(),
+                currentTransactions = emptySet(),
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetUnreachableResultForAddress {
+
+        @Test
+        fun `GIVEN an address WHEN getUnreachableResult THEN unreachable with that one primary address`() {
+            // Act
+            val actual = factory.getUnreachableResult(address = "0xSafe")
+
+            // Assert
+            val expected = UpdateWalletManagerResult.Unreachable(
+                selectedAddress = "0xSafe",
+                addresses = setOf(
+                    UpdateWalletManagerResult.Address("0xSafe", UpdateWalletManagerResult.Address.Type.Primary),
+                ),
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

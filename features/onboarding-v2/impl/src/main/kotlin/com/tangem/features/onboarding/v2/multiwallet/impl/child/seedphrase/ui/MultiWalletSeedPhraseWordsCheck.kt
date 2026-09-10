@@ -27,6 +27,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -35,6 +36,8 @@ internal fun MultiWalletSeedPhraseWordsCheck(
     state: MultiWalletSeedPhraseUM.GeneratedWordsCheck,
     modifier: Modifier = Modifier,
 ) {
+    DisableAutofillEffect()
+
     if (state.dialog != null) {
         BasicDialog(
             title = state.dialog.title.resolveReference(),

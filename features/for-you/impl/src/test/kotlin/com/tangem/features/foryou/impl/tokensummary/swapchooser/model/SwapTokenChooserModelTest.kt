@@ -172,7 +172,7 @@ internal class SwapTokenChooserModelTest {
     private fun wallet(walletId: UserWalletId): UserWallet =
         MockUserWalletFactory.create().copy(walletId = walletId, isMultiCurrency = true)
 
-    private fun portfolio(walletId: UserWalletId): AccountStatus.CryptoPortfolio = mockk {
+    private fun portfolio(walletId: UserWalletId): AccountStatus.Personal = mockk {
         // `account` is dereferenced for grouping and item ids, so it is a real model rather than a stub.
         every { account } returns MockAccounts.createAccount(derivationIndex = 1, userWalletId = walletId)
         every { tokenList } returns mockk<TokenList>()

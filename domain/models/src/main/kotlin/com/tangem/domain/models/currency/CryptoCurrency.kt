@@ -175,6 +175,28 @@ sealed class CryptoCurrency {
                     derivationPathHashCode = derivationPath.hashCode(),
                 )
             }
+
+            companion object {
+                private const val JOINT_DERIVATION_PATH_SALT = "joint:"
+
+                fun create(rawId: String, derivationPath: Network.DerivationPath): Body {
+                    return when (derivationPath) {
+                        is Network.DerivationPath.Card -> NetworkIdWithDerivationPath(
+                            rawId = rawId,
+                            derivationPath = derivationPath.value,
+                        )
+                        is Network.DerivationPath.Custom -> NetworkIdWithDerivationPath(
+                            rawId = rawId,
+                            derivationPath = derivationPath.value,
+                        )
+                        is Network.DerivationPath.Joint -> NetworkIdWithDerivationPath(
+                            rawId = rawId,
+                            derivationPath = JOINT_DERIVATION_PATH_SALT + derivationPath.value,
+                        )
+                        is Network.DerivationPath.None -> NetworkId(rawId)
+                    }
+                }
+            }
         }
 
         /**

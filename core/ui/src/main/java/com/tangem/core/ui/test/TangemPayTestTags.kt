@@ -4,11 +4,16 @@ object TangemPayTestTags {
     // Main wallet screen tile (entry point into Tangem Pay)
     const val MAIN_SCREEN_TILE = "TANGEM_PAY_MAIN_SCREEN_TILE"
     const val MAIN_SCREEN_TILE_BALANCE = "TANGEM_PAY_MAIN_SCREEN_TILE_BALANCE"
+    const val MAIN_SCREEN_TILE_CACHE_ICON = "TANGEM_PAY_MAIN_SCREEN_TILE_CACHE_ICON"
+
+    // KYC (Sumsub) loading screen the onboarding hands over to
+    const val KYC_SCREEN = "TANGEM_PAY_KYC_SCREEN"
 
     // Payment account details screen
     const val PAYMENT_ACCOUNT_CONTENT = "TANGEM_PAY_PAYMENT_ACCOUNT_CONTENT"
     const val PAYMENT_ACCOUNT_BALANCE = "TANGEM_PAY_PAYMENT_ACCOUNT_BALANCE"
     const val PAYMENT_ACCOUNT_CARD_BUTTON = "TANGEM_PAY_PAYMENT_ACCOUNT_CARD_BUTTON"
+    const val PAYMENT_ACCOUNT_ADD_CARD_BUTTON = "TANGEM_PAY_PAYMENT_ACCOUNT_ADD_CARD_BUTTON"
 
     // Reload button shown in the transaction-history "failed to load" state
     const val TRANSACTION_HISTORY_RELOAD_BUTTON = "TANGEM_PAY_TRANSACTION_HISTORY_RELOAD_BUTTON"
@@ -63,8 +68,19 @@ object TangemPayTestTags {
     const val REISSUE_SHEET_CONFIRM_BUTTON = "TANGEM_PAY_REISSUE_SHEET_CONFIRM_BUTTON"
     const val REISSUE_SHEET_FEE_VALUE = "TANGEM_PAY_REISSUE_SHEET_FEE_VALUE"
 
+    // Issue an additional card bottom sheet
+    const val ISSUE_ADDITIONAL_CARD_FEE_VALUE = "TANGEM_PAY_ISSUE_ADDITIONAL_CARD_FEE_VALUE"
+    const val ISSUE_ADDITIONAL_CARD_CONFIRM_BUTTON = "TANGEM_PAY_ISSUE_ADDITIONAL_CARD_CONFIRM_BUTTON"
+
+    // Order new card type selection screen
+    const val ORDER_CARD_TYPE_SELECT_BUTTON = "TANGEM_PAY_ORDER_CARD_TYPE_SELECT_BUTTON"
+
     // Transaction details bottom sheet
     const val TRANSACTION_DETAILS_AMOUNT = "TANGEM_PAY_TRANSACTION_DETAILS_AMOUNT"
+    const val TRANSACTION_DETAILS_CARD_ROW = "TANGEM_PAY_TRANSACTION_DETAILS_CARD_ROW"
+    const val TRANSACTION_DETAILS_ICON = "TANGEM_PAY_TRANSACTION_DETAILS_ICON"
+    const val TRANSACTION_DETAILS_STATUS = "TANGEM_PAY_TRANSACTION_DETAILS_STATUS"
+    const val TRANSACTION_DETAILS_STATUS_ICON = "TANGEM_PAY_TRANSACTION_DETAILS_STATUS_ICON"
 
     // Freeze confirmation bottom sheet
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"
@@ -82,8 +98,6 @@ object TangemPayTestTags {
     const val VIEW_PIN_CHANGE_BUTTON = "TANGEM_PAY_VIEW_PIN_CHANGE_BUTTON"
 
     // PIN success screen
-    const val PIN_SUCCESS_TITLE = "TANGEM_PAY_PIN_SUCCESS_TITLE"
-    const val PIN_SUCCESS_DESCRIPTION = "TANGEM_PAY_PIN_SUCCESS_DESCRIPTION"
     const val PIN_DONE_BUTTON = "TANGEM_PAY_PIN_DONE_BUTTON"
 
     // Daily limit block (card page)
@@ -95,8 +109,20 @@ object TangemPayTestTags {
     const val DAILY_LIMIT_SET_BUTTON = "TANGEM_PAY_DAILY_LIMIT_SET_BUTTON"
 
     // Daily limit success screen
-    const val DAILY_LIMIT_SUCCESS_TITLE = "TANGEM_PAY_DAILY_LIMIT_SUCCESS_TITLE"
     const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
 
+    // Bank transfer (virtual account) deposit bottom sheet
+    const val VA_DEPOSIT_SHOW_DETAILS_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SHOW_DETAILS_BUTTON"
+    const val VA_DEPOSIT_FEE_ERROR_BANNER = "TANGEM_PAY_VA_DEPOSIT_FEE_ERROR_BANNER"
+
+    // Virtual account order success screen
+    const val VA_DEPOSIT_SUCCESS_CLOSE_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SUCCESS_CLOSE_BUTTON"
+
     fun dailyLimitPresetChip(rawValue: String): String = "TANGEM_PAY_DAILY_LIMIT_PRESET_$rawValue"
+
+    /** [feeType] is the backend fee type, e.g. `ACH_ONRAMP`. */
+    fun vaDepositFeeTitle(feeType: String): String = "TANGEM_PAY_VA_DEPOSIT_FEE_TITLE_$feeType"
+
+    /** [feeType] is the backend fee type, e.g. `ACH_ONRAMP`. */
+    fun vaDepositFeeValue(feeType: String): String = "TANGEM_PAY_VA_DEPOSIT_FEE_VALUE_$feeType"
 }

@@ -30,6 +30,7 @@ dependencies {
 
     /** Features api */
     api(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.commonUi)
     api(projects.features.tokenRecieve.api)
     api(projects.features.promoBanners.api)
     api(projects.features.virtualAccounts.details.api)
@@ -75,6 +76,7 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)

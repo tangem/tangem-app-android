@@ -26,6 +26,9 @@ internal class DefaultIntroductionVideoPlayer(
     override val isSurfaceAttached: Boolean
         get() = attachedSurfaceView != null
 
+    override val positionMs: Long
+        get() = player.currentPosition
+
     init {
         // Copies make the wrap an ordinary transition with the next period already buffered;
         // REPEAT_MODE_ONE re-seeks the single period instead and stalls on slower decoders.
