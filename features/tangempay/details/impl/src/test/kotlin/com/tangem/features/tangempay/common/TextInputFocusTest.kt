@@ -1,4 +1,4 @@
-package com.tangem.features.tangempay.orderCard.impl.ui.components
+package com.tangem.features.tangempay.common
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.TestInstance
