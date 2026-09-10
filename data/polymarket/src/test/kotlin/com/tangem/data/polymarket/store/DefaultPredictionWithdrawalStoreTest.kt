@@ -1,5 +1,6 @@
 package com.tangem.data.polymarket.store
 
+import androidx.datastore.core.DataStore
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
@@ -9,10 +10,14 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawalBatch
 import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.io.IOException
 
 internal class DefaultPredictionWithdrawalStoreTest {
 
@@ -84,9 +89,25 @@ internal class DefaultPredictionWithdrawalStoreTest {
         assertThat(store.get(WALLET_B)).isEqualTo(RECORD)
     }
 
+    @Test
+    fun `GIVEN the persisted file cannot be read WHEN get THEN it throws`() = runTest {
+        // Arrange
+        val cause = IOException("unreadable")
+        val persisted: DataStore<WalletIdWithWithdrawalRecordDTO> = mockk()
+        every { persisted.data } returns flow { throw cause }
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+
+        // Act
+        val actual = runCatching { store.get(WALLET_A) }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(PredictionWithdrawalStoreUnreadableException::class.java)
+        assertThat(actual).hasCauseThat().isSameInstanceAs(cause)
+    }
+
     private fun createStore(
         testScope: TestScope,
-        persistenceDataStore: MockStateDataStore<WalletIdWithWithdrawalRecordDTO> = MockStateDataStore(emptyMap()),
+        persistenceDataStore: DataStore<WalletIdWithWithdrawalRecordDTO> = MockStateDataStore(emptyMap()),
     ) = DefaultPredictionWithdrawalStore(
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = persistenceDataStore,
