@@ -3,8 +3,6 @@ package com.tangem.feature.tokendetails.domain
 import arrow.core.none
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
@@ -19,6 +17,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -48,6 +47,7 @@ class GetCurrencyWarningsUseCaseTest {
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier = mockk(relaxed = true)
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     private val dynamicAddressesRepository: DynamicAddressesRepository = mockk(relaxed = true)
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
     private val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
     private val dispatchers: CoroutineDispatcherProvider = TestDispatchers(Dispatchers.Unconfined)
 
@@ -71,6 +71,7 @@ class GetCurrencyWarningsUseCaseTest {
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         dynamicAddressesRepository = dynamicAddressesRepository,
+        isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
         sendFeatureToggles = sendFeatureToggles,
     )
 
@@ -95,6 +96,7 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
         coEvery { currenciesRepository.isNetworkFeeZero(any(), any()) } returns false
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
         every { sendFeatureToggles.isTronGaslessEnabled } returns false
     }
 
@@ -289,10 +291,10 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN Tron token with balance AND zero TRX AND tron gasless WHEN invoke THEN fee warning is absent`() =
+    fun `GIVEN gasless supported token AND zero coin WHEN invoke THEN fee warning is absent`() =
         runTest {
             // Arrange
-            givenTronTokenWithEmptyCoin()
+            givenGaslessSupportedTokenWithEmptyCoin()
             every { sendFeatureToggles.isTronGaslessEnabled } returns true
 
             // Act
@@ -303,10 +305,10 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN Tron token with balance AND zero TRX AND toggle disabled WHEN invoke THEN fee warning is present`() =
+    fun `GIVEN gasless supported token AND zero coin AND toggle disabled WHEN invoke THEN fee warning is present`() =
         runTest {
             // Arrange
-            givenTronTokenWithEmptyCoin()
+            givenGaslessSupportedTokenWithEmptyCoin()
             every { sendFeatureToggles.isTronGaslessEnabled } returns false
 
             // Act
@@ -317,11 +319,11 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN non-Tron token AND zero coin AND tron gasless enabled WHEN invoke THEN fee warning is present`() =
+    fun `GIVEN token unsupported by gasless AND zero coin WHEN invoke THEN fee warning is present`() =
         runTest {
             // Arrange
             givenTokenWithEmptyCoin()
-            every { network.rawId } returns Blockchain.Polkadot.toNetworkId()
+            coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
             every { sendFeatureToggles.isTronGaslessEnabled } returns true
 
             // Act
@@ -339,9 +341,9 @@ class GetCurrencyWarningsUseCaseTest {
         )
     }
 
-    private fun givenTronTokenWithEmptyCoin() {
-        every { network.rawId } returns Blockchain.Tron.toNetworkId()
+    private fun givenGaslessSupportedTokenWithEmptyCoin() {
         givenTokenWithEmptyCoin()
+        coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns true
     }
 
     private fun coin(name: String = "Polkadot", symbol: String = "DOT"): CryptoCurrency.Coin {
