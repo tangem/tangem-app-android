@@ -8,24 +8,40 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
+import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.model.transformer.PolymarketFeedContentTransformer
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -33,13 +49,18 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -56,21 +77,48 @@ internal class PolymarketMainModel @Inject constructor(
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase,
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-) : Model() {
+    private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
+    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
 
     private val balanceConverter = PredictionBalanceUMConverter(
-        onAddFundsClick = {},
+        onAddFundsClick = ::onAddFundsClick,
         onWithdrawClick = {},
     )
+
+    private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
+
+    private val requisitesState = MutableStateFlow<RequisitesState>(RequisitesState.Loading)
+
+    private val tradingAllowance = PredictionTradingAllowance(
+        checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
+        dispatchers = dispatchers,
+    )
+
+    private val refreshJobHolder = JobHolder()
+
+    private val requisitesJobHolder = JobHolder()
+
+    val addFundsNavigation = SlotNavigation<Unit>()
+
+    val receiveNavigation = SlotNavigation<TokenReceiveConfig>()
 
     val uiState: StateFlow<PolymarketMainUM>
         field = MutableStateFlow(
             PolymarketMainUM(
-                balance = balanceConverter.convert(PredictionAccountStatusValue.Loading),
+                balance = balanceConverter.convert(
+                    PredictionBalanceUMConverter.Input(
+                        status = PredictionAccountStatusValue.Loading,
+                        depositTarget = null,
+                        isTradingAllowed = false,
+                    ),
+                ),
                 categories = persistentListOf(),
                 content = PolymarketMainUM.ContentUM.Loading,
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
             ),
         )
 
@@ -84,9 +132,29 @@ internal class PolymarketMainModel @Inject constructor(
     private val staleDataReporter = PolymarketStaleDataReporter(onReport = ::reportStaleData)
 
     init {
-        predictionAccountStatusSupplier(userWalletId = params.userWalletId)
-            .onEach { status -> uiState.update { it.copy(balance = balanceConverter.convert(status)) } }
+        combine(
+            predictionAccountStatusSupplier(userWalletId = params.userWalletId),
+            requisitesState,
+            tradingAllowance.isAllowed,
+        ) { status, requisites, isTradingAllowed ->
+            activeStatus.value = status as? PredictionAccountStatusValue.Active
+
+            balanceConverter.convert(
+                PredictionBalanceUMConverter.Input(
+                    status = status,
+                    depositTarget = requisites.depositTarget,
+                    isTradingAllowed = isTradingAllowed,
+                ),
+            )
+        }
+            .onEach { balance -> uiState.update { it.copy(balance = balance) } }
             .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+
+        predictionAccountStatusSupplier(userWalletId = params.userWalletId)
+            .filterIsInstance<PredictionAccountStatusValue.Active>()
+            .take(count = 1)
+            .onEach { prefetchRequisites() }
             .launchIn(modelScope)
     }
 
@@ -104,6 +172,7 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         observeEvents()
         loadCategories()
+        loadTradingAllowance()
     }
 
     fun onBackClick() {
@@ -147,6 +216,7 @@ internal class PolymarketMainModel @Inject constructor(
     fun onResume() {
         isScreenResumed = true
         activeFeed.value?.poller?.resume()
+        if (requisitesState.value is RequisitesState.Failed) prefetchRequisites()
     }
 
     fun onPause() {
@@ -255,6 +325,95 @@ internal class PolymarketMainModel @Inject constructor(
         )
     }
 
+    private fun loadTradingAllowance() {
+        modelScope.launch { tradingAllowance.refresh() }
+    }
+
+    private fun onRefresh() {
+        setRefreshing(isRefreshing = true)
+
+        modelScope.launch {
+            listOf(
+                async { tradingAllowance.refresh() },
+                async { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(params.userWalletId)) },
+            ).awaitAll()
+
+            setRefreshing(isRefreshing = false)
+        }.saveIn(refreshJobHolder)
+    }
+
+    private fun setRefreshing(isRefreshing: Boolean) {
+        uiState.update {
+            it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
+        }
+    }
+
+    private fun prefetchRequisites() {
+        if (requisitesState.value is RequisitesState.Ready || requisitesJobHolder.isActive) return
+
+        modelScope.launch {
+            refreshPredictionDepositRequisitesInteractor(userWalletId = params.userWalletId).fold(
+                ifLeft = { requisitesState.value = RequisitesState.Failed },
+                ifRight = { requisitesState.value = RequisitesState.Ready(requisites = it) },
+            )
+        }.saveIn(requisitesJobHolder)
+    }
+
+    private fun onAddFundsClick() {
+        if (requisitesState.value.depositTarget == null) return reportFundingUnavailable()
+        if (activeStatus.value?.cryptoCurrencyStatus == null) return reportFundingUnavailable()
+
+        addFundsNavigation.activate(Unit)
+    }
+
+    override fun onSwapClick() {
+        val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
+        addFundsNavigation.dismiss()
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = collateral,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+                screenSource = AnalyticsParam.ScreensSources.Predictions.value,
+                accountFlow = null,
+            ),
+        )
+    }
+
+    override fun onReceiveClick() {
+        val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
+        val target = requisitesState.value.depositTarget ?: return
+        receiveNavigation.activate(
+            TokenReceiveConfig(
+                shouldShowWarning = true,
+                cryptoCurrency = collateral,
+                userWalletId = params.userWalletId,
+                showMemoDisclaimer = false,
+                receiveAddress = listOf(
+                    ReceiveAddressModel(
+                        displayType = ReceiveAddressModel.DisplayType.Default,
+                        value = target.address,
+                    ),
+                ),
+                tokenReceiveNotification = listOf(
+                    TokenReceiveNotification(
+                        title = R.string.prediction_add_funds_notification_limits_title,
+                        subtitle = R.string.prediction_add_funds_notification_limits_description,
+                        formatArgs = listOf(target.token.minCheckoutUsd.formatPolymarketEnteredAmount()),
+                    ),
+                ),
+            ),
+        )
+    }
+
+    override fun onDismissAddFunds() {
+        addFundsNavigation.dismiss()
+    }
+
+    private fun reportFundingUnavailable() {
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
+    }
+
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
         router.push(
             PolymarketRoute.EventDetails(
@@ -266,3 +425,12 @@ internal class PolymarketMainModel @Inject constructor(
         )
     }
 }
+
+private sealed interface RequisitesState {
+    data object Loading : RequisitesState
+    data class Ready(val requisites: PolymarketDepositRequisites) : RequisitesState
+    data object Failed : RequisitesState
+}
+
+private val RequisitesState.depositTarget: PolymarketDepositTarget?
+    get() = (this as? RequisitesState.Ready)?.requisites?.default

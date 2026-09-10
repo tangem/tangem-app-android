@@ -27,5 +27,6 @@ dependencies {
     // region Tests
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(deps.web3j.core)
     // endregion
 }

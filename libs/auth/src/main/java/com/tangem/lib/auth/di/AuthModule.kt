@@ -6,6 +6,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.lib.auth.api.AuthApi
 import com.tangem.lib.auth.api.config.Auth
+import com.tangem.lib.auth.api.config.AuthServiceConfig
 import com.tangem.core.remote.RetrofitApiSpec
 import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.auth.SessionAuthAuthenticator
@@ -119,11 +120,12 @@ internal object AuthModule {
     @Singleton
     fun provideAuthNonceDecryptor(
         authFeatureToggles: AuthFeatureToggles,
-        @Named("authServiceKey") authServiceKey: String?,
+        authServiceConfig: AuthServiceConfig,
         dispatchers: CoroutineDispatcherProvider,
     ): AuthNonceDecryptor {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledAuthNonceDecryptor
 
+        val authServiceKey = authServiceConfig.authServiceKey
         if (authServiceKey.isNullOrEmpty()) return DisabledAuthNonceDecryptor
 
         return runCatching { DefaultAuthNonceDecryptor(authServiceKey, dispatchers) }
