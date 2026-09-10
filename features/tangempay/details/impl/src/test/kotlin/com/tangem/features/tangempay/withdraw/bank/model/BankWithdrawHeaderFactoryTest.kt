@@ -83,4 +83,38 @@ internal class BankWithdrawHeaderFactoryTest {
             ),
         )
     }
+
+    @Test
+    fun `GIVEN new personal entry WHEN create for account type THEN select account type title and counter 3 of 5`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
+
+        // Act
+        val actual = BankWithdrawHeaderFactory.create(draft, TangemPayBankWithdrawInnerRoute.AccountType)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankWithdrawHeaderUM(
+                title = resourceReference(R.string.tangempay_withdraw_bank_account_type_screen_title),
+                subtitle = resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(3, 5)),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN new business entry WHEN create for account type THEN select account type title and counter 2 of 4`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewBusiness)
+
+        // Act
+        val actual = BankWithdrawHeaderFactory.create(draft, TangemPayBankWithdrawInnerRoute.AccountType)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankWithdrawHeaderUM(
+                title = resourceReference(R.string.tangempay_withdraw_bank_account_type_screen_title),
+                subtitle = resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(2, 4)),
+            ),
+        )
+    }
 }
