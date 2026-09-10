@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -107,6 +108,47 @@ internal class TangemPayBankWithdrawModelTest {
                 destination = destination,
             ),
         )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new personal entry WHEN transfer type selected THEN draft keeps third party flag`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+
+        // Act
+        model.onTransferTypeSelected(isThirdParty = true)
+
+        // Assert
+        assertThat(model.draft.value.newRecipient).isEqualTo(NewRecipientDraft(isThirdParty = true))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new personal entry WHEN account type selected THEN draft keeps account type`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+
+        // Act
+        model.onAccountTypeSelected(BankAccountType.SAVINGS)
+
+        // Assert
+        assertThat(model.draft.value.newRecipient).isEqualTo(NewRecipientDraft(accountType = BankAccountType.SAVINGS))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN transfer type selected WHEN account type selected THEN draft keeps both answers`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onTransferTypeSelected(isThirdParty = true)
+
+        // Act
+        model.onAccountTypeSelected(BankAccountType.SAVINGS)
+
+        // Assert
+        assertThat(model.draft.value.newRecipient)
+            .isEqualTo(NewRecipientDraft(isThirdParty = true, accountType = BankAccountType.SAVINGS))
         model.onDestroy()
     }
 
