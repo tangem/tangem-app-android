@@ -127,7 +127,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private fun campaignDeeplink(): String = "${DeeplinkConst.TANGEM_SCHEME}://marketing/${params.campaignKey}"
 
     private suspend fun findWalletWithPay(): Either<VisaApiError, UserWalletId?> = either {
-        eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+        eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
             .firstOrNull { walletId -> onboardingRepository.hasTangemPayInWallet(walletId).bind() }
     }
 
@@ -194,7 +194,7 @@ internal class TangemPayCampaignModel @Inject constructor(
                     )
                 }
                 TangemPayCampaignUM.Landing.Mode.NoPay -> onboardingStarter.proceedWithWallets(
-                    walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
+                    walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true),
                     mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
                     campaignKey = params.campaignKey,
                     callbacks = starterCallbacks,
