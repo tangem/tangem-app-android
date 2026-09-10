@@ -32,10 +32,10 @@ class PredictionBalancePoller(
     @Synchronized
     private fun acquire(userWalletId: UserWalletId) {
         val loop = loops[userWalletId]
-        if (loop == null) {
-            loops[userWalletId] = Loop(job = appScope.launch { run(userWalletId = userWalletId) }, subscribers = 1)
-        } else {
+        if (loop != null && loop.job.isActive) {
             loop.subscribers += 1
+        } else {
+            loops[userWalletId] = Loop(job = appScope.launch { run(userWalletId = userWalletId) }, subscribers = 1)
         }
     }
 
