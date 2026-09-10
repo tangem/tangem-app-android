@@ -1,6 +1,6 @@
 package com.tangem.tests.markets
 
-import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import com.tangem.common.BaseTestCase
@@ -25,7 +25,7 @@ import org.junit.Test
 class MarketsExchangesTest : BaseTestCase() {
 
     @Test
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @AllureId("58")
     @DisplayName("Markets: verify exchanges list screen")
     fun marketsExchangesListTest() {
@@ -43,7 +43,7 @@ class MarketsExchangesTest : BaseTestCase() {
     @OptIn(ExperimentalTestApi::class)
     @Test
     @AllureId("56")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchanges block is displayed in token details")
     fun marketsExchangesBlockDisplayedTest() {
         val tokenName = "Bitcoin"
@@ -86,7 +86,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("60")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchanges list is sorted by volume descending")
     fun marketsExchangesListSortedByVolumeTest() {
         val tokenName = "Bitcoin"
@@ -104,7 +104,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("61")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchange types are CEX or DEX")
     fun marketsExchangesTypeTest() {
         val tokenName = "Bitcoin"
@@ -122,7 +122,7 @@ class MarketsExchangesTest : BaseTestCase() {
 
     @Test
     @AllureId("62")
-    @ApiEnv(ApiEnvConfig(TangemTech.KEY, ApiEnvironment.PROD))
+    @ApiEnv(ApiEnvConfig(TangemGatewayApiConfig.TANGEM_TECH_KEY, ApiEnvironment.PROD))
     @DisplayName("Markets: verify exchange trust scores are valid")
     fun marketsExchangesTrustScoreTest() {
         val tokenName = "Bitcoin"

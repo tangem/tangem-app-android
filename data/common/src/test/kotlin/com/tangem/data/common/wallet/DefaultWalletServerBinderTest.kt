@@ -6,7 +6,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
 import com.tangem.datasource.api.tangemTech.models.WalletType
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,13 +28,13 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultWalletServerBinderTest {
 
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val appsFlyerStore: AppsFlyerStore = mockk()
+    private val appsFlyerRepository: AppsFlyerRepository = mockk()
     private val tangemTechApi: TangemTechApi = mockk()
     private val dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider()
 
     private val binder = DefaultWalletServerBinder(
         userWalletsListRepository = userWalletsListRepository,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         tangemTechApi = tangemTechApi,
         dispatchers = dispatchers
     )
@@ -48,7 +48,7 @@ internal class DefaultWalletServerBinderTest {
 
     @AfterEach
     fun tearDown() {
-        clearMocks(userWalletsListRepository, appsFlyerStore, tangemTechApi)
+        clearMocks(userWalletsListRepository, appsFlyerRepository, tangemTechApi)
     }
 
     @Nested
@@ -69,7 +69,7 @@ internal class DefaultWalletServerBinderTest {
             val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
             every { userWalletsListRepository.userWallets } returns userWalletsFlow
-            coEvery { appsFlyerStore.get() } returns conversionData
+            coEvery { appsFlyerRepository.getConversionData() } returns conversionData
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
             val actual = binder.bind(userWalletId = userWalletId)
@@ -78,7 +78,7 @@ internal class DefaultWalletServerBinderTest {
 
             coVerifyOrder {
                 userWalletsListRepository.userWallets
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
         }
@@ -96,7 +96,7 @@ internal class DefaultWalletServerBinderTest {
             coVerifyOrder { userWalletsListRepository.userWallets }
 
             coVerify(inverse = true) {
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(any())
             }
         }
@@ -113,7 +113,7 @@ internal class DefaultWalletServerBinderTest {
             val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
             every { userWalletsListRepository.userWallets } returns userWalletsFlow
-            coEvery { appsFlyerStore.get() } returns null
+            coEvery { appsFlyerRepository.getConversionData() } returns null
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
             val actual = binder.bind(userWalletId = userWalletId)
@@ -122,7 +122,7 @@ internal class DefaultWalletServerBinderTest {
 
             coVerifyOrder {
                 userWalletsListRepository.userWallets
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
         }
@@ -141,7 +141,7 @@ internal class DefaultWalletServerBinderTest {
             val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
             every { userWalletsListRepository.userWallets } returns userWalletsFlow
-            coEvery { appsFlyerStore.get() } returns conversionData
+            coEvery { appsFlyerRepository.getConversionData() } returns conversionData
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
             val actual = binder.bind(userWalletId = userWalletId)
@@ -150,7 +150,7 @@ internal class DefaultWalletServerBinderTest {
 
             coVerifyOrder {
                 userWalletsListRepository.userWallets
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
         }
@@ -171,7 +171,7 @@ internal class DefaultWalletServerBinderTest {
             )
             val apiResponse = ApiResponse.Success(Unit)
 
-            coEvery { appsFlyerStore.get() } returns conversionData
+            coEvery { appsFlyerRepository.getConversionData() } returns conversionData
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
             val actual = binder.bind(userWallet = userWallet)
@@ -179,7 +179,7 @@ internal class DefaultWalletServerBinderTest {
             Truth.assertThat(actual).isEqualTo(apiResponse)
 
             coVerifyOrder {
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
         }
@@ -193,7 +193,7 @@ internal class DefaultWalletServerBinderTest {
             )
             val apiResponse = ApiResponse.Success(Unit)
 
-            coEvery { appsFlyerStore.get() } returns null
+            coEvery { appsFlyerRepository.getConversionData() } returns null
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
             val actual = binder.bind(userWallet = userWallet)
@@ -201,7 +201,7 @@ internal class DefaultWalletServerBinderTest {
             Truth.assertThat(actual).isEqualTo(apiResponse)
 
             coVerifyOrder {
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
         }
@@ -217,7 +217,7 @@ internal class DefaultWalletServerBinderTest {
             )
             val apiResponse = ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<Unit>
 
-            coEvery { appsFlyerStore.get() } returns conversionData
+            coEvery { appsFlyerRepository.getConversionData() } returns conversionData
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
             val actual = binder.bind(userWallet = userWallet)
@@ -225,7 +225,7 @@ internal class DefaultWalletServerBinderTest {
             Truth.assertThat(actual).isEqualTo(apiResponse)
 
             coVerifyOrder {
-                appsFlyerStore.get()
+                appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
         }

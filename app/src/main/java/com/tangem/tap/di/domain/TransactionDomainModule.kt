@@ -77,11 +77,13 @@ internal object TransactionDomainModule {
     fun provideSignAndBroadcastPsbtUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
+        singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): SignAndBroadcastPsbtUseCase {
         return SignAndBroadcastPsbtUseCase(
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
+            singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             getHotTransactionSigner = tangemHotWalletSignerFactory::create,
         )
     }

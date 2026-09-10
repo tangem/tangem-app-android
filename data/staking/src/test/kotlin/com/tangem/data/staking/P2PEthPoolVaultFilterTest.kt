@@ -8,10 +8,10 @@ import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolResponse
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultDTO
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolVaultsResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.token.P2PEthPoolRegionBlockedStore
+import com.tangem.data.staking.store.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
-import com.tangem.datasource.local.token.P2PVaultLimitsStore
-import com.tangem.datasource.local.txhistory.db.dao.P2PEthPoolVaultDao
+import com.tangem.data.staking.store.P2PVaultLimitsStore
+import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.toggles.StakingFeatureToggles

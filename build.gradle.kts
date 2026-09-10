@@ -278,6 +278,10 @@ dependencyAnalysis {
                 // Feature `impl` modules are wired in per build type purely so Hilt picks up their
                 // @Module bindings; dropping them removes the feature from the built app at runtime.
                 exclude(":features:kyc:impl")
+                // Same reason: :data:social-login only contributes Hilt bindings (feature toggle,
+                // provider repository). Nothing references it by type until the UC-08 feature
+                // modules land.
+                exclude(":data:social-login")
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(

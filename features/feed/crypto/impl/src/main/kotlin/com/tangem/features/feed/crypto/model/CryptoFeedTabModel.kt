@@ -1,67 +1,70 @@
 package com.tangem.features.feed.crypto.model
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.util.TangemPriceChange
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.GetMarketIndicatorsUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
+import com.tangem.domain.markets.MarketIndicators
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
+import com.tangem.features.feed.crypto.categories.MarketCategorySelection
+import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
+import com.tangem.features.feed.crypto.impl.R
+import com.tangem.features.feed.crypto.model.converter.TotalMarketCapConverter
+import com.tangem.features.feed.crypto.model.entity.FeedCryptoTabBottomSheetConfig
 import com.tangem.features.feed.crypto.model.list.MarketPulseBatchFlowManager
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory
 import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
-import com.tangem.features.feed.crypto.ui.state.CryptoFeedTabUM
-import com.tangem.features.feed.crypto.ui.state.MarketIndexCardUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseCategoryUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseListUM
-import com.tangem.features.feed.crypto.ui.state.MarketPulseUM
-import com.tangem.features.feed.crypto.ui.state.TotalMarketCapUM
+import com.tangem.features.feed.crypto.ui.state.*
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.collections.immutable.persistentListOf
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60_000L
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class CryptoFeedTabModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase,
+    private val categoryFilterController: MarketCategoryFilterController,
     private val router: Router,
 ) : Model() {
 
     /** Expanded/collapsed state of the hosting shtorka — quotes refresh only while expanded. */
     val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
+    val bottomSheetNavigation: SlotNavigation<FeedCryptoTabBottomSheetConfig> = SlotNavigation()
 
     private val updateQuotesJob = JobHolder()
+    private val marketIndicatorsJob = JobHolder()
+
+    /** Last loaded indicators, kept so a currency switch can re-format them without a refetch */
+    private val marketIndicators = MutableStateFlow<MarketIndicators?>(null)
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
         maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -80,6 +83,7 @@ internal class CryptoFeedTabModel @Inject constructor(
         currentTrendInterval = { selectedInterval.value },
         currentAppCurrency = { currentAppCurrency.value },
         currentCategory = { selectedCategory.value },
+        currentCategoryFilter = { categoryFilterController.selection.value },
         onItemClick = ::openTokenDetails,
         modelScope = modelScope,
         dispatchers = dispatchers,
@@ -103,9 +107,23 @@ internal class CryptoFeedTabModel @Inject constructor(
             .onEach { list -> updateMarketPulse { it.copy(list = list) } }
             .launchIn(modelScope)
 
+        combine(
+            flow = marketIndicators.filterNotNull(),
+            flow2 = currentAppCurrency,
+        ) { indicators, appCurrency ->
+            TotalMarketCapConverter(
+                appCurrency = appCurrency,
+                onIndexClick = ::showIndexInfo,
+                onInfoClick = ::onInfoClick,
+            ).convert(indicators)
+        }
+            .distinctUntilChanged()
+            .onEach { totalMarketCap -> uiState.update { it.copy(totalMarketCap = totalMarketCap) } }
+            .launchIn(modelScope)
+
         // reload the list when the user's currency changes
         currentAppCurrency.drop(1)
-            .onEach { listManager.reload() }
+            .onEach { loadData() }
             .launchIn(modelScope)
 
         // load charts for a freshly loaded batch and keep quotes fresh
@@ -116,7 +134,7 @@ internal class CryptoFeedTabModel @Inject constructor(
 
         // interval switch: rating order only re-renders + fetches missing charts, others re-sort
         selectedInterval.drop(1).onEach { interval ->
-            updateMarketPulse { it.copy(interval = intervalFilterItem(interval)) }
+            updateMarketPulse { it.copy(intervalMenu = it.intervalMenu.copy(selected = interval)) }
             if (selectedCategory.value == MarketPulseCategory.MarketCap) {
                 listManager.updateUIWithSameState()
                 listManager.loadCharts(listManager.getBatchKeysByItemIds(visibleItemIds.value), interval)
@@ -126,8 +144,14 @@ internal class CryptoFeedTabModel @Inject constructor(
         }.launchIn(modelScope)
 
         // category = sort order, so a switch always reloads
-        selectedCategory.drop(1)
-            .onEach { listManager.reload() }
+        selectedCategory.drop(1).onEach { category ->
+            updateMarketPulse { it.copy(sortTabs = sortTabs(selected = category)) }
+            listManager.reload()
+        }.launchIn(modelScope)
+
+        // the selector screen publishes here; drop(1) skips the value initialState already rendered
+        categoryFilterController.selection.drop(1)
+            .onEach(::applyCategorySelection)
             .launchIn(modelScope)
 
         // fetch charts for the batches that become visible while scrolling
@@ -138,58 +162,81 @@ internal class CryptoFeedTabModel @Inject constructor(
             .launchIn(modelScope)
 
         listManager.reload()
+        fetchMarketIndicators()
+    }
+
+    private fun loadData() {
+        listManager.reload()
+        fetchMarketIndicators()
     }
 
     private fun initialState(): CryptoFeedTabUM {
         return CryptoFeedTabUM(
-            totalMarketCap = stubTotalMarketCap(),
+            totalMarketCap = TotalMarketCapUM.Loading,
             marketPulse = MarketPulseUM(
-                title = stringReference("Market Pulse"),
-                interval = intervalFilterItem(selectedInterval.value),
-                categories = MarketPulseCategory.entries
-                    .map { MarketPulseCategoryUM(id = it.id, title = stringReference(it.categoryTitle())) }
-                    .toImmutableList(),
-                selectedCategoryIndex = 0,
-                onCategorySelect = ::selectCategory,
+                title = resourceReference(R.string.markets_pulse_common_title),
+                categoriesFilter = categoriesFilterItem(categoryFilterController.selection.value),
+                intervalMenu = MarketPulseIntervalUM(
+                    selected = selectedInterval.value,
+                    onOptionClick = ::selectInterval,
+                ),
+                sortTabs = sortTabs(selected = selectedCategory.value),
                 list = MarketPulseListUM.Loading,
                 onVisibleItemsChange = { ids -> visibleItemIds.value = ids.map(CryptoCurrency::RawID) },
             ),
         )
     }
 
-    private fun selectCategory(index: Int) {
-        val category = MarketPulseCategory.entries.getOrNull(index) ?: return
-        updateMarketPulse { it.copy(selectedCategoryIndex = index) }
+    private fun selectCategory(category: MarketPulseCategory) {
         selectedCategory.value = category
     }
 
-    // TODO: [TWI-1608] a proper interval picker; clicking cycles 24h → 7d → 1m for now
-    private fun cycleInterval() {
-        val entries = MarketPulseInterval.entries
-        selectedInterval.update { current -> entries[(current.ordinal + 1) % entries.size] }
+    private fun sortTabs(selected: MarketPulseCategory): ImmutableList<TangemTabItemUM> {
+        return MarketPulseCategory.entries
+            .map<MarketPulseCategory, TangemTabItemUM> { category ->
+                TangemTabItemUM.Content(
+                    id = category.id,
+                    label = category.categoryTitle(),
+                    isSelected = category == selected,
+                    onClick = { selectCategory(category) },
+                )
+            }
+            .toImmutableList()
     }
 
-    private fun intervalFilterItem(interval: MarketPulseInterval): TangemFilterItemUM {
-        val label = when (interval) {
-            MarketPulseInterval.H24 -> "24 hours"
-            MarketPulseInterval.D7 -> "7 days"
-            MarketPulseInterval.M1 -> "1 month"
-        }
-        return TangemFilterItemUM.Inactive(
-            id = "interval",
-            label = stringReference(label),
-            onClick = ::cycleInterval,
+    private fun applyCategorySelection(selection: MarketCategorySelection) {
+        updateMarketPulse { it.copy(categoriesFilter = categoriesFilterItem(selection)) }
+        listManager.reload()
+    }
+
+    private fun openCategorySelector() {
+        router.push(route = MarketCategorySelectorRoute)
+    }
+
+    private fun categoriesFilterItem(selection: MarketCategorySelection): TangemFilterItemUM {
+        val category = selection.category
+            ?: return TangemFilterItemUM.Inactive(
+                id = "crypto_categories",
+                label = resourceReference(R.string.market_categories),
+                onClick = ::openCategorySelector,
+            )
+
+        return TangemFilterItemUM.Active(
+            id = category.id,
+            value = stringReference(category.name),
+            onClick = ::openCategorySelector,
+            onClearClick = { categoryFilterController.onSelectionApplied(MarketCategorySelection()) },
         )
     }
 
-    private fun MarketPulseCategory.categoryTitle(): String {
-        return when (this) {
-            MarketPulseCategory.MarketCap -> "Market cap"
-            MarketPulseCategory.TopGainers -> "Top gainers"
-            MarketPulseCategory.TopLosers -> "Top losers"
-            MarketPulseCategory.ExperiencedBuyers -> "Experienced buyers"
-            MarketPulseCategory.Trending -> "Trending"
-        }
+    private fun selectInterval(interval: MarketPulseInterval) {
+        selectedInterval.value = interval
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // the controller outlives the tab, so a reopened feed would otherwise start pre-filtered
+        categoryFilterController.clear()
     }
 
     private inline fun updateMarketPulse(block: (MarketPulseUM) -> MarketPulseUM) {
@@ -219,38 +266,41 @@ internal class CryptoFeedTabModel @Inject constructor(
                 containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
                 isVisibleOnScreen.first { it }
                 listManager.updateQuotes()
+                fetchMarketIndicators()
             }
         }.saveIn(updateQuotesJob)
     }
 
-    // TODO: [TWI-1608] stub mirroring the design mock until real market metrics are wired
-    @Suppress("MagicNumber")
-    private fun stubTotalMarketCap(): TotalMarketCapUM {
-        return TotalMarketCapUM(
-            title = stringReference("Total market cap"),
-            value = stringReference("\$2.44 T"),
-            change = TangemPriceChange.State(
-                value = stringReference("1.18%"),
-                direction = TangemPriceChange.Direction.Up,
-            ),
-            indexes = persistentListOf(
-                MarketIndexCardUM(
-                    id = "fear_greed",
-                    title = stringReference("Fear & greed"),
-                    statusLabel = stringReference("Extreme Fear"),
-                    isGrowth = false,
-                    value = stringReference("13"),
-                    progress = 0.13f,
-                ),
-                MarketIndexCardUM(
-                    id = "altcoin_index",
-                    title = stringReference("Altcoin index"),
-                    statusLabel = stringReference("Altcoin Growth"),
-                    isGrowth = true,
-                    value = stringReference("56"),
-                    progress = 0.56f,
-                ),
-            ),
+    private fun fetchMarketIndicators() {
+        modelScope.launch {
+            getMarketIndicatorsUseCase(appCurrency = currentAppCurrency.value)
+                .onRight { indicators -> marketIndicators.value = indicators }
+                .onLeft(::onMarketIndicatorsFailure)
+        }.saveIn(marketIndicatorsJob)
+    }
+
+    private fun showIndexInfo(index: MarketIndexUM) {
+        bottomSheetNavigation.activate(
+            FeedCryptoTabBottomSheetConfig.MarketIndexInfo(index),
+        )
+    }
+
+    /** A refresh failure keeps the readings already on screen; only a failed first load empties the block */
+    private fun onMarketIndicatorsFailure(error: Throwable) {
+        TangemLogger.e("Failed to load market indicators", error)
+
+        uiState.update { state ->
+            if (state.totalMarketCap is TotalMarketCapUM.Loading) {
+                state.copy(totalMarketCap = TotalMarketCapUM.Empty)
+            } else {
+                state
+            }
+        }
+    }
+
+    private fun onInfoClick() {
+        bottomSheetNavigation.activate(
+            FeedCryptoTabBottomSheetConfig.MarketInfo,
         )
     }
 }

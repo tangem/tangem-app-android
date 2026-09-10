@@ -4,8 +4,10 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.core.res.R as CommonR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
@@ -74,6 +76,27 @@ fun BaseTestCase.openTokenDetails(tokenName: String) {
     }
 }
 
+/** Creates a brand-new mobile (hot) wallet from the intro stories and lands on Main. */
+fun BaseTestCase.openMainScreenWithNewHotWallet() {
+    step("Click on 'Get started' button") {
+        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    }
+    step("Click on 'Start with Mobile Wallet' button") {
+        onCreateWalletStartScreen { startWithMobileWalletButton.performClick() }
+    }
+    step("Click on 'Create wallet' button") {
+        onCreateMobileWalletScreen { createWalletButton.clickWithAssertion() }
+    }
+    step("Assert 'Main' screen is displayed") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION) {
+            onMainScreen { screenContainer.assertIsDisplayed() }
+        }
+    }
+    step("Dismiss Market Tooltip by clicking close button") {
+        onMarketsTooltipScreen { closeButton.clickWithAssertion() }
+    }
+}
+
 @OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
     step("Click on 'Get started' button") {
@@ -131,7 +154,14 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
             }
         }
         step("Dismiss biometry prompt if shown") {
-            waitForIdle()
+            // The sheet is optional, so wait for it or for the Finish screen that replaces it — deciding
+            // before either has rendered leaves the sheet up. Wallet creation runs in between and on a
+            // cold launch outlasts the ordinary timeout.
+            composeTestRule.waitUntilAtLeastOneExists(
+                matcher = hasText(getResourceString(CoreUiR.string.save_user_wallet_agreement_dont_allow))
+                    or hasText(getResourceString(CommonR.string.common_finish)),
+                timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION,
+            )
             onBiometryDialog {
                 if (dontAllowButton.isDisplayedSafely()) {
                     dontAllowButton.performClick()
@@ -147,6 +177,7 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
         }
     }
     step("Click on 'Finish' button") {
+        awaitSuccess { onImportWalletScreen { finishButton.assertExists() } }
         onImportWalletScreen {
             finishButton.assertIsEnabled()
             finishButton.performClick()

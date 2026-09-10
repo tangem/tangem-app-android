@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -27,6 +28,8 @@ import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.Dialog 
 
 @Composable
 internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+    BackHandler(onBack = onBackClick)
+
     SettingsScreensScaffold(
         onBackClick = onBackClick,
         modifier = modifier,

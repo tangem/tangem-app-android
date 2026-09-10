@@ -16,7 +16,8 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
+    runtimeOnly(deps.room.runtime)
     // endregion
 
     // region Domain models
