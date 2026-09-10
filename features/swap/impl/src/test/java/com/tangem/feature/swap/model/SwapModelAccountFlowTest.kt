@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.model
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
@@ -21,6 +22,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -41,6 +43,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -982,10 +985,34 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val predicate = model.chooseToTokenBridge.tokenFilter.value
 
         // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
         assertThat(predicate(portfolioStatus, destinationStatus)).isTrue()
         assertThat(predicate(portfolioStatus, otherStatus)).isFalse()
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown and the TO filter passes nothing`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+            val portfolioStatus = personalAccountStatus(listOf(currencyStatus))
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
+            } returns accountStatusList(listOf(portfolioStatus))
+            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns PolymarketBridgeError.Network.left()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Act
+            val predicate = model.chooseToTokenBridge.tokenFilter.value
+
+            // Assert
+            verify(exactly = 1) { messageSender.send(any()) }
+            assertThat(predicate(portfolioStatus, currencyStatus)).isFalse()
+            model.onDestroy()
+        }
 
     private fun accountStatusList(accountStatuses: List<AccountStatus>) = AccountStatusList(
         userWalletId = userWalletId,

@@ -224,7 +224,7 @@ internal class SwapModel @Inject constructor(
 
     private var isAccountsMode: Boolean = false
 
-    private var predictionWithdrawDestinations: Set<CryptoCurrency.ID> = emptySet()
+    private var predictionWithdrawDestinations: Set<CryptoCurrency.ID>? = null
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -2516,7 +2516,7 @@ internal class SwapModel @Inject constructor(
         val toFilter = if (isPredictionWithdrawFlow) {
             { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
                 baseFilter(accountStatus, currencyStatus) &&
-                    currencyStatus.currency.id in predictionWithdrawDestinations
+                    predictionWithdrawDestinations?.contains(currencyStatus.currency.id) == true
             }
         } else {
             baseFilter
@@ -2535,11 +2535,16 @@ internal class SwapModel @Inject constructor(
                 .filterIsInstance<AccountStatus.Personal>()
                 .flatMap { it.flattenCurrencies() }
                 .map { it.currency }
-            predictionWithdrawDestinations = getPredictionWithdrawDestinationsUseCase(portfolio).getOrElse { error ->
-                TangemLogger.e("Unable to load the prediction withdraw destinations: $error")
-                emptySet()
-            }
-            filterTokensFromSelector()
+            getPredictionWithdrawDestinationsUseCase(portfolio).fold(
+                ifLeft = { error ->
+                    TangemLogger.e("Unable to load the prediction withdraw destinations: $error")
+                    showAlert()
+                },
+                ifRight = { destinations ->
+                    predictionWithdrawDestinations = destinations
+                    filterTokensFromSelector()
+                },
+            )
         }
     }
 
