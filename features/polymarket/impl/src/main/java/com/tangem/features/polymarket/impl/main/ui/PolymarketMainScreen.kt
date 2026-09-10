@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
@@ -204,14 +206,19 @@ private fun PolymarketMainScaffold(
             }
         },
     ) { contentPadding ->
-        FeedList(
-            modifier = Modifier.fillMaxSize(),
-            state = state,
-            listState = listState,
-            tabRowState = tabRowState,
-            isTabBandPinned = isTabBandPinned,
-            contentPadding = contentPadding,
-        )
+        TangemPullToRefreshSlidingContainer(
+            config = state.pullToRefreshConfig,
+            indicatorOffset = contentPadding.calculateTopPadding(),
+        ) {
+            FeedList(
+                modifier = Modifier.fillMaxSize(),
+                state = state,
+                listState = listState,
+                tabRowState = tabRowState,
+                isTabBandPinned = isTabBandPinned,
+                contentPadding = contentPadding,
+            )
+        }
     }
 }
 
@@ -472,6 +479,7 @@ private fun PolymarketMainScreenContentPreview() {
                     events = previewEvents(),
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             onBackClick = {},
             onSearchClick = {},

@@ -76,7 +76,6 @@ internal class DefaultPredictionDepositAddressWriterTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
             fiatRate = null,
-            isTradingAllowed = true,
             depositCurrency = COLLATERAL,
             depositAddress = null,
         )
