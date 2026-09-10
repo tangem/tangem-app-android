@@ -13,7 +13,7 @@ import com.tangem.features.txhistory.impl.R
  * Shared by the history list (row content title and status-pill label) and the transaction-details header, so the two
  * never drift apart. Pill types (Approve / Staking.* / YieldSupply Enter|Exit) resolve to the status-aware pill label
  * text only — the same wording shown in the list pill, without its trailing amount (e.g. "Staking", "Restaking",
- * "Yield mode"). Content types reproduce the per-type row titles.
+ * "Yield mode"); Approve is the exception, see its branch. Content types reproduce the per-type row titles.
  */
 internal class TxHistoryTitleConverter {
 
@@ -25,7 +25,11 @@ internal class TxHistoryTitleConverter {
     @Suppress("CyclomaticComplexMethod", "LongMethod")
     fun convert(tx: TxInfo, isOwnTransfer: Boolean = false): TextReference = when (val type = tx.type) {
         // region Pills — the label text only (no amount), matching what the list pill shows
-        is TransactionType.Approve -> tx.pillTitle(ApproveSpec)
+        is TransactionType.Approve -> tx.statusAwareTitle(
+            pending = R.string.common_approving,
+            confirmed = R.string.common_approved,
+            failed = R.string.transaction_history_status_approve_failed,
+        )
         is TransactionType.Staking.Stake -> tx.pillTitle(StakeSpec)
         is TransactionType.Staking.Unstake -> tx.pillTitle(UnstakeSpec)
         is TransactionType.Staking.Restake -> tx.pillTitle(RestakeSpec)
