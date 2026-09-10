@@ -1,6 +1,6 @@
 package com.tangem.domain.markets
 
-import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
+import com.tangem.domain.markets.repositories.MarketIndicatorsRepository
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -8,15 +8,15 @@ import kotlinx.coroutines.flow.Flow
  * The cache starts empty and is populated by [FetchCoinIndicatorsUseCase], so consumers can render
  * already-stored readings immediately and refresh in the background
  *
- * @property coinIndicatorsRepository repository of coin indicators
+ * @property marketIndicatorsRepository repository of coin indicators
  *
 [REDACTED_AUTHOR]
  */
 class GetCoinIndicatorsUpdatesUseCase(
-    private val coinIndicatorsRepository: CoinIndicatorsRepository,
+    private val marketIndicatorsRepository: MarketIndicatorsRepository,
 ) {
 
     operator fun invoke(): Flow<Map<String, CoinIndicators>> {
-        return coinIndicatorsRepository.getCoinIndicatorsUpdates()
+        return marketIndicatorsRepository.getCoinIndicatorsUpdates()
     }
 }

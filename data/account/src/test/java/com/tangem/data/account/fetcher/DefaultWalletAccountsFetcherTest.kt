@@ -13,8 +13,9 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -55,7 +56,7 @@ class DefaultWalletAccountsFetcherTest {
         userTokensSaver = userTokensSaver,
         fetchWalletAccountsErrorHandler = fetchWalletAccountsErrorHandler,
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
-        eTagsStore = eTagsStore,
+        walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         dispatchers = TestingCoroutineDispatcherProvider(),
         mainAccountTokensMigration = tokensMigration,
         jointAccountFeatureToggles = jointAccountFeatureToggles,
@@ -77,7 +78,7 @@ class DefaultWalletAccountsFetcherTest {
 
     @BeforeEach
     fun setUpEach() {
-        every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
     }
 
     @AfterEach
@@ -102,13 +103,13 @@ class DefaultWalletAccountsFetcherTest {
             accountId = "9CC9C1C9A1F1B62B1F0FCBB5D4C7A34F1B8B98A6D3B3E1B94F6C8F0A1E2D3C4B",
             accountName = "Family",
             derivationIndex = 0,
-            type = WalletAccountDTO.Type.JOINT.value,
+            type = WalletAccountDTO.Type.JOINT,
         )
 
         @Test
         fun `GIVEN toggle is off WHEN fetch THEN joint records do not reach the store`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns false
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
 
             val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
 
@@ -122,7 +123,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is on WHEN fetch THEN joint records reach the store`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountCreationEnabled } returns true
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
 
             val stored = arrangeFetch(accounts = listOf(ownAccount, jointAccount))
 

@@ -4,11 +4,14 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.cosign.CosignRequestRowUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import kotlinx.collections.immutable.ImmutableList
@@ -44,6 +47,13 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val rows: ImmutableList<InfoRowUM>,
         /** Warning plaque under the amount block (currently: the unlimited-approval "High Risk" notice). */
         val statusBanner: StatusBannerUM? = null,
+        /**
+         * Joint-account cosigning row ("Signatures X of Y"), shown while the transaction awaits member signatures.
+         * `null` for a non-joint transaction or once it has left the awaiting-signatures state.
+         */
+        val cosign: CosignRequestRowUM? = null,
+        /** Sign/Signed/Rejected action and its caption, shown together with [cosign]. `null` alongside it. */
+        val cosignAction: CosignActionUM? = null,
     ) : TxHistoryDetailsUM
 
     /**
@@ -101,6 +111,23 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      */
     data class ProviderButtonUM(
         val text: TextReference,
+        val onClick: () -> Unit,
+    )
+
+    /**
+     * Bottom CTA of a joint-account pending transaction: "Sign" ([isEnabled] — mine to act on) or the terminal
+     * "Signed" / "Rejected" ( `!isEnabled` — reflects my own past action). [caption] explains the auto-send
+     * threshold ("Auto-sends once 3 of 5 members sign") or the outcome of a decline.
+     *
+     * @property isLoading `true` while the signing action (e.g. NFC card scan) is in flight.
+     * @property iconEnd Optional trailing glyph on the button (e.g. a scan/NFC icon on "Sign").
+     */
+    data class CosignActionUM(
+        val buttonText: TextReference,
+        val caption: TextReference,
+        val isEnabled: Boolean,
+        val isLoading: Boolean = false,
+        val iconEnd: TangemIconUM? = null,
         val onClick: () -> Unit,
     )
 
@@ -225,23 +252,24 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
     /**
      * Counterparty ("Recipient" / "From") card of the single-asset detail: a leading [avatar], the section [label] over
-     * the counterparty [title], and — when [onCopyClick] is non-null — the whole card is clickable to copy.
+     * the counterparty [title], and a tap that copies the counterparty address.
      *
-     * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar])
-     * and whether copy is offered. The kind is resolved through the shared `TxHistoryLookupContext` — the same
-     * own-account / own-wallet resolution the history list applies to its row subtitle.
+     * The layout is identical across counterparty kinds; the only variance is the [avatar] (see [CounterpartyAvatar]).
+     * The kind is resolved through the shared `TxHistoryLookupContext` — the same own-account / own-wallet resolution
+     * the history list applies to its row subtitle — but it only decides what the card *shows*: an own account or
+     * wallet renders its display name and still copies the address behind it.
      *
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
      * @property avatar Leading avatar.
-     * @property onCopyClick Copy action; `null` makes the card non-interactive (an own account / wallet shows a
-     * display name, not an address, so there is nothing to copy).
+     * @property onCopyClick Copies the counterparty address — the same address the header menu's "Copy address" row
+     * copies, so the two entry points never disagree.
      */
     data class CounterpartyUM(
         val label: TextReference,
         val title: TextReference,
         val avatar: CounterpartyAvatar,
-        val onCopyClick: (() -> Unit)?,
+        val onCopyClick: () -> Unit,
     )
 
     /** Leading avatar of the [CounterpartyUM] card — the only thing that differs between counterparty kinds. */
@@ -262,11 +290,21 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
         /** User's own wallet — rendered as the wallet card [deviceIconUM]. */
         data class Wallet(val deviceIconUM: DeviceIconUM) : CounterpartyAvatar
+
+        /**
+         * Recipient saved in an address book — rendered as the contact avatar: the monogram of [name] for a letter
+         * [icon], the picked drawable otherwise.
+         */
+        data class Contact(val name: String, val icon: AccountIconUM.CryptoPortfolio) : CounterpartyAvatar
     }
 
     /**
      * Shared bottom-sheet top bar. The icon glyph and [title] text come from the transaction type; [status] drives
      * the three visual states (in-progress / confirmed / failed) — recoloring the icon circle and the title.
+     *
+     * [subtitle] is normally the transaction date; [subtitleStyle] recolors it independently of [status] — e.g. a
+     * joint-account transaction awaiting member signatures shows "Pending" there instead of a date, in
+     * [SubtitleStyle.Warning], regardless of the on-chain [status].
      *
      * [menu] is the header's overflow context-menu content; empty leaves the trailing menu button inert.
      */
@@ -275,9 +313,14 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
         val status: TransactionItemUM.Content.Status,
         val title: TextReference,
         val subtitle: TextReference,
+        val subtitleStyle: SubtitleStyle = SubtitleStyle.Default,
         val menu: ImmutableList<MenuItemUM> = persistentListOf(),
         val debugModel: TxHistoryInfo? = null,
-    )
+    ) {
+
+        /** Visual identity of [HeaderUM.subtitle], independent of the on-chain [HeaderUM.status]. */
+        enum class SubtitleStyle { Default, Warning }
+    }
 
     /**
      * One row of the header's overflow context menu: a leading [icon] glyph and a [title] label. [isDestructive]

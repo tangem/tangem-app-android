@@ -8,6 +8,7 @@ internal interface TangemPayOrderCardComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
+        val onAddFundsRequested: () -> Unit,
         val intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
     )
 

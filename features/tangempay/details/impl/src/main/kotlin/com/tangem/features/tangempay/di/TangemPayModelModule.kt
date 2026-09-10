@@ -6,6 +6,7 @@ import com.tangem.features.tangempay.account.TangemPayDetailsModel
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsModel
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorModel
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositModel
+import com.tangem.features.tangempay.campaign.TangemPayCampaignIssueCardModel
 import com.tangem.features.tangempay.card.activation.TangemPayCardActivationModel
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.card.details.TangemPayCardPageModel
@@ -29,6 +30,10 @@ import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanModel
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanModel
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryModel
 import com.tangem.features.tangempay.txhistory.details.TangemPayTxHistoryDetailsModel
+import com.tangem.features.tangempay.withdraw.bank.amount.model.TangemPayBankWithdrawAmountModel
+import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
+import com.tangem.features.tangempay.withdraw.bank.recipients.model.TangemPayBankWithdrawRecipientsModel
+import com.tangem.features.tangempay.withdraw.hub.model.TangemPayWithdrawHubModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -174,4 +179,29 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayOrderCardSuccessModel::class)
     fun bindTangemPayOrderCardSuccessModel(model: TangemPayOrderCardSuccessModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayWithdrawHubModel::class)
+    fun bindTangemPayWithdrawHubModel(model: TangemPayWithdrawHubModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayBankWithdrawModel::class)
+    fun bindTangemPayBankWithdrawModel(model: TangemPayBankWithdrawModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayBankWithdrawAmountModel::class)
+    fun bindTangemPayBankWithdrawAmountModel(model: TangemPayBankWithdrawAmountModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayBankWithdrawRecipientsModel::class)
+    fun bindTangemPayBankWithdrawRecipientsModel(model: TangemPayBankWithdrawRecipientsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCampaignIssueCardModel::class)
+    fun bindTangemPayCampaignIssueCardModel(model: TangemPayCampaignIssueCardModel): Model
 }

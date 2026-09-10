@@ -70,6 +70,17 @@ internal class JointAccountsStore(
         }
     }
 
+    suspend fun remove(userWalletIds: List<UserWalletId>) {
+        if (userWalletIds.isEmpty()) return
+
+        val keys = userWalletIds.mapTo(hashSetOf()) { it.stringValue }
+
+        runSuspendCatching { runtimeStore.update(default = emptyMap()) { stored -> stored - keys } }
+            .onFailure { error -> logger.e(messageString = "Failed to remove from runtime", throwable = error) }
+        runSuspendCatching { persistenceDataStore.updateData { stored -> stored - keys } }
+            .onFailure { error -> logger.e(messageString = "Failed to remove from persistence", throwable = error) }
+    }
+
     private suspend fun storeInRuntime(userWalletId: UserWalletId, accounts: List<JointAccount>) {
         runtimeStore.update(default = emptyMap()) { stored ->
             stored + (userWalletId.stringValue to accounts)

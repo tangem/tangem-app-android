@@ -10,6 +10,7 @@ import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -140,7 +141,7 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
         verify(inverse = true) { supplier.invoke(userWalletId = any()) }
     }
 
@@ -170,7 +171,7 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.UserCancelled.left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.UserCancelled.left())
         coVerify(exactly = 0) { repository.create(any(), any(), any()) }
     }
 
@@ -185,7 +186,7 @@ internal class CreateJointAccountUseCaseTest {
 
             // Assert
             // Broken backend data must not crash the app on a failed requirement
-            val expected = JointAccountCreationError.InvalidDerivationIndex(
+            val expected = JointAccountFlowError.InvalidDerivationIndex(
                 cause = DerivationIndex.Error.NegativeDerivationIndex(derivationIndex = -1),
             )
             assertThat(actual).isEqualTo(expected.left())
@@ -202,7 +203,7 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
         coVerify(exactly = 0) { signer.sign(any(), any()) }
     }
 
@@ -218,7 +219,7 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
     }
 
     private fun config() = JointAccountConfig(

@@ -9,8 +9,8 @@ import com.tangem.grow.datasource.express.models.response.ExchangeHistoryDeltaRe
 import com.tangem.grow.datasource.express.models.response.ExchangeHistoryResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
-import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.ExpressTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryExpressTrigger

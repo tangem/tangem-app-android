@@ -6,10 +6,12 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.swap.models.isSwapTargetOnly
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
@@ -98,28 +100,20 @@ internal class InitialCurrenciesResolver @Inject constructor(
             accountStatus is AccountStatus.Payment
         }
 
+        val targetOnlyAccounts = walletAccountList.filterKeys { accountStatus ->
+            accountStatus.account.isSwapTargetOnly
+        }
+
         val cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten()
 
         val (from, to) = if (initialCryptoCurrency != null) {
-            val selectedSwapCurrencyStatus = if (isPaymentAccount) {
-                cryptoPaymentAccounts
-            } else {
-                cryptoPortfolioAccounts
-            }.firstNotNullOfOrNull { (_, currencyList) ->
-                currencyList.firstOrNull { currencyStatus ->
-                    currencyStatus.currency.id == initialCryptoCurrency.id
-                }
-            }
-
-            if (selectedSwapCurrencyStatus == null) {
-                null to null
-            } else {
-                placeSelectedCurrency(
-                    selectedSwapCurrencyStatus = selectedSwapCurrencyStatus,
-                    swapCurrencyPosition = swapCurrencyPosition,
-                    cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
-                )
-            }
+            resolveInitialPair(
+                initialCryptoCurrency = initialCryptoCurrency,
+                swapCurrencyPosition = swapCurrencyPosition,
+                lookupAccounts = if (isPaymentAccount) cryptoPaymentAccounts else cryptoPortfolioAccounts,
+                targetOnlyAccounts = targetOnlyAccounts,
+                cryptoPortfolioAccounts = cryptoPortfolioAccounts,
+            )
         } else {
             selectCryptoCurrency(
                 cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
@@ -153,6 +147,41 @@ internal class InitialCurrenciesResolver @Inject constructor(
         }
 
         return prioritizedFrom to anchoredTo
+    }
+
+    /**
+     * Places [initialCryptoCurrency] into its slot. A currency of a [target-only][isSwapTargetOnly] account goes
+     * to TO whatever position was asked for, and FROM is auto-filled from the portfolio — the entry point can
+     * only have meant "fund this".
+     */
+    private fun resolveInitialPair(
+        initialCryptoCurrency: CryptoCurrency,
+        swapCurrencyPosition: CurrencyPosition,
+        lookupAccounts: Map<out AccountStatus, List<SwapCurrencyStatus>>,
+        targetOnlyAccounts: Map<out AccountStatus, List<SwapCurrencyStatus>>,
+        cryptoPortfolioAccounts: Map<AccountStatus.CryptoPortfolio, List<SwapCurrencyStatus>>,
+    ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
+        val targetOnly = targetOnlyAccounts.findCurrency(initialCryptoCurrency)
+        if (targetOnly != null) {
+            return selectCryptoCurrency(
+                cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+                cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten(),
+            ) to targetOnly
+        }
+
+        val selected = lookupAccounts.findCurrency(initialCryptoCurrency) ?: return null to null
+
+        return placeSelectedCurrency(
+            selectedSwapCurrencyStatus = selected,
+            swapCurrencyPosition = swapCurrencyPosition,
+            cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+        )
+    }
+
+    private fun Map<out AccountStatus, List<SwapCurrencyStatus>>.findCurrency(
+        currency: CryptoCurrency,
+    ): SwapCurrencyStatus? = firstNotNullOfOrNull { (_, currencyList) ->
+        currencyList.firstOrNull { it.currency.id == currency.id }
     }
 
     /**
@@ -232,12 +261,15 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
         return walletAccountCurrencyStatuses.associateWith { accountStatus ->
             val currencyStatuses = when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.flattenCurrencies()
+                is AccountStatus.Personal -> accountStatus.flattenCurrencies()
                 is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus, isAccountFlowEnabled)
                 // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
                 is AccountStatus.Virtual -> emptyList()
-                // Prediction account isn't a swap source either — the same MVP rule
-                is AccountStatus.Prediction -> emptyList()
+                // The collateral funds the account but never spends from it, so it is offered as a target only
+                is AccountStatus.Prediction -> listOfNotNull(
+                    (accountStatus.value as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus,
+                )
+                is AccountStatus.Collectibles -> emptyList()
                 // Joint currencies live on the Safe contract and never swap through the participant's EOA
                 is AccountStatus.Joint -> emptyList()
             }

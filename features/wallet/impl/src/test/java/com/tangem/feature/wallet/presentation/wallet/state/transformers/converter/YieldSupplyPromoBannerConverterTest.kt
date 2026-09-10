@@ -19,7 +19,7 @@ import java.math.BigDecimal
 class YieldSupplyPromoBannerConverterTest {
 
     private val account
-        get() = AccountStatus.CryptoPortfolio(
+        get() = AccountStatus.Personal(
             tokenList = TokenList.Empty,
             priceChangeLce = Unit.lceError(),
             account = createMainAccount(UserWalletId("00"))

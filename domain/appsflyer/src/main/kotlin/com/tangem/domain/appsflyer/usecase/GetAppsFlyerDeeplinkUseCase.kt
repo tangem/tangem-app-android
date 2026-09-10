@@ -9,5 +9,6 @@ import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 class GetAppsFlyerDeeplinkUseCase(
     private val appsFlyerRepository: AppsFlyerRepository,
 ) {
-    suspend operator fun invoke(): AppsFlyerDeeplink? = AppsFlyerDeeplink.from(appsFlyerRepository.getDeeplink())
+    suspend operator fun invoke(): AppsFlyerDeeplink? =
+        AppsFlyerDeeplink.from(appsFlyerRepository.getNavigationDeeplink())
 }
