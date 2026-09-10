@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.OtelIncludedEvent
 import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.tap.common.analytics.AnalyticsEventsLogger
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.wallet.BuildConfig
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.DoubleHistogram
 import io.opentelemetry.api.metrics.LongCounter
@@ -85,7 +86,7 @@ internal class OpenTelemetryAnalyticsHandler(
     ) : AnalyticsHandlerBuilder {
 
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler {
-            val logger = if (data.isDebug && data.logConfig.isOpenTelemetryLogEnabled) {
+            val logger = if (BuildConfig.TESTER_MENU_ENABLED && data.logConfig.isOpenTelemetryLogEnabled) {
                 AnalyticsEventsLogger(name = ID)
             } else {
                 null

@@ -3,8 +3,11 @@ package com.tangem.domain.collectibles.usecase
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
+import javax.inject.Inject
 
-class GetCollectibleGachaMachinesBatchFlowUseCase(private val repository: CollectiblesRepository) {
+class GetCollectibleGachaMachinesBatchFlowUseCase @Inject constructor(
+    private val repository: CollectiblesRepository,
+) {
 
     operator fun invoke(
         context: CollectibleGachaMachinesBatchingContext,
