@@ -21,29 +21,31 @@ class PredictionBalancePoller(
     private val loops = mutableMapOf<UserWalletId, Loop>()
 
     fun subscribe(userWalletId: UserWalletId): Flow<Unit> = flow {
-        acquire(userWalletId = userWalletId)
+        val loop = acquire(userWalletId = userWalletId)
         try {
             awaitCancellation()
         } finally {
-            release(userWalletId = userWalletId)
+            release(userWalletId = userWalletId, loop = loop)
         }
     }
 
     @Synchronized
-    private fun acquire(userWalletId: UserWalletId) {
+    private fun acquire(userWalletId: UserWalletId): Loop {
         val loop = loops[userWalletId]
-        if (loop != null && loop.job.isActive) {
+        return if (loop != null && loop.job.isActive) {
             loop.subscribers += 1
+            loop
         } else {
-            loops[userWalletId] = Loop(job = appScope.launch { run(userWalletId = userWalletId) }, subscribers = 1)
+            Loop(job = appScope.launch { run(userWalletId = userWalletId) }, subscribers = 1).also {
+                loops[userWalletId] = it
+            }
         }
     }
 
     @Synchronized
-    private fun release(userWalletId: UserWalletId) {
-        val loop = loops[userWalletId] ?: return
+    private fun release(userWalletId: UserWalletId, loop: Loop) {
         loop.subscribers -= 1
-        if (loop.subscribers == 0) {
+        if (loop.subscribers == 0 && loops[userWalletId] === loop) {
             loop.job.cancel()
             loops.remove(userWalletId)
         }
