@@ -47,6 +47,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
@@ -284,8 +285,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
-        val source = requireNotNull(getTransactionHistorySource(userWalletId, currency.network)) {
-            "Unable to get a transaction history source for blockchain: ${currency.network}"
+        val source = getTransactionHistorySource(userWalletId, currency.network)
+        if (source == null) {
+            requireJointNetwork(currency.network)
+            return TxHistoryState.AddressNotReady
         }
 
         val transactionHistoryState = source.provider.getTransactionHistoryState(
@@ -302,8 +305,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         page: Page,
         pageSize: Int,
     ): PaginationWrapper<TxInfo> {
-        val source = requireNotNull(getTransactionHistorySource(userWalletId, currency.network)) {
-            "Unable to get a transaction history source for blockchain: ${currency.network}"
+        val source = getTransactionHistorySource(userWalletId, currency.network)
+        if (source == null) {
+            requireJointNetwork(currency.network)
+            throw TxHistoryStateError.AddressNotReady()
         }
 
         val itemsResult = source.provider.getTransactionsHistory(
@@ -353,6 +358,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     /** What a wallet manager knows about its wallet, the provider of a joint network knows about the Safe address */
     private class TransactionHistorySource(val provider: TransactionHistoryProvider, val address: String)
+
+    /**
+     * Only a joint network may legitimately have no history source: it reads by the Safe address, which can still
+     * be resolving, so the caller retries. For any other network a missing source means there is no wallet manager
+     * at all, which is a defect and stays loud.
+     */
+    private fun requireJointNetwork(network: Network) {
+        require(network.derivationPath is Network.DerivationPath.Joint) {
+            "Unable to get a transaction history source for blockchain: $network"
+        }
+    }
 
     private suspend fun getTransactionHistorySource(
         userWalletId: UserWalletId,
@@ -711,10 +727,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
-        if (network.derivationPath is Network.DerivationPath.Joint) {
-            TangemLogger.e(jointNetworkRefusalMessage(network))
-            return null
-        }
+        if (network.derivationPath is Network.DerivationPath.Joint) return null
         val blockchain = network.toBlockchain()
         return getOrCreateWalletManager(
             userWalletId = userWalletId,
