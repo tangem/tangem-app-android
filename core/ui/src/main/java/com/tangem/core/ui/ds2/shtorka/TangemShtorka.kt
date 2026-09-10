@@ -117,12 +117,7 @@ fun TangemShtorka(
         }
     }
 
-    val haptic = LocalHapticFeedback.current
-    LaunchedEffect(state) {
-        snapshotFlow { state.currentDetent }
-            .drop(1)
-            .collect { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
-    }
+    DetentHaptics(state = state)
 
     TangemSurface(
         modifier = modifier
@@ -154,6 +149,7 @@ fun TangemShtorka(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .shtorkaContentScale(state)
                     .conditionalCompose(isMaterial) {
                         // The glass fades into an opaque surface as the card approaches full.
                         drawBehind { drawRect(color = color.copy(alpha = state.expandProgress)) }
@@ -165,7 +161,12 @@ fun TangemShtorka(
                 }
             }
             CompositionLocalProvider(LocalHazeState provides contentHazeState) {
-                Column(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shtorkaChromeScale(state)
+                        .align(Alignment.TopCenter),
+                ) {
                     if (showDragHandle) {
                         DragHandle(contentDescription = dragHandleContentDescription)
                     }
@@ -195,7 +196,7 @@ object TangemShtorka {
     @Immutable
     sealed interface Detent {
 
-        /** Fixed visible card height, e.g. exactly a header. Coerced to the parent height at most. */
+        /** Fixed visible card height in content coordinates, coerced to the parent height at most. */
         data class Height(val value: Dp) : Detent
 
         /** Visible card height as a fraction (`0..1`) of the parent height. */
@@ -207,6 +208,16 @@ object TangemShtorka {
 
         /** The entire parent height; the card is edge-to-edge at this detent. */
         data object Full : Detent
+    }
+}
+
+@Composable
+private fun DetentHaptics(state: TangemShtorkaState) {
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(state) {
+        snapshotFlow { state.currentDetent }
+            .drop(1)
+            .collect { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
     }
 }
 
