@@ -211,26 +211,52 @@ internal class ForYouUtilsTest {
 
         @Test
         fun `GIVEN non-zero amount and total WHEN toForYouPercent THEN returns the share as a ratio`() {
-            // Arrange — 50.00 / 200 = 0.25 (ratio, scaled to the amount's scale)
+            // Arrange — 50.00 / 200 = 0.25 as a ratio
             val amount = BigDecimal("50.00")
 
             // Act
             val result = amount.toForYouPercent(BigDecimal("200"))
 
             // Assert
-            assertThat(result).isEqualTo(BigDecimal("0.25"))
+            assertThat(result).isEqualToIgnoringScale(BigDecimal("0.25"))
         }
 
         @Test
         fun `GIVEN a share requiring rounding WHEN toForYouPercent THEN applies HALF_UP rounding`() {
-            // Arrange — 1.0000 / 3 = 0.3333... rounds HALF_UP to the amount's scale (4)
+            // Arrange — 1.0000 / 3 = 0.3333... rounds HALF_UP at the pinned share scale
             val amount = BigDecimal("1.0000")
 
             // Act
             val result = amount.toForYouPercent(BigDecimal("3"))
 
             // Assert
-            assertThat(result).isEqualTo(BigDecimal("0.3333"))
+            assertThat(result).isEqualTo(BigDecimal("0.33333333"))
+        }
+
+        @Test
+        fun `GIVEN a low-scale amount WHEN toForYouPercent THEN the share is not quantised to it`() {
+            // Arrange — the amount carries only two decimals; the share must not inherit that scale, or
+            // the donut's slice weights would be quantised to whole percents.
+            val amount = BigDecimal("1234.56")
+
+            // Act
+            val result = amount.toForYouPercent(BigDecimal("10000"))
+
+            // Assert
+            assertThat(result).isEqualTo(BigDecimal("0.12345600"))
+        }
+
+        @Test
+        fun `GIVEN a dust amount WHEN toForYouPercent THEN the share keeps its sign`() {
+            // Arrange — 0.00005% of the portfolio: far below what the display can render, but the share has to
+            // stay positive so `percent(canBeLower = true)` can tell it apart from an empty holding.
+            val amount = BigDecimal("0.005")
+
+            // Act
+            val result = amount.toForYouPercent(BigDecimal("10000"))
+
+            // Assert
+            assertThat(result?.signum()).isEqualTo(1)
         }
     }
 
