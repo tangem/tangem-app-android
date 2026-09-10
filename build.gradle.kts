@@ -256,17 +256,19 @@ dependencyAnalysis {
                     "androidx.lifecycle:lifecycle-viewmodel-compose",
                     "androidx.lifecycle:lifecycle-viewmodel-savedstate",
                 )
-                // datastore-preferences-core arrives through core:datasource-impl rather than through the
-                // datastore-core these modules declare, so the androidx-datastore bundle misses it.
+                // datastore-preferences-core arrives transitively (core:local api-exposes it) rather than
+                // through the datastore-core the androidx-datastore bundle these modules declare provides,
+                // so the bundle misses it.
                 exclude("androidx.datastore:datastore-preferences-core")
                 // core:ui exports haze as `api` and puts HazeState in the signatures of public DS
                 // components (TangemPagerIndicator, Fade, TangemModalHost). Every module that renders
                 // one of those ends up referencing haze in bytecode without importing it, so the advice
                 // would reappear for each new screen that uses a bottom sheet.
                 exclude("dev.chrisbanes.haze:haze")
-                // :core:datasource-impl is the data layer's single entry point and deliberately re-exports
-                // these two as `api` (see its build file). Every data module reaches RetrofitFactory and
-                // the local stores through it; declaring them in ~35 modules would duplicate the facade.
+                // Many modules still reach core:local / core:remote types transitively (via
+                // core:datasource-impl's `api` re-export, or via another core module) without declaring
+                // them, so this silences the "declare directly" advice across them. Candidate for removal
+                // once every consumer declares these directly — tracked as a separate decoupling step.
                 exclude(":core:local", ":core:remote")
             }
         }
