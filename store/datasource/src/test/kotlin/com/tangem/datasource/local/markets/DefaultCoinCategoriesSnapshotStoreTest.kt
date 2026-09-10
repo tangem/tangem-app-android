@@ -10,9 +10,7 @@ import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultCoinCategoriesSnapshotStoreTest {
 
     private val appPreferencesStore = createAppPreferencesStore(
