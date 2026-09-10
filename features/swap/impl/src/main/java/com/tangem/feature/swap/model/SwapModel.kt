@@ -276,6 +276,9 @@ internal class SwapModel @Inject constructor(
             dataStateStateFlow.value = value
         }
 
+    private val isTargetOnlyDestination: Boolean
+        get() = dataState.toSwapCurrencyStatus?.isTargetOnly == true
+
     /**
      * Request flow for the STANDALONE marketing banner shown on the swap screen.
      * Derives [MarketingScreen.Swap] from the live [dataStateStateFlow]; emits null until both the FROM and TO
@@ -734,7 +737,7 @@ internal class SwapModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun onChangeCardsClicked() {
-        if (isAccountFlowActive) return
+        if (isAccountFlowActive || isTargetOnlyDestination) return
         modelScope.launch {
             singleTaskScheduler.cancelTask()
 
@@ -2636,7 +2639,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
-        return if (isAccountFlowActive) {
+        return if (isAccountFlowActive || isTargetOnlyDestination) {
             copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
         } else {
             this
