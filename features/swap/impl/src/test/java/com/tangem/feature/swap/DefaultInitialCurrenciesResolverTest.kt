@@ -1815,7 +1815,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         }
 
     @Test
-    fun `GIVEN the prediction collateral WHEN asked for as FROM THEN it still lands as TO`() = runTest {
+    fun `GIVEN no account flow WHEN the collateral is asked for as FROM THEN it still lands as TO`() = runTest {
         // Arrange
         val walletCurrency = mockCryptoCurrency()
         val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
@@ -1836,12 +1836,69 @@ internal class DefaultInitialCurrenciesResolverTest {
             initialCryptoCurrency = collateral,
             swapCurrencyPosition = CurrencyPosition.FROM,
             accountFlow = null,
+            isAccountFlowEnabled = true,
         )
 
         // Assert
         assertThat(to?.status).isSameInstanceAs(collateralStatus)
         assertThat(from?.status).isSameInstanceAs(walletStatus)
     }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the collateral is asked for as FROM THEN it lands as FROM`() = runTest {
+        // Arrange
+        val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = AccountFlow.PredictionWithdraw,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(collateralStatus)
+        assertThat(to).isNull()
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw and a payment account WHEN resolved THEN FROM is the collateral, not the payment token`() =
+        runTest {
+            // Arrange
+            val paymentTokenStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val collateral = mockCryptoCurrency()
+            val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+            setupSupplier(
+                listOf(
+                    createPaymentAccountStatus(paymentTokenStatus),
+                    createPredictionAccountStatus(collateralStatus),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                accountFlow = AccountFlow.PredictionWithdraw,
+                isAccountFlowEnabled = true,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(collateralStatus)
+        }
 
     @Test
     fun `GIVEN a prediction account without a confirmed address WHEN the collateral is asked for THEN nothing resolves`() =
