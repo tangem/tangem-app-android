@@ -62,6 +62,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.marketing.models)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.polymarket)
     implementation(projects.domain.quotes)
     implementation(projects.domain.stories.models)
     implementation(projects.domain.txhistory.models)
