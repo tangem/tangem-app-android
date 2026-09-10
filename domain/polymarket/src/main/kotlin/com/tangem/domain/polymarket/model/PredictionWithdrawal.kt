@@ -1,5 +1,7 @@
 package com.tangem.domain.polymarket.model
 
+import com.tangem.domain.models.wallet.UserWalletId
+
 /**
  * A withdrawal batch as the card signed it. The single [call] is the contract's invariant made a type:
  * the wire format is an array only because the signature covers an array, and a withdrawal is never
@@ -38,3 +40,24 @@ enum class PredictionWithdrawalState {
             entries.firstOrNull { it.name.equals(raw, ignoreCase = true) } ?: IN_PROGRESS
     }
 }
+
+/** @property transactionId null until the BFF acknowledged the batch with a `202`. */
+data class PredictionWithdrawalRecord(
+    val batch: PredictionWithdrawalBatch,
+    val transactionId: String?,
+)
+
+/**
+ * A withdrawal built and read back, waiting only for the card. [decoded] is what the confirmation screen
+ * must display — the values read out of [call], never the ones it was built from.
+ */
+data class PreparedPredictionWithdrawal(
+    val userWalletId: UserWalletId,
+    val walletId: String,
+    val ownerAddress: String,
+    val depositWalletAddress: String,
+    val nonce: String,
+    val deadline: String,
+    val call: PolymarketApprovalCall,
+    val decoded: PredictionTransferCall,
+)
