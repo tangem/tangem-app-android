@@ -7,12 +7,13 @@ import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.grow.datasource.polymarket.models.PolymarketClosedPositionDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketOpenPositionDto
+import com.tangem.utils.converter.Converter
 import java.time.Instant
 import java.time.LocalDate
 
-internal object PolymarketPositionConverter {
+internal object PolymarketOpenPositionConverter : Converter<PolymarketOpenPositionDto, PolymarketPosition.Open> {
 
-    fun convert(value: PolymarketOpenPositionDto): PolymarketPosition.Open = PolymarketPosition.Open(
+    override fun convert(value: PolymarketOpenPositionDto): PolymarketPosition.Open = PolymarketPosition.Open(
         id = PolymarketPositionId(conditionId = value.conditionId, assetId = value.assetId),
         title = value.title,
         iconUrl = value.icon,
@@ -40,8 +41,11 @@ internal object PolymarketPositionConverter {
             PolymarketPositionResult.entries.firstOrNull { it.name == status } ?: PolymarketPositionResult.UNKNOWN
         },
     )
+}
 
-    fun convert(value: PolymarketClosedPositionDto): PolymarketPosition.Closed = PolymarketPosition.Closed(
+internal object PolymarketClosedPositionConverter : Converter<PolymarketClosedPositionDto, PolymarketPosition.Closed> {
+
+    override fun convert(value: PolymarketClosedPositionDto): PolymarketPosition.Closed = PolymarketPosition.Closed(
         id = PolymarketPositionId(conditionId = value.conditionId, assetId = value.assetId),
         title = value.title,
         iconUrl = value.icon,
@@ -55,6 +59,6 @@ internal object PolymarketPositionConverter {
         status = PolymarketClosedPositionStatus.entries.firstOrNull { it.name == value.status }
             ?: PolymarketClosedPositionStatus.UNKNOWN,
     )
-
-    private fun String?.toDateOrNull(): LocalDate? = this?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 }
+
+private fun String?.toDateOrNull(): LocalDate? = this?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
