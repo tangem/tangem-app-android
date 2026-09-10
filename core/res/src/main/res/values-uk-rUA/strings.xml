@@ -441,6 +441,7 @@
     <item>грудні</item>
   </string-array>
   <string name="common_more">Більше</string>
+  <string name="common_negative">Негативно</string>
   <string name="common_network">Мережа</string>
   <string name="common_network_fee_title">Комісія мережі</string>
   <string name="common_network_fee_warning_content">Сума відправлення буде зменшена на %1$s (%2$s) для покриття обраного рівня комісії</string>
@@ -450,6 +451,7 @@
     <item quantity="many">%d мереж</item>
     <item quantity="other">%d мережі</item>
   </plurals>
+  <string name="common_neutral">Нейтрально</string>
   <string name="common_new_address">Нова адреса</string>
   <string name="common_news">Новини</string>
   <string name="common_next">Далі</string>
@@ -468,8 +470,10 @@
   <string name="common_or">або</string>
   <string name="common_origin_card">Основна картка</string>
   <string name="common_origin_ring">Основне кільце</string>
+  <string name="common_other">Інші</string>
   <string name="common_passphrase">Парольна фраза</string>
   <string name="common_paste">Вставити</string>
+  <string name="common_positive">Позитивно</string>
   <string name="common_privacy_policy">Політикою конфіденційності</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -492,6 +496,7 @@
   <string name="common_second_no_param">сек</string>
   <string name="common_see_all">Переглянути все</string>
   <string name="common_seed_phrase">Seed-фраза</string>
+  <string name="common_select_account">Виберіть рахунок</string>
   <string name="common_select_action">Оберіть дію</string>
   <string name="common_sell">Продати</string>
   <string name="common_send">Надіслати</string>
@@ -866,6 +871,7 @@
   <string name="hw_cloud_backup_confirm_password_description">Пароль потрібен для шифрування секретної фрази в %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Підтвердьте пароль</string>
   <string name="hw_cloud_backup_consent">Я розумію, що Tangem не може відновити пароль моєї резервної копії. Якщо я втрачу цей пароль або свій Apple ID, мою резервну копію буде неможливо відновити. Без фрази відновлення я також не зможу відновити доступ до своїх криптоактивів.</string>
+  <string name="hw_cloud_backup_consent_v2">Я розумію, що Tangem не може відновити пароль моєї резервної копії. Якщо я втрачу цей пароль або свій %1$s, мою резервну копію буде неможливо відновити. Без фрази відновлення я також не зможу відновити доступ до своїх криптоактивів.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Ви не зможете відновити цей гаманець із %s. Нову резервну копію можна створити будь-коли.</string>
   <string name="hw_cloud_backup_error_network">Немає підключення до інтернету. Перевірте мережу та спробуйте ще раз.</string>
   <string name="hw_cloud_backup_error_title">Щось пішло не так</string>
@@ -1029,6 +1035,10 @@
   <string name="manage_tokens_unavailable_description">Обраний токен наразі недоступний для дій у криптогаманці. Але не хвилюйтеся, ви можете висловити свою зацікавленість, проголосувавши за його інтеграцію.</string>
   <string name="manage_tokens_unavailable_vote">Проголосувати</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Гаманець не підтримує більше однієї мережі</string>
+  <string name="market_chart_bubble_no_amount">Немає токенів \n/ вартості активів</string>
+  <string name="market_chart_bubble_total_value">Загальна вартість</string>
+  <string name="market_chart_can_not_load_data">Не вдалося завантажити дані</string>
+  <string name="market_chart_no_amount">Немає токенів або їхня вартість невідома</string>
   <string name="market_chart_top_holding">%s вашого портфеля</string>
   <string name="markets_about_coin_header">Про монету</string>
   <string name="markets_add_to_my_portfolio_description">Щоб купити, обміняти або отримати цей актив, додайте його до свого портфоліо</string>
@@ -2239,15 +2249,15 @@
   <string name="tangempay_newonboard_title">Отримайте картку Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Без комісії за покупки</string>
-  <string name="tangempay_newonboard_topright_body">У USDC, а не в невідомих токенах</string>
-  <string name="tangempay_newonboard_topright_title">Кешбек до 2%</string>
+  <string name="tangempay_newonboard_topright_body">Без сюрпризів</string>
+  <string name="tangempay_newonboard_topright_title">$0 на місяць, \n$0 за поповнення</string>
   <string name="tangempay_onboarding_banner_description">Безкоштовна картка Tangem Pay із кешбеком до 2%</string>
   <string name="tangempay_onboarding_banner_title">Витрачайте крипту в реальному житті</string>
   <string name="tangempay_onboarding_get_card_button_text">Отримати картку</string>
-  <string name="tangempay_onboarding_pay_description">Цифрова картка з Apple Pay або Google Pay, без комісій за покупки</string>
+  <string name="tangempay_onboarding_pay_description">Віртуальну картку можна додати до Apple Pay та Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Витрачайте свої активи будь-де</string>
-  <string name="tangempay_onboarding_purchases_description">За всі покупки — у USDC, а не в балах чи невідомих токенах</string>
-  <string name="tangempay_onboarding_purchases_title">Кешбек до 2%</string>
+  <string name="tangempay_onboarding_purchases_description">Немає жодних додаткових комісій за покупки</string>
+  <string name="tangempay_onboarding_purchases_title">Платіть стільки, скільки бачите</string>
   <string name="tangempay_onboarding_security_description">Буде створено окремий платіжний рахунок без розкриття ваших адрес та активів</string>
   <string name="tangempay_onboarding_security_title">Неперевершена конфіденційність</string>
   <string name="tangempay_onboarding_setup_wallet_description">І прив’яжемо Tangem Pay до нього</string>
@@ -2434,6 +2444,12 @@
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажу</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обміну з %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Недоступно для обміну</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">Найбільший актив</item>
+    <item quantity="few">%d найбільші активи</item>
+    <item quantity="many">%d найбільших активів</item>
+    <item quantity="other"></item>
+  </plurals>
   <string name="transaction_history_claiming_reward">Отримання нагороди</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_disabling_yield_mode">Вимкнення режиму дохідності</string>
