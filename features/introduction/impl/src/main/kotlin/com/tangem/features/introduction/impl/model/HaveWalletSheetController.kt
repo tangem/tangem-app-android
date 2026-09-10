@@ -1,10 +1,14 @@
 package com.tangem.features.introduction.impl.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -17,10 +21,12 @@ import kotlinx.coroutines.launch
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
+@Suppress("LongParameterList")
 internal class HaveWalletSheetController(
     private val host: Host,
     private val scope: CoroutineScope,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase,
@@ -76,6 +82,7 @@ internal class HaveWalletSheetController(
      */
     private fun onSignInWithCardClick() {
         if (!isShown) return
+        analyticsEventHandler.send(IntroductionProcess.ButtonSignInWithCard())
         dismiss()
         host.scanCardForExistingWallet()
     }
@@ -83,7 +90,17 @@ internal class HaveWalletSheetController(
     private fun onImportWalletClick() {
         if (!isShown) return
         if (currentStep() is HaveWalletUM.Step.Import) return
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
+        analyticsEventHandler.send(
+            OnboardingAnalyticsEvent.Backup.ImportWalletRequest(cloudBackup = cloudBackupAvailability()),
+        )
         showStep { importStep(isCloudLoading = false) }
+    }
+
+    private fun cloudBackupAvailability() = if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
+        AnalyticsParam.CloudBackupAvailability.Available
+    } else {
+        AnalyticsParam.CloudBackupAvailability.Unavailable
     }
 
     private fun currentStep(): HaveWalletUM.Step? = (host.haveWalletSheetConfig?.content as? HaveWalletUM)?.step
@@ -108,6 +125,12 @@ internal class HaveWalletSheetController(
 
     private fun onImportBack() {
         if (importStepOrNull() == null) return
+        analyticsEventHandler.send(
+            IntroductionProcess.SheetDismissed(
+                sheet = IntroductionProcess.SheetDismissed.Sheet.ImportExisting,
+                reason = IntroductionProcess.SheetDismissed.DismissReason.BackButton,
+            ),
+        )
         cancelCloudResolve()
         showStep(::optionsStep)
     }
@@ -161,15 +184,33 @@ internal class HaveWalletSheetController(
     }
 
     private fun showError(message: CloudRestoreErrorMessage) {
-        showStep { HaveWalletUM.Step.Error(message = message, onGotItClick = ::dismiss) }
+        showStep { HaveWalletUM.Step.Error(message = message, onGotItClick = ::onCloseClick) }
     }
 
     private fun showStep(step: () -> HaveWalletUM.Step) {
-        val content = HaveWalletUM(step = step())
+        val content = HaveWalletUM(step = step(), onCloseClick = ::onCloseClick)
         host.updateHaveWalletSheetConfig { current ->
             current?.copy(isShown = true, content = content)
-                ?: TangemBottomSheetConfig(isShown = true, onDismissRequest = ::dismiss, content = content)
+                ?: TangemBottomSheetConfig(isShown = true, onDismissRequest = ::onDismissRequest, content = content)
         }
+    }
+
+    private fun onCloseClick() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
+
+    private fun onDismissRequest() = dismissByViewer(IntroductionProcess.SheetDismissed.DismissReason.Dismissed)
+
+    /** Only a viewer leaving without picking a row is a dismissal; rows dismiss programmatically and stay silent. */
+    private fun dismissByViewer(reason: IntroductionProcess.SheetDismissed.DismissReason) {
+        if (!isShown) return
+        val sheet = when (currentStep()) {
+            is HaveWalletUM.Step.Options -> IntroductionProcess.SheetDismissed.Sheet.IHaveWallet
+            is HaveWalletUM.Step.Import,
+            is HaveWalletUM.Step.Error,
+            null,
+            -> IntroductionProcess.SheetDismissed.Sheet.ImportExisting
+        }
+        analyticsEventHandler.send(IntroductionProcess.SheetDismissed(sheet = sheet, reason = reason))
+        dismiss()
     }
 
     private fun dismiss() {
