@@ -28,7 +28,6 @@ internal class PredictionAccountStatusValueDTOConverter(
         )
         is PredictionAccountStatusValue.Active -> PredictionAccountStatusValueDTO.Active(
             balance = value.balance,
-            isTradingAllowed = value.isTradingAllowed,
             depositAddress = value.depositAddress,
         )
         is PredictionAccountStatusValue.Loading,
@@ -49,7 +48,6 @@ internal class PredictionAccountStatusValueDTOConverter(
             source = StatusSource.CACHE,
             balance = value.balance,
             fiatRate = null,
-            isTradingAllowed = value.isTradingAllowed,
             depositCurrency = collateralCurrencyFactory.createDepositTarget(),
             depositAddress = value.depositAddress,
         )

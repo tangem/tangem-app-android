@@ -183,7 +183,6 @@ internal class PolymarketUserWalletDataCleanerTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
             fiatRate = null,
-            isTradingAllowed = true,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
         )
