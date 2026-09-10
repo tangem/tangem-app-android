@@ -15,13 +15,17 @@ dependencies {
     /** Feature */
     implementation(projects.features.polymarket.api)
     api(projects.features.commonFeatures.api)
+    implementation(projects.features.tokenRecieve.api)
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.routing)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
 
     /** Core */
+    api(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
