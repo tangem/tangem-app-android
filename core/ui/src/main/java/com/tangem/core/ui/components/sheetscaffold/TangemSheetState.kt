@@ -7,6 +7,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -217,6 +218,31 @@ class TangemSheetState(
 
     internal val offset: Float
         get() = anchoredDraggableState.offset
+
+    /**
+     * Drives the sheet from a plain `Modifier.draggable`, mirroring Material3's internal `draggableState`.
+     * The foundation `Modifier.anchoredDraggable` settles the sheet on its own and exposes no drag-stop hook,
+     * so a sheet swiped to [Hidden] by hand would never report the dismissal to its owner.
+     */
+    internal val draggableState: DraggableState = object : DraggableState {
+
+        override suspend fun drag(dragPriority: MutatePriority, block: suspend DragScope.() -> Unit) {
+            anchoredDraggableState.anchoredDrag(dragPriority) { anchors ->
+                val dragScope = object : DragScope {
+                    override fun dragBy(pixels: Float) {
+                        val currentOffset = anchoredDraggableState.offset.takeUnless(Float::isNaN) ?: 0f
+                        val newOffset = (currentOffset + pixels).coerceIn(anchors.minPosition(), anchors.maxPosition())
+                        dragTo(newOffset)
+                    }
+                }
+                dragScope.block()
+            }
+        }
+
+        override fun dispatchRawDelta(delta: Float) {
+            anchoredDraggableState.dispatchRawDelta(delta)
+        }
+    }
 
     companion object {
         /** The default [Saver] implementation for [TangemSheetState]. */

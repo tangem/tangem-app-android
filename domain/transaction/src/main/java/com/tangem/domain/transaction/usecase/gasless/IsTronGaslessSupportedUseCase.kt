@@ -11,8 +11,7 @@ import com.tangem.utils.coroutines.runSuspendCatching
 /**
  * Tells whether the Tron gasless flow is available for the given [network]/[currency].
  *
- * Checks ONLY domain facts: the currency is a token on a Tron network whose contract is in the
- * backend-supported token list. The `TWI_1259_TRON_GASLESS_ENABLED` feature toggle is applied in the
+ * Checks ONLY domain facts. The `TWI_1259_TRON_GASLESS_ENABLED` feature toggle is applied in the
  * feature layer (SendModel) — this use case must not depend on `features/send/api`.
  */
 class IsTronGaslessSupportedUseCase(
@@ -20,10 +19,14 @@ class IsTronGaslessSupportedUseCase(
     private val walletManagersFacade: WalletManagersFacade,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId, network: Network, currency: CryptoCurrency): Boolean {
+        if (!isTokenSupported(network = network, currency = currency)) return false
+        return walletManagersFacade.isTronAccountActivated(userWalletId = userWalletId, network = network)
+    }
+
+    suspend fun isTokenSupported(network: Network, currency: CryptoCurrency): Boolean {
         if (currency !is CryptoCurrency.Token) return false
         if (!isTron(network.rawId)) return false
         val supported = runSuspendCatching { repository.getSupportedTokens() }.getOrDefault(emptyList())
-        if (supported.none { it.contractAddress == currency.contractAddress }) return false
-        return walletManagersFacade.isTronAccountActivated(userWalletId = userWalletId, network = network)
+        return supported.any { it.contractAddress == currency.contractAddress }
     }
 }

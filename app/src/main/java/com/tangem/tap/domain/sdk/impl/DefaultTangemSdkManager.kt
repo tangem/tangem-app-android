@@ -35,6 +35,7 @@ import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.hot.sdk.android.PassphraseValidator
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -204,6 +205,15 @@ internal class DefaultTangemSdkManager(
         passphrase: String?,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
+        // The card itself has no passphrase length limit, but a wallet the mobile wallet cannot reproduce
+        // would break both the upgrade between them and importing the same seed phrase twice
+        val passphraseError = runCatching {
+            PassphraseValidator.validate(passphrase.orEmpty().toCharArray())
+        }.exceptionOrNull()
+        if (passphraseError != null) {
+            return CompletionResult.Failure(TangemSdkError.ExceptionError(passphraseError))
+        }
+
         val defaultMnemonic = try {
             DefaultMnemonic(mnemonic, tangemSdk.wordlist)
         } catch (e: TangemSdkError.MnemonicException) {
