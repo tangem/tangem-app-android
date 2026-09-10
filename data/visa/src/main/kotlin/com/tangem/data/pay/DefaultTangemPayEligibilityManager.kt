@@ -36,13 +36,13 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         shouldExcludePaeraCustomers: Boolean,
         entryPoint: TangemPayEntryPoint?,
     ): List<UserWallet> {
-        return getUserWalletsData(entryPoint = entryPoint).mapNotNull {
+        return getEligibleWalletsData(entryPoint = entryPoint).mapNotNull {
             if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet else null
         }
     }
 
-    override suspend fun getPossibleWalletsIds(shouldExcludePaeraCustomers: Boolean): List<UserWalletId> {
-        return getSuitableWallets().addPaeraCustomersData().mapNotNull {
+    override suspend fun getCompatibleWalletsIds(shouldExcludePaeraCustomers: Boolean): List<UserWalletId> {
+        return getCompatibleWallets().addPaeraCustomersData().mapNotNull {
             if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet.walletId else null
         }
     }
@@ -55,10 +55,10 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     override suspend fun isPaeraCustomerForAnyWallet(entryPoint: TangemPayEntryPoint): Boolean {
-        return getUserWalletsData(entryPoint = entryPoint).any { it.isPaeraCustomer }
+        return getEligibleWalletsData(entryPoint = entryPoint).any { it.isPaeraCustomer }
     }
 
-    private suspend fun getUserWalletsData(entryPoint: TangemPayEntryPoint?): List<UserWalletData> {
+    private suspend fun getEligibleWalletsData(entryPoint: TangemPayEntryPoint?): List<UserWalletData> {
         cachedEligibleWallets[entryPoint]?.let { return it }
 
         return loadMutex.withLock {
@@ -67,7 +67,9 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
 
             coroutineScope {
                 val deferred = async {
-                    getEligibleWallets(entryPoint = entryPoint)
+                    getCompatibleWallets()
+                        .takeIf { it.isNotEmpty() && hasEligibleChannel(entryPoint = entryPoint) }
+                        .orEmpty()
                         .addPaeraCustomersData()
                         .also { cachedEligibleWallets += mapOf(entryPoint to it) }
                 }
@@ -81,19 +83,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
-    private suspend fun getEligibleWallets(entryPoint: TangemPayEntryPoint?): List<UserWallet> {
-        val candidates = getSuitableWallets()
-
-        if (candidates.isEmpty()) return emptyList()
-
-        if (!checkTangemPayEligibility(entryPoint = entryPoint)) {
-            return emptyList()
-        }
-
-        return candidates
-    }
-
-    private suspend fun getSuitableWallets(): List<UserWallet> {
+    private suspend fun getCompatibleWallets(): List<UserWallet> {
         val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
 
         return wallets.filter { wallet ->
@@ -133,7 +123,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         eligibleWalletsDeferred = null
     }
 
-    private suspend fun checkTangemPayEligibility(entryPoint: TangemPayEntryPoint?): Boolean {
+    private suspend fun hasEligibleChannel(entryPoint: TangemPayEntryPoint?): Boolean {
         val eligibility = onboardingRepository.getCustomerEligibility()
             ?: onboardingRepository.checkCustomerEligibility()
         return if (entryPoint == null) {

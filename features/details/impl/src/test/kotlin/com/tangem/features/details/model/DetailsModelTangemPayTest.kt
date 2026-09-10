@@ -73,7 +73,7 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
             // GIVEN
             every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
             coEvery {
-                tangemPayEligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true)
+                tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
             } returns listOf(wallet1)
 
             // WHEN
@@ -91,7 +91,7 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
         // GIVEN
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
         coEvery {
-            tangemPayEligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true)
+            tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
         } returns listOf(wallet1)
         val model = createModel(this)
         advanceUntilIdle()
