@@ -8,6 +8,8 @@ import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResp
 import com.tangem.store.datasource.markets.models.response.GetCoinIndicatorsResponse.Asset.Indicator
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.markets.MarketIndicators
+import com.tangem.store.datasource.markets.models.response.MarketIndicatorsResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -18,14 +20,15 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultCoinIndicatorsRepositoryTest {
+internal class DefaultMarketIndicatorsRepositoryTest {
 
     private val marketsApi: TangemTechMarketsApi = mockk()
     private val store: RuntimeStateStore<Map<String, CoinIndicators>> = RuntimeStateStore(defaultValue = emptyMap())
 
-    private val repository = DefaultCoinIndicatorsRepository(
+    private val repository = DefaultMarketIndicatorsRepository(
         marketsApi = marketsApi,
         store = store,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -133,6 +136,61 @@ internal class DefaultCoinIndicatorsRepositoryTest {
         // Assert
         assertThat(result.isLeft()).isTrue()
         assertThat(store.get().value.keys).containsExactly("ETH")
+    }
+
+    @Test
+    fun `GIVEN a populated response WHEN getMarketIndicators THEN returns the converted indicators`() = runTest {
+        // Arrange
+        coEvery { marketsApi.getMarketIndicators(any(), any()) } returns ApiResponse.Success(
+            MarketIndicatorsResponse(
+                totalMarketCap = BigDecimal("2679300000000"),
+                marketCapChangePercentage24h = BigDecimal("-0.93"),
+                fearGreedValue = 72,
+                fearGreedClassification = "Greed",
+                altcoinIndexValue = 44,
+                altcoinIndexClassification = "Balanced Market",
+            ),
+        )
+
+        // Act
+        val actual = repository.getMarketIndicators(fiatCurrencyCode = "USD", languageCode = "en")
+
+        // Assert
+        val indicators = actual.getOrNull()!!
+        assertThat(indicators.totalMarketCap).isEqualToIgnoringScale("2679300000000")
+        assertThat(indicators.fearGreed).isEqualTo(MarketIndicators.Index(value = 72, classification = "Greed"))
+        coVerify(exactly = 1) { marketsApi.getMarketIndicators(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an all-null response WHEN getMarketIndicators THEN returns Right with empty indicators`() = runTest {
+        // Arrange — a response without data is not a failure
+        coEvery { marketsApi.getMarketIndicators(any(), any()) } returns ApiResponse.Success(MarketIndicatorsResponse())
+
+        // Act
+        val actual = repository.getMarketIndicators(fiatCurrencyCode = "USD", languageCode = "en")
+
+        // Assert
+        assertThat(actual.getOrNull()).isEqualTo(
+            MarketIndicators(
+                totalMarketCap = null,
+                marketCapChange24h = null,
+                fearGreed = null,
+                altcoinSeason = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN the api throws WHEN getMarketIndicators THEN returns Left`() = runTest {
+        // Arrange
+        coEvery { marketsApi.getMarketIndicators(any(), any()) } throws RuntimeException("api down")
+
+        // Act
+        val actual = repository.getMarketIndicators(fiatCurrencyCode = "USD", languageCode = "en")
+
+        // Assert
+        assertThat(actual.isLeft()).isTrue()
     }
 
     private fun success(vararg assets: Asset): ApiResponse<GetCoinIndicatorsResponse> =
