@@ -2,6 +2,7 @@ package com.tangem.data.card
 
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.common.core.CardSession
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -15,5 +16,6 @@ interface TransactionSignerFactory {
         sdk: TangemSdk,
         twinKey: TwinKey?,
         userWalletId: UserWalletId,
+        session: CardSession?,
     ): TransactionSigner
 }
