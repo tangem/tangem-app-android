@@ -882,6 +882,7 @@
   <string name="hw_cloud_backup_confirm_password_description">Auf %s ist ein Passwort erforderlich, um Ihre Wiederherstellungsphrase zu verschlüsseln.</string>
   <string name="hw_cloud_backup_confirm_password_title">Passwort bestätigen</string>
   <string name="hw_cloud_backup_consent">Ich verstehe, dass Tangem mein Backup Passwort nicht wiederherstellen kann. Wenn ich mein Passwort oder meine Apple ID verliere, kann mein Backup nicht wiederhergestellt werden. Ohne meine Wiederherstellungsphrase können auch meine Kryptowährungen nicht wiederhergestellt werden.</string>
+  <string name="hw_cloud_backup_consent_v2">Ich verstehe, dass Tangem mein Backup Passwort nicht wiederherstellen kann. Wenn ich mein Passwort oder meine %1$s verliere, kann mein Backup nicht wiederhergestellt werden. Ohne meine Wiederherstellungsphrase können auch meine Kryptowährungen nicht wiederhergestellt werden.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Sie können diese Wallet nicht wiederherstellen von %s. Sie können jederzeit ein neues Backup erstellen.</string>
   <string name="hw_cloud_backup_error_network">Keine Internetverbindung. Überprüfen Sie Ihre Netzwerkverbindung und versuchen Sie es erneut.</string>
   <string name="hw_cloud_backup_error_title">Etwas ist schiefgelaufen.</string>
@@ -1144,11 +1145,11 @@
   <string name="market_categories">Kategorien</string>
   <string name="market_chart_ai_total">KI Gesamt:</string>
   <string name="market_chart_ask_for_ai_summary_button">Zusammenfassung der KI anfordern</string>
-  <string name="market_chart_bubble_no_amount">Kein Betrag  auf Token</string>
+  <string name="market_chart_bubble_no_amount">Keine Token \n/ kein Wert</string>
   <string name="market_chart_bubble_no_data">Keine Daten</string>
   <string name="market_chart_bubble_total_value">Gesamtwert</string>
   <string name="market_chart_can_not_load_data">Daten konnten nicht geladen werden</string>
-  <string name="market_chart_no_amount">Du hast keine Token mit diesem Betrag.</string>
+  <string name="market_chart_no_amount">Keine Token oder Wert unbekannt</string>
   <string name="market_chart_top_holding">Top-Halterung %s</string>
   <string name="market_crypto_total_cap_altcoin_index_info">Der Altcoin Season Index ist eine tägliche Marktkennzahl von 0 bis 100, die misst, ob Geld in Bitcoin oder Altcoins fließt. Er erfasst, ob 75% Die führenden Altcoins übertreffen Bitcoin über 90 Tage und signalisieren damit eine „Altcoin-Saison“.</string>
   <string name="market_crypto_total_cap_altcoin_index_title">Altcoin-Index</string>
@@ -1585,7 +1586,7 @@
   <string name="prediction_account_subtitle">Guthaben aufladen und mit den Vorhersagen beginnen</string>
   <string name="prediction_account_title">Prognosekonto</string>
   <string name="prediction_add_funds_error_description">Die Einzahlungsdetails konnten nicht geladen werden. Bitte aktualisieren Sie die Seite oder rufen Sie diesen Bildschirm erneut auf.</string>
-  <string name="prediction_add_funds_notification_limits_description">Der Einzahlungsbetrag muss mindestens %1$sbetragen. Einzahlungen über 50.000 $ werden nicht empfohlen – teilen Sie einen höheren Betrag in mehrere kleinere Einzahlungen auf.</string>
+  <string name="prediction_add_funds_notification_limits_description">Der Einzahlungsbetrag muss mindestens %1$s betragen. Einzahlungen über 50.000 $ werden nicht empfohlen – teilen Sie einen höheren Betrag in mehrere kleinere Einzahlungen auf.</string>
   <string name="prediction_add_funds_notification_limits_title">Einzahlungslimits</string>
   <string name="prediction_add_funds_receive_body">Schicken %1$s aus einer anderen Wallet, Mindestbetrag %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Senden Sie USDC über das Polygon-Netzwerk an Ihr Polymarket-Konto.</string>
@@ -2521,15 +2522,15 @@
   <string name="tangempay_newonboard_title">Hol dir deine Tangem Pay Karte</string>
   <string name="tangempay_newonboard_topleft_body">Zahl, was du siehst</string>
   <string name="tangempay_newonboard_topleft_title">Keine Kaufgebühren, \n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">In USDC, nicht in unbekannten Token</string>
-  <string name="tangempay_newonboard_topright_title">Bis zu 2% Cashback</string>
+  <string name="tangempay_newonboard_topright_body">Keine Überraschungen</string>
+  <string name="tangempay_newonboard_topright_title">$0 monatlich,\n$0 Aufladegebühr</string>
   <string name="tangempay_onboarding_banner_description">Kostenlose Tangem Pay Karte mit bis zu 2 % Cashback</string>
   <string name="tangempay_onboarding_banner_title">Krypto ganz einfach im Alltag ausgeben</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
-  <string name="tangempay_onboarding_pay_description">Digitalkarte mit Apple Pay oder Google Pay, ohne Kaufgebühren</string>
+  <string name="tangempay_onboarding_pay_description">Mit digitaler Karte, die mit Apple Pay und Google Pay funktioniert</string>
   <string name="tangempay_onboarding_pay_title">Geben Sie Ihre Vermögenswerte überall aus</string>
-  <string name="tangempay_onboarding_purchases_description">In USDC — keine Punkte oder unbekannten Token</string>
-  <string name="tangempay_onboarding_purchases_title">Bis zu 2% Cashback</string>
+  <string name="tangempay_onboarding_purchases_description">Es fallen keine zusätzlichen Gebühren für Käufe an</string>
+  <string name="tangempay_onboarding_purchases_title">Zahlen Sie genau das, was Sie sehen</string>
   <string name="tangempay_onboarding_security_description">Ein separates Zahlungskonto wird erstellt, ohne Ihre Adressen und Vermögenswerte offenzulegen</string>
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
   <string name="tangempay_onboarding_setup_wallet_description">Und verknüpfen Tangem Pay damit</string>
