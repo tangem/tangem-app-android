@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.common.google)
     implementation(projects.domain.models)
+    implementation(projects.libs.auth)
 
     api(projects.domain.socialLogin)
 
