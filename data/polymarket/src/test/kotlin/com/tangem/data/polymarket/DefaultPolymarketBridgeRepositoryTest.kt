@@ -152,7 +152,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
     }
 
     @Test
-    fun `GIVEN catalogue already fetched WHEN asked again THEN the api is called once`() = runTest {
+    fun `GIVEN catalogue already fetched WHEN asked again THEN the api is called again`() = runTest {
         // Arrange
         coEvery { bridgeApi.getSupportedAssets() } returns responseWithOneAsset()
 
@@ -161,25 +161,30 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         repository.getSupportedAssets()
 
         // Assert
-        coVerify(exactly = 1) { bridgeApi.getSupportedAssets() }
+        coVerify(exactly = 2) { bridgeApi.getSupportedAssets() }
     }
 
     @Test
-    fun `GIVEN catalogue call failed WHEN asked again THEN the api is called again`() = runTest {
+    fun `GIVEN an asset without a minimum WHEN listed THEN the minimum is absent`() = runTest {
         // Arrange
-        coEvery { bridgeApi.getSupportedAssets() } returnsMany listOf(
-            networkError(),
-            responseWithOneAsset(),
+        coEvery { bridgeApi.getSupportedAssets() } returns ApiResponse.Success(
+            PolymarketSupportedAssetsResponse(
+                supportedAssets = listOf(
+                    PolymarketSupportedAssetDto(
+                        chainId = "1",
+                        chainName = "Bitcoin",
+                        token = PolymarketBridgeTokenDto(name = "Bitcoin", symbol = "BTC", address = "", decimals = 8),
+                        minCheckoutUsd = null,
+                    ),
+                ),
+            ),
         )
 
         // Act
-        val first = repository.getSupportedAssets()
-        val second = repository.getSupportedAssets()
+        val actual = repository.getSupportedAssets()
 
         // Assert
-        assertThat(first).isEqualTo(Either.Left(PolymarketBridgeError.Network))
-        assertThat(second.getOrNull()).hasSize(1)
-        coVerify(exactly = 2) { bridgeApi.getSupportedAssets() }
+        assertThat(actual.getOrNull()!!.single().minCheckoutUsd).isNull()
     }
 
     @Suppress("UNCHECKED_CAST")
