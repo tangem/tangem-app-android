@@ -18,7 +18,4 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-
-    /** Other */
-    implementation(deps.haze)
 }
