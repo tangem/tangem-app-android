@@ -23,14 +23,14 @@ internal fun CreateWalletBottomSheet(config: TangemBottomSheetConfig) {
         // The glass material samples the video behind the screen, which washes the card out and leaves a
         // sheen across its top. A dialog window cannot blur across windows, so the card stays flat and opaque.
         presentation = TangemModal.Presentation.Dialog,
-        title = {
+        title = { content ->
             TangemTopNavigation(
                 title = resourceReference(R.string.introduction_button_create_wallet),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 windowInsets = WindowInsets(0.dp),
                 fadeEnabled = false,
                 onBack = null,
-                onClose = if (isCreatingWallet) null else config.onDismissRequest,
+                onClose = if (isCreatingWallet) null else content.onCloseClick,
             )
         },
     ) { content ->
