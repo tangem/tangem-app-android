@@ -92,6 +92,7 @@ internal class GetCloudBackupStatusUseCaseTest {
 
     private fun backupInfo(walletId: String?) = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "Wallet",
         walletName = "Wallet",
         createdAtMillis = 0L,
         walletId = walletId,
