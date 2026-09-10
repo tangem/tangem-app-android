@@ -12,8 +12,8 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
+import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -37,10 +37,10 @@ internal class PredictionBalanceUMConverter(
                 icon = Icons.ic_arrow_down_24,
                 isEnabled = active?.cryptoCurrencyStatus != null &&
                     value.isTradingAllowed &&
-                    value.depositTarget != null,
+                    value.requisites !is RequisitesState.Loading,
                 isLoading = isLoading,
                 onClick = onAddFundsClick,
-            ),
+            ).copy(isDimmed = value.requisites is RequisitesState.Failed),
             withdraw = actionButton(
                 text = resourceReference(id = R.string.prediction_main_withdraw),
                 icon = Icons.ic_arrow_up_24,
@@ -71,7 +71,7 @@ internal class PredictionBalanceUMConverter(
 
     data class Input(
         val status: PredictionAccountStatusValue,
-        val depositTarget: PolymarketDepositTarget?,
+        val requisites: RequisitesState,
         val isTradingAllowed: Boolean,
     )
 }
