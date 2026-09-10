@@ -25,12 +25,15 @@ import com.tangem.core.ui.components.fields.contextmenu.DisableContextMenu
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.manualbackup.check.entity.ManualBackupCheckUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun ManualBackupCheckContent(state: ManualBackupCheckUM, modifier: Modifier = Modifier) {
+    DisableAutofillEffect()
+
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)

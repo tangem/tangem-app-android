@@ -25,8 +25,19 @@ class TangemHotSDKProxy @Inject constructor(
 
     val sdkState = MutableStateFlow<TangemHotSdk?>(null)
 
-    override suspend fun importWallet(mnemonic: Mnemonic, passphrase: CharArray?, auth: HotAuth): HotWalletId =
-        callSdk { importWallet(mnemonic, passphrase, auth) }
+    override suspend fun importWallet(
+        mnemonic: Mnemonic,
+        passphrase: CharArray?,
+        auth: HotAuth,
+        isLegacyPassphraseImport: Boolean,
+    ): HotWalletId = callSdk {
+        importWallet(
+            mnemonic = mnemonic,
+            passphrase = passphrase,
+            auth = auth,
+            isLegacyPassphraseImport = isLegacyPassphraseImport,
+        )
+    }
 
     override suspend fun generateWallet(auth: HotAuth, mnemonicType: MnemonicType): HotWalletId =
         callSdk { generateWallet(auth, mnemonicType) }

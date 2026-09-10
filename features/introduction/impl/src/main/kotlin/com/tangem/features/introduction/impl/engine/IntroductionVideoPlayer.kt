@@ -9,6 +9,8 @@ internal interface IntroductionVideoPlayer {
 
     val isSurfaceAttached: Boolean
 
+    val positionMs: Long
+
     fun attachSurface(surfaceView: SurfaceView)
 
     fun detachSurface(surfaceView: SurfaceView)

@@ -98,7 +98,6 @@ internal class PolymarketWalletBlockConverterTest {
         source = source,
         balance = BigDecimal.TEN,
         fiatRate = fiatRate,
-        isTradingAllowed = true,
         depositCurrency = mockk(relaxed = true),
         depositAddress = null,
     )

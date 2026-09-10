@@ -69,7 +69,7 @@ internal class TronDefaultFeeLoaderTest {
         val sentCurrency = if (model.sendsCoin) trx else usdt
 
         // Act
-        val actual = load(sentCurrency = sentCurrency, sentBalance = "100", nativeBalance = "50", amount = "1")
+        val actual = load(sentCurrency = sentCurrency, sentBalance = "100", nativeBalance = "50")
 
         // Assert
         val expected = if (model.expectsGasless) gaslessFee(compensation = "2.41") else nativeFee(value = "6.43")
@@ -84,9 +84,9 @@ internal class TronDefaultFeeLoaderTest {
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns quoteError()
 
         // Act
-        val first = load(sentBalance = "100", nativeBalance = "50", amount = "1")
+        val first = load(sentBalance = "100", nativeBalance = "50")
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
-        val second = load(sentBalance = "100", nativeBalance = "50", amount = "1")
+        val second = load(sentBalance = "100", nativeBalance = "50")
 
         // Assert
         assertThat(first).isEqualTo(nativeFee(value = "6.43").right())
@@ -100,9 +100,9 @@ internal class TronDefaultFeeLoaderTest {
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns quoteError()
 
         // Act
-        val first = load(sentBalance = "100", nativeBalance = "1", amount = "1")
+        val first = load(sentBalance = "100", nativeBalance = "1")
         coEvery { getTronGaslessFeeUseCase(any(), any()) } returns gaslessFee(compensation = "2.41").right()
-        val second = load(sentBalance = "100", nativeBalance = "1", amount = "1")
+        val second = load(sentBalance = "100", nativeBalance = "1")
 
         // Assert
         assertThat(first).isEqualTo(nativeFee(value = "6.43").right())
@@ -115,8 +115,8 @@ internal class TronDefaultFeeLoaderTest {
         coEvery { isTronGaslessSupportedUseCase(any(), any(), any()) } returnsMany listOf(false, true)
 
         // Act
-        val first = load(sentBalance = "100", nativeBalance = "50", amount = "1")
-        val second = load(sentBalance = "100", nativeBalance = "50", amount = "1")
+        val first = load(sentBalance = "100", nativeBalance = "50")
+        val second = load(sentBalance = "100", nativeBalance = "50")
 
         // Assert
         assertThat(first).isEqualTo(nativeFee(value = "6.43").right())
@@ -124,14 +124,13 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
-    fun `GIVEN fee status is not the network coin WHEN token is short THEN gasless fee is kept`() = runTest {
+    fun `GIVEN fee status is not the network coin WHEN token cannot pay the fee THEN gasless fee is kept`() = runTest {
         // Arrange
         val actual = loader.load(
             userWalletId = userWalletId,
             sentStatus = status(usdt, "2"),
             nativeStatus = status(usdt, "2"),
             transactionData = transactionData,
-            sentAmount = BigDecimal("2"),
             loadNativeFee = nativeFeeStub::load,
         )
 
@@ -140,7 +139,7 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
-    fun `GIVEN TRX balance unknown and zero native fee WHEN token is short THEN gasless fee is kept`() = runTest {
+    fun `GIVEN TRX balance unknown and zero native fee WHEN token cannot pay the fee THEN gasless fee is kept`() = runTest {
         // Arrange
         nativeFeeStub.reset(nativeFee(value = "0").right())
 
@@ -150,7 +149,6 @@ internal class TronDefaultFeeLoaderTest {
             sentStatus = status(usdt, "2"),
             nativeStatus = status(trx, balance = null),
             transactionData = transactionData,
-            sentAmount = BigDecimal("2"),
             loadNativeFee = nativeFeeStub::load,
         )
 
@@ -166,7 +164,6 @@ internal class TronDefaultFeeLoaderTest {
             sentStatus = status(usdt, balance = null),
             nativeStatus = status(trx, "50"),
             transactionData = transactionData,
-            sentAmount = BigDecimal("2"),
             loadNativeFee = nativeFeeStub::load,
         )
 
@@ -176,9 +173,9 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
-    fun `GIVEN token covers amount and fee WHEN load THEN gasless fee without native estimate`() = runTest {
+    fun `GIVEN token covers the fee WHEN load THEN gasless fee without native estimate`() = runTest {
         // Act
-        val actual = load(sentBalance = "3.41", nativeBalance = "50", amount = "1")
+        val actual = load(sentBalance = "3.41", nativeBalance = "50")
 
         // Assert
         assertThat(actual).isEqualTo(gaslessFee(compensation = "2.41").right())
@@ -186,20 +183,19 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
-    fun `GIVEN unknown amount WHEN load THEN gasless fee without coverage check`() = runTest {
+    fun `GIVEN token balance equals the fee WHEN load THEN switches to native`() = runTest {
         // Act
-        val actual = load(sentBalance = "0.5", nativeBalance = "50", amount = null)
+        val actual = load(sentBalance = "2.41", nativeBalance = "50")
 
         // Assert
-        assertThat(actual).isEqualTo(gaslessFee(compensation = "2.41").right())
-        assertThat(nativeFeeStub.calls).isEqualTo(0)
+        assertThat(actual).isEqualTo(nativeFee(value = "6.43").right())
     }
 
     @Test
-    fun `GIVEN token short and TRX covers native fee WHEN load THEN switches to native and stays`() = runTest {
+    fun `GIVEN token cannot pay the fee and TRX covers native fee WHEN load THEN switches to native and stays`() = runTest {
         // Act
-        val first = load(sentBalance = "2", nativeBalance = "50", amount = "2")
-        val second = load(sentBalance = "2", nativeBalance = "50", amount = "0.1")
+        val first = load(sentBalance = "2", nativeBalance = "50")
+        val second = load(sentBalance = "2", nativeBalance = "50")
 
         // Assert
         assertThat(first).isEqualTo(nativeFee(value = "6.43").right())
@@ -209,10 +205,10 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
-    fun `GIVEN token short and TRX short too WHEN load THEN gasless fee is kept`() = runTest {
+    fun `GIVEN token cannot pay the fee and TRX short too WHEN load THEN gasless fee is kept`() = runTest {
         // Act
-        val first = load(sentBalance = "2", nativeBalance = "1", amount = "2")
-        val second = load(sentBalance = "2", nativeBalance = "1", amount = "2")
+        val first = load(sentBalance = "2", nativeBalance = "1")
+        val second = load(sentBalance = "2", nativeBalance = "1")
 
         // Assert
         assertThat(first).isEqualTo(gaslessFee(compensation = "2.41").right())
@@ -221,12 +217,12 @@ internal class TronDefaultFeeLoaderTest {
     }
 
     @Test
-    fun `GIVEN token short and native estimate fails WHEN load THEN gasless fee is kept`() = runTest {
+    fun `GIVEN token cannot pay the fee and native estimate fails WHEN load THEN gasless fee is kept`() = runTest {
         // Arrange
         nativeFeeStub.reset(GetFeeError.UnknownError.left())
 
         // Act
-        val actual = load(sentBalance = "2", nativeBalance = "50", amount = "2")
+        val actual = load(sentBalance = "2", nativeBalance = "50")
 
         // Assert
         assertThat(actual).isEqualTo(gaslessFee(compensation = "2.41").right())
@@ -241,7 +237,7 @@ internal class TronDefaultFeeLoaderTest {
         nativeFeeStub.reset(GetFeeError.UnknownError.left())
 
         // Act
-        val actual = load(sentBalance = "100", nativeBalance = "50", amount = "1")
+        val actual = load(sentBalance = "100", nativeBalance = "50")
 
         // Assert
         assertThat(actual).isEqualTo(GetFeeError.UnknownError.left())
@@ -251,13 +247,11 @@ internal class TronDefaultFeeLoaderTest {
         sentCurrency: CryptoCurrency = usdt,
         sentBalance: String,
         nativeBalance: String,
-        amount: String?,
     ): Either<GetFeeError, TransactionFeeExtended> = loader.load(
         userWalletId = userWalletId,
         sentStatus = status(sentCurrency, sentBalance),
         nativeStatus = status(trx, nativeBalance),
         transactionData = transactionData,
-        sentAmount = amount?.let(::BigDecimal),
         loadNativeFee = nativeFeeStub::load,
     )
 

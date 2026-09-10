@@ -11,8 +11,11 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
+import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
@@ -53,6 +56,126 @@ fun BaseTestCase.openMainScreenWithTangemPayTile() {
     }
     step("Assert Tangem Pay tile is displayed") {
         awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
+    }
+}
+
+/**
+ * Imports the Tangem Pay hot wallet on a `TwoAccountsSameUsdt` portfolio and lands on Main with both the
+ * regular accounts and the Pay tile rendered. Callers set the WireMock scenarios themselves.
+ */
+fun BaseTestCase.openMainScreenWithPayAndTwoAccounts() {
+    // Imported without an access code on purpose: deriving the second account's addresses would otherwise
+    // stop on the unlock prompt, and Tangem Pay itself does not need the code.
+    step("Import hot wallet from Tangem Pay seed phrase") {
+        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+    }
+    step("Click on 'Synchronize addresses' button") {
+        // The prompt only appears once the imported wallet finishes restoring, which outlasts the
+        // ordinary timeout on a busy emulator.
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION) {
+            onMainScreen { synchronizeAddressesButton.assertIsDisplayed() }
+        }
+        onMainScreen { synchronizeAddressesButton.performClick() }
+    }
+    step("Wait for addresses to be generated") {
+        waitForAddressesGenerated()
+    }
+    // Without the tile the wallet has no Pay account at all, and every "Pay is absent" assertion below
+    // would pass for the wrong reason.
+    step("Assert Tangem Pay tile is displayed on Main") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() }
+        }
+    }
+}
+
+/**
+ * WireMock state shared by every "Pay account is hidden in account lists" test: an eligible Pay customer
+ * whose portfolio holds two regular accounts.
+ */
+fun BaseTestCase.setTangemPayWithTwoAccountsScenarios() {
+    val eligibilityPaeraCustomerState = "PaeraCustomer"
+    val userTokensTwoAccountsState = "TwoAccountsSameUsdt"
+    val ethCallScenario = "eth_call_api"
+    val ethBalanceScenario = "eth_network_balance"
+    val startedState = "Started"
+
+    step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
+        setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityPaeraCustomerState)
+    }
+    step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensTwoAccountsState'") {
+        setWireMockScenarioState(USER_TOKENS_API_SCENARIO, userTokensTwoAccountsState)
+    }
+    step("Set WireMock scenario '$ethCallScenario' to '$startedState'") {
+        setWireMockScenarioState(ethCallScenario, startedState)
+    }
+    step("Set WireMock scenario '$ethBalanceScenario' to '$startedState'") {
+        setWireMockScenarioState(ethBalanceScenario, startedState)
+    }
+}
+
+/** From Main, opens the 'Choose token' sheet behind the 'Add funds' button. */
+fun BaseTestCase.openAddFundsChooseTokenSheet() {
+    step("Click on 'Add funds' button") {
+        onMainScreen { addFundsButton.clickWithAssertion() }
+    }
+    step("Assert 'Choose token' sheet is displayed") {
+        awaitSuccess { onChooseTokenBottomSheet { title.assertIsDisplayed() } }
+    }
+}
+
+/** From Main, opens the 'Choose token' sheet behind the 'Transfer' button — the same selector, Transfer flow. */
+fun BaseTestCase.openTransferChooseTokenSheet() {
+    step("Click on 'Transfer' button") {
+        onMainScreen { transferButton.clickWithAssertion() }
+    }
+    step("Assert 'Choose token' sheet is displayed") {
+        awaitSuccess { onChooseTokenBottomSheet { title.assertIsDisplayed() } }
+    }
+}
+
+/** From Main, opens the account picker behind 'Add tokens' in the Add & Manage sheet. */
+fun BaseTestCase.openAddTokensPortfolioSelector() {
+    step("Open 'Add & Manage' bottom sheet") {
+        onMainScreen { clickDisplayedAddAndManageButton() }
+    }
+    step("Click on 'Add tokens' button") {
+        onAddAndManageBottomSheet { addTokensButton.clickWithAssertion() }
+    }
+}
+
+/** Opens [tokenName] in Markets and taps 'Add', then opens the portfolio picker on the 'Add token' sheet. */
+fun BaseTestCase.openMarketsAddToPortfolioSelector(tokenName: String) {
+    step("Open 'Markets' screen") {
+        onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
+        waitForIdle()
+    }
+    step("Click on '$tokenName' token") {
+        awaitSuccess { onMarketsScreen { tokenWithTitle(tokenName).assertIsDisplayed() } }
+        onMarketsScreen { tokenWithTitle(tokenName).performClick() }
+    }
+    step("Click on 'Add' button") {
+        awaitSuccess { onMarketsScreen { addButton.assertIsDisplayed() } }
+        onMarketsScreen { addButton.performClick() }
+    }
+    step("Click on the selected portfolio row") {
+        awaitSuccess { onAddToPortfolioScreen { selectedPortfolioRow.assertIsDisplayed() } }
+        onAddToPortfolioScreen { selectedPortfolioRow.performClick() }
+    }
+}
+
+/** From Main, walks wallet settings into the referral program and opens its 'Account for rewards' picker. */
+fun BaseTestCase.openReferralPortfolioSelector() {
+    openWalletSettingsScreen()
+    step("Click on 'Referral program' button") {
+        onWalletSettingsScreen {
+            scrollToReferralProgram()
+            referralProgramButton.clickWithAssertion()
+        }
+    }
+    step("Click on the rewards account row") {
+        awaitSuccess { onReferralProgramScreen { rewardsAccountRow.assertIsDisplayed() } }
+        onReferralProgramScreen { rewardsAccountRow.performClick() }
     }
 }
 
