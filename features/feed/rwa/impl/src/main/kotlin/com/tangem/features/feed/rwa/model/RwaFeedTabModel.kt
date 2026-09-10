@@ -8,7 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -27,11 +27,12 @@ import com.tangem.features.feed.rwa.model.list.RwaListRequest
 import com.tangem.features.feed.rwa.model.list.RwaSort
 import com.tangem.features.feed.rwa.ui.state.RwaFeaturedUM
 import com.tangem.features.feed.rwa.ui.state.RwaFeedTabUM
+import com.tangem.features.feed.rwa.ui.state.RwaIntervalUM
 import com.tangem.features.feed.rwa.ui.state.RwaListUM
-import com.tangem.features.feed.rwa.ui.state.RwaTagUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -50,7 +51,7 @@ private const val CATEGORIES_FILTER_ID = "rwa_categories"
 
 /**
  * Model of the Real assets tab. The Featured rail and the main list are two independent requests
- * against the same endpoint: the rail is pinned to the reserved `featured_assets` category, the list
+ * against the same endpoint: the rail is pinned to the reserved `featured-assets` category, the list
  * follows whatever the user picks in the Category selector.
  *
  * The list is never requested unscoped — with no user filter it falls back to the `real-world-assets`
@@ -62,7 +63,6 @@ internal class RwaFeedTabModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
     private val router: Router,
 ) : Model(), CategorySelectorComponent.ModelCallback {
@@ -84,6 +84,13 @@ internal class RwaFeedTabModel @Inject constructor(
     private val categoriesState = MutableStateFlow(CategoriesState())
     private val visibleItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
+    /**
+     * Source of truth for the trend interval and the sort; conflation is what makes re-picking the current
+     * value a no-op, so neither setter needs an equality guard.
+     */
+    private val selectedInterval = MutableStateFlow(RwaInterval.H24)
+    private val selectedSort = MutableStateFlow(RwaSort.MarketCap)
+
     val uiState: StateFlow<RwaFeedTabUM>
         field = MutableStateFlow(initialState())
 
@@ -99,7 +106,8 @@ internal class RwaFeedTabModel @Inject constructor(
     )
 
     private val featuredManager = RwaFeaturedAssetsManager(
-        getTopFiveMarketTokenUseCase = getTopFiveMarketTokenUseCase,
+        getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+        interval = selectedInterval,
         appCurrency = currentAppCurrency,
         onItemClick = ::openTokenDetails,
         modelScope = modelScope,
@@ -129,15 +137,35 @@ internal class RwaFeedTabModel @Inject constructor(
             .launchIn(modelScope)
 
         listManager.onLastBatchLoadedSuccess.onEach { batchKey ->
-            listManager.loadCharts(setOf(batchKey), uiState.value.selectedInterval)
+            listManager.loadCharts(setOf(batchKey), selectedInterval.value)
             modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
         }.launchIn(modelScope)
 
         visibleItemIds
             .mapNotNull { ids -> ids.takeIf { it.isNotEmpty() }?.let(listManager::getBatchKeysByItemIds) }
             .distinctUntilChanged()
-            .onEach { visibleBatchKeys -> listManager.loadCharts(visibleBatchKeys, uiState.value.selectedInterval) }
+            .onEach { visibleBatchKeys -> listManager.loadCharts(visibleBatchKeys, selectedInterval.value) }
             .launchIn(modelScope)
+
+        // interval switch: the market-cap order does not depend on it, so re-render and fill the charts in;
+        // the gainers/losers orders are ranked by it, so the row set itself changes
+        selectedInterval.drop(1).onEach { interval ->
+            uiState.update { it.copy(interval = it.interval.copy(selected = interval)) }
+
+            if (selectedSort.value == RwaSort.MarketCap) {
+                syncListRequest()
+                listManager.updateUIWithSameState()
+                listManager.loadCharts(listManager.getBatchKeysByItemIds(visibleItemIds.value), interval)
+            } else {
+                reloadList()
+            }
+        }.launchIn(modelScope)
+
+        // the sort *is* the query, so a switch always reloads
+        selectedSort.drop(1).onEach { sort ->
+            uiState.update { it.copy(sortTabs = sortTabs(selected = sort)) }
+            reloadList()
+        }.launchIn(modelScope)
 
         featuredManager.state
             .onEach { featured -> uiState.update { it.copy(featured = featured) } }
@@ -152,15 +180,10 @@ internal class RwaFeedTabModel @Inject constructor(
         return RwaFeedTabUM(
             featured = RwaFeaturedUM.Loading,
             categoriesFilter = categoriesFilterItem(selection = request.selection),
-            interval = intervalControl(selected = request.interval),
-            tags = RwaSort.entries
-                .map { RwaTagUM(id = it.id, title = it.title) }
-                .toImmutableList(),
-            onTagSelect = ::selectSort,
+            interval = RwaIntervalUM(selected = selectedInterval.value, onOptionClick = ::selectInterval),
+            sortTabs = sortTabs(selected = selectedSort.value),
             onVisibleItemsChange = { ids -> visibleItemIds.value = ids.map(CryptoCurrency::RawID) },
             list = RwaListUM.Loading,
-            selectedInterval = request.interval,
-            selectedSort = request.sort,
             appliedSelection = request.selection,
         )
     }
@@ -219,8 +242,8 @@ internal class RwaFeedTabModel @Inject constructor(
         val state = uiState.value
 
         listRequest.value = RwaListRequest(
-            interval = state.selectedInterval,
-            sort = state.selectedSort,
+            interval = selectedInterval.value,
+            sort = selectedSort.value,
             selection = state.appliedSelection.orUmbrella(categoriesState.value.rwaCategory),
         )
     }
@@ -255,45 +278,27 @@ internal class RwaFeedTabModel @Inject constructor(
         )
     }
 
-    private fun intervalControl(selected: RwaInterval): TangemSegmentedControl.State {
-        return TangemSegmentedControl.State.Content(
-            items = RwaInterval.entries.map { interval ->
-                TangemSegmentedControl.Item(
-                    id = interval.name,
-                    label = interval.title,
-                    isSelected = interval == selected,
-                    onClick = { selectInterval(interval) },
-                )
-            }.toImmutableList(),
-        )
-    }
-
     private fun selectInterval(interval: RwaInterval) {
-        if (uiState.value.selectedInterval == interval) return
+        selectedInterval.value = interval
+    }
 
-        uiState.update { it.copy(selectedInterval = interval, interval = intervalControl(selected = interval)) }
+    private fun selectSort(sort: RwaSort) {
+        selectedSort.value = sort
+    }
 
-        if (uiState.value.selectedSort == RwaSort.MarketCap) {
-            // ByRating does not depend on the interval, so re-render what is loaded and fill the charts in
-            syncListRequest()
-            listManager.updateUIWithSameState()
-            listManager.loadCharts(listManager.getBatchKeysByItemIds(visibleItemIds.value), interval)
-        } else {
-            // the gainers/losers orders are ranked by the interval, so the rows themselves change
-            reloadList()
+    private fun sortTabs(selected: RwaSort): ImmutableList<TangemTabItemUM> = RwaSort.entries
+        .map<RwaSort, TangemTabItemUM> { sort ->
+            TangemTabItemUM.Content(
+                id = sort.id,
+                label = sort.title,
+                isSelected = sort == selected,
+                onClick = { selectSort(sort) },
+            )
         }
-    }
-
-    private fun selectSort(index: Int) {
-        val sort = RwaSort.entries.getOrNull(index) ?: return
-        if (uiState.value.selectedSort == sort) return
-
-        uiState.update { it.copy(selectedSort = sort) }
-        reloadList()
-    }
+        .toImmutableList()
 
     private fun openTokenDetails(id: CryptoCurrency.RawID) {
-        val token = listManager.getTokenById(id) ?: return
+        val token = listManager.getTokenById(id) ?: featuredManager.getTokenById(id) ?: return
         router.push(
             route = FeedRoute.MarketsTokenDetails(
                 token = token.toSerializableParam(),

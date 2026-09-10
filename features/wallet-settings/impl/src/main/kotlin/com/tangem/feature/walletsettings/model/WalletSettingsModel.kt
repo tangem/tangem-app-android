@@ -268,7 +268,7 @@ internal class WalletSettingsModel @Inject constructor(
         if (hasUserWallets) {
             router.pop()
         } else {
-            router.replaceAll(AppRoute.Home())
+            router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
         }
     }
 
