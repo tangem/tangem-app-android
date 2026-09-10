@@ -1,15 +1,25 @@
 package com.tangem.feature.swap.model
 
 import arrow.core.Either
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.TokensGroupType
+import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.quote.PriceChange
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.buildSwapCurrencyStatus
@@ -37,6 +47,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 /**
  * Tests for mode-based withdrawal detection driven by [AccountFlow] (instead of
@@ -861,6 +872,159 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(model.dataState.currentTransferState).isNull()
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN checked THEN it is not a Tangem Pay withdrawal`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        val fromCollateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
+
+        // Act
+        val actual = model.isTangemPayWithdrawal(fromCollateral)
+
+        // Assert
+        assertThat(actual).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN reverse is clicked THEN the pair does not flip`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val (collateral, destination) = stubResolvedPredictionPair()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.onChangeCardsClicked()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.dataState.fromSwapCurrencyStatus).isSameInstanceAs(collateral)
+        assertThat(model.dataState.toSwapCurrencyStatus).isSameInstanceAs(destination)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no account flow and the collateral in FROM WHEN reverse is clicked THEN the pair does not flip`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val (collateral, destination) = stubResolvedPredictionPair()
+            val model = createModel(accountFlow = null)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.onChangeCardsClicked()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            assertThat(model.dataState.fromSwapCurrencyStatus).isSameInstanceAs(collateral)
+            assertThat(model.dataState.toSwapCurrencyStatus).isSameInstanceAs(destination)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the state is built THEN the send card is locked and the title is Withdraw`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Assert
+            val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+            assertThat(sendCard.isSelectionLocked).isTrue()
+            assertThat(model.uiState.titleId).isEqualTo(R.string.prediction_main_withdraw)
+            assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN to selector settings THEN Markets is hidden and payment tokens are hidden`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Act
+            val settings = model.chooseToTokenBridge.settings
+
+            // Assert
+            assertThat(settings.chooserBlock).isEqualTo(ChooserBlock.None)
+            assertThat(settings.paymentAccountTokens).isEqualTo(PaymentAccountTokens.Hidden)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN to tokenFilter applied THEN only the bridge destinations pass`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+        val otherStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+        val portfolioStatus = personalAccountStatus(listOf(destinationStatus, otherStatus))
+        val portfolio = listOf(destinationStatus.currency, otherStatus.currency)
+        val destinations = setOf(destinationStatus.currency.id)
+        coEvery {
+            singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
+        } returns accountStatusList(listOf(portfolioStatus))
+        coEvery { getPredictionWithdrawDestinationsUseCase(portfolio) } returns destinations.right()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        advanceUntilIdle()
+
+        // Act
+        val predicate = model.chooseToTokenBridge.tokenFilter.value
+
+        // Assert
+        assertThat(predicate(portfolioStatus, destinationStatus)).isTrue()
+        assertThat(predicate(portfolioStatus, otherStatus)).isFalse()
+        model.onDestroy()
+    }
+
+    private fun accountStatusList(accountStatuses: List<AccountStatus>) = AccountStatusList(
+        userWalletId = userWalletId,
+        accountStatuses = accountStatuses,
+        totalAccounts = accountStatuses.size,
+        totalArchivedAccounts = 0,
+        totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+        sortType = TokensSortType.NONE,
+        groupType = TokensGroupType.NONE,
+    )
+
+    private fun personalAccountStatus(currencies: List<CryptoCurrencyStatus>): AccountStatus.Personal {
+        return AccountStatus.Personal(
+            account = Account.Personal.createMainAccount(userWalletId),
+            tokenList = TokenList.Ungrouped(
+                totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+                sortedBy = TokensSortType.NONE,
+                currencies = currencies,
+            ),
+            priceChangeLce = Lce.Content(PriceChange(value = BigDecimal.ZERO, source = StatusSource.ACTUAL)),
+        )
+    }
+
+    private fun stubResolvedPredictionPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
+        val wallet = accountFlowUserWallet()
+        val collateral = buildSwapCurrencyStatus(wallet).copy(account = Account.Prediction(userWalletId))
+        val destination = buildSwapCurrencyStatus(wallet)
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (collateral to destination)
+        return collateral to destination
+    }
 
     // -------------------------------------------------------------------------
     // Helpers
