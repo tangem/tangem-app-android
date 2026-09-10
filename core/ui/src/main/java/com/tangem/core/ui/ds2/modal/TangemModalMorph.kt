@@ -68,7 +68,10 @@ internal class ModalMorphGeometry {
 
 /**
  * How far the modal has slid in: 0 at the hidden anchor, 1 at the expanded anchor, interpolated
- * per frame during drags and settle animations. 1 before the anchors are known.
+ * per frame during drags and settle animations. While the anchors or the offset are unresolvable it
+ * reports the settled [TangemSheetState.currentValue] instead: the first layout pass measures the
+ * card before the anchors exist, and claiming "open" there lays out a full, unfolded card against a
+ * sheet still parked at the hidden anchor — which flashes the card's top edge on screen.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @PublishedApi
@@ -78,7 +81,9 @@ internal fun TangemSheetState.openProgress(): Float {
     val expanded = anchors.positionOf(TangemSheetValue.Expanded)
     val offset = anchoredDraggableState.offset
     val isResolvable = !hidden.isNaN() && !expanded.isNaN() && !offset.isNaN()
-    if (!isResolvable || hidden == expanded) return 1f
+    if (!isResolvable || hidden == expanded) {
+        return if (currentValue == TangemSheetValue.Hidden) 0f else OPEN_PROGRESS_SETTLED
+    }
     return ((hidden - offset) / (hidden - expanded)).coerceIn(0f, 1f)
 }
 

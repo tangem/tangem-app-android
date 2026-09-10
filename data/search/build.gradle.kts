@@ -28,8 +28,9 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.utils)
     implementation(projects.core.local)
+    implementation(projects.core.remote)
+    api(projects.core.utils)
     // endregion
 
     // region Project - Domain

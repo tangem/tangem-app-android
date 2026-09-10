@@ -183,6 +183,15 @@ object PredictionAccountIcon {
     val color: Color = Color(color = 0xFF5A5AF0)
 }
 
+/** Art of the Collectibles account, shared by the account icon and the wallet row, so both change together. */
+object CollectiblesAccountIcon {
+
+    // TODO([REDACTED_TASK_KEY]): replace the placeholder icon and color with the final collectibles account asset
+    @DrawableRes
+    val resId: Int = R.drawable.ic_gift_24
+    val color: Color = Color(color = 0xFFE2A400)
+}
+
 fun AccountIconSize.toBoxSize(): Dp = when (this) {
     AccountIconSize.Default -> 40.dp
     AccountIconSize.Large -> 88.dp

@@ -9,7 +9,6 @@ import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
-import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
@@ -70,9 +69,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
-
-    private val moshiJsonConverter: MoshiJsonConverter
-        get() = entryPoint.getMoshiJsonConverter()
 
     private val tangemLoggingInitializer: TangemLoggingInitializer
         get() = entryPoint.getTangemLoggingInitializer()
@@ -214,12 +210,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         )
     }
 
-    override fun newImageLoader(): ImageLoader {
-        return createCoilImageLoader(
-            context = this,
-            logEnabled = LogConfig.imageLoader,
-        )
-    }
+    override fun newImageLoader(): ImageLoader = createCoilImageLoader(context = this)
 
     private fun loadNativeLibraries() {
         System.loadLibrary("TrustWalletCore")
@@ -242,7 +233,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             config = environmentConfig,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
-            jsonConverter = moshiJsonConverter,
         )
 
         Analytics.addParamsInterceptor(interceptor = sendTransactionSignerInfoInterceptor)

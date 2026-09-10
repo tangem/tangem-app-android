@@ -1,8 +1,7 @@
 package com.tangem.data.notifications
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.PreferencesKeys.getShouldShowAskNotificationPermissionViaBs
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import kotlinx.coroutines.flow.Flow
@@ -10,65 +9,66 @@ import javax.inject.Inject
 
 class DefaultNotificationsRepository @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
 ) : NotificationsRepository {
 
     override suspend fun shouldShowNotification(key: String): Boolean {
-        return appPreferencesStore.getSyncOrDefault(PreferencesKeys.getShouldShowNotificationKey(key), true)
+        return appPreferencesStore.getSyncOrDefault(storePreferencesKeys.getShouldShowNotificationKey(key), true)
     }
 
     override fun getShouldShowNotification(key: String): Flow<Boolean> {
-        return appPreferencesStore.get(PreferencesKeys.getShouldShowNotificationKey(key), true)
+        return appPreferencesStore.get(storePreferencesKeys.getShouldShowNotificationKey(key), true)
     }
 
     override suspend fun setShouldShowNotifications(key: String, value: Boolean) {
-        appPreferencesStore.store(PreferencesKeys.getShouldShowNotificationKey(key), value)
+        appPreferencesStore.store(storePreferencesKeys.getShouldShowNotificationKey(key), value)
     }
 
     override suspend fun incrementTronTokenFeeNotificationShowCounter() {
         appPreferencesStore.editData { preferences ->
             val count = preferences.getOrDefault(
-                key = PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY,
+                key = storePreferencesKeys.tronNetworkFeeNotificationShowCountKey,
                 default = 0,
             )
-            preferences[PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY] = count + 1
+            preferences[storePreferencesKeys.tronNetworkFeeNotificationShowCountKey] = count + 1
         }
     }
 
     override suspend fun getTronTokenFeeNotificationShowCounter(): Int {
         return appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY,
+            key = storePreferencesKeys.tronNetworkFeeNotificationShowCountKey,
             default = 0,
         )
     }
 
     override suspend fun shouldShowSubscribeOnNotificationsAfterUpdate(): Boolean {
         return appPreferencesStore.getSyncOrNull(
-            key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+            key = storePreferencesKeys.notificationsUserAllowSendAddressesKey,
         ) == null
     }
 
     override suspend fun isUserAllowToSubscribeOnPushNotifications(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY,
+            key = storePreferencesKeys.notificationsUserAllowSendAddressesKey,
             default = false,
         )
     }
 
     override suspend fun setUserAllowToSubscribeOnPushNotifications(value: Boolean) {
-        appPreferencesStore.store(PreferencesKeys.NOTIFICATIONS_USER_ALLOW_SEND_ADDRESSES_KEY, value)
+        appPreferencesStore.store(storePreferencesKeys.notificationsUserAllowSendAddressesKey, value)
     }
 
     override suspend fun getWalletAutomaticallyEnabledList(): List<String> = appPreferencesStore
-        .getObjectMapSync<Boolean>(PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY).map {
+        .getObjectMapSync<Boolean>(storePreferencesKeys.notificationsAutomaticallyEnabledStatesKey).map {
             it.key
         }
 
     override suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String) {
         appPreferencesStore.editData { preferences ->
             preferences.setObjectMap(
-                key = PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
+                key = storePreferencesKeys.notificationsAutomaticallyEnabledStatesKey,
                 value = preferences.getObjectMap<Boolean>(
-                    PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
+                    storePreferencesKeys.notificationsAutomaticallyEnabledStatesKey,
                 )
                     .plus(userWalletId to true),
             )
@@ -76,10 +76,16 @@ class DefaultNotificationsRepository @Inject constructor(
     }
 
     override suspend fun shouldAskNotificationPermissionsViaBs(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(getShouldShowAskNotificationPermissionViaBs(), false)
+        return appPreferencesStore.getSyncOrDefault(
+            storePreferencesKeys.getShouldShowAskNotificationPermissionViaBs(),
+            false,
+        )
     }
 
     override suspend fun setShouldAskNotificationPermissionsViaBs(shouldAsk: Boolean) {
-        appPreferencesStore.store(key = getShouldShowAskNotificationPermissionViaBs(), value = shouldAsk)
+        appPreferencesStore.store(
+            key = storePreferencesKeys.getShouldShowAskNotificationPermissionViaBs(),
+            value = shouldAsk,
+        )
     }
 }

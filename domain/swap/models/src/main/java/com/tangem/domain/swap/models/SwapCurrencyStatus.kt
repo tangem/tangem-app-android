@@ -32,4 +32,14 @@ data class SwapCurrencyStatus(
         get() = userWallet.walletId
     val isYieldSupplyActive: Boolean
         get() = status.value.yieldSupplyStatus?.isActive == true
+
+    val isTargetOnly: Boolean
+        get() = account.isSwapTargetOnly
 }
+
+/**
+ * Whether the account can receive a swap but never fund one: it holds its currency at an address of an
+ * integration's own, so the wallet has no key that could spend it.
+ */
+val Account.isSwapTargetOnly: Boolean
+    get() = this is Account.Prediction

@@ -13,6 +13,7 @@ import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
 import com.tangem.data.onramp.legacy.MercuryoTopUpRepository
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
 import com.tangem.grow.datasource.onramp.OnrampApi
@@ -21,7 +22,7 @@ import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
@@ -29,7 +30,8 @@ import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsSto
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.onramp.repositories.*
@@ -53,6 +55,8 @@ internal object OnrampDataModule {
         expressApi: TangemExpressApi,
         dispatchers: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
+        expressUtils: ExpressUtils,
         paymentMethodsStore: OnrampPaymentMethodsStore,
         pairsStore: OnrampPairsStore,
         quotesStore: OnrampQuotesStore,
@@ -72,6 +76,8 @@ internal object OnrampDataModule {
             expressApi = expressApi,
             dispatchers = dispatchers,
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
+            expressUtils = expressUtils,
             paymentMethodsStore = paymentMethodsStore,
             onrampCurrentCountryByIPStore = onrampCurrentCountryByIPStore,
             pairsStore = pairsStore,
@@ -98,10 +104,12 @@ internal object OnrampDataModule {
     @Singleton
     fun provideOnrampTransactionRepository(
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
         dispatchers: CoroutineDispatcherProvider,
     ): OnrampTransactionRepository {
         return DefaultOnrampTransactionRepository(
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
             dispatchers = dispatchers,
         )
     }
@@ -144,11 +152,11 @@ internal object OnrampDataModule {
     @Provides
     @Singleton
     fun provideMercuryoRepository(
-        environmentConfig: EnvironmentConfig,
+        growEnvironmentConfig: GrowEnvironmentConfig,
         dispatchersProvider: CoroutineDispatcherProvider,
     ): LegacyTopUpRepository {
         return MercuryoTopUpRepository(
-            environmentConfig = environmentConfig,
+            growEnvironmentConfig = growEnvironmentConfig,
             dispatchersProvider = dispatchersProvider,
         )
     }

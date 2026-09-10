@@ -14,7 +14,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
@@ -118,7 +118,7 @@ internal class WalletModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
@@ -286,7 +286,7 @@ internal class WalletModel @Inject constructor(
                             completedBackups = getCompletedBackupsUseCase(selectedWallet),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
-                            referralId = appsFlyerStore.get()?.refcode,
+                            referralId = appsFlyerRepository.getConversionData()?.refcode,
                             appCurrency = appCurrency,
                         ),
                     )

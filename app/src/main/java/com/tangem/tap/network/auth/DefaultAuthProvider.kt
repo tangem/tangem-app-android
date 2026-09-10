@@ -1,17 +1,17 @@
 package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
-import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.remote.auth.AuthProvider
 import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 
 internal class DefaultAuthProvider(
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val environmentConfig: EnvironmentConfig,
+    private val storeEnvironmentConfig: StoreEnvironmentConfig,
 ) : AuthProvider {
 
     override suspend fun getCardPublicKey(): String {
@@ -47,12 +47,12 @@ internal class DefaultAuthProvider(
                 ApiEnvironment.DEV,
                 ApiEnvironment.DEV_2,
                 ApiEnvironment.DEV_3,
-                -> environmentConfig.tangemApiKeyDev
+                -> storeEnvironmentConfig.tangemApiKeyDev
                 ApiEnvironment.STAGE,
                 ApiEnvironment.STAGE_2,
                 ApiEnvironment.STAGE_3,
-                -> environmentConfig.tangemApiKeyStage
-                ApiEnvironment.PROD -> environmentConfig.tangemApiKey
+                -> storeEnvironmentConfig.tangemApiKeyStage
+                ApiEnvironment.PROD -> storeEnvironmentConfig.tangemApiKey
             } ?: error("No tangem tech api config provided")
         }
     }

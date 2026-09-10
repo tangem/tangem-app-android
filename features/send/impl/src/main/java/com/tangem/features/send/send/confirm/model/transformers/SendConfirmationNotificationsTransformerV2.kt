@@ -18,6 +18,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculati
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
@@ -39,7 +40,7 @@ internal class SendConfirmationNotificationsTransformerV2(
         val state = prevState as? ConfirmUM.Content ?: return prevState
         val feeSelectorUM = feeSelectorUM as? FeeSelectorUM.Content ?: return prevState
         return state.copy(
-            sendingFooter = getSendingFooterText(),
+            sendingFooter = getSendingFooterText(signaturesUM = state.signaturesUM),
             notifications = buildList {
                 addTooHighNotification(feeSelectorUM)
                 addTooLowNotification(feeSelectorUM)
@@ -73,7 +74,7 @@ internal class SendConfirmationNotificationsTransformerV2(
         }
     }
 
-    private fun getSendingFooterText(): TextReference {
+    private fun getSendingFooterText(signaturesUM: SendSignaturesUM?): TextReference {
         val feeSelectorUM = feeSelectorUM as? FeeSelectorUM.Content
         val amountUM = amountUM as? AmountState.Data
         val fee = feeSelectorUM?.selectedFeeItem?.fee
@@ -108,7 +109,17 @@ internal class SendConfirmationNotificationsTransformerV2(
             appCurrency = appCurrency,
         )
 
-        return if (fee is Fee.Tron) {
+        return if (signaturesUM != null) {
+            resourceReference(
+                id = R.string.joint_account_send_footer_text,
+                formatArgs = wrappedList(
+                    fiatSending,
+                    fiatFee,
+                    signaturesUM.threshold.toString(),
+                    signaturesUM.membersCount.toString(),
+                ),
+            )
+        } else if (fee is Fee.Tron) {
             getTronTokenFeeSendingText(
                 fee = fee,
                 fiatFee = fiatFee,

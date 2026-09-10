@@ -17,6 +17,7 @@ dependencies {
 
     /** Project - Domain */
     api(projects.domain.card)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.common)
     api(projects.domain.hotWallet)
     api(projects.domain.settings)
@@ -26,7 +27,6 @@ dependencies {
 
     /** Core modules */
     api(projects.core.analytics)
-    api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.utils)

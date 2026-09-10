@@ -94,7 +94,10 @@ internal class TangemPayOrderCardModel @Inject constructor(
     }
 
     override fun onAddFundsForCardIssue() {
+        if (isOrderFlowClosed) return
+        isOrderFlowClosed = true
         bottomSheetNavigation.dismiss()
-        router.pop()
+        params.onAddFundsRequested()
+        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 }

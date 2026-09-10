@@ -4,6 +4,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.*
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.common.quote.DefaultQuotesFetcher
@@ -11,13 +12,14 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.wallet.DefaultWalletServerBinder
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.retryer.RetryerPool
 import dagger.Module
@@ -70,6 +72,8 @@ internal object DataCommonModule {
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
         appScope: AppCoroutineScope,
+        walletAccountsETags: WalletAccountsETags,
+        jointAccountFeatureToggles: JointAccountFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -80,6 +84,8 @@ internal object DataCommonModule {
                 coroutineScope = appScope,
             ),
             walletServerBinder = walletServerBinder,
+            walletAccountsETags = walletAccountsETags,
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
         )
     }
 
@@ -99,13 +105,13 @@ internal object DataCommonModule {
     @Singleton
     fun provideWalletServerBinder(
         userWalletsListRepository: UserWalletsListRepository,
-        appsFlyerStore: AppsFlyerStore,
+        appsFlyerRepository: AppsFlyerRepository,
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletServerBinder {
         return DefaultWalletServerBinder(
             userWalletsListRepository = userWalletsListRepository,
-            appsFlyerStore = appsFlyerStore,
+            appsFlyerRepository = appsFlyerRepository,
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
         )

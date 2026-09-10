@@ -31,6 +31,7 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isAccountMultichainEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
+    private val accountIdsWithInvites: Set<String> = emptySet(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -76,7 +77,7 @@ internal class SetTokenListTransformer(
         return when (walletUM) {
             is WalletUM.Content -> {
                 val tokensListUM = toLoadedState()
-                val isTokensEmpty = tokensListUM is WalletTokensListUM.Empty
+                val isTokensEmpty = !hasPersonalCurrencies()
                 val areActionsAvailable = getTotalFiatBalance().areActionsAvailable()
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
@@ -99,6 +100,11 @@ internal class SetTokenListTransformer(
                 walletUM
             }
         }
+    }
+
+    private fun hasPersonalCurrencies(): Boolean = when (params) {
+        is TokenConverterParams.Account -> params.accountList.flattenPersonalCurrencies().isNotEmpty()
+        is TokenConverterParams.Wallet -> params.tokenList.flattenCurrencies().isNotEmpty()
     }
 
     private fun getTotalFiatBalance(): TotalFiatBalance = when (params) {
@@ -196,6 +202,7 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
+            accountIdsWithInvites = accountIdsWithInvites,
         ).convert(value = params.accountList)
     }
 }

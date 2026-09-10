@@ -30,6 +30,7 @@ data class ReceiveAddressModel(
 data class TokenReceiveNotification(
     val title: Int,
     val subtitle: Int,
+    val formatArgs: List<String> = emptyList(),
     val isYieldSupplyNotification: Boolean = false,
 )
 

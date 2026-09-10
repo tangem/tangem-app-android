@@ -8,10 +8,11 @@ import com.tangem.domain.cloudbackup.models.CloudBackupAccount
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.ImportOptionsBottomSheetComponent
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.entity.ImportOptionsBottomSheetUM
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResult
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -145,7 +146,8 @@ internal class ImportOptionsBottomSheetModelTest {
     fun `GIVEN no backups WHEN cloud backup clicked THEN warning error shown`() = runTest {
         // Arrange
         coEvery { cloudBackupRepository.findBackups(interactive = true, validateContent = true) } returns emptyList<CloudBackupInfo>().right()
-        val model = createModel(this, CloudRestoreResultHolder())
+        val holder = CloudRestoreResultHolder()
+        val model = createModel(this, holder)
 
         // Act
         model.options().onCloudBackupClick()
@@ -153,6 +155,7 @@ internal class ImportOptionsBottomSheetModelTest {
 
         // Assert
         assertThat(model.error().isWarning).isTrue()
+        assertThat(holder.result.value).isNull()
         verify(exactly = 0) { onCloudBackupsResolved(any()) }
     }
 
@@ -227,8 +230,10 @@ internal class ImportOptionsBottomSheetModelTest {
     private fun createModel(testScope: TestScope, holder: CloudRestoreResultHolder) = ImportOptionsBottomSheetModel(
         paramsContainer = paramsContainer,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-        cloudBackupRepository = cloudBackupRepository,
-        cloudRestoreResultHolder = holder,
+        resolveCloudRestoreBackups = ResolveCloudRestoreBackupsUseCase(
+            cloudBackupRepository = cloudBackupRepository,
+            cloudRestoreResultHolder = holder,
+        ),
     )
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {

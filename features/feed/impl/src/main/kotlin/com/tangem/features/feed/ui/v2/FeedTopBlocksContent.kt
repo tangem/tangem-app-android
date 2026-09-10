@@ -2,13 +2,7 @@ package com.tangem.features.feed.ui.v2
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,9 +42,18 @@ private val BlockShape = RoundedCornerShape(size = BlockCornerRadius)
  * cards. Layout matches the target design; real block content arrives with the block plug-ins.
  *
  * @param onForYouClick opens the For You screen on the feed stack
+ * @param isPredictionsVisible whether the Predictions entry block is contributed to the row
+ * @param onPredictionsClick opens the Predictions feature above the shtorka
  */
 @Composable
-internal fun FeedTopBlocksContent(onForYouClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun FeedTopBlocksContent(
+    onForYouClick: () -> Unit,
+    isPredictionsVisible: Boolean,
+    isCollectiblesVisible: Boolean,
+    onPredictionsClick: () -> Unit,
+    onCollectiblesClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     // the blocks lie on the already-elevated shtorka, where another material shadow reads as grime
     CompositionLocalProvider(LocalMaterialShadowEnabled provides false) {
         LazyRow(
@@ -66,6 +69,23 @@ internal fun FeedTopBlocksContent(onForYouClick: () -> Unit, modifier: Modifier 
             }
             item(key = "promo_pay") {
                 LargeBlockPlaceholder(title = "Tangem Pay")
+            }
+            if (isPredictionsVisible) {
+                item(key = "predictions") {
+                    LargeBlockPlaceholder(
+                        title = stringResourceSafe(R.string.prediction_main_title),
+                        onClick = onPredictionsClick,
+                    )
+                }
+            }
+
+            if (isCollectiblesVisible) {
+                item {
+                    LargeBlockPlaceholder(
+                        title = "Collectibles",
+                        onClick = onCollectiblesClick,
+                    )
+                }
             }
             item(key = "promo_yield") {
                 LargeBlockPlaceholder(title = "Yield")
@@ -188,12 +208,12 @@ private fun AddAccountIcon(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LargeBlockPlaceholder(title: String, modifier: Modifier = Modifier) {
+private fun LargeBlockPlaceholder(title: String, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     TangemSurface(
         modifier = modifier.size(width = LargeBlockWidth, height = LargeBlockHeight),
         isMaterial = true,
         shape = BlockShape,
-        onClick = {},
+        onClick = onClick,
     ) {
         Box(modifier = Modifier.padding(all = 12.dp), contentAlignment = Alignment.Center) {
             Text(

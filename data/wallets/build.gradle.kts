@@ -37,7 +37,8 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     // endregion
 
@@ -47,6 +48,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.common)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.dynamicAddresses)
     api(projects.domain.models)
     api(projects.domain.settings)

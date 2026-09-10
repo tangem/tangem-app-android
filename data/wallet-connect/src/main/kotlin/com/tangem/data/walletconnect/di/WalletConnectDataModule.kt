@@ -19,8 +19,8 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.datasource.di.SdkMoshi
-import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.core.local.moshi.SdkMoshi
+import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository

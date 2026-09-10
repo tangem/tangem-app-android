@@ -6,7 +6,7 @@ import com.tangem.store.datasource.surveysparrow.models.CreateSurveySparrowRespo
 import com.tangem.store.datasource.surveysparrow.models.SurveySparrowGetAnswerDto
 import com.tangem.store.datasource.surveysparrow.models.SurveySparrowResponseDto
 import com.tangem.store.datasource.surveysparrow.models.SurveySparrowResponsesDto
-import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
+import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -118,7 +118,7 @@ internal class SurveySparrowSwapFeedbackRemoteSourceTest {
     }
 
     private companion object {
-        val CONFIG = SurveySparrowSwapRatingConfig(
+        val CONFIG = StoreEnvironmentConfig.SurveySparrowSwapRating(
             surveyId = 100L,
             ratingQuestionId = 42L,
             feedbackQuestionId = 43L,

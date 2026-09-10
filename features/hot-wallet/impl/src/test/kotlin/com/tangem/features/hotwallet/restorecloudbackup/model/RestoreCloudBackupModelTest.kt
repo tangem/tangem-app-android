@@ -21,8 +21,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResult
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
 import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider

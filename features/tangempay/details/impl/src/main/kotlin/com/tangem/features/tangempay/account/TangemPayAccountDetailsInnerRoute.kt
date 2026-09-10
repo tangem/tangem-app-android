@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -43,4 +44,10 @@ internal sealed class TangemPayAccountDetailsInnerRoute : Route {
     data class OrderCard(
         val intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
     ) : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data object WithdrawHub : TangemPayAccountDetailsInnerRoute()
+
+    @Serializable
+    data class BankWithdraw(val entry: BankWithdrawEntry) : TangemPayAccountDetailsInnerRoute()
 }

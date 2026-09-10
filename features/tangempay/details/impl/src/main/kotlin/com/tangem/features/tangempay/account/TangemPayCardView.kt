@@ -108,6 +108,7 @@ internal fun TangemPayCardView(
 internal fun TangemPayAddCardView(onClick: () -> Unit, isEnabled: Boolean, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
+            .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_ADD_CARD_BUTTON)
             .alpha(if (isEnabled) 1f else DISABLED_ALPHA)
             .size(
                 height = TangemTheme.dimens2.x10,

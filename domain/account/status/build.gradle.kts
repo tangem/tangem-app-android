@@ -37,6 +37,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.polymarket)
     implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
 

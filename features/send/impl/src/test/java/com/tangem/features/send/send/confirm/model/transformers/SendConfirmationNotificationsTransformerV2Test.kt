@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.model.Amount
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.*
 import com.tangem.features.send.api.utils.formatFooterFiatFee
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
@@ -166,6 +167,45 @@ class SendConfirmationNotificationsTransformerV2Test {
         val content = result as ConfirmUM.Content
         Truth.assertThat(content.sendingFooter).isEqualTo(
             expectedFiatFooter(sendingValue = BigDecimal("50.00"), feeSelectorUM = feeSelectorUM),
+        )
+    }
+
+    @Test
+    fun `GIVEN joint signatures WHEN transform THEN footer describes the request and its threshold`() = runTest {
+        // GIVEN
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = createTestAmountUM(),
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = false,
+            isFeeExceedingBalance = false,
+        )
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // WHEN
+        val result = transformer.transform(initialState)
+
+        // THEN: the total includes the fee, and the threshold and members are spelled out
+        val fee = feeSelectorUM.selectedFeeItem.fee
+        val fiatFeeValue = fee.amount.value!!.multiply(feeSelectorUM.feeFiatRateUM!!.rate)
+        val sending = (BigDecimal("50.00") + fiatFeeValue).format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        val feeText = formatFooterFiatFee(
+            amount = fee.amount.copy(value = fiatFeeValue),
+            isFeeConvertibleToFiat = true,
+            isFeeApproximate = feeSelectorUM.feeExtraInfo.isFeeApproximate,
+            appCurrency = appCurrency,
+        )
+        Truth.assertThat((result as ConfirmUM.Content).sendingFooter).isEqualTo(
+            resourceReference(
+                id = R.string.joint_account_send_footer_text,
+                formatArgs = wrappedList(sending, feeText, "2", "3"),
+            ),
         )
     }
 

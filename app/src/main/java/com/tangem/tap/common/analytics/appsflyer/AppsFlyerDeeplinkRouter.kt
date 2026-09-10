@@ -2,10 +2,12 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
+import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -20,19 +22,21 @@ import javax.inject.Singleton
 /**
  * Reactively routes AppsFlyer deep links persisted by [AppsFlyerReferralParamsHandler].
  *
- * To add a deep link: add it to [AppsFlyerDeeplink] and a branch in [onDeeplinkPending] (the `when` is exhaustive).
+ * To add a deep link: add it to [AppsFlyerDeeplinkTarget] and a branch in [onDeeplinkPending]
+ * (the `when` is exhaustive).
  */
 @Singleton
 class AppsFlyerDeeplinkRouter @Inject constructor(
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val appRouter: AppRouter,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
     fun observe(scope: CoroutineScope, currentRoute: Flow<AppRoute?>) {
         combine(
-            appsFlyerStore.observeNavigationDeeplink(),
+            appsFlyerRepository.observeNavigationDeeplink(),
             currentRoute.distinctUntilChanged(),
         ) { deepLinkValue, route ->
             if (deepLinkValue != null && route != null) deepLinkValue to route else null
@@ -43,9 +47,12 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun onDeeplinkPending(deepLinkValue: String, currentRoute: AppRoute) {
-        when (AppsFlyerDeeplink.from(deepLinkValue)) {
-            AppsFlyerDeeplink.TangemPayMobileOnboarding -> routeTangemPayOnboarding(currentRoute)
-            AppsFlyerDeeplink.Referral -> routeReferral(currentRoute)
+        when (val target = AppsFlyerDeeplinkTarget.from(deepLinkValue)) {
+            is AppsFlyerDeeplinkTarget.Known -> when (target.deeplink) {
+                AppsFlyerDeeplink.TangemPayMobileOnboarding -> routeTangemPayOnboarding(currentRoute)
+                AppsFlyerDeeplink.Referral -> routeReferral(currentRoute)
+            }
+            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> routeTangemPayCampaign(target.key, currentRoute)
             null -> TangemLogger.i("Ignoring unknown AppsFlyer deep link value: $deepLinkValue")
         }
     }
@@ -66,6 +73,19 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
         appRouter.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink))
         // One-shot: consume the deep link once routed so the user isn't forced back here on relaunch.
         clearAppsFlyerDeeplinkUseCase()
+    }
+
+    private suspend fun routeTangemPayCampaign(campaignKey: String, currentRoute: AppRoute) {
+        if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) return
+        if (!isIdleEntryPoint(currentRoute)) return
+
+        if (userWalletsListRepository.userWalletsSync().isNotEmpty()) {
+            TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link over the current screen")
+            appRouter.push(AppRoute.TangemPayCampaign(campaignKey))
+        } else {
+            TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link as the root")
+            appRouter.replaceAll(AppRoute.TangemPayCampaign(campaignKey))
+        }
     }
 
     private suspend fun routeReferral(currentRoute: AppRoute) {

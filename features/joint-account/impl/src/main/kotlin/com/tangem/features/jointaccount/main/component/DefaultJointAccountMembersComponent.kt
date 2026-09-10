@@ -14,9 +14,9 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
+import com.tangem.features.jointaccount.main.entity.ActivationConfirmationConfig
 import com.tangem.features.jointaccount.main.entity.MemberCardConfig
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
-import com.tangem.features.jointaccount.main.ui.JointAccountActivationConfirmationBS
 import com.tangem.features.jointaccount.main.ui.JointAccountMembersScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -45,19 +45,26 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
         childFactory = { _, componentContext -> shareSafelyChild(componentContext) },
     )
 
+    private val activationConfirmationSlot = childSlot(
+        source = model.activationConfirmationNavigation,
+        serializer = null,
+        handleBackButton = false,
+        key = "activationConfirmationSlot",
+        childFactory = ::activationConfirmationChild,
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val memberCard by memberCardSlot.subscribeAsState()
         val shareSafely by shareSafelySlot.subscribeAsState()
+        val activationConfirmation by activationConfirmationSlot.subscribeAsState()
 
         JointAccountMembersScreen(state = state, modifier = modifier)
 
         memberCard.child?.instance?.BottomSheet()
         shareSafely.child?.instance?.BottomSheet()
-        state.activation?.confirmation?.let { confirmation ->
-            JointAccountActivationConfirmationBS(state = confirmation)
-        }
+        activationConfirmation.child?.instance?.BottomSheet()
     }
 
     private fun memberCardChild(
@@ -79,6 +86,19 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext),
             params = ShareSafelyComponent.Params(onDismiss = model.shareSafelyNavigation::dismiss),
         )
+
+    private fun activationConfirmationChild(
+        config: ActivationConfirmationConfig,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent = ActivationConfirmationComponent(
+        appComponentContext = childByContext(componentContext),
+        params = ActivationConfirmationComponent.Params(
+            walletInteractionIconRes = config.walletInteractionIconRes,
+            isConfirming = model.isConfirmingActivation,
+            onConfirmClick = { model.onConfirmActivationClick(cryptoAccountId = config.cryptoAccountId) },
+            onDismiss = model.activationConfirmationNavigation::dismiss,
+        ),
+    )
 
     @AssistedFactory
     interface Factory : JointAccountMembersComponent.Factory {

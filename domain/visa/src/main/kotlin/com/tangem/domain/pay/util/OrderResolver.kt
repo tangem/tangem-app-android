@@ -28,6 +28,14 @@ object OrderResolver {
             .maxByOrNull { it.updatedAt.orEmpty() }
     }
 
+    fun selectActiveByTypes(orders: List<Order>, types: Set<OrderType>): Order? {
+        return orders
+            .asSequence()
+            .filter { it.isActive }
+            .filter { it.type in types }
+            .maxByOrNull { it.updatedAt.orEmpty() }
+    }
+
     fun selectActiveBySource(orders: List<Order>, type: OrderType, sourceProductInstanceId: String): Order? {
         return orders
             .asSequence()

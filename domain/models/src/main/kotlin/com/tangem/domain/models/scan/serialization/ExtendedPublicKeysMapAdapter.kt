@@ -11,7 +11,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
-class ExtendedPublicKeysMapAdapter {
+internal class ExtendedPublicKeysMapAdapter {
     @ToJson
     fun toJson(
         writer: JsonWriter,

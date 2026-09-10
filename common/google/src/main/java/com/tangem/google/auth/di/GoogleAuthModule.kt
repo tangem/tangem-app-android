@@ -1,6 +1,8 @@
 package com.tangem.google.auth.di
 
+import com.tangem.google.auth.CredentialManagerGoogleIdTokenProvider
 import com.tangem.google.auth.GoogleAuthorizer
+import com.tangem.google.auth.GoogleIdTokenProvider
 import com.tangem.google.auth.GoogleIdentityAuthorizer
 import dagger.Binds
 import dagger.Module
@@ -15,4 +17,8 @@ internal interface GoogleAuthModule {
     @Binds
     @Singleton
     fun bindGoogleAuthorizer(impl: GoogleIdentityAuthorizer): GoogleAuthorizer
+
+    @Binds
+    @Singleton
+    fun bindGoogleIdTokenProvider(impl: CredentialManagerGoogleIdTokenProvider): GoogleIdTokenProvider
 }

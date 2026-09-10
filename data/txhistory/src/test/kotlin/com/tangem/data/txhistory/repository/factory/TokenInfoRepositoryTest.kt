@@ -7,8 +7,8 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
-import com.tangem.datasource.local.txhistory.db.dao.TokenInfoDao
-import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
+import com.tangem.store.datasource.txhistory.db.dao.TokenInfoDao
+import com.tangem.store.datasource.txhistory.db.entity.express.TokenInfoEntity
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.express.models.ExpressAsset

@@ -43,6 +43,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         params = PortfolioSelectorComponent.Params(
             portfolioFetcher = model.addToPortfolioManager.portfolioFetcher,
             controller = model.portfolioSelectorController,
+            settings = PortfolioSelectorComponent.Settings(isJointAccountsIncluded = true),
         ),
     )
 

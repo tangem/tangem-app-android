@@ -19,6 +19,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
@@ -43,13 +44,7 @@ internal class WalletTokenAccountItemConverter(
             titleUM = TangemTokenRowUM.TitleUM.Content(
                 text = account.accountName.toUM().value,
             ),
-            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
-                text = pluralReference(
-                    R.plurals.common_tokens_count,
-                    count = account.tokensCount,
-                    formatArgs = wrappedList(account.tokensCount),
-                ),
-            ),
+            subtitleUM = TangemTokenRowUM.SubtitleUM.Content(text = subtitle(value)),
             topEndContentUM = getTopEndContent(value.tokenList.totalFiatBalance),
             bottomEndContentUM = getBottomEndContent(
                 value.tokenList.totalFiatBalance,
@@ -63,6 +58,27 @@ internal class WalletTokenAccountItemConverter(
                 }
             },
             onItemLongClick = null,
+        )
+    }
+
+    private fun subtitle(value: AccountStatus.CryptoPortfolio): TextReference {
+        val tokensCount = pluralReference(
+            R.plurals.common_tokens_count,
+            count = value.account.tokensCount,
+            formatArgs = wrappedList(value.account.tokensCount),
+        )
+        val activeJoint = (value as? AccountStatus.Joint)
+            ?.value as? JointAccountStatusValue.Active
+            ?: return tokensCount
+
+        return combinedReference(
+            tokensCount,
+            stringReference(" ${StringsSigns.DOT} "),
+            pluralReference(
+                id = R.plurals.joint_account_members_count,
+                count = activeJoint.totalMembers,
+                formatArgs = wrappedList(activeJoint.totalMembers),
+            ),
         )
     }
 

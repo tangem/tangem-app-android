@@ -24,7 +24,6 @@ import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.OperationType
 import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
-import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
@@ -41,7 +40,6 @@ import java.math.BigInteger
 internal class DefaultTransactionRepository(
     private val tangemTechApi: TangemTechApi,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletManagersStore: WalletManagersStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TransactionRepository {
 
@@ -247,7 +245,7 @@ internal class DefaultTransactionRepository(
         network: Network,
     ): Result<Unit> = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
-        val walletManager = walletManagersStore.getSyncOrNull(
+        val walletManager = walletManagersFacade.getStoredWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,

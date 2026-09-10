@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.storiesv2.impl.R
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.tangem.core.res.R as CoreResR
 
 /**
  * Stories that ship inside the apk: available before the first response of any api, and working offline from the
@@ -21,13 +22,13 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
         actions = listOf(
             StoryV2Action(
                 id = "learn_more",
-                label = resourceReference(R.string.stories_onboarding_action_learn_more),
+                label = resourceReference(CoreResR.string.introduction_stories_button_secondary),
                 style = StoryV2Action.Style.SECONDARY,
                 target = StoryV2Action.Target.Web(url = BUY_URL),
             ),
             StoryV2Action(
                 id = "scan_wallet",
-                label = resourceReference(R.string.stories_onboarding_action_scan),
+                label = resourceReference(CoreResR.string.introduction_stories_button_primary),
                 style = StoryV2Action.Style.PRIMARY,
                 target = StoryV2Action.Target.Screen(key = SCAN_WALLET_SCREEN),
                 icon = StoryV2MediaRef.DrawableResource(R.drawable.ic_tangem_24),
@@ -36,8 +37,8 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
         slides = listOf(
             StoryV2Slide(
                 id = "one_tap",
-                title = resourceReference(R.string.stories_onboarding_slide_1_title),
-                subtitle = resourceReference(R.string.stories_onboarding_slide_1_subtitle),
+                title = resourceReference(CoreResR.string.introduction_stories_one_title),
+                subtitle = resourceReference(CoreResR.string.introduction_stories_one_subtitle),
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_1),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_1),
@@ -46,8 +47,8 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
             ),
             StoryV2Slide(
                 id = "multiple_cards",
-                title = resourceReference(R.string.stories_onboarding_slide_2_title),
-                subtitle = resourceReference(R.string.stories_onboarding_slide_2_subtitle),
+                title = resourceReference(CoreResR.string.introduction_stories_two_title),
+                subtitle = resourceReference(CoreResR.string.introduction_stories_two_subtitle),
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_2),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_2),
@@ -56,21 +57,21 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
             ),
             StoryV2Slide(
                 id = "your_keys",
-                title = resourceReference(R.string.stories_onboarding_slide_3_title),
-                subtitle = resourceReference(R.string.stories_onboarding_slide_3_subtitle),
+                title = resourceReference(CoreResR.string.introduction_stories_three_title),
+                subtitle = resourceReference(CoreResR.string.introduction_stories_three_subtitle),
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_3),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_3),
                     durationMs = SLIDE_3_DURATION_MS,
                 ),
             ),
-            // An image until the fourth video is delivered, which keeps the mixed video+image path exercised.
             StoryV2Slide(
                 id = "trusted_by_millions",
-                title = resourceReference(R.string.stories_onboarding_slide_4_title),
-                subtitle = resourceReference(R.string.stories_onboarding_slide_4_subtitle),
-                asset = StoryV2Asset.Image(
-                    source = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_slide_4),
+                title = resourceReference(CoreResR.string.introduction_stories_four_title),
+                subtitle = resourceReference(CoreResR.string.introduction_stories_four_subtitle),
+                asset = StoryV2Asset.Video(
+                    source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_4),
+                    poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_4),
                     durationMs = SLIDE_4_DURATION_MS,
                 ),
             ),
@@ -85,11 +86,13 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
         /** Resolved by the host: onboarding starts the card scan from here. */
         const val SCAN_WALLET_SCREEN = "scan_wallet"
 
-        // Exactly the length of each bundled file: duration is authoritative for progress, so a value that
-        // disagrees with the media makes the bar and the picture disagree too.
-        const val SLIDE_1_DURATION_MS = 7_000L
-        const val SLIDE_2_DURATION_MS = 6_000L
-        const val SLIDE_3_DURATION_MS = 5_000L
-        const val SLIDE_4_DURATION_MS = 5_000L
+        // Duration is authoritative for progress: a value that disagrees with the media makes the bar and
+        // the picture disagree too. The designers' masters are cuts of one continuous reel, so clips 1 and 3
+        // carry an outro transition into the next scene; a tappable player can't keep that seamless, so their
+        // tails are trimmed to end on a static frame. Trim the media and this constant together.
+        const val SLIDE_1_DURATION_MS = 8_400L
+        const val SLIDE_2_DURATION_MS = 10_000L
+        const val SLIDE_3_DURATION_MS = 9_000L
+        const val SLIDE_4_DURATION_MS = 10_000L
     }
 }

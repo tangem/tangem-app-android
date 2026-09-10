@@ -107,7 +107,7 @@ fun LazyListScope.notifications(
  * preset in `slotEnd`, and each button maps to the primary/secondary slot by its [TangemButtonType].
  */
 @Composable
-private fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
+fun MessageBanner(messageUM: TangemMessageUM, modifier: Modifier = Modifier) {
     val icon: (@Composable () -> Unit)? = messageUM.iconUM?.let { iconUM ->
         {
             TangemIcon(

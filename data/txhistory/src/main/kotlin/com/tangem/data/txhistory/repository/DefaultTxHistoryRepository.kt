@@ -7,7 +7,7 @@ import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
-import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
+import com.tangem.store.datasource.txhistory.TxHistoryItemsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.currency.CryptoCurrency

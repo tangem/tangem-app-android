@@ -136,7 +136,7 @@ class ToggleTokenListSortingUseCaseTest {
     }
 
     private fun createAccountStatusList(tokenList: TokenList): AccountStatusList {
-        val accountStatus = AccountStatus.CryptoPortfolio(
+        val accountStatus = AccountStatus.Personal(
             account = Account.Personal.createMainAccount(userWalletId),
             tokenList = tokenList,
             priceChangeLce = Unit.lceError(),

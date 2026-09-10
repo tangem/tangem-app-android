@@ -11,13 +11,13 @@ import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
 import com.tangem.data.txhistory.repository.factory.toAssetId
 import com.tangem.data.txhistory.repository.factory.toRefundAssetId
 import com.tangem.data.txhistory.repository.paging.TxHistoryPageBatchFetcher
-import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressProviderEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.OnrampCurrencyEntity
+import com.tangem.store.datasource.txhistory.TxHistoryItemsStore
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressProviderEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.OnrampCurrencyEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -93,9 +93,12 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
         val contract = (currency as? CryptoCurrency.Token)?.contractAddress
             ?: ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
 
-        // bound filters the window directly in SQL. Generated in the same UTC/'Z' shape as stored values.
+        // bound filters the window directly in SQL. Printed as the start of its second with an explicit
+        // `.000` fraction: a bound truncated to `ss'Z'` sorts *after* a same-second row stored as
+        // `ss.SSS'Z'` ('.' < 'Z'), which dropped the very row the bound was taken from.
         val fromCreatedAtIso = DateTime(fromCreatedAtMillis, DateTimeZone.UTC)
-            .toString(ISODateTimeFormat.dateTimeNoMillis())
+            .withMillisOfSecond(0)
+            .toString(ISODateTimeFormat.dateTime())
         val addresses = getAddresses(userWalletId, currency.network)
 
         val flow = combine(
@@ -190,12 +193,14 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     }.flowOn(dispatchers.io)
 
     /**
-     * the default one plus the dynamic (UTXO) addresses already used,
+     * Every address the currency is watched under: all of the wallet's address types plus the dynamic (UTXO)
+     * addresses already used. A payout may land on a non-default type — a swap paid out to the wallet's own
+     * legacy P2PKH BTC address is still its incoming leg — so the default address alone is not enough.
      */
     private suspend fun getAddresses(userWalletId: UserWalletId, network: Network): List<String> {
-        val defaultAddress = walletManagersFacade.getDefaultAddress(userWalletId, network)
+        val walletAddresses = walletManagersFacade.getAddresses(userWalletId, network).map { it.value }
         val dynamicAddresses = walletManagersFacade.usedDynamicAddresses(userWalletId, network).orEmpty()
-        return (listOfNotNull(defaultAddress) + dynamicAddresses).distinct()
+        return (walletAddresses + dynamicAddresses).distinct()
     }
 
     private data class IndexWindow(val fromCreatedAtMillis: Long, val hasMore: Boolean)

@@ -56,7 +56,6 @@ internal object GeneratedEnvironmentConfigConverter {
             customerIoCdpApiKey = GeneratedEnvironmentConfig.CustomerIO.androidApiKey,
             surveySparrowToken = GeneratedEnvironmentConfig.SurveySparrow.apiKey,
             surveySparrowSwapRating = createSurveySparrowSwapRating(),
-            authServiceKey = GeneratedEnvironmentConfig.authServiceKey,
             // the JSON key was created with a typo ("otpl"), kept as is to match the deployed configs
             otlpApiKey = GeneratedEnvironmentConfig.otplApiKey,
         )

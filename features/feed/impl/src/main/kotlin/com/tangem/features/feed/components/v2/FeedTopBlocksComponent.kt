@@ -3,6 +3,7 @@ package com.tangem.features.feed.components.v2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.feed.nav.FeedRoute
@@ -16,6 +17,8 @@ import com.tangem.features.feed.ui.v2.FeedTopBlocksContent
 @Stable
 internal class FeedTopBlocksComponent(
     context: AppComponentContext,
+    private val isPredictionsEntryVisible: Boolean,
+    private val isCollectiblesVisible: Boolean,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     @Composable
@@ -23,6 +26,10 @@ internal class FeedTopBlocksComponent(
         // TODO: [TWI-1608] real blocks; static placeholders until then
         FeedTopBlocksContent(
             onForYouClick = { router.push(FeedRoute.ForYou) },
+            isPredictionsVisible = isPredictionsEntryVisible,
+            isCollectiblesVisible = isCollectiblesVisible,
+            onPredictionsClick = { router.push(AppRoute.Polymarket()) },
+            onCollectiblesClick = { router.push(AppRoute.Collectibles) },
             modifier = modifier,
         )
     }

@@ -3,10 +3,11 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,29 +30,33 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class AppsFlyerDeeplinkRouterTest {
 
-    private val appsFlyerStore: AppsFlyerStore = mockk()
+    private val appsFlyerRepository: AppsFlyerRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val router = AppsFlyerDeeplinkRouter(
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
         userWalletsListRepository = userWalletsListRepository,
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
         appRouter = appRouter,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
     @BeforeEach
     fun setup() {
         clearMocks(
-            appsFlyerStore,
+            appsFlyerRepository,
             userWalletsListRepository,
             clearAppsFlyerDeeplinkUseCase,
             appRouter,
+            tangemPayFeatureToggles,
         )
         // Happy baseline: deep link pending, authorized.
-        every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
+        every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+        every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
     }
 
     // region idle entry point
@@ -122,7 +127,7 @@ internal class AppsFlyerDeeplinkRouterTest {
     fun `GIVEN referral deeplink and empty wallets on Home WHEN observe THEN replaceAll create wallet, not cleared`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
-            every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf("referral")
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("referral")
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
             val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
 
@@ -143,9 +148,99 @@ internal class AppsFlyerDeeplinkRouterTest {
         }
 
     @Test
+    fun `GIVEN campaign deeplink and authorized wallet WHEN observe THEN push container, not cleared`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify { appRouter.push(route = AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN campaign deeplink and empty wallets WHEN observe THEN replaceAll container, not cleared`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify { appRouter.replaceAll(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN campaign deeplink and toggle disabled WHEN observe THEN does not route, not cleared`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN toggle disabled WHEN observe THEN mobile onboarding still routes`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify {
+                appRouter.push(
+                    route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
+                    onComplete = any(),
+                )
+            }
+            coVerify { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN campaign deeplink on non-idle route WHEN observe THEN does not route`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE))
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+        }
+
+    @Test
     fun `GIVEN no stored deeplink WHEN observe THEN does not evaluate`() = runTest(UnconfinedTestDispatcher()) {
         // Arrange
-        every { appsFlyerStore.observeNavigationDeeplink() } returns flowOf(null)
+        every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(null)
         val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
         // Act
@@ -158,4 +253,8 @@ internal class AppsFlyerDeeplinkRouterTest {
     }
 
     // endregion
+
+    private companion object {
+        const val CAMPAIGN_VALUE = "tpay_for_oxford"
+    }
 }

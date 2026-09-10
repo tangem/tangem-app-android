@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -14,19 +13,14 @@ import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnFilterNetwork
 import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.usecase.*
-import com.tangem.domain.markets.RawMarketToken
-import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnNetworks
-import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams.Companion.CategoryEarn
 import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
 import com.tangem.features.feed.earn.components.EarnNetworkFilterComponent
 import com.tangem.features.feed.earn.components.EarnTypeFilterComponent
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
-import com.tangem.features.feed.earn.model.analytics.EarnSource
 import com.tangem.features.feed.earn.model.filters.state.EarnFilterChipsFactory
+import com.tangem.features.feed.earn.model.portfolio.EarnAddToPortfolioLauncher
 import com.tangem.features.feed.earn.model.state.EarnStateController
 import com.tangem.features.feed.earn.model.state.transformers.*
 import com.tangem.features.feed.earn.model.statemanager.EarnListBatchFlowManager
@@ -75,17 +69,28 @@ internal class EarnFeedTabModel @Inject constructor(
         createEarnTokensListConfig(filter = appliedFilter.value, earnNetworks = earnNetworks.value)
     }
 
+    val bottomSheetNavigation: SlotNavigation<EarnBottomSheetRoute> = SlotNavigation()
+
+    private val addToPortfolioLauncher = EarnAddToPortfolioLauncher(
+        addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+        analyticsEventHandler = analyticsEventHandler,
+        appRouter = appRouter,
+        modelScope = modelScope,
+        showSheet = { source, manager ->
+            bottomSheetNavigation.activate(
+                EarnBottomSheetRoute.AddToPortfolio(source = source.value, manager = manager),
+            )
+        },
+        dismissSheet = { bottomSheetNavigation.dismiss() },
+    )
+
     private val batchFlowManager = EarnListBatchFlowManager(
         getEarnTokensBatchFlowUseCase = getEarnTokensBatchFlowUseCase,
         configProvider = earnListConfigProvider,
-        onItemClick = ::onEarnTokenClick,
+        onItemClick = addToPortfolioLauncher::launch,
         modelScope = modelScope,
         dispatchers = dispatchers,
     )
-
-    val bottomSheetNavigation: SlotNavigation<EarnBottomSheetRoute> = SlotNavigation()
-
-    private var currentAddToPortfolioManagerScope: CoroutineScope? = null
 
     private var isOpenedReported = false
 
@@ -100,15 +105,6 @@ internal class EarnFeedTabModel @Inject constructor(
         subscribeOnNetworks()
         subscribeOnBatchFlow()
         subscribeToMostlyUsed()
-    }
-
-    private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
-        appRouter.push(
-            AppRoute.CurrencyDetails(
-                userWalletId = result.wallet.walletId,
-                currency = result.addedCurrency.currency,
-            ),
-        )
     }
 
     private fun subscribeOnBatchFlow() {
@@ -144,7 +140,7 @@ internal class EarnFeedTabModel @Inject constructor(
                 stateController.update(
                     UpdateOpportunitiesStateTransformer(
                         earnResult = earnResult,
-                        onItemClick = ::onEarnTokenClick,
+                        onItemClick = addToPortfolioLauncher::launch,
                         onRetryClick = ::fetchTopEarnTokens,
                     ),
                 )
@@ -227,69 +223,6 @@ internal class EarnFeedTabModel @Inject constructor(
 
     private fun onClearTypeFilterClick() {
         applyFilter(currentFilter.copy(earnFilterType = DEFAULT_FILTER.earnFilterType))
-    }
-
-    private fun onEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency, source: EarnSource) {
-        analyticsEventHandler.send(
-            EarnAnalyticsEvent.OpportunitySelected(
-                tokenSymbol = earnTokenWithCurrency.earnToken.tokenSymbol,
-                blockchain = earnTokenWithCurrency.cryptoCurrency.network.name,
-                source = source.value,
-            ),
-        )
-        val token = RawMarketToken(
-            id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
-            name = earnTokenWithCurrency.earnToken.tokenName,
-            symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
-        )
-        val network = TokenMarketInfo.Network(
-            networkId = earnTokenWithCurrency.earnToken.networkId,
-            isExchangeable = false,
-            contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
-            decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
-        )
-        val manager = createAddToPortfolioManager(source = source).apply {
-            setTokenParams(token)
-            setTokenNetworks(listOf(network))
-        }
-        // Drop the slot through null so the same-source repeat click still recreates the child.
-        bottomSheetNavigation.dismiss()
-        bottomSheetNavigation.activate(
-            EarnBottomSheetRoute.AddToPortfolio(
-                source = source.value,
-                manager = manager,
-            ),
-        )
-    }
-
-    private fun createAddToPortfolioManager(source: EarnSource): AddToPortfolioManager {
-        currentAddToPortfolioManagerScope?.cancel()
-        val managerScope = CoroutineScope(
-            modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext.job),
-        )
-        currentAddToPortfolioManagerScope = managerScope
-
-        val manager = addToPortfolioManagerFactory.create(
-            scope = managerScope,
-            settings = AddToPortfolioManager.Settings.Earn,
-            analyticsParams = AddToPortfolioManager.AnalyticsParams(source = source.value, category = CategoryEarn),
-        ).apply {
-            updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
-        }
-
-        manager.onDismiss.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .launchIn(managerScope)
-        manager.onSuccessAdded.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(managerScope)
-        manager.onAddedTokenClick.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(managerScope)
-
-        return manager
     }
 
     private fun onTypeFilterOptionSelected(type: EarnFilterType) {

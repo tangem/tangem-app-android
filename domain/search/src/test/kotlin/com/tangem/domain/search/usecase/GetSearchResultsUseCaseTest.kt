@@ -368,7 +368,7 @@ internal class GetSearchResultsUseCaseTest {
         every { isLocked } returns locked
     }
 
-    private fun mainAccount(walletId: UserWalletId): Account.CryptoPortfolio =
+    private fun mainAccount(walletId: UserWalletId): Account.Personal =
         Account.Personal.createMainAccount(userWalletId = walletId)
 
     private fun secondaryAccount(walletId: UserWalletId, derivationIndex: Int): Account.Personal {
@@ -390,9 +390,9 @@ internal class GetSearchResultsUseCaseTest {
     }
 
     private fun cryptoPortfolio(
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
         statuses: List<CryptoCurrencyStatus>,
-    ): AccountStatus.CryptoPortfolio = AccountStatus.CryptoPortfolio(
+    ): AccountStatus.CryptoPortfolio = AccountStatus.Personal(
         account = account,
         tokenList = TokenList.Ungrouped(
             totalFiatBalance = TotalFiatBalance.Loading,
@@ -415,7 +415,7 @@ internal class GetSearchResultsUseCaseTest {
 
     private fun entry(
         wallet: UserWallet,
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
         status: CryptoCurrencyStatus,
     ): UserAssetEntry = UserAssetEntry(
         userWalletId = wallet.walletId,

@@ -8,7 +8,6 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -43,7 +42,8 @@ internal class HotCryptoPortfolioDataLoader @Inject constructor(
             .invokeSync(userWalletId, hotCryptoCurrencies)
             .getOrNull()
             .orEmpty()
-        val accountsWithHotCrypto = walletAccounts.accountStatuses.filterCryptoPortfolio().map { accountStatus ->
+        val personalStatuses = walletAccounts.accountStatuses.filterIsInstance<AccountStatus.Personal>()
+        val accountsWithHotCrypto = personalStatuses.map { accountStatus ->
             val addedHotCrypto = mapOfAddedCurrencies[accountStatus.account].orEmpty()
             HotCryptoPortfolioData.Account(
                 account = accountStatus,

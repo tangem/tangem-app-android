@@ -50,7 +50,7 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
             derivationIndex = derivationIndex,
             icon = icon.value.name,
             iconColor = icon.color.name,
-            type = type.value,
+            type = type,
         )
     }
 }

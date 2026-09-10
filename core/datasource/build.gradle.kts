@@ -8,7 +8,6 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
-    alias(deps.plugins.room)
     alias(deps.plugins.ksp)
     id("configuration")
 }
@@ -32,10 +31,6 @@ abstract class GenerateEnvironmentConfigTask : DefaultTask() {
 
 android {
     namespace = "com.tangem.datasource"
-
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
 }
 
 androidComponents {
@@ -77,8 +72,6 @@ dependencies {
 
     // region Network
     api(deps.moshi)
-    implementation(deps.moshi.adapters)
-    implementation(deps.moshi.adapters.ext)
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.okHttp)
@@ -89,12 +82,6 @@ dependencies {
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
-    // region Room
-    api(deps.room.runtime)
-    api(deps.room.ktx)
-    ksp(deps.room.compiler)
-    // endregion
-
     // region Other libraries
     api(deps.jodatime)
     runtimeOnly(deps.spongecastle.core)
@@ -103,14 +90,13 @@ dependencies {
     // region Chucker
     debugImplementation(deps.chucker)
     mockedImplementation(deps.chucker)
+    internalImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
-    internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
     // endregion
 
     // region Tangem
     api(tangemDeps.blockchain)
-    api(tangemDeps.card.core)
     // endregion
 
     // region Core modules
@@ -118,23 +104,10 @@ dependencies {
     api(projects.core.local)
     implementation(projects.core.analytics.models)
     api(projects.core.utils)
-    implementation(projects.core.res)
     api(projects.core.remote)
-    // endregion
-
-    // region Domain models
-    api(projects.domain.models)
-    api(projects.domain.nft.models)
-    api(projects.domain.onramp.models)
-    api(projects.domain.staking.models)
-    api(projects.domain.txhistory.models)
-    api(projects.domain.walletConnect.models)
-    api(projects.domain.wallets.models)
-    api(projects.domain.yieldSupply.models)
     // endregion
 
     // region Tests
     testImplementation(projects.test.core)
-    testImplementation(projects.grow.datasource)
     // endregion
 }

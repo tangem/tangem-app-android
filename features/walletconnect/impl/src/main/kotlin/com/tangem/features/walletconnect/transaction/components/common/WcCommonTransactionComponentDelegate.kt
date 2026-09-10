@@ -3,6 +3,7 @@ package com.tangem.features.walletconnect.transaction.components.common
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -48,9 +49,10 @@ internal abstract class WcCommonTransactionComponentDelegate(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        if (contentStack != null) {
-            val content by contentStack!!.subscribeAsState()
-            BackHandler(onBack = ::onChildBack)
+        val stack = contentStack ?: return
+        val content by stack.subscribeAsState()
+        BackHandler(onBack = ::onChildBack)
+        key(content.active.instance) {
             content.active.instance.BottomSheet()
         }
     }

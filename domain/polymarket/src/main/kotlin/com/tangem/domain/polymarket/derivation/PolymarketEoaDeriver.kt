@@ -7,7 +7,7 @@ import com.tangem.domain.polymarket.model.PolymarketDerivationError
 /**
  * The Polymarket owner-EOA derivation path. Must match iOS/SDK byte-for-byte — pinned by a unit test.
  */
-const val POLYMARKET_OWNER_DERIVATION_PATH: String = "m/44'/60'/999997'/0/0"
+const val POLYMARKET_OWNER_DERIVATION_PATH: String = "m/44'/60'/999899'/0/0"
 
 /**
  * Derives the Polymarket owner EOA — the secp256k1 key on [POLYMARKET_OWNER_DERIVATION_PATH] converted to an

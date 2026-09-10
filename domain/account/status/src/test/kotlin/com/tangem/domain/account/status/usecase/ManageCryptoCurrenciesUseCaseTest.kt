@@ -9,6 +9,8 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.status.utils.createStatus
 import com.tangem.domain.account.status.utils.createUngrouped
 import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.jointaccount.derivation.toNetworkDerivationPath
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -18,6 +20,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -61,6 +64,8 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             accountsCRUDRepository,
             currenciesRepository,
             derivationsRepository,
+            walletManagersFacade,
+            cryptoCurrencyBalanceFetcher,
         )
     }
 
@@ -115,6 +120,78 @@ internal class ManageCryptoCurrenciesUseCaseTest {
         }
     }
 
+    @Test
+    fun `GIVEN joint account WHEN add token on the owner path THEN saved without deriving keys or wallet managers`() =
+        runTest {
+            // Arrange
+            val ownerPath = OwnerKeyIndex(value = 0).getOrNull()!!.toNetworkDerivationPath()
+            val account = MockAccounts.createJointAccount(ownerKeyIndex = 0, userWalletId = userWalletId)
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+            } returns createJointAccountStatusList(account = account)
+            val addedToken = createToken(derivationPath = ownerPath)
+            val createdCoin = createCoin(derivationPath = ownerPath)
+            coEvery { currenciesRepository.createCoinCurrency(addedToken.network) } returns createdCoin
+
+            // Act
+            val actual = useCase(accountId = account.accountId, add = addedToken, skipDerivationErrors = false)
+
+            // Assert
+            Truth.assertThat(actual.isRight()).isTrue()
+            coVerify(exactly = 1) {
+                accountsCRUDRepository.saveAccount(account.copySealed(cryptoCurrencies = listOf(createdCoin, addedToken)))
+            }
+            coVerify(inverse = true) { derivationsRepository.derivePublicKeys(any(), match<List<CryptoCurrency>> { it.isNotEmpty() }) }
+            coVerify(inverse = true) { walletManagersFacade.getOrCreateWalletManager(any(), any<Network>()) }
+            coVerify(exactly = 1) { cryptoCurrencyBalanceFetcher(userWalletId, listOf(createdCoin, addedToken)) }
+        }
+
+    @Test
+    fun `GIVEN joint account waiting for members WHEN add token THEN refused and nothing is saved`() = runTest {
+        // Arrange
+        val ownerPath = OwnerKeyIndex(value = 0).getOrNull()!!.toNetworkDerivationPath()
+        val account = MockAccounts.createJointAccount(ownerKeyIndex = 0, userWalletId = userWalletId)
+        coEvery {
+            singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
+        } returns createJointAccountStatusList(
+            account = account,
+            value = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2),
+        )
+
+        // Act
+        val actual = useCase(accountId = account.accountId, add = createToken(derivationPath = ownerPath))
+
+        // Assert
+        Truth.assertThat(actual.isLeft()).isTrue()
+        coVerify(inverse = true) { accountsCRUDRepository.saveAccount(any()) }
+    }
+
+    private fun createJointAccountStatusList(
+        account: Account.Joint,
+        value: JointAccountStatusValue = JointAccountStatusValue.Active(
+            source = StatusSource.ACTUAL,
+            totalMembers = 2,
+            safeAddress = "0x5afe000000000000000000000000000000000001",
+        ),
+    ): com.tangem.domain.account.models.AccountStatusList {
+        return com.tangem.domain.account.models.AccountStatusList(
+            userWalletId = userWalletId,
+            accountStatuses = listOf(
+                AccountStatus.Joint(
+                    account = account,
+                    value = value,
+                    tokenList = createUngrouped(statuses = emptyList()),
+                    priceChangeLce = com.tangem.domain.core.utils.lceLoading(),
+                ),
+            ),
+            totalAccounts = 1,
+            totalArchivedAccounts = 0,
+            totalFiatBalance = TotalFiatBalance.Loading,
+            sortType = com.tangem.domain.models.TokensSortType.NONE,
+            groupType = com.tangem.domain.models.TokensGroupType.NONE,
+        )
+    }
+
     private fun createAccount(currencies: List<CryptoCurrency>): Account.Personal {
         return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
@@ -129,7 +206,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
     }
 
     private fun createAccountStatusList(
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
         currencies: List<CryptoCurrency>,
     ): com.tangem.domain.account.models.AccountStatusList {
         val statuses = currencies.map { createStatus(currency = it, fiatAmount = BigDecimal.ONE) }
@@ -137,7 +214,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
         return com.tangem.domain.account.models.AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Personal(
                     account = account,
                     tokenList = createUngrouped(statuses = statuses),
                     priceChangeLce = com.tangem.domain.core.utils.lceLoading(),
