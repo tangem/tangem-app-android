@@ -19,11 +19,17 @@ import retrofit2.http.Query
 /** [Google Drive API v3](https://developers.google.com/workspace/drive/api/reference/rest/v3) */
 interface GoogleDriveApi {
 
+    /**
+     * @param spaces Drive space to search in — `null` means the default "drive" space; pass
+     * [SPACE_APP_DATA_FOLDER] to look inside the hidden per-app folder, which is not covered by the
+     * default space and stays invisible otherwise.
+     */
     @GET("drive/v3/files")
     suspend fun listFiles(
         @Header("Authorization") authorization: String,
         @Query("q") query: String,
         @Query("fields") fields: String = FILE_LIST_FIELDS,
+        @Query("spaces") spaces: String? = null,
     ): Response<DriveFileListResponse>
 
     @POST("drive/v3/files")
@@ -75,6 +81,9 @@ interface GoogleDriveApi {
 
     companion object {
         const val BASE_URL = "https://www.googleapis.com/"
+
+        /** The hidden application data folder — both the `spaces` value and the `parents` id of a file in it */
+        const val SPACE_APP_DATA_FOLDER = "appDataFolder"
 
         private const val FILE_FIELDS = "id,name,createdTime,appProperties"
         private const val FILE_LIST_FIELDS = "files($FILE_FIELDS)"
