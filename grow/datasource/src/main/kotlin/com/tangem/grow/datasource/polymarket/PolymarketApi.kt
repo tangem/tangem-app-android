@@ -15,6 +15,8 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsReq
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -143,4 +145,24 @@ interface PolymarketApi {
      */
     @POST("api/predictions/v1/orders/quote")
     suspend fun getOrderQuote(@Body request: PolymarketOrderQuoteRequest): ApiResponse<PolymarketOrderQuoteResponse>
+
+    /**
+     * Relay the signed pUSD transfer that empties part of the deposit wallet (gasless). Always `202` on
+     * acceptance; resubmitting the identical batch answers with the same `transactionId`.
+     */
+    @POST("api/predictions/v1/withdraw")
+    suspend fun submitWithdraw(
+        @Header("wallet-id") walletId: String,
+        @Body request: PolymarketWithdrawRequest,
+    ): ApiResponse<PolymarketWithdrawResponse>
+
+    /**
+     * Read leg 1 from the BFF's own record of the withdrawal, not from the relayer. A `404` means the id is
+     * not this wallet's withdrawal.
+     */
+    @GET("api/predictions/v1/withdraw/{transactionId}")
+    suspend fun getWithdrawState(
+        @Header("wallet-id") walletId: String,
+        @Path("transactionId") transactionId: String,
+    ): ApiResponse<PolymarketWithdrawResponse>
 }
