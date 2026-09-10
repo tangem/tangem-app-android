@@ -103,6 +103,7 @@ internal class IntroductionModel @Inject constructor(
             IntroductionUM(
                 isVideoReady = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
+                scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,
