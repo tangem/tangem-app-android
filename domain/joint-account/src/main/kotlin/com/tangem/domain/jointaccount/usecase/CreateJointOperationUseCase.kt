@@ -17,7 +17,7 @@ import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.safe.Erc20TransferEncoder
+import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -40,6 +40,7 @@ class CreateJointOperationUseCase(
     private val gasBuilder: SafeTxGasBuilder,
     private val compositionChecker: SafeCompositionChecker,
     private val networkReader: JointNetworkReader,
+    private val payloadCodec: JointTransferPayloadCodec,
 ) {
 
     suspend operator fun invoke(
@@ -164,26 +165,11 @@ class CreateJointOperationUseCase(
         if (intent.amountWei.bitLength() > UINT256_BITS) return JointOperationCreateError.InvalidPayload.left()
         if (!ADDRESS_FORMAT.matches(intent.recipient)) return JointOperationCreateError.InvalidPayload.left()
 
-        val call = when (intent) {
-            is JointTransferIntent.Native -> SafeInnerCall(
-                to = intent.recipient.lowercase(),
-                value = intent.amountWei,
-                data = EMPTY_CALLDATA,
-            )
-            is JointTransferIntent.Erc20 -> {
-                if (!ADDRESS_FORMAT.matches(intent.tokenContract)) {
-                    return JointOperationCreateError.InvalidPayload.left()
-                }
-                SafeInnerCall(
-                    to = intent.tokenContract.lowercase(),
-                    value = BigInteger.ZERO,
-                    data = Erc20TransferEncoder.encodeTransfer(
-                        recipient = intent.recipient,
-                        amount = intent.amountWei,
-                    ),
-                )
-            }
+        if (intent is JointTransferIntent.Erc20 && !ADDRESS_FORMAT.matches(intent.tokenContract)) {
+            return JointOperationCreateError.InvalidPayload.left()
         }
+
+        val call = payloadCodec.encode(intent) ?: return JointOperationCreateError.InvalidPayload.left()
 
         return if (call.to.equals(safeAddress, ignoreCase = true)) {
             JointOperationCreateError.InvalidPayload.left()
@@ -201,7 +187,6 @@ class CreateJointOperationUseCase(
     }
 
     private companion object {
-        const val EMPTY_CALLDATA = "0x"
         const val UINT256_BITS = 256
         val ADDRESS_FORMAT = Regex(pattern = "^0x[0-9a-fA-F]{40}$")
     }

@@ -1,4 +1,4 @@
-package com.tangem.domain.jointaccount.verifier
+package com.tangem.data.jointaccount.verifier
 
 import arrow.core.left
 import arrow.core.right
@@ -8,9 +8,10 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignError.VerificationFailed
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.Erc20TransferEncoder
 import com.tangem.domain.jointaccount.safe.SafeAddress
+import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.models.StatusSource
 import com.tangem.test.core.ProvideTestModels
@@ -23,7 +24,7 @@ import java.math.BigInteger
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationVerifierTest {
 
-    private val verifier = JointOperationVerifier()
+    private val verifier = JointOperationVerifier(payloadCodec = DefaultJointTransferPayloadCodec())
 
     @Test
     fun `GIVEN operation matching what the user sees WHEN verify THEN the signature is allowed`() = runTest {
@@ -231,10 +232,20 @@ internal class JointOperationVerifierTest {
             nonce = BigInteger.ZERO,
         )
 
+        fun transferCalldata(recipient: String, amount: BigInteger): String = requireNotNull(
+            DefaultJointTransferPayloadCodec().encode(
+                JointTransferIntent.Erc20(
+                    tokenContract = "0x" + "1".repeat(n = 40),
+                    recipient = recipient,
+                    amountWei = amount,
+                ),
+            ),
+        ).data
+
         fun erc20SafeTx(calldataRecipient: String = RECIPIENT): SafeTx = nativeSafeTx(
             to = TOKEN,
             value = BigInteger.ZERO,
-            data = Erc20TransferEncoder.encodeTransfer(recipient = calldataRecipient, amount = AMOUNT),
+            data = transferCalldata(recipient = calldataRecipient, amount = AMOUNT),
         )
     }
 }
