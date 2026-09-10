@@ -16,7 +16,7 @@ internal class DefaultIntroductionVideoPlayer(
 
         override fun onRenderedFirstFrame() = listener.onFirstFrameRendered()
 
-        override fun onPlayerError(error: PlaybackException) = listener.onError()
+        override fun onPlayerError(error: PlaybackException) = listener.onError(error)
     }
 
     private var isPrepared = false

@@ -73,7 +73,7 @@ internal class HaveWalletSheetController(
         importWallet = WalletOptionUM(
             iconRes = CoreUiR.drawable.ic_arrow_down_24,
             title = resourceReference(CoreResR.string.hw_import_existing_wallet),
-            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+            description = resourceReference(CoreResR.string.hw_import_existing_wallet_description),
             onClick = ::onImportWalletClick,
         ),
     )
