@@ -89,6 +89,10 @@ class TangemLoggingInitializer(
         )
     }
 
+    /**
+     * Logcat and Chucker output, unlike [NetworkLogsSaveInterceptor], never reaches the exported log
+     * file, so it stays limited to builds that can actually show it.
+     */
     private fun createConsoleInterceptors(application: Application): List<Interceptor> {
         return if (BuildConfig.LOG_ENABLED) {
             listOf(createNetworkLoggingInterceptor(), ChuckerInterceptor(application))
