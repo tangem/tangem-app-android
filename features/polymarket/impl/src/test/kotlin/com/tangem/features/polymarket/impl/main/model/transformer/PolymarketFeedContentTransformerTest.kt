@@ -250,7 +250,12 @@ internal class PolymarketFeedContentTransformerTest {
     private companion object {
         val PREV_STATE = PolymarketMainUM(
             balance = PredictionBalanceUMConverter(onAddFundsClick = {}, onWithdrawClick = {})
-                .convert(PredictionAccountStatusValue.Loading),
+                .convert(
+                    PredictionBalanceUMConverter.Input(
+                        status = PredictionAccountStatusValue.Loading,
+                        depositTarget = null,
+                    ),
+                ),
             categories = persistentListOf(
                 PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
             ),
