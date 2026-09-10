@@ -184,6 +184,8 @@ internal object JointAccountDomainModule {
         blockaidGate: JointOperationBlockaidGate,
         ownerAddressResolver: JointOwnerAddressResolver,
         networkReader: JointNetworkReader,
+        compositionChecker: SafeCompositionChecker,
+        refundReceiverProvider: JointRefundReceiverProvider,
     ): SignJointOperationUseCase {
         return SignJointOperationUseCase(
             repository = repository,
@@ -194,6 +196,8 @@ internal object JointAccountDomainModule {
             blockaidGate = blockaidGate,
             ownerAddressResolver = ownerAddressResolver,
             networkReader = networkReader,
+            compositionChecker = compositionChecker,
+            refundReceiverProvider = refundReceiverProvider,
         )
     }
 
