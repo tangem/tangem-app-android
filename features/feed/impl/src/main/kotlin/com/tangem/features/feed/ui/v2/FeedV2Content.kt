@@ -1,8 +1,7 @@
 package com.tangem.features.feed.ui.v2
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -38,9 +38,6 @@ import kotlinx.collections.immutable.ImmutableList
  * The collapse rides nested scroll: scrolling the tab's list up first shrinks the blocks, then the
  * list itself scrolls; scrolling back down re-expands the blocks once the list is at its top. The
  * shtorka's own nested scroll still wins first, raising the sheet before anything collapses.
- *
- * The semi-open (half) detent shows only the blocks and the tab row: the tab's list renders only
- * when [isExpanded], and tapping a tab raises the shtorka to full via [onExpandSheet].
  *
  * @param tabContent the selected tab page, provided by the feed's pager
  */
@@ -83,9 +80,12 @@ internal fun FeedV2Content(
         }
     }
 
-    // the semi-open detent is sized for expanded blocks — restore them when the sheet drops
+    // the semi-open detent is sized for expanded blocks — ease them back when the sheet drops;
+    // a snap here would jump the tab row mid-gesture, since isExpanded flips while dragging
     LaunchedEffect(isExpanded) {
-        if (!isExpanded) topBlocksOffset = 0f
+        if (!isExpanded && topBlocksOffset != 0f) {
+            animate(initialValue = topBlocksOffset, targetValue = 0f) { value, _ -> topBlocksOffset = value }
+        }
     }
 
     Column(
@@ -118,11 +118,10 @@ internal fun FeedV2Content(
                 onExpandSheet()
             },
         )
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
+        // No overscroll in the tabs: a downward fling at the list's top must hand its velocity to
+        // the shtorka settle; the stretch effect would swallow it into a giant stretch that
+        // displaces the rendered rows for a second (the list looks torn/blank while it relaxes).
+        CompositionLocalProvider(LocalOverscrollFactory provides null) {
             tabContent(Modifier.fillMaxSize())
         }
     }

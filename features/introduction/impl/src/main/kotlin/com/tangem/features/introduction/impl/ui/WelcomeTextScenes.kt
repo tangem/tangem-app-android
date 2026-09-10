@@ -18,19 +18,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.introduction.impl.ui.state.WelcomeSceneUM
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * The scenes are composed on top of each other; animation frames read the position inside the draw phase, while the
- * active scene recomposes when it changes to keep only that scene in accessibility semantics. When animation is disabled,
+ * active scene recomposes when it changes to keep only that scene in accessibility semantics. Without a playing video
  * the first scene stays.
  */
 @Composable
-internal fun WelcomeTextScenes(isAnimated: Boolean, videoPositionMs: () -> Long, modifier: Modifier = Modifier) {
+internal fun WelcomeTextScenes(
+    scenes: ImmutableList<WelcomeSceneUM>,
+    isAnimated: Boolean,
+    videoPositionMs: () -> Long,
+    modifier: Modifier = Modifier,
+) {
     val positionMs = remember { mutableLongStateOf(videoPositionMs()) }
     if (isAnimated) {
         LaunchedEffect(Unit) {
@@ -48,7 +53,7 @@ internal fun WelcomeTextScenes(isAnimated: Boolean, videoPositionMs: () -> Long,
         else -> WelcomeTextTimeline.hidden
     }
     Box(modifier = modifier) {
-        SceneTexts.forEachIndexed { scene, texts ->
+        scenes.forEachIndexed { scene, texts ->
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -86,20 +91,3 @@ private fun SceneLine(text: TextReference, color: Color, frame: () -> WelcomeTex
         color = color,
     )
 }
-
-private data class SceneText(val title: TextReference, val subtitle: TextReference)
-
-private val SceneTexts = listOf(
-    SceneText(
-        title = resourceReference(R.string.introduction_title),
-        subtitle = resourceReference(R.string.introduction_subtitle),
-    ),
-    SceneText(
-        title = resourceReference(R.string.introduction_scene_two_title),
-        subtitle = resourceReference(R.string.introduction_scene_two_subtitle),
-    ),
-    SceneText(
-        title = resourceReference(R.string.introduction_scene_three_title),
-        subtitle = resourceReference(R.string.introduction_scene_three_subtitle),
-    ),
-)

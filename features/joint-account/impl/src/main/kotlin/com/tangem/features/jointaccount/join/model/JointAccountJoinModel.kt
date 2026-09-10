@@ -86,6 +86,7 @@ internal class JointAccountJoinModel @Inject constructor(
             SnackbarMessage(
                 message = resourceReference(CoreUiR.string.account_create_success_message),
                 startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
             ),
         )
     }
