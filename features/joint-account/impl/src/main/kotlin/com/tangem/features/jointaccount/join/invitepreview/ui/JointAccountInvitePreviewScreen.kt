@@ -300,7 +300,11 @@ private fun CreatorRow(creatorName: String, hasDivider: Boolean, onInfoClick: ()
         },
         valueSlot = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TangemRowText(text = stringReference(value = creatorName), role = TangemRowTextRole.Value)
+                TangemRowText(
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                    text = stringReference(value = creatorName),
+                    role = TangemRowTextRole.Value,
+                )
 
                 Icon(
                     modifier = Modifier.size(20.dp),

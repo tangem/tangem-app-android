@@ -1,4 +1,4 @@
-package com.tangem.features.introduction.impl.ui
+package com.tangem.core.ui.components.legal
 
 internal enum class LegalDocument { TermsOfService, PrivacyPolicy }
 
