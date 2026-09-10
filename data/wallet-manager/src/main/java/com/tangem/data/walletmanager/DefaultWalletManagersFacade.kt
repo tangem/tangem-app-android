@@ -38,6 +38,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
+import com.tangem.domain.jointaccount.derivation.isJointAccountReservedPath
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -505,6 +506,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
+        if (derivationPath != null && isJointAccountReservedPath(rawPath = derivationPath)) return null
+
         getWmInitializationMutex(userWalletId, blockchain, derivationPath).withLock {
             val userWallet = getUserWallet(userWalletId) ?: run {
                 TangemLogger.w("Unable to find a user wallet with provided ID: $userWalletId")
