@@ -77,8 +77,7 @@ internal class RwaFeaturedAssetsManagerTest {
     fun `GIVEN the tab is on a week interval WHEN load THEN the request carries it`() = runTest {
         // Arrange
         val actions = captureActions()
-        val request = MutableStateFlow(RwaListRequest(interval = RwaInterval.D7))
-        val manager = createManager(testScope = this, request = request)
+        val manager = createManager(testScope = this, interval = MutableStateFlow(RwaInterval.D7))
         advanceUntilIdle()
 
         // Act
@@ -109,13 +108,13 @@ internal class RwaFeaturedAssetsManagerTest {
         // Arrange — one token whose change percent has a different sign per interval
         val token = createToken(h24ChangePercent = PERCENT_UP, weekChangePercent = PERCENT_DOWN, monthChangePercent = null)
         val actions = captureActions(state = MutableStateFlow(stateOf(token)))
-        val request = MutableStateFlow(RwaListRequest(interval = RwaInterval.H24))
-        val manager = createManager(testScope = this, request = request)
+        val interval = MutableStateFlow(RwaInterval.H24)
+        val manager = createManager(testScope = this, interval = interval)
         advanceUntilIdle()
         assertThat(manager.directions()).containsExactly(TangemPriceChange.Direction.Up)
 
         // Act
-        request.value = RwaListRequest(interval = RwaInterval.D7)
+        interval.value = RwaInterval.D7
         advanceUntilIdle()
 
         // Assert
@@ -128,12 +127,12 @@ internal class RwaFeaturedAssetsManagerTest {
         // Arrange
         val token = createToken(h24ChangePercent = PERCENT_UP, weekChangePercent = PERCENT_DOWN, monthChangePercent = null)
         captureActions(state = MutableStateFlow(stateOf(token)))
-        val request = MutableStateFlow(RwaListRequest(interval = RwaInterval.H24))
-        val manager = createManager(testScope = this, request = request)
+        val interval = MutableStateFlow(RwaInterval.H24)
+        val manager = createManager(testScope = this, interval = interval)
         advanceUntilIdle()
 
         // Act
-        request.value = RwaListRequest(interval = RwaInterval.M1)
+        interval.value = RwaInterval.M1
         advanceUntilIdle()
 
         // Assert
@@ -261,7 +260,7 @@ internal class RwaFeaturedAssetsManagerTest {
 
     private fun createManager(
         testScope: TestScope,
-        request: MutableStateFlow<RwaListRequest> = MutableStateFlow(RwaListRequest()),
+        interval: MutableStateFlow<RwaInterval> = MutableStateFlow(RwaInterval.H24),
     ): RwaFeaturedAssetsManager {
         val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
         // not backgroundScope: its jobs are not advanced by advanceUntilIdle here, and the manager's
@@ -270,7 +269,7 @@ internal class RwaFeaturedAssetsManagerTest {
         scopes.add(scope)
         return RwaFeaturedAssetsManager(
             getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
-            request = request,
+            interval = interval,
             appCurrency = MutableStateFlow(AppCurrency.Default),
             onItemClick = {},
             modelScope = scope,
