@@ -59,6 +59,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_eye_20
 import com.tangem.core.ui.res.generated.icons.ic_eye_cross_20
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.hotwallet.impl.R
 
 private val EYE_ICON_SIZE = 20.dp
@@ -67,10 +68,10 @@ private val EYE_ICON_SIZE = 20.dp
  * Masked password input with an eye toggle, shared by the create- and restore-cloud-backup flows.
  * Holds no state of its own — the caller owns the [value] and visibility, so nothing secret lingers here.
  *
- * [contentType] wires the field to the platform password manager: [ContentType.NewPassword] makes it
- * offer a generated password, [ContentType.Password] fills the stored one on restore. This is the only
- * kind of field in the app that wants autofill — everything else holding a secret keeps it away with
- * `DisableAutofillEffect`.
+ * Autofill is opt-in through [contentType]: [ContentType.NewPassword] makes the platform password
+ * manager offer a generated password, [ContentType.Password] fills the stored one on restore. The cloud
+ * backup password is the only secret in the app that wants that — without an explicit content type the
+ * field suppresses autofill, so reusing it for a passphrase keeps the secret away from the heuristics.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -87,6 +88,8 @@ internal fun CloudBackupPasswordField(
     contentType: ContentType? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
+    if (contentType == null) DisableAutofillEffect()
+
     val isFocused by interactionSource.collectIsFocusedAsState()
     val error = errorText?.resolveReference()
 

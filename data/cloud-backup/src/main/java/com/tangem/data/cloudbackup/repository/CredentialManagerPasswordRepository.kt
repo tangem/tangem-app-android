@@ -27,13 +27,15 @@ internal class CredentialManagerPasswordRepository(
 
     @Suppress("TooGenericExceptionCaught")
     override suspend fun savePassword(username: String, password: CharArray): Boolean {
-        val activity = foregroundActivityProvider.foregroundActivity
-        if (activity == null) {
-            logger.e("Cannot offer to save the password: no foreground activity")
-            return false
-        }
-
         return withContext(dispatchers.main) {
+            // read on the main thread right before the call: an activity resolved earlier can be gone by
+            // the time the coroutine gets dispatched here, and the provider would then get a stale one
+            val activity = foregroundActivityProvider.foregroundActivity
+            if (activity == null) {
+                logger.e("Cannot offer to save the password: no foreground activity")
+                return@withContext false
+            }
+
             try {
                 credentialManager.createCredential(
                     context = activity,
