@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -23,24 +22,19 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withLink
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.KeepScreenOn
+import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.features.introduction.impl.model.welcomeScenes
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.core.ui.R as CoreUiR
 
@@ -59,6 +53,7 @@ internal fun IntroductionScreen(
     state: IntroductionUM,
     onSurfaceAvailable: (SurfaceView) -> Unit,
     onSurfaceRelease: (SurfaceView) -> Unit,
+    videoPositionMs: () -> Long,
     modifier: Modifier = Modifier,
 ) {
     SystemBarsIconsDisposable(darkIcons = false)
@@ -101,14 +96,23 @@ internal fun IntroductionScreen(
                     contentScale = ContentScale.FillHeight,
                     contentDescription = null,
                 )
-                BottomActions(
-                    state = state,
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp),
-                )
+                ) {
+                    WelcomeTextScenes(
+                        scenes = state.scenes,
+                        isMotionEnabled = state.isMotionEnabled,
+                        videoPositionMs = videoPositionMs,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                    )
+                    BottomActions(state = state)
+                }
             }
             state.bottomSheetConfig?.let { CreateWalletBottomSheet(config = it) }
             state.haveWalletBottomSheetConfig?.let { HaveWalletBottomSheet(config = it) }
@@ -155,53 +159,6 @@ private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) 
     }
 }
 
-@Composable
-private fun LegalCaption(
-    onTermsOfServiceClick: () -> Unit,
-    onPrivacyPolicyClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val termsTitle = stringResourceSafe(id = R.string.introduction_terms_of_service)
-    val privacyTitle = stringResourceSafe(id = R.string.common_privacy_policy)
-    val caption = stringResourceSafe(id = R.string.introduction_legal, termsTitle, privacyTitle)
-    val linkStyle = SpanStyle(color = TangemTheme.colors3.text.primary)
-
-    val parts = remember(caption, termsTitle, privacyTitle) {
-        splitLegalCaption(
-            caption = caption,
-            titles = mapOf(
-                LegalDocument.TermsOfService to termsTitle,
-                LegalDocument.PrivacyPolicy to privacyTitle,
-            ),
-        )
-    }
-
-    val text = buildAnnotatedString {
-        parts.forEach { part ->
-            when (part) {
-                is LegalCaptionPart.Plain -> append(part.text)
-                is LegalCaptionPart.Link -> {
-                    val onClick = when (part.document) {
-                        LegalDocument.TermsOfService -> onTermsOfServiceClick
-                        LegalDocument.PrivacyPolicy -> onPrivacyPolicyClick
-                    }
-                    withLink(LinkAnnotation.Clickable(part.text, linkInteractionListener = { onClick() })) {
-                        withStyle(linkStyle) { append(part.text) }
-                    }
-                }
-            }
-        }
-    }
-
-    Text(
-        modifier = modifier.fillMaxWidth(),
-        text = text,
-        style = TangemTheme.typography3.caption.medium,
-        color = TangemTheme.colors3.text.secondary,
-        textAlign = TextAlign.Center,
-    )
-}
-
 // region Preview
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
 @Composable
@@ -210,9 +167,11 @@ private fun IntroductionScreenPreview() {
         IntroductionScreen(
             onSurfaceAvailable = {},
             onSurfaceRelease = {},
+            videoPositionMs = { 0L },
             state = IntroductionUM(
                 isVideoReady = true,
                 isMotionEnabled = true,
+                scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},
