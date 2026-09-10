@@ -9,7 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
@@ -27,7 +29,7 @@ private val MinRoom = 8.dp
 
 /** One entry of the feed's tab row. */
 @Immutable
-data class FeedTabUM(val id: String, val title: TextReference)
+data class FeedTabUM(val id: String, val title: TextReference, val icon: ImageVector)
 
 /**
  * The feed's tab row, shared by every feed surface that pages over [FeedTabSet].
@@ -54,7 +56,7 @@ fun FeedTabRow(
 ) {
     TangemTabNavigation(
         tabs = rememberTabItems(tabs = tabs, selectedTabIndex = selectedTabIndex, onTabClick = onTabSelect),
-        variant = TangemTabItem.Variant.Transparent,
+        variant = TangemTabItem.Variant.Material,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         modifier = modifier
             .dropWhenNoRoom(minRoom = MinRoom)
@@ -77,6 +79,7 @@ private fun rememberTabItems(
                 TangemTabItemUM.Content(
                     id = tab.id,
                     label = tab.title,
+                    iconStart = TangemIconUM.Icon(tab.icon),
                     isSelected = index == selectedTabIndex,
                     onClick = { currentOnTabClick(index) },
                 )
