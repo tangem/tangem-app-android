@@ -33,6 +33,15 @@ internal class SendConfirmAlertFactory @Inject constructor(
         )
     }
 
+    fun getJointSlotBusyState() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.joint_account_send_slot_busy_title),
+                message = resourceReference(id = R.string.joint_account_send_slot_busy_subtitle),
+            ),
+        )
+    }
+
     fun getSendTransactionErrorState(
         error: SendTransactionError,
         popBack: () -> Unit,
