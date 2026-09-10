@@ -51,13 +51,13 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
+    api(deps.decompose.ext.compose)
 
     /* Other */
     implementation(deps.androidx.appCompat)
     implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
 
