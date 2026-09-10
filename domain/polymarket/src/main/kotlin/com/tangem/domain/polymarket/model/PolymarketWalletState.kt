@@ -29,6 +29,8 @@ enum class PolymarketWalletStatus {
     UNKNOWN,
     ;
 
+    fun needsDeploy(): Boolean = this == NOT_CREATED || this == DEPLOYMENT_FAILED
+
     companion object {
 
         fun fromRaw(raw: String): PolymarketWalletStatus = entries.firstOrNull { it.name == raw } ?: UNKNOWN

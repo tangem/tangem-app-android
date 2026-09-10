@@ -207,7 +207,6 @@ internal object PolymarketDomainModule {
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
         polymarketOnboardedStore: PolymarketOnboardedStore,
-        checkGeoblock: CheckPolymarketGeoblockUseCase,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
@@ -219,7 +218,6 @@ internal object PolymarketDomainModule {
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
         polymarketOnboardedStore = polymarketOnboardedStore,
-        checkGeoblock = checkGeoblock,
     )
 
     @Provides

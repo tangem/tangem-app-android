@@ -28,6 +28,8 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.collectibles)
+    implementation(projects.domain.common)
+    implementation(projects.domain.models)
     implementation(projects.domain.collectibles.models)
     implementation(projects.domain.appCurrency.models)
 
@@ -59,4 +61,6 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
+    testImplementation(projects.core.error)
 }

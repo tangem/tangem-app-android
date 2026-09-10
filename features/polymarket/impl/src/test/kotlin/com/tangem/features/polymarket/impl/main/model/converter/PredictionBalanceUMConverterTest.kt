@@ -3,6 +3,11 @@ package com.tangem.features.polymarket.impl.main.model.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketChainFamily
+import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
+import com.tangem.domain.polymarket.model.PolymarketDepositTarget
+import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
@@ -27,7 +32,9 @@ internal class PredictionBalanceUMConverterTest {
         val status = model.status
 
         // Act
-        val actual = converter.convert(status)
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(status = status, depositTarget = DEPOSIT_TARGET),
+        )
 
         // Assert
         assertThat(actual.addFunds.isEnabled).isEqualTo(model.addFundsEnabled)
@@ -42,7 +49,7 @@ internal class PredictionBalanceUMConverterTest {
         val status = active(balance = "12.5", isTradingAllowed = true)
 
         // Act
-        val actual = converter.convert(status)
+        val actual = converter.convert(PredictionBalanceUMConverter.Input(status = status, depositTarget = null))
 
         // Assert
         assertThat(actual.balance).isNotEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
@@ -54,7 +61,7 @@ internal class PredictionBalanceUMConverterTest {
         val status = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
 
         // Act
-        val actual = converter.convert(status)
+        val actual = converter.convert(PredictionBalanceUMConverter.Input(status = status, depositTarget = null))
 
         // Assert
         assertThat(actual.balance).isEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
@@ -66,10 +73,65 @@ internal class PredictionBalanceUMConverterTest {
         val status = PredictionAccountStatusValue.Loading
 
         // Act
-        val actual = converter.convert(status)
+        val actual = converter.convert(PredictionBalanceUMConverter.Input(status = status, depositTarget = null))
 
         // Assert
         assertThat(actual.balance).isEqualTo(stringReference(value = EMPTY_BALANCE_SIGN))
+    }
+
+    @Test
+    fun `GIVEN no deposit target WHEN converted THEN add funds is disabled and not loading`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(status = ACTIVE, depositTarget = null)
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isFalse()
+        assertThat(actual.addFunds.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a deposit target WHEN converted THEN add funds is enabled`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(status = ACTIVE, depositTarget = DEPOSIT_TARGET)
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN trading not allowed WHEN a deposit target exists THEN add funds stays disabled`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE.copy(isTradingAllowed = false),
+            depositTarget = DEPOSIT_TARGET,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no deposit address WHEN a deposit target exists THEN add funds stays disabled`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE.copy(depositAddress = null),
+            depositTarget = DEPOSIT_TARGET,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isFalse()
     }
 
     internal data class GatingModel(
@@ -77,15 +139,6 @@ internal class PredictionBalanceUMConverterTest {
         val addFundsEnabled: Boolean,
         val withdrawEnabled: Boolean,
         val isLoading: Boolean = false,
-    )
-
-    private fun active(balance: String, isTradingAllowed: Boolean) = PredictionAccountStatusValue.Active(
-        source = StatusSource.ACTUAL,
-        balance = BigDecimal(balance),
-        fiatRate = BigDecimal.ONE,
-        isTradingAllowed = isTradingAllowed,
-        depositCurrency = mockk(relaxed = true),
-        depositAddress = "0xbridge",
     )
 
     private fun provideTestModels() = listOf(
@@ -144,4 +197,34 @@ internal class PredictionBalanceUMConverterTest {
             withdrawEnabled = false,
         ),
     )
+
+    private companion object {
+
+        fun active(balance: String, isTradingAllowed: Boolean) = PredictionAccountStatusValue.Active(
+            source = StatusSource.ACTUAL,
+            balance = BigDecimal(balance),
+            fiatRate = BigDecimal.ONE,
+            isTradingAllowed = isTradingAllowed,
+            depositCurrency = mockk(relaxed = true),
+            depositAddress = "0xbridge",
+        )
+
+        val ACTIVE = active(balance = "12.5", isTradingAllowed = true)
+
+        val DEPOSIT_TARGET = PolymarketDepositTarget(
+            network = PolymarketDepositNetwork(
+                chainId = PolymarketContracts.CHAIN_ID.toString(),
+                chainName = "Polygon",
+                family = PolymarketChainFamily.EVM,
+                address = "0xrequisites",
+                tokens = emptyList(),
+            ),
+            token = PolymarketDepositToken(
+                symbol = "USDC",
+                address = PolymarketContracts.USDC_TOKEN_ADDRESS,
+                decimals = 6,
+                minCheckoutUsd = BigDecimal("2"),
+            ),
+        )
+    }
 }

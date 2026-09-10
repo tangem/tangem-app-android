@@ -73,5 +73,6 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(deps.okio)
     testImplementation(deps.web3j.core)
+    testRuntimeOnly(deps.orgJson)
     // endregion
 }

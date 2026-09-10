@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
@@ -37,6 +38,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_search_24
 import kotlinx.collections.immutable.persistentListOf
 
@@ -54,10 +56,12 @@ internal fun ResidencyListScreen(state: ResidencyListUM, modifier: Modifier = Mo
             )
         },
         overlay = {
-            ResidencySearchFooter(
-                state = state.search,
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
+            if (state.content.isSearchVisible) {
+                ResidencySearchFooter(
+                    state = state.search,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
         },
     ) { contentPadding ->
         AnimatedContent(
@@ -157,7 +161,6 @@ private fun ResidencyFlag(flagUrl: String, modifier: Modifier = Modifier) {
     )
 }
 
-// TODO v_rodionov: #[REDACTED_TASK_KEY]
 @Composable
 private fun LoadingContent(contentPadding: PaddingValues, modifier: Modifier = Modifier) {
     ProvideTangemShimmer {
@@ -177,9 +180,8 @@ private fun LoadingContent(contentPadding: PaddingValues, modifier: Modifier = M
                     },
                     titleSlot = {
                         TangemShimmer(
-                            modifier = Modifier
-                                .width(width = 140.dp)
-                                .height(height = 20.dp),
+                            style = TangemTheme.typography3.body.medium,
+                            modifier = Modifier.weight(weight = 1f),
                         )
                     },
                 )
@@ -188,7 +190,6 @@ private fun LoadingContent(contentPadding: PaddingValues, modifier: Modifier = M
     }
 }
 
-// TODO v_rodionov: #[REDACTED_TASK_KEY]
 @Composable
 private fun ErrorContent(
     content: ResidencyListUM.Content.Error,
@@ -199,31 +200,21 @@ private fun ErrorContent(
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 64.dp),
+        verticalArrangement = Arrangement.spacedBy(space = 12.dp, alignment = Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            modifier = Modifier.padding(top = 32.dp),
-            text = stringResourceSafe(R.string.common_something_went_wrong),
-            textAlign = TextAlign.Center,
-            color = TangemTheme.colors3.text.primary,
-            style = TangemTheme.typography3.heading.small,
+        TangemButton(
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X10,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_20),
+            onClick = content.onRetryClick,
         )
         Text(
-            modifier = Modifier.padding(top = 8.dp),
-            text = stringResourceSafe(R.string.common_try_again_later),
+            text = stringResourceSafe(R.string.tangempay_common_error_list_loading),
             textAlign = TextAlign.Center,
             color = TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.subheading.medium,
-        )
-        TangemButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp),
-            variant = TangemButton.Variant.Primary,
-            text = resourceReference(R.string.common_retry),
-            onClick = content.onRetryClick,
+            style = TangemTheme.typography3.caption.medium,
         )
     }
 }
@@ -261,9 +252,12 @@ private fun EmptyContent(contentPadding: PaddingValues, modifier: Modifier = Mod
     }
 }
 
+private val ResidencyListUM.Content.isSearchVisible: Boolean
+    get() = this is ResidencyListUM.Content.Sections || this is ResidencyListUM.Content.Empty
+
 private val FLAG_SIZE = 40.dp
 private val FOOTER_INSET = 88.dp
-private const val LOADING_ITEMS_COUNT = 12
+private const val LOADING_ITEMS_COUNT = 5
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true)
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)

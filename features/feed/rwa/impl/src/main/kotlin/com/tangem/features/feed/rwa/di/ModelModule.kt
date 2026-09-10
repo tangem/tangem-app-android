@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.rwa.categories.model.CategorySelectorModel
 import com.tangem.features.feed.rwa.model.RwaFeedTabModel
+import com.tangem.features.feed.rwa.model.search.RwaFeedSearchTabModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,6 +19,11 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(RwaFeedTabModel::class)
     fun bindRwaFeedTabModel(model: RwaFeedTabModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(RwaFeedSearchTabModel::class)
+    fun bindRwaFeedSearchTabModel(model: RwaFeedSearchTabModel): Model
 
     @Binds
     @IntoMap
