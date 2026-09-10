@@ -22,7 +22,7 @@ import javax.inject.Inject
 /**
  * Tracks the draft selection separately from the applied one, so Reset can restore it.
  *
- * Two categories are not plain filters. The `featured_assets` one is excluded: it populates the tab's
+ * Two categories are not plain filters. The `featured-assets` one is excluded: it populates the tab's
  * Featured rail. The `real-world-assets` umbrella leads the list titled "All": it is the tab's default
  * scope, so picking it without a sector applies the empty [CategorySelection].
  */
