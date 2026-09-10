@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignError
@@ -14,6 +15,7 @@ import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeSingleton
+import java.math.BigInteger
 
 /**
  * The local checks a co-signer runs before anything reaches the card — each blocks the signature on its own:
@@ -21,18 +23,28 @@ import com.tangem.domain.jointaccount.safe.SafeSingleton
  * 1. the Safe address resolves from the composition the app knows (CREATE2, any supported singleton);
  * 2. this wallet's own owner address is among the members;
  * 3. the `SafeTx` decodes to exactly what the UI shows the user — recipient, amount, asset;
- * 4. the payload has one of the two allowed shapes and never targets the Safe itself.
+ * 4. the payload has one of the two allowed shapes and never targets the Safe itself;
+ * 5. the refund fields pay what the operation was built to pay, and no one else.
  */
 class JointOperationVerifier(
     private val payloadCodec: JointTransferPayloadCodec,
     private val safeAddressCalculator: SafeAddressCalculator,
 ) {
 
+    /**
+     * What the refund fields are allowed to say, read from the same sources the creation path used.
+     *
+     * @param refundReceiver the fee recipient `SafeTxGasBuilder` puts into an operation it creates
+     * @param networkGasPrice the current gas price of the network, the reference the ceiling is taken from
+     */
+    data class RefundBounds(val refundReceiver: String, val networkGasPrice: BigInteger)
+
     fun verify(
         jointAccount: JointAccount,
         operation: JointOperation,
         displayed: JointTransferIntent,
         ownerAddress: String,
+        refundBounds: RefundBounds,
     ): Either<JointOperationSignError, Unit> = either {
         // Nothing allowed is longer than a transfer call: an oversized payload fails before anything touches it
         ensure(operation.safeTx.data.length <= TRANSFER_CALLDATA_LENGTH) {
@@ -46,6 +58,22 @@ class JointOperationVerifier(
         checkMembership(ownerAddress = ownerAddress, jointAccount = jointAccount)
         checkDisplayedPayload(safeTx = operation.safeTx, displayed = displayed)
         checkForm(safeTx = operation.safeTx, safeAddress = safeAddress)
+        checkRefund(safeTx = operation.safeTx, bounds = refundBounds)
+    }
+
+    /**
+     * The Safe pays the refund out of its own balance, so a co-signer who ignores these fields signs away funds
+     * beyond the transfer on screen. Each field is compared to what the creation path would have put there:
+     * the native coin, our fee recipient, and one of the two known `baseGas` values. `gasPrice` is only capped
+
+     */
+    private fun Raise<JointOperationSignError>.checkRefund(safeTx: SafeTx, bounds: RefundBounds) {
+        val refundMismatch = VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH)
+
+        ensure(safeTx.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true)) { refundMismatch }
+        ensure(safeTx.refundReceiver.equals(bounds.refundReceiver, ignoreCase = true)) { refundMismatch }
+        ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
+        ensure(safeTx.gasPrice <= bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER) { refundMismatch }
     }
 
     private fun Raise<JointOperationSignError>.checkSafeAddress(jointAccount: JointAccount, safeAddress: String) {
@@ -105,5 +133,18 @@ class JointOperationVerifier(
     private companion object {
         // "0x" + transfer(address,uint256) selector + two 32-byte ABI words — nothing allowed is longer
         const val TRANSFER_CALLDATA_LENGTH = 2 + 8 + 64 + 64
+
+        /** The two values `SafeTxGasBuilder` can put there: with and without the Safe deployment */
+        val ALLOWED_BASE_GAS = setOf(
+            SafeTxGasBuilder.SAFE_BASE_GAS,
+            SafeTxGasBuilder.SAFE_BASE_GAS + SafeTxGasBuilder.DEPLOY_GAS,
+        )
+
+        /**
+         * Creation caps `gasPrice` at ×2 of the network price. The ceiling here is deliberately far above that:
+         * an operation collecting signatures for hours carries the price of the moment it was built, and the
+         * decision on a risen price is to execute it as is. What this rejects is an absurd value, not drift.
+         */
+        val GAS_PRICE_CEILING_MULTIPLIER: BigInteger = BigInteger.valueOf(20)
     }
 }
