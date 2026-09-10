@@ -61,9 +61,14 @@ interface TangemTechMarketsApi {
         @Query("indicators") indicators: String? = null,
     ): ApiResponse<GetCoinIndicatorsResponse>
 
-    /** Returns the coin categories tree — each category with its sectors and coin counts */
+    /**
+     * Returns the coin categories tree — each category with its sectors and coin counts
+     *
+     * @param country ISO 3166-1 alpha-2 code the `restricted` flag is evaluated for. It narrows nothing:
+     *                omitting it returns the very same categories, all with `restricted = false`
+     */
     @GET("v1/coins/categories")
-    suspend fun getCoinCategories(): ApiResponse<CoinCategoriesResponse>
+    suspend fun getCoinCategories(@Query("country") country: String? = null): ApiResponse<CoinCategoriesResponse>
 
     /**
      * Returns a page of market categories with their aggregated market data
