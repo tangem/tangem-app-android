@@ -220,16 +220,81 @@ internal class PushNotificationsModelTest {
         coVerify(exactly = 0) { applyPushNotificationFirstActivation(any()) }
     }
 
+    @Test
+    fun `GIVEN root screen with next route WHEN onAllowPermission THEN next route replaces stack once`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onAllowPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN root screen with next route WHEN onDenyPermission THEN next route replaces stack once`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onDenyPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN root screen with next route WHEN onLaterClick THEN next route replaces stack once`() = runTest {
+        // Arrange
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.Off
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onLaterClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN bottom sheet with next route WHEN onDenyPermission THEN stack is not changed`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        val model = createModel(testScope = this, isBottomSheet = true, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onDenyPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { appRouter.push(any(), any()) }
+    }
+
     private fun wallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
 
     private fun createModel(
         testScope: TestScope,
         isBottomSheet: Boolean = false,
         source: AppRoute.PushNotification.Source = AppRoute.PushNotification.Source.Onboarding,
+        nextRoute: AppRoute? = null,
         paramsContainer: ParamsContainer = MutableParamsContainer(
             value = PushNotificationsParams(
                 isBottomSheet = isBottomSheet,
-                nextRoute = null,
+                nextRoute = nextRoute,
                 modelCallbacks = modelCallbacks,
                 source = source,
             ),
@@ -259,5 +324,9 @@ internal class PushNotificationsModelTest {
             default = testDispatcher,
             single = testDispatcher,
         )
+    }
+
+    private companion object {
+        val NEXT_ROUTE: AppRoute = AppRoute.Home()
     }
 }
