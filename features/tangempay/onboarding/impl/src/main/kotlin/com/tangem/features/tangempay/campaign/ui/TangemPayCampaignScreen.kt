@@ -45,6 +45,7 @@ private fun previewLanding(mode: TangemPayCampaignUM.Landing.Mode, isCtaLoading:
     mode = mode,
     isCtaLoading = isCtaLoading,
     onGetCardClick = {},
-    onTermsClick = {},
+    onTermsOfServiceClick = {},
+    onPrivacyPolicyClick = {},
     onCloseClick = {},
 )
