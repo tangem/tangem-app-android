@@ -84,7 +84,7 @@ internal abstract class DetailsModelTestBase {
         every { appInfoProvider.appVersion } returns "1.2.3"
         every { appInfoProvider.appVersionCode } returns 456
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
-        coEvery { tangemPayEligibilityManager.getPossibleWalletsIds(any()) } returns emptyList()
+        coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { getVirtualAccountEligibilityUseCase(any()) } returns VirtualAccountEligibility.NotAvailable
         every { virtualAccountFeatureToggles.isVirtualAccountsEnabled } returns true
