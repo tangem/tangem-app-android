@@ -16,7 +16,7 @@ internal class DefaultIntroductionVideoPlayer(
 
         override fun onRenderedFirstFrame() = listener.onFirstFrameRendered()
 
-        override fun onPlayerError(error: PlaybackException) = listener.onError()
+        override fun onPlayerError(error: PlaybackException) = listener.onError(error)
     }
 
     private var isPrepared = false
@@ -27,7 +27,7 @@ internal class DefaultIntroductionVideoPlayer(
         get() = attachedSurfaceView != null
 
     override val positionMs: Long
-        get() = player.currentPosition
+        get() = player.currentPosition.coerceAtLeast(0L)
 
     init {
         // Copies make the wrap an ordinary transition with the next period already buffered;
@@ -58,6 +58,10 @@ internal class DefaultIntroductionVideoPlayer(
 
     override fun setRunning(isRunning: Boolean) {
         if (isRunning && isMotionEnabled) player.play() else player.pause()
+    }
+
+    override fun restart() {
+        player.seekTo(0L)
     }
 
     override fun release() {

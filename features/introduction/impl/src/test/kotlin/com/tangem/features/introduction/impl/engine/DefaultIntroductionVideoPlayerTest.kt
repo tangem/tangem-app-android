@@ -191,6 +191,18 @@ internal class DefaultIntroductionVideoPlayerTest {
         assertThat(positionMs).isEqualTo(4_200L)
     }
 
+    @Test
+    fun `GIVEN playback under way WHEN restarted THEN the current pass rewinds to its first frame`() {
+        // Arrange
+        val videoPlayer = createPlayer()
+
+        // Act
+        videoPlayer.restart()
+
+        // Assert
+        verify(exactly = 1) { player.seekTo(0L) }
+    }
+
     private fun createPlayer(isMotionEnabled: Boolean = true) = DefaultIntroductionVideoPlayer(
         player = player,
         videoItem = videoItem,
