@@ -146,5 +146,6 @@ internal class PolymarketMainComponentTest {
         checkPolymarketGeoblockUseCase = checkGeoblock,
         predictionAccountStatusFetcher = mockk(relaxed = true),
         positionsPreviewLoader = positionsPreviewLoader,
+        predictionBalancePoller = mockk(relaxed = true),
     )
 }
