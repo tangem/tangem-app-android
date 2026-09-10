@@ -5,14 +5,16 @@ import com.tangem.data.markets.converters.CoinIndicatorsConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.data.markets.converters.MarketIndicatorsConverter
 import com.tangem.domain.markets.CoinIndicators
-import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
+import com.tangem.domain.markets.MarketIndicators
+import com.tangem.domain.markets.repositories.MarketIndicatorsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 /**
- * Implementation of [CoinIndicatorsRepository].
+ * Implementation of [MarketIndicatorsRepository].
  *
  * Fetched readings are merged into a session [store] keyed by uppercase symbol (modelled on
  * `tokenExchangesStore` in [DefaultMarketsTokenRepository]), so consumers observing
@@ -20,11 +22,11 @@ import kotlinx.coroutines.withContext
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultCoinIndicatorsRepository(
+internal class DefaultMarketIndicatorsRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val store: RuntimeStateStore<Map<String, CoinIndicators>>,
     private val dispatchers: CoroutineDispatcherProvider,
-) : CoinIndicatorsRepository {
+) : MarketIndicatorsRepository {
 
     override fun getCoinIndicatorsUpdates(): Flow<Map<String, CoinIndicators>> = store.get()
 
@@ -43,6 +45,18 @@ internal class DefaultCoinIndicatorsRepository(
 
             // Merge instead of replace: a single-symbol refresh must not evict other coins' readings
             store.update { stored -> stored + fetched.associateBy { it.symbol.uppercase() } }
+        }
+    }
+
+    override suspend fun getMarketIndicators(
+        fiatCurrencyCode: String,
+        languageCode: String,
+    ): Either<Throwable, MarketIndicators> = Either.catch {
+        withContext(dispatchers.io) {
+            MarketIndicatorsConverter.convert(marketsApi.getMarketIndicators(
+                currency = fiatCurrencyCode,
+                language = languageCode,
+            ).getOrThrow())
         }
     }
 
