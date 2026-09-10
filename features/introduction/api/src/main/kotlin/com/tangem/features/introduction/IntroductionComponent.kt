@@ -6,10 +6,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface IntroductionComponent : ComposableContentComponent {
 
-    /**
-     * @param launchMode how the app was started. [InitScreenLaunchMode.WithCardScan] means an NFC tap brought
-     * the user here and the card scan is expected to start on its own, which this screen cannot do yet.
-     */
+    /** @param launchMode [InitScreenLaunchMode.WithCardScan] means an NFC tag opened the app: the scan starts untapped. */
     data class Params(val launchMode: InitScreenLaunchMode)
 
     interface Factory : ComponentFactory<Params, IntroductionComponent>
