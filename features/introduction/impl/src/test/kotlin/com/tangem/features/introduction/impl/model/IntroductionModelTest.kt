@@ -172,24 +172,41 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
-        model.onError()
+        model.onError(PLAYBACK_ERROR)
         assertThat(model.uiState.value.isVideoReady).isTrue()
     }
 
     @Test
-    fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter lifts to the still frame`() {
+    fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter stays down over the empty surface`() {
         // Arrange
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
 
         // Act
-        model.onError()
+        model.onError(PLAYBACK_ERROR)
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
+        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
+    }
+
+    @Test
+    fun `GIVEN a frame already rendered WHEN playback fails THEN shutter stays up on the still frame`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.onFirstFrameRendered()
+
+        // Act
+        model.onError(PLAYBACK_ERROR)
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
         assertThat(model.uiState.value.isVideoFailed).isTrue()
-        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
+        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
     }
 
     @Test
@@ -203,7 +220,7 @@ internal class IntroductionModelTest {
         model.detachSurface(surfaceView)
 
         // Act
-        model.onError()
+        model.onError(PLAYBACK_ERROR)
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isFalse()
@@ -1190,6 +1207,8 @@ internal class IntroductionModelTest {
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title))
             assertThat(options.importWallet.title)
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
+            assertThat(options.importWallet.description)
+                .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet_description))
         }
 
         private fun IntroductionModel.openHaveWallet(): HaveWalletUM.Step.Options {
@@ -1287,6 +1306,45 @@ internal class IntroductionModelTest {
             assertThat(sentEvents.last())
                 .isEqualTo(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the card row tapped WHEN the composition is unavailable THEN the scan starts from the intro`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+
+            // Act
+            model.onStoryResult(StoriesV2Result.Unavailable(StoriesV2Result.Unavailable.Reason.NO_CONTENT))
+
+            // Assert
+            coVerify(exactly = 1) {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = any(),
+                    onFailed = any(),
+                )
+            }
+            assertThat(sentEvents.last())
+                .isEqualTo(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN a scan in flight WHEN the composition turns unavailable THEN the gone story is not resumed`() {
+            // Arrange
+            val model = createModel()
+            val action = pendingAction(actionId = "scan_wallet")
+            model.openStory()
+            model.onStoryAction(action)
+            model.onStoryResult(StoriesV2Result.Unavailable(StoriesV2Result.Unavailable.Reason.NO_USABLE_FRAME))
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            verify(exactly = 0) { action.resume() }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
         }
 
         @Test
@@ -1698,9 +1756,10 @@ internal class IntroductionModelTest {
         }
     }
 
+    /** Callbacks of the latest scan: a fallback scan can follow the one a story action started. */
     private fun IntroductionModel.capturedScanCallbacks(): ScanCallbacks {
-        val onNavigatedAway = slot<() -> Unit>()
-        val onFailed = slot<() -> Unit>()
+        val onNavigatedAway = mutableListOf<() -> Unit>()
+        val onFailed = mutableListOf<() -> Unit>()
         coVerify {
             cardScanner.scanAndOpenWallet(
                 analyticsSource = any(),
@@ -1708,7 +1767,7 @@ internal class IntroductionModelTest {
                 onFailed = capture(onFailed),
             )
         }
-        return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
+        return ScanCallbacks(onNavigatedAway.last(), onFailed.last())
     }
 
     private fun IntroductionModel.seedPhraseRow(): WalletOptionUM =
@@ -1758,11 +1817,14 @@ internal class IntroductionModelTest {
         cardScanner = cardScanner,
         mobileWalletCreator = mobileWalletCreator,
         referral = IntroductionReferral(appsFlyerRepository),
+        legalLinks = IntroductionLegalLinks(urlOpener, analyticsEventHandler),
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         uiMessageSender = uiMessageSender,
     )
 
     private companion object {
+        val PLAYBACK_ERROR = IllegalStateException("decoder failed")
+
         val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
