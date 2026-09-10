@@ -14,4 +14,17 @@ interface PolymarketBridgeRepository {
         walletId: String,
         depositWalletAddress: String,
     ): Either<PolymarketBridgeError, PolymarketBridgeAddresses>
+
+    /**
+     * @param depositWalletAddress the wallet pUSD leaves, never the owner address
+     * @param recipientAddress the user's own address on the destination chain
+     * @return the bridge's `evm` address, whatever the destination chain is
+     */
+    suspend fun createWithdrawAddress(
+        walletId: String,
+        depositWalletAddress: String,
+        toChainId: String,
+        toTokenAddress: String,
+        recipientAddress: String,
+    ): Either<PolymarketBridgeError, String>
 }
