@@ -33,6 +33,7 @@ dependencies {
     api(projects.domain.feedback)
     api(projects.domain.hotWallet)
     api(projects.domain.settings)
+    api(projects.domain.socialLogin)
     api(projects.domain.wallets)
     implementation(projects.domain.cloudBackup)
     implementation(projects.domain.feedback.models)
