@@ -154,6 +154,37 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN the pre-submit save throws WHEN confirmed THEN PersistenceFailed and nothing is submitted`() = runTest {
+        // Arrange
+        val prepared = interactor.prepare(params()).getOrNull()!!
+        val cause = IllegalStateException("disk full")
+        coEvery { store.save(USER_WALLET_ID, any()) } throws cause
+
+        // Act
+        val actual = interactor.confirm(prepared)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.PersistenceFailed(cause).left())
+        coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the post-202 save throws WHEN confirmed THEN the receipt is still returned`() = runTest {
+        // Arrange
+        val prepared = interactor.prepare(params()).getOrNull()!!
+        coEvery { store.save(USER_WALLET_ID, match { it.transactionId == null }) } returns Unit
+        coEvery { store.save(USER_WALLET_ID, match { it.transactionId == TX_ID }) } throws
+            IllegalStateException("disk full")
+
+        // Act
+        val actual = interactor.confirm(prepared)
+
+        // Assert
+        assertThat(actual).isEqualTo(receipt().right())
+        coVerify(exactly = 1) { withdrawRepository.submit(WALLET_ID, any()) }
+    }
+
     private fun params() = SubmitPredictionWithdrawalInteractor.Params(
         userWalletId = USER_WALLET_ID,
         walletId = WALLET_ID,
