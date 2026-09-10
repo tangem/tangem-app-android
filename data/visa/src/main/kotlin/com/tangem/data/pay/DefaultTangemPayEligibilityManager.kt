@@ -42,7 +42,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     override suspend fun getPossibleWalletsIds(shouldExcludePaeraCustomers: Boolean): List<UserWalletId> {
-        return getPossibleWalletsForTangemPay(entryPoint = null).addPaeraCustomersData().mapNotNull {
+        return getSuitableWallets().addPaeraCustomersData().mapNotNull {
             if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet.walletId else null
         }
     }
@@ -67,7 +67,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
 
             coroutineScope {
                 val deferred = async {
-                    getPossibleWalletsForTangemPay(entryPoint = entryPoint)
+                    getEligibleWallets(entryPoint = entryPoint)
                         .addPaeraCustomersData()
                         .also { cachedEligibleWallets += mapOf(entryPoint to it) }
                 }
@@ -81,13 +81,8 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
-    private suspend fun getPossibleWalletsForTangemPay(entryPoint: TangemPayEntryPoint?): List<UserWallet> {
-        val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
-
-        val candidates = wallets.filter { wallet ->
-            wallet.isMultiCurrency && !wallet.isLocked && wallet.isTangemPayCompatible &&
-                !onboardingRepository.isTangemPayDeactivated(wallet.walletId)
-        }
+    private suspend fun getEligibleWallets(entryPoint: TangemPayEntryPoint?): List<UserWallet> {
+        val candidates = getSuitableWallets()
 
         if (candidates.isEmpty()) return emptyList()
 
@@ -96,6 +91,15 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
 
         return candidates
+    }
+
+    private suspend fun getSuitableWallets(): List<UserWallet> {
+        val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
+
+        return wallets.filter { wallet ->
+            wallet.isMultiCurrency && !wallet.isLocked && wallet.isTangemPayCompatible &&
+                !onboardingRepository.isTangemPayDeactivated(wallet.walletId)
+        }
     }
 
     private suspend fun List<UserWallet>.addPaeraCustomersData(): List<UserWalletData> {

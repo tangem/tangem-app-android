@@ -29,6 +29,7 @@ dependencies {
     api(projects.features.wallet.api)
     implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.eligibility.api)
 
     /** Domain */
     api(projects.domain.common)

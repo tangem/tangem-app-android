@@ -1,12 +1,11 @@
-package com.tangem.features.tangempay.model
+package com.tangem.features.tangempay.eligibility.wallet
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.features.tangempay.components.TangemPayWalletSelectorComponent
-import com.tangem.features.tangempay.ui.WalletSelectorBSContentUM
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
@@ -37,37 +36,37 @@ internal class TangemPayWalletSelectorModel @Inject constructor(
         onWalletClick = { params.listener.onWalletSelected(it) },
     )
 
-    val uiState: StateFlow<WalletSelectorBSContentUM>
+    val uiState: StateFlow<TangemPayWalletSelectorUM>
         field = MutableStateFlow(getInitialState())
 
     init {
-        fetchUserWalletsUM()
+        fetchUserWallets()
     }
 
-    private fun getInitialState(): WalletSelectorBSContentUM {
-        return WalletSelectorBSContentUM(
-            userWallets = persistentListOf(),
-            onDismiss = { params.listener.onWalletSelectorDismiss() },
-        )
+    fun onDismiss() {
+        params.listener.onWalletSelectorDismiss()
     }
 
-    private fun fetchUserWalletsUM() {
+    private fun fetchUserWallets() {
         modelScope.launch {
             val eligibleWalletsIds = params.walletsIds.map { it.stringValue }.toSet()
-            userWalletsFetcher.userWallets.collectLatest { userWalletsListUM ->
+            userWalletsFetcher.userWallets.collectLatest { userWallets ->
                 uiState.update {
-                    WalletSelectorBSContentUM(
-                        userWallets = userWalletsListUM
+                    TangemPayWalletSelectorUM(
+                        userWallets = userWallets
                             .filter { wallet -> wallet.id in eligibleWalletsIds }
                             .toImmutableList(),
-                        onDismiss = { params.listener.onWalletSelectorDismiss() },
+                        onDismiss = ::onDismiss,
                     )
                 }
             }
         }
     }
 
-    fun onDismiss() {
-        params.listener.onWalletSelectorDismiss()
+    private fun getInitialState(): TangemPayWalletSelectorUM {
+        return TangemPayWalletSelectorUM(
+            userWallets = persistentListOf(),
+            onDismiss = ::onDismiss,
+        )
     }
 }
