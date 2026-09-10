@@ -13,6 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketDepositRequest
 import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketSupportedAssetDto
+import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketWithdrawAddressRequest
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -73,5 +74,38 @@ internal class DefaultPolymarketBridgeRepository @Inject constructor(
             },
             onError = { PolymarketBridgeError.Network.left() },
         )
+    }
+
+    override suspend fun createWithdrawAddress(
+        walletId: String,
+        depositWalletAddress: String,
+        toChainId: String,
+        toTokenAddress: String,
+        recipientAddress: String,
+    ): Either<PolymarketBridgeError, String> = withContext(dispatchers.io) {
+        val builderCode = polymarketRepository.getBuilderCode(walletId = walletId).getOrNull()
+            ?: return@withContext PolymarketBridgeError.Unavailable.left()
+
+        safeApiCall(
+            call = {
+                val response = bridgeApi.createWithdrawAddress(
+                    builderCode = builderCode,
+                    body = PolymarketWithdrawAddressRequest(
+                        address = depositWalletAddress,
+                        toChainId = toChainId,
+                        toTokenAddress = toTokenAddress,
+                        recipientAddr = recipientAddress,
+                    ),
+                ).bind()
+
+                (response.nested?.evm ?: response.evm)?.right()
+                    ?: PolymarketBridgeError.Rejected(detail = MISSING_EVM_DETAIL).left()
+            },
+            onError = { PolymarketBridgeError.Network.left() },
+        )
+    }
+
+    private companion object {
+        const val MISSING_EVM_DETAIL = "The bridge answered without an evm address"
     }
 }
