@@ -4,7 +4,9 @@ import arrow.core.Either
 import arrow.core.left
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.data.polymarket.converter.PolymarketPositionConverter
+import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.polymarket.converter.PolymarketClosedPositionConverter
+import com.tangem.data.polymarket.converter.PolymarketOpenPositionConverter
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
@@ -35,7 +37,7 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
             )
         },
         convert = { response ->
-            PolymarketPositionsPage(response.positions.map(PolymarketPositionConverter::convert), response.hasNext)
+            PolymarketPositionsPage(PolymarketOpenPositionConverter.convertList(response.positions), response.hasNext)
         },
     )
 
@@ -53,7 +55,7 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
             )
         },
         convert = { response ->
-            PolymarketPositionsPage(response.positions.map(PolymarketPositionConverter::convert), response.hasNext)
+            PolymarketPositionsPage(PolymarketClosedPositionConverter.convertList(response.positions), response.hasNext)
         },
     )
 
@@ -69,18 +71,21 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
                 assetId = id.assetId,
             )
         },
-        convert = { it.position?.let(PolymarketPositionConverter::convert) },
+        convert = { it.position?.let(PolymarketOpenPositionConverter::convert) },
     )
 
     private suspend fun <R : Any, T> read(
         call: suspend () -> ApiResponse<R>,
         convert: (R) -> T,
     ): Either<PolymarketPositionsError, T> = withContext(dispatchers.io) {
-        when (val response = call()) {
-            is ApiResponse.Success -> Either.catch { convert(response.data) }
-                .mapLeft { PolymarketPositionsError.Unknown(httpCode = null, detail = it.message) }
-            is ApiResponse.Error -> response.cause.toPositionsError().left()
-        }
+        safeApiCall(
+            call = {
+                val response = call().bind()
+                Either.catch { convert(response) }
+                    .mapLeft { PolymarketPositionsError.Unknown(httpCode = null, detail = it.message) }
+            },
+            onError = { it.toPositionsError().left() },
+        )
     }
 
     private fun ApiResponseError.toPositionsError(): PolymarketPositionsError = when (this) {
