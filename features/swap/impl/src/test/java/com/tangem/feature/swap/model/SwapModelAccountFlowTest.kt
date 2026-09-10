@@ -22,6 +22,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.buildSwapCurrencyStatus
@@ -992,6 +993,59 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction withdraw WHEN to tokenFilter sees a bridge destination held by another wallet THEN it is rejected`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+            val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
+            val foreignPortfolio = personalAccountStatus(
+                currencies = listOf(destinationStatus),
+                userWalletId = UserWalletId(stringValue = "FEDCBA9876543210"),
+            )
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
+            } returns accountStatusList(listOf(ownPortfolio))
+            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
+                setOf(destinationStatus.currency.id).right()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Act
+            val predicate = model.chooseToTokenBridge.tokenFilter.value
+
+            // Assert
+            assertThat(predicate(ownPortfolio, destinationStatus)).isTrue()
+            assertThat(predicate(foreignPortfolio, destinationStatus)).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN to tokenFilter sees a bridge destination in a payment account THEN it is rejected`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+            val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
+            val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
+            coEvery {
+                singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
+            } returns accountStatusList(listOf(ownPortfolio))
+            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
+                setOf(destinationStatus.currency.id).right()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Act
+            val predicate = model.chooseToTokenBridge.tokenFilter.value
+
+            // Assert
+            assertThat(predicate(ownPortfolio, destinationStatus)).isTrue()
+            assertThat(predicate(paymentAccountStatus, destinationStatus)).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown and the TO filter passes nothing`() =
         runTest {
             // Arrange
@@ -1024,7 +1078,10 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         groupType = TokensGroupType.NONE,
     )
 
-    private fun personalAccountStatus(currencies: List<CryptoCurrencyStatus>): AccountStatus.Personal {
+    private fun personalAccountStatus(
+        currencies: List<CryptoCurrencyStatus>,
+        userWalletId: UserWalletId = this.userWalletId,
+    ): AccountStatus.Personal {
         return AccountStatus.Personal(
             account = Account.Personal.createMainAccount(userWalletId),
             tokenList = TokenList.Ungrouped(
