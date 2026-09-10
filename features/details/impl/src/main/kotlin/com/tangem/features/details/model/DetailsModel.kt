@@ -303,7 +303,7 @@ internal class DetailsModel @Inject constructor(
     private fun addTangemPayItemIfEligible() {
         modelScope.launch {
             val isEligible = if (tangemPayFeatureToggles.isResidencyStepEnabled) {
-                tangemPayEligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true).isNotEmpty()
+                tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true).isNotEmpty()
             } else {
                 tangemPayEligibilityManager
                     .getEligibleWallets(

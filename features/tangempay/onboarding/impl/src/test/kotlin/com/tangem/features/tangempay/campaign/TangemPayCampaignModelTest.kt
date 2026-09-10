@@ -74,7 +74,7 @@ internal class TangemPayCampaignModelTest {
         )
         coEvery { onboardingRepository.validateDeeplink(CAMPAIGN_DEEPLINK) } returns true.right()
         coEvery { campaignRepository.getCampaign(CAMPAIGN_KEY) } returns CAMPAIGN.right()
-        coEvery { eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
     }
 
@@ -369,7 +369,7 @@ internal class TangemPayCampaignModelTest {
             givenWallets(WALLET_ID)
             coEvery { onboardingRepository.hasTangemPayInWallet(WALLET_ID) } returns false.right()
             coEvery {
-                eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true)
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
             } returns listOf(WALLET_ID)
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -430,7 +430,7 @@ internal class TangemPayCampaignModelTest {
     private fun givenWallets(vararg walletsIds: UserWalletId) {
         coEvery { userWalletsListRepository.userWalletsSync() } returns walletsIds.map { mockk<UserWallet>() }
         coEvery {
-            eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+            eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
         } returns walletsIds.toList()
     }
 

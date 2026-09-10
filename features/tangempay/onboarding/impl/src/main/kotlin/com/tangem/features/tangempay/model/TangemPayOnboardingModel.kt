@@ -130,7 +130,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         ) {
             modelScope.launch {
                 proceedWithWallets(
-                    walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
+                    walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true),
                 )
             }
         } else {
