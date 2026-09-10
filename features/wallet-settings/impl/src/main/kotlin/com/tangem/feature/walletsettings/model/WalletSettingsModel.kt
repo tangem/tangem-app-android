@@ -594,7 +594,11 @@ internal class WalletSettingsModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun sendForgetSeedBackupSheet(userWallet: UserWallet.Hot) {
-        if (!userWallet.backedUp) {
+        // Any backup, not the seed phrase alone: a wallet kept by social recovery survives being
+        // forgotten, so it must not be offered the "forget anyway" wording (FR-11, FR-15).
+        val isBackedUp = state.value.isWalletBackedUp
+
+        if (!isBackedUp) {
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
@@ -614,13 +618,13 @@ internal class WalletSettingsModel @Inject constructor(
                         backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
                     title = resourceReference(R.string.hw_remove_wallet_notification_title_v2)
-                    body = if (userWallet.backedUp) {
+                    body = if (isBackedUp) {
                         resourceReference(R.string.hw_remove_wallet_notification_description_has_backup_v2)
                     } else {
                         resourceReference(R.string.hw_remove_wallet_notification_description_without_backup)
                     }
                 }
-                if (userWallet.backedUp) {
+                if (isBackedUp) {
                     secondaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_forget)
                         onClick {
@@ -637,7 +641,7 @@ internal class WalletSettingsModel @Inject constructor(
                         }
                     }
                 }
-                if (userWallet.backedUp) {
+                if (isBackedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
                         onClick {

@@ -22,6 +22,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -40,6 +41,7 @@ import io.mockk.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -64,6 +66,9 @@ internal class WalletBackupModelTest {
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase = mockk(relaxed = true)
     private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase = mockk {
+        every { flow(any()) } returns flowOf(false)
+    }
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -125,6 +130,39 @@ internal class WalletBackupModelTest {
             Assertions.assertEquals(false, state.isBackedUp)
             Assertions.assertEquals(BackupStatus.ComingSoon, state.googleDriveStatus)
         }
+
+    @Test
+    fun `GIVEN social backup WHEN model created THEN the google drive option is hidden`() = runTest {
+        // Arrange — a social-login wallet already keeps its seed in the cloud under its own key (FR-10)
+        every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletNotBackedUp.right())
+        every { isSocialBackupCompletedUseCase.flow(walletId) } returns flowOf(true)
+
+        // Act
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Assert
+        Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
+    }
+
+    @Test
+    fun `GIVEN social backup dropped WHEN it clears THEN the google drive option comes back`() = runTest {
+        // Arrange
+        every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletNotBackedUp.right())
+        val isSocialBackup = MutableStateFlow(true)
+        every { isSocialBackupCompletedUseCase.flow(walletId) } returns isSocialBackup
+
+        val model = createModel(this)
+        advanceUntilIdle()
+        Assertions.assertEquals(false, model.uiState.value.isGoogleDriveOptionShown)
+
+        // Act
+        isSocialBackup.value = false
+        advanceUntilIdle()
+
+        // Assert
+        Assertions.assertEquals(true, model.uiState.value.isGoogleDriveOptionShown)
+    }
 
     @Test
     fun `GIVEN toggle off WHEN model created THEN google drive is ComingSoon AND clickable AND not refreshed`() =
@@ -772,6 +810,7 @@ internal class WalletBackupModelTest {
             setCloudBackupStateUseCase = lazySetStateUseCase,
             clearHotWalletContextualUnlockUseCase = clearHotWalletContextualUnlockUseCase,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
+            isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
         )
     }
 
