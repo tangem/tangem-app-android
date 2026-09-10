@@ -4,8 +4,10 @@ import com.tangem.data.collectibles.DefaultCollectiblesRepository
 import com.tangem.data.collectibles.account.DefaultCollectiblesAccountRepository
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerDeriver
+import com.tangem.data.collectibles.vault.DefaultGachaVaultRepository
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
+import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import dagger.Binds
@@ -34,4 +36,8 @@ internal interface CollectiblesDataModule {
     @Binds
     @IntoSet
     fun bindCollectiblesUserWalletDataCleaner(impl: CollectiblesUserWalletDataCleaner): UserWalletDataCleaner
+
+    @Binds
+    @Singleton
+    fun bindGachaVaultRepository(impl: DefaultGachaVaultRepository): GachaVaultRepository
 }
