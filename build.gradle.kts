@@ -183,7 +183,7 @@ dependencyAnalysis {
             // Dropping the mocked bucket leaves `debugImplementation(chucker)` as the declaration under
             // watch. The guard matters because this is a global setting: applied unconditionally it also
             // blinded the full run, where all five build types are analysed and the twelve declarations
-            // it hides (chucker/chuckerStub in :app and :core:datasource, :features:kyc:impl in :app)
+            // it hides (chucker/chuckerStub in :app and :core:datasource-impl, :features:kyc:impl in :app)
             // are exactly what the nightly report exists to watch.
             if (isTrimmedVariantRun) {
                 ignoreSourceSet(*dagpIgnoredSourceSets.toTypedArray())
@@ -256,7 +256,7 @@ dependencyAnalysis {
                     "androidx.lifecycle:lifecycle-viewmodel-compose",
                     "androidx.lifecycle:lifecycle-viewmodel-savedstate",
                 )
-                // datastore-preferences-core arrives through core:datasource rather than through the
+                // datastore-preferences-core arrives through core:datasource-impl rather than through the
                 // datastore-core these modules declare, so the androidx-datastore bundle misses it.
                 exclude("androidx.datastore:datastore-preferences-core")
                 // core:ui exports haze as `api` and puts HazeState in the signatures of public DS
@@ -264,7 +264,7 @@ dependencyAnalysis {
                 // one of those ends up referencing haze in bytecode without importing it, so the advice
                 // would reappear for each new screen that uses a bottom sheet.
                 exclude("dev.chrisbanes.haze:haze")
-                // :core:datasource is the data layer's single entry point and deliberately re-exports
+                // :core:datasource-impl is the data layer's single entry point and deliberately re-exports
                 // these two as `api` (see its build file). Every data module reaches RetrofitFactory and
                 // the local stores through it; declaring them in ~35 modules would duplicate the facade.
                 exclude(":core:local", ":core:remote")
@@ -428,6 +428,42 @@ interface Injected {
 val unitTest by tasks.registering {
     group = "verification"
     description = "Run unit tests for debug/googleDebug variant and all JVM modules"
+}
+
+// :core:datasource-impl is the implementation module for :core:local / :core:remote and is wired in
+// only by :app (like a feature `impl`). This guard keeps it out of every other module's dependencies,
+// so modules keep compiling against the contracts and never against the implementation.
+val verifyDatasourceImplIsolation by tasks.registering {
+    group = "verification"
+    description = "Fails if any module other than :app depends on :core:datasource-impl"
+
+    doLast {
+        val target = ":core:datasource-impl"
+        val allowedDependents = setOf(":app")
+
+        val offenders = rootProject.subprojects
+            .filter { it.path != target && it.path !in allowedDependents }
+            .filter { module ->
+                module.configurations.any { configuration ->
+                    configuration.dependencies.any { dependency ->
+                        dependency is ProjectDependency && dependency.path == target
+                    }
+                }
+            }
+            .map { it.path }
+            .sorted()
+
+        if (offenders.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("$target is an implementation module — only :app may depend on it.")
+                    appendLine("Depend on the contracts in :core:local / :core:remote instead.")
+                    appendLine("Offending modules:")
+                    offenders.forEach { appendLine("  - $it") }
+                }.trim(),
+            )
+        }
+    }
 }
 
 /**
