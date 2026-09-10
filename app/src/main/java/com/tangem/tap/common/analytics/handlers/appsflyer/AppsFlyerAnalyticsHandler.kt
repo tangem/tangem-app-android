@@ -62,7 +62,7 @@ class AppsFlyerAnalyticsHandler(
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler = AppsFlyerAnalyticsHandler(
             client = if (data.logConfig.isAppsflyerLogEnabled) {
                 TangemLogger.withTag("AppsFlyer").i("AppsFlyer log enabled, mock client created")
-                AppsFlyerLogClient(data.jsonConverter)
+                AppsFlyerLogClient()
             } else {
                 TangemLogger.withTag("AppsFlyer").i("AppsFlyer log disabled, real client created")
                 appsFlyerClientFactory.create(apiKey = data.config.appsFlyerApiKey)

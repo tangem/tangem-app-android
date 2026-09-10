@@ -27,11 +27,13 @@ dependencies {
     /** Features api */
     api(projects.features.tangempay.onboarding.api)
     api(projects.features.wallet.api)
+    implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
 
     /** Domain */
     api(projects.domain.common)
     api(projects.domain.hotWallet)
+    implementation(projects.domain.appsflyer)
     api(projects.domain.visa)
     api(projects.domain.visa.models)
     api(projects.domain.wallets)
@@ -51,6 +53,7 @@ dependencies {
     implementation(deps.decompose.ext.compose)
 
     /** AndroidX */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
     implementation(deps.androidx.appCompat)
     implementation(deps.lifecycle.compose)

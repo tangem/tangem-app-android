@@ -7,7 +7,7 @@ package com.tangem.domain.jointaccount.model
  * @property name         account name shared by all participants, 1..20 chars
  * @property icon         icon name, from the same set as crypto accounts
  * @property iconColor    color name, from the same set as crypto accounts
- * @property membersCount slots including the creator, 2..5
+ * @property membersCount slots including the creator, [MIN_MEMBERS_COUNT]..[MAX_MEMBERS_COUNT]
  * @property threshold    signatures required to execute an operation, 1..[membersCount]
  */
 data class JointAccountConfig(
@@ -25,4 +25,11 @@ data class JointAccountConfig(
         "membersCount" to membersCount,
         "threshold" to threshold,
     )
+
+    companion object {
+
+        /** The product bounds of [membersCount] — the promo and the composition screens share them */
+        const val MIN_MEMBERS_COUNT = 2
+        const val MAX_MEMBERS_COUNT = 5
+    }
 }

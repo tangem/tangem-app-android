@@ -1,0 +1,453 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
+package com.tangem.features.tangempay.campaign
+
+import arrow.core.left
+import arrow.core.right
+import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.error.UniversalError
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.TangemPayCampaign
+import com.tangem.domain.pay.model.TangemPayCampaignResolution
+import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
+import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.components.TangemPayCampaignComponent
+import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.Called
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.util.Currency
+
+internal class TangemPayCampaignModelTest {
+
+    private val router: Router = mockk(relaxed = true)
+    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val eligibilityManager: TangemPayEligibilityManager = mockk()
+    private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase = mockk()
+    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
+    private val onboardingStarter: TangemPayOnboardingStarter = mockk(relaxed = true)
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(
+            router,
+            uiMessageSender,
+            urlOpener,
+            userWalletsListRepository,
+            eligibilityManager,
+            resolveTangemPayCampaignUseCase,
+            clearAppsFlyerDeeplinkUseCase,
+            onboardingStarter,
+        )
+        givenResolution(TangemPayCampaignResolution.Landing(CAMPAIGN))
+        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+    }
+
+    @Nested
+    inner class Resolution {
+
+        @Test
+        fun `GIVEN landing resolution and no wallets WHEN model created THEN landing in NoWallet mode`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val landing = model.uiState.value as TangemPayCampaignUM.Landing
+            assertThat(landing.mode).isEqualTo(TangemPayCampaignUM.Landing.Mode.NoWallet)
+            assertThat(landing.cardArtUrl).isEqualTo(CARD_ART_URL)
+            assertThat(landing.isCtaLoading).isFalse()
+            coVerify(exactly = 1) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN landing resolution and wallets present WHEN model created THEN landing in NoPay mode`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val landing = model.uiState.value as TangemPayCampaignUM.Landing
+            assertThat(landing.mode).isEqualTo(TangemPayCampaignUM.Landing.Mode.NoPay)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN issue card resolution WHEN model created THEN child opened with the offer art`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            givenResolution(issueCardResolution(offer = campaignOffer(mainImageUrl = OFFER_ART_URL)))
+
+            // Act
+            val model = createModel(testScope = this)
+            val children = model.trackChildren()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(TangemPayCampaignUM.Loading)
+            assertThat(children).containsExactly(
+                TangemPayCampaignChild.IssueCard(
+                    userWalletId = WALLET_ID,
+                    cardArtUrl = OFFER_ART_URL,
+                    feeAmount = BigDecimal.ZERO,
+                    feeCurrency = Currency.getInstance("USD"),
+                ),
+            )
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN offer without art WHEN model created THEN child uses the campaign art`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            givenResolution(issueCardResolution(offer = campaignOffer()))
+
+            // Act
+            val model = createModel(testScope = this)
+            val children = model.trackChildren()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(children.single()?.cardArtUrl).isEqualTo(CARD_ART_URL)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN issue card child WHEN child finished THEN campaign key cleared AND container stays`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            givenResolution(issueCardResolution(offer = campaignOffer()))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onCampaignIssueCardFinished()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            verify { router wasNot Called }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN unavailable resolution WHEN model created THEN terminal dialog shown AND dismiss closes`() =
+            runTest {
+                // Arrange
+                givenResolution(TangemPayCampaignResolution.Unavailable)
+                val messages = mutableListOf<DialogMessage>()
+                every { uiMessageSender.send(capture(messages)) } returns Unit
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                messages.single().onDismissRequest()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value).isEqualTo(TangemPayCampaignUM.Loading)
+                coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+                verify(exactly = 1) { router.replaceAll(AppRoute.Home()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN resolution error WHEN model created THEN error state AND no dialog`() = runTest {
+            // Arrange
+            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returns UNIVERSAL_ERROR.left()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN error state WHEN retry THEN campaign resolved again`() = runTest {
+            // Arrange
+            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returnsMany listOf(
+                UNIVERSAL_ERROR.left(),
+                TangemPayCampaignResolution.Landing(CAMPAIGN).right(),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Error).onRetry()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Landing::class.java)
+            coVerify(exactly = 2) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class Exit {
+
+        @Test
+        fun `GIVEN no wallets WHEN onClose THEN key cleared AND replaces all with Home`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+
+            // Act
+            model.onClose()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            verify { router.replaceAll(AppRoute.Home()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN wallets present WHEN onClose THEN key cleared AND replaces all with Wallet`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            val model = createModel(testScope = this)
+
+            // Act
+            model.onClose()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            verify { router.replaceAll(AppRoute.Wallet) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN error state WHEN close clicked THEN key cleared AND container closed`() = runTest {
+            // Arrange
+            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returns UNIVERSAL_ERROR.left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Error).onClose()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            verify { router.replaceAll(AppRoute.Home()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN landing in NoPay mode WHEN close clicked THEN key cleared AND replaces all with Wallet`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Landing).onCloseClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            verify { router.replaceAll(AppRoute.Wallet) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class LandingActions {
+
+        @Test
+        fun `GIVEN NoWallet landing WHEN get card THEN hot wallet created AND onboarding started with campaign`() =
+            runTest {
+                // Arrange
+                val userWallet: UserWallet.Hot = mockk { every { walletId } returns WALLET_ID }
+                coEvery { onboardingStarter.createHotWallet(CAMPAIGN_KEY, any()) } returns userWallet
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { onboardingStarter.createHotWallet(CAMPAIGN_KEY, any()) }
+                coVerify(exactly = 1) { onboardingStarter.startOnboarding(WALLET_ID, CAMPAIGN_KEY, any()) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN NoWallet landing WHEN hot wallet not created THEN onboarding not started`() = runTest {
+            // Arrange
+            coEvery { onboardingStarter.createHotWallet(CAMPAIGN_KEY, any()) } returns null
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { onboardingStarter.startOnboarding(any(), any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN NoPay landing WHEN get card THEN possible wallets passed to starter with campaign`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            coEvery {
+                eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true)
+            } returns listOf(WALLET_ID)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Landing).onGetCardClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                onboardingStarter.proceedWithWallets(
+                    walletsIds = listOf(WALLET_ID),
+                    mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                    campaignKey = CAMPAIGN_KEY,
+                    callbacks = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN landing WHEN terms clicked THEN terms link opened`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Landing).onTermsClick()
+
+            // Assert
+            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN landing WHEN wallet selected THEN customer info checked with campaign`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onWalletSelected(WALLET_ID)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                onboardingStarter.checkCustomerInfo(
+                    userWalletId = WALLET_ID,
+                    mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                    campaignKey = CAMPAIGN_KEY,
+                    callbacks = any(),
+                )
+            }
+            model.onDestroy()
+        }
+    }
+
+    private fun givenResolution(resolution: TangemPayCampaignResolution) {
+        coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returns resolution.right()
+    }
+
+    private fun givenWallets(vararg walletsIds: UserWalletId) {
+        coEvery { userWalletsListRepository.userWalletsSync() } returns walletsIds.map { mockk<UserWallet>() }
+    }
+
+    private fun issueCardResolution(offer: Offer) = TangemPayCampaignResolution.IssueCard(
+        userWalletId = WALLET_ID,
+        campaign = CAMPAIGN,
+        offer = offer,
+    )
+
+    private fun campaignOffer(mainImageUrl: String? = null) = Offer(
+        type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK,
+        fee = Offer.Fee(amount = BigDecimal.ZERO, currency = Currency.getInstance("USD")),
+        data = Offer.Data(specificationName = "SP_000009", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2),
+        mainImageUrl = mainImageUrl,
+    )
+
+    private fun TangemPayCampaignModel.trackChildren(): List<TangemPayCampaignChild.IssueCard?> {
+        val children = mutableListOf<TangemPayCampaignChild.IssueCard?>()
+        childNavigation.subscribe { event -> children += event.transformer(null) as TangemPayCampaignChild.IssueCard? }
+        return children
+    }
+
+    private fun createModel(testScope: TestScope): TangemPayCampaignModel {
+        val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
+        return TangemPayCampaignModel(
+            paramsContainer = MutableParamsContainer(
+                TangemPayCampaignComponent.Params(campaignKey = CAMPAIGN_KEY),
+            ),
+            dispatchers = TestingCoroutineDispatcherProvider(
+                main = testDispatcher,
+                mainImmediate = testDispatcher,
+                io = testDispatcher,
+                default = testDispatcher,
+                single = testDispatcher,
+            ),
+            router = router,
+            uiMessageSender = uiMessageSender,
+            urlOpener = urlOpener,
+            userWalletsListRepository = userWalletsListRepository,
+            eligibilityManager = eligibilityManager,
+            resolveTangemPayCampaignUseCase = resolveTangemPayCampaignUseCase,
+            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
+            onboardingStarter = onboardingStarter,
+        )
+    }
+
+    private companion object {
+        const val CAMPAIGN_KEY = "tpay_for_oxford"
+        const val CARD_ART_URL = "https://example.com/oxford.png"
+        const val OFFER_ART_URL = "https://example.com/oxford-offer.png"
+        val WALLET_ID = UserWalletId("011")
+        val CAMPAIGN = TangemPayCampaign(cardArtUrl = CARD_ART_URL)
+        val UNIVERSAL_ERROR = object : UniversalError {
+            override val errorCode: Int = 0
+        }
+    }
+}

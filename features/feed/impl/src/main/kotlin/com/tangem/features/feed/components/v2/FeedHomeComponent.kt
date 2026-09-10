@@ -43,16 +43,22 @@ import kotlinx.collections.immutable.toImmutableList
 internal class FeedHomeComponent(
     context: AppComponentContext,
     tabSet: FeedTabSet,
+    isPredictionsEntryVisible: Boolean,
+    isCollectiblesVisible: Boolean,
 ) : FeedScreenComponent, AppComponentContext by context {
 
-    private val topBlocksComponent = FeedTopBlocksComponent(context = child("feedTopBlocks"))
+    private val topBlocksComponent = FeedTopBlocksComponent(
+        context = child("feedTopBlocks"),
+        isPredictionsEntryVisible = isPredictionsEntryVisible,
+        isCollectiblesVisible = isCollectiblesVisible,
+    )
 
     private val contributors: List<FeedTabContributor> = tabSet.tabs
 
     private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
 
     private val tabs: ImmutableList<FeedTabUM> = contributors
-        .map { FeedTabUM(id = it.id.value, title = it.title) }
+        .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
 
     private val pagesNavigation = PagesNavigation<FeedTabId>()

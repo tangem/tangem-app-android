@@ -444,6 +444,7 @@
     <item>December</item>
   </string-array>
   <string name="common_more">More</string>
+  <string name="common_more_info">More info</string>
   <string name="common_negative">Negative</string>
   <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>

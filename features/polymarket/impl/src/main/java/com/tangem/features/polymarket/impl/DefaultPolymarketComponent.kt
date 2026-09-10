@@ -26,6 +26,7 @@ import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +35,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: PolymarketComponent.Params,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : PolymarketComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
@@ -94,6 +96,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.Main -> PolymarketMainComponent(
             appComponentContext = factoryContext,
             userWalletId = configuration.userWalletId,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
         is PolymarketRoute.EventDetails -> PolymarketEventDetailsComponent(
             appComponentContext = factoryContext,

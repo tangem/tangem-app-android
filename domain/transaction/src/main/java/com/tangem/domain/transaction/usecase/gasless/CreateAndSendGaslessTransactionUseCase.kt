@@ -27,6 +27,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
@@ -58,7 +59,7 @@ class CreateAndSendGaslessTransactionUseCase(
                 signAndSendTransactionOnBackend(context, signedData, uncompiledTxData)
             },
             catch = {
-                raise(SendTransactionError.DataError(it.message))
+                raise(it.mapToGaslessSendError())
             },
         )
     }
