@@ -343,6 +343,21 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideResolveTangemPayCampaignUseCase(
+            onboardingRepository: OnboardingRepository,
+            campaignRepository: TangemPayCampaignRepository,
+            eligibilityManager: TangemPayEligibilityManager,
+            getCustomerOffersUseCase: GetCustomerOffersUseCase,
+        ): ResolveTangemPayCampaignUseCase {
+            return ResolveTangemPayCampaignUseCase(
+                onboardingRepository = onboardingRepository,
+                campaignRepository = campaignRepository,
+                eligibilityManager = eligibilityManager,
+                getCustomerOffersUseCase = getCustomerOffersUseCase,
+            )
+        }
+
+        @Provides
         fun provideGetCashbackSummaryUseCase(cashbackRepository: CashbackRepository): GetCashbackSummaryUseCase {
             return GetCashbackSummaryUseCase(cashbackRepository)
         }
