@@ -11,4 +11,12 @@ interface JointAccountSafeAddressResolver {
 
     /** The Safe address of each joint network in [networks] that has one; other networks are ignored */
     suspend fun resolve(userWalletId: UserWalletId, networks: Set<Network>): Map<Network, String>
+
+    /**
+     * The same addresses keyed by the raw owner derivation path, for a caller that holds a path rather than a
+     * [Network] — a token as the backend states it. An account without a Safe address yet is absent.
+     *
+     * Waits for the data like [resolve] does, so ask only when a joint path is actually in hand.
+     */
+    suspend fun resolveByOwnerPath(userWalletId: UserWalletId): Map<String, String>
 }
