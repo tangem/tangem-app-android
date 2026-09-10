@@ -30,7 +30,7 @@ internal class JointOperationDtoTest {
                 "gasPrice": "60000000000",
                 "gasToken": "0x0000000000000000000000000000000000000000",
                 "refundReceiver": "0x2222222222222222222222222222222222222222",
-                "nonce": 4
+                "nonce": "4"
               },
               "status": "awaiting_signatures",
               "initiator": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
@@ -62,7 +62,7 @@ internal class JointOperationDtoTest {
                 gasPrice = "60000000000",
                 gasToken = "0x0000000000000000000000000000000000000000",
                 refundReceiver = "0x2222222222222222222222222222222222222222",
-                nonce = 4,
+                nonce = "4",
             ),
             status = "awaiting_signatures",
             initiator = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
@@ -97,7 +97,7 @@ internal class JointOperationDtoTest {
                 "gasPrice": "1",
                 "gasToken": "0x0000000000000000000000000000000000000000",
                 "refundReceiver": "0x2222222222222222222222222222222222222222",
-                "nonce": 0,
+                "nonce": "0",
                 "digest": "0xdeadbeef"
               },
               "status": "pending"
@@ -139,7 +139,7 @@ internal class JointOperationDtoTest {
                     "gasPrice": "1",
                     "gasToken": "0x0000000000000000000000000000000000000000",
                     "refundReceiver": "0x2222222222222222222222222222222222222222",
-                    "nonce": 0
+                    "nonce": "0"
                   },
                   "status": "awaiting_signatures"
                 }
