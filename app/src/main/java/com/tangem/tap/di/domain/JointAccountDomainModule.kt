@@ -22,6 +22,7 @@ import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
+import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
@@ -172,6 +173,24 @@ internal object JointAccountDomainModule {
     @Provides
     @Singleton
     fun provideJointOperationSignersResolver(): JointOperationSignersResolver = JointOperationSignersResolver()
+
+    @Provides
+    @Singleton
+    fun provideGetPendingJointOperationsUseCase(
+        supplier: SingleJointAccountListSupplier,
+        transferResolver: JointOperationTransferResolver,
+        signersResolver: JointOperationSignersResolver,
+        ownerAddressResolver: JointOwnerAddressResolver,
+        networkReader: JointNetworkReader,
+    ): GetPendingJointOperationsUseCase {
+        return GetPendingJointOperationsUseCase(
+            jointAccountListSupplier = supplier,
+            transferResolver = transferResolver,
+            signersResolver = signersResolver,
+            ownerAddressResolver = ownerAddressResolver,
+            networkReader = networkReader,
+        )
+    }
 
     @Provides
     @Singleton
