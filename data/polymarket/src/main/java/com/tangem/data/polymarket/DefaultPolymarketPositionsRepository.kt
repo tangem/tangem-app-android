@@ -7,14 +7,20 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.polymarket.converter.PolymarketClosedPositionConverter
 import com.tangem.data.polymarket.converter.PolymarketOpenPositionConverter
+import com.tangem.data.polymarket.pagination.PolymarketPositionsBatchFetcher
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
+import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.toBatchFlow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -22,6 +28,21 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
     private val api: PolymarketApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketPositionsRepository {
+
+    override fun getPositionsBatchFlow(
+        context: PolymarketPositionsBatchingContext,
+        batchSize: Int,
+    ): PolymarketPositionsBatchFlow = BatchListSource(
+        fetchDispatcher = dispatchers.io,
+        context = context,
+        generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+        batchFetcher = PolymarketPositionsBatchFetcher(batchSize = batchSize) { config, limit, offset ->
+            when (config.tab) {
+                PolymarketPositionsTab.ACTIVE -> getOpenPositions(config.addresses, limit, offset)
+                PolymarketPositionsTab.FINISHED -> getClosedPositions(config.addresses, limit, offset)
+            }
+        },
+    ).toBatchFlow()
 
     override suspend fun getOpenPositions(
         addresses: PolymarketAddresses,
