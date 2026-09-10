@@ -41,7 +41,6 @@ internal sealed interface PredictionAccountStatusValueDTO {
     @SerialName("active")
     data class Active(
         @SerialName("balance") val balance: SerializedBigDecimal,
-        @SerialName("is_trading_allowed") val isTradingAllowed: Boolean,
         @SerialName("deposit_address") val depositAddress: String? = null,
     ) : PredictionAccountStatusValueDTO
 

@@ -8,6 +8,7 @@ import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
+import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent.ModelCallback
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorSectionUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
@@ -262,8 +263,8 @@ internal class CategorySelectorModelTest {
             displayName = "xStocks",
             displayOrder = 2,
             sectors = listOf(
-                CoinCategory.Sector(id = "technology", displayName = "Technology", tokensCount = 48),
-                CoinCategory.Sector(id = "healthcare", displayName = "Healthcare", tokensCount = 31),
+                createSector(id = "technology", displayName = "Technology", displayOrder = 0, tokensCount = 48),
+                createSector(id = "healthcare", displayName = "Healthcare", displayOrder = 1, tokensCount = 31),
             ),
         )
 
@@ -272,10 +273,15 @@ internal class CategorySelectorModelTest {
             code = "bonds",
             displayName = "Bonds",
             displayOrder = 3,
-            sectors = listOf(CoinCategory.Sector(id = "government", displayName = "Government", tokensCount = 7)),
+            sectors = listOf(createSector(id = "government", displayName = "Government", tokensCount = 7)),
         )
 
-        val featured = createCategory(id = "4", code = "featured_assets", displayName = "Featured", displayOrder = 4)
+        val featured = createCategory(
+            id = "4",
+            code = ReservedCategoryCodes.FEATURED_ASSETS,
+            displayName = "Featured",
+            displayOrder = 4,
+        )
 
         val hidden = createCategory(
             id = "5",
@@ -288,6 +294,19 @@ internal class CategorySelectorModelTest {
         val stocksWithTechnology = CategorySelection(
             category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName),
             sector = CategorySelection.Entry(id = "technology", displayName = "Technology"),
+        )
+
+        fun createSector(
+            id: String,
+            displayName: String,
+            displayOrder: Int = 0,
+            tokensCount: Int = 7,
+        ) = CoinCategory.Sector(
+            id = id,
+            code = id,
+            displayName = displayName,
+            displayOrder = displayOrder,
+            tokensCount = tokensCount,
         )
 
         @Suppress("LongParameterList")

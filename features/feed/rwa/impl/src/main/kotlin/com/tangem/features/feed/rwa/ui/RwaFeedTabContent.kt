@@ -5,28 +5,36 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.charts.MarketChartMini
+import androidx.compose.ui.unit.sp
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -34,11 +42,12 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.model.list.RwaInterval
-import com.tangem.features.feed.rwa.model.list.RwaSort
 import com.tangem.features.feed.rwa.ui.state.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -58,38 +67,37 @@ internal fun RwaFeedTabContent(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
+            top = contentPadding.calculateTopPadding() + 16.dp,
             bottom = bottomPadding,
         ),
     ) {
         item(key = "promoBanners") {
-            promoBanners(Modifier.padding(vertical = 8.dp))
+            promoBanners(Modifier.padding(bottom = 20.dp))
         }
         if (state.featured !is RwaFeaturedUM.Empty) {
             item(key = "featuredHeader") {
                 SectionTitle(
                     title = resourceReference(R.string.markets_real_assets_featured_assets),
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
             }
             item(key = "featuredAssets") {
-                FeaturedAssets(state = state.featured)
+                FeaturedAssets(state = state.featured, modifier = Modifier.padding(bottom = 48.dp))
             }
         }
         item(key = "listHeader") {
             SectionTitle(
                 title = resourceReference(R.string.markets_real_assets_title),
-                modifier = Modifier.padding(top = 16.dp),
             )
         }
         item(key = "listFilters") {
             ListFilters(state = state)
         }
-        item(key = "listTags") {
-            TagPills(
-                tags = state.tags,
-                selectedIndex = state.selectedTagIndex,
-                onSelect = state.onTagSelect,
+        item(key = "listSortTabs") {
+            TangemTabNavigation(
+                tabs = state.sortTabs,
+                variant = TangemTabItem.Variant.Transparent,
+                modifier = Modifier.padding(bottom = 16.dp),
             )
         }
         listItems(list = state.list)
@@ -121,50 +129,11 @@ internal fun RwaFeedTabContent(
 
 private fun LazyListScope.listItems(list: RwaListUM) {
     when (list) {
-        is RwaListUM.Loading -> items(count = SKELETON_ROW_COUNT, key = { "skeleton_$it" }) {
-            ListRowShimmer()
-        }
+        is RwaListUM.Loading -> rwaTokenShimmers()
         is RwaListUM.Error -> item(key = "listError") {
             ListError(onRetry = list.onRetry)
         }
-        is RwaListUM.Content -> {
-            items(items = list.items, key = { TOKEN_KEY_PREFIX + it.id }) { item ->
-                TangemTokenRowMarket(
-                    state = item.row,
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    chart = {
-                        item.chartData?.let { chartData ->
-                            MarketChartMini(
-                                rawData = chartData,
-                                type = item.chartType,
-                                modifier = Modifier.size(width = 24.dp, height = 32.dp),
-                            )
-                        }
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun VisibleTokensTracker(
-    listState: LazyListState,
-    isTrackingEnabled: Boolean,
-    onVisibleItemsChange: (List<String>) -> Unit,
-) {
-    val visibleItems by remember(listState) {
-        derivedStateOf {
-            listState.layoutInfo.visibleItemsInfo.mapNotNull { itemInfo ->
-                (itemInfo.key as? String)
-                    ?.takeIf { it.startsWith(TOKEN_KEY_PREFIX) }
-                    ?.removePrefix(TOKEN_KEY_PREFIX)
-            }
-        }
-    }
-
-    LaunchedEffect(listState.isScrollInProgress, visibleItems, isTrackingEnabled) {
-        onVisibleItemsChange(if (isTrackingEnabled) visibleItems else emptyList())
+        is RwaListUM.Content -> rwaTokenItems(list.items)
     }
 }
 
@@ -176,7 +145,7 @@ private fun SectionTitle(title: TextReference, modifier: Modifier = Modifier) {
         color = TangemTheme.colors3.text.primary,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp),
     )
 }
 
@@ -190,10 +159,7 @@ private fun FeaturedAssets(state: RwaFeaturedUM, modifier: Modifier = Modifier) 
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(count = SKELETON_CARD_COUNT) {
-                TangemShimmer(
-                    modifier = Modifier.size(width = 176.dp, height = 132.dp),
-                    radius = 20.dp,
-                )
+                FeaturedAssetCardPlaceholder()
             }
         }
         is RwaFeaturedUM.Content -> FeaturedAssetsRail(assets = state.assets, modifier = modifier)
@@ -217,35 +183,41 @@ private fun FeaturedAssetsRail(assets: ImmutableList<RwaFeaturedAssetUM>, modifi
 private fun FeaturedAssetCard(asset: RwaFeaturedAssetUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .width(176.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(color = TangemTheme.colors3.bg.secondary)
+            .width(178.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(color = TangemTheme.colors3.bg.opaque.primary)
             .clickable(onClick = asset.onClick)
-            .padding(all = 16.dp),
+            .padding(all = 12.dp),
     ) {
         TangemTokenIcon(
             state = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = asset.iconUrl)),
             size = TangemTokenIcon.Size.X40,
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        SpacerH(22.dp)
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Text(
+                modifier = Modifier.weight(weight = 1f, fill = false),
                 text = asset.name.resolveReference(),
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.primary,
+                overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
             Text(
                 text = asset.ticker.resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
-                modifier = Modifier.padding(start = 4.dp),
+                lineHeight = (TangemTheme.typography3.caption.medium.lineHeight.value + 1).sp,
                 maxLines = 1,
             )
         }
+        SpacerH(2.dp)
         Row(
-            modifier = Modifier.padding(top = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = asset.price.resolveReference(),
@@ -256,10 +228,59 @@ private fun FeaturedAssetCard(asset: RwaFeaturedAssetUM, modifier: Modifier = Mo
             TangemPriceChange(
                 value = asset.priceChange.value,
                 direction = asset.priceChange.direction,
-                modifier = Modifier.padding(start = 4.dp),
             )
         }
     }
+}
+
+@Composable
+private fun FeaturedAssetCardPlaceholder(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .width(178.dp)
+            .height(130.dp)
+            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = RoundedCornerShape(24.dp))
+            .padding(all = 12.dp),
+    ) {
+        TangemShimmer(modifier = Modifier.size(40.dp), radius = 999.dp)
+        SpacerH(22.dp)
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            ShimmerLine(
+                style = TangemTheme.typography3.body.medium,
+                width = 56.dp,
+                modifier = Modifier.weight(weight = 1f, fill = false),
+            )
+            ShimmerLine(style = TangemTheme.typography3.caption.medium, width = 32.dp)
+        }
+        SpacerH(2.dp)
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            ShimmerLine(
+                style = TangemTheme.typography3.caption.medium,
+                width = 64.dp,
+                modifier = Modifier.weight(weight = 1f, fill = false),
+            )
+            ShimmerLine(style = TangemTheme.typography3.caption.medium, width = 32.dp)
+        }
+    }
+}
+
+@Composable
+private fun ShimmerLine(style: TextStyle, width: Dp, modifier: Modifier = Modifier) {
+    val lineHeight = with(LocalDensity.current) { style.lineHeight.toDp() }
+
+    TangemShimmer(
+        radius = 16.dp,
+        modifier = modifier
+            .width(width)
+            .height(lineHeight)
+            .padding(vertical = 2.dp),
+    )
 }
 
 @Composable
@@ -267,67 +288,46 @@ private fun ListFilters(state: RwaFeedTabUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TangemFilterItem(state = state.categoriesFilter)
-        TangemSegmentedControl(state = state.interval)
-    }
-}
-
-@Composable
-private fun TagPills(
-    tags: ImmutableList<RwaTagUM>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
-    ) {
-        itemsIndexed(items = tags, key = { _, tag -> tag.id }) { index, tag ->
-            TagPill(
-                tag = tag,
-                isSelected = index == selectedIndex,
-                onClick = { onSelect(index) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun TagPill(tag: RwaTagUM, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .heightIn(min = 36.dp)
-            .clip(CircleShape)
-            .background(color = if (isSelected) TangemTheme.colors3.bg.tertiary else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = tag.title.resolveReference(),
-            style = TangemTheme.typography3.subheading.medium,
-            color = if (isSelected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
-            maxLines = 1,
+        TangemFilterItem(
+            state = state.categoriesFilter,
+            variant = TangemFilterItem.Variant.Transparent,
+            modifier = Modifier.weight(weight = 1f, fill = false),
         )
+        SpacerW(8.dp)
+        IntervalFilter(interval = state.interval)
     }
 }
 
 @Composable
-private fun ListRowShimmer(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        TangemShimmer(modifier = Modifier.size(width = 184.dp, height = 12.dp))
+private fun IntervalFilter(interval: RwaIntervalUM, modifier: Modifier = Modifier) {
+    var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    val hapticManager = LocalHapticManager.current
+
+    Box(modifier = modifier) {
+        TangemFilterItem(
+            variant = TangemFilterItem.Variant.Transparent,
+            // always Inactive: the chip shows the current value with a chevron, never a clear cross
+            state = TangemFilterItemUM.Inactive(
+                id = "interval",
+                label = interval.selected.title,
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                    isMenuExpanded = true
+                },
+            ),
+        )
+        RwaIntervalMenu(
+            um = interval,
+            expanded = isMenuExpanded,
+            onDismiss = { isMenuExpanded = false },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .hazeEffectTangem { blurRadius = 10.dp },
+        )
     }
 }
 
@@ -354,8 +354,6 @@ private fun ListError(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-private const val TOKEN_KEY_PREFIX = "token:"
-private const val SKELETON_ROW_COUNT = 8
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
 private const val SKELETON_CARD_COUNT = 3
 
@@ -404,19 +402,17 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
             onClick = {},
             onClearClick = {},
         ),
-        interval = TangemSegmentedControl.State.Content(
-            items = persistentListOf(
-                TangemSegmentedControl.Item(id = "H24", label = stringReference("Day"), isSelected = true) {},
-                TangemSegmentedControl.Item(id = "D7", label = stringReference("Week")) {},
-                TangemSegmentedControl.Item(id = "M1", label = stringReference("Month")) {},
+        interval = RwaIntervalUM(selected = RwaInterval.H24, onOptionClick = {}),
+        sortTabs = persistentListOf(
+            TangemTabItemUM.Content(
+                id = "market_cap",
+                label = stringReference("Market cap"),
+                isSelected = true,
+                onClick = {},
             ),
+            TangemTabItemUM.Content(id = "top_gainers", label = stringReference("Top gainers"), onClick = {}),
+            TangemTabItemUM.Content(id = "top_losers", label = stringReference("Top losers"), onClick = {}),
         ),
-        tags = persistentListOf(
-            RwaTagUM(id = "market_cap", title = stringReference("Market cap")),
-            RwaTagUM(id = "top_gainers", title = stringReference("Top gainers")),
-            RwaTagUM(id = "top_losers", title = stringReference("Top losers")),
-        ),
-        onTagSelect = {},
         onVisibleItemsChange = {},
         list = RwaListUM.Content(
             items = persistentListOf(
@@ -441,8 +437,6 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
             ),
             loadMore = {},
         ),
-        selectedInterval = RwaInterval.H24,
-        selectedSort = RwaSort.MarketCap,
         appliedSelection = CategorySelection(
             category = CategorySelection.Entry(id = "rwa_categories", displayName = "Stocks"),
         ),

@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.main.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -13,6 +14,7 @@ internal data class PolymarketMainUM(
     val balance: PredictionBalanceUM,
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
+    val pullToRefreshConfig: PullToRefreshConfig,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
 ) {
 
