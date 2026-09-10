@@ -8,7 +8,7 @@ import com.tangem.blockchainsdk.utils.BlockAidChainNameConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.SafeTxTypedDataBuilder
+import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.models.network.Network
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
