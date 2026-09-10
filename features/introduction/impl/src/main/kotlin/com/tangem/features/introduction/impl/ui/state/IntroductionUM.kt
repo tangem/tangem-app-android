@@ -13,9 +13,14 @@ internal data class IntroductionUM(
     val scenes: ImmutableList<WelcomeSceneUM>,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val haveWalletBottomSheetConfig: TangemBottomSheetConfig?,
+    val socialLoginProgress: SocialLoginProgressUM?,
     val onCreateWalletClick: () -> Unit,
     val onIHaveWalletClick: () -> Unit,
     val onCreateWalletSheetCollapsed: () -> Unit,
     val onTermsOfServiceClick: () -> Unit,
     val onPrivacyPolicyClick: () -> Unit,
-)
+) {
+
+    val isSocialLoginShown: Boolean
+        get() = socialLoginProgress != null
+}
