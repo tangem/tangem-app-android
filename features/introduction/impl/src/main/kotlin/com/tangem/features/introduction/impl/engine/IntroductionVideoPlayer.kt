@@ -28,7 +28,7 @@ internal interface IntroductionVideoPlayer {
         /** Fires on every pass of the loop, not only on the first one. */
         fun onFirstFrameRendered()
 
-        fun onError()
+        fun onError(error: Throwable)
     }
 
     interface Factory {
