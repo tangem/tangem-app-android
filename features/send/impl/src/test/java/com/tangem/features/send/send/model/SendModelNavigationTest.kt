@@ -184,6 +184,7 @@ internal class SendModelNavigationTest {
             isAccountsModeEnabledUseCase = mockk(relaxed = true),
             sendAmountUpdateTrigger = mockk(relaxed = true),
             analyticsEventHandler = analyticsEventHandler,
+            jointSendDelegate = mockk(relaxed = true),
         )
     }
 

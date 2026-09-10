@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -35,7 +34,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
@@ -59,6 +57,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_eye_20
 import com.tangem.core.ui.res.generated.icons.ic_eye_cross_20
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.hotwallet.impl.R
 
 private val EYE_ICON_SIZE = 20.dp
@@ -66,9 +65,6 @@ private val EYE_ICON_SIZE = 20.dp
 /**
  * Masked password input with an eye toggle, shared by the create- and restore-cloud-backup flows.
  * Holds no state of its own — the caller owns the [value] and visibility, so nothing secret lingers here.
- *
- * [contentType] wires the field to the platform password manager: [ContentType.NewPassword] makes it
- * offer a generated password (FR-02), [ContentType.Password] enables autofill on restore (FR-04).
  */
 @Suppress("LongParameterList")
 @Composable
@@ -82,9 +78,10 @@ internal fun CloudBackupPasswordField(
     errorText: TextReference? = null,
     enabled: Boolean = true,
     focusRequester: FocusRequester? = null,
-    contentType: ContentType? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
+    DisableAutofillEffect()
+
     val isFocused by interactionSource.collectIsFocusedAsState()
     val error = errorText?.resolveReference()
 
@@ -108,7 +105,6 @@ internal fun CloudBackupPasswordField(
                 enabled = enabled,
                 error = error,
                 focusRequester = focusRequester,
-                contentType = contentType,
                 interactionSource = interactionSource,
                 modifier = Modifier.weight(1f),
             )
@@ -164,7 +160,6 @@ private fun PasswordInputField(
     enabled: Boolean,
     error: String?,
     focusRequester: FocusRequester?,
-    contentType: ContentType?,
     interactionSource: MutableInteractionSource,
     modifier: Modifier = Modifier,
 ) {
@@ -192,7 +187,6 @@ private fun PasswordInputField(
         modifier = modifier
             .fillMaxWidth()
             .then(focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier)
-            .then(contentType?.let { type -> Modifier.semantics { this.contentType = type } } ?: Modifier)
             .semantics {
                 if (!enabled) disabled()
                 if (error != null) error(error)
