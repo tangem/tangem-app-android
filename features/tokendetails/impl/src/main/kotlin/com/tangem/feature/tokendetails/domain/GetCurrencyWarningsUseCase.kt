@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils
@@ -38,6 +39,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     private val sendFeatureToggles: SendFeatureToggles,
 ) {
 
@@ -121,13 +123,12 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     ): CryptoCurrencyWarning? {
         val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
         val isNetworkFeeZero = currenciesRepository.isNetworkFeeZero(userWalletId, tokenStatus.currency.network)
-        val isGaslessAvailable = isGaslessAvailable(coinStatus = coinStatus, tokenStatus = tokenStatus)
         return when {
             feePaidCurrency is FeePaidCurrency.Coin &&
                 !tokenStatus.value.amount.isZero() &&
                 coinStatus.value.amount.isZero() &&
                 !isNetworkFeeZero &&
-                !isGaslessAvailable -> {
+                !isGaslessAvailable(coinStatus = coinStatus, tokenStatus = tokenStatus) -> {
                 CryptoCurrencyWarning.BalanceNotEnoughForFee(
                     tokenCurrency = tokenStatus.currency,
                     coinCurrency = coinStatus.currency,
@@ -150,12 +151,17 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
         }
     }
 
-    private fun isGaslessAvailable(coinStatus: CryptoCurrencyStatus, tokenStatus: CryptoCurrencyStatus): Boolean {
+    private suspend fun isGaslessAvailable(
+        coinStatus: CryptoCurrencyStatus,
+        tokenStatus: CryptoCurrencyStatus,
+    ): Boolean {
         if (currencyChecksRepository.isNetworkSupportedForGaslessTx(coinStatus.currency.network)) return true
 
         return sendFeatureToggles.isTronGaslessEnabled &&
-            tokenStatus.currency is CryptoCurrency.Token &&
-            BlockchainUtils.isTron(tokenStatus.currency.network.rawId)
+            isTronGaslessSupportedUseCase.isTokenSupported(
+                network = tokenStatus.currency.network,
+                currency = tokenStatus.currency,
+            )
     }
 
     private fun getUsedOutdatedDataWarning(status: CryptoCurrencyStatus): CryptoCurrencyWarning? {
