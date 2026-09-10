@@ -9,6 +9,7 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -52,6 +53,7 @@ internal object UserWalletsListRepositoryModule {
         dispatchers: CoroutineDispatcherProvider,
         passwordRequester: HotWalletPasswordRequester,
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
         tangemHotSdk: TangemHotSdk,
         trackingContextProxy: TrackingContextProxy,
@@ -105,6 +107,7 @@ internal object UserWalletsListRepositoryModule {
             userWalletEncryptionKeysRepository = userWalletEncryptionKeysRepository,
             tangemSdkManagerProvider = Provider { tangemSdkManager },
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
             hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
             tangemHotSdk = tangemHotSdk,

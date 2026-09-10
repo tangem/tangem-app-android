@@ -77,7 +77,12 @@ internal class ResetCardModelTest {
         model.onBackClick()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceAll(AppRoute.Home(), onComplete = any()) }
+        verify(exactly = 1) {
+            appRouter.replaceAll(
+                AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten),
+                onComplete = any(),
+            )
+        }
         verify(exactly = 0) { appRouter.pop(any()) }
     }
 
