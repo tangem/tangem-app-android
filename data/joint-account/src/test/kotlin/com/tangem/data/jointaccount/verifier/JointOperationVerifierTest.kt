@@ -9,8 +9,8 @@ import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignError.VerificationFailed
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
+import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.SafeAddress
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.models.StatusSource
@@ -24,7 +24,10 @@ import java.math.BigInteger
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationVerifierTest {
 
-    private val verifier = JointOperationVerifier(payloadCodec = DefaultJointTransferPayloadCodec())
+    private val verifier = JointOperationVerifier(
+        payloadCodec = DefaultJointTransferPayloadCodec(),
+        safeAddressCalculator = DefaultSafeAddressCalculator(),
+    )
 
     @Test
     fun `GIVEN operation matching what the user sees WHEN verify THEN the signature is allowed`() = runTest {
@@ -188,7 +191,7 @@ internal class JointOperationVerifierTest {
         const val FOREIGN_SAFE = "0x5afe000000000000000000000000000000000001"
         val AMOUNT: BigInteger = BigInteger("1000000000000000000")
 
-        val COMPUTED_SAFE: String = SafeAddress
+        val COMPUTED_SAFE: String = DefaultSafeAddressCalculator()
             .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = SafeSingleton.SAFE_L2)
             .getOrNull()!!
 
