@@ -12,6 +12,8 @@ internal data class WalletBackupUM(
     val onGoogleDriveClick: () -> Unit,
     val onHardwareWalletClick: () -> Unit,
     val isBackedUp: Boolean,
+    /** Hidden for a social-login wallet, whose seed is already in the cloud under its own key (FR-10) */
+    val isGoogleDriveOptionShown: Boolean = true,
 ) {
 
     val isGoogleDriveEnabled: Boolean get() = googleDriveStatus != BackupStatus.Loading

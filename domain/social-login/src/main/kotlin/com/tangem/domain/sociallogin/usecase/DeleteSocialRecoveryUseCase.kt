@@ -13,12 +13,9 @@ import javax.inject.Inject
  * flag and deletes the cloud file. Used after an upgrade to a hardware wallet, so that the social
  * account can no longer restore the wallet it used to own (FR-16).
  *
- * Unbinding comes first because it is what actually enforces FR-16: without the recovery key the cloud
- * file is unreadable, while deleting the file guarantees nothing on its own — it may already have been
- * copied. It also frees the identity, which FR-14 would otherwise keep occupied by a dead binding, and
- * it does not depend on the cloud being reachable. The flag follows immediately: from that point the
- * wallet is not recoverable and must stop counting as backed up (FR-15). Deleting the leftover file goes
- * last — an encrypted file whose key no longer exists is harmless.
+ * The local flag is cleared first, since it is the one step that can still be taken back. Unbinding is
+ * what enforces FR-16 — it destroys the key — and the file is removed even when that fails, because a
+ * file that is gone cannot be restored from either.
  *
  * Forgetting a wallet does not go through here: it leaves social recovery intact (FR-11).
  */
@@ -28,8 +25,34 @@ class DeleteSocialRecoveryUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(walletId: UserWalletId): Either<SocialLoginError, Unit> = either {
-        socialRecoveryRepository.unbindWallet(walletId).bind()
-        socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = false).bind()
+        // The stored flag, not IsSocialBackupCompletedUseCase: that one reports `false` while the
+        // feature toggle is off, which would skip the teardown and leave the binding alive.
+        val wasCompleted = socialBackupRepository.isSocialBackupCompleted(walletId)
+
+        // Ahead of the destructive part, and the only step allowed to abort it: a flag that cannot be
+        // stored would otherwise survive the key it describes and keep a wallet with no recovery left
+        // counting as backed up. Nothing to outlive anything when it is already false, and insisting on
+        // the write there would only keep a half-registered binding alive over a local storage failure.
+        if (wasCompleted) {
+            socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = false).bind()
+        }
+
+        // Attempted whatever the flag said, because a binding can outlive it — registration stores the
+        // binding first.
+        val unbindError = socialRecoveryRepository.unbindWallet(walletId).fold(ifLeft = { it }, ifRight = { null })
+
+        // The rest is for a wallet that finished its setup: the others were upgrading a wallet social
+        // login never touched, and a failed unbind there says nothing worth failing the upgrade over.
+        if (!wasCompleted) return@either
+
+        // Runs even when the unbind did not: the backend may be unreachable, or its authentication
+        // switched off entirely, and a wallet with no file has nothing left to restore from either.
+        // Deleting authorizes the hidden Drive folder interactively, so an unguarded call would put an
+        // account picker in front of everyone upgrading to a card.
         socialBackupRepository.deleteBackup(walletId).bind()
+
+        // Reported last: the identity keeps a live binding, which the caller has to know about, but not
+        // at the price of the steps above.
+        unbindError?.let { raise(it) }
     }
 }
