@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -34,13 +33,13 @@ import kotlinx.coroutines.launch
  * bucket and discards it. The rail is one batch ([GetMarketsTokenListFlowUseCase.BatchFlowType.Featured])
  * and never pages.
  *
- * Only [RwaListRequest.interval] is read from [request]; the rail deliberately ignores the tab's
+ * The rail follows the tab's trend [interval] and nothing else — it deliberately ignores the applied
  * category/sector filter, which scopes the list below it. A changed interval re-maps the loaded tokens
  * instead of reloading, because a token carries the change percent for every interval at once.
  */
 internal class RwaFeaturedAssetsManager(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
-    private val request: StateFlow<RwaListRequest>,
+    private val interval: StateFlow<RwaInterval>,
     private val appCurrency: StateFlow<AppCurrency>,
     private val onItemClick: (CryptoCurrency.RawID) -> Unit,
     private val modelScope: CoroutineScope,
@@ -58,13 +57,13 @@ internal class RwaFeaturedAssetsManager(
 
     val state: StateFlow<RwaFeaturedUM> = combine(
         flow = batchFlow.state,
-        flow2 = request.map { it.interval }.distinctUntilChanged(),
-    ) { batchState, interval ->
+        flow2 = interval,
+    ) { batchState, currentInterval ->
         val tokens = batchState.data.flatMap { it.data }
 
         when {
             tokens.isNotEmpty() -> RwaFeaturedUM.Content(
-                assets = tokens.map { token -> toFeaturedAsset(token, interval) }.toImmutableList(),
+                assets = tokens.map { token -> toFeaturedAsset(token, currentInterval) }.toImmutableList(),
             )
             batchState.status is PaginationStatus.InitialLoadingError -> RwaFeaturedUM.Empty
             batchState.status is PaginationStatus.EndOfPagination -> RwaFeaturedUM.Empty
@@ -85,7 +84,7 @@ internal class RwaFeaturedAssetsManager(
                     requestParams = TokenMarketListConfig(
                         fiatPriceCurrency = appCurrency.value.code,
                         searchText = null,
-                        priceChangeInterval = request.value.interval.toBatchRequestInterval(),
+                        priceChangeInterval = interval.value.toBatchRequestInterval(),
                         order = TokenMarketListConfig.Order.ByCategory,
                         categoryId = categoryId,
                     ),
@@ -102,8 +101,8 @@ internal class RwaFeaturedAssetsManager(
             .firstOrNull { it.id == id }
     }
 
-    private fun toFeaturedAsset(token: TokenMarket, interval: RwaInterval): RwaFeaturedAssetUM {
-        val changePercent = token.trendChangePercent(interval)
+    private fun toFeaturedAsset(token: TokenMarket, currentInterval: RwaInterval): RwaFeaturedAssetUM {
+        val changePercent = token.trendChangePercent(currentInterval)
 
         return RwaFeaturedAssetUM(
             id = token.id.value,
