@@ -2,7 +2,7 @@ package com.tangem.google.drive.di
 
 import android.content.Context
 import com.tangem.core.local.connection.NetworkConnectionManager
-import com.tangem.google.auth.GoogleAuthorizer
+import com.tangem.google.auth.GoogleIdentityAuthorizer
 import com.tangem.google.drive.AppDataDrive
 import com.tangem.google.drive.DefaultGoogleDriveTokenProvider
 import com.tangem.google.drive.GoogleDriveApi
@@ -55,7 +55,7 @@ internal object GoogleDriveModule {
     @Provides
     @Singleton
     fun provideGoogleDriveTokenProvider(
-        authorizer: GoogleAuthorizer,
+        authorizer: GoogleIdentityAuthorizer,
         api: GoogleDriveApi,
         @ApplicationContext context: Context,
         networkConnectionManager: NetworkConnectionManager,
@@ -73,7 +73,7 @@ internal object GoogleDriveModule {
     @Singleton
     @AppDataDrive
     fun provideAppDataDriveTokenProvider(
-        authorizer: GoogleAuthorizer,
+        authorizer: GoogleIdentityAuthorizer,
         api: GoogleDriveApi,
         @ApplicationContext context: Context,
         networkConnectionManager: NetworkConnectionManager,
