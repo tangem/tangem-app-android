@@ -10,6 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -28,7 +29,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
 import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
-import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
@@ -68,6 +69,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class IntroductionModelTest {
@@ -78,7 +80,7 @@ internal class IntroductionModelTest {
     private val videoPlayerFactory: IntroductionVideoPlayer.Factory = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
-    private val socialLoginFeatureToggles: SocialLoginFeatureToggles = mockk()
+    private val socialLoginHandler: IntroductionSocialLoginHandler = mockk(relaxed = true)
     private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
     private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
@@ -103,7 +105,7 @@ internal class IntroductionModelTest {
             videoPlayerFactory,
             router,
             isHotWalletCreationSupported,
-            socialLoginFeatureToggles,
+            socialLoginHandler,
             hotWalletFeatureToggles,
             resolveCloudRestoreBackups,
             trackingContextProxy,
@@ -118,7 +120,10 @@ internal class IntroductionModelTest {
         coEvery { analyticsRepository.checkIsEventSent(any()) } returns true
         entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
         every { isHotWalletCreationSupported() } returns true
-        every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
+        every { socialLoginHandler.provider } returns SocialLoginProvider.Google
+        every { socialLoginHandler.createWalletOption(any(), any(), any()) } answers {
+            createWalletSocialOption(isEnabled = firstArg(), onPicked = thirdArg())
+        }
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
         sentEvents.clear()
         every { videoPlayer.isMotionEnabled } returns true
@@ -947,17 +952,16 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the options step WHEN sign in picked THEN nothing happens yet`() {
+        fun `GIVEN an available provider WHEN sign in picked THEN social login starts`() {
             // Arrange
             val model = createModel()
             val options = model.openHaveWallet()
 
             // Act
-            // TODO TWI-1555: the row acts once social login lands.
             requireNotNull(options.socialLogin).onClick()
 
             // Assert
-            verify { router wasNot Called }
+            verify(exactly = 1) { socialLoginHandler.start(any(), SocialLoginProvider.Google, any()) }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
 
@@ -1312,9 +1316,10 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN social login disabled WHEN the options open THEN the sign in row is absent`() {
+        fun `GIVEN no available provider WHEN the options open THEN the sign in row is absent`() {
             // Arrange
-            every { socialLoginFeatureToggles.isSocialLoginEnabled } returns false
+            every { socialLoginHandler.provider } returns null
+            every { socialLoginHandler.createWalletOption(any(), any(), any()) } returns null
             val model = createModel()
 
             // Act
@@ -1996,7 +2001,7 @@ internal class IntroductionModelTest {
         entryReasonTracker = entryReasonTracker,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
-        socialLoginFeatureToggles = socialLoginFeatureToggles,
+        socialLoginHandler = socialLoginHandler,
         hotWalletFeatureToggles = hotWalletFeatureToggles,
         resolveCloudRestoreBackups = resolveCloudRestoreBackups,
         trackingContextProxy = trackingContextProxy,
@@ -2007,6 +2012,15 @@ internal class IntroductionModelTest {
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         uiMessageSender = uiMessageSender,
     )
+
+    private fun createWalletSocialOption(isEnabled: Boolean, onPicked: (SocialLoginProvider) -> Unit) =
+        WalletOptionUM(
+            iconRes = CoreUiR.drawable.ic_user_24,
+            title = stringReference("Create with Google"),
+            description = resourceReference(CoreResR.string.introduction_create_wallet_seed_phrase_description),
+            isEnabled = isEnabled,
+            onClick = { onPicked(SocialLoginProvider.Google) },
+        )
 
     private companion object {
         val PLAYBACK_ERROR = IllegalStateException("decoder failed")

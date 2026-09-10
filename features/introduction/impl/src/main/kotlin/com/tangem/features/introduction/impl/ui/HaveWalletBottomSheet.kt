@@ -44,26 +44,35 @@ import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.core.ui.R as CoreUiR
 
+/** `null` while a row of the sheet is still running, so the sheet cannot be closed out from under it */
+private fun closeButton(isBusy: Boolean, onClick: () -> Unit): (@Composable () -> Unit)? {
+    if (isBusy) return null
+    return { TangemButton.Close(onClick = onClick) }
+}
+
 @Composable
 internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
-    val step = (config.content as? HaveWalletUM)?.step
+    val sheet = config.content as? HaveWalletUM
+    val step = sheet?.step
+    val isBusy = sheet?.isBusy == true
 
     TangemModal<HaveWalletUM>(
         config = config,
+        dismissOnClickOutside = !isBusy,
         // Flat card for the same reason as the Create wallet sheet: the glass material would sample the
         // video behind the screen, and a dialog window costs half a second before the sheet can animate.
         isMaterialEnabled = false,
         // The overlay composes in the host, outside this screen's forced palette, so the modal forces its own.
         forceDarkTheme = true,
         containerColor = TangemTheme.colors3.bg.secondary,
-        // Back steps inside the sheet; on the first step it falls through to dismissing it.
-        onBack = (step as? HaveWalletUM.Step.Import)?.onBack,
+        // Back steps inside the sheet; on the first step it dismisses, unless a row is still running.
+        onBack = (step as? HaveWalletUM.Step.Import)?.onBack ?: {}.takeIf { isBusy },
         title = { content ->
             TangemModal.TopNavigation(
                 startButton = (content.step as? HaveWalletUM.Step.Import)?.onBack?.let {
                     { TangemButton.Back(onClick = it) }
                 },
-                endButton = { TangemButton.Close(onClick = content.onCloseClick) },
+                endButton = closeButton(isBusy = isBusy, onClick = content.onCloseClick),
                 contentColumn = { StepTitle(step = content.step) },
             )
         },
