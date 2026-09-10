@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -545,13 +546,15 @@ internal class DefaultCloudBackupRepositoryTest {
     @Test
     fun `GIVEN backup without createdAt appProperty WHEN findBackups THEN createdAtMillis from createdTime`() = runTest {
         // Arrange
+        val createdTime = "2024-01-15T10:30:00Z"
         coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
             DriveFileListResponse(
                 files = listOf(
                     DriveFile(
                         id = "f1",
                         name = "Wallet.backup.json",
-                        appProperties = mapOf("walletId" to "w1", "createdAt" to "1705314600000"),
+                        createdTime = createdTime,
+                        appProperties = mapOf("walletId" to "w1"),
                     ),
                 ),
             ),
@@ -561,7 +564,8 @@ internal class DefaultCloudBackupRepositoryTest {
         val result = repository.findBackups(interactive = false)
 
         // Assert
-        assertThat(result.getOrNull()?.single()?.createdAtMillis).isEqualTo(1_705_314_600_000L)
+        assertThat(result.getOrNull()?.single()?.createdAtMillis)
+            .isEqualTo(Instant.parse(createdTime).toEpochMilliseconds())
     }
 
     @Test
