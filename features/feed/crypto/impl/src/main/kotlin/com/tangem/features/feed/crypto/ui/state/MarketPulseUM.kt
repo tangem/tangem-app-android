@@ -5,10 +5,11 @@ import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
 import kotlinx.collections.immutable.ImmutableList
 
 /** UI model of the crypto feed tab: the Total market cap block and the Market Pulse list. */
@@ -80,9 +81,8 @@ internal data class MarketPulseUM(
     val title: TextReference,
     val categoriesFilter: TangemFilterItemUM?,
     val intervalMenu: MarketPulseIntervalUM,
-    val categories: ImmutableList<MarketPulseCategoryUM>,
-    val selectedCategoryIndex: Int,
-    val onCategorySelect: (Int) -> Unit,
+    /** Sort tabs. Not to be confused with [categoriesFilter], which scopes the list to a Gecko category. */
+    val sortTabs: ImmutableList<TangemTabItemUM>,
     val list: MarketPulseListUM,
     val onVisibleItemsChange: (List<String>) -> Unit,
 )
@@ -91,12 +91,6 @@ internal data class MarketPulseUM(
 internal data class MarketPulseIntervalUM(
     val selected: MarketPulseInterval,
     val onOptionClick: (MarketPulseInterval) -> Unit,
-)
-
-@Immutable
-internal data class MarketPulseCategoryUM(
-    val id: String,
-    val title: TextReference,
 )
 
 /** State of the Market Pulse markets list. */

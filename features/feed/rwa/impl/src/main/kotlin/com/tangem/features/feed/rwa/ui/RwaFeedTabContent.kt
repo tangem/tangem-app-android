@@ -5,14 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,12 +25,16 @@ import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -39,11 +42,12 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.model.list.RwaInterval
-import com.tangem.features.feed.rwa.model.list.RwaSort
 import com.tangem.features.feed.rwa.ui.state.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -74,11 +78,11 @@ internal fun RwaFeedTabContent(
             item(key = "featuredHeader") {
                 SectionTitle(
                     title = resourceReference(R.string.markets_real_assets_featured_assets),
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
             }
             item(key = "featuredAssets") {
-                FeaturedAssets(state = state.featured, modifier = Modifier.padding(bottom = 40.dp))
+                FeaturedAssets(state = state.featured, modifier = Modifier.padding(bottom = 48.dp))
             }
         }
         item(key = "listHeader") {
@@ -89,11 +93,11 @@ internal fun RwaFeedTabContent(
         item(key = "listFilters") {
             ListFilters(state = state)
         }
-        item(key = "listTags") {
-            TagPills(
-                tags = state.tags,
-                selectedIndex = state.selectedTagIndex,
-                onSelect = state.onTagSelect,
+        item(key = "listSortTabs") {
+            TangemTabNavigation(
+                tabs = state.sortTabs,
+                variant = TangemTabItem.Variant.Transparent,
+                modifier = Modifier.padding(bottom = 16.dp),
             )
         }
         listItems(list = state.list)
@@ -141,7 +145,7 @@ private fun SectionTitle(title: TextReference, modifier: Modifier = Modifier) {
         color = TangemTheme.colors3.text.primary,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp),
     )
 }
 
@@ -284,53 +288,45 @@ private fun ListFilters(state: RwaFeedTabUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TangemFilterItem(state = state.categoriesFilter)
-        TangemSegmentedControl(state = state.interval)
+        TangemFilterItem(
+            state = state.categoriesFilter,
+            variant = TangemFilterItem.Variant.Transparent,
+            modifier = Modifier.weight(weight = 1f, fill = false),
+        )
+        SpacerW(8.dp)
+        IntervalFilter(interval = state.interval)
     }
 }
 
 @Composable
-private fun TagPills(
-    tags: ImmutableList<RwaTagUM>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
-    ) {
-        itemsIndexed(items = tags, key = { _, tag -> tag.id }) { index, tag ->
-            TagPill(
-                tag = tag,
-                isSelected = index == selectedIndex,
-                onClick = { onSelect(index) },
-            )
-        }
-    }
-}
+private fun IntervalFilter(interval: RwaIntervalUM, modifier: Modifier = Modifier) {
+    var isMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    val hapticManager = LocalHapticManager.current
 
-@Composable
-private fun TagPill(tag: RwaTagUM, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .heightIn(min = 36.dp)
-            .clip(CircleShape)
-            .background(color = if (isSelected) TangemTheme.colors3.bg.tertiary else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = tag.title.resolveReference(),
-            style = TangemTheme.typography3.subheading.medium,
-            color = if (isSelected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
-            maxLines = 1,
+    Box(modifier = modifier) {
+        TangemFilterItem(
+            variant = TangemFilterItem.Variant.Transparent,
+            // always Inactive: the chip shows the current value with a chevron, never a clear cross
+            state = TangemFilterItemUM.Inactive(
+                id = "interval",
+                label = interval.selected.title,
+                onClick = {
+                    hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                    isMenuExpanded = true
+                },
+            ),
+        )
+        RwaIntervalMenu(
+            um = interval,
+            expanded = isMenuExpanded,
+            onDismiss = { isMenuExpanded = false },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .hazeEffectTangem { blurRadius = 10.dp },
         )
     }
 }
@@ -406,19 +402,17 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
             onClick = {},
             onClearClick = {},
         ),
-        interval = TangemSegmentedControl.State.Content(
-            items = persistentListOf(
-                TangemSegmentedControl.Item(id = "H24", label = stringReference("Day"), isSelected = true) {},
-                TangemSegmentedControl.Item(id = "D7", label = stringReference("Week")) {},
-                TangemSegmentedControl.Item(id = "M1", label = stringReference("Month")) {},
+        interval = RwaIntervalUM(selected = RwaInterval.H24, onOptionClick = {}),
+        sortTabs = persistentListOf(
+            TangemTabItemUM.Content(
+                id = "market_cap",
+                label = stringReference("Market cap"),
+                isSelected = true,
+                onClick = {},
             ),
+            TangemTabItemUM.Content(id = "top_gainers", label = stringReference("Top gainers"), onClick = {}),
+            TangemTabItemUM.Content(id = "top_losers", label = stringReference("Top losers"), onClick = {}),
         ),
-        tags = persistentListOf(
-            RwaTagUM(id = "market_cap", title = stringReference("Market cap")),
-            RwaTagUM(id = "top_gainers", title = stringReference("Top gainers")),
-            RwaTagUM(id = "top_losers", title = stringReference("Top losers")),
-        ),
-        onTagSelect = {},
         onVisibleItemsChange = {},
         list = RwaListUM.Content(
             items = persistentListOf(
@@ -443,8 +437,6 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
             ),
             loadMore = {},
         ),
-        selectedInterval = RwaInterval.H24,
-        selectedSort = RwaSort.MarketCap,
         appliedSelection = CategorySelection(
             category = CategorySelection.Entry(id = "rwa_categories", displayName = "Stocks"),
         ),
