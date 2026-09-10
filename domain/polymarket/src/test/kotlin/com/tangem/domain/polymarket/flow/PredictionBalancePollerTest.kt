@@ -1,5 +1,6 @@
 package com.tangem.domain.polymarket.flow
 
+import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
@@ -9,6 +10,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -127,6 +130,52 @@ internal class PredictionBalancePollerTest {
 
         first.cancel()
         second.cancel()
+        runCurrent()
+    }
+
+    @Test
+    fun `GIVEN loop died on a throwing refresh WHEN a new subscriber arrives THEN a fresh loop starts`() = runTest {
+        // Arrange
+        coEvery { refresher.refresh(WALLET_ID) } throws IllegalStateException("boom") andThen Unit.right()
+        val poller = PredictionBalancePoller(
+            refresher = refresher,
+            config = config,
+            appScope = TestAppCoroutineScope(
+                coroutineContext = StandardTestDispatcher(testScheduler) +
+                    SupervisorJob() +
+                    CoroutineExceptionHandler { _, _ -> },
+            ),
+        )
+
+        // Act
+        val first = poller.subscribe(WALLET_ID).launchIn(this)
+        runCurrent()
+        val second = poller.subscribe(WALLET_ID).launchIn(this)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { refresher.refresh(WALLET_ID) }
+
+        first.cancel()
+        second.cancel()
+        runCurrent()
+    }
+
+    @Test
+    fun `GIVEN refresh returns a Left WHEN interval passes THEN the loop keeps ticking`() = runTest {
+        // Arrange
+        coEvery { refresher.refresh(WALLET_ID) } returns IllegalStateException("x").left()
+        val poller = createPoller()
+
+        // Act
+        val subscription = poller.subscribe(WALLET_ID).launchIn(this)
+        advanceTimeBy(30.seconds)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { refresher.refresh(WALLET_ID) }
+
+        subscription.cancel()
         runCurrent()
     }
 
