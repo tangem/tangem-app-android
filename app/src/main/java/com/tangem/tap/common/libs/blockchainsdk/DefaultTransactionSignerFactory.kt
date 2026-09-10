@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.common.core.CardSession
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.analytics.store.LastSignedWalletFormStore
 import com.tangem.data.card.TransactionSignerFactory
@@ -28,15 +29,18 @@ internal class DefaultTransactionSignerFactory(
         sdk: TangemSdk,
         twinKey: TwinKey?,
         userWalletId: UserWalletId,
+        session: CardSession?,
     ): TransactionSigner {
         return TangemSigner(
             cardId = cardId,
             tangemSdk = sdk,
             initialMessage = Message(),
             twinKey = twinKey,
-        ) { signResponse ->
-            onSignerResponse(userWalletId, signResponse)
-        }
+            signerCallback = { signResponse ->
+                onSignerResponse(userWalletId, signResponse)
+            },
+            session = session,
+        )
     }
 
     @VisibleForTesting
