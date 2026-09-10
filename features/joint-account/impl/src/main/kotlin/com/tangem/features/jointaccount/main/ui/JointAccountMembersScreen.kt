@@ -256,6 +256,7 @@ private fun ShareSafelyBanner(state: JointAccountMembersUM.ShareSafelyUM, modifi
 private fun JoinedMemberRow(member: MemberUM.Joined, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier.jointAccountCard(),
+        onClick = member.onInfoClick,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
