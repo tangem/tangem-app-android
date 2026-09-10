@@ -60,7 +60,7 @@ internal class SafeTxTypedDataBuilderTest {
         val safeTx = nativeTransfer().copy(
             to = TOKEN_ADDRESS,
             value = BigInteger.ZERO,
-            data = Erc20TransferEncoder.encodeTransfer(recipient = RECIPIENT, amount = BigInteger("2500000")),
+            data = "0xa9059cbb" + "0".repeat(n = 24) + RECIPIENT.removePrefix(prefix = "0x") + "0".repeat(n = 64),
         )
 
         // Act
