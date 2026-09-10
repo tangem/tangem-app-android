@@ -1,9 +1,11 @@
-package com.tangem.domain.jointaccount.safe
+package com.tangem.data.jointaccount.safe
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.network.JointNetworkReader
+import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
+import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -24,7 +26,7 @@ internal class SafeCompositionCheckerTest {
     private val network: Network = mockk()
     private val userWalletId = UserWalletId("0011223344556677")
 
-    private val checker = SafeCompositionChecker(networkReader = networkReader)
+    private val checker = SafeCompositionChecker(networkReader = networkReader, safeAddressCalculator = DefaultSafeAddressCalculator())
 
     @ParameterizedTest
     @ProvideTestModels
@@ -214,7 +216,7 @@ internal class SafeCompositionCheckerTest {
         const val GET_OWNERS_SELECTOR = "0xa0e67e2b"
         const val GET_THRESHOLD_SELECTOR = "0xe75235b8"
 
-        val COMPUTED_SAFE: String = SafeAddress
+        val COMPUTED_SAFE: String = DefaultSafeAddressCalculator()
             .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = SafeSingleton.SAFE_L2)
             .getOrNull()!!
     }
