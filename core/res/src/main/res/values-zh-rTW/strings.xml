@@ -625,15 +625,15 @@
   <string name="tangempay_newonboard_title">取得你的 Tangem Pay 卡</string>
   <string name="tangempay_newonboard_topleft_body">看多少，付多少</string>
   <string name="tangempay_newonboard_topleft_title">消費零手續費，\n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">以 USDC 發放，不是冷門代幣</string>
-  <string name="tangempay_newonboard_topright_title">最高 2% 現金回饋</string>
+  <string name="tangempay_newonboard_topright_body">沒有隱藏費用</string>
+  <string name="tangempay_newonboard_topright_title">月費 0 美元，\n儲值費 0 美元</string>
   <string name="tangempay_onboarding_banner_description">免費 Tangem Pay 卡，享最高 2% 回饋</string>
   <string name="tangempay_onboarding_banner_title">在現實生活中隨心消費加密資產</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
   <string name="tangempay_onboarding_pay_description">數位卡支援 Apple Pay 或 Google Pay，消費免手續費</string>
   <string name="tangempay_onboarding_pay_title">在任何地方花费您的资产</string>
-  <string name="tangempay_onboarding_purchases_description">所有消費皆有回饋，以 USDC 發放，無積分或冷門代幣</string>
-  <string name="tangempay_onboarding_purchases_title">最高 2% 現金回饋</string>
+  <string name="tangempay_onboarding_purchases_description">購物無額外費用</string>
+  <string name="tangempay_onboarding_purchases_title">所見即所付</string>
   <string name="tangempay_onboarding_security_description">將創建單獨的支付帳戶，且不會透露您的地址和資產</string>
   <string name="tangempay_onboarding_security_title">無與倫比的隱私</string>
   <string name="tangempay_onboarding_setup_wallet_description">並將 Tangem Pay 綁定到該錢包</string>
