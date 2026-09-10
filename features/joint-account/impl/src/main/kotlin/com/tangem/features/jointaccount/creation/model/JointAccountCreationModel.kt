@@ -86,8 +86,12 @@ internal class JointAccountCreationModel @Inject constructor(
         }
     }
 
+    /** The wallet stays under the members screen, so closing it lands on the wallet instead of leaving the app */
     private fun openMembers(userWalletId: UserWalletId, cryptoAccountId: String) {
-        router.replaceAll(AppRoute.JointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId))
+        router.replaceAll(
+            AppRoute.Wallet,
+            AppRoute.JointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId),
+        )
     }
 
     private fun showError() {
