@@ -58,7 +58,7 @@ internal class FeedHomeComponent(
     private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
 
     private val tabs: ImmutableList<FeedTabUM> = contributors
-        .map { FeedTabUM(id = it.id.value, title = it.title) }
+        .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
 
     private val pagesNavigation = PagesNavigation<FeedTabId>()
