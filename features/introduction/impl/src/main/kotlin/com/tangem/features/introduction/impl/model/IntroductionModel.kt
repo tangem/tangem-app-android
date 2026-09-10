@@ -64,6 +64,7 @@ internal class IntroductionModel @Inject constructor(
     private val cardScanner: IntroductionCardScanner,
     private val mobileWalletCreator: IntroductionMobileWalletCreator,
     private val referral: IntroductionReferral,
+    private val legalLinks: IntroductionLegalLinks,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host {
@@ -110,8 +111,8 @@ internal class IntroductionModel @Inject constructor(
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
-                onTermsOfServiceClick = ::onTermsOfServiceClick,
-                onPrivacyPolicyClick = ::onPrivacyPolicyClick,
+                onTermsOfServiceClick = legalLinks::openTermsOfService,
+                onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
             ),
         )
 
@@ -140,17 +141,19 @@ internal class IntroductionModel @Inject constructor(
         uiState.update { it.copy(isVideoReady = true) }
     }
 
-    override fun onError() {
+    override fun onError(error: Throwable) {
         val stage = if (hasRenderedFrame) {
             IntroductionProcess.WelcomeMediaError.Stage.Playback
         } else {
             IntroductionProcess.WelcomeMediaError.Stage.Load
         }
         analyticsEventHandler.send(IntroductionProcess.WelcomeMediaError(stage))
-        // Errors arrive asynchronously, so one can land after the surface is gone; lifting the shutter then
-        // would uncover a blank surface on the way back.
-        val isSurfaceAttached = videoPlayer.isSurfaceAttached
-        uiState.update { it.copy(isVideoFailed = true, isVideoReady = it.isVideoReady || isSurfaceAttached) }
+        TangemLogger.e("Welcome background video failed at the ${stage.value} stage", error)
+        // The SurfaceView punches a hole through the window (see IntroductionScreen), so the shutter may only
+        // lift over a surface that already holds a frame: a failure before the first one, or one landing after
+        // the surface is gone, would uncover a blank hole instead of the design's background.
+        val canUncoverSurface = hasRenderedFrame && videoPlayer.isSurfaceAttached
+        uiState.update { it.copy(isVideoFailed = true, isVideoReady = it.isVideoReady || canUncoverSurface) }
     }
 
     fun videoPositionMs(): Long = videoPlayer.positionMs
@@ -266,10 +269,15 @@ internal class IntroductionModel @Inject constructor(
             // A looping story reports neither on its own; both mean the viewer left it alone.
             StoriesV2Result.Dismissed,
             StoriesV2Result.Completed,
-            is StoriesV2Result.Unavailable,
             -> {
                 pendingScanStoryAction = null
                 closeStory()
+            }
+            // Nothing to show, so the tap that opened it must still do what its scan slide would have, the way
+            // iOS does — otherwise the card row answers a tap with a blank flash.
+            is StoriesV2Result.Unavailable -> {
+                closeStory()
+                startCardScan(action = null)
             }
             // A scan that navigated away is covered by the next screen: tearing the player down now would flash
             // the welcome screen behind the closing NFC sheet, so that teardown waits for the next resume.
@@ -313,7 +321,8 @@ internal class IntroductionModel @Inject constructor(
         }
     }
 
-    private fun startCardScan(action: StoriesV2PendingAction) {
+    /** [action] is `null` when no story is left to settle around the scan. */
+    private fun startCardScan(action: StoriesV2PendingAction?) {
         pendingScanStoryAction = action
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
         launchCardScan(onNavigatedAway = ::onScanNavigatedAway, onFailed = ::onScanFailed)
@@ -411,24 +420,9 @@ internal class IntroductionModel @Inject constructor(
         return false
     }
 
-    private fun onTermsOfServiceClick() {
-        openLegalDocument(IntroductionProcess.LegalOpened.Document.TermsOfService, TERMS_OF_SERVICE_URL)
-    }
-
-    private fun onPrivacyPolicyClick() {
-        openLegalDocument(IntroductionProcess.LegalOpened.Document.PrivacyPolicy, PRIVACY_POLICY_URL)
-    }
-
-    private fun openLegalDocument(document: IntroductionProcess.LegalOpened.Document, url: String) {
-        analyticsEventHandler.send(IntroductionProcess.LegalOpened(document))
-        urlOpener.openUrl(url)
-    }
-
     private companion object {
         // Declared by the bundled composition in BundledStoryV2ContentSource; a remote one must reuse them.
         const val LEARN_MORE_ACTION_ID = "learn_more"
         const val SCAN_WALLET_ACTION_ID = "scan_wallet"
-        const val TERMS_OF_SERVICE_URL = "https://tangem.com/terms-of-service/"
-        const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy/"
     }
 }
