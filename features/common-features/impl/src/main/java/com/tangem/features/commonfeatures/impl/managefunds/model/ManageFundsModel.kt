@@ -251,7 +251,7 @@ internal class ManageFundsModel @Inject constructor(
                 .first()
                 .firstOrNull { it.userWalletId == mode.userWalletId }
                 ?.accountStatuses
-                ?.filterIsInstance<AccountStatus.Personal>()
+                ?.filterIsInstance<AccountStatus.CryptoPortfolio>()
                 ?.firstNotNullOfOrNull { accountStatus ->
                     accountStatus.tokenList.flattenCurrencies()
                         .firstOrNull { it.currency.id == mode.currency.id }

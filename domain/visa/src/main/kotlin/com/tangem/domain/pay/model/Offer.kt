@@ -24,6 +24,8 @@ data class Offer(
 
     val isPlasticReissue: Boolean get() = type == Type.CARD_REISSUE_PLASTIC_RAIN
 
+    val isDeeplink: Boolean get() = type == Type.CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK
+
     data class Data(
         val specificationName: String?,
         val orderType: OrderType,
@@ -37,6 +39,7 @@ data class Offer(
         CARD_ISSUE_VIRTUAL_RAIN("CARD_ISSUE_VIRTUAL_RAIN"),
         CARD_ISSUE_PLASTIC_RAIN("CARD_ISSUE_PLASTIC_RAIN"),
         CARD_REISSUE_PLASTIC_RAIN("CARD_REISSUE_PLASTIC_RAIN"),
+        CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK("CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK"),
         UNKNOWN(""),
         ;
 
@@ -60,3 +63,5 @@ fun List<Offer>.plasticOffer(): Offer? = firstOrNull(Offer::isPlastic)
 fun List<Offer>.virtualOffer(): Offer? = firstOrNull(Offer::isVirtual)
 
 fun List<Offer>.plasticReissueOffer(): Offer? = firstOrNull(Offer::isPlasticReissue)
+
+fun List<Offer>.deeplinkOffer(): Offer? = firstOrNull(Offer::isDeeplink)

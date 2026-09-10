@@ -5,4 +5,9 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 internal data class CreateWalletUM(
     val cardOrRing: WalletOptionUM,
     val seedPhrase: WalletOptionUM,
-) : TangemBottomSheetConfigContent
+    val onCloseClick: () -> Unit,
+) : TangemBottomSheetConfigContent {
+
+    val isCreatingWallet: Boolean
+        get() = seedPhrase.isLoading
+}
