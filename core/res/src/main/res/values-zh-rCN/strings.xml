@@ -411,12 +411,14 @@
     <item>12月</item>
   </string-array>
   <string name="common_more">更多的</string>
+  <string name="common_negative">负面</string>
   <string name="common_network">网络</string>
   <string name="common_network_fee_title">网络费用</string>
   <string name="common_network_fee_warning_content">汇款金额将减少 %1$s （%2$s）以支付所选费用等级</string>
   <plurals name="common_networks_count">
     <item quantity="other">%d网络</item>
   </plurals>
+  <string name="common_neutral">中性</string>
   <string name="common_new_address">新地址</string>
   <string name="common_news">新闻</string>
   <string name="common_next">下一个</string>
@@ -435,8 +437,10 @@
   <string name="common_or">或者</string>
   <string name="common_origin_card">主卡</string>
   <string name="common_origin_ring">主指环</string>
+  <string name="common_other">其他</string>
   <string name="common_passphrase">密码短语</string>
   <string name="common_paste">粘贴</string>
+  <string name="common_positive">正面</string>
   <string name="common_privacy_policy">隐私政策</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -459,6 +463,7 @@
   <string name="common_second_no_param">秒</string>
   <string name="common_see_all">查看全部</string>
   <string name="common_seed_phrase">助记词</string>
+  <string name="common_select_account">选择账户</string>
   <string name="common_select_action">选择操作</string>
   <string name="common_sell">出售</string>
   <string name="common_send">发送</string>
@@ -831,6 +836,7 @@
   <string name="hw_cloud_backup_confirm_password_description">在 %s上，需要输入密码才能对您的种子助记词进行加密。</string>
   <string name="hw_cloud_backup_confirm_password_title">确认密码</string>
   <string name="hw_cloud_backup_consent">我明白Tangem无法恢复我的备份密码。一旦丢失该密码或Apple ID，我的备份就无法恢复了。如果没有我的恢复短语，我的加密资产也无法恢复。</string>
+  <string name="hw_cloud_backup_consent_v2">我明白 Tangem 无法恢复我的备份密码。一旦丢失该密码或 %1s，我的备份就无法恢复了。如果没有我的恢复短语，我的加密资产也无法恢复。</string>
   <string name="hw_cloud_backup_delete_confirm_message">您将无法通过 %s恢复此钱包。您可以随时创建新的备份。</string>
   <string name="hw_cloud_backup_error_network">没有互联网连接。请检查网络连接，然后重试。</string>
   <string name="hw_cloud_backup_error_title">出现了一些问题</string>
@@ -991,6 +997,10 @@
   <string name="manage_tokens_unavailable_description">所选代币目前无法在加密钱包中进行操作。不过别担心，您可以点赞来表达您的兴趣。</string>
   <string name="manage_tokens_unavailable_vote">点赞</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">该钱包不支持多个网络</string>
+  <string name="market_chart_bubble_no_amount">无代币 \n/ 资产价值</string>
+  <string name="market_chart_bubble_total_value">总价值</string>
+  <string name="market_chart_can_not_load_data">无法加载数据</string>
+  <string name="market_chart_no_amount">没有代币，或无法确定其价值</string>
   <string name="market_chart_top_holding">最大持有占比 %s</string>
   <string name="markets_about_coin_header">关于硬币</string>
   <string name="markets_add_to_my_portfolio_description">要购买、交换或接收此资产，请将其添加到您的投资组合中。</string>
@@ -2154,15 +2164,15 @@
   <string name="tangempay_newonboard_title">获取你的 Tangem Pay 卡</string>
   <string name="tangempay_newonboard_topleft_body">看多少，付多少</string>
   <string name="tangempay_newonboard_topleft_title">无消费手续费，\n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">以 USDC 发放，不是冷门代币 </string>
-  <string name="tangempay_newonboard_topright_title">最高 2% 返现</string>
+  <string name="tangempay_newonboard_topright_body">没有隐藏费用</string>
+  <string name="tangempay_newonboard_topright_title">月费 0 美元，\n充值费 0 美元</string>
   <string name="tangempay_onboarding_banner_description">免费 Tangem Pay 卡，享最高 2% 返现</string>
   <string name="tangempay_onboarding_banner_title">在现实生活中随心消费加密资产</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
-  <string name="tangempay_onboarding_pay_description">数字卡支持 Apple Pay 或 Google Pay，消费免手续费</string>
+  <string name="tangempay_onboarding_pay_description">数字卡可与 Apple Pay 和 Google Pay 一起使用</string>
   <string name="tangempay_onboarding_pay_title">随意支配您的资产</string>
-  <string name="tangempay_onboarding_purchases_description">所有消费返现，以 USDC 发放，无积分或冷门代币</string>
-  <string name="tangempay_onboarding_purchases_title">最高 2% 返现</string>
+  <string name="tangempay_onboarding_purchases_description">购买无需支付任何额外费用</string>
+  <string name="tangempay_onboarding_purchases_title">实际支付金额与所示金额一致</string>
   <string name="tangempay_onboarding_security_description">将在不透露您的地址和资产的情况下创建一个单独的付款账户</string>
   <string name="tangempay_onboarding_security_title">无与伦比的隐私保护</string>
   <string name="tangempay_onboarding_setup_wallet_description">并将 Tangem Pay 绑定到该钱包</string>
