@@ -82,4 +82,17 @@ interface TangemTechMarketsApi {
         @Query("featured") featured: Boolean? = null,
         @Query("search") search: String? = null,
     ): ApiResponse<MarketCategoriesResponse>
+
+    /**
+     * Returns the global market indicators of the "Total market cap" block: total capitalisation
+     * with its 24h change, the Fear & Greed index and the Altcoin Season index.
+     *
+     * Takes no parameters — the capitalisation is always in USD and the index labels are localised
+     * by the backend.
+     */
+    @GET("api/v1/market-indicators")
+    suspend fun getMarketIndicators(
+        @Query("currency") currency: String,
+        @Query("language") language: String,
+    ): ApiResponse<MarketIndicatorsResponse>
 }
