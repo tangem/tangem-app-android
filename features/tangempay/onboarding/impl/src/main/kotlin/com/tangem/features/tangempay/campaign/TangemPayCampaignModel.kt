@@ -27,7 +27,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
-import com.tangem.features.tangempay.components.WalletSelectorListener
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -53,7 +53,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val onboardingStarter: TangemPayOnboardingStarter,
-) : Model(), WalletSelectorListener {
+) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayCampaignComponent.Params>()
 
