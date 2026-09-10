@@ -19,6 +19,9 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
+import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
+import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoiceConfig
+import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoices
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
@@ -81,8 +84,20 @@ internal class TangemPayBankWithdrawComponent(
                 },
             ),
         )
-        TangemPayBankWithdrawInnerRoute.TransferType,
-        TangemPayBankWithdrawInnerRoute.AccountType,
+        TangemPayBankWithdrawInnerRoute.TransferType -> choiceChild(
+            step = config,
+            componentContext = componentContext,
+            choice = BankWithdrawChoices.transferType(isThirdParty = model.draft.value.newRecipient.isThirdParty),
+            onSelected = { selectedId ->
+                model.onTransferTypeSelected(isThirdParty = BankWithdrawChoices.isThirdParty(selectedId))
+            },
+        )
+        TangemPayBankWithdrawInnerRoute.AccountType -> choiceChild(
+            step = config,
+            componentContext = componentContext,
+            choice = BankWithdrawChoices.accountType(selected = model.draft.value.newRecipient.accountType),
+            onSelected = { selectedId -> model.onAccountTypeSelected(BankWithdrawChoices.accountTypeOf(selectedId)) },
+        )
         TangemPayBankWithdrawInnerRoute.RecipientDetails,
         TangemPayBankWithdrawInnerRoute.BankDetails,
         TangemPayBankWithdrawInnerRoute.Preview,
@@ -91,6 +106,24 @@ internal class TangemPayBankWithdrawComponent(
             params = TangemPayBankWithdrawStepStubComponent.Params(draft = model.draft, step = config),
         )
     }
+
+    private fun choiceChild(
+        step: TangemPayBankWithdrawInnerRoute,
+        componentContext: ComponentContext,
+        choice: BankWithdrawChoiceConfig,
+        onSelected: (selectedId: String) -> Unit,
+    ): ComposableContentComponent = TangemPayBankWithdrawChoiceComponent(
+        appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        params = TangemPayBankWithdrawChoiceComponent.Params(
+            draft = model.draft,
+            step = step,
+            config = choice,
+            onContinue = { selectedId ->
+                onSelected(selectedId)
+                pushNext(from = step)
+            },
+        ),
+    )
 
     private fun pushNext(from: TangemPayBankWithdrawInnerRoute) {
         val next = BankWithdrawFlow.nextStep(entry = params.entry, current = from) ?: return
