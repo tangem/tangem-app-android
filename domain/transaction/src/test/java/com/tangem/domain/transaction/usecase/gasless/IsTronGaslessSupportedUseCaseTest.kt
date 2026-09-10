@@ -26,6 +26,7 @@ internal class IsTronGaslessSupportedUseCaseTest {
     private val usdtContract = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
     private val usdtToken = factory.createToken(blockchain = Blockchain.Tron, contractAddress = usdtContract)
     private val tronCoin = factory.createCoin(blockchain = Blockchain.Tron)
+    private val ethereumToken = factory.createToken(blockchain = Blockchain.Ethereum, contractAddress = usdtContract)
     private val usdt = TronGaslessToken(contractAddress = usdtContract, symbol = "USDT", decimals = 6)
 
     @BeforeEach
@@ -81,5 +82,40 @@ internal class IsTronGaslessSupportedUseCaseTest {
 
         // Assert
         assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `GIVEN supported token WHEN isTokenSupported THEN true without asking for activation`() = runTest {
+        // Arrange
+        coEvery { repository.getSupportedTokens() } returns listOf(usdt)
+
+        // Act
+        val result = useCase.isTokenSupported(network = usdtToken.network, currency = usdtToken)
+
+        // Assert
+        assertThat(result).isTrue()
+        coVerify(exactly = 0) { walletManagersFacade.isTronAccountActivated(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN supported list lacks token WHEN isTokenSupported THEN false`() = runTest {
+        // Arrange
+        coEvery { repository.getSupportedTokens() } returns emptyList()
+
+        // Act
+        val result = useCase.isTokenSupported(network = usdtToken.network, currency = usdtToken)
+
+        // Assert
+        assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `GIVEN token on another blockchain WHEN isTokenSupported THEN false and backend is not queried`() = runTest {
+        // Act
+        val result = useCase.isTokenSupported(network = ethereumToken.network, currency = ethereumToken)
+
+        // Assert
+        assertThat(result).isFalse()
+        coVerify(exactly = 0) { repository.getSupportedTokens() }
     }
 }

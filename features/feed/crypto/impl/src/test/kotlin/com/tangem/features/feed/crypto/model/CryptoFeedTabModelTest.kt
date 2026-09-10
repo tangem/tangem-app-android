@@ -22,6 +22,7 @@ import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.impl.R
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.features.feed.crypto.model.entity.FeedCryptoTabBottomSheetConfig
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopGainers
@@ -243,7 +244,7 @@ internal class CryptoFeedTabModelTest {
         // Arrange — every other order ranks by the interval, so the backend has to re-rank
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.uiState.value.marketPulse.onCategorySelect(MarketPulseCategory.entries.indexOf(TopGainers))
+        model.sortTab(TopGainers).onClick()
         advanceUntilIdle()
         val reloadsBefore = actions.reloadCount()
 
@@ -420,6 +421,14 @@ internal class CryptoFeedTabModelTest {
     private fun CryptoFeedTabModel.chip(): TangemFilterItemUM? = uiState.value.marketPulse.categoriesFilter
 
     private fun CryptoFeedTabModel.intervalMenu(): MarketPulseIntervalUM = uiState.value.marketPulse.intervalMenu
+
+    /** The tab carries its own `onClick`, so the enum's id is the only bridge from a sort to its tab. */
+    private fun CryptoFeedTabModel.sortTab(category: MarketPulseCategory): TangemTabItemUM.Content = uiState
+        .value
+        .marketPulse
+        .sortTabs
+        .filterIsInstance<TangemTabItemUM.Content>()
+        .first { it.id == category.id }
 
     private fun List<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>.reloadCount() =
         count { it is BatchAction.Reload<*> }

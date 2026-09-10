@@ -17,6 +17,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
@@ -26,6 +27,9 @@ import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
@@ -73,6 +77,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
+import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -84,6 +89,8 @@ internal class PolymarketMainModelTest {
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
     private val getEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
+    private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
+    private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -103,6 +110,11 @@ internal class PolymarketMainModelTest {
         mutableListOf<MutableList<BatchAction<Int, PolymarketEventsListConfig, PolymarketEventsUpdateRequest>>>()
 
     private var model: PolymarketMainModel? = null
+
+    @BeforeEach
+    fun allowTradingByDefault() {
+        coEvery { checkGeoblock() } returns false.right()
+    }
 
     init {
         coEvery { getCategoriesUseCase() } returns categories().right()
@@ -553,6 +565,56 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN a blocked region WHEN the screen opens THEN add funds is disabled`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns true.right()
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
+        coVerify(exactly = 1) { checkGeoblock() }
+    }
+
+    @Test
+    fun `GIVEN the region cannot be read WHEN the screen opens THEN add funds stays available`() = runTest {
+        // Arrange
+        coEvery { checkGeoblock() } returns PolymarketOnboardingError.Network.left()
+        statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the region turned blocked WHEN pulled to refresh THEN the gate closes AND the account is refetched`() =
+        runTest {
+            // Arrange
+            statusFlow.value = activeStatus(depositAddress = DEPOSIT_ADDRESS)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            coEvery { checkGeoblock() } returns true.right()
+
+            // Act
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            coVerify(exactly = 1) {
+                accountStatusFetcher(PredictionAccountStatusFetcher.Params(USER_WALLET_ID))
+            }
+        }
+
+    @Test
     fun `GIVEN an account with a confirmed address WHEN add funds tapped THEN the sheet opens`() =
         runTest {
             // Arrange
@@ -797,7 +859,6 @@ internal class PolymarketMainModelTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
             fiatRate = BigDecimal.ONE,
-            isTradingAllowed = true,
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
         )
@@ -870,6 +931,8 @@ internal class PolymarketMainModelTest {
             getPolymarketCategoriesUseCase = getCategoriesUseCase,
             predictionAccountStatusSupplier = predictionAccountStatusSupplier,
             refreshPredictionDepositRequisitesInteractor = refreshRequisites,
+            checkPolymarketGeoblockUseCase = checkGeoblock,
+            predictionAccountStatusFetcher = accountStatusFetcher,
         ).also { model = it }
     }
 

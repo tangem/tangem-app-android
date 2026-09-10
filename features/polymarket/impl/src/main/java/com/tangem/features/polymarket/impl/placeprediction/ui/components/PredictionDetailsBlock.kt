@@ -20,6 +20,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 
@@ -29,7 +30,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
  */
 @Composable
 internal fun PredictionDetailsBlock(state: PlacePredictionUM, modifier: Modifier = Modifier) {
-    TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary) {
+    TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             TangemRow(
                 divider = true,

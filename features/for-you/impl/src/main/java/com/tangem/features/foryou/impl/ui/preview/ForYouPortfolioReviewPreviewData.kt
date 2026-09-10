@@ -171,7 +171,7 @@ internal object ForYouPortfolioReviewPreviewData {
     val loadingState = PortfolioReviewUM.Loading(
         marketChartUM = MarketChartUM.NoData(
             title = resourceReference(R.string.market_chart_can_not_load_data),
-            donutText = resourceReference(R.string.market_chart_bubble_no_data),
+            donutText = resourceReference(R.string.markets_loading_no_data_title),
         ),
         tokenList = buildList {
             repeat(5) { index ->
