@@ -68,7 +68,6 @@ dependencies {
     api(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
 
     /** Test */
