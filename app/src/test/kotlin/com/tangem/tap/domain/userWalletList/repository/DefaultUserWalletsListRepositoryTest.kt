@@ -9,7 +9,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
+import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -47,12 +48,13 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val userWalletEncryptionKeysRepository: UserWalletEncryptionKeysRepository = mockk(relaxed = true)
     private val tangemSdkManager: TangemSdkManager = mockk(relaxed = true)
     private val appPreferencesStore: AppPreferencesStore = mockk(relaxed = true)
+    private val storePreferencesKeys = StorePreferencesKeys()
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository = mockk(relaxed = true)
     private val tangemHotSdk: TangemHotSdk = mockk(relaxed = true)
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val hotWalletRepository: HotWalletRepository = mockk(relaxed = true)
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
+    private val clearReferralInstallUseCase: ClearReferralInstallUseCase = mockk(relaxed = true)
     private val userWalletSelectedHandler: UserWalletSelectedHandler = mockk(relaxed = true)
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk(relaxed = true)
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase = mockk(relaxed = true)
@@ -70,7 +72,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             selectedUserWalletRepository,
             userWalletEncryptionKeysRepository,
             trackingContextProxy,
-            clearAppsFlyerDeeplinkUseCase,
+            clearReferralInstallUseCase,
             userWalletSelectedHandler,
         )
 
@@ -86,12 +88,13 @@ internal class DefaultUserWalletsListRepositoryTest {
             tangemSdkManagerProvider = Provider { tangemSdkManager },
             savePersistentInformation = ProviderSuspend { true },
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
             tangemHotSdk = tangemHotSdk,
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
-            clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
+            clearReferralInstallUseCase = clearReferralInstallUseCase,
             userWalletSelectedHandler = Lazy { userWalletSelectedHandler },
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,

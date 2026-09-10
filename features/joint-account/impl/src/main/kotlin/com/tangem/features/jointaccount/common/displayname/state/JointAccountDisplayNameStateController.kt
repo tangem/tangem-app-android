@@ -21,7 +21,6 @@ internal class JointAccountDisplayNameStateController @Inject constructor() {
 
     private fun getInitialState(): JointAccountDisplayNameUM = JointAccountDisplayNameUM(
         name = "",
-        isError = false,
         buttonText = TextReference.EMPTY,
         buttonIconRes = null,
         isButtonEnabled = false,

@@ -130,9 +130,8 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     private suspend fun checkTangemPayEligibility(entryPoint: TangemPayEntryPoint?): Boolean {
-        val eligibility = onboardingRepository.getCustomerEligibility().ifEmpty {
-            onboardingRepository.checkCustomerEligibility()
-        }
+        val eligibility = onboardingRepository.getCustomerEligibility()
+            ?: onboardingRepository.checkCustomerEligibility()
         return if (entryPoint == null) {
             eligibility.any { it.isTangemPayType }
         } else {

@@ -1,7 +1,7 @@
 package com.tangem.domain.markets.repositories
 
 import com.tangem.domain.markets.*
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -44,7 +44,7 @@ interface MarketsTokenRepository {
         userWalletId: UserWalletId,
         token: RawMarketToken,
         network: TokenMarketInfo.Network,
-        accountIndex: DerivationIndex? = null,
+        account: Account.CryptoPortfolio,
     ): CryptoCurrency?
 
     /**
@@ -56,4 +56,26 @@ interface MarketsTokenRepository {
 
     /** Get coin categories with their sectors */
     suspend fun getCoinCategories(): List<CoinCategory>
+
+    /**
+     * Get one page of market categories with their aggregated market data
+     *
+     * @param timestamp pagination snapshot token: `null` for the first page, then the value the
+     *                  previous page was fetched with, so the list stays stable while paging
+     * @param featured  when `true`, only categories curated as featured are returned
+     */
+    suspend fun getMarketCategories(
+        currency: String,
+        offset: Int,
+        limit: Int,
+        timestamp: Long? = null,
+        featured: Boolean? = null,
+    ): MarketCategoryPage
+
+    /** Get a paginated flow of market categories. Categories never update in place, so `TUpdate` is [Nothing] */
+    fun getMarketCategoryListFlow(
+        batchingContext: MarketCategoryListBatchingContext,
+        firstBatchSize: Int,
+        nextBatchSize: Int,
+    ): MarketCategoryListBatchFlow
 }

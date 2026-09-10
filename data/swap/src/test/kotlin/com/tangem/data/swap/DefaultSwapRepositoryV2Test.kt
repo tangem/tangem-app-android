@@ -11,7 +11,7 @@ import com.tangem.grow.datasource.express.models.request.LeastTokenInfo
 import com.tangem.grow.datasource.express.models.request.PairsRequestBody
 import com.tangem.grow.datasource.express.models.response.*
 import com.tangem.grow.datasource.crypto.DataSignatureVerifier
-import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.*
 import com.tangem.domain.express.models.ExpressError
@@ -40,7 +40,7 @@ internal class DefaultSwapRepositoryV2Test {
 
     private val tangemExpressApi: TangemExpressApi = mockk()
     private val expressRepository: ExpressRepository = mockk()
-    private val appPreferencesStore: AppPreferencesStore = mockk(relaxed = true)
+    private val expressUtils: ExpressUtils = mockk(relaxed = true)
     private val dataSignatureVerifier: DataSignatureVerifier = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
@@ -51,7 +51,7 @@ internal class DefaultSwapRepositoryV2Test {
         tangemExpressApi = tangemExpressApi,
         expressRepository = expressRepository,
         coroutineDispatcher = TestingCoroutineDispatcherProvider(),
-        appPreferencesStore = appPreferencesStore,
+        expressUtils = expressUtils,
         dataSignatureVerifier = dataSignatureVerifier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
@@ -64,7 +64,7 @@ internal class DefaultSwapRepositoryV2Test {
         clearMocks(
             tangemExpressApi,
             expressRepository,
-            appPreferencesStore,
+            expressUtils,
             dataSignatureVerifier,
             singleQuoteStatusSupplier,
             singleQuoteStatusFetcher,

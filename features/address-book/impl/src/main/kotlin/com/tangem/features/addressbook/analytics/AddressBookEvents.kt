@@ -53,6 +53,7 @@ sealed class AddressBookEvents(
         enum class Source(val value: String) {
             Settings("Settings"),
             SendSuccess("Send Flow"),
+            TransactionDetails("Transaction Details"),
         }
     }
 

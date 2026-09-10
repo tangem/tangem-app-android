@@ -1,6 +1,9 @@
 package com.tangem.features.polymarket.impl.main
 
 import arrow.core.right
+import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.instancekeeper.InstanceKeeperDispatcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
@@ -16,6 +19,9 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
+import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -37,6 +43,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import javax.inject.Provider
+import com.tangem.domain.models.account.PredictionAccountStatusValue
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * The feed is reached only after the gate resolves an access mode, so a model it cannot construct crashes the
@@ -49,12 +57,19 @@ internal class PolymarketMainComponentTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
+    private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
+    private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk(relaxed = true)
+    private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk<CheckPolymarketGeoblockUseCase>().also {
+        coEvery { it() } returns false.right()
+    }
 
     private val userWalletId = UserWalletId("011")
 
     init {
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+        every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
+            flowOf(PredictionAccountStatusValue.Loading)
         every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
             override val state = MutableStateFlow(
                 BatchListState<Int, PolymarketEventsBatch>(
@@ -82,6 +97,7 @@ internal class PolymarketMainComponentTest {
         PolymarketMainComponent(
             appComponentContext = appComponentContext,
             userWalletId = userWalletId,
+            tokenReceiveComponentFactory = mockk(relaxed = true),
         )
 
         // Assert
@@ -105,6 +121,9 @@ internal class PolymarketMainComponentTest {
 
         return mockk<AppComponentContext>(relaxed = true).also {
             every { it.instanceKeeper } returns InstanceKeeperDispatcher()
+            every { it.stateKeeper } returns StateKeeperDispatcher()
+            every { it.lifecycle } returns LifecycleRegistry()
+            every { it.backHandler } returns BackDispatcher()
             every { it.tags } returns HashMap()
             every { it.hiltComponentBuilder } returns hiltComponentBuilder
             every { it.router } returns router
@@ -118,5 +137,9 @@ internal class PolymarketMainComponentTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         getPolymarketEventsBatchFlowUseCase = getPolymarketEventsBatchFlowUseCase,
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
+        predictionAccountStatusSupplier = predictionAccountStatusSupplier,
+        refreshPredictionDepositRequisitesInteractor = refreshRequisites,
+        checkPolymarketGeoblockUseCase = checkGeoblock,
+        predictionAccountStatusFetcher = mockk(relaxed = true),
     )
 }
