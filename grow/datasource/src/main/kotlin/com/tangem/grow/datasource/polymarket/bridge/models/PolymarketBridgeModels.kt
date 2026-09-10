@@ -42,3 +42,21 @@ data class PolymarketBridgeAddressesDto(
     @Json(name = "btc") val btc: String? = null,
     @Json(name = "tron") val tron: String? = null,
 )
+
+@JsonClass(generateAdapter = true)
+data class PolymarketWithdrawAddressRequest(
+    @Json(name = "address") val address: String,
+    @Json(name = "toChainId") val toChainId: String,
+    @Json(name = "toTokenAddress") val toTokenAddress: String,
+    @Json(name = "recipientAddr") val recipientAddr: String,
+)
+
+/**
+ * @param nested the shape the live deposit endpoint answers with
+ * @param evm the shape the client guide documents
+ */
+@JsonClass(generateAdapter = true)
+data class PolymarketWithdrawAddressResponse(
+    @Json(name = "address") val nested: PolymarketBridgeAddressesDto? = null,
+    @Json(name = "evm") val evm: String? = null,
+)
