@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
@@ -35,7 +36,6 @@ import com.tangem.core.remote.build
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
 import com.tangem.core.remote.config.TangemGatewayApiConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -104,13 +104,13 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideBlockchainSDKFactory(
-        environmentConfig: EnvironmentConfig,
+        blockchainSdkConfig: BlockchainSdkConfig,
         blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
-            blockchainSdkConfig = environmentConfig.blockchainSdkConfig,
+            blockchainSdkConfig = blockchainSdkConfig,
             blockchainProvidersTypesManager = blockchainProvidersTypesManager,
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,

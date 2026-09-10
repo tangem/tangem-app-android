@@ -62,6 +62,7 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
         targetTariffPlanId: String?,
         transitionType: TangemPayTariffPlanTransition.Type?,
         chainId: Int?,
+        deeplinkValue: String?,
     ): Either<VisaApiError, Order> = real.createOrder(
         userWalletId = userWalletId,
         type = type,
@@ -70,6 +71,7 @@ internal class MockAwareCustomerOrderRepository @Inject constructor(
         targetTariffPlanId = targetTariffPlanId,
         transitionType = transitionType,
         chainId = chainId,
+        deeplinkValue = deeplinkValue,
     )
 
     override suspend fun createPlasticIssueOrder(

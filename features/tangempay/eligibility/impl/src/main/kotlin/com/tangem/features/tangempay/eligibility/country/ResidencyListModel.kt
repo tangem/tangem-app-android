@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.eligibility.country
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -12,10 +13,16 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.models.pay.TangemPayCountry
+import com.tangem.domain.models.pay.TangemPayEligibility
+import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.pay.usecase.CheckTangemPayEligibilityUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
+import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
 import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,22 +31,27 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class ResidencyListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val residencySource: MockResidencySource,
+    private val getCountriesUseCase: GetTangemPayCountriesUseCase,
+    private val getRegionsUseCase: GetTangemPayRegionsUseCase,
+    private val checkEligibilityUseCase: CheckTangemPayEligibilityUseCase,
     private val uiMessageSender: UiMessageSender,
+    paramsContainer: ParamsContainer,
 ) : Model() {
+
+    private val params = paramsContainer.require<TangemPayEligibilityComponent.Params>()
 
     val uiState: StateFlow<ResidencyListUM>
         field = MutableStateFlow(getInitialState())
 
     private var step: Step = Step.Countries
-    private var countries: List<CountryOfResidence> = emptyList()
-    private var suggestedItems: List<ResidencyListUM.ItemUM> = emptyList()
-    private var restItems: List<ResidencyListUM.ItemUM> = emptyList()
+    private var dataState: DataState = DataState.Loading
+    private var countries: List<TangemPayCountry> = emptyList()
     private var checkingItemId: String? = null
 
     init {
@@ -52,68 +64,65 @@ internal class ResidencyListModel @Inject constructor(
             state.copy(
                 title = resourceReference(R.string.tangempay_residency_title_country),
                 search = state.search.copy(query = "", isActive = false),
-                content = Content.Loading,
                 onBackClick = null,
             )
         }
+        loadCountries()
+    }
+
+    private fun loadCountries() {
+        setLoading()
         modelScope.launch {
-            if (countries.isEmpty()) {
-                countries = residencySource.getCountries()
+            if (countries.isNotEmpty()) {
+                setCountriesLoaded()
+                return@launch
             }
-            val suggestedCodes = residencySource.getSuggestedCountryCodes()
-            suggestedItems = countries.filter { country -> country.code in suggestedCodes }.map(::toItem)
-            restItems = countries.map(::toItem)
-            updateContent()
+            getCountriesUseCase()
+                .onLeft { setFailed(onRetry = ::loadCountries) }
+                .onRight { loaded ->
+                    countries = loaded
+                    setCountriesLoaded()
+                }
         }
     }
 
-    private fun showStates(country: CountryOfResidence) {
-        step = Step.States
+    private fun showRegions(country: TangemPayCountry) {
+        step = Step.Regions(country)
         uiState.update { state ->
             state.copy(
                 title = resourceReference(R.string.tangempay_residency_title_state),
                 search = state.search.copy(query = "", isActive = false),
-                content = Content.Loading,
                 onBackClick = ::showCountries,
             )
         }
+        loadRegions(country)
+    }
+
+    private fun loadRegions(country: TangemPayCountry) {
+        setLoading()
         modelScope.launch {
-            val states = residencySource.getStates(country.code)
-            val suggestedCodes = residencySource.getSuggestedStateCodes(country.code)
-
-            suggestedItems = states
-                .filter { state -> state.code in suggestedCodes }
-                .map { state -> toItem(country, state) }
-
-            restItems = states.map { state -> toItem(country, state) }
-            updateContent()
+            getRegionsUseCase(country.code)
+                .onLeft { setFailed(onRetry = { loadRegions(country) }) }
+                .onRight { setRegionsLoaded(country, it) }
         }
     }
 
-    private fun onCountryClick(country: CountryOfResidence) {
-        checkEligibility(
-            itemId = country.code,
-            countryCode = country.code,
-            stateCode = null,
-        ) { isEligible ->
+    private fun onCountryClick(country: TangemPayCountry) {
+        checkEligibility(itemId = country.code, countryCode = country.code, regionCode = null) { eligibility ->
             when {
-                country.hasStates -> showStates(country)
-                isEligible -> openKycScreen()
-                else -> openEligibilityDeniedScreen()
+                !eligibility.isAvailable -> openRegionUnavailableScreen(eligibility)
+                country.hasRegions -> showRegions(country)
+                else -> openKycScreen()
             }
         }
     }
 
-    private fun onStateClick(country: CountryOfResidence, state: StateOfResidence) {
-        checkEligibility(
-            itemId = state.code,
-            countryCode = country.code,
-            stateCode = state.code,
-        ) { isEligible ->
-            if (isEligible) {
+    private fun onRegionClick(country: TangemPayCountry, region: TangemPayRegion) {
+        checkEligibility(itemId = region.code, countryCode = country.code, regionCode = region.code) { eligibility ->
+            if (eligibility.isAvailable) {
                 openKycScreen()
             } else {
-                openEligibilityDeniedScreen()
+                openRegionUnavailableScreen(eligibility)
             }
         }
     }
@@ -121,20 +130,23 @@ internal class ResidencyListModel @Inject constructor(
     private fun checkEligibility(
         itemId: String,
         countryCode: String,
-        stateCode: String?,
-        onEligible: (isEligible: Boolean) -> Unit,
+        regionCode: String?,
+        onChecked: (TangemPayEligibility) -> Unit,
     ) {
-        TangemLogger.i("ResidencyListModel: checkEligibility $countryCode $stateCode")
         if (checkingItemId != null) return
         checkingItemId = itemId
         updateContent()
         modelScope.launch {
-            val result = residencySource.checkEligibility()
+            val result = checkEligibilityUseCase(
+                product = params.product,
+                countryCode = countryCode,
+                regionCode = regionCode,
+            )
 
             checkingItemId = null
 
             result
-                .onLeft {
+                .onLeft { _ ->
                     uiMessageSender.send(
                         DialogMessage(
                             title = resourceReference(R.string.common_something_went_wrong),
@@ -143,9 +155,7 @@ internal class ResidencyListModel @Inject constructor(
                     )
                     updateContent()
                 }
-                .onRight { isEligible ->
-                    onEligible(isEligible)
-                }
+                .onRight(onChecked)
         }
     }
 
@@ -155,9 +165,14 @@ internal class ResidencyListModel @Inject constructor(
         uiMessageSender.send(ToastMessage(stringReference("Open KYC")))
     }
 
-    private fun openEligibilityDeniedScreen() {
+    private fun openRegionUnavailableScreen(eligibility: TangemPayEligibility) {
         updateContent()
-        router.push(EligibilityInnerRoute.RegionUnavailable)
+        router.push(
+            EligibilityInnerRoute.RegionUnavailable(
+                countryCode = eligibility.country,
+                regionCode = eligibility.region,
+            ),
+        )
     }
 
     private fun onQueryChange(query: String) {
@@ -170,15 +185,47 @@ internal class ResidencyListModel @Inject constructor(
         uiState.update { state -> state.copy(search = state.search.copy(isActive = isActive)) }
     }
 
+    private fun setLoading() {
+        dataState = DataState.Loading
+        updateContent()
+    }
+
+    private fun setCountriesLoaded() {
+        dataState = DataState.Loaded(
+            suggested = countries.filter(TangemPayCountry::isSuggested).map(::toItem),
+            all = countries.map(::toItem),
+        )
+        updateContent()
+    }
+
+    private fun setRegionsLoaded(country: TangemPayCountry, regions: List<TangemPayRegion>) {
+        dataState = DataState.Loaded(
+            suggested = regions.filter(TangemPayRegion::isSuggested).map { region ->
+                toItem(country = country, region = region)
+            },
+            all = regions.map { region -> toItem(country = country, region = region) },
+        )
+        updateContent()
+    }
+
+    private fun setFailed(onRetry: () -> Unit) {
+        dataState = DataState.Failed(onRetry = onRetry)
+        updateContent()
+    }
+
     private fun updateContent() {
         uiState.update { state -> state.copy(content = buildContent(query = state.search.query)) }
     }
 
     private fun buildContent(query: String): Content {
-        if (restItems.isEmpty()) return Content.Loading
+        val loaded = when (val state = dataState) {
+            DataState.Loading -> return Content.Loading
+            is DataState.Failed -> return Content.Error(onRetryClick = state.onRetry)
+            is DataState.Loaded -> state
+        }
 
         if (query.isNotBlank()) {
-            val found = restItems.filter { item -> item.name.contains(query.trim(), ignoreCase = true) }
+            val found = loaded.all.filter { item -> item.name.contains(query.trim(), ignoreCase = true) }
             return if (found.isEmpty()) {
                 Content.Empty
             } else {
@@ -195,12 +242,12 @@ internal class ResidencyListModel @Inject constructor(
         }
 
         val sections = buildList {
-            if (suggestedItems.isNotEmpty()) {
+            if (loaded.suggested.isNotEmpty()) {
                 add(
                     ResidencyListUM.SectionUM(
                         id = SUGGESTED_SECTION_ID,
                         title = suggestedSectionTitle(),
-                        items = suggestedItems.map(::withLoadingState).toImmutableList(),
+                        items = loaded.suggested.map(::withLoadingState).toImmutableList(),
                     ),
                 )
             }
@@ -208,7 +255,7 @@ internal class ResidencyListModel @Inject constructor(
                 ResidencyListUM.SectionUM(
                     id = ALL_SECTION_ID,
                     title = allSectionTitle(),
-                    items = restItems.map(::withLoadingState).toImmutableList(),
+                    items = loaded.all.map(::withLoadingState).toImmutableList(),
                 ),
             )
         }
@@ -220,7 +267,7 @@ internal class ResidencyListModel @Inject constructor(
         return item.copy(isLoading = item.id == checkingItemId)
     }
 
-    private fun toItem(country: CountryOfResidence): ResidencyListUM.ItemUM {
+    private fun toItem(country: TangemPayCountry): ResidencyListUM.ItemUM {
         return ResidencyListUM.ItemUM(
             id = country.code,
             name = country.name,
@@ -230,13 +277,13 @@ internal class ResidencyListModel @Inject constructor(
         )
     }
 
-    private fun toItem(country: CountryOfResidence, state: StateOfResidence): ResidencyListUM.ItemUM {
+    private fun toItem(country: TangemPayCountry, region: TangemPayRegion): ResidencyListUM.ItemUM {
         return ResidencyListUM.ItemUM(
-            id = state.code,
-            name = state.name,
+            id = region.code,
+            name = region.name,
             flagUrl = null,
             isLoading = false,
-            onClick = { onStateClick(country, state) },
+            onClick = { onRegionClick(country = country, region = region) },
         )
     }
 
@@ -259,15 +306,28 @@ internal class ResidencyListModel @Inject constructor(
 
     private fun suggestedSectionTitle(): TextReference = when (step) {
         Step.Countries -> resourceReference(R.string.tangempay_residency_suggested_country)
-        Step.States -> resourceReference(R.string.tangempay_residency_suggested_state)
+        is Step.Regions -> resourceReference(R.string.tangempay_residency_suggested_state)
     }
 
     private fun allSectionTitle(): TextReference = when (step) {
         Step.Countries -> resourceReference(R.string.tangempay_residency_all_country)
-        Step.States -> resourceReference(R.string.tangempay_residency_all_state)
+        is Step.Regions -> resourceReference(R.string.tangempay_residency_all_state)
     }
 
-    private enum class Step { Countries, States }
+    private sealed interface Step {
+        data object Countries : Step
+        data class Regions(val country: TangemPayCountry) : Step
+    }
+
+    private sealed interface DataState {
+        data object Loading : DataState
+        data class Loaded(
+            val suggested: List<ResidencyListUM.ItemUM>,
+            val all: List<ResidencyListUM.ItemUM>,
+        ) : DataState
+
+        data class Failed(val onRetry: () -> Unit) : DataState
+    }
 
     private companion object {
         const val SUGGESTED_SECTION_ID = "suggested"

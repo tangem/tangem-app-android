@@ -77,6 +77,10 @@ internal class TangemPayDetailsComponent(
         )
     }
 
+    fun openAddFunds() {
+        model.onClickAddFunds()
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()

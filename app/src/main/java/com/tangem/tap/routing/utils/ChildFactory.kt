@@ -1,7 +1,6 @@
 package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
@@ -26,7 +25,6 @@ import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.main.JointAccountMembersComponent
-import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
@@ -65,6 +63,7 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCo
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
+import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
@@ -134,7 +133,6 @@ internal class ChildFactory @Inject constructor(
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
-    private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val tangemPayEligibilityComponentFactory: TangemPayEligibilityComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
@@ -375,17 +373,17 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                // An NFC launch stays on the legacy screen, which is the only one that auto-starts the card
-                // scan. Routing it to the redesign would consume the tag and do nothing.
-                val isRedesign = introductionFeatureToggles.isIntroductionRedesignEnabled &&
-                    route.launchMode != InitScreenLaunchMode.WithCardScan
-                if (isRedesign) {
+                if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
                     createComponentChild(
                         context = context,
-                        params = IntroductionComponent.Params(route.launchMode),
+                        params = IntroductionComponent.Params(
+                            launchMode = route.launchMode,
+                            entryReason = route.entryReason,
+                        ),
                         componentFactory = introductionComponentFactory,
                     )
                 } else {
+                    @RemoveWithToggle("TWI_1356_INTRODUCTION_REDESIGN_ENABLED")
                     createComponentChild(
                         context = context,
                         params = HomeComponent.Params(route.launchMode),
@@ -714,13 +712,6 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = jointAccountMembersComponentFactory,
                 )
             }
-            is AppRoute.JointSupportedNetworks -> {
-                createComponentChild(
-                    context = context,
-                    params = Unit,
-                    componentFactory = jointSupportedNetworksComponentFactory,
-                )
-            }
             is AppRoute.EditAccount -> {
                 createComponentChild(
                     context = context,
@@ -819,7 +810,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayEligibility -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayEligibilityComponent.Params(userWalletId = route.userWalletId),
+                    params = TangemPayEligibilityComponent.Params(
+                        userWalletId = route.userWalletId,
+                        product = route.product,
+                    ),
                     componentFactory = tangemPayEligibilityComponentFactory,
                 )
             }
