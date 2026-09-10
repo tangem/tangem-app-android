@@ -18,13 +18,16 @@ import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.models.PolymarketClosedPositionsResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketPositionResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketPositionsResponse
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -79,13 +82,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
     @Test
     fun `GIVEN a claimed losing position with earlier profit WHEN reading history THEN both are preserved`() = runTest {
         // Arrange
-        val response = moshi.adapter(PolymarketClosedPositionsResponse::class.java).fromJson(
-            """
-                {"positions":[{"conditionId":"condition","assetId":"asset","title":"Will it happen?",
-                "outcome":"No","avgPrice":"0.5","curPrice":"0","totalBought":"10",
-                "realizedPnl":"2.75","closedAt":"2026-09-07T10:00:00Z","status":"LOST"}],"hasNext":false}
-            """.trimIndent(),
-        )!!
+        val response = closedResponse()
         coEvery { api.getClosedPositions(any(), any(), any(), any()) } returns ApiResponse.Success(response)
         val expected = PolymarketPosition.Closed(
             id = POSITION_ID,
@@ -137,19 +134,33 @@ internal class DefaultPolymarketPositionsRepositoryTest {
         assertThat(result).isEqualTo(Either.Right(PolymarketPositionsPage(emptyList<PolymarketPosition.Open>(), false)))
     }
 
-    @Test
+    @ParameterizedTest
+    @ProvideTestModels
     @Suppress("UNCHECKED_CAST")
-    fun `GIVEN a timeout WHEN reading positions THEN the result is a network failure not an empty list`() = runTest {
+    fun `GIVEN an API error WHEN reading positions THEN the result preserves the failure`(model: ApiErrorTestModel) =
+        runTest {
+            // Arrange
+            coEvery { api.getPositions(any(), any(), any(), any()) } returns
+                ApiResponse.Error(model.apiError) as ApiResponse<PolymarketPositionsResponse>
+
+            // Act
+            val result = repository.getOpenPositions(addresses, limit = 3, offset = 0)
+
+            // Assert
+            assertThat(result).isEqualTo(Either.Left(model.expected))
+        }
+
+    @Test
+    fun `GIVEN request cancellation WHEN reading a position THEN cancellation propagates`() = runTest {
         // Arrange
-        coEvery { api.getPositions(any(), any(), any(), any()) } returns ApiResponse.Error(
-            ApiResponseError.TimeoutException(),
-        ) as ApiResponse<PolymarketPositionsResponse>
+        val cancellation = CancellationException("Screen closed")
+        coEvery { api.getPosition(any(), any(), any(), any()) } throws cancellation
 
         // Act
-        val result = repository.getOpenPositions(addresses, limit = 3, offset = 0)
+        val error = runCatching { repository.getPosition(addresses, POSITION_ID) }.exceptionOrNull()
 
         // Assert
-        assertThat(result).isEqualTo(Either.Left(PolymarketPositionsError.Network))
+        assertThat(error).isSameInstanceAs(cancellation)
     }
 
     @Test
@@ -160,6 +171,19 @@ internal class DefaultPolymarketPositionsRepositoryTest {
 
         // Act
         val result = repository.getPosition(addresses, POSITION_ID)
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(PolymarketPositionsError.Unknown::class.java)
+    }
+
+    @Test
+    fun `GIVEN a malformed closing date WHEN reading history THEN the conversion returns a typed failure`() = runTest {
+        // Arrange
+        coEvery { api.getClosedPositions(any(), any(), any(), any()) } returns
+            ApiResponse.Success(closedResponse(closedAt = "not a date"))
+
+        // Act
+        val result = repository.getClosedPositions(addresses, limit = 3, offset = 0)
 
         // Assert
         assertThat(result.leftOrNull()).isInstanceOf(PolymarketPositionsError.Unknown::class.java)
@@ -190,9 +214,38 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             """.trimIndent(),
         )!!
 
+    private fun closedResponse(closedAt: String = "2026-09-07T10:00:00Z"): PolymarketClosedPositionsResponse =
+        moshi.adapter(PolymarketClosedPositionsResponse::class.java).fromJson(
+            """
+                {"positions":[{"conditionId":"condition","assetId":"asset","title":"Will it happen?",
+                "outcome":"No","avgPrice":"0.5","curPrice":"0","totalBought":"10",
+                "realizedPnl":"2.75","closedAt":"$closedAt","status":"LOST"}],"hasNext":false}
+            """.trimIndent(),
+        )!!
+
+    data class ApiErrorTestModel(val apiError: ApiResponseError, val expected: PolymarketPositionsError)
+
     private companion object {
         val WALLET_ID = "a".repeat(64)
         const val DEPOSIT_ADDRESS = "0x1234567890123456789012345678901234567890"
         val POSITION_ID = PolymarketPositionId(conditionId = "condition", assetId = "asset")
+
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            ApiErrorTestModel(ApiResponseError.NetworkException(), PolymarketPositionsError.Network),
+            ApiErrorTestModel(ApiResponseError.TimeoutException(), PolymarketPositionsError.Network),
+            ApiErrorTestModel(
+                ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
+                    message = "Service unavailable",
+                    errorBody = "Try again later",
+                ),
+                PolymarketPositionsError.Unknown(httpCode = 503, detail = "Try again later"),
+            ),
+            ApiErrorTestModel(
+                ApiResponseError.UnknownException(IllegalStateException("Unreadable response")),
+                PolymarketPositionsError.Unknown(httpCode = null, detail = "Unreadable response"),
+            ),
+        )
     }
 }
