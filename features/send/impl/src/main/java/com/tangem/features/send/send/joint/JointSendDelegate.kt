@@ -7,7 +7,9 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -23,6 +25,7 @@ internal class JointSendDelegate @Inject constructor(
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val gasBuilder: SafeTxGasBuilder,
+    private val createJointOperationUseCase: CreateJointOperationUseCase,
 ) {
 
     suspend fun findJointAccount(userWalletId: UserWalletId, account: Account.Joint): JointAccount? {
@@ -67,5 +70,17 @@ internal class JointSendDelegate @Inject constructor(
             .build(userWalletId = userWalletId, network = currency.network, call = intent.toSafeInnerCall())
             .map(JointSendFeeConverter(network = currency.network)::convert)
             .mapLeft(GetFeeError::DataError)
+    }
+
+    suspend fun createOperation(
+        account: Account.Joint,
+        currency: CryptoCurrency,
+        amountUM: AmountState,
+        destinationUM: DestinationUM,
+    ): Either<JointOperationCreateError, Unit> {
+        val intent = JointTransferIntentFactory.create(amountUM, destinationUM, currency)
+            ?: return JointOperationCreateError.InvalidPayload.left()
+
+        return createJointOperationUseCase(account = account, network = currency.network, intent = intent)
     }
 }
