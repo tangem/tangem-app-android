@@ -30,6 +30,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
@@ -63,6 +64,7 @@ internal class WalletBackupModel @Inject constructor(
     private val setCloudBackupStateUseCase: Lazy<SetCloudBackupStateUseCase>,
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
@@ -117,6 +119,10 @@ internal class WalletBackupModel @Inject constructor(
                     },
                 )
             }.launchIn(modelScope)
+
+        isSocialBackupCompletedUseCase.flow(params.userWalletId)
+            .onEach { isSocialBackup -> uiState.update { it.copy(isGoogleDriveOptionShown = !isSocialBackup) } }
+            .launchIn(modelScope)
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
             refreshCloudBackupStatus()

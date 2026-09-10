@@ -47,6 +47,7 @@ dependencies {
     api(projects.domain.networks)
     api(projects.domain.onboarding)
     api(projects.domain.settings)
+    api(projects.domain.socialLogin)
     api(projects.domain.staking)
     api(projects.domain.tokens)
     api(projects.domain.visa)
