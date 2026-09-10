@@ -210,6 +210,26 @@ internal class IntroductionModelTest {
     }
 
     @Test
+    fun `GIVEN a fresh surface after a rendered frame WHEN playback fails THEN shutter stays down`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.onFirstFrameRendered()
+        surfaceAttached(isAttached = false)
+        model.detachSurface(surfaceView)
+        surfaceAttached(isAttached = true)
+        model.attachSurface(otherSurfaceView)
+
+        // Act
+        model.onError(PLAYBACK_ERROR)
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
+    }
+
+    @Test
     fun `GIVEN surface already gone WHEN playback fails THEN shutter stays down`() {
         // Arrange
         val model = createModel()
