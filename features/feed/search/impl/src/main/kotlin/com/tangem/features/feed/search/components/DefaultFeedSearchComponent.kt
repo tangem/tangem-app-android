@@ -7,7 +7,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -24,6 +23,7 @@ import com.tangem.features.feed.search.model.FeedSearchModel
 import com.tangem.features.feed.search.ui.FeedSearchPlaceholder
 import com.tangem.features.feed.search.ui.FeedSearchTabsContent
 import com.tangem.features.feed.ui.FeedTabUM
+import com.tangem.features.feed.v2.FeedV2Component
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -90,8 +90,9 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         ) { tabModifier ->
             pagesState.items.getOrNull(pagesState.selectedIndex)?.instance?.Content(
                 bottomSheetState = bottomSheetState,
-                // the tab row is laid out above, not overlaid
-                contentPadding = PaddingValues(0.dp),
+                contentPadding = PaddingValues(
+                    top = contentPadding.calculateTopPadding() + FeedV2Component.TabRowHeight,
+                ),
                 modifier = tabModifier.fillMaxSize(),
             )
         }

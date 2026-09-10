@@ -320,6 +320,7 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
+        val isShtorkaBlurEnabled by feedV2Component.isSheetBlurEnabled.collectAsStateWithLifecycle()
         WalletScreen(
             state = uiState,
             promoBannersBlockComponent = promoBannersBlockComponent,
@@ -329,6 +330,7 @@ internal class WalletComponent @AssistedInject constructor(
             polymarketComponent = polymarketWalletBlockComponent,
             modifier = modifier,
             isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
+            isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
             shtorkaHeaderContent = { sheetExpansion, onExpandSheet ->
                 feedV2Component.Header(
                     sheetExpansion = sheetExpansion,
