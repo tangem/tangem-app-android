@@ -12,21 +12,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.children.ChildNavState
-import com.arkivanov.decompose.router.pages.ChildPages
-import com.arkivanov.decompose.router.pages.Pages
-import com.arkivanov.decompose.router.pages.PagesNavigation
-import com.arkivanov.decompose.router.pages.childPages
-import com.arkivanov.decompose.router.pages.select
+import com.arkivanov.decompose.router.pages.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.features.feed.nav.FeedRoute
-import com.tangem.features.feed.nav.FeedTabComponent
-import com.tangem.features.feed.nav.FeedTabContributor
-import com.tangem.features.feed.nav.FeedTabId
-import com.tangem.features.feed.nav.FeedTabSet
+import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.search.FeedSearchComponent
 import com.tangem.features.feed.search.model.FeedSearchModel
 import com.tangem.features.feed.search.ui.FeedSearchPlaceholder
@@ -52,7 +44,7 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
     private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
 
     private val tabs: ImmutableList<FeedTabUM> = contributors
-        .map { FeedTabUM(id = it.id.value, title = it.title) }
+        .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
 
     private val pagesNavigation = PagesNavigation<FeedTabId>()
