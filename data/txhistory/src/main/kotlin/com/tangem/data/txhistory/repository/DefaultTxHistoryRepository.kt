@@ -45,6 +45,7 @@ class DefaultTxHistoryRepository @Inject constructor(
             when (state) {
                 is TxHistoryState.Failed.FetchError -> throw TxHistoryStateError.DataError(state.exception)
                 is TxHistoryState.NotImplemented -> throw TxHistoryStateError.TxHistoryNotImplemented
+                is TxHistoryState.AddressNotReady -> throw TxHistoryStateError.AddressNotReady()
                 is TxHistoryState.Success.Empty -> throw TxHistoryStateError.EmptyTxHistories
                 is TxHistoryState.Success.HasTransactions -> state.txCount
             }
