@@ -17,6 +17,7 @@ internal sealed class ConfirmUM {
         val isShowTapHelp: Boolean,
         val sendingFooter: TextReference,
         val notifications: ImmutableList<NotificationUM>,
+        val signaturesUM: SendSignaturesUM? = null,
     ) : ConfirmUM()
 
     data class Success(
