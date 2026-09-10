@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import kotlin.reflect.KClass
@@ -254,12 +255,14 @@ internal class PolymarketFeedContentTransformerTest {
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
                         depositTarget = null,
+                        isTradingAllowed = false,
                     ),
                 ),
             categories = persistentListOf(
                 PolymarketCategoryTabUM(id = 1, label = "Politics", isSelected = true, onClick = {}),
             ),
             content = PolymarketMainUM.ContentUM.Loading,
+            pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         )
     }
 }
