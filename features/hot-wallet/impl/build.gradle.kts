@@ -88,6 +88,5 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
-    testImplementation(projects.domain.socialLogin)
     testImplementation(projects.test.core)
 }
