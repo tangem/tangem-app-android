@@ -1,18 +1,18 @@
 package com.tangem.domain.markets
 
 import arrow.core.Either
-import com.tangem.domain.markets.repositories.CoinIndicatorsRepository
+import com.tangem.domain.markets.repositories.MarketIndicatorsRepository
 
 /**
  * Use case for fetching technical and social indicator readings per coin into the session store.
  * The fetched readings are observed via [GetCoinIndicatorsUpdatesUseCase]
  *
- * @property coinIndicatorsRepository repository of coin indicators
+ * @property marketIndicatorsRepository repository of coin indicators
  *
 [REDACTED_AUTHOR]
  */
 class FetchCoinIndicatorsUseCase(
-    private val coinIndicatorsRepository: CoinIndicatorsRepository,
+    private val marketIndicatorsRepository: MarketIndicatorsRepository,
 ) {
 
     /**
@@ -25,6 +25,6 @@ class FetchCoinIndicatorsUseCase(
         symbols: List<String>? = null,
         indicators: List<CoinIndicators.Reading.Type>? = null,
     ): Either<Throwable, Unit> {
-        return coinIndicatorsRepository.fetchCoinIndicators(symbols = symbols, indicators = indicators)
+        return marketIndicatorsRepository.fetchCoinIndicators(symbols = symbols, indicators = indicators)
     }
 }

@@ -127,11 +127,14 @@ internal class EarnFeedTabModelTest {
 
         // Act
         topTokensFlow.value = listOf(
-            createEarnTokenWithCurrency(cryptoCurrency = createEarnCurrency(currencyId = "btc")),
+            createEarnTokenWithCurrency(
+                earnToken = createEarnToken(tokenId = "btc"),
+                cryptoCurrency = createEarnCurrency(currencyId = "btc"),
+            ),
         ).right()
         advanceUntilIdle()
 
-        // Assert
+        // Assert — the carousel keeps the currency-based id; only the row converter was hardened
         val content = underTest.state.value.mostlyUsed as EarnListUM.Content
         assertThat(content.items.map { it.id }).containsExactly("btc_STAKING")
     }
@@ -161,7 +164,7 @@ internal class EarnFeedTabModelTest {
 
         // Assert
         val content = underTest.state.value.bestOpportunities as EarnBestOpportunitiesUM.Content
-        assertThat(content.items.map { it.id }).containsExactly("btc_STAKING")
+        assertThat(content.items.map { it.id }).containsExactly("btc_ethereum_STAKING")
     }
 
     @Test
@@ -275,7 +278,10 @@ internal class EarnFeedTabModelTest {
             Batch(
                 key = 0,
                 data = listOf(
-                    createEarnTokenWithCurrency(cryptoCurrency = createEarnCurrency(currencyId = currencyId)),
+                    createEarnTokenWithCurrency(
+                        earnToken = createEarnToken(tokenId = currencyId),
+                        cryptoCurrency = createEarnCurrency(currencyId = currencyId),
+                    ),
                 ),
             ),
         ),

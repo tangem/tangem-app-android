@@ -238,7 +238,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         yieldSupplyDeactivateUseCase = deactivateUseCase,
         yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyPendingTracker = pendingTracker,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
     )
 
     private companion object {

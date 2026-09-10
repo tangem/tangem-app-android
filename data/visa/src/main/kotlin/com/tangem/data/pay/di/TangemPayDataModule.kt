@@ -10,6 +10,7 @@ import com.tangem.data.pay.entity.DefaultTangemPayCurrencyFactory
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
+import com.tangem.data.pay.store.DefaultBankOfframpRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
@@ -17,18 +18,29 @@ import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.*
+import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
+import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
+import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
+import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
+import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
+import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
+import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
+import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -55,10 +67,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPaySwapRepository(repository: DefaultTangemPayWithdrawRepository): TangemPayWithdrawRepository
-
-    @Binds
-    @Singleton
-    fun bindCustomerOffersRepository(repository: DefaultCustomerOffersRepository): CustomerOffersRepository
 
     @Binds
     @Singleton
@@ -119,6 +127,14 @@ internal interface TangemPayDataModule {
     fun bindTariffPlanTransitionsRepository(
         repository: DefaultTariffPlanTransitionsRepository,
     ): TangemPayTariffPlanTransitionsRepository
+
+    @Binds
+    @Singleton
+    fun bindResidencyRepository(repository: DefaultTangemPayResidencyRepository): TangemPayResidencyRepository
+
+    @Binds
+    @Singleton
+    fun bindWaitlistRepository(repository: DefaultTangemPayWaitlistRepository): TangemPayWaitlistRepository
 
     @Suppress("TooManyFunctions", "LargeClass")
     companion object {
@@ -285,10 +301,60 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetTangemPayCountriesUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): GetTangemPayCountriesUseCase {
+            return GetTangemPayCountriesUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideGetTangemPayRegionsUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): GetTangemPayRegionsUseCase {
+            return GetTangemPayRegionsUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideCheckTangemPayEligibilityUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): CheckTangemPayEligibilityUseCase {
+            return CheckTangemPayEligibilityUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideCheckTangemPayEligibilityByKycUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): CheckTangemPayEligibilityForCustomerUseCase {
+            return CheckTangemPayEligibilityForCustomerUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideJoinTangemPayWaitlistUseCase(
+            waitlistRepository: TangemPayWaitlistRepository,
+        ): JoinTangemPayWaitlistUseCase {
+            return JoinTangemPayWaitlistUseCase(waitlistRepository)
+        }
+
+        @Provides
         fun provideGetCustomerOffersUseCase(
             customerOffersRepository: CustomerOffersRepository,
         ): GetCustomerOffersUseCase {
             return GetCustomerOffersUseCase(customerOffersRepository)
+        }
+
+        @Provides
+        fun provideResolveTangemPayCampaignUseCase(
+            onboardingRepository: OnboardingRepository,
+            campaignRepository: TangemPayCampaignRepository,
+            eligibilityManager: TangemPayEligibilityManager,
+            getCustomerOffersUseCase: GetCustomerOffersUseCase,
+        ): ResolveTangemPayCampaignUseCase {
+            return ResolveTangemPayCampaignUseCase(
+                onboardingRepository = onboardingRepository,
+                campaignRepository = campaignRepository,
+                eligibilityManager = eligibilityManager,
+                getCustomerOffersUseCase = getCustomerOffersUseCase,
+            )
         }
 
         @Provides
@@ -498,6 +564,68 @@ internal interface TangemPayDataModule {
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             )
+        }
+
+        // Mock until the bank off-ramp BFF endpoints ship; replaced by the real repository in the integration task
+        @Provides
+        @Singleton
+        fun provideBankOfframpRepository(): BankOfframpRepository = MockBankOfframpRepository()
+
+        @Provides
+        @Singleton
+        fun provideBankOfframpRecentsStore(
+            prefs: AppPreferencesStore,
+            spendPreferencesKeys: SpendPreferencesKeys,
+        ): BankOfframpRecentsStore {
+            return DefaultBankOfframpRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
+        }
+
+        @Provides
+        fun provideGetBankAccountsUseCase(repository: BankOfframpRepository): GetBankAccountsUseCase {
+            return GetBankAccountsUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideGetRecentBankAccountsUseCase(
+            repository: BankOfframpRepository,
+            recentsStore: BankOfframpRecentsStore,
+        ): GetRecentBankAccountsUseCase {
+            return GetRecentBankAccountsUseCase(repository = repository, recentsStore = recentsStore)
+        }
+
+        @Provides
+        fun provideMarkBankAccountUsedUseCase(recentsStore: BankOfframpRecentsStore): MarkBankAccountUsedUseCase {
+            return MarkBankAccountUsedUseCase(recentsStore = recentsStore)
+        }
+
+        @Provides
+        fun provideGetBankOfframpOptionsUseCase(repository: BankOfframpRepository): GetBankOfframpOptionsUseCase {
+            return GetBankOfframpOptionsUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideCreateBankOfframpOrderUseCase(repository: BankOfframpRepository): CreateBankOfframpOrderUseCase {
+            return CreateBankOfframpOrderUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideAwaitBankOfframpSignatureUseCase(
+            repository: BankOfframpRepository,
+        ): AwaitBankOfframpSignatureUseCase {
+            return AwaitBankOfframpSignatureUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideSignBankOfframpOrderUseCase(
+            repository: BankOfframpRepository,
+            authDataSource: TangemPayAuthDataSource,
+        ): SignBankOfframpOrderUseCase {
+            return SignBankOfframpOrderUseCase(repository = repository, authDataSource = authDataSource)
+        }
+
+        @Provides
+        fun provideCancelBankOfframpOrderUseCase(repository: BankOfframpRepository): CancelBankOfframpOrderUseCase {
+            return CancelBankOfframpOrderUseCase(repository = repository)
         }
     }
 }
