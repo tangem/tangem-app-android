@@ -10,7 +10,8 @@ package com.tangem.domain.cloudbackup.models
  *                           backup password is stored under in the password manager
  * @property walletName      name of the backed up wallet
 
- * @property walletId        id of the backed up wallet (matches `UserWalletId.stringValue`)
+ * @property walletId        id of the backed up wallet (matches `UserWalletId.stringValue`);
+ *                           `null` for legacy files uploaded before the id was persisted
  */
 data class CloudBackupInfo(
     val fileId: String,

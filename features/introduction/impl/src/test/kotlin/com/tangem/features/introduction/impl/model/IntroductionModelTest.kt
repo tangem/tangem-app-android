@@ -1699,6 +1699,12 @@ internal class IntroductionModelTest {
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
-        val BACKUP = CloudBackupInfo(fileId = "file-1", walletName = "My Wallet", createdAtMillis = 0L, walletId = "011")
+        val BACKUP = CloudBackupInfo(
+            fileId = "file-1",
+            backupName = "My Wallet",
+            walletName = "My Wallet",
+            createdAtMillis = 0L,
+            walletId = "011",
+        )
     }
 }
