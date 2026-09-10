@@ -154,6 +154,7 @@ private fun Content(
                 item { SpacerH24() }
 
                 tokenMarketDetailsBody(
+                    regionRestriction = state.regionRestriction,
                     state = state.body,
                     relatedNews = state.relatedNews,
                     marketingBanner = marketingBanner,
