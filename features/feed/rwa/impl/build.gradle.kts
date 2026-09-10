@@ -14,15 +14,35 @@ android {
 dependencies {
     /* Project - API */
     implementation(projects.features.feed.api)
+    implementation(projects.features.promoBanners.api)
 
     /* Project - Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.common)
+    implementation(projects.domain.feed.search)
     implementation(projects.domain.markets)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.models)
+    implementation(projects.domain.search)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
 
     /* Project - Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.pagination)
     implementation(projects.core.decompose)
+    implementation(projects.core.remote)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+
+    /* Project - Common */
+    implementation(projects.common.routing)
+    implementation(projects.common.ui)
+    implementation(projects.common.uiCharts)
+    implementation(projects.common.uiMarkets)
 
     /* Compose */
     implementation(deps.compose.foundation)
@@ -45,4 +65,7 @@ dependencies {
 
     /* Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
+    testImplementation(tangemDeps.blockchain)
+    testImplementation(deps.kotlin.serialization)
 }

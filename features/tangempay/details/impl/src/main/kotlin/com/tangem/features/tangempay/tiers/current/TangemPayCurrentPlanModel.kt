@@ -97,7 +97,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
 
     private fun onFullTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
-        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
     private fun onChangePlanClick() {

@@ -14,6 +14,7 @@ import com.tangem.data.settings.ProdUsedeskTokenTtlManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.UsedeskTokenTtlManager
@@ -36,6 +37,7 @@ internal object SettingsDataModule {
     @Singleton
     fun provideSettingsRepository(
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         appLogsStore: AppLogsStore,
         tangemTechApi: TangemTechApi,
         settingsFeatureToggles: SettingsFeatureToggles,
@@ -43,6 +45,7 @@ internal object SettingsDataModule {
     ): SettingsRepository {
         return DefaultSettingsRepository(
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             appLogsStore = appLogsStore,
             tangemTechApi = tangemTechApi,
             settingsFeatureToggles = settingsFeatureToggles,
@@ -58,18 +61,26 @@ internal object SettingsDataModule {
 
     @Provides
     @Singleton
-    fun provideAppRatingRepository(appPreferencesStore: AppPreferencesStore): AppRatingRepository {
-        return DefaultAppRatingRepository(appPreferencesStore = appPreferencesStore)
+    fun provideAppRatingRepository(
+        appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
+    ): AppRatingRepository {
+        return DefaultAppRatingRepository(
+            appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
+        )
     }
 
     @Provides
     @Singleton
     fun providePushPermissionRepository(
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         @ApplicationContext context: Context,
     ): PermissionRepository {
         return DefaultPermissionRepository(
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             context = context,
         )
     }

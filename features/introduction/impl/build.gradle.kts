@@ -12,6 +12,7 @@ android {
 
 dependencies {
     /** Project - API */
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.introduction.api)
     implementation(projects.features.storiesV2.api)
 
@@ -27,13 +28,17 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.analytics)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.card)
+    implementation(projects.domain.cloudBackup)
     implementation(projects.domain.common)
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.socialLogin)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -49,6 +54,7 @@ dependencies {
 
     /** SDK */
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
 
     /** Other */
     implementation(deps.androidx.annotation)
