@@ -12,7 +12,7 @@ import com.tangem.domain.jointaccount.model.JointOperationSignError.Verification
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
-import com.tangem.domain.jointaccount.safe.SafeAddress
+import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 
 /**
@@ -23,7 +23,10 @@ import com.tangem.domain.jointaccount.safe.SafeSingleton
  * 3. the `SafeTx` decodes to exactly what the UI shows the user — recipient, amount, asset;
  * 4. the payload has one of the two allowed shapes and never targets the Safe itself.
  */
-class JointOperationVerifier(private val payloadCodec: JointTransferPayloadCodec) {
+class JointOperationVerifier(
+    private val payloadCodec: JointTransferPayloadCodec,
+    private val safeAddressCalculator: SafeAddressCalculator,
+) {
 
     fun verify(
         jointAccount: JointAccount,
@@ -49,7 +52,7 @@ class JointOperationVerifier(private val payloadCodec: JointTransferPayloadCodec
         val owners = jointAccount.members.map(JointAccount.Member::address)
 
         val isAnySingletonMatching = SafeSingleton.entries.any { singleton ->
-            SafeAddress.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
+            safeAddressCalculator.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
                 .getOrNull()
                 ?.equals(safeAddress, ignoreCase = true) == true
         }
