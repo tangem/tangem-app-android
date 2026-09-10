@@ -23,6 +23,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.domain.cloudbackup.usecase.CreateCloudBackupUseCase
+import com.tangem.domain.cloudbackup.usecase.SaveBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -70,6 +71,7 @@ internal class CreateCloudBackupModelTest {
     private val createCloudBackupUseCase: CreateCloudBackupUseCase = mockk()
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val cloudBackupRepository: CloudBackupRepository = mockk()
+    private val saveBackupPasswordUseCase: SaveBackupPasswordUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -90,6 +92,7 @@ internal class CreateCloudBackupModelTest {
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "My Wallet (1)",
         walletName = "My Wallet",
         createdAtMillis = 0L,
         walletId = "011",
@@ -110,6 +113,7 @@ internal class CreateCloudBackupModelTest {
             heldUnlock = unlockHotWallet
             unlockHotWallet.right()
         }
+        coEvery { saveBackupPasswordUseCase(any(), any()) } returns true
     }
 
     @Test
@@ -142,6 +146,64 @@ internal class CreateCloudBackupModelTest {
             verify(exactly = 1) { router.pop() }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN upload succeeds WHEN confirm clicked THEN password offered under the backup file name`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        val usernames = mutableListOf<String>()
+        val passwords = mutableListOf<String>()
+        coEvery { saveBackupPasswordUseCase(capture(usernames), any()) } answers {
+            // read inside the call: the model wipes its copy right after the offer
+            passwords += String(secondArg<CharArray>())
+            true
+        }
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(usernames).containsExactly("My Wallet (1)")
+        assertThat(passwords).containsExactly(STRONG_PASSWORD)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the password is not stored WHEN confirm clicked THEN state Completed anyway`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        coEvery { saveBackupPasswordUseCase(any(), any()) } returns false
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.Completed::class.java)
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN upload fails WHEN confirm clicked THEN the password is not offered`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns CloudBackupError.NetworkError.left()
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { saveBackupPasswordUseCase(any(), any()) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN strong password AND upload fails WHEN confirm clicked THEN error sheet sent AND stays ConfirmPassword`() =
@@ -682,6 +744,7 @@ internal class CreateCloudBackupModelTest {
             createCloudBackupUseCase = createCloudBackupUseCase,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
             cloudBackupRepository = cloudBackupRepository,
+            saveBackupPasswordUseCase = saveBackupPasswordUseCase,
         )
     }
 

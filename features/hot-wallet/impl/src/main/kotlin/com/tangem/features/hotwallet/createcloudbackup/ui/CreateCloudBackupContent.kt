@@ -27,13 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -218,8 +218,6 @@ private fun Footer(state: CreateCloudBackupUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun ConfirmFooter(state: CreateCloudBackupUM.ConfirmPassword) {
-    val autofillManager = LocalAutofillManager.current
-
     ConsentRow(
         checked = state.isConsentChecked,
         onCheckedChange = state.onConsentChange,
@@ -232,12 +230,7 @@ private fun ConfirmFooter(state: CreateCloudBackupUM.ConfirmPassword) {
         text = resourceReference(R.string.common_confirm),
         isEnabled = state.isConfirmEnabled && !state.isLoading,
         isLoading = state.isLoading,
-        onClick = {
-            // FR-13: offers saving the freshly set password to the platform password manager,
-            // while both fields are still composed and the autofill session is open
-            autofillManager?.commit()
-            state.onConfirmClick()
-        },
+        onClick = state.onConfirmClick,
     )
 }
 
@@ -277,6 +270,7 @@ private fun SetPasswordScreen(
             isVisible = state.isPasswordVisible,
             onToggleVisibility = state.onToggleVisibility,
             focusRequester = focusRequester,
+            contentType = ContentType.NewPassword,
         )
         SpacerH(12.dp)
         StrengthIndicator(strength = state.strength, hint = state.hint)
@@ -314,6 +308,7 @@ private fun ConfirmPasswordScreen(
                 .takeIf { state.isMismatch },
             enabled = !state.isLoading,
             focusRequester = focusRequester,
+            contentType = ContentType.NewPassword,
         )
     }
 }
@@ -453,9 +448,6 @@ private fun StrengthIndicator(strength: PasswordStrength?, hint: PasswordStrengt
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // FR-09: a password too short to rate shows no meter, only the neutral label and the hint.
-            // The gap to the label lives inside the animated block, so it collapses together with the meter
-            // instead of leaving the label offset until the animation ends.
             AnimatedVisibility(visible = strength != null) {
                 Canvas(
                     modifier = Modifier
