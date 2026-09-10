@@ -285,7 +285,7 @@ internal class ResetCardModel @Inject constructor(
         if (newSelectedWallet != null) {
             appRouter.popTo<AppRoute.Wallet>()
         } else {
-            appRouter.replaceAll(AppRoute.Home())
+            appRouter.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
         }
     }
 

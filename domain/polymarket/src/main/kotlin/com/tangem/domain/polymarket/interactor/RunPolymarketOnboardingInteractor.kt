@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.model.PolymarketAddresses
@@ -10,7 +9,6 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -50,7 +48,6 @@ class RunPolymarketOnboardingInteractor(
     private val submitApprovals: SubmitApprovalsUseCase,
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
-    private val checkGeoblock: CheckPolymarketGeoblockUseCase,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
@@ -81,36 +78,12 @@ class RunPolymarketOnboardingInteractor(
             return
         }
 
-        if (entry.needsDeploy() && !isRegionAllowed()) return
-
         val nonce = step { getRelayerNonce(addresses) } ?: return
 
         emit(PolymarketOnboardingProgress.AwaitingSignature)
         val signed = step { signOnboardingDigests(addresses, nonce) } ?: return
 
         settleWallet(addresses = addresses, entry = entry, signed = signed, credentials = credentials)
-    }
-
-    /**
-     * Whether the region permits opening a new account. Read fresh and fail-closed — an unknown region must
-     * not deploy. Existing accounts are untouched by it, so only [needsDeploy] runs are asked.
-     */
-    private suspend fun FlowCollector<PolymarketOnboardingProgress>.isRegionAllowed(): Boolean {
-        val isBlocked = checkGeoblock().getOrElse { error ->
-            TangemLogger.e("Onboarding: region check failed, deploy refused: $error")
-            true
-        }
-
-        if (isBlocked) {
-            emit(
-                PolymarketOnboardingProgress.Failed(
-                    error = PolymarketOnboardingError.RegionBlocked,
-                    isRetryable = false,
-                ),
-            )
-        }
-
-        return !isBlocked
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.settleWallet(
@@ -231,9 +204,6 @@ class RunPolymarketOnboardingInteractor(
         -> false
         else -> true
     }
-
-    private fun PolymarketWalletStatus.needsDeploy(): Boolean = this == PolymarketWalletStatus.NOT_CREATED ||
-        this == PolymarketWalletStatus.DEPLOYMENT_FAILED
 
     private fun PolymarketWalletStatus.isDeployComplete(): Boolean =
         this == PolymarketWalletStatus.DEPLOYED || this == PolymarketWalletStatus.APPROVALS_FAILED

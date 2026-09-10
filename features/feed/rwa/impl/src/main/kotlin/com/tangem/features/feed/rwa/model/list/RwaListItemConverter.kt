@@ -13,14 +13,12 @@ import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.rwa.ui.state.RwaListItemUM
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 /**
  * Port of the old feed's `MarketsTokenItemConverter` onto the new DS component.
@@ -74,7 +72,7 @@ internal class RwaListItemConverter(
             ticker = stringReference(symbol),
             position = marketRating?.toString()?.let(::stringReference),
             capitalization = getMarketCap()?.let(::stringReference),
-            price = stringReference(getCurrentPrice()),
+            price = stringReference(formatPrice(appCurrency)),
             priceChange = TangemPriceChange.State(
                 value = stringReference(getTrendPercent()),
                 direction = trendDirection,
@@ -101,15 +99,6 @@ internal class RwaListItemConverter(
         }
     }
 
-    private fun TokenMarket.getCurrentPrice(): String {
-        return tokenQuotesShort.currentPrice.format {
-            fiat(
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            ).price()
-        }
-    }
-
     private fun TokenMarket.getChartData(): MarketChartRawData? {
         val chart = when (currentTrendInterval) {
             RwaInterval.H24 -> tokenCharts.h24
@@ -128,26 +117,11 @@ internal class RwaListItemConverter(
     }
 
     private fun TokenMarket.getTrendPercent(): String {
-        return getTrendChangePercent().format { percent() }
+        return trendChangePercent(currentTrendInterval).format { percent() }
     }
 
-    @Suppress("MagicNumber")
     private fun TokenMarket.getTrendDirection(): TangemPriceChange.Direction {
-        val scaled = getTrendChangePercent()?.setScale(4, RoundingMode.HALF_UP)
-        return when {
-            scaled == null -> TangemPriceChange.Direction.Neutral
-            scaled > BigDecimal.ZERO -> TangemPriceChange.Direction.Up
-            scaled < BigDecimal.ZERO -> TangemPriceChange.Direction.Down
-            else -> TangemPriceChange.Direction.Neutral
-        }
-    }
-
-    private fun TokenMarket.getTrendChangePercent(): BigDecimal? {
-        return when (currentTrendInterval) {
-            RwaInterval.H24 -> tokenQuotesShort.h24ChangePercent
-            RwaInterval.D7 -> tokenQuotesShort.weekChangePercent
-            RwaInterval.M1 -> tokenQuotesShort.monthChangePercent
-        }
+        return trendChangePercent(currentTrendInterval).toPriceChangeDirection()
     }
 
     private fun TangemPriceChange.Direction.toChartType(): MarketChartLook.Type {
