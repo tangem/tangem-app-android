@@ -46,7 +46,7 @@ data class JointOperationDto(
         @Json(name = "gasPrice") val gasPrice: String,
         @Json(name = "gasToken") val gasToken: String,
         @Json(name = "refundReceiver") val refundReceiver: String,
-        @Json(name = "nonce") val nonce: Long,
+        @Json(name = "nonce") val nonce: String,
     )
 
     /**
