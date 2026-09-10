@@ -33,14 +33,18 @@ data class CoinCategoriesResponse(
         /**
          * Sector of a [Category]
          *
-         * @param id          sector id, e.g. `technology`
-         * @param displayName name to show when no localized name is available
-         * @param tokensCount number of coins in the sector
+         * @param id           sector id
+         * @param code         stable machine-readable key, e.g. `technology`
+         * @param displayName  name to show when no localized name is available
+         * @param displayOrder curated position of the sector within its category
+         * @param tokensCount  number of coins in the sector
          */
         @JsonClass(generateAdapter = true)
         data class Sector(
             @Json(name = "id") val id: String,
+            @Json(name = "code") val code: String,
             @Json(name = "displayName") val displayName: String,
+            @Json(name = "displayOrder") val displayOrder: Int,
             @Json(name = "tokensCount") val tokensCount: Int,
         )
     }
