@@ -69,7 +69,6 @@ internal class FeedTopBlocksModel @Inject constructor(
     }
 
     private fun showWalletSelector() {
-        portfolioSelectorController.isEnabled.value = { wallet, _ -> !wallet.isLocked }
         portfolioSelectorController.selectAccount(accountId = null)
         observeWalletSelection()
         bottomSheetNavigation.activate(FeedTopBlocksBottomSheetConfig.WalletSelector)
