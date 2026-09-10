@@ -2,12 +2,15 @@ package com.tangem.data.markets.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.markets.DefaultMarketIndicatorsRepository
 import com.tangem.data.markets.DefaultMarketsTokenRepository
+import com.tangem.datasource.local.markets.CoinCategoriesSnapshotStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.repositories.MarketIndicatorsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
@@ -34,6 +37,8 @@ internal object MarketsDataModule {
         cacheRegistry: CacheRegistry,
         excludedBlockchains: ExcludedBlockchains,
         networkFactory: NetworkFactory,
+        coinCategoriesSnapshotStore: CoinCategoriesSnapshotStore,
+        apiConfigsManager: ApiConfigsManager,
     ): MarketsTokenRepository {
         return DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
@@ -43,7 +48,9 @@ internal object MarketsDataModule {
             analyticsEventHandler = analyticsEventHandler,
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
-            coinCategoriesStore = RuntimeStateStore(defaultValue = emptyList()),
+            coinCategoriesStore = RuntimeSharedMapStore(),
+            coinCategoriesSnapshotStore = coinCategoriesSnapshotStore,
+            apiConfigsManager = apiConfigsManager,
             excludedBlockchains = excludedBlockchains,
             networkFactory = networkFactory,
         )

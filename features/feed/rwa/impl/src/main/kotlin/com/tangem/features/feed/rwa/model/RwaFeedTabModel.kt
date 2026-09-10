@@ -19,6 +19,7 @@ import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.RwaCategoryNames
+import com.tangem.features.feed.rwa.categories.RwaDefaultCategory
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent
 import com.tangem.features.feed.rwa.model.list.RwaBatchFlowManager
 import com.tangem.features.feed.rwa.model.list.RwaFeaturedAssetsManager
@@ -59,11 +60,13 @@ private const val CATEGORIES_FILTER_ID = "rwa_categories"
  * categories fetch, so the first list request waits for it.
  */
 @ModelScoped
+@Suppress("LongParameterList")
 internal class RwaFeedTabModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
+    private val userCountryResolver: UserCountryResolver,
     private val router: Router,
 ) : Model(), CategorySelectorComponent.ModelCallback {
 
@@ -192,17 +195,19 @@ internal class RwaFeedTabModel @Inject constructor(
         categoriesState.update { it.copy(isFailed = false) }
 
         modelScope.launch {
-            getCoinCategoriesUseCase().fold(
+            val country = userCountryResolver.resolve()
+
+            getCoinCategoriesUseCase(country = country).fold(
                 ifLeft = { _ ->
                     uiState.update { it.copy(featured = RwaFeaturedUM.Empty) }
                     categoriesState.update { it.copy(isFailed = true) }
                 },
-                ifRight = ::onCategoriesLoaded,
+                ifRight = { categories -> onCategoriesLoaded(categories = categories, country = country) },
             )
         }
     }
 
-    private fun onCategoriesLoaded(categories: List<CoinCategory>) {
+    private fun onCategoriesLoaded(categories: List<CoinCategory>, country: String?) {
         val featured = categories.firstOrNull { it.code == ReservedCategoryCodes.FEATURED_ASSETS }
 
         if (featured == null) {
@@ -216,15 +221,40 @@ internal class RwaFeedTabModel @Inject constructor(
 
         if (umbrella == null) {
             categoriesState.update { it.copy(isFailed = true) }
-        } else {
-            val entry = CategorySelection.Entry(
-                id = umbrella.id,
-                displayName = umbrella.displayName,
-                code = umbrella.code,
-            )
-            categoriesState.update { it.copy(rwaCategory = entry) }
-            reloadList()
+            return
         }
+
+        val entry = CategorySelection.Entry(
+            id = umbrella.id,
+            displayName = umbrella.displayName,
+            code = umbrella.code,
+        )
+        categoriesState.update { it.copy(rwaCategory = entry) }
+
+        val default = defaultSelection(categories = categories, country = country)
+
+        if (default == null) {
+            reloadList()
+        } else {
+            onCategorySelect(selection = default)
+        }
+    }
+
+    /** Applied once per model: a later reload must not overwrite whatever the user has picked since. */
+    private fun defaultSelection(categories: List<CoinCategory>, country: String?): CategorySelection? {
+        if (categoriesState.value.isDefaultApplied) return null
+
+        // a load that went out without a country carries no restriction data, so spending the one-shot
+        // on it would leave a restricted region unfiltered for the rest of the session
+        if (country == null) return null
+
+        categoriesState.update { it.copy(isDefaultApplied = true) }
+
+        return RwaDefaultCategory.resolve(
+            categories = categories,
+            country = country,
+            hasUserSelection = uiState.value.appliedSelection.category != null,
+        )
     }
 
     private fun reloadFeatured() {
@@ -352,5 +382,6 @@ internal class RwaFeedTabModel @Inject constructor(
         val rwaCategory: CategorySelection.Entry? = null,
         val featuredCategoryId: String? = null,
         val isFailed: Boolean = false,
+        val isDefaultApplied: Boolean = false,
     )
 }
