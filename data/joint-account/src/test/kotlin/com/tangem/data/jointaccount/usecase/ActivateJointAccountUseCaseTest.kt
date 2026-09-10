@@ -1,10 +1,12 @@
-package com.tangem.domain.jointaccount.usecase
+package com.tangem.data.jointaccount.usecase
 
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
+import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
@@ -13,7 +15,6 @@ import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.safe.SafeAddress
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -47,6 +48,7 @@ internal class ActivateJointAccountUseCaseTest {
         signer = signer,
         fetcher = fetcher,
         supplier = supplier,
+        safeAddressCalculator = DefaultSafeAddressCalculator(),
     )
 
     private val account = MockAccounts.createJointAccount(
@@ -297,7 +299,7 @@ internal class ActivateJointAccountUseCaseTest {
     }
 
     private fun computedSafeAddress(singleton: SafeSingleton): String {
-        return SafeAddress
+        return DefaultSafeAddressCalculator()
             .compute(owners = listOf(OWNER_ADDRESS, MEMBER_ADDRESS), threshold = 2, singleton = singleton)
             .getOrNull()!!
     }
