@@ -178,10 +178,9 @@ and so stays stale across the whole gap between a new query and its reload.
 inside `reload()`. Writing to `RwaFeedTabModel.listRequest` therefore does nothing to the list on its own —
 the model must call `reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
 
-`RwaFeaturedAssetsManager` takes the *same* `listRequest` flow but does collect it — only
-`interval`, and only to re-map the rail. So a write to `listRequest` moves the rail and not the list, which
-is intended; keep the rail's dependency narrowed to `map { it.interval }.distinctUntilChanged()` rather
-than the whole request, or every filter change re-allocates the rail's cards.
+`RwaFeaturedAssetsManager` is the opposite: it takes the model's `selectedInterval` flow and *does* collect
+it, to re-map the rail. It deliberately does not see `listRequest`, so it is unaffected by the one gap in
+that object's upkeep — `reloadList()` skips `syncListRequest()` while the umbrella category is unresolved.
 
 **The reserved category codes are backend contract strings** (`featured-assets`, `real-world-assets`,
 TWI-1477). Neither is derived from the other, and a rename on either side silently empties the rail or the
@@ -193,6 +192,25 @@ from a category the backend does not serve.
 `@Serializable` on a `FeedRoute` is currently inert. Don't rely on restoration when adding a screen,
 and treat the "routes are pure data" rule in `features/feed/README.md` as unenforced by the compiler
 (TWI-1608).
+
+**The interval and the sort are model state, not UI state.** `RwaFeedTabModel.selectedInterval` and
+`selectedSort` are the sources of truth (`RwaFeedTabUM.interval` and `sortTabs` only mirror them), and every
+consequence of a switch lives in that value's own `drop(1)` collector in `init` — `selectInterval()` and
+`selectSort()` are just setters. This mirrors `CryptoFeedTabModel`, and the conflation is load-bearing:
+both the interval menu and the sort tabs invoke their callback unconditionally, including on the value
+already selected, so the only thing that stops a redundant reload is a `StateFlow` refusing to re-emit an
+equal value. Add interval- or sort-driven work to those collectors, not to the click handlers.
+
+The interval is presented as a chip + dropdown (`ui/RwaIntervalMenu.kt`, anchored by `IntervalFilter` in
+`RwaFeedTabContent.kt`), copied from the Crypto tab's `MarketPulseIntervalMenu` — itself a copy of the
+legacy `SortByMenu`. `TangemContextMenu` is a slot API with no row or selection component, which is why
+all three hand-roll the same row and check-circle.
+
+The sort is presented as `TangemTabNavigation` (DS3), built in the model as an
+`ImmutableList<TangemTabItemUM>`: the component derives selection from each item's `isSelected` and takes a
+per-item `onClick`, so there is no index contract and no feature-local pill UM. `RwaSort.id` is the tab key
+— domain-derived, never text- or resource-derived. The Crypto tab was migrated the same way in the same
+change, so `sortTabs` is a real twin there too.
 
 being destroyed, so holding scroll position in the component is what makes it survive tab switches.
 

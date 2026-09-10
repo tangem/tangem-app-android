@@ -4,18 +4,19 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.model.list.RwaInterval
-import com.tangem.features.feed.rwa.model.list.RwaSort
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * [selectedInterval], [selectedSort] and [appliedSelection] are the source of truth for the next list
- * request; [interval] and [categoriesFilter] are the rendered projections of the latter two.
+ * [appliedSelection] is the source of truth for the next list request's category scope, and
+ * [categoriesFilter] is its rendered projection. The trend interval and the sort are owned by the model as
+ * `StateFlow`s; [interval] and [sortTabs] only mirror their current values for the chip label, the menu's
+ * check mark and the selected tab.
  *
  * @property appliedSelection category filter the list is currently scoped to; empty means "All"
  */
@@ -23,19 +24,22 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class RwaFeedTabUM(
     val featured: RwaFeaturedUM,
     val categoriesFilter: TangemFilterItemUM,
-    val interval: TangemSegmentedControl.State,
-    val tags: ImmutableList<RwaTagUM>,
-    val onTagSelect: (Int) -> Unit,
+    val interval: RwaIntervalUM,
+    val sortTabs: ImmutableList<TangemTabItemUM>,
     val onVisibleItemsChange: (List<String>) -> Unit,
     val list: RwaListUM,
-    val selectedInterval: RwaInterval,
-    val selectedSort: RwaSort,
     val appliedSelection: CategorySelection,
-) {
+)
 
-    /** [tags] is built from `RwaSort.entries`, so the selected sort is the selected pill. */
-    val selectedTagIndex: Int get() = RwaSort.entries.indexOf(selectedSort)
-}
+/**
+ * Trend-interval chip and its menu. Carries no option list — the menu renders `RwaInterval.entries` — and
+ * no expanded flag, which is local Compose state in the anchor.
+ */
+@Immutable
+internal data class RwaIntervalUM(
+    val selected: RwaInterval,
+    val onOptionClick: (RwaInterval) -> Unit,
+)
 
 @Immutable
 internal sealed interface RwaFeaturedUM {
@@ -58,12 +62,6 @@ internal data class RwaFeaturedAssetUM(
     val price: TextReference,
     val priceChange: TangemPriceChange.State,
     val onClick: () -> Unit,
-)
-
-@Immutable
-internal data class RwaTagUM(
-    val id: String,
-    val title: TextReference,
 )
 
 @Immutable
