@@ -14,6 +14,7 @@ dependencies {
 
     /** Compose */
     api(deps.compose.foundation)
+    implementation(deps.compose.coil)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)

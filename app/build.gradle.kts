@@ -133,6 +133,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.appUpdate)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
@@ -182,6 +183,7 @@ dependencies {
     implementation(projects.domain.earn)
     implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.feed.search)
     implementation(projects.domain.cloudBackup)
 
@@ -393,6 +395,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.referral)
+    implementation(projects.domain.socialLogin)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.virtualAccount)
     implementation(projects.domain.visa.models)
@@ -520,8 +523,8 @@ dependencies {
     /** Chucker */
     debugImplementation(deps.chucker)
     mockedImplementation(deps.chucker)
+    internalImplementation(deps.chucker)
     externalImplementation(deps.chuckerStub)
-    internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 
     /** Camera */

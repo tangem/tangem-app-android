@@ -24,8 +24,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, but every
- * action a personal account could perform is held back with [ScenarioUnavailabilityReason.JointAccount].
+ * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, the
+ * exchanges are held back with [ScenarioUnavailabilityReason.JointAccount] and send keeps its natural availability.
  */
 internal class JointAccountActionsFactoryTest {
 
@@ -46,7 +46,7 @@ internal class JointAccountActionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN everything a personal account offers WHEN create THEN the same actions are held back as joint`() =
+    fun `GIVEN everything a personal account offers WHEN create THEN exchanges are held back and send is offered`() =
         runTest {
             // Arrange
             val status = statusWithAddress(SAFE)
@@ -65,7 +65,7 @@ internal class JointAccountActionsFactoryTest {
                 ActionState.CopyAddress(ScenarioUnavailabilityReason.None),
                 ActionState.Receive(ScenarioUnavailabilityReason.None),
                 ActionState.Stake(ScenarioUnavailabilityReason.JointAccount, option = null),
-                ActionState.Send(ScenarioUnavailabilityReason.JointAccount),
+                ActionState.Send(ScenarioUnavailabilityReason.None),
                 ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
                 ActionState.Buy(ScenarioUnavailabilityReason.JointAccount),
                 ActionState.Sell(ScenarioUnavailabilityReason.JointAccount),
@@ -167,7 +167,7 @@ internal class JointAccountActionsFactoryTest {
         assertThat(actual.filterIsInstance<ActionState.Receive>()).isEmpty()
         assertThat(actual.filterIsInstance<ActionState.CopyAddress>()).isEmpty()
         assertThat(actual.filterIsInstance<ActionState.Send>().single().unavailabilityReason)
-            .isEqualTo(ScenarioUnavailabilityReason.JointAccount)
+            .isEqualTo(ScenarioUnavailabilityReason.None)
     }
 
     @Test

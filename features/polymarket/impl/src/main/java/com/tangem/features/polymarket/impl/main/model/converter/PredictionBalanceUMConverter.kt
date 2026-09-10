@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.main.model.converter
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.res.R
-import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -13,6 +12,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import com.tangem.utils.converter.Converter
@@ -21,11 +21,12 @@ import java.math.BigDecimal
 internal class PredictionBalanceUMConverter(
     private val onAddFundsClick: () -> Unit,
     private val onWithdrawClick: () -> Unit,
-) : Converter<PredictionAccountStatusValue, PredictionBalanceUM> {
+) : Converter<PredictionBalanceUMConverter.Input, PredictionBalanceUM> {
 
-    override fun convert(value: PredictionAccountStatusValue): PredictionBalanceUM {
-        val active = value as? PredictionAccountStatusValue.Active
-        val isLoading = value is PredictionAccountStatusValue.Loading
+    override fun convert(value: Input): PredictionBalanceUM {
+        val status = value.status
+        val active = status as? PredictionAccountStatusValue.Active
+        val isLoading = status is PredictionAccountStatusValue.Loading
 
         return PredictionBalanceUM(
             balance = active?.balance.formatPolymarketMoneyStyled(
@@ -34,7 +35,9 @@ internal class PredictionBalanceUMConverter(
             addFunds = actionButton(
                 text = resourceReference(id = R.string.common_add_funds),
                 icon = Icons.ic_arrow_down_24,
-                isEnabled = active != null && active.isTradingAllowed,
+                isEnabled = active?.cryptoCurrencyStatus != null &&
+                    value.isTradingAllowed &&
+                    value.depositTarget != null,
                 isLoading = isLoading,
                 onClick = onAddFundsClick,
             ),
@@ -61,9 +64,14 @@ internal class PredictionBalanceUMConverter(
             tintReference = { TangemTheme.colors3.icon.primary },
         ),
         type = TangemButtonType.Secondary,
-        shape = TangemButtonShape.Rounded,
         isEnabled = isEnabled,
         isLoading = isLoading,
         onClick = onClick,
+    )
+
+    data class Input(
+        val status: PredictionAccountStatusValue,
+        val depositTarget: PolymarketDepositTarget?,
+        val isTradingAllowed: Boolean,
     )
 }
