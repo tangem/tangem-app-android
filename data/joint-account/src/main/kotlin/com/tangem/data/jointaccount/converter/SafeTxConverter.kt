@@ -21,8 +21,23 @@ internal class SafeTxConverter @Inject constructor() :
         gasPrice = BigInteger(value.gasPrice),
         gasToken = value.gasToken.lowercase(),
         refundReceiver = value.refundReceiver.lowercase(),
-        nonce = BigInteger.valueOf(value.nonce),
+        nonce = value.nonce.toContractNonce(),
     )
+
+    /**
+     * The backend validates the field as `^(0|[1-9]\d{0,17})$` — at most 18 digits, so it always fits the `Long`
+     * the persisted copy keeps. Refusing a wider value here fails the operation while it is being read, where the
+     * fetch drops just that operation, rather than later at the store, where the narrowing would take the whole
+     * fetch down.
+     */
+    private fun String.toContractNonce(): BigInteger {
+        val nonce = BigInteger(this)
+        require(nonce.signum() >= 0 && nonce <= MAX_CONTRACT_NONCE) {
+            "nonce is outside the range the contract allows: $this"
+        }
+
+        return nonce
+    }
 
     override fun convertBack(value: SafeTx): JointOperationDto.SafeTxDto = JointOperationDto.SafeTxDto(
         to = value.to,
@@ -34,7 +49,11 @@ internal class SafeTxConverter @Inject constructor() :
         gasPrice = value.gasPrice.toString(),
         gasToken = value.gasToken,
         refundReceiver = value.refundReceiver,
-        // exact conversion: the wire contract pins nonce as an integer — fail fast rather than truncate
-        nonce = value.nonce.longValueExactCompat(),
+        nonce = value.nonce.toString(),
     )
+
+    private companion object {
+        /** The largest value `^(0|[1-9]\d{0,17})$` can express */
+        val MAX_CONTRACT_NONCE: BigInteger = BigInteger("999999999999999999")
+    }
 }
