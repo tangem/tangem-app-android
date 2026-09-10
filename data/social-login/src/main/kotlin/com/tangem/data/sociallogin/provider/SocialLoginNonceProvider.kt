@@ -1,21 +1,25 @@
 package com.tangem.data.sociallogin.provider
 
+import com.tangem.lib.auth.social.SignInNonce
+import com.tangem.lib.auth.social.SocialRecoveryClient
+import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
+
 /**
  * Supplies the server nonce the provider id token is bound to, so a token obtained elsewhere cannot be
- * replayed against the recovery backend (SEC-03).
+ * replayed against the recovery backend.
  */
 internal interface SocialLoginNonceProvider {
 
     /** `null` when the backend cannot issue one */
-    suspend fun getNonce(): String?
+    suspend fun getNonce(): SignInNonce?
 }
 
-/**
- * Issues no nonce, leaving every id token unbound and SEC-03 unmet: a locally generated value would
- * give no replay protection, so the nonce can only come from the backend. Superseded once the recovery
- * API exposes an endpoint that issues one.
- */
-internal class NoServerNonceProvider : SocialLoginNonceProvider {
+internal class BackendSocialLoginNonceProvider @Inject constructor(
+    private val client: SocialRecoveryClient,
+) : SocialLoginNonceProvider {
 
-    override suspend fun getNonce(): String? = null
+    override suspend fun getNonce(): SignInNonce? = client.requestSignInNonce()
+        .onLeft { TangemLogger.e("Failed to obtain the social sign-in nonce: ${it::class.simpleName}") }
+        .getOrNull()
 }
