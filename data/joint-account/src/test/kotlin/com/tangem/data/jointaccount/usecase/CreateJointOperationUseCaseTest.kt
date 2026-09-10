@@ -1,10 +1,11 @@
-package com.tangem.domain.jointaccount.usecase
+package com.tangem.data.jointaccount.usecase
 
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
+import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -16,6 +17,7 @@ import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
+import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
@@ -53,6 +55,7 @@ internal class CreateJointOperationUseCaseTest {
         gasBuilder = gasBuilder,
         compositionChecker = compositionChecker,
         networkReader = networkReader,
+        payloadCodec = DefaultJointTransferPayloadCodec(),
     )
 
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 3)
