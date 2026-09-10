@@ -15,18 +15,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.introduction.impl.ui.state.WelcomeSceneUM
+import kotlinx.collections.immutable.ImmutableList
 
 /**
- * The three scenes are composed on top of each other and only their alpha and offset move, so a scene change never
+ * The scenes are composed on top of each other and only their alpha and offset move, so a scene change never
  * recomposes anything: the position is read inside the draw phase. Under reduced motion the first scene simply stays.
  */
 @Composable
-internal fun WelcomeTextScenes(isMotionEnabled: Boolean, videoPositionMs: () -> Long, modifier: Modifier = Modifier) {
+internal fun WelcomeTextScenes(
+    scenes: ImmutableList<WelcomeSceneUM>,
+    isMotionEnabled: Boolean,
+    videoPositionMs: () -> Long,
+    modifier: Modifier = Modifier,
+) {
     val positionMs = remember { mutableLongStateOf(0L) }
     if (isMotionEnabled) {
         LaunchedEffect(Unit) {
@@ -41,7 +46,7 @@ internal fun WelcomeTextScenes(isMotionEnabled: Boolean, videoPositionMs: () -> 
         else -> WelcomeTextTimeline.Frame(alpha = 0f, offsetDp = 0f)
     }
     Box(modifier = modifier) {
-        welcomeTextScenes().forEachIndexed { scene, texts ->
+        scenes.forEachIndexed { scene, texts ->
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -78,20 +83,3 @@ private fun SceneLine(text: TextReference, color: Color, frame: () -> WelcomeTex
         color = color,
     )
 }
-
-private data class WelcomeTextScene(val title: TextReference, val subtitle: TextReference)
-
-private fun welcomeTextScenes() = listOf(
-    WelcomeTextScene(
-        title = resourceReference(R.string.introduction_title),
-        subtitle = resourceReference(R.string.introduction_subtitle),
-    ),
-    WelcomeTextScene(
-        title = resourceReference(R.string.introduction_scene_two_title),
-        subtitle = resourceReference(R.string.introduction_scene_two_subtitle),
-    ),
-    WelcomeTextScene(
-        title = resourceReference(R.string.introduction_scene_three_title),
-        subtitle = resourceReference(R.string.introduction_scene_three_subtitle),
-    ),
-)
