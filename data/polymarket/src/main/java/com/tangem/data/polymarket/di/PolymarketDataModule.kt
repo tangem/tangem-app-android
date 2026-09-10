@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.di
 
 import com.tangem.data.polymarket.DefaultPolymarketBridgeRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
+import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.entity.DefaultPolymarketCollateralCurrencyFactory
 import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriver
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
@@ -14,6 +15,7 @@ import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
@@ -29,6 +31,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface PolymarketDataModule {
+
+    @Binds
+    @Singleton
+    fun bindPolymarketPositionsRepository(impl: DefaultPolymarketPositionsRepository): PolymarketPositionsRepository
 
     @Binds
     @Singleton
