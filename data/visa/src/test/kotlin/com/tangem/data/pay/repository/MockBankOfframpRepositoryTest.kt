@@ -45,13 +45,13 @@ internal class MockBankOfframpRepositoryTest {
     }
 
     @Test
-    fun `GIVEN fresh repository WHEN getOptions THEN three USDC sources and two rails`() = runTest {
+    fun `GIVEN fresh repository WHEN getOptions THEN four USDC sources and two rails`() = runTest {
         // Act
         val actual = repository.getOptions(WALLET_ID)
 
         // Assert
         val options = actual.getOrNull()
-        assertThat(options?.sources?.map { it.chainId }).containsExactly(137L, 8453L, 42161L).inOrder()
+        assertThat(options?.sources?.map { it.chainId }).containsExactly(137L, 84532L, 84532L, 42161L).inOrder()
         assertThat(options?.destinations?.map { it.rail }).containsExactly(BankRail.ACH, BankRail.WIRE).inOrder()
     }
 
