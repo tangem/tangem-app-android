@@ -72,6 +72,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
@@ -702,19 +704,114 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN a failed prefetch WHEN add funds clicked THEN nothing opens and it is reported`() = runTest {
+    fun `GIVEN a failed prefetch WHEN the screen opens THEN add funds is dimmed but tappable`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN add funds clicked THEN nothing opens and the error alert is shown`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
         val model = createModel(testScope = this)
         val slot = FakeSlotHost(model.addFundsNavigation)
         advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
 
         // Act
         model.uiState.value.balance.addFunds.onClick()
 
         // Assert
         assertThat(slot.configuration).isNull()
-        verify { messageSender.send(SnackbarMessage(resourceReference(R.string.common_unknown_error))) }
+        assertThat((message.captured as DialogMessage).message)
+            .isEqualTo(resourceReference(R.string.prediction_add_funds_error_description))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN add funds clicked THEN no request is made`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.balance.addFunds.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a successful prefetch WHEN pulled to refresh THEN requisites are requested again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN pulled to refresh and the bridge recovers THEN add funds is enabled`() =
+        runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
+                PolymarketBridgeError.Network.left(),
+                REQUISITES.right(),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+            assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+            assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a refresh is still in flight from ready WHEN observed THEN add funds stays enabled`() = runTest {
+        // Arrange
+        val refreshHangs = CompletableDeferred<Unit>()
+        var calls = 0
+        coEvery { refreshRequisites(USER_WALLET_ID) } coAnswers {
+            calls++
+            if (calls == 1) REQUISITES.right() else { refreshHangs.await(); REQUISITES.right() }
+        }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
         model.onDestroy()
     }
 
@@ -790,7 +887,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN requisites without a default target WHEN the screen opens THEN add funds stays disabled`() = runTest {
+    fun `GIVEN requisites without a default target WHEN the screen opens THEN add funds is dimmed`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_DEFAULT.right()
 
@@ -799,8 +896,25 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN requisites without a default target WHEN the screen resumes THEN they are retried`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_DEFAULT.right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+        model.onDestroy()
+
+        // Assert
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
     }
 
     @Test
