@@ -50,6 +50,8 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.foryou.TokenSummaryComponent
@@ -92,7 +94,7 @@ import javax.inject.Inject
 internal class MarketsTokenDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getUserCountryUseCase: GetUserCountryUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
     addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
@@ -246,8 +248,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
     val addFundsSheetNavigation = SlotNavigation<AddFundsSlotRoute>()
 
+    // a region-restricted asset must not become tradable, and adding it to the portfolio is the only
+    // route to that from this screen
     private val isAddToPortfolioAvailable: Boolean =
-        params.shouldShowPortfolio
+        params.shouldShowPortfolio && !params.token.isRestrictedForCountry
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
         scope = modelScope,
         settings = AddToPortfolioManager.Settings(
@@ -256,8 +260,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         analyticsParams = AddToPortfolioManager.AnalyticsParams(params.analyticsParams?.source),
     )
 
+    private val regionRestriction: TangemMessageBanner.State? = regionRestrictionState()
+
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
+            regionRestriction = regionRestriction,
             tokenName = params.token.name,
             symbol = params.token.symbol,
             priceText = params.token.tokenQuotes.currentPrice.format {
@@ -446,6 +453,30 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 networks = (networksState.value as? TokenNetworksState.NetworksAvailable)?.networks.orEmpty(),
             ),
             tokenSummaryPeriodConverter.convert(state.value.selectedInterval).id,
+        )
+    }
+
+    /**
+     * Names the region when the platform can, and falls back to the region-less wording when it cannot —
+     * printing a bare country code would read worse than saying nothing.
+     */
+    private fun regionRestrictionState(): TangemMessageBanner.State? {
+        if (!params.token.isRestrictedForCountry) return null
+
+        val regionName = getUserCountryUseCase.invokeSync().getOrNull()
+            ?.let { RegionDisplayName.resolve(countryCode = it.code) }
+
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.buy_swap_region_restriction_title),
+            variant = TangemMessageBanner.Variant.Warning,
+            description = if (regionName == null) {
+                resourceReference(R.string.buy_swap_region_restriction_description)
+            } else {
+                resourceReference(
+                    id = R.string.buy_swap_region_restriction_description_region,
+                    formatArgs = wrappedList(regionName),
+                )
+            },
         )
     }
 
