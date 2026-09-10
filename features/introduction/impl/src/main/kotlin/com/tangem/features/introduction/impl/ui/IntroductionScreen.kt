@@ -41,6 +41,7 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.features.introduction.impl.model.welcomeScenes
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.core.ui.R as CoreUiR
 
@@ -59,6 +60,7 @@ internal fun IntroductionScreen(
     state: IntroductionUM,
     onSurfaceAvailable: (SurfaceView) -> Unit,
     onSurfaceRelease: (SurfaceView) -> Unit,
+    videoPositionMs: () -> Long,
     modifier: Modifier = Modifier,
 ) {
     SystemBarsIconsDisposable(darkIcons = false)
@@ -101,14 +103,23 @@ internal fun IntroductionScreen(
                     contentScale = ContentScale.FillHeight,
                     contentDescription = null,
                 )
-                BottomActions(
-                    state = state,
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp),
-                )
+                ) {
+                    WelcomeTextScenes(
+                        scenes = state.scenes,
+                        isMotionEnabled = state.isMotionEnabled,
+                        videoPositionMs = videoPositionMs,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                    )
+                    BottomActions(state = state)
+                }
             }
             state.bottomSheetConfig?.let { CreateWalletBottomSheet(config = it) }
             state.haveWalletBottomSheetConfig?.let { HaveWalletBottomSheet(config = it) }
@@ -210,9 +221,11 @@ private fun IntroductionScreenPreview() {
         IntroductionScreen(
             onSurfaceAvailable = {},
             onSurfaceRelease = {},
+            videoPositionMs = { 0L },
             state = IntroductionUM(
                 isVideoReady = true,
                 isMotionEnabled = true,
+                scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},

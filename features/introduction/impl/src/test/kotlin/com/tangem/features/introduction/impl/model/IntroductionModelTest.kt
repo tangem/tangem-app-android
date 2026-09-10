@@ -222,6 +222,19 @@ internal class IntroductionModelTest {
     }
 
     @Test
+    fun `GIVEN playback under way WHEN the video position is read THEN the player position is returned`() {
+        // Arrange
+        every { videoPlayer.positionMs } returns 4_200L
+        val model = createModel()
+
+        // Act
+        val positionMs = model.videoPositionMs()
+
+        // Assert
+        assertThat(positionMs).isEqualTo(4_200L)
+    }
+
+    @Test
     fun `GIVEN introduction screen WHEN destroyed twice THEN player released once per call`() {
         // Arrange
         val model = createModel()
