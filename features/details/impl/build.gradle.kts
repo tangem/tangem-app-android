@@ -16,7 +16,6 @@ dependencies {
     api(projects.features.details.api)
     api(projects.features.onboardingV2.api)
     api(projects.features.wallet.api)
-    implementation(projects.features.tangempay.details.api)
     implementation(projects.features.virtualAccounts.details.api)
 
     /* Project - Core */
