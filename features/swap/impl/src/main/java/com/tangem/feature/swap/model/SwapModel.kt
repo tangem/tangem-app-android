@@ -2515,7 +2515,9 @@ internal class SwapModel @Inject constructor(
 
         val toFilter = if (isPredictionWithdrawFlow) {
             { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
-                baseFilter(accountStatus, currencyStatus) &&
+                accountStatus is AccountStatus.Personal &&
+                    accountStatus.account.userWalletId == params.userWalletId &&
+                    baseFilter(accountStatus, currencyStatus) &&
                     predictionWithdrawDestinations?.contains(currencyStatus.currency.id) == true
             }
         } else {
