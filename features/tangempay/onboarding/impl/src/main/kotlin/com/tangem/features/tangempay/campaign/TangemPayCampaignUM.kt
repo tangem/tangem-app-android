@@ -17,7 +17,8 @@ internal sealed interface TangemPayCampaignUM {
         val mode: Mode,
         val isCtaLoading: Boolean,
         val onGetCardClick: () -> Unit,
-        val onTermsClick: () -> Unit,
+        val onTermsOfServiceClick: () -> Unit,
+        val onPrivacyPolicyClick: () -> Unit,
         val onCloseClick: () -> Unit,
     ) : TangemPayCampaignUM {
 
