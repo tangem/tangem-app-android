@@ -47,10 +47,7 @@ data class PredictionWithdrawalRecord(
     val transactionId: String?,
 )
 
-/**
- * A withdrawal built and read back, waiting only for the card. [decoded] is what the confirmation screen
- * must display — the values read out of [call], never the ones it was built from.
- */
+/** @property decoded the recipient and amount read out of [call], the values a confirmation screen must display */
 data class PreparedPredictionWithdrawal(
     val userWalletId: UserWalletId,
     val walletId: String,

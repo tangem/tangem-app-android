@@ -20,6 +20,8 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
 import com.tangem.domain.polymarket.model.PreparedPredictionWithdrawal
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 sealed interface PredictionWithdrawalFailure {
@@ -39,6 +41,8 @@ sealed interface PredictionWithdrawalFailure {
     data object SigningFailed : PredictionWithdrawalFailure
 
     data class Rejected(val error: PredictionWithdrawError) : PredictionWithdrawalFailure
+
+    data class PersistenceFailed(val cause: Throwable) : PredictionWithdrawalFailure
 }
 
 class SubmitPredictionWithdrawalInteractor(
@@ -50,7 +54,10 @@ class SubmitPredictionWithdrawalInteractor(
     private val codec: PredictionTransferCallCodec,
 ) {
 
-    /** Everything up to but excluding the signature, so the caller can show the decoded values first. */
+    /**
+     * @return a withdrawal that is built and read back but not yet signed; [PreparedPredictionWithdrawal.decoded]
+     * holds the recipient and amount as read out of the calldata
+     */
     suspend fun prepare(params: Params): Either<PredictionWithdrawalFailure, PreparedPredictionWithdrawal> = either {
         ensure(store.get(params.userWalletId) == null) { PredictionWithdrawalFailure.AlreadyInFlight }
 
@@ -88,7 +95,10 @@ class SubmitPredictionWithdrawalInteractor(
         )
     }
 
-    
+    /**
+     * @return the receipt of the accepted batch; the signed batch is persisted before it is submitted, so a
+     * crash in between leaves a record [resend] can pick up
+     */
     suspend fun confirm(
         prepared: PreparedPredictionWithdrawal,
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
@@ -111,12 +121,14 @@ class SubmitPredictionWithdrawalInteractor(
             signature = signature,
         )
 
-        store.save(prepared.userWalletId, PredictionWithdrawalRecord(batch = batch, transactionId = null))
+        runSuspendCatching {
+            store.save(prepared.userWalletId, PredictionWithdrawalRecord(batch = batch, transactionId = null))
+        }.getOrElse { raise(PredictionWithdrawalFailure.PersistenceFailed(it)) }
 
         send(userWalletId = prepared.userWalletId, walletId = prepared.walletId, batch = batch)
     }
 
-    /** Resends the persisted batch. Never re-signs: a fresh nonce would be a second withdrawal. */
+    /** @return the receipt for the persisted batch, submitted again as signed, with no new signature or nonce */
     suspend fun resend(
         userWalletId: UserWalletId,
         walletId: String,
@@ -134,7 +146,9 @@ class SubmitPredictionWithdrawalInteractor(
         val receipt = withdrawRepository.submit(walletId = walletId, batch = batch)
             .getOrElse { raise(PredictionWithdrawalFailure.Rejected(it)) }
 
-        store.save(userWalletId, PredictionWithdrawalRecord(batch = batch, transactionId = receipt.transactionId))
+        runSuspendCatching {
+            store.save(userWalletId, PredictionWithdrawalRecord(batch = batch, transactionId = receipt.transactionId))
+        }.onFailure { TangemLogger.e("Failed to record the accepted withdrawal ${receipt.transactionId}", it) }
 
         return receipt
     }
