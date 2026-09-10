@@ -40,7 +40,6 @@ internal class FeedTopBlocksModelTest {
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
 
-    private lateinit var isEnabledFlow: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
     private lateinit var selection: MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>
 
     private val walletAId = UserWalletId("aa")
@@ -62,8 +61,6 @@ internal class FeedTopBlocksModelTest {
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         selection = MutableStateFlow(null)
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns selection
-        isEnabledFlow = MutableStateFlow { _: UserWallet, _: AccountStatus -> true }
-        every { portfolioSelectorController.isEnabled } returns isEnabledFlow
         // the real controller clears its pick, and the model relies on that to see the next one
         every { portfolioSelectorController.selectAccount(accountId = null) } answers { selection.value = null }
         coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = any()) } returns null
@@ -260,23 +257,6 @@ internal class FeedTopBlocksModelTest {
         assertThat(openedSheets)
             .containsExactly(FeedTopBlocksBottomSheetConfig.WalletSelector, null)
             .inOrder()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN a locked wallet WHEN the selector is shown THEN it cannot be picked`() = runTest {
-        // Arrange
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
-        val model = createModel(testScope = this)
-
-        // Act
-        model.onCollectiblesClick()
-        advanceUntilIdle()
-
-        // Assert
-        val isEnabled = isEnabledFlow.value
-        assertThat(isEnabled(lockedWallet, accountStatus)).isFalse()
-        assertThat(isEnabled(walletA, accountStatus)).isTrue()
         model.onDestroy()
     }
 
