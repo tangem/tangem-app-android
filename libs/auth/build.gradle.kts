@@ -12,6 +12,13 @@ android {
     namespace = "com.tangem.libs.auth"
 }
 
+// bcprov-jdk15to18 arrives transitively and ships the same classes as the bcprov declared below, so this
+// module would compile against two copies while :app drops that artifact globally. Match :app so the
+// classpath here is the one that actually ends up in the built app.
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+}
+
 dependencies {
 
     // region DI
@@ -29,6 +36,7 @@ dependencies {
     api(deps.arrow.core)
     api(deps.okHttp)
     api(deps.androidx.datastore.preferences.core)
+    implementation(deps.bouncycastle.bcprov)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.retrofit)
