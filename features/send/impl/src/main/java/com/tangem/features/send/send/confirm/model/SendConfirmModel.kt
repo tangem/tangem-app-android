@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -64,6 +65,7 @@ import com.tangem.features.send.common.CommonSendRoute
 import com.tangem.features.send.common.SendBalanceUpdater
 import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
@@ -71,6 +73,7 @@ import com.tangem.features.send.send.confirm.model.transformers.SendConfirmIniti
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSendingStateTransformer
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
+import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
@@ -118,6 +121,7 @@ internal class SendConfirmModel @Inject constructor(
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isHighNetworkFeeUseCase: IsHighNetworkFeeUseCase,
+    private val jointSendDelegate: JointSendDelegate,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -125,6 +129,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private val analyticsCategoryName = params.analyticsCategoryName
     private val userWallet = params.userWallet
+    private val jointAccount = params.accountFlow.value as? Account.Joint
     private val appCurrency = params.appCurrency
     private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
     private val cryptoCurrency = cryptoCurrencyStatus.currency
@@ -333,11 +338,17 @@ internal class SendConfirmModel @Inject constructor(
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty) {
+                val signaturesUM = if (jointAccount != null) {
+                    loadSignaturesUM(account = jointAccount) ?: return@launch
+                } else {
+                    null
+                }
                 _uiState.update { state ->
                     state.copy(
                         confirmUM = SendConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
                             walletName = stringReference(userWallet.name),
+                            signaturesUM = signaturesUM,
                         ).transform(uiState.value.confirmUM),
                         confirmData = confirmData,
                     )
@@ -345,6 +356,19 @@ internal class SendConfirmModel @Inject constructor(
                 updateConfirmNotifications()
             }
         }
+    }
+
+    private suspend fun loadSignaturesUM(account: Account.Joint): SendSignaturesUM? {
+        val jointAccount = jointSendDelegate.findJointAccount(userWalletId = userWallet.walletId, account = account)
+        if (jointAccount == null) {
+            TangemLogger.e("Send confirm: the joint account ${account.accountId.value} is not in the store")
+            alertFactory.getGenericErrorState(
+                onFailedTxEmailClick = { onFailedTxEmailClick("") },
+                popBack = router::pop,
+            )
+            return null
+        }
+        return SendSignaturesUM(threshold = jointAccount.threshold, membersCount = jointAccount.membersCount)
     }
 
     private fun subscribeOnTapHelpUpdates() {
@@ -601,7 +625,7 @@ internal class SendConfirmModel @Inject constructor(
             textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),
             isIconVisible = isReadyToSend && !isHoldToConfirm,
-            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            isEnabled = confirmUM.isPrimaryButtonEnabled && jointAccount == null,
             isHapticClick = isReadyToSend,
             isHoldToConfirm = isHoldToConfirm,
             onClick = {
@@ -620,9 +644,11 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
         return when {
+            isHoldToConfirm && jointAccount != null -> resourceReference(R.string.joint_account_send_create_request)
             isHoldToConfirm -> resourceReference(R.string.common_send)
             confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
             confirmUM is ConfirmUM.Content && confirmUM.isSending -> resourceReference(R.string.send_sending)
+            jointAccount != null -> resourceReference(R.string.joint_account_send_create_request)
             else -> resourceReference(R.string.common_send)
         }
     }
