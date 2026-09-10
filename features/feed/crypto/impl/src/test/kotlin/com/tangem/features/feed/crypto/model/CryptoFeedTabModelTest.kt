@@ -1,13 +1,17 @@
 package com.tangem.features.feed.crypto.model
 
+import arrow.core.left
 import arrow.core.right
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.GetMarketIndicatorsUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
+import com.tangem.domain.markets.MarketIndicators
 import com.tangem.domain.markets.TokenListBatchFlow
 import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
@@ -18,16 +22,22 @@ import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.impl.R
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.features.feed.crypto.model.entity.FeedCryptoTabBottomSheetConfig
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopGainers
 import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
 import com.tangem.features.feed.crypto.ui.state.MarketPulseIntervalUM
+import com.tangem.features.feed.crypto.ui.state.TotalMarketCapUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -47,6 +57,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 /**
  * The tab renders the category chip and narrows its list request, but does not own the selection —
@@ -62,6 +73,7 @@ internal class CryptoFeedTabModelTest {
 
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase = mockk()
     private val feedFeatureToggles: FeedFeatureToggles = mockk()
     private val router: Router = mockk(relaxed = true)
 
@@ -71,29 +83,23 @@ internal class CryptoFeedTabModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getMarketsTokenListFlowUseCase, getSelectedAppCurrencyUseCase, feedFeatureToggles, router)
+        clearMocks(
+            getMarketsTokenListFlowUseCase,
+            getSelectedAppCurrencyUseCase,
+            getMarketIndicatorsUseCase,
+            feedFeatureToggles,
+            router,
+        )
         actions.clear()
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
         every { feedFeatureToggles.isRwaAndCategoriesEnabled } returns true
+        coEvery { getMarketIndicatorsUseCase(any()) } returns noIndicators.right()
     }
 
     @AfterEach
     fun destroyModel() {
         model?.onDestroy()
         model = null
-    }
-
-    @Test
-    fun `GIVEN the categories toggle off WHEN the tab opens THEN no category chip is offered`() = runTest {
-        // Arrange
-        every { feedFeatureToggles.isRwaAndCategoriesEnabled } returns false
-
-        // Act
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.chip()).isNull()
     }
 
     @Test
@@ -238,7 +244,7 @@ internal class CryptoFeedTabModelTest {
         // Arrange — every other order ranks by the interval, so the backend has to re-rank
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.uiState.value.marketPulse.onCategorySelect(MarketPulseCategory.entries.indexOf(TopGainers))
+        model.sortTab(TopGainers).onClick()
         advanceUntilIdle()
         val reloadsBefore = actions.reloadCount()
 
@@ -250,6 +256,164 @@ internal class CryptoFeedTabModelTest {
         assertThat(actions.reloadCount()).isEqualTo(reloadsBefore + 1)
     }
 
+    @Test
+    fun `GIVEN the indicators load WHEN the tab opens THEN the block shows them`() = runTest {
+        // Arrange
+        coEvery { getMarketIndicatorsUseCase(any()) } returns indicators().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val block = model.totalMarketCap() as TotalMarketCapUM.Content
+        assertThat(block.indexes.map { it.id }).containsExactly("fear_greed", "altcoin_index").inOrder()
+    }
+
+    @Test
+    fun `GIVEN the indicators fail to load WHEN the tab opens THEN the block is left out of the list`() = runTest {
+        // Arrange
+        coEvery { getMarketIndicatorsUseCase(any()) } returns RuntimeException("api down").left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.totalMarketCap()).isEqualTo(TotalMarketCapUM.Empty)
+    }
+
+    @Test
+    fun `GIVEN the backend published no indicators WHEN the tab opens THEN the block is left out of the list`() =
+        runTest {
+            // Arrange — the test environment answers with every field null, which is not a failure
+            coEvery { getMarketIndicatorsUseCase(any()) } returns noIndicators.right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.totalMarketCap()).isEqualTo(TotalMarketCapUM.Empty)
+        }
+
+    @Test
+    fun `GIVEN loaded indicators WHEN the app currency changes THEN they are refetched in it`() = runTest {
+        // Arrange — the backend converts the capitalisation, so a currency switch has to go back to it
+        val appCurrency = MutableStateFlow(AppCurrency.Default.right())
+        every { getSelectedAppCurrencyUseCase() } returns appCurrency
+        coEvery { getMarketIndicatorsUseCase(any()) } returns indicators().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val inUsd = model.headline()
+
+        // Act
+        appCurrency.value = euro.right()
+        advanceUntilIdle()
+
+        // Assert — asserting on the symbol rather than the whole string keeps this off JDK
+        // locale-formatting details
+        assertThat(inUsd).contains("\$")
+        assertThat(model.headline()).contains("€")
+        coVerifyOrder {
+            getMarketIndicatorsUseCase(AppCurrency.Default)
+            getMarketIndicatorsUseCase(euro)
+        }
+    }
+
+    @Test
+    fun `GIVEN loaded indicators WHEN a refresh fails THEN the readings stay on screen`() = runTest {
+        // Arrange — only a failed first load empties the block
+        val appCurrency = MutableStateFlow(AppCurrency.Default.right())
+        every { getSelectedAppCurrencyUseCase() } returns appCurrency
+        coEvery { getMarketIndicatorsUseCase(any()) } returnsMany listOf(
+            indicators().right(),
+            RuntimeException("api down").left(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act — a currency switch is the only refresh the tab makes without waiting for its quotes timer
+        appCurrency.value = euro.right()
+        advanceUntilIdle()
+
+        // Assert — the refresh has to have happened for the block to be worth asserting on
+        coVerify(exactly = 2) { getMarketIndicatorsUseCase(any()) }
+        assertThat(model.totalMarketCap()).isInstanceOf(TotalMarketCapUM.Content::class.java)
+    }
+
+    @Test
+    fun `GIVEN the tab opens WHEN nothing is tapped THEN no sheet is opened`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(openedSheets).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN loaded indicators WHEN a card is tapped THEN its info sheet is opened`() = runTest {
+        // Arrange
+        coEvery { getMarketIndicatorsUseCase(any()) } returns indicators().right()
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+        val block = model.totalMarketCap() as TotalMarketCapUM.Content
+        val fearGreed = block.indexes.first()
+
+        // Act
+        block.onIndexClick(fearGreed)
+
+        // Assert
+        assertThat(openedSheets).containsExactly(FeedCryptoTabBottomSheetConfig.MarketIndexInfo(fearGreed))
+    }
+
+    @Test
+    fun `GIVEN the headline WHEN its info icon is tapped THEN the market info sheet is opened`() = runTest {
+        // Arrange
+        coEvery { getMarketIndicatorsUseCase(any()) } returns indicators().right()
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+
+        // Act
+        (model.totalMarketCap() as TotalMarketCapUM.Content).onInfoClick()
+
+        // Assert
+        assertThat(openedSheets).containsExactly(FeedCryptoTabBottomSheetConfig.MarketInfo)
+    }
+
+    private fun CryptoFeedTabModel.totalMarketCap(): TotalMarketCapUM = uiState.value.totalMarketCap
+
+    private fun CryptoFeedTabModel.headline(): String =
+        ((totalMarketCap() as TotalMarketCapUM.Content).value as TextReference.Str).value
+
+    /** Mirrors what a real `childSlot` would track, since bare `SlotNavigation` only relays events */
+    private fun SlotNavigation<FeedCryptoTabBottomSheetConfig>.trackSlot(): List<FeedCryptoTabBottomSheetConfig?> {
+        val tracked = mutableListOf<FeedCryptoTabBottomSheetConfig?>()
+        subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
+        return tracked
+    }
+
+    /** The capitalisation stays below `1` so `compact()` keeps off `android.icu`, which unit tests lack */
+    private fun indicators() = MarketIndicators(
+        totalMarketCap = BigDecimal("0.5"),
+        marketCapChange24h = BigDecimal("-0.0093"),
+        fearGreed = MarketIndicators.Index(value = 73, classification = "Greed"),
+        altcoinSeason = MarketIndicators.Index(value = 45, classification = "Balanced Market"),
+    )
+
+    private val euro = AppCurrency(code = "EUR", name = "Euro", symbol = "€")
+
+    private val noIndicators = MarketIndicators(
+        totalMarketCap = null,
+        marketCapChange24h = null,
+        fearGreed = null,
+        altcoinSeason = null,
+    )
+
     private fun selectionOf(id: String, name: String) = MarketCategorySelection(
         category = MarketCategorySelection.Entry(id = id, name = name),
     )
@@ -257,6 +421,14 @@ internal class CryptoFeedTabModelTest {
     private fun CryptoFeedTabModel.chip(): TangemFilterItemUM? = uiState.value.marketPulse.categoriesFilter
 
     private fun CryptoFeedTabModel.intervalMenu(): MarketPulseIntervalUM = uiState.value.marketPulse.intervalMenu
+
+    /** The tab carries its own `onClick`, so the enum's id is the only bridge from a sort to its tab. */
+    private fun CryptoFeedTabModel.sortTab(category: MarketPulseCategory): TangemTabItemUM.Content = uiState
+        .value
+        .marketPulse
+        .sortTabs
+        .filterIsInstance<TangemTabItemUM.Content>()
+        .first { it.id == category.id }
 
     private fun List<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>.reloadCount() =
         count { it is BatchAction.Reload<*> }
@@ -286,7 +458,7 @@ internal class CryptoFeedTabModelTest {
             ),
             getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-            feedFeatureToggles = feedFeatureToggles,
+            getMarketIndicatorsUseCase = getMarketIndicatorsUseCase,
             categoryFilterController = filterController,
             router = router,
         ).also { model = it }

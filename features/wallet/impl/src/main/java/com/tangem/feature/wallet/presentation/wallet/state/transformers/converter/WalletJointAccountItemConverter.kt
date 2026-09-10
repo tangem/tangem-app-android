@@ -39,10 +39,12 @@ internal class WalletJointAccountItemConverter(
                     id = R.string.joint_account_members_progress,
                     formatArgs = wrappedList(status.joinedMembers, status.totalMembers),
                 ),
+                banner = inviteBanner(account = account, hasFreeSlots = status.joinedMembers < status.totalMembers),
             )
             is JointAccountStatusValue.Confirming -> waitingMembers(
                 account = account,
                 subtitle = resourceReference(id = R.string.joint_account_waiting_activation),
+                banner = activateBanner(account = account),
             )
             is JointAccountStatusValue.Active -> error("An active joint account is a regular portfolio row")
         }
@@ -50,16 +52,42 @@ internal class WalletJointAccountItemConverter(
         return TokensListItemUM2.JointPending(accountId = account.accountId.value, state = state)
     }
 
-    private fun waitingMembers(account: Account.Joint, subtitle: TextReference): JointAccountMainUM.WaitingMembers {
+    private fun waitingMembers(
+        account: Account.Joint,
+        subtitle: TextReference,
+        banner: JointAccountMainUM.BannerUM?,
+    ): JointAccountMainUM.WaitingMembers {
         return JointAccountMainUM.WaitingMembers(
             title = account.accountName.toUM().value,
             subtitle = subtitle,
             icon = CryptoPortfolioIconConverter.convert(account.icon),
             balance = stringReference(zeroBalanceText()),
             priceChange = TangemPriceChange.State(value = zeroPriceChange(), direction = Neutral),
-            canInvite = account.accountId.value in accountIdsWithInvites,
+            banner = banner,
             onClick = { onAccountClick(userWalletId, account.accountId.value) },
-            onInviteClick = { onAccountClick(userWalletId, account.accountId.value) },
+        )
+    }
+
+    /** Only the creator holds the invites, so their presence on this device marks the creator's row */
+    private fun Account.Joint.belongsToCreator(): Boolean = accountId.value in accountIdsWithInvites
+
+    private fun inviteBanner(account: Account.Joint, hasFreeSlots: Boolean): JointAccountMainUM.BannerUM? {
+        if (!account.belongsToCreator() || !hasFreeSlots) return null
+
+        return JointAccountMainUM.BannerUM(
+            text = resourceReference(id = R.string.joint_account_invite_members_to_join),
+            iconRes = R.drawable.ic_group_24,
+            onClick = { onAccountClick(userWalletId, account.accountId.value) },
+        )
+    }
+
+    private fun activateBanner(account: Account.Joint): JointAccountMainUM.BannerUM? {
+        if (!account.belongsToCreator()) return null
+
+        return JointAccountMainUM.BannerUM(
+            text = resourceReference(id = R.string.joint_account_activation_account_button_title),
+            iconRes = R.drawable.ic_circle_clock_24,
+            onClick = { onAccountClick(userWalletId, account.accountId.value) },
         )
     }
 

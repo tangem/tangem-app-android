@@ -63,7 +63,7 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
                 windowInsets = WindowInsets(0.dp),
                 fadeEnabled = false,
                 onBack = (content.step as? HaveWalletUM.Step.Import)?.onBack,
-                onClose = config.onDismissRequest,
+                onClose = content.onCloseClick,
             )
         },
     ) { content ->

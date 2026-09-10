@@ -12,8 +12,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.campaign.ui.TangemPayCampaignScreen
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
+import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.components.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import dagger.assisted.Assisted
@@ -22,7 +24,8 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultTangemPayCampaignComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: TangemPayCampaignComponent.Params,
+    @Assisted private val params: TangemPayCampaignComponent.Params,
+    private val issueCardComponentFactory: TangemPayCampaignIssueCardComponent.Factory,
 ) : TangemPayCampaignComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayCampaignModel = getOrCreateModel(params)
@@ -34,13 +37,43 @@ internal class DefaultTangemPayCampaignComponent @AssistedInject constructor(
         childFactory = ::bottomSheetChild,
     )
 
+    private val childSlot = childSlot(
+        source = model.childNavigation,
+        serializer = TangemPayCampaignChild.serializer(),
+        key = "campaignChild",
+        handleBackButton = false,
+        childFactory = ::child,
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        BackHandler(onBack = model::onClose)
-        TangemPayCampaignScreen(state = state, modifier = modifier)
+        val child by childSlot.subscribeAsState()
+        val childComponent = child.child?.instance
+        BackHandler(enabled = childComponent == null, onBack = model::onClose)
+        if (childComponent != null) {
+            childComponent.Content(modifier = modifier)
+        } else {
+            TangemPayCampaignScreen(state = state, modifier = modifier)
+        }
         bottomSheet.child?.instance?.BottomSheet()
+    }
+
+    private fun child(child: TangemPayCampaignChild, componentContext: ComponentContext): ComposableContentComponent {
+        return when (child) {
+            is TangemPayCampaignChild.IssueCard -> issueCardComponentFactory.create(
+                context = childByContext(componentContext),
+                params = TangemPayCampaignIssueCardComponent.Params(
+                    userWalletId = child.userWalletId,
+                    campaignKey = params.campaignKey,
+                    cardArtUrl = child.cardArtUrl,
+                    feeAmount = child.feeAmount,
+                    feeCurrency = child.feeCurrency,
+                    listener = model,
+                ),
+            )
+        }
     }
 
     private fun bottomSheetChild(
