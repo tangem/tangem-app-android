@@ -45,7 +45,7 @@ internal class IntroductionMobileWalletCreatorTest {
 
     private val creator = IntroductionMobileWalletCreator(
         createHotWalletUseCase = createHotWalletUseCase,
-        appsFlyerRepository = appsFlyerRepository,
+        referral = IntroductionReferral(appsFlyerRepository),
         analyticsEventHandler = analyticsEventHandler,
         router = router,
         messageSender = messageSender,
@@ -73,6 +73,8 @@ internal class IntroductionMobileWalletCreatorTest {
         // Assert
         assertThat(sentEvents).containsExactly(
             OnboardingAnalyticsEvent.Onboarding.Started(source = SOURCE),
+            OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = SOURCE),
+            OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet(),
             OnboardingAnalyticsEvent.Onboarding.Finished(source = SOURCE),
             walletCreated(referralId = null),
         ).inOrder()
@@ -93,7 +95,11 @@ internal class IntroductionMobileWalletCreatorTest {
         verify(exactly = 1) { messageSender.send(any<DialogMessage>()) }
         verify(exactly = 1) { onFailed() }
         verify { router wasNot Called }
-        assertThat(sentEvents).containsExactly(OnboardingAnalyticsEvent.Onboarding.Started(source = SOURCE))
+        assertThat(sentEvents).containsExactly(
+            OnboardingAnalyticsEvent.Onboarding.Started(source = SOURCE),
+            OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = SOURCE),
+            OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet(),
+        ).inOrder()
     }
 
     @Test
