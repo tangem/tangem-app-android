@@ -105,6 +105,7 @@ internal class IntroductionModel @Inject constructor(
                 isVideoReady = false,
                 isVideoFailed = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
+                scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,

@@ -68,7 +68,7 @@ dependencies {
 
     /** Core modules */
     api(projects.core.configToggles)
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.core.decompose)
     api(projects.core.navigation)
