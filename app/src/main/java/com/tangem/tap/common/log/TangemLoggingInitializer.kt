@@ -6,18 +6,18 @@ import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
-import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.logs.SensitiveUrlMasker
 import com.tangem.datasource.remote.interceptors.NetworkLogsSaveInterceptor
 import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
-import com.tangem.domain.common.LogConfig
+import com.tangem.datasource.remote.interceptors.createNetworkLoggingInterceptor
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.utils.JsonStringValuesExtractor
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import kotlinx.serialization.json.Json
+import okhttp3.Interceptor
 
 /**
  * Owns all app-startup wiring of the logging subsystem in a single place:
@@ -64,14 +64,11 @@ class TangemLoggingInitializer(
     fun initSdkLogging(application: Application) {
         Log.addLogger(logger = tangemSdkLogger)
 
-        if (!LogConfig.network.isBlockchainSdkNetworkLogEnabled) return
-
         BlockchainSdkRetrofitBuilder.interceptors = buildList {
             if (BuildConfig.MOCK_DATA_SOURCE) {
                 add(WireMockRedirectInterceptor())
             }
-            add(createNetworkLoggingInterceptor())
-            add(ChuckerInterceptor(application))
+            addAll(createConsoleInterceptors(application))
             add(
                 NetworkLogsSaveInterceptor(
                     appLogsStore = appLogsStore,
@@ -86,11 +83,18 @@ class TangemLoggingInitializer(
                 if (BuildConfig.MOCK_DATA_SOURCE) {
                     add(WireMockRedirectInterceptor())
                 }
-                add(createNetworkLoggingInterceptor())
-                add(ChuckerInterceptor(application))
+                addAll(createConsoleInterceptors(application))
                 add(NetworkLogsSaveInterceptor(appLogsStore))
             }.toTypedArray(),
         )
+    }
+
+    private fun createConsoleInterceptors(application: Application): List<Interceptor> {
+        return if (BuildConfig.LOG_ENABLED) {
+            listOf(createNetworkLoggingInterceptor(), ChuckerInterceptor(application))
+        } else {
+            emptyList()
+        }
     }
 
     private fun createBlockchainSensitiveUrlMasker(): SensitiveUrlMasker {

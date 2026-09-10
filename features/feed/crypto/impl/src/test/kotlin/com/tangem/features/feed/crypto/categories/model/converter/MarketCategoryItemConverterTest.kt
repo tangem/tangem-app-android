@@ -152,13 +152,42 @@ internal class MarketCategoryItemConverterTest {
         assertThat(actual.caption).isNull()
     }
 
+    @Test
+    fun `GIVEN a search narrows the list WHEN converted THEN the All row is left out`() {
+        // Act — the list is then a result set, and "no filter" is not one of the results
+        val actual = convert(ai, defi, shouldIncludeAllRow = false)
+
+        // Assert
+        assertThat(actual.map(MarketCategoryItemUM::id)).containsExactly("ai", "defi").inOrder()
+    }
+
+    @Test
+    fun `GIVEN a search matched nothing WHEN converted THEN no rows are built`() {
+        // Act
+        val actual = convert(shouldIncludeAllRow = false)
+
+        // Assert
+        assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a search and a selection outside it WHEN converted THEN nothing is checked`() {
+        // Act — without the All row there is no fallback check for "no filter"
+        val actual = convert(ai, shouldIncludeAllRow = false, selection = selectionOf(defi))
+
+        // Assert
+        assertThat(actual.filter(MarketCategoryItemUM::isSelected)).isEmpty()
+    }
+
     private fun convert(
         vararg categories: MarketCategory,
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
+        shouldIncludeAllRow: Boolean = true,
     ): List<MarketCategoryItemUM> = MarketCategoryItemConverter(
         selection = selection,
         appCurrency = appCurrency,
+        shouldIncludeAllRow = shouldIncludeAllRow,
         onSelectionChange = { emitted = it },
     ).convert(categories.toList())
 

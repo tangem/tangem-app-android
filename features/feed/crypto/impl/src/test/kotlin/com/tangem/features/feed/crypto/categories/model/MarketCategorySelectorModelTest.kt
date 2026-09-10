@@ -46,7 +46,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -134,16 +136,16 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
         batchFlow.emitInitialLoadingError()
         advanceUntilIdle()
-        val errorState = model.uiState.value
+        val errorContent = model.uiState.value.content
 
         // Act
-        (errorState as MarketCategorySelectorUM.Error).onRetry()
+        (errorContent as MarketCategorySelectorUM.ContentUM.Error).onRetry()
         advanceUntilIdle()
         batchFlow.emitFirstPage(ai)
         advanceUntilIdle()
 
         // Assert
-        assertThat(errorState).isInstanceOf(MarketCategorySelectorUM.Error::class.java)
+        assertThat(errorContent).isInstanceOf(MarketCategorySelectorUM.ContentUM.Error::class.java)
         assertThat(model.rows().map { it.id }).containsExactly(ALL_ROW_ID, ai.id).inOrder()
     }
 
@@ -173,7 +175,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Act
         model.rowFor(ai.id).onItemClick()
-        model.content().footer.onApply()
+        model.footer().onApply()
 
         // Assert
         assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
@@ -190,7 +192,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Act
         model.content().featured!!.items.single { it.id == meme.id }.onItemClick()
-        model.content().footer.onApply()
+        model.footer().onApply()
 
         // Assert
         assertThat(filterController.selection.value).isEqualTo(selectionOf(meme))
@@ -207,7 +209,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Act
         model.rowFor(ALL_ROW_ID).onItemClick()
-        model.content().footer.onApply()
+        model.footer().onApply()
 
         // Assert
         assertThat(filterController.selection.value).isEqualTo(MarketCategorySelection())
@@ -238,7 +240,7 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.content().isEdited).isFalse()
+        assertThat(model.isEdited()).isFalse()
     }
 
     @Test
@@ -253,7 +255,7 @@ internal class MarketCategorySelectorModelTest {
         model.rowFor(defi.id).onItemClick()
 
         // Assert
-        assertThat(model.content().isEdited).isTrue()
+        assertThat(model.isEdited()).isTrue()
     }
 
     @Test
@@ -266,10 +268,10 @@ internal class MarketCategorySelectorModelTest {
         model.rowFor(defi.id).onItemClick()
 
         // Act
-        model.content().footer.onReset()
+        model.footer().onReset()
 
         // Assert
-        assertThat(model.content().isEdited).isFalse()
+        assertThat(model.isEdited()).isFalse()
         assertThat(model.rows().filter { it.isSelected }.map { it.id }).containsExactly(ai.id)
     }
 
@@ -320,7 +322,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         coVerify { getMarketCategoriesUseCase(any(), any(), any(), any(), any()) }
-        assertThat(model.uiState.value).isEqualTo(MarketCategorySelectorUM.Loading)
+        assertThat(model.uiState.value.content).isEqualTo(MarketCategorySelectorUM.ContentUM.Loading)
     }
 
     @Test
@@ -365,7 +367,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(model.rows().none { it.isSelected }).isTrue()
-        assertThat(model.content().isEdited).isFalse()
+        assertThat(model.isEdited()).isFalse()
     }
 
     @Test
@@ -382,7 +384,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(model.rowFor(ai.id).isSelected).isTrue()
-        assertThat(model.content().isEdited).isFalse()
+        assertThat(model.isEdited()).isFalse()
     }
 
     @Test
@@ -399,7 +401,7 @@ internal class MarketCategorySelectorModelTest {
 
         // Assert
         assertThat(model.rowFor(ALL_ROW_ID).isSelected).isTrue()
-        assertThat(model.content().isEdited).isTrue()
+        assertThat(model.isEdited()).isTrue()
     }
 
     @Test
@@ -423,26 +425,201 @@ internal class MarketCategorySelectorModelTest {
 
     @Test
     fun `GIVEN the app currency WHEN model created THEN the list request carries it`() = runTest {
-        // Arrange — actionsFlow is a rendezvous SharedFlow and drops what it emits with no subscriber, so
-        // the collector is attached as the batch flow is handed over, before init can reload
-        val actions = mutableListOf<BatchAction<Int, MarketCategoryListConfig, Nothing>>()
-        every {
-            getMarketCategoryListFlowUseCase(batchingContext = capture(batchingContextSlot), batchFlowType = any())
-        } answers {
-            val context = firstArg<MarketCategoryListBatchingContext>()
-            context.coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                context.actionsFlow.collect(actions::add)
-            }
-            batchFlow
-        }
+        // Arrange
+        val actions = recordActions()
 
         // Act
         createModel(testScope = this)
         advanceUntilIdle()
 
         // Assert
-        assertThat(actions.filterIsInstance<BatchAction.Reload<MarketCategoryListConfig>>().map { it.requestParams })
+        assertThat(actions.reloadConfigs())
             .containsExactly(MarketCategoryListConfig(fiatCurrencySymbol = AppCurrency.Default.code))
+    }
+
+    @Test
+    fun `GIVEN a typed query WHEN the debounce elapses THEN the listing is reloaded with it`() = runTest {
+        // Arrange
+        val actions = recordActions()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.type(query = "meme")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.reloadSearchTexts()).containsExactly(null, "meme").inOrder()
+    }
+
+    @Test
+    fun `GIVEN a typed query WHEN the debounce has not elapsed THEN nothing is requested yet`() = runTest {
+        // Arrange
+        val actions = recordActions()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.type(query = "meme")
+        advanceTimeBy(QUERY_DEBOUNCE_MILLIS - 1)
+        runCurrent()
+
+        // Assert — only the initial unfiltered load
+        assertThat(actions.reloadSearchTexts()).containsExactly(null)
+    }
+
+    @Test
+    fun `GIVEN keystrokes inside one debounce window WHEN it elapses THEN only the last text is requested`() =
+        runTest {
+            // Arrange
+            val actions = recordActions()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.type(query = "m")
+            runCurrent()
+            model.type(query = "me")
+            runCurrent()
+            model.type(query = "mem")
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(actions.reloadSearchTexts()).containsExactly(null, "mem").inOrder()
+        }
+
+    @Test
+    fun `GIVEN a whitespace only query WHEN the debounce elapses THEN it is not treated as a query`() = runTest {
+        // Arrange
+        val actions = recordActions()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.type(query = "   ")
+        advanceUntilIdle()
+
+        // Assert — trimming collapses it back to the empty query the listing already carries
+        assertThat(actions.reloadSearchTexts()).containsExactly(null)
+    }
+
+    @Test
+    fun `GIVEN a query cleared WHEN the debounce elapses THEN the listing is reloaded unfiltered`() = runTest {
+        // Arrange
+        val actions = recordActions()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.type(query = "meme")
+        advanceUntilIdle()
+
+        // Act
+        model.type(query = "")
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.reloadSearchTexts()).containsExactly(null, "meme", null).inOrder()
+    }
+
+    @Test
+    fun `GIVEN results for a query WHEN they arrive THEN the rail and the All row are both gone`() = runTest {
+        // Arrange — the list is then a result set: an unfiltered shortcut strip is not one of the results
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai, meme)
+        advanceUntilIdle()
+
+        // Act
+        model.type(query = "meme")
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(meme)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.content().featured).isNull()
+        assertThat(model.rows().map { it.id }).containsExactly(meme.id)
+    }
+
+    @Test
+    fun `GIVEN a query WHEN the page comes back empty THEN the no results state takes the body`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai)
+        advanceUntilIdle()
+
+        // Act
+        model.type(query = "zzz")
+        advanceUntilIdle()
+        batchFlow.emitFirstPage()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(MarketCategorySelectorUM.ContentUM.Empty)
+    }
+
+    @Test
+    fun `GIVEN a query WHEN the listing goes back to loading THEN the field and the footer survive`() = runTest {
+        // Arrange — the field is unmounted with the body, so a reload must not take it down mid-typing
+        val model = createModel(testScope = this, selection = selectionOf(ai))
+        advanceUntilIdle()
+        batchFlow.emitFirstPage(ai, defi)
+        advanceUntilIdle()
+        model.rowFor(defi.id).onItemClick()
+        model.type(query = "meme")
+        advanceUntilIdle()
+
+        // Act
+        batchFlow.emitInitialLoading()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.content).isEqualTo(MarketCategorySelectorUM.ContentUM.Loading)
+        assertThat(model.uiState.value.search.query).isEqualTo("meme")
+        assertThat(model.isEdited()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a query WHEN retry is pressed after a failure THEN the reload still carries it`() = runTest {
+        // Arrange
+        val actions = recordActions()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.type(query = "meme")
+        advanceUntilIdle()
+        batchFlow.emitInitialLoadingError()
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value.content as MarketCategorySelectorUM.ContentUM.Error).onRetry()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.reloadSearchTexts()).containsExactly(null, "meme", "meme").inOrder()
+    }
+
+    @Test
+    fun `GIVEN the search field WHEN the screen opens THEN it offers no close of its own`() = runTest {
+        // Arrange — the screen's close button is a sibling in the header; the built-in one hides while idle
+        val model = createModel(testScope = this)
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.search.onCloseClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN the search field WHEN it is focused THEN the state follows`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.search.onActiveChange(true)
+
+        // Assert
+        assertThat(model.uiState.value.search.isActive).isTrue()
     }
 
     @Test
@@ -458,7 +635,7 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value).isInstanceOf(MarketCategorySelectorUM.Error::class.java)
+        assertThat(model.uiState.value.content).isInstanceOf(MarketCategorySelectorUM.ContentUM.Error::class.java)
     }
 
     @Test
@@ -486,12 +663,39 @@ internal class MarketCategorySelectorModelTest {
         advanceUntilIdle()
 
         // Act
-        model.content().footer.onApply()
+        model.footer().onApply()
 
         // Assert
         assertThat(filterController.selection.value).isEqualTo(selectionOf(ai))
         verify(exactly = 1) { router.pop() }
     }
+
+    /**
+     * `actionsFlow` is a rendezvous `SharedFlow` and drops what it emits with no subscriber, so the
+     * collector is attached as the batch flow is handed over — before `init` can reload. Call this
+     * before [createModel].
+     */
+    private fun recordActions(): MutableList<BatchAction<Int, MarketCategoryListConfig, Nothing>> {
+        val actions = mutableListOf<BatchAction<Int, MarketCategoryListConfig, Nothing>>()
+
+        every {
+            getMarketCategoryListFlowUseCase(batchingContext = capture(batchingContextSlot), batchFlowType = any())
+        } answers {
+            val context = firstArg<MarketCategoryListBatchingContext>()
+            context.coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                context.actionsFlow.collect(actions::add)
+            }
+            batchFlow
+        }
+
+        return actions
+    }
+
+    private fun List<BatchAction<Int, MarketCategoryListConfig, Nothing>>.reloadConfigs() =
+        filterIsInstance<BatchAction.Reload<MarketCategoryListConfig>>().map { it.requestParams }
+
+    private fun List<BatchAction<Int, MarketCategoryListConfig, Nothing>>.reloadSearchTexts() =
+        reloadConfigs().map(MarketCategoryListConfig::searchText)
 
     private fun stubFeatured(vararg categories: MarketCategory) {
         coEvery { getMarketCategoriesUseCase(any(), any(), any(), any(), any()) } returns Either.Right(
@@ -527,7 +731,14 @@ internal class MarketCategorySelectorModelTest {
         )
     }
 
-    private fun MarketCategorySelectorModel.content() = uiState.value as MarketCategorySelectorUM.Content
+    private fun MarketCategorySelectorModel.content() =
+        uiState.value.content as MarketCategorySelectorUM.ContentUM.Content
+
+    private fun MarketCategorySelectorModel.footer() = uiState.value.footer
+
+    private fun MarketCategorySelectorModel.isEdited() = uiState.value.isEdited
+
+    private fun MarketCategorySelectorModel.type(query: String) = uiState.value.search.onQueryChange(query)
 
     private fun MarketCategorySelectorModel.rows() = content().categories.items
 
@@ -564,6 +775,10 @@ internal class MarketCategorySelectorModelTest {
             )
         }
 
+        fun emitInitialLoading() {
+            mutableState.value = BatchListState(data = emptyList(), status = PaginationStatus.InitialLoading)
+        }
+
         fun emitInitialLoadingError() {
             mutableState.value = BatchListState(
                 data = emptyList(),
@@ -573,6 +788,9 @@ internal class MarketCategorySelectorModelTest {
     }
 
     private companion object {
+
+        /** Mirrors the model's own debounce; the tests step exactly over it. */
+        const val QUERY_DEBOUNCE_MILLIS = 500L
 
         val ai = createCategory(id = "ai", name = "AI")
         val defi = createCategory(id = "defi", name = "DeFi")

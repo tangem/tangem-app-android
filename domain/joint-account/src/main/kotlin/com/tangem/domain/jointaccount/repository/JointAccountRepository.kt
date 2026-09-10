@@ -8,6 +8,9 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.JointOperationSignError
+import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -100,4 +103,27 @@ interface JointAccountRepository {
      * empty list, so a screen built on this keeps rendering everything else.
      */
     suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String>
+
+    /**
+     * Registers a [safeTx] for collective signing, [signature] counting as the initiator's first one.
+     */
+    suspend fun createOperation(
+        userWalletId: UserWalletId,
+        safeAddress: String,
+        chainId: Long,
+        safeTx: SafeTx,
+        signature: String,
+    ): Either<JointOperationCreateError, Unit>
+
+    /**
+     * A 404 (the operation finished or was removed while the sheet was open) comes back as
+     * [JointOperationSignError.OperationNotFound], a 409 (the threshold is already reached) as
+     * [JointOperationSignError.ThresholdReached]. The function never throws.
+     */
+    suspend fun signOperation(
+        userWalletId: UserWalletId,
+        operationId: String,
+        safeTx: SafeTx,
+        signature: String,
+    ): Either<JointOperationSignError, Unit>
 }
