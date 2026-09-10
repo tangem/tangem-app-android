@@ -48,6 +48,8 @@ import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 
@@ -62,6 +64,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
 ) : FeedV2Component, AppComponentContext by context {
+
+    override val isSheetBlurEnabled: StateFlow<Boolean>
+        field = MutableStateFlow(true)
 
     private val stackNavigation = StackNavigation<FeedRoute>()
 
@@ -90,6 +95,8 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             searchBarController.setActive(
                 isActive = stackState.items.any { it.configuration is FeedRoute.Search },
             )
+            val active = stackState.active.configuration
+            isSheetBlurEnabled.value = active is FeedHomeRoute || active is FeedRoute.Search
         }
         lifecycle.doOnDestroy { searchBarController.setActive(isActive = false) }
     }
