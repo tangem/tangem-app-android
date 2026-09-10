@@ -1,6 +1,9 @@
 package com.tangem.features.polymarket.impl.main
 
 import arrow.core.right
+import com.arkivanov.essenty.statekeeper.StateKeeperDispatcher
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.instancekeeper.InstanceKeeperDispatcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
@@ -17,6 +20,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
@@ -53,6 +57,7 @@ internal class PolymarketMainComponentTest {
     private val getPolymarketEventsBatchFlowUseCase: GetPolymarketEventsBatchFlowUseCase = mockk()
     private val getPolymarketCategoriesUseCase: GetPolymarketCategoriesUseCase = mockk()
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier = mockk(relaxed = true)
+    private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
 
@@ -88,6 +93,7 @@ internal class PolymarketMainComponentTest {
         PolymarketMainComponent(
             appComponentContext = appComponentContext,
             userWalletId = userWalletId,
+            tokenReceiveComponentFactory = mockk(relaxed = true),
         )
 
         // Assert
@@ -111,6 +117,9 @@ internal class PolymarketMainComponentTest {
 
         return mockk<AppComponentContext>(relaxed = true).also {
             every { it.instanceKeeper } returns InstanceKeeperDispatcher()
+            every { it.stateKeeper } returns StateKeeperDispatcher()
+            every { it.lifecycle } returns LifecycleRegistry()
+            every { it.backHandler } returns BackDispatcher()
             every { it.tags } returns HashMap()
             every { it.hiltComponentBuilder } returns hiltComponentBuilder
             every { it.router } returns router
@@ -125,5 +134,6 @@ internal class PolymarketMainComponentTest {
         getPolymarketEventsBatchFlowUseCase = getPolymarketEventsBatchFlowUseCase,
         getPolymarketCategoriesUseCase = getPolymarketCategoriesUseCase,
         predictionAccountStatusSupplier = predictionAccountStatusSupplier,
+        refreshPredictionDepositRequisitesInteractor = refreshRequisites,
     )
 }
