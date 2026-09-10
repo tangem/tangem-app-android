@@ -6,6 +6,6 @@ class ClearAppsFlyerDeeplinkUseCase(
     private val appsFlyerRepository: AppsFlyerRepository,
 ) {
     suspend operator fun invoke() {
-        appsFlyerRepository.clearDeeplink()
+        appsFlyerRepository.clearNavigationDeeplink()
     }
 }

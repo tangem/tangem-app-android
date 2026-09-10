@@ -1,7 +1,6 @@
 package com.tangem.data.common.cache
 
-import com.tangem.datasource.local.cache.CacheKeysStore
-import com.tangem.datasource.local.cache.model.CacheKey
+import com.tangem.data.common.cache.model.CacheKey
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex

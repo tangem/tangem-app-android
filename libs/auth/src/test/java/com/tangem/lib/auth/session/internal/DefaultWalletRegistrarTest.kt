@@ -38,6 +38,7 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -97,6 +98,9 @@ class DefaultWalletRegistrarTest {
         // fakes ignore the bytes, so any fixed value works here.
         every { android.util.Base64.decode(any<String>(), any()) } returns ByteArray(size = 16) { 7 }
         coEvery { attestationProvider.getAttestationToken(any()) } returns null
+        // Default to an active session so the happy-path tests reach the nonce/register flow;
+        // the no-session tests override this with None.
+        coEvery { store.get() } returns Some(sessionTokens())
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
@@ -450,6 +454,42 @@ class DefaultWalletRegistrarTest {
         coVerify(exactly = 0) { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
+
+    @Test
+    fun `register returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
+        // Arrange — device not authenticated yet; registerWallet is @RequiresSessionAuth.
+        stubHappyPath()
+        coEvery { store.get() } returns None
+
+        // Act
+        val result = registrar.register(WALLET_ID, mobileSigner)
+
+        // Assert — bail before the one-time wallet nonce is fetched, nothing persisted.
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+        coVerify(exactly = 0) { store.save(any()) }
+        assertThat(registeredIds()).doesNotContain(WALLET_ID)
+    }
+
+    @Test
+    fun `prepare returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
+        stubHappyPath()
+        coEvery { store.get() } returns None
+
+        val result = registrar.prepare(WALLET_ID, coldSigner)
+
+        assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+    }
+
+    private fun sessionTokens() = SessionTokens(
+        accessToken = "access",
+        accessTokenExpiresAt = Instant.DISTANT_FUTURE,
+        refreshToken = "refresh",
+        refreshTokenExpiresAt = Instant.DISTANT_FUTURE,
+        walletIds = emptyList(),
+    )
 
     private fun stubHappyPath() {
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))

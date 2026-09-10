@@ -26,7 +26,7 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     implementation(projects.core.local)
     api(projects.core.utils)
     implementation(projects.core.pagination)
@@ -45,5 +45,10 @@ dependencies {
 
     // region Project - Libs
     api(projects.libs.blockchainSdk)
+    // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
     // endregion
 }
