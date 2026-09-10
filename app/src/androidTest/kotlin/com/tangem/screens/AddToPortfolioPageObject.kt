@@ -34,6 +34,12 @@ class AddToPortfolioPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         hasClickAction()
     }
 
+    /** Same row as [selectedWalletRow], but the label reads 'Account' once the wallet is in accounts mode. */
+    val selectedPortfolioRow: KNode = child {
+        hasText(getResourceString(R.string.account_details_title))
+        hasClickAction()
+    }
+
     /** The network row on the 'Add token' screen; tap to open the 'Choose network' selector. */
     val networkRow: KNode = child {
         hasText(getResourceString(R.string.wc_common_network))
