@@ -226,6 +226,7 @@ internal class RwaFeaturedAssetsManagerTest {
         yieldRate = null,
         updateTimestamp = null,
         networks = null,
+        isRestrictedForCountry = false,
         imageHost = "https://host/",
     )
 

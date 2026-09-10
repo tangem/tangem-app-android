@@ -210,7 +210,10 @@ internal class RwaFeedSearchTabModel @Inject constructor(
         modelScope.launch {
             try {
                 // the same country as the tab, so both share one cache entry instead of fetching twice
-                getCoinCategoriesUseCase(country = userCountryResolver.resolve()).fold(
+                val country = userCountryResolver.resolve()
+                searchRequest.update { it.copy(country = country) }
+
+                getCoinCategoriesUseCase(country = country).fold(
                     ifLeft = { isCategoriesFailed.value = true },
                     ifRight = ::onCategoriesLoaded,
                 )

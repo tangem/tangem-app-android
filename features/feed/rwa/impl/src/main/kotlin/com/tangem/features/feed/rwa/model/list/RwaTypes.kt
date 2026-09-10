@@ -46,4 +46,5 @@ internal data class RwaListRequest(
     val sort: RwaSort = RwaSort.MarketCap,
     val selection: CategorySelection = CategorySelection(),
     val searchText: String? = null,
+    val country: String? = null,
 )

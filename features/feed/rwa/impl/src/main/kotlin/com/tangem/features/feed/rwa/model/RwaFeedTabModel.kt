@@ -196,6 +196,7 @@ internal class RwaFeedTabModel @Inject constructor(
 
         modelScope.launch {
             val country = userCountryResolver.resolve()
+            categoriesState.update { it.copy(country = country) }
 
             getCoinCategoriesUseCase(country = country).fold(
                 ifLeft = { _ ->
@@ -279,6 +280,8 @@ internal class RwaFeedTabModel @Inject constructor(
             interval = selectedInterval.value,
             sort = selectedSort.value,
             selection = state.appliedSelection.orUmbrella(categoriesState.value.rwaCategory),
+            // without it every token comes back unrestricted, so the region marks never appear
+            country = categoriesState.value.country,
         )
     }
 
@@ -383,5 +386,6 @@ internal class RwaFeedTabModel @Inject constructor(
         val featuredCategoryId: String? = null,
         val isFailed: Boolean = false,
         val isDefaultApplied: Boolean = false,
+        val country: String? = null,
     )
 }
