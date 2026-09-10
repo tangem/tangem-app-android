@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -122,6 +123,50 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         assertThat(addresses).isEmpty()
         assertThat(transactions).isEmpty()
         verify { sdkFactory wasNot Called }
+    }
+
+    /**
+     * The low-level overload takes a raw path, and a joint owner path is derivable — without the gate the factory
+     * builds a manager on the owner key, an address that holds nothing. Both overloads must refuse alike.
+     */
+    @Test
+    fun `GIVEN a joint owner path WHEN the raw overload is asked THEN it refuses like the network one`() = runTest {
+        // Act
+        @Suppress("DEPRECATION")
+        val byRawPath = facade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = Blockchain.Ethereum,
+            derivationPath = jointNetwork.derivationPath.value,
+        )
+
+        @Suppress("DEPRECATION")
+        val byNetwork = facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork)
+
+        // Assert
+        assertThat(byRawPath).isNull()
+        assertThat(byNetwork).isNull()
+        coVerify {
+            walletManagersStore wasNot Called
+            userWalletsListRepository wasNot Called
+        }
+    }
+
+    @Test
+    fun `GIVEN a personal path WHEN the raw overload is asked THEN the gate does not stand in the way`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
+
+        // Act
+        @Suppress("DEPRECATION")
+        val actual = facade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = Blockchain.Ethereum,
+            derivationPath = "m/44'/60'/0'/0/0",
+        )
+
+        // Assert
+        assertThat(actual).isNull()
+        verify { userWalletsListRepository.userWallets }
     }
 
     @Test
