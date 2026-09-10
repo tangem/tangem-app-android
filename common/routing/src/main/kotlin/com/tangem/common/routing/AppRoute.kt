@@ -267,12 +267,16 @@ sealed class AppRoute(val path: String) : Route {
          * Explicit mode for account top-up / withdraw flows opened on the swap screen.
          * TopUp anchors the account as an abstract TO; Withdraw anchors it as the concrete FROM.
          * Single Payment account per wallet — resolved by userWalletId on the swap side, no id needed here.
+         * PredictionWithdraw anchors the prediction account as the concrete FROM; the debit is not signed with
+         * a wallet key but submitted as a signed batch through our backend.
          */
         @Serializable
         sealed interface AccountFlow {
             @Serializable data object TopUp : AccountFlow
 
             @Serializable data object Withdraw : AccountFlow
+
+            @Serializable data object PredictionWithdraw : AccountFlow
         }
     }
 

@@ -14,6 +14,8 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -31,6 +33,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -109,6 +112,9 @@ internal abstract class SwapModelTestBase {
     protected val messageSender: UiMessageSender = mockk(relaxed = true)
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
+    protected val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
+    protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
+        mockk(relaxed = true)
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
@@ -164,6 +170,10 @@ internal abstract class SwapModelTestBase {
             )
         } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
+        coEvery {
+            singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
+        } returns null
+        coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns emptySet<CryptoCurrency.ID>().right()
         // Unstubbed, a relaxed mock would fabricate a nested SwapCurrencyStatus/Account chain instead of
         // echoing the real fromSwapCurrencyStatus, which can trip Account-type checks (e.g. isTangemPayWithdrawal).
         every {
@@ -235,6 +245,8 @@ internal abstract class SwapModelTestBase {
         messageSender = messageSender,
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,
         getSwapUiModeUseCase = getSwapUiModeUseCase,
