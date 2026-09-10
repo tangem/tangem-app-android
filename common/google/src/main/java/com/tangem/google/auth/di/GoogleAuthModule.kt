@@ -1,9 +1,7 @@
 package com.tangem.google.auth.di
 
 import com.tangem.google.auth.CredentialManagerGoogleIdTokenProvider
-import com.tangem.google.auth.GoogleAuthorizer
 import com.tangem.google.auth.GoogleIdTokenProvider
-import com.tangem.google.auth.GoogleIdentityAuthorizer
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,9 +12,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal interface GoogleAuthModule {
 
-    @Binds
-    @Singleton
-    fun bindGoogleAuthorizer(impl: GoogleIdentityAuthorizer): GoogleAuthorizer
+    // No app-wide GoogleAuthorizer binding: its picked account is per Drive scope — see GoogleDriveModule
 
     @Binds
     @Singleton
