@@ -38,4 +38,11 @@ interface GachaVaultRepository {
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit>
+
+    /**
+     * Closes the vault and returns its rent. Refused only while a buyback delegate is live (6014 `VaultNotClean`);
+     * a vault that still owns token accounts closes successfully and strands their rent, so emptying it first is
+     * the caller's job.
+     */
+    suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit>
 }
