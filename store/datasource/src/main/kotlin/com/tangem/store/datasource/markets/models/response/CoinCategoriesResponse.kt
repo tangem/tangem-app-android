@@ -42,9 +42,10 @@ data class CoinCategoriesResponse(
         @JsonClass(generateAdapter = true)
         data class Sector(
             @Json(name = "id") val id: String,
-            @Json(name = "code") val code: String,
+            @Json(name = "code") val code: String = "",
             @Json(name = "displayName") val displayName: String,
-            @Json(name = "displayOrder") val displayOrder: Int,
+            // unknown order sinks to the end instead of failing the parse of every category
+            @Json(name = "displayOrder") val displayOrder: Int = Int.MAX_VALUE,
             @Json(name = "tokensCount") val tokensCount: Int,
         )
     }
