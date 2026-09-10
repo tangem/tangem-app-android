@@ -48,6 +48,8 @@ data class ToastMessage(
  * @param onDismissRequest The action to perform when the snackbar is dismissed. Optional, empty lambda by default.
  * @param actionLabel The label of the action button. Optional, `null` by default.
  * @param action The action to perform when the action button is clicked. Optional, `null` by default.
+ * @param isIconTinted Whether [startIconId] takes the snackbar's neutral tint. `false` keeps the asset's own
+ * colours, e.g. a coloured status icon. `true` by default.
  * */
 @Immutable
 data class SnackbarMessage(
@@ -57,6 +59,7 @@ data class SnackbarMessage(
     val onDismissRequest: () -> Unit = {},
     val actionLabel: TextReference? = null,
     val action: (() -> Unit)? = null,
+    val isIconTinted: Boolean = true,
 ) : EventMessage {
 
     /**
