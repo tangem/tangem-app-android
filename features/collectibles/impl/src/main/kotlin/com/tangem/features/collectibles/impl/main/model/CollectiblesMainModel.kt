@@ -3,16 +3,25 @@ package com.tangem.features.collectibles.impl.main.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
+import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesActionsConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
+import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuItem
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuConverter
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -23,6 +32,9 @@ import javax.inject.Inject
 @ModelScoped
 internal class CollectiblesMainModel @Inject constructor(
     private val router: Router,
+    private val messageSender: UiMessageSender,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -34,10 +46,7 @@ internal class CollectiblesMainModel @Inject constructor(
     private val menuConverter = CollectiblesMenuConverter(
         onMenuClick = ::onMenuClick,
         onDismiss = ::onMenuDismiss,
-        onActivityLogClick = ::onActivityLogClick,
-        onDeliveriesClick = ::onDeliveriesClick,
-        onHowItWorksClick = ::onHowItWorksClick,
-        onGetAssistanceClick = ::onGetAssistanceClick,
+        onItemClick = ::onMenuItemClick,
     )
 
     val uiState: StateFlow<CollectiblesMainUM>
@@ -64,6 +73,16 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private fun onMenuDismiss() {
         uiState.update { state -> state.copy(menu = state.menu.copy(isShown = false)) }
+    }
+
+    private fun onMenuItemClick(item: CollectiblesMenuItem) {
+        when (item) {
+            CollectiblesMenuItem.ACTIVITY_LOG -> onActivityLogClick()
+            CollectiblesMenuItem.DELIVERIES -> onDeliveriesClick()
+            CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
+            CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
+            CollectiblesMenuItem.CLOSE_ACCOUNT -> onCloseAccountClick()
+        }
     }
 
     private fun onHowItWorksClick() {
@@ -103,5 +122,25 @@ internal class CollectiblesMainModel @Inject constructor(
     @Suppress("EmptyFunctionBlock")
     private fun onGetAssistanceClick() {
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
+    }
+
+    private fun onCloseAccountClick() {
+        onMenuDismiss()
+
+        modelScope.launch {
+            val userWallet = userWalletsListRepository.selectedUserWalletSync() ?: return@launch
+
+            closeCollectiblesVaultUseCase(userWallet).fold(
+                ifLeft = ::onCloseFailed,
+                ifRight = { router.pop() },
+            )
+        }
+    }
+
+    private fun onCloseFailed(failure: CollectiblesAccountError) {
+        // A card refusal is already on the NFC sheet, and a cancellation is the user's own choice: neither needs one
+        if (failure is CollectiblesAccountError.CardError || failure is CollectiblesAccountError.Cancelled) return
+
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
     }
 }
