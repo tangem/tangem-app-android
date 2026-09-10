@@ -57,8 +57,9 @@ internal fun IntroductionScreen(
     modifier: Modifier = Modifier,
 ) {
     SystemBarsIconsDisposable(darkIcons = false)
-    // Nothing moves under reduced motion, so there is nothing to keep the display awake for.
-    if (state.isMotionEnabled) KeepScreenOn()
+    val isAnimated = state.isMotionEnabled && !state.isVideoFailed
+    // Nothing moves under reduced motion or with the video down, so there is nothing to keep the display awake for.
+    if (isAnimated) KeepScreenOn()
 
     // The design's colours are the dark-theme tokens, and re-entering the theme is what recomputes them.
     CompositionLocalProvider(LocalIsInDarkTheme provides true) {
@@ -105,7 +106,7 @@ internal fun IntroductionScreen(
                 ) {
                     WelcomeTextScenes(
                         scenes = state.scenes,
-                        isMotionEnabled = state.isMotionEnabled,
+                        isAnimated = isAnimated,
                         videoPositionMs = videoPositionMs,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -170,7 +171,8 @@ private fun IntroductionScreenPreview() {
             videoPositionMs = { 0L },
             state = IntroductionUM(
                 isVideoReady = true,
-                isMotionEnabled = true,
+                isVideoFailed = false,
+                isMotionEnabled = false,
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
