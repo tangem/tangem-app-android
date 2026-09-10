@@ -248,8 +248,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
     val addFundsSheetNavigation = SlotNavigation<AddFundsSlotRoute>()
 
-    // a region-restricted asset must not become tradable, and adding it to the portfolio is the only
-    // route to that from this screen
+    // A region-restricted asset must not become tradable. This screen offers two routes to that —
+    // adding it to the portfolio and topping it up — and both are closed below; the portfolio block
+    // additionally hides its controls so nothing inert is left on screen. Operations for an asset the
+    // user already holds live on the wallet's own token screen and are NOT covered here.
     private val isAddToPortfolioAvailable: Boolean =
         params.shouldShowPortfolio && !params.token.isRestrictedForCountry
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
@@ -436,6 +438,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     fun openAddFunds(rawCurrencyId: com.tangem.domain.models.currency.CryptoCurrency.RawID) {
+        if (params.token.isRestrictedForCountry) return
+
         analyticsEventHandler.send(analyticsEventBuilder.addFundsClicked())
         addFundsSheetNavigation.activate(AddFundsSlotRoute(rawCurrencyId = rawCurrencyId))
     }

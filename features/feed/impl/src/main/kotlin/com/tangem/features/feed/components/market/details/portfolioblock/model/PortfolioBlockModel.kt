@@ -138,8 +138,10 @@ internal class PortfolioBlockModel @Inject constructor(
         val allCurrencies = portfolios.flatMap { it.currencies }
         val hasMultiCurrencyWallet = portfolios.any { it.userWallet.isMultiCurrency }
 
+        val isRestricted = params.token.isRestrictedForCountry
+
         if (allCurrencies.isEmpty()) {
-            return if (hasMultiCurrencyWallet) {
+            return if (hasMultiCurrencyWallet && !isRestricted) {
                 PortfolioBlockUM.AddToken(
                     tokenIcon = tokenIcon,
                     onAddClick = { parentRouter?.openAddToPortfolioDirect() },
@@ -163,6 +165,9 @@ internal class PortfolioBlockModel @Inject constructor(
         }
 
         val firstCurrency = allCurrencies.first().currency
+        val rowClick: () -> Unit = { parentRouter?.openAddToPortfolioViaUserPortfolio(currencyRawId) }
+        val addFundsClick: () -> Unit = { parentRouter?.openAddFunds(currencyRawId) }
+
         return PortfolioBlockUM.Content(
             totalBalance = formattedBalance,
             tokensInPortfolioCount = allCurrencies.size,
@@ -170,8 +175,8 @@ internal class PortfolioBlockModel @Inject constructor(
             tokenName = firstCurrency.name,
             tokenSymbol = firstCurrency.symbol,
             isBalanceHidden = isBalanceHidden,
-            onRowClick = { parentRouter?.openAddToPortfolioViaUserPortfolio(currencyRawId) },
-            onAddFundsClick = { parentRouter?.openAddFunds(currencyRawId) },
+            onRowClick = rowClick.takeIf { !isRestricted },
+            onAddFundsClick = addFundsClick.takeIf { !isRestricted },
         )
     }
 }
