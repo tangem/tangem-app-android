@@ -36,6 +36,16 @@ internal class TxHistoryTitleConverterTest {
             expected = resRef(R.string.common_approved),
         ),
         TitleModel(
+            tx = txInfo(
+                type = TransactionType.Approve(
+                    amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6),
+                    address = "0xspender",
+                ),
+                status = TransactionStatus.Failed,
+            ),
+            expected = resRef(R.string.transaction_history_status_approve_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.Staking.Stake),
             expected = resRef(R.string.common_staked),
         ),
