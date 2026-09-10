@@ -56,7 +56,7 @@ internal class DisclaimerModel @Inject constructor(
                     key = NotificationId.EnablePushesReminderNotification.key,
                     value = false,
                 )
-                router.push(
+                router.replaceAll(
                     AppRoute.PushNotification(
                         source = AppRoute.PushNotification.Source.Stories,
                         nextRoute = nextRoute,
