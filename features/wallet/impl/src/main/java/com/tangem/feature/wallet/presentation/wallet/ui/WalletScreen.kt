@@ -58,6 +58,7 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.shtorka.TangemShtorka
 import com.tangem.core.ui.ds2.shtorka.TangemShtorkaState
 import com.tangem.core.ui.ds2.shtorka.rememberTangemShtorkaState
@@ -113,7 +114,7 @@ internal fun WalletScreen(
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
@@ -203,7 +204,7 @@ private fun WalletContent(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
@@ -453,7 +454,7 @@ private fun BaseScaffoldWithMarkets(
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -606,7 +607,7 @@ private fun ShtorkaScaffoldWithMarkets(
     state: WalletScreenState,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
-    shtorkaHeaderContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
+    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     appBarContent: @Composable () -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
@@ -656,6 +657,15 @@ private fun ShtorkaScaffoldWithMarkets(
         val onExpandSheet = remember(shtorkaState) {
             { shtorkaState.animateTo(TangemShtorka.Detent.Full) }
         }
+        val sheetExpansion = remember(shtorkaState) {
+            derivedStateOf {
+                when (shtorkaState.targetDetent) {
+                    ShtorkaCollapsedDetent -> ShtorkaExpansion.PILL
+                    TangemShtorka.Detent.Full -> ShtorkaExpansion.FULL
+                    else -> ShtorkaExpansion.PARTIAL
+                }
+            }
+        }
 
         Box(modifier = modifier.fillMaxSize()) {
             content(contentPadding, sheetHandle)
@@ -678,8 +688,8 @@ private fun ShtorkaScaffoldWithMarkets(
                 // The header draws its own small drag tip with the search bar centered around it
                 showDragHandle = false,
                 header = {
-                    ShtorkaSheetHeader {
-                        shtorkaHeaderContent(onExpandSheet)
+                    ShtorkaSheetHeader(expansion = sheetExpansion) {
+                        shtorkaHeaderContent(sheetExpansion, onExpandSheet)
                     }
                 },
             ) {
@@ -942,7 +952,7 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 ) {
                 }
             },
-            shtorkaHeaderContent = {},
+            shtorkaHeaderContent = { _, _ -> },
             shtorkaContent = {},
             legacyBottomSheetContent = {
                 Text("Markets Content")

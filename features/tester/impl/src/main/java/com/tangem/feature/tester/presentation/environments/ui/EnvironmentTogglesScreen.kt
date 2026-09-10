@@ -1,6 +1,6 @@
 package com.tangem.feature.tester.presentation.environments.ui
 
-import com.tangem.datasource.api.common.config.TangemTech
+import com.tangem.core.remote.config.TangemGatewayApiConfig
 import com.tangem.grow.datasource.config.Express
 
 import android.content.res.Configuration
@@ -188,8 +188,8 @@ private fun PreviewFeatureTogglesScreen() {
                         ),
                     ),
                     EnvironmentTogglesScreenUM.ApiInfoUM(
-                        name = TangemTech.ID.name,
-                        select = select[TangemTech.ID.name] ?: ApiEnvironment.DEV.name,
+                        name = TangemGatewayApiConfig.TANGEM_TECH_ID.name,
+                        select = select[TangemGatewayApiConfig.TANGEM_TECH_ID.name] ?: ApiEnvironment.DEV.name,
                         url = "https://api.express.tangem.com",
                         environments = persistentSetOf(
                             ApiEnvironment.DEV.name,

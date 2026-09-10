@@ -51,7 +51,7 @@ class GetAvailableFeeTokensUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val userCurrenciesStatuses = accountStatusList.flattenCurrencies()
+                    val userCurrenciesStatuses = accountStatusList.flattenPersonalCurrencies()
 
                     val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
                         raiseIllegalStateError("No native currency found: ${network.id}")

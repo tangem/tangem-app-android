@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CardIssueOffers
 import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.deeplinkOffer
 import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.model.plasticReissueOffer
 import com.tangem.domain.pay.model.virtualOffer
@@ -19,8 +20,17 @@ import com.tangem.domain.visa.error.VisaApiError
 class GetCustomerOffersUseCase(
     private val customerOffersRepository: CustomerOffersRepository,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, List<Offer>> {
-        return customerOffersRepository.getOffers(userWalletId)
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        deeplinkValue: String? = null,
+    ): Either<VisaApiError, List<Offer>> {
+        return customerOffersRepository.getOffers(userWalletId = userWalletId, deeplinkValue = deeplinkValue)
+    }
+
+    suspend fun campaignOffer(userWalletId: UserWalletId, deeplinkValue: String): Either<VisaApiError, Offer?> {
+        return customerOffersRepository
+            .getOffers(userWalletId = userWalletId, deeplinkValue = deeplinkValue)
+            .map { offers -> offers.deeplinkOffer() }
     }
 
     suspend fun cardIssueOffers(userWalletId: UserWalletId): Either<VisaApiError, CardIssueOffers> {
