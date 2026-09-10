@@ -8,6 +8,7 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.google.auth.GoogleIdTokenError
 import com.tangem.google.auth.GoogleIdTokenProvider
+import com.tangem.lib.auth.social.SignInNonce
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -61,36 +62,36 @@ internal class DefaultSocialLoginProviderRepositoryTest {
     }
 
     @Test
-    fun `GIVEN sign-in succeeds WHEN signIn THEN id token requested with the server nonce`() = runTest {
+    fun `GIVEN sign-in succeeds WHEN signIn THEN id token is minted with the hashed nonce`() = runTest {
         // Arrange
-        coEvery { googleIdTokenProvider.getIdToken(NONCE) } returns ID_TOKEN.right()
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns ID_TOKEN.right()
 
         // Act
         val actual = repository.signIn(SocialLoginProvider.Google)
 
         // Assert
-        assertThat(actual).isEqualTo(SocialProviderIdToken(ID_TOKEN).right())
-        coVerify(exactly = 1) { googleIdTokenProvider.getIdToken(NONCE) }
+        assertThat(actual).isEqualTo(SocialProviderIdToken(value = ID_TOKEN, nonce = PLAIN_NONCE).right())
+        coVerify(exactly = 1) { googleIdTokenProvider.getIdToken(HASHED_NONCE) }
     }
 
     @Test
-    fun `GIVEN backend issues no nonce WHEN signIn THEN id token requested unbound`() = runTest {
+    fun `GIVEN backend issues no nonce WHEN signIn THEN it fails without prompting the provider`() = runTest {
         // Arrange
         coEvery { nonceProvider.getNonce() } returns null
-        coEvery { googleIdTokenProvider.getIdToken(null) } returns ID_TOKEN.right()
 
         // Act
-        repository.signIn(SocialLoginProvider.Google)
+        val actual = repository.signIn(SocialLoginProvider.Google)
 
         // Assert
-        coVerify(exactly = 1) { googleIdTokenProvider.getIdToken(null) }
+        assertThat(actual).isEqualTo(SocialLoginError.ServerError().left())
+        coVerify(exactly = 0) { googleIdTokenProvider.getIdToken(any()) }
     }
 
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN sign-in fails WHEN signIn THEN error is mapped`(model: ErrorModel) = runTest {
         // Arrange
-        coEvery { googleIdTokenProvider.getIdToken(NONCE) } returns model.providerError.left()
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns model.providerError.left()
 
         // Act
         val actual = repository.signIn(SocialLoginProvider.Google)
@@ -125,7 +126,9 @@ internal class DefaultSocialLoginProviderRepositoryTest {
     }
 
     private companion object {
-        const val NONCE = "server-nonce"
+        const val PLAIN_NONCE = "server-nonce"
+        const val HASHED_NONCE = "hashed-server-nonce"
+        val NONCE = SignInNonce(forProvider = HASHED_NONCE, forRequest = PLAIN_NONCE)
         const val ID_TOKEN = "google-id-token"
     }
 }
