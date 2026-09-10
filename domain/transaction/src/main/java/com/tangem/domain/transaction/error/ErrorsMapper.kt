@@ -59,3 +59,15 @@ fun parseWrappedError(error: BlockchainSdkError.WrappedTangemError): SendTransac
         }
     }
 }
+
+/**
+ * Maps a failure of a gasless send into [SendTransactionError], keeping the backend status code so the user
+ * (and the support request) sees it instead of an empty error.
+ */
+fun Throwable.mapToGaslessSendError(): SendTransactionError = when (this) {
+    is GaslessServiceException -> SendTransactionError.NetworkError(
+        message = message,
+        code = httpCode?.toString(),
+    )
+    else -> SendTransactionError.DataError(message)
+}

@@ -40,8 +40,9 @@ interface ExpressHistoryDao {
      * Outgoing swaps: the viewed currency is the swap's `from` side, so the row is looked up by its `from_address`.
      * Join to on-chain by `payin_hash`.
      *
-     * [fromAddresses] holds every address the currency is watched under — the default one plus the dynamic (UTXO)
-     * addresses already used, so a swap paid from a non-base address is still found.
+     * [fromAddresses] holds every address the currency is watched under — all of the wallet's address types
+     * (segwit, legacy, …) plus the dynamic (UTXO) addresses already used, so a swap paid from a non-default
+     * address is still found.
      *
 
      * loading the whole table; [activeStatuses] keeps in-progress deals visible even outside the window.

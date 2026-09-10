@@ -21,6 +21,8 @@ internal data class ResidencyListUM(
 
         data object Empty : Content
 
+        data class Error(val onRetryClick: () -> Unit) : Content
+
         data class Sections(val sections: ImmutableList<SectionUM>) : Content
     }
 

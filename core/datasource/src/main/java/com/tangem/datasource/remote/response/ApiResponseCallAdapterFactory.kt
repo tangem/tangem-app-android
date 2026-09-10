@@ -18,7 +18,7 @@ internal class ApiResponseCallAdapterFactory private constructor(
             return null
         }
 
-        val callType = getParameterUpperBound(0, returnType as ParameterizedType)
+        val callType: Type = getParameterUpperBound(0, returnType as ParameterizedType)
         if (getRawType(callType) != ApiResponse::class.java) {
             return null
         }

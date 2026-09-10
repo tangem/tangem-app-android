@@ -11,13 +11,15 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
-import com.tangem.features.tangempay.eligibility.waitlist.DefaultTangemPayWaitlistComponent
 import kotlinx.serialization.builtins.serializer
 
 internal class RegionUnavailableComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
+    private val waitlistComponentFactory: TangemPayWaitlistComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val waitlistNavigation: SlotNavigation<Unit> = SlotNavigation()
@@ -27,9 +29,15 @@ internal class RegionUnavailableComponent(
         serializer = Unit.serializer(),
         handleBackButton = false,
         childFactory = { _, componentContext ->
-            DefaultTangemPayWaitlistComponent(
+            waitlistComponentFactory.create(
                 context = childByContext(componentContext),
-                params = TangemPayWaitlistComponent.Params(onDismiss = waitlistNavigation::dismiss),
+                params = TangemPayWaitlistComponent.Params(
+                    userWalletId = params.userWalletId,
+                    product = params.product,
+                    countryCode = params.countryCode,
+                    regionCode = params.regionCode,
+                    onDismiss = waitlistNavigation::dismiss,
+                ),
             )
         },
     )
@@ -47,5 +55,11 @@ internal class RegionUnavailableComponent(
         waitlist.child?.instance?.BottomSheet()
     }
 
-    data class Params(val onSelectAnotherRegionClick: () -> Unit)
+    data class Params(
+        val userWalletId: UserWalletId,
+        val product: TangemPayProduct,
+        val countryCode: String,
+        val regionCode: String?,
+        val onSelectAnotherRegionClick: () -> Unit,
+    )
 }

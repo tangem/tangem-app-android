@@ -2,7 +2,6 @@ package com.tangem.data.notifications
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConverter
@@ -13,7 +12,7 @@ import com.tangem.datasource.api.tangemTech.models.CryptoNetworkResponse
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationIdResponse
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
@@ -38,10 +37,13 @@ class DefaultPushNotificationsRepositoryTest {
         preferencesDataStore = preferencesDataStore,
     )
     private val appsFlyerRepository: AppsFlyerRepository = mockk()
+    private val storePreferencesKeys = StorePreferencesKeys()
+
     private val repository = DefaultPushNotificationsRepository(
         tangemTechApi = tangemTechApi,
         appInfoProvider = appInfoProvider,
         appPreferencesStore = appPreferencesStore,
+        storePreferencesKeys = storePreferencesKeys,
         appsFlyerRepository = appsFlyerRepository,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -105,7 +107,7 @@ class DefaultPushNotificationsRepositoryTest {
         // GIVEN
         val expectedAppId = ApplicationId("test-app-id")
         val preferences = mockk<Preferences>(relaxed = true)
-        val key = stringPreferencesKey(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY.name)
+        val key = storePreferencesKeys.notificationsApplicationIdKey
         every { preferences[key] } returns expectedAppId.value
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
 

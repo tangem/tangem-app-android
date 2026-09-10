@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
@@ -201,7 +200,6 @@ private fun previewButton(text: TextReference, icon: ImageVector, isEnabled: Boo
         tintReference = { TangemTheme.colors3.icon.primary },
     ),
     type = TangemButtonType.Secondary,
-    shape = TangemButtonShape.Rounded,
     isEnabled = isEnabled,
     onClick = {},
 )

@@ -2,6 +2,7 @@ package com.tangem.screens.tangempay
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.StatusScreenTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -11,7 +12,7 @@ class TangemPayVirtualAccountSuccessPageObject(semanticsProvider: SemanticsNodeI
     ComposeScreen<TangemPayVirtualAccountSuccessPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasTestTag(TangemPayTestTags.VA_DEPOSIT_SUCCESS_TITLE)
+        hasTestTag(StatusScreenTestTags.TITLE)
         useUnmergedTree = true
     }
 

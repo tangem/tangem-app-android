@@ -17,6 +17,7 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.repository.BankOfframpRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -36,6 +37,7 @@ internal class MockBankOfframpRepository(
     private var nextOrderIndex = 1
 
     override suspend fun getBankAccounts(userWalletId: UserWalletId): Either<BankOfframpError, List<BankAccount>> {
+        delay(ACCOUNTS_FETCH_DELAY_MILLIS)
         return mutex.withLock { accounts.toList().right() }
     }
 
@@ -160,6 +162,8 @@ internal class MockBankOfframpRepository(
         const val ORDER_ID_PREFIX = "mock-bank-offramp-order-"
         const val FAKE_PAYLOAD_HASH = "0x5f3c4d3e2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e"
         const val AWAITING_SIGNATURE_DELAY_MILLIS = 6_000L
+        // Long enough for the hub's recents shimmer to be visible against the in-memory mock.
+        const val ACCOUNTS_FETCH_DELAY_MILLIS = 600L
         const val INVALID_ROUTING_NUMBER = "000000001"
         const val SUPPORTED_COUNTRY_CODE = "US"
         const val SENDER_REGION_TRIGGER_CENTS = 66_600L

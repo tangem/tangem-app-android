@@ -13,7 +13,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.res.R
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
@@ -62,6 +62,7 @@ internal class DefaultUserWalletsListRepository(
     private val tangemSdkManagerProvider: Provider<TangemSdkManager>,
     private val savePersistentInformation: ProviderSuspend<Boolean>,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val tangemHotSdk: TangemHotSdk,
     private val trackingContextProxy: TrackingContextProxy,
@@ -579,7 +580,7 @@ internal class DefaultUserWalletsListRepository(
 
     private suspend fun hasBiometry(): Boolean {
         val isBiometricAuthenticationUsed = appPreferencesStore.getSyncOrDefault(
-            key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+            key = storePreferencesKeys.useBiometricAuthenticationKey,
             default = false,
         )
 
@@ -684,6 +685,6 @@ internal class DefaultUserWalletsListRepository(
     private suspend fun onAllWalletsDeleted() {
         // reset the referral attribution (set from AF deeplink) after removing the last wallet
         clearReferralInstallUseCase()
-        appPreferencesStore.editData { it.remove(PreferencesKeys.USEDESK_CLIENT_ID_KEY) }
+        appPreferencesStore.editData { it.remove(storePreferencesKeys.usedeskClientIdKey) }
     }
 }

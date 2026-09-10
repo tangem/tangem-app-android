@@ -117,9 +117,10 @@ private fun MembersMenuButton(onArchiveClick: () -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Box {
+        // A button group entry is X9: the group pill adds its own 4dp, which levels it with the 44dp close button
         TangemButton(
             variant = TangemButton.Variant.Ghost,
-            size = TangemButton.Size.X11,
+            size = TangemButton.Size.X9,
             iconStart = TangemIconUM.Icon(Icons.ic_dots_horizontal_20),
             contentDescription = stringResourceSafe(CoreUiR.string.common_more),
             onClick = { isExpanded = true },
@@ -255,6 +256,7 @@ private fun ShareSafelyBanner(state: JointAccountMembersUM.ShareSafelyUM, modifi
 private fun JoinedMemberRow(member: MemberUM.Joined, modifier: Modifier = Modifier) {
     TangemRow(
         modifier = modifier.jointAccountCard(),
+        onClick = member.onInfoClick,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {

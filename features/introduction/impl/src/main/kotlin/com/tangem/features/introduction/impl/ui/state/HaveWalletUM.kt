@@ -2,6 +2,7 @@ package com.tangem.features.introduction.impl.ui.state
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 
 /**
  * The sheet keeps one content type across all of its steps on purpose: [com.tangem.core.ui.ds2.modal.TangemModal]
@@ -10,6 +11,7 @@ import com.tangem.core.ui.extensions.TextReference
  */
 internal data class HaveWalletUM(
     val step: Step,
+    val onCloseClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
     sealed interface Step {
@@ -24,10 +26,16 @@ internal data class HaveWalletUM(
             val title: TextReference,
             val description: TextReference,
             val recoveryPhraseButtonText: TextReference,
-            val cloudBackupButtonText: TextReference,
+            val cloudBackupButtonText: TextReference?,
+            val isCloudLoading: Boolean,
             val onRecoveryPhraseClick: () -> Unit,
             val onCloudBackupClick: () -> Unit,
             val onBack: () -> Unit,
+        ) : Step
+
+        data class Error(
+            val message: CloudRestoreErrorMessage,
+            val onGotItClick: () -> Unit,
         ) : Step
     }
 }

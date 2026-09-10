@@ -17,6 +17,7 @@ import com.tangem.grow.datasource.stakekit.models.response.model.error.StakeKitE
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.data.staking.store.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.data.staking.store.P2PVaultLimitsStore
@@ -117,11 +118,13 @@ internal object StakingDataModule {
     fun provideStakingTransactionHashRepository(
         stakeKitApi: StakeKitApi,
         appPreferencesStore: AppPreferencesStore,
+        growPreferencesKeys: GrowPreferencesKeys,
         dispatchers: CoroutineDispatcherProvider,
     ): StakeKitTransactionHashRepository {
         return DefaultStakeKitTransactionHashRepository(
             stakeKitApi = stakeKitApi,
             appPreferencesStore = appPreferencesStore,
+            growPreferencesKeys = growPreferencesKeys,
             dispatchers = dispatchers,
         )
     }

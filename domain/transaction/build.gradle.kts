@@ -57,6 +57,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testRuntimeOnly(deps.orgJson)
     testRuntimeOnly(deps.test.junit5.vintage.engine)
     testImplementation(deps.test.junit)
     testImplementation(projects.common.test)

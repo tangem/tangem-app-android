@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_download_24
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.core.ui.R as CoreUiR
@@ -53,13 +55,15 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
                     is HaveWalletUM.Step.Options ->
                         resourceReference(R.string.introduction_button_i_have_a_wallet)
                     // The Import step carries its title in the body, so the bar keeps only its buttons.
-                    is HaveWalletUM.Step.Import -> stringReference("")
+                    is HaveWalletUM.Step.Import,
+                    is HaveWalletUM.Step.Error,
+                    -> stringReference("")
                 },
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 windowInsets = WindowInsets(0.dp),
                 fadeEnabled = false,
                 onBack = (content.step as? HaveWalletUM.Step.Import)?.onBack,
-                onClose = config.onDismissRequest,
+                onClose = content.onCloseClick,
             )
         },
     ) { content ->
@@ -77,6 +81,7 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
                 when (step) {
                     is HaveWalletUM.Step.Options -> OptionsStep(step = step)
                     is HaveWalletUM.Step.Import -> ImportStep(step = step)
+                    is HaveWalletUM.Step.Error -> ErrorStep(step = step)
                 }
             }
         }
@@ -111,14 +116,47 @@ private fun ImportStep(step: HaveWalletUM.Step.Import) {
             text = step.recoveryPhraseButtonText,
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X12,
+            isEnabled = !step.isCloudLoading,
             onClick = step.onRecoveryPhraseClick,
         )
+        step.cloudBackupButtonText?.let { text ->
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = text,
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                isLoading = step.isCloudLoading,
+                onClick = step.onCloudBackupClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorStep(step: HaveWalletUM.Step.Error) {
+    StepBody(
+        icon = StepIcon(
+            image = ImageVector.vectorResource(CoreUiR.drawable.ic_alert_triange_24),
+            tint = if (step.message.isWarning) {
+                TangemTheme.colors3.icon.status.warning
+            } else {
+                TangemTheme.colors3.icon.status.error
+            },
+            background = if (step.message.isWarning) {
+                TangemTheme.colors3.bg.status.warningSubtle
+            } else {
+                TangemTheme.colors3.bg.status.errorSubtle
+            },
+        ),
+        title = step.message.title.resolveReference(),
+        description = step.message.body.resolveReference(),
+    ) {
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
-            text = step.cloudBackupButtonText,
-            variant = TangemButton.Variant.Secondary,
+            text = resourceReference(R.string.common_got_it),
+            variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
-            onClick = step.onCloudBackupClick,
+            onClick = step.onGotItClick,
         )
     }
 }
@@ -194,9 +232,27 @@ private fun ImportStepPreview() {
                 description = resourceReference(R.string.hw_import_existing_wallet_description),
                 recoveryPhraseButtonText = resourceReference(R.string.hw_cloud_backup_restore_use_recovery_phrase),
                 cloudBackupButtonText = resourceReference(R.string.hw_cloud_backup_service_name),
+                isCloudLoading = false,
                 onRecoveryPhraseClick = {},
                 onCloudBackupClick = {},
                 onBack = {},
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ErrorStepPreview() {
+    TangemThemePreviewRedesign(isDark = true) {
+        ErrorStep(
+            step = HaveWalletUM.Step.Error(
+                message = CloudRestoreErrorMessage(
+                    title = resourceReference(R.string.hw_cloud_backup_error_title),
+                    body = resourceReference(R.string.hw_cloud_backup_restore_error_with_recovery),
+                    isWarning = false,
+                ),
+                onGotItClick = {},
             ),
         )
     }

@@ -41,8 +41,8 @@ import com.tangem.features.txhistory.impl.R
 /**
  * Counterparty ("Recipient" / "From") card of the single-asset detail, built on the DS3 [TangemRow] inside a tinted
  * `bg.opaque.primary` cell. The layout is identical across counterparty kinds — only the leading
- * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]). The whole row is clickable and triggers
- * [CounterpartyUM.onCopyClick] when it is non-null.
+ * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]). The whole row is clickable and copies the
+ * counterparty address via [CounterpartyUM.onCopyClick].
  *
  * The section [label][CounterpartyUM.label] sits above the counterparty value. [TangemRow] renders its `titleSlot`
  * above the `subtitleSlot`, so the slots are filled inverted to their semantic role: the small caption label goes in
@@ -147,7 +147,7 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
                     avatar = CounterpartyAvatar.Wallet(
                         deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
                     ),
-                    onCopyClick = null,
+                    onCopyClick = {},
                 ),
             )
             TxHistoryDetailsCounterpartyRow(

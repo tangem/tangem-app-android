@@ -14,9 +14,11 @@ interface TangemPayStorage {
 
     suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens?
 
-    suspend fun storeOrderId(customerWalletAddress: String, orderId: String)
+    suspend fun storeOrderId(customerWalletAddress: String, orderId: String, isCampaignOrder: Boolean = false)
 
     suspend fun getOrderId(customerWalletAddress: String): String?
+
+    suspend fun isCampaignOrder(customerWalletAddress: String): Boolean
 
     suspend fun clearOrderId(customerWalletAddress: String)
 

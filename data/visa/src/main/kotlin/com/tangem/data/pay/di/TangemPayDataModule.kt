@@ -20,6 +20,7 @@ import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -66,10 +67,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPaySwapRepository(repository: DefaultTangemPayWithdrawRepository): TangemPayWithdrawRepository
-
-    @Binds
-    @Singleton
-    fun bindCustomerOffersRepository(repository: DefaultCustomerOffersRepository): CustomerOffersRepository
 
     @Binds
     @Singleton
@@ -130,6 +127,14 @@ internal interface TangemPayDataModule {
     fun bindTariffPlanTransitionsRepository(
         repository: DefaultTariffPlanTransitionsRepository,
     ): TangemPayTariffPlanTransitionsRepository
+
+    @Binds
+    @Singleton
+    fun bindResidencyRepository(repository: DefaultTangemPayResidencyRepository): TangemPayResidencyRepository
+
+    @Binds
+    @Singleton
+    fun bindWaitlistRepository(repository: DefaultTangemPayWaitlistRepository): TangemPayWaitlistRepository
 
     @Suppress("TooManyFunctions", "LargeClass")
     companion object {
@@ -293,6 +298,41 @@ internal interface TangemPayDataModule {
                 appCoroutineScope = appCoroutineScope,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             )
+        }
+
+        @Provides
+        fun provideGetTangemPayCountriesUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): GetTangemPayCountriesUseCase {
+            return GetTangemPayCountriesUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideGetTangemPayRegionsUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): GetTangemPayRegionsUseCase {
+            return GetTangemPayRegionsUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideCheckTangemPayEligibilityUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): CheckTangemPayEligibilityUseCase {
+            return CheckTangemPayEligibilityUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideCheckTangemPayEligibilityByKycUseCase(
+            residencyRepository: TangemPayResidencyRepository,
+        ): CheckTangemPayEligibilityForCustomerUseCase {
+            return CheckTangemPayEligibilityForCustomerUseCase(residencyRepository)
+        }
+
+        @Provides
+        fun provideJoinTangemPayWaitlistUseCase(
+            waitlistRepository: TangemPayWaitlistRepository,
+        ): JoinTangemPayWaitlistUseCase {
+            return JoinTangemPayWaitlistUseCase(waitlistRepository)
         }
 
         @Provides
@@ -518,8 +558,11 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideBankOfframpRecentsStore(prefs: AppPreferencesStore): BankOfframpRecentsStore {
-            return DefaultBankOfframpRecentsStore(prefs = prefs)
+        fun provideBankOfframpRecentsStore(
+            prefs: AppPreferencesStore,
+            spendPreferencesKeys: SpendPreferencesKeys,
+        ): BankOfframpRecentsStore {
+            return DefaultBankOfframpRecentsStore(prefs = prefs, spendPreferencesKeys = spendPreferencesKeys)
         }
 
         @Provides

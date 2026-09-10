@@ -44,10 +44,18 @@ dependencies {
     implementation(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
+    implementation(projects.libs.tangemSdkApi)
+    // endregion
+
+    // region Data
+    implementation(projects.data.common)
+    implementation(projects.data.wallets)
     // endregion
 
     // region Domain
     api(projects.domain.collectibles)
+    implementation(projects.domain.card)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.collectibles.models)
     implementation(projects.domain.core)
     implementation(projects.domain.common)

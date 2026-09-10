@@ -20,9 +20,10 @@ dependencies {
 
     /** Features api */
     api(projects.features.tangempay.eligibility.api)
-    implementation(projects.features.tangempay.commonUi)
 
     /** Domain */
+    implementation(projects.domain.models)
+    implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
 
     /** Compose */

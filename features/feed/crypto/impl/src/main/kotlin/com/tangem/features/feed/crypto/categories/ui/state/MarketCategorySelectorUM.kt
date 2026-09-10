@@ -1,28 +1,39 @@
 package com.tangem.features.feed.crypto.categories.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal sealed interface MarketCategorySelectorUM {
-
-    data object Loading : MarketCategorySelectorUM
-
-    /**
-     * @property featured null when the backend curates no featured categories or the featured request
-     * failed — the rail is then hidden and the full list still works
-     */
-    @Immutable
-    data class Content(
-        val featured: FeaturedCategoriesUM?,
-        val categories: MarketCategoryListUM,
-        val isEdited: Boolean,
-        val footer: MarketCategorySelectorFooterUM,
-    ) : MarketCategorySelectorUM
+internal data class MarketCategorySelectorUM(
+    val search: TangemSearch.State,
+    val isEdited: Boolean,
+    val footer: MarketCategorySelectorFooterUM,
+    val content: ContentUM,
+) {
 
     @Immutable
-    data class Error(val onRetry: () -> Unit) : MarketCategorySelectorUM
+    sealed interface ContentUM {
+
+        data object Loading : ContentUM
+
+        /**
+         * @property featured null when the backend curates no featured categories, the featured
+         * request failed, or a search is applied — the rail is then hidden and the list still works
+         */
+        @Immutable
+        data class Content(
+            val featured: FeaturedCategoriesUM?,
+            val categories: MarketCategoryListUM,
+        ) : ContentUM
+
+        /** A search matched nothing. Unreachable without a query: an unfiltered list always has the "All" row. */
+        data object Empty : ContentUM
+
+        @Immutable
+        data class Error(val onRetry: () -> Unit) : ContentUM
+    }
 }
 
 @Immutable

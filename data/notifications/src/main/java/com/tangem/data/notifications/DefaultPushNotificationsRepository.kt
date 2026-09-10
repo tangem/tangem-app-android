@@ -12,7 +12,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.models.wallet.UserWalletId
@@ -32,6 +32,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val appInfoProvider: AppInfoProvider,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val appsFlyerRepository: AppsFlyerRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PushNotificationsRepository {
@@ -54,17 +55,17 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
     }
 
     override suspend fun saveApplicationId(appId: ApplicationId) {
-        appPreferencesStore.store(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY, appId.value)
+        appPreferencesStore.store(storePreferencesKeys.notificationsApplicationIdKey, appId.value)
     }
 
     override suspend fun getApplicationId(): ApplicationId? {
-        return appPreferencesStore.getSyncOrNull(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY)
+        return appPreferencesStore.getSyncOrNull(storePreferencesKeys.notificationsApplicationIdKey)
             ?.let(::ApplicationId)
     }
 
     override suspend fun clearApplicationId() {
         appPreferencesStore.edit { mutablePreferences ->
-            mutablePreferences.remove(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY)
+            mutablePreferences.remove(storePreferencesKeys.notificationsApplicationIdKey)
         }
     }
 
@@ -102,7 +103,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
     }
 
     override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
-        appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+        appPreferencesStore.getObjectMap<Boolean>(storePreferencesKeys.notificationsEnabledStatesKey)
             .map { it[userWalletId.stringValue] == true }
             .firstOrNull() == true
 }

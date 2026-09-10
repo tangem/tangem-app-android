@@ -71,6 +71,7 @@ interface TangemTechMarketsApi {
      * @param timestamp pagination snapshot token: pass the same value for every page of one listing
      *                  so it stays stable while paging. The response does not echo it back
      * @param featured  when `true`, only categories curated as featured are returned
+     * @param search    narrows the page to categories matching the query; `null` returns all of them
      */
     @GET("v1/coins/gecko-categories")
     suspend fun getMarketCategories(
@@ -79,5 +80,19 @@ interface TangemTechMarketsApi {
         @Query("limit") limit: Int,
         @Query("timestamp") timestamp: Long? = null,
         @Query("featured") featured: Boolean? = null,
+        @Query("search") search: String? = null,
     ): ApiResponse<MarketCategoriesResponse>
+
+    /**
+     * Returns the global market indicators of the "Total market cap" block: total capitalisation
+     * with its 24h change, the Fear & Greed index and the Altcoin Season index.
+     *
+     * Takes no parameters — the capitalisation is always in USD and the index labels are localised
+     * by the backend.
+     */
+    @GET("api/v1/market-indicators")
+    suspend fun getMarketIndicators(
+        @Query("currency") currency: String,
+        @Query("language") language: String,
+    ): ApiResponse<MarketIndicatorsResponse>
 }

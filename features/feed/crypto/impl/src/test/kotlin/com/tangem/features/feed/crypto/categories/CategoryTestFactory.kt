@@ -1,6 +1,10 @@
 package com.tangem.features.feed.crypto.categories
 
+import com.tangem.core.ui.ds2.search.TangemSearch
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.markets.MarketCategory
+import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorFooterUM
+import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorUM
 import java.math.BigDecimal
 
 /**
@@ -36,4 +40,24 @@ internal fun createCategory(
 
 internal fun selectionOf(category: MarketCategory): MarketCategorySelection = MarketCategorySelection(
     category = MarketCategorySelection.Entry(id = category.id, name = category.name),
+)
+
+internal fun createSelectorState(
+    search: TangemSearch.State = createSearchState(),
+    isEdited: Boolean = false,
+    footer: MarketCategorySelectorFooterUM = MarketCategorySelectorFooterUM(onReset = {}, onApply = {}),
+    content: MarketCategorySelectorUM.ContentUM = MarketCategorySelectorUM.ContentUM.Loading,
+): MarketCategorySelectorUM = MarketCategorySelectorUM(
+    search = search,
+    isEdited = isEdited,
+    footer = footer,
+    content = content,
+)
+
+internal fun createSearchState(query: String = "", isActive: Boolean = false): TangemSearch.State = TangemSearch.State(
+    placeholderText = stringReference("Search"),
+    query = query,
+    onQueryChange = {},
+    isActive = isActive,
+    onActiveChange = {},
 )

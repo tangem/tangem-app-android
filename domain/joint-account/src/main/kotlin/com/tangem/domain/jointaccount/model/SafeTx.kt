@@ -36,3 +36,13 @@ data class SafeTx(
         const val OPERATION_CALL = 0
     }
 }
+
+/**
+ * The inner call a [SafeTx] wraps — what the Safe itself executes. Phase 2 sources (swap, WalletConnect)
+ * plug in their own callData here without touching the gas and signing paths.
+ */
+data class SafeInnerCall(
+    val to: String,
+    val value: BigInteger,
+    val data: String,
+)

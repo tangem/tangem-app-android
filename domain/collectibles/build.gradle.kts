@@ -7,6 +7,7 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    implementation(deps.hilt.core)
     // endregion
 
     // region Core

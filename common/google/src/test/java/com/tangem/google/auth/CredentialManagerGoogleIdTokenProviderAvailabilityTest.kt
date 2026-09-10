@@ -50,7 +50,7 @@ internal class CredentialManagerGoogleIdTokenProviderAvailabilityTest {
 
     private fun createProvider(webClientId: String?) = CredentialManagerGoogleIdTokenProvider(
         context = context,
-        webClientId = webClientId,
+        googleAuthConfig = GoogleAuthConfig(webClientId = webClientId),
         foregroundActivityProvider = foregroundActivityProvider,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

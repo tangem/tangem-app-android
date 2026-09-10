@@ -29,8 +29,10 @@ data class ExpressExchangeEntity(
      * Address from which the `from` assets were taken — the key outgoing swaps are looked up by. The API may omit it
      * (the very first app versions did not send it), but such items are filtered out before persisting, so the stored
      * value is always present.
+     *
+     * Compared case-insensitively — see [payoutAddress].
      */
-    @ColumnInfo(name = "from_address")
+    @ColumnInfo(name = "from_address", collate = ColumnInfo.NOCASE)
     val fromAddress: String,
 
     /** Address to which the source assets were transferred for the exchange */
@@ -41,8 +43,14 @@ data class ExpressExchangeEntity(
     @ColumnInfo(name = "payin_extra_id")
     val payinExtraId: String?,
 
-    /** Address that received the target assets */
-    @ColumnInfo(name = "payout_address")
+    /**
+     * Address that received the target assets.
+     *
+     * Compared case-insensitively: the wallet derives EVM addresses ERC-55 checksummed while the express backend
+     * stores whatever casing the provider reported, and a case variant of another valid address would fail its
+     * checksum — the same tolerance the off-database address matching in the history merger applies.
+     */
+    @ColumnInfo(name = "payout_address", collate = ColumnInfo.NOCASE)
     val payoutAddress: String,
 
     /** Refund destination address */

@@ -74,11 +74,11 @@ internal class WalletJointAccountItemConverterTest {
                 direction = TangemPriceChange.Direction.Neutral,
             ),
         )
-        assertThat(state.canInvite).isFalse()
+        assertThat(state.banner).isNull()
     }
 
     @Test
-    fun `GIVEN unused invites on this device WHEN convert pending THEN the invite banner is offered`() {
+    fun `GIVEN invites on this device WHEN convert pending with free slots THEN the invite banner is offered`() {
         // Arrange
         val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
         val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2))
@@ -87,17 +87,32 @@ internal class WalletJointAccountItemConverterTest {
         val state = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
 
         // Assert
-        assertThat(state.canInvite).isTrue()
+        val banner = requireNotNull(state.banner)
+        assertThat(banner.text).isEqualTo(resourceReference(R.string.joint_account_invite_members_to_join))
+        assertThat(banner.iconRes).isEqualTo(R.drawable.ic_group_24)
 
         // Act
-        state.onInviteClick()
+        banner.onClick()
 
         // Assert
         assertThat(clickedAccounts).containsExactly(userWalletId to account.accountId.value)
     }
 
     @Test
-    fun `GIVEN confirming status WHEN convert THEN waiting for activation`() {
+    fun `GIVEN invites on this device WHEN convert pending with every slot taken THEN no banner is offered`() {
+        // Arrange
+        val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
+        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 3, totalMembers = 3))
+
+        // Act
+        val state = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
+
+        // Assert
+        assertThat(state.banner).isNull()
+    }
+
+    @Test
+    fun `GIVEN confirming status WHEN convert THEN waiting for activation without a banner for a member`() {
         // Arrange
         val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
 
@@ -107,6 +122,28 @@ internal class WalletJointAccountItemConverterTest {
         // Assert
         val state = actual.state as JointAccountMainUM.WaitingMembers
         assertThat(state.subtitle).isEqualTo(resourceReference(R.string.joint_account_waiting_activation))
+        assertThat(state.banner).isNull()
+    }
+
+    @Test
+    fun `GIVEN invites on this device WHEN convert confirming THEN the activate banner is offered`() {
+        // Arrange
+        val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
+        val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
+
+        // Act
+        val state = inviting.convert(status).state as JointAccountMainUM.WaitingMembers
+
+        // Assert
+        val banner = requireNotNull(state.banner)
+        assertThat(banner.text).isEqualTo(resourceReference(R.string.joint_account_activation_account_button_title))
+        assertThat(banner.iconRes).isEqualTo(R.drawable.ic_circle_clock_24)
+
+        // Act
+        banner.onClick()
+
+        // Assert
+        assertThat(clickedAccounts).containsExactly(userWalletId to account.accountId.value)
     }
 
     @Test

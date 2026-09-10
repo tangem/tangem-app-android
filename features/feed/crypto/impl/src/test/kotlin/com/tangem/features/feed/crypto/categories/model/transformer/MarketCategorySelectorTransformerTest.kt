@@ -7,9 +7,12 @@ import com.tangem.domain.markets.MarketCategory
 import com.tangem.features.feed.crypto.categories.ALL_ROW_ID
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.createCategory
+import com.tangem.features.feed.crypto.categories.createSearchState
+import com.tangem.features.feed.crypto.categories.createSelectorState
 import com.tangem.features.feed.crypto.categories.selectionOf
 import com.tangem.features.feed.crypto.categories.ui.state.FeaturedCategoryUM
 import com.tangem.features.feed.crypto.categories.ui.state.MarketCategoryItemUM
+import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorFooterUM
 import com.tangem.features.feed.crypto.categories.ui.state.MarketCategorySelectorUM
 import com.tangem.features.feed.crypto.impl.R
 import com.tangem.test.core.ProvideTestModels
@@ -18,27 +21,26 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 /**
- * The transformer rebuilds the whole screen from the values it is handed, so the assertions here are
- * about what reaches the state, not about what survives from the previous one.
+ * The transformer rebuilds the screen body from the values it is handed, so the assertions here are
+ * about what reaches the state, not about what survives from the previous one — with one exception:
+ * the search field and the footer live above the body and must come through untouched.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MarketCategorySelectorTransformerTest {
 
     private val onLoadMore: () -> Unit = {}
-    private val onReset: () -> Unit = {}
-    private val onApply: () -> Unit = {}
 
     private val ai = createCategory(id = "ai", name = "AI")
     private val meme = createCategory(id = "meme", name = "Meme", isFeatured = true)
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `previous state is ignored`(model: PrevStateModel) {
+    fun `previous body is ignored`(model: PrevStateModel) {
         // Act
-        val actual = transform(prevState = model.prevState)
+        val actual = transform(prevState = createSelectorState(content = model.prevContent))
 
         // Assert
-        assertThat(actual).isInstanceOf(MarketCategorySelectorUM.Content::class.java)
+        assertThat(actual).isInstanceOf(MarketCategorySelectorUM.ContentUM.Content::class.java)
     }
 
     @Test
@@ -59,6 +61,16 @@ internal class MarketCategorySelectorTransformerTest {
         // Assert
         assertThat(actual.featured).isNull()
         assertThat(actual.categories.items.map(MarketCategoryItemUM::id)).containsExactly(ALL_ROW_ID, "ai").inOrder()
+    }
+
+    @Test
+    fun `GIVEN a search WHEN transformed THEN the rail and the All row are both dropped`() {
+        // Act — an unfiltered shortcut strip and "no filter" are not search results
+        val actual = transform(featured = listOf(meme), categories = listOf(ai), isSearching = true)
+
+        // Assert
+        assertThat(actual.featured).isNull()
+        assertThat(actual.categories.items.map(MarketCategoryItemUM::id)).containsExactly("ai")
     }
 
     @Test
@@ -84,23 +96,57 @@ internal class MarketCategorySelectorTransformerTest {
     @Test
     fun `GIVEN the screen flags WHEN transformed THEN they reach the state untouched`() {
         // Act
-        val actual = transform(isEdited = true, isLoadingMore = true)
+        val actual = transformState(isEdited = true, isLoadingMore = true)
 
         // Assert
         assertThat(actual.isEdited).isTrue()
-        assertThat(actual.categories.isLoadingMore).isTrue()
+        assertThat(actual.body().categories.isLoadingMore).isTrue()
     }
 
     @Test
-    fun `GIVEN the screen callbacks WHEN transformed THEN the state hands back the very same lambdas`() {
+    fun `GIVEN the load more callback WHEN transformed THEN the state hands back the very same lambda`() {
         // Act
         val actual = transform()
 
         // Assert
         assertThat(actual.categories.loadMore).isEqualTo(onLoadMore)
-        assertThat(actual.footer.onReset).isEqualTo(onReset)
-        assertThat(actual.footer.onApply).isEqualTo(onApply)
     }
+
+    @Test
+    fun `GIVEN a typed query and a footer WHEN transformed THEN neither is rebuilt`() {
+        // Arrange — a reload must not unmount the field mid-typing or strip a drafted selection
+        val footer = MarketCategorySelectorFooterUM(onReset = {}, onApply = {})
+        val prevState = createSelectorState(search = createSearchState(query = "mem", isActive = true), footer = footer)
+
+        // Act
+        val actual = transformState(prevState = prevState)
+
+        // Assert
+        assertThat(actual.search).isEqualTo(prevState.search)
+        assertThat(actual.footer).isSameInstanceAs(footer)
+    }
+
+    @Suppress("LongParameterList")
+    private fun transformState(
+        featured: List<MarketCategory> = emptyList(),
+        categories: List<MarketCategory> = emptyList(),
+        selection: MarketCategorySelection = MarketCategorySelection(),
+        appCurrency: AppCurrency = AppCurrency.Default,
+        isSearching: Boolean = false,
+        isEdited: Boolean = false,
+        isLoadingMore: Boolean = false,
+        prevState: MarketCategorySelectorUM = createSelectorState(),
+    ): MarketCategorySelectorUM = MarketCategorySelectorTransformer(
+        featured = featured,
+        categories = categories,
+        selection = selection,
+        appCurrency = appCurrency,
+        isSearching = isSearching,
+        isEdited = isEdited,
+        isLoadingMore = isLoadingMore,
+        onLoadMore = onLoadMore,
+        onSelectionChange = {},
+    ).transform(prevState)
 
     @Suppress("LongParameterList")
     private fun transform(
@@ -108,49 +154,53 @@ internal class MarketCategorySelectorTransformerTest {
         categories: List<MarketCategory> = emptyList(),
         selection: MarketCategorySelection = MarketCategorySelection(),
         appCurrency: AppCurrency = AppCurrency.Default,
+        isSearching: Boolean = false,
         isEdited: Boolean = false,
         isLoadingMore: Boolean = false,
-        prevState: MarketCategorySelectorUM = MarketCategorySelectorUM.Loading,
-    ): MarketCategorySelectorUM.Content = MarketCategorySelectorTransformer(
+        prevState: MarketCategorySelectorUM = createSelectorState(),
+    ): MarketCategorySelectorUM.ContentUM.Content = transformState(
         featured = featured,
         categories = categories,
         selection = selection,
         appCurrency = appCurrency,
+        isSearching = isSearching,
         isEdited = isEdited,
         isLoadingMore = isLoadingMore,
-        onLoadMore = onLoadMore,
-        onReset = onReset,
-        onApply = onApply,
-        onSelectionChange = {},
-    ).transform(prevState) as MarketCategorySelectorUM.Content
+        prevState = prevState,
+    ).body()
+
+    private fun MarketCategorySelectorUM.body() = content as MarketCategorySelectorUM.ContentUM.Content
 
     private fun provideTestModels() = listOf(
         PrevStateModel(
             name = "GIVEN a loading screen WHEN transformed THEN content replaces it",
-            prevState = MarketCategorySelectorUM.Loading,
+            prevContent = MarketCategorySelectorUM.ContentUM.Loading,
         ),
         PrevStateModel(
             name = "GIVEN a failed screen WHEN transformed THEN content replaces it",
-            prevState = MarketCategorySelectorUM.Error(onRetry = {}),
+            prevContent = MarketCategorySelectorUM.ContentUM.Error(onRetry = {}),
+        ),
+        PrevStateModel(
+            name = "GIVEN an empty search result WHEN transformed THEN content replaces it",
+            prevContent = MarketCategorySelectorUM.ContentUM.Empty,
         ),
         PrevStateModel(
             name = "GIVEN an already rendered screen WHEN transformed THEN it is rebuilt",
-            prevState = MarketCategorySelectorTransformer(
+            prevContent = MarketCategorySelectorTransformer(
                 featured = emptyList(),
                 categories = emptyList(),
                 selection = MarketCategorySelection(),
                 appCurrency = AppCurrency.Default,
+                isSearching = false,
                 isEdited = false,
                 isLoadingMore = false,
                 onLoadMore = {},
-                onReset = {},
-                onApply = {},
                 onSelectionChange = {},
-            ).transform(MarketCategorySelectorUM.Loading),
+            ).transform(createSelectorState()).content,
         ),
     )
 
-    internal data class PrevStateModel(val name: String, val prevState: MarketCategorySelectorUM) {
+    internal data class PrevStateModel(val name: String, val prevContent: MarketCategorySelectorUM.ContentUM) {
         override fun toString(): String = name
     }
 }
