@@ -28,6 +28,12 @@ import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.store.datasource.markets.models.response.CoinCategoriesResponse
+import org.joda.time.Duration
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.datasource.local.markets.CoinCategoriesSnapshotStore
+import com.tangem.core.remote.config.managers.ApiConfigsManager
+import com.tangem.core.remote.config.TangemGatewayApiConfig
+import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -43,7 +49,9 @@ internal class DefaultMarketsTokenRepository(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
-    private val coinCategoriesStore: RuntimeStateStore<List<CoinCategoriesResponse.Category>>,
+    private val coinCategoriesStore: RuntimeSharedMapStore<String, List<CoinCategoriesResponse.Category>>,
+    private val coinCategoriesSnapshotStore: CoinCategoriesSnapshotStore,
+    private val apiConfigsManager: ApiConfigsManager,
     private val networkFactory: NetworkFactory,
     excludedBlockchains: ExcludedBlockchains,
 ) : MarketsTokenRepository {
@@ -299,15 +307,47 @@ internal class DefaultMarketsTokenRepository(
         }
     }
 
-    override suspend fun getCoinCategories(): List<CoinCategory> {
+    override suspend fun getCoinCategories(country: String?): List<CoinCategory> {
         return withContext(dispatcherProvider.io) {
-            cacheRegistry.invokeOnExpire(key = "coins/categories", skipCache = false) {
-                val response = marketsApi.getCoinCategories().getOrThrow()
+            val environment = apiConfigsManager
+                .getEnvironmentConfig(id = TangemGatewayApiConfig.TANGEM_TECH_ID)
+                .environment
+                .name
+            val key = "coins/categories/$environment/${country ?: NO_COUNTRY}"
 
-                coinCategoriesStore.store(value = response.categories)
+            cacheRegistry.invokeOnExpire(key = key, skipCache = false, expireIn = CATEGORIES_EXPIRE_IN) {
+                val categories = runSuspendCatching { marketsApi.getCoinCategories(country = country).getOrThrow() }
+                    .fold(
+                        onSuccess = { response ->
+                            // An answer without a country is unrestricted by definition — keeping it would
+                            // later be served as this country's restrictions.
+                            if (country != null) {
+                                coinCategoriesSnapshotStore.store(
+                                    country = country,
+                                    environment = environment,
+                                    categories = response.categories,
+                                )
+                            }
+
+                            response.categories
+                        },
+                        onFailure = { error ->
+                            val fallback = country
+                                ?.let { coinCategoriesSnapshotStore.getSyncOrNull(it, environment) }
+                                ?: throw error
+
+                            // A fallback is not a fresh answer: leaving the key warm would suppress retries
+                            // for the whole TTL.
+                            cacheRegistry.invalidate(key = key)
+
+                            fallback
+                        },
+                    )
+
+                coinCategoriesStore.store(key = key, value = categories)
             }
 
-            CoinCategoryConverter.convertList(input = coinCategoriesStore.get().value)
+            CoinCategoryConverter.convertList(input = coinCategoriesStore.getSyncOrNull(key).orEmpty())
         }
     }
 
@@ -446,5 +486,18 @@ internal class DefaultMarketsTokenRepository(
                 createEvent(MarketsDataAnalyticsEvent.Type.Unknown, null, error.message.orEmpty())
             }
         }
+    }
+
+    private companion object {
+
+        /** Stands in for the country in the cache key so a country-less answer cannot pass for a resolved one */
+        const val NO_COUNTRY = "none"
+
+        /**
+         * What UC 4 of the categories spec asks for. Note `CacheRegistry` has expiry-by-time disabled and
+         * never reads this, so the effective policy is one fetch per process per country and environment;
+         * varying the key is what actually refetches.
+         */
+        val CATEGORIES_EXPIRE_IN: Duration = Duration.standardHours(24)
     }
 }
