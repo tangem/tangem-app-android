@@ -103,6 +103,7 @@ internal class IntroductionModel @Inject constructor(
             IntroductionUM(
                 isVideoReady = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
+                scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,
@@ -149,6 +150,8 @@ internal class IntroductionModel @Inject constructor(
         if (!videoPlayer.isSurfaceAttached) return
         uiState.update { it.copy(isVideoReady = true) }
     }
+
+    fun videoPositionMs(): Long = videoPlayer.positionMs
 
     fun attachSurface(surfaceView: SurfaceView) {
         videoPlayer.attachSurface(surfaceView)
