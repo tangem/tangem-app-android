@@ -41,6 +41,7 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
+import com.tangem.features.introduction.impl.model.welcomeScenes
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.core.ui.R as CoreUiR
 
@@ -110,6 +111,7 @@ internal fun IntroductionScreen(
                         .padding(bottom = 12.dp),
                 ) {
                     WelcomeTextScenes(
+                        scenes = state.scenes,
                         isMotionEnabled = state.isMotionEnabled,
                         videoPositionMs = videoPositionMs,
                         modifier = Modifier
@@ -223,6 +225,7 @@ private fun IntroductionScreenPreview() {
             state = IntroductionUM(
                 isVideoReady = true,
                 isMotionEnabled = true,
+                scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},
