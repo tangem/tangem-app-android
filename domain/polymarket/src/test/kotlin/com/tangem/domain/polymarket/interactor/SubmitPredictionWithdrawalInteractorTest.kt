@@ -12,6 +12,7 @@ import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PredictionTransferCall
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
+import com.tangem.domain.polymarket.model.PredictionWithdrawError
 import com.tangem.domain.polymarket.model.PredictionWithdrawalBatch
 import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
 import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
@@ -73,9 +74,130 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         // Assert
         assertThat(actual).isEqualTo(receipt().right())
         coVerify(ordering = Ordering.ORDERED) {
-            store.save(USER_WALLET_ID, any())
+            store.save(USER_WALLET_ID, match { it.isSignedRecord(transactionId = null) })
             withdrawRepository.submit(WALLET_ID, any())
+            store.save(USER_WALLET_ID, match { it.isSignedRecord(transactionId = TX_ID) })
         }
+    }
+
+    @Test
+    fun `GIVEN the store cannot be read WHEN prepared THEN PersistenceFailed and no address is requested`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("unreadable")
+        coEvery { store.get(USER_WALLET_ID) } throws cause
+
+        // Act
+        val actual = interactor.prepare(params())
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.PersistenceFailed(cause).left())
+        coVerify(exactly = 0) { bridgeRepository.createWithdrawAddress(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
+    }
+
+    @Test
+    fun `GIVEN the relayer rejects the batch WHEN confirmed THEN the record is cleared and Rejected is returned`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            val error = PredictionWithdrawError.RelayerRejected(detail = "signature mismatch")
+            coEvery { withdrawRepository.submit(any(), any()) } returns error.left()
+
+            // Act
+            val actual = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionWithdrawalFailure.Rejected(error).left())
+            coVerify(exactly = 1) { store.clear(USER_WALLET_ID) }
+            coVerify(exactly = 1) { store.save(USER_WALLET_ID, any()) }
+        }
+
+    @Test
+    fun `GIVEN the request is invalid WHEN confirmed THEN the record is cleared and Rejected is returned`() = runTest {
+        // Arrange
+        val prepared = interactor.prepare(params()).getOrNull()!!
+        val error = PredictionWithdrawError.InvalidRequest(detail = "bad deadline")
+        coEvery { withdrawRepository.submit(any(), any()) } returns error.left()
+
+        // Act
+        val actual = interactor.confirm(prepared)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.Rejected(error).left())
+        coVerify(exactly = 1) { store.clear(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN the relayer rejects the batch and the clear throws WHEN confirmed THEN Rejected is still returned`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            val error = PredictionWithdrawError.RelayerRejected(detail = null)
+            coEvery { withdrawRepository.submit(any(), any()) } returns error.left()
+            coEvery { store.clear(USER_WALLET_ID) } throws IllegalStateException("disk full")
+
+            // Act
+            val actual = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionWithdrawalFailure.Rejected(error).left())
+        }
+
+    @Test
+    fun `GIVEN the nonce is taken WHEN confirmed THEN the record is kept`() = runTest {
+        // Arrange
+        val prepared = interactor.prepare(params()).getOrNull()!!
+        val error = PredictionWithdrawError.NonceTaken(detail = "nonce 9 is taken")
+        coEvery { withdrawRepository.submit(any(), any()) } returns error.left()
+
+        // Act
+        val actual = interactor.confirm(prepared)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.Rejected(error).left())
+        coVerify(exactly = 0) { store.clear(any()) }
+    }
+
+    @Test
+    fun `GIVEN the relayer is unavailable WHEN confirmed THEN the record is kept`() = runTest {
+        // Arrange
+        val prepared = interactor.prepare(params()).getOrNull()!!
+        coEvery { withdrawRepository.submit(any(), any()) } returns PredictionWithdrawError.RelayerUnavailable.left()
+
+        // Act
+        interactor.confirm(prepared)
+
+        // Assert
+        coVerify(exactly = 0) { store.clear(any()) }
+    }
+
+    @Test
+    fun `GIVEN the store cannot be read WHEN resent THEN PersistenceFailed and nothing is submitted`() = runTest {
+        // Arrange
+        val cause = IllegalStateException("unreadable")
+        coEvery { store.get(USER_WALLET_ID) } throws cause
+
+        // Act
+        val actual = interactor.resend(userWalletId = USER_WALLET_ID, walletId = WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.PersistenceFailed(cause).left())
+        coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the relayer rejects the resend WHEN resent THEN the record is cleared`() = runTest {
+        // Arrange
+        coEvery { store.get(USER_WALLET_ID) } returns record(transactionId = null)
+        val error = PredictionWithdrawError.RelayerRejected(detail = null)
+        coEvery { withdrawRepository.submit(any(), any()) } returns error.left()
+
+        // Act
+        val actual = interactor.resend(userWalletId = USER_WALLET_ID, walletId = WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionWithdrawalFailure.Rejected(error).left())
+        coVerify(exactly = 1) { store.clear(USER_WALLET_ID) }
     }
 
     @Test
@@ -203,6 +325,14 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         deadline = "1787346200",
         call = PolymarketApprovalCall(target = PolymarketContracts.COLLATERAL, value = "0", data = "0xa9059cbb"),
         signature = SIGNATURE,
+    )
+
+    private fun PredictionWithdrawalRecord.isSignedRecord(transactionId: String?): Boolean =
+        this.transactionId == transactionId && batch == batch().copy(deadline = batch.deadline)
+
+    private fun record(transactionId: String?) = PredictionWithdrawalRecord(
+        batch = batch(),
+        transactionId = transactionId,
     )
 
     private fun receipt() = PredictionWithdrawalReceipt(
