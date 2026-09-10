@@ -11,6 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -30,16 +31,18 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val credentialsStore: PolymarketCredentialsStore = mockk(relaxUnitFun = true)
     private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
     private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
+    private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
         predictionAccountStatusStore = statusStore,
         onboardedStore = onboardedStore,
+        requisitesStore = requisitesStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore, statusStore, onboardedStore)
+        clearMocks(credentialsStore, statusStore, onboardedStore, requisitesStore)
     }
 
     @Test
@@ -124,6 +127,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             credentialsStore = store,
             predictionAccountStatusStore = statusStore,
             onboardedStore = onboardedStore,
+            requisitesStore = requisitesStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -141,10 +145,23 @@ internal class PolymarketUserWalletDataCleanerTest {
             credentialsStore = credentialsStore,
             predictionAccountStatusStore = store,
             onboardedStore = onboardedStore,
+            requisitesStore = requisitesStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
         assertThat(store.getSyncOrNull(WALLET_A)).isNull()
+    }
+
+    @Test
+    fun `GIVEN wallets deleted WHEN cleared THEN the funding requisites are cleared too`() = runTest {
+        // Arrange
+        val userWalletIds = listOf(WALLET_A)
+
+        // Act
+        cleaner.clear(userWalletIds)
+
+        // Assert
+        coVerify(exactly = 1) { requisitesStore.clear(WALLET_A) }
     }
 
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
@@ -166,7 +183,6 @@ internal class PolymarketUserWalletDataCleanerTest {
             source = StatusSource.ACTUAL,
             balance = BigDecimal("12.5"),
             fiatRate = null,
-            isTradingAllowed = true,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
         )

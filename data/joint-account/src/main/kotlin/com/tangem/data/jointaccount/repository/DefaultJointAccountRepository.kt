@@ -1,6 +1,7 @@
 package com.tangem.data.jointaccount.repository
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.remote.response.ApiResponseError
@@ -13,6 +14,11 @@ import com.tangem.data.jointaccount.converter.CreateJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JoinJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
+import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
+import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
+import com.tangem.data.jointaccount.converter.SafeTxConverter
+import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
+import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
@@ -21,6 +27,9 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.JointOperationSignError
+import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.wallet.UserWalletId
@@ -30,16 +39,20 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class DefaultJointAccountRepository @Inject constructor(
     private val jointAccountApi: JointAccountApi,
     private val walletAccountsFetcher: WalletAccountsFetcher,
     private val invitesStore: JointAccountInvitesStore,
     private val converter: JointAccountDtoConverter,
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
+    private val safeTxConverter: SafeTxConverter,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : JointAccountRepository {
 
     private val logger = TangemLogger.withTag(tag = TAG)
+    private val createErrorConverter = JointOperationCreateErrorConverter()
+    private val signErrorConverter = JointOperationSignErrorConverter()
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
@@ -69,7 +82,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
                         invites = response.invites.orEmpty().map { it.id },
                     )
 
-                    JointAccountCreationResult.Created(account = converter.convert(dto = response))
+                    JointAccountCreationResult.Created(account = converter.convert(value = response))
                 },
                 onError = { error ->
                     // The HTTP code stays in the data layer: the domain branches on the result, not on 409
@@ -96,7 +109,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
                         body = JoinJointAccountRequestConverter(signature = signature).convert(value = payload),
                     ).bind()
 
-                    JointAccountJoinResult.Joined(account = converter.convert(dto = response))
+                    JointAccountJoinResult.Joined(account = converter.convert(value = response))
                 },
                 onError = { error ->
                     // The HTTP code stays in the data layer: the domain branches on the result, not on 409
@@ -201,6 +214,63 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 throwable = throwable,
             )
         }
+    }
+
+    override suspend fun createOperation(
+        userWalletId: UserWalletId,
+        safeAddress: String,
+        chainId: Long,
+        safeTx: SafeTx,
+        signature: String,
+    ): Either<JointOperationCreateError, Unit> = withContext(dispatchers.io) {
+        val safeTxDto = Either
+            .catch { safeTxConverter.convertBack(safeTx) }
+            .getOrElse { return@withContext JointOperationCreateError.Failed(cause = it).left() }
+
+        safeApiCall(
+            call = {
+                jointAccountApi.createJointOperation(
+                    walletId = userWalletId.stringValue,
+                    body = CreateJointOperationRequest(
+                        safeAddress = safeAddress,
+                        chainId = chainId,
+                        safeTx = safeTxDto,
+                        deadline = null,
+                        signature = signature,
+                    ),
+                ).bind()
+
+                Unit.right()
+            },
+            onError = { error -> createErrorConverter.convert(error).left() },
+        )
+    }
+
+    override suspend fun signOperation(
+        userWalletId: UserWalletId,
+        operationId: String,
+        safeTx: SafeTx,
+        signature: String,
+    ): Either<JointOperationSignError, Unit> = withContext(dispatchers.io) {
+        val safeTxDto = Either
+            .catch { safeTxConverter.convertBack(safeTx) }
+            .getOrElse { return@withContext JointOperationSignError.Failed(cause = it).left() }
+
+        safeApiCall(
+            call = {
+                jointAccountApi.signJointOperation(
+                    walletId = userWalletId.stringValue,
+                    operationId = operationId,
+                    body = SignJointOperationRequest(
+                        safeTx = safeTxDto,
+                        signature = signature,
+                    ),
+                ).bind()
+
+                Unit.right()
+            },
+            onError = { error -> signErrorConverter.convert(error).left() },
+        )
     }
 
     private companion object {

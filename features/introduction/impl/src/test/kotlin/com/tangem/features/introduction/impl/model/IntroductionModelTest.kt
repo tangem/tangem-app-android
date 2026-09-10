@@ -16,10 +16,22 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.analytics.repository.AnalyticsRepository
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.card.analytics.IntroductionProcess.LegalOpened
+import com.tangem.domain.card.analytics.IntroductionProcess.SheetDismissed
+import com.tangem.domain.card.analytics.IntroductionProcess.WelcomeMediaError
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
+import com.tangem.domain.cloudbackup.models.CloudBackupError
+import com.tangem.domain.cloudbackup.models.CloudBackupInfo
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
+import com.tangem.domain.cloudbackup.usecase.ResolveCloudRestoreBackupsUseCase
 import com.tangem.domain.sociallogin.SocialLoginFeatureToggles
+import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.hotwallet.cloudrestore.CloudRestoreErrorMessage
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
@@ -28,11 +40,14 @@ import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.introduction.impl.ui.state.HaveWalletUM
+import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
+import arrow.core.left
+import arrow.core.right
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -42,6 +57,8 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -59,8 +76,14 @@ internal class IntroductionModelTest {
     private val router: Router = mockk(relaxed = true)
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
     private val socialLoginFeatureToggles: SocialLoginFeatureToggles = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
+    private val resolveCloudRestoreBackups: ResolveCloudRestoreBackupsUseCase = mockk()
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxed = true)
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
+    private val mobileWalletCreator: IntroductionMobileWalletCreator = mockk(relaxed = true)
+    private val appsFlyerRepository: AppsFlyerRepository = mockk()
+    private val analyticsRepository: AnalyticsRepository = mockk(relaxed = true)
+    private var entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val surfaceView: SurfaceView = mockk(relaxed = true)
@@ -78,13 +101,22 @@ internal class IntroductionModelTest {
             router,
             isHotWalletCreationSupported,
             socialLoginFeatureToggles,
+            hotWalletFeatureToggles,
+            resolveCloudRestoreBackups,
             trackingContextProxy,
             cardScanner,
+            mobileWalletCreator,
+            appsFlyerRepository,
+            analyticsRepository,
             generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
+        coEvery { appsFlyerRepository.getConversionData() } returns null
+        coEvery { analyticsRepository.checkIsEventSent(any()) } returns true
+        entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
         every { isHotWalletCreationSupported() } returns true
         every { socialLoginFeatureToggles.isSocialLoginEnabled } returns true
+        every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
         sentEvents.clear()
         every { videoPlayer.isMotionEnabled } returns true
         surfaceAttached(isAttached = false)
@@ -156,6 +188,7 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
+        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
     }
 
     @Test
@@ -173,6 +206,7 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
     }
 
     @Test
@@ -212,27 +246,168 @@ internal class IntroductionModelTest {
         // Assert
         verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/terms-of-service/") }
         verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/privacy-policy/") }
+        assertThat(sentEvents).containsExactly(
+            SCREEN_OPENED,
+            LegalOpened(LegalOpened.Document.TermsOfService),
+            LegalOpened(LegalOpened.Document.PrivacyPolicy),
+        ).inOrder()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EntryReason {
+
+        @Test
+        fun `GIVEN the welcome was never shown WHEN model created THEN the opening reports the first launch`() {
+            // Arrange
+            coEvery { analyticsRepository.checkIsEventSent("introduction_welcome_opened") } returns false
+
+            // Act
+            createModel()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.FirstLaunch),
+            )
+            coVerify(exactly = 1) { analyticsRepository.setIsEventSent("introduction_welcome_opened") }
+        }
+
+        @Test
+        fun `GIVEN the welcome was shown before WHEN model created THEN the opening reports no wallets`() {
+            // Act
+            createModel()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+            coVerify(exactly = 0) { analyticsRepository.setIsEventSent(any()) }
+        }
+
+        @Test
+        fun `GIVEN the opening was reported WHEN the screen is rebuilt in the same process THEN it is not reported again`() {
+            // Arrange
+            createModel()
+
+            // Act
+            createModel()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+        }
+
+        @Test
+        fun `GIVEN the opening was reported WHEN the last wallet is forgotten THEN the new opening is reported`() {
+            // Arrange
+            createModel()
+
+            // Act
+            createModel(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten)
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.LastWalletForgotten),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the last wallet was forgotten WHEN model created THEN the opening reports it regardless of history`() {
+            // Arrange
+            coEvery { analyticsRepository.checkIsEventSent(any()) } returns false
+
+            // Act
+            createModel(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten)
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.LastWalletForgotten),
+            )
+        }
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class LaunchMode {
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun launchMode(model: LaunchModeModel) {
+        @Test
+        fun `GIVEN an NFC launch WHEN model created THEN the scan starts without a tap being reported`() {
             // Act
-            val introductionModel = createModel(launchMode = model.launchMode)
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
 
-            // A canary meant to fail once [REDACTED_TASK_KEY] makes an NFC launch start the scan.
-            assertThat(introductionModel.uiState.value.renderedFields()).isEqualTo(SHUTTER_DOWN)
-            assertThat(sentEvents.map { it::class }).containsExactly(IntroductionProcess.ScreenOpened::class)
+            // Assert
+            coVerify(exactly = 1) {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = any(),
+                    onFailed = any(),
+                )
+            }
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+            assertThat(model.uiState.value.renderedFields()).isEqualTo(SHUTTER_DOWN)
         }
 
-        private fun provideTestModels() = listOf(
-            LaunchModeModel(InitScreenLaunchMode.Standard),
-            LaunchModeModel(InitScreenLaunchMode.WithCardScan),
-        )
+        @Test
+        fun `GIVEN a standard launch WHEN model created THEN no scan starts`() {
+            // Act
+            createModel(launchMode = InitScreenLaunchMode.Standard)
+
+            // Assert
+            coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+        }
+
+        @Test
+        fun `GIVEN an NFC launch WHEN the video is stopped and started again THEN the scan does not restart`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.setVideoRunning(false)
+            model.setVideoRunning(true)
+
+            // Assert
+            coVerify(exactly = 1) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the launch scan WHEN it fails THEN the viewer stays on the welcome screen without a sheet`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig).isNull()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the launch scan WHEN it leaves the screen THEN no sheet or story is touched`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.capturedScanCallbacks().onNavigatedAway()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig).isNull()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED)
+        }
+
+        @Test
+        fun `GIVEN the launch scan is running WHEN create wallet clicked THEN the sheet opens as usual`() {
+            // Arrange
+            val model = createModel(launchMode = InitScreenLaunchMode.WithCardScan)
+
+            // Act
+            model.uiState.value.onCreateWalletClick()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+        }
     }
 
     @Nested
@@ -273,7 +448,11 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
             assertThat(sentEvents)
-                .containsExactly(IntroductionProcess.ScreenOpened(), IntroductionProcess.ButtonCreateNewWallet())
+                .containsExactly(
+                    SCREEN_OPENED,
+                    IntroductionProcess.ButtonCreateNewWallet(),
+                    IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = null),
+                )
                 .inOrder()
         }
 
@@ -308,7 +487,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN a supported device WHEN the seed phrase option is picked THEN the creation flow opens`() {
+        fun `GIVEN a supported device WHEN the seed phrase option is picked THEN the wallet is created in place`() {
             // Arrange
             val model = createModel()
 
@@ -316,18 +495,118 @@ internal class IntroductionModelTest {
             model.openSheet().seedPhrase.onClick()
 
             // Assert
-            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(model.seedPhraseRow().isLoading).isTrue()
             verify(exactly = 1) { trackingContextProxy.addHotWalletContext() }
-            // The creation flow owns the context from here on and releases it on its own destroy.
             verify(exactly = 0) { trackingContextProxy.removeContext() }
-            verify(exactly = 1) {
-                router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro))
+            coVerify(exactly = 1) {
+                mobileWalletCreator.createAndOpen(
+                    source = AnalyticsParam.ScreensSources.CreateWalletIntro,
+                    onFailed = any(),
+                )
             }
+            verify { router wasNot Called }
             assertThat(sentEvents.last()).isEqualTo(
                 OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
                     source = AnalyticsParam.ScreensSources.CreateWalletIntro.value,
                 ),
             )
+        }
+
+        @Test
+        fun `GIVEN the wallet is being created WHEN the rows are tapped again THEN the taps are ignored`() {
+            // Arrange
+            val model = createModel()
+            val sheet = model.openSheet()
+            sheet.seedPhrase.onClick()
+
+            // Act
+            sheet.seedPhrase.onClick()
+            sheet.cardOrRing.onClick()
+
+            // Assert
+            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(model.seedPhraseRow().isLoading).isTrue()
+            assertThat(model.cardOrRingRow().isEnabled).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the wallet is being created WHEN the sheet is closed and reopened THEN it still shows the creation`() {
+            // Arrange
+            coEvery { mobileWalletCreator.createAndOpen(any(), any()) } coAnswers { awaitCancellation() }
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            model.closeCreateWalletSheet()
+
+            // Act
+            model.uiState.value.onCreateWalletClick()
+            model.seedPhraseRow().onClick()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.seedPhraseRow().isLoading).isTrue()
+            assertThat(model.cardOrRingRow().isEnabled).isFalse()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            coVerify(exactly = 1) { mobileWalletCreator.createAndOpen(any(), any()) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the wallet is being created WHEN the sheet is closed and i have a wallet clicked THEN it stays closed`() {
+            // Arrange
+            coEvery { mobileWalletCreator.createAndOpen(any(), any()) } coAnswers { awaitCancellation() }
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            model.closeCreateWalletSheet()
+
+            // Act
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the sheet closed during creation WHEN the creation fails THEN it stays closed with the rows released`() {
+            // Arrange
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            val onFailed = slot<() -> Unit>()
+            coVerify { mobileWalletCreator.createAndOpen(source = any(), onFailed = capture(onFailed)) }
+            model.closeCreateWalletSheet()
+
+            // Act
+            onFailed.captured()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(model.seedPhraseRow().isLoading).isFalse()
+            assertThat(model.cardOrRingRow().isEnabled).isTrue()
+            model.uiState.value.onIHaveWalletClick()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+        }
+
+        @Test
+        fun `GIVEN the wallet creation failed WHEN reported THEN the row is released and the context dropped`() {
+            // Arrange
+            val model = createModel()
+            model.openSheet().seedPhrase.onClick()
+            val onFailed = slot<() -> Unit>()
+            coVerify { mobileWalletCreator.createAndOpen(source = any(), onFailed = capture(onFailed)) }
+
+            // Act
+            onFailed.captured()
+
+            // Assert
+            assertThat(model.seedPhraseRow().isLoading).isFalse()
+            assertThat(model.cardOrRingRow().isEnabled).isTrue()
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            verifyOrder {
+                trackingContextProxy.addHotWalletContext()
+                trackingContextProxy.removeContext()
+            }
         }
 
         @Test
@@ -345,7 +624,8 @@ internal class IntroductionModelTest {
             verify(exactly = 1) { uiMessageSender.send(capture(message)) }
             assertThat(message.captured.title)
                 .isEqualTo(hotWalletCreationNotSupportedDialog(LEAST_OS_VERSION).title)
-            verify { router wasNot Called }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any()) }
             // Nothing downstream opens, so the context added for the tap has to be given back here.
             verifyOrder {
                 trackingContextProxy.addHotWalletContext()
@@ -364,7 +644,7 @@ internal class IntroductionModelTest {
             sheet.seedPhrase.onClick()
 
             // Assert
-            verify { router wasNot Called }
+            coVerify(exactly = 0) { mobileWalletCreator.createAndOpen(any(), any()) }
             assertThat(sentEvents.filterIsInstance<OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet>())
                 .isEmpty()
         }
@@ -435,8 +715,7 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
-            // A canary meant to fail once the analytics contract for this tap is settled.
-            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(sentEvents).containsExactly(SCREEN_OPENED, IntroductionProcess.ButtonIHaveWallet()).inOrder()
         }
 
         @Test
@@ -454,7 +733,7 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the options step WHEN import picked THEN the import step replaces it and nothing is reported`() {
+        fun `GIVEN the options step WHEN import picked THEN the import step replaces it and the request is reported`() {
             // Arrange
             val model = createModel()
 
@@ -464,8 +743,12 @@ internal class IntroductionModelTest {
             // Assert
             assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Import::class.java)
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
-            // Picking a path inside a sheet must stay silent; only the flow it opens reports itself.
-            assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened())
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
+            ).inOrder()
         }
 
         @Test
@@ -497,30 +780,20 @@ internal class IntroductionModelTest {
             assertThat(config?.content).isInstanceOf(HaveWalletUM::class.java)
         }
 
-        @ParameterizedTest
-        @ProvideTestModels
-        fun inertRows(model: InertRowModel) {
+        @Test
+        fun `GIVEN the options step WHEN sign in picked THEN nothing happens yet`() {
             // Arrange
-            val introductionModel = createModel()
-            val options = introductionModel.openHaveWallet()
+            val model = createModel()
+            val options = model.openHaveWallet()
 
             // Act
-            model.pick(options, introductionModel)
+            // TODO TWI-1555: the row acts once social login lands.
+            requireNotNull(options.socialLogin).onClick()
 
             // Assert
             verify { router wasNot Called }
             coVerify(exactly = 0) { cardScanner.scanAndOpenWallet(any(), any(), any()) }
         }
-
-        private fun provideTestModels() = listOf(
-            // TODO TWI-1555: the row acts once social login lands.
-            InertRowModel(name = "sign in") { options, _ -> requireNotNull(options.socialLogin).onClick() },
-            // A canary meant to fail once the cloud restore is wired.
-            InertRowModel(name = "cloud backup") { options, model ->
-                options.importWallet.onClick()
-                model.currentImportStep().onCloudBackupClick()
-            },
-        )
 
         @Test
         fun `GIVEN the options step WHEN card or ring picked THEN the sheet closes and the scan starts`() {
@@ -532,8 +805,8 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
-            assertThat(sentEvents.last())
-                .isEqualTo(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
+            assertThat(sentEvents.last()).isEqualTo(IntroductionProcess.ButtonSignInWithCard())
+            assertThat(sentEvents.filterIsInstance<IntroductionProcess.ButtonScanCard>()).isEmpty()
             coVerify(exactly = 1) {
                 cardScanner.scanAndOpenWallet(
                     analyticsSource = AnalyticsParam.ScreensSources.Intro,
@@ -608,6 +881,210 @@ internal class IntroductionModelTest {
             }
             // The import flow owns the hot wallet analytics context; a second push here would overwrite its parent.
             verify(exactly = 0) { trackingContextProxy.addHotWalletContext() }
+        }
+
+        @Test
+        fun `GIVEN backups found WHEN cloud backup picked THEN the restore opens`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudRestoreResult(listOf(BACKUP), "user@gmail.com").right()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            verify(exactly = 1) {
+                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.CloudRestore))
+            }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the listing fails WHEN cloud backup picked THEN the error step replaces the import step`(
+            model: CloudFailureModel,
+        ) {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns model.error.left()
+            val introductionModel = createModel()
+            introductionModel.openHaveWallet().importWallet.onClick()
+
+            // Act
+            introductionModel.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            val step = introductionModel.haveWalletStep() as HaveWalletUM.Step.Error
+            assertThat(step.message).isEqualTo(requireNotNull(CloudRestoreErrorMessage.of(model.error)))
+            assertThat(step.message.isWarning).isEqualTo(model.isWarning)
+            assertThat(introductionModel.uiState.value.haveWalletBottomSheetConfig?.isShown).isTrue()
+            verify { router wasNot Called }
+        }
+
+        private fun provideTestModels() = listOf(
+            CloudFailureModel(error = CloudBackupError.BackupNotFound, isWarning = true),
+            CloudFailureModel(error = CloudBackupError.AuthPermissionsMissing, isWarning = false),
+            CloudFailureModel(error = CloudBackupError.NetworkError, isWarning = false),
+        )
+
+        @Test
+        fun `GIVEN the account picker left WHEN cloud backup picked THEN the import step returns without loading`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.AuthCanceled.left()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.currentImportStep().isCloudLoading).isFalse()
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the error step WHEN got it tapped THEN the whole sheet closes`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.NetworkError.left()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Error).onGotItClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN backups loading WHEN the buttons are tapped again THEN the taps are ignored`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } coAnswers { awaitCancellation() }
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+            model.currentImportStep().onRecoveryPhraseClick()
+
+            // Assert
+            assertThat(model.currentImportStep().isCloudLoading).isTrue()
+            coVerify(exactly = 1) { resolveCloudRestoreBackups() }
+            verify { router wasNot Called }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN backups loading WHEN back pressed THEN the listing is dropped and a new one can start`() {
+            // Arrange
+            val listing = CompletableDeferred<Unit>()
+            coEvery { resolveCloudRestoreBackups() } coAnswers {
+                listing.await()
+                CloudRestoreResult(listOf(BACKUP), null).right()
+            }
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            model.currentImportStep().onBack()
+            listing.complete(Unit)
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the error step WHEN the outgoing import buttons are tapped THEN they are inert`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.NetworkError.left()
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            val importStep = model.currentImportStep()
+            importStep.onCloudBackupClick()
+
+            // Act
+            importStep.onRecoveryPhraseClick()
+            importStep.onCloudBackupClick()
+            importStep.onBack()
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Error::class.java)
+            coVerify(exactly = 1) { resolveCloudRestoreBackups() }
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN backups loading WHEN the sheet is closed THEN the listing is dropped`() {
+            // Arrange
+            val listing = CompletableDeferred<Unit>()
+            coEvery { resolveCloudRestoreBackups() } coAnswers {
+                listing.await()
+                CloudRestoreResult(listOf(BACKUP), null).right()
+            }
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            model.closeHaveWalletSheet()
+            listing.complete(Unit)
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the import step dismissed WHEN back pressed during the collapse THEN the sheet stays closed`() {
+            // Arrange
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+            val step = model.currentImportStep()
+            model.closeHaveWalletSheet()
+
+            // Act
+            step.onBack()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN an unsupported device WHEN cloud backup picked THEN a warning replaces the sheet before any listing`() {
+            // Arrange
+            every { isHotWalletCreationSupported() } returns false
+            every { isHotWalletCreationSupported.getLeastVersionName() } returns LEAST_OS_VERSION
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+            coVerify(exactly = 0) { resolveCloudRestoreBackups() }
+            verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN cloud backups unavailable WHEN the import step opens THEN the cloud button is absent and inert`() {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            val model = createModel()
+            model.openHaveWallet().importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onCloudBackupClick()
+
+            // Assert
+            assertThat(model.currentImportStep().cloudBackupButtonText).isNull()
+            coVerify(exactly = 0) { resolveCloudRestoreBackups() }
         }
 
         @Test
@@ -819,6 +1296,7 @@ internal class IntroductionModelTest {
             val action = pendingAction(actionId = "scan_wallet")
             model.onStoryAction(action)
             model.onStoryResult(StoriesV2Result.Dismissed)
+            val openingsBefore = sentEvents.count { it is IntroductionProcess.CreateWalletIntroScreenOpened }
 
             // Act
             model.capturedScanCallbacks().onFailed()
@@ -826,6 +1304,8 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 0) { action.resume() }
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(sentEvents.count { it is IntroductionProcess.CreateWalletIntroScreenOpened })
+                .isEqualTo(openingsBefore + 1)
         }
 
         @Test
@@ -914,16 +1394,207 @@ internal class IntroductionModelTest {
         }
     }
 
-    internal data class ScanCallbacks(val onNavigatedAway: () -> Unit, val onFailed: () -> Unit)
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SheetAnalytics {
 
-    internal data class StoryReturnModel(val name: String, val result: StoriesV2Result) {
-        override fun toString(): String = name
+        @Test
+        fun `GIVEN a referral WHEN create wallet clicked THEN the sheet opening carries it without a screen type`() {
+            // Arrange
+            coEvery { appsFlyerRepository.getConversionData() } returns AppsFlyerConversionData("ref-42", null)
+            val model = createModel()
+
+            // Act
+            model.uiState.value.onCreateWalletClick()
+
+            // Assert
+            assertThat(sentEvents.last()).isEqualTo(
+                IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = "ref-42"),
+            )
+        }
+
+        @Test
+        fun `GIVEN the create sheet WHEN the card row is picked THEN the hardware choice is reported`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onCreateWalletClick()
+
+            // Act
+            model.createSheet().cardOrRing.onClick()
+
+            // Assert
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonCreateNewWallet(),
+                IntroductionProcess.CreateWalletIntroScreenOpened(screenType = null, referralId = null),
+                IntroductionProcess.ButtonHardwareWallet(),
+            ).inOrder()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the create sheet WHEN the viewer leaves it THEN the dismissal is reported once`(
+            model: DismissModel,
+        ) {
+            // Arrange
+            val introductionModel = createModel()
+            introductionModel.uiState.value.onCreateWalletClick()
+
+            // Act
+            model.leave(introductionModel)
+            model.leave(introductionModel)
+
+            // Assert
+            assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(introductionModel.uiState.value.bottomSheetConfig).isNotNull()
+            assertThat(sentEvents.filterIsInstance<SheetDismissed>()).containsExactly(
+                SheetDismissed(SheetDismissed.Sheet.CreateWallet, model.reason),
+            )
+        }
+
+        @Test
+        fun `GIVEN the have wallet options WHEN closed by the button THEN the dismissal names the sheet`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            model.haveWalletContent().onCloseClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                SheetDismissed(SheetDismissed.Sheet.IHaveWallet, SheetDismissed.DismissReason.CloseButton),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN cloud backups switched off WHEN import picked THEN the request reports them unavailable`() {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Assert
+            assertThat(sentEvents.last()).isEqualTo(
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Unavailable),
+            )
+        }
+
+        @Test
+        fun `GIVEN the import step WHEN closed by the button THEN the dismissal names the import sheet`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Act
+            model.haveWalletContent().onCloseClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(sentEvents.last()).isEqualTo(
+                SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.CloseButton),
+            )
+        }
+
+        @Test
+        fun `GIVEN the cloud restore failed WHEN got it is tapped THEN the import sheet reports a close`() {
+            // Arrange
+            coEvery { resolveCloudRestoreBackups() } returns CloudBackupError.BackupNotFound.left()
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+            model.currentImportStep().onCloudBackupClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Error).onGotItClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(sentEvents.last()).isEqualTo(
+                SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.CloseButton),
+            )
+        }
+
+        @Test
+        fun `GIVEN the import step WHEN dismissed from outside THEN the dismissal names the import sheet`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Act
+            model.closeHaveWalletSheet()
+            model.closeHaveWalletSheet()
+
+            // Assert
+            assertThat(sentEvents.filterIsInstance<SheetDismissed>()).containsExactly(
+                SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.Dismissed),
+            )
+        }
+
+        @Test
+        fun `GIVEN the import step WHEN back pressed THEN the back is reported and the options return`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+
+            // Act
+            model.currentImportStep().onBack()
+
+            // Assert
+            assertThat(model.haveWalletStep()).isInstanceOf(HaveWalletUM.Step.Options::class.java)
+            assertThat(sentEvents).containsExactly(
+                SCREEN_OPENED,
+                IntroductionProcess.ButtonIHaveWallet(),
+                OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet(),
+                OnboardingAnalyticsEvent.Backup.ImportWalletRequest(AnalyticsParam.CloudBackupAvailability.Available),
+                SheetDismissed(SheetDismissed.Sheet.ImportExisting, SheetDismissed.DismissReason.BackButton),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the have wallet options WHEN the card row is picked THEN no dismissal is reported`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Act
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).cardOrRing.onClick()
+
+            // Assert
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig?.isShown).isFalse()
+            assertThat(sentEvents.filterIsInstance<SheetDismissed>()).isEmpty()
+        }
+
+        private fun IntroductionModel.createSheet(): CreateWalletUM =
+            uiState.value.bottomSheetConfig?.content as CreateWalletUM
+
+        private fun IntroductionModel.haveWalletContent(): HaveWalletUM =
+            uiState.value.haveWalletBottomSheetConfig?.content as HaveWalletUM
+
+        private fun provideTestModels() = listOf(
+            DismissModel(reason = SheetDismissed.DismissReason.CloseButton) { it.createSheet().onCloseClick() },
+            DismissModel(reason = SheetDismissed.DismissReason.Dismissed) { it.closeCreateWalletSheet() },
+        )
     }
 
-    internal data class InertRowModel(
-        val name: String,
-        val pick: (HaveWalletUM.Step.Options, IntroductionModel) -> Unit,
-    ) {
+    internal class DismissModel(val reason: SheetDismissed.DismissReason, val leave: (IntroductionModel) -> Unit) {
+        override fun toString() = reason.name
+    }
+
+    internal data class ScanCallbacks(val onNavigatedAway: () -> Unit, val onFailed: () -> Unit)
+
+    internal data class CloudFailureModel(val error: CloudBackupError, val isWarning: Boolean)
+
+    internal data class StoryReturnModel(val name: String, val result: StoriesV2Result) {
         override fun toString(): String = name
     }
 
@@ -972,6 +1643,12 @@ internal class IntroductionModelTest {
         return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
     }
 
+    private fun IntroductionModel.seedPhraseRow(): WalletOptionUM =
+        (uiState.value.bottomSheetConfig?.content as CreateWalletUM).seedPhrase
+
+    private fun IntroductionModel.cardOrRingRow(): WalletOptionUM =
+        (uiState.value.bottomSheetConfig?.content as CreateWalletUM).cardOrRing
+
     private fun IntroductionModel.haveWalletStep(): HaveWalletUM.Step? =
         (uiState.value.haveWalletBottomSheetConfig?.content as? HaveWalletUM)?.step
 
@@ -986,8 +1663,6 @@ internal class IntroductionModelTest {
         uiState.value.haveWalletBottomSheetConfig?.onDismissRequest?.invoke()
     }
 
-    internal data class LaunchModeModel(val launchMode: InitScreenLaunchMode)
-
     internal data class RunningModel(val isRunning: Boolean)
 
     private fun IntroductionUM.renderedFields() = isVideoReady to isMotionEnabled
@@ -996,24 +1671,34 @@ internal class IntroductionModelTest {
         every { videoPlayer.isSurfaceAttached } returns isAttached
     }
 
-    private fun createModel(launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard) = IntroductionModel(
+    private fun createModel(
+        launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
+        entryReason: AppRoute.Home.EntryReason = AppRoute.Home.EntryReason.Launch,
+    ) = IntroductionModel(
         dispatchers = TestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode)),
+        paramsContainer = MutableParamsContainer(IntroductionComponent.Params(launchMode, entryReason)),
         videoPlayerFactory = videoPlayerFactory,
         urlOpener = urlOpener,
         analyticsEventHandler = analyticsEventHandler,
+        entryReasonTracker = entryReasonTracker,
         router = router,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
         socialLoginFeatureToggles = socialLoginFeatureToggles,
+        hotWalletFeatureToggles = hotWalletFeatureToggles,
+        resolveCloudRestoreBackups = resolveCloudRestoreBackups,
         trackingContextProxy = trackingContextProxy,
         cardScanner = cardScanner,
+        mobileWalletCreator = mobileWalletCreator,
+        referral = IntroductionReferral(appsFlyerRepository),
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         uiMessageSender = uiMessageSender,
     )
 
     private companion object {
+        val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"
         const val LEAST_OS_VERSION = "Android 10"
+        val BACKUP = CloudBackupInfo(fileId = "file-1", walletName = "My Wallet", createdAtMillis = 0L, walletId = "011")
     }
 }

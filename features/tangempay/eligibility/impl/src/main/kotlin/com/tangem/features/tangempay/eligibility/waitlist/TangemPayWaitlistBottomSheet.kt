@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -30,9 +32,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -49,7 +49,7 @@ internal fun TangemPayWaitlistBottomSheet(state: TangemPayWaitlistUM) {
             content = state,
         ),
         isExpanded = true,
-        scrollableContent = false,
+        scrollableContent = true,
         title = {
             TangemTopNavigation(
                 windowInsets = WindowInsets(0),
@@ -78,6 +78,7 @@ private fun Content(state: TangemPayWaitlistUM, modifier: Modifier = Modifier) {
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.common_save),
             isEnabled = state.isSaveEnabled,
+            isLoading = state.isSaveInProgress,
             onClick = state.onSaveClick,
         )
     }
@@ -89,7 +90,7 @@ private fun Header(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .padding(top = 12.dp, bottom = 24.dp),
+            .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
@@ -129,49 +130,70 @@ private fun EmailField(state: TangemPayWaitlistUM, modifier: Modifier = Modifier
             color = TangemTheme.colors3.text.secondary,
         )
         SpacerH4()
-        Row(
-            modifier = Modifier
-                .heightIn(min = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SimpleTextField(
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState -> isFocused = focusState.isFocused },
-                value = state.email,
-                placeholder = resourceReference(R.string.tangempay_waitlist_email_placeholder),
-                textStyle = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
-                placeholderColor = TangemTheme.colors3.text.tertiary,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Done,
-                ),
-                onValueChange = state.onEmailChange,
-            )
-            if (state.email.isNotEmpty()) {
-                Icon(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickableSingle(onClick = state.onEmailClearClick),
-                    imageVector = Icons.ic_cross_circle_24_filled,
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.tertiary,
-                )
-            }
-        }
+        EmailTextField(
+            state = state,
+            onFocusChange = { isFocused = it.isFocused },
+            focusRequester = focusRequester,
+        )
         SpacerH(14.dp)
         HorizontalDivider(
             thickness = 1.dp,
-            color = if (isFocused) {
-                TangemTheme.colors3.border.brand
-            } else {
-                TangemTheme.colors3.border.tertiary
+            color = when {
+                state.emailError != null -> TangemTheme.colors3.border.status.error
+                isFocused -> TangemTheme.colors3.border.brand
+                else -> TangemTheme.colors3.border.tertiary
             },
         )
+        Text(
+            modifier = Modifier.padding(top = 8.dp),
+            text = state.emailError?.resolveReference().orEmpty(),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.status.error,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun EmailTextField(
+    state: TangemPayWaitlistUM,
+    onFocusChange: (FocusState) -> Unit,
+    focusRequester: FocusRequester,
+) {
+    Row(
+        modifier = Modifier
+            .heightIn(min = 24.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        SimpleTextField(
+            modifier = Modifier
+                .weight(1f)
+                .focusRequester(focusRequester)
+                .onFocusChanged(onFocusChange),
+            value = state.email,
+            placeholder = resourceReference(R.string.tangempay_waitlist_email_placeholder),
+            textStyle = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.primary,
+            placeholderColor = TangemTheme.colors3.text.tertiary,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Done,
+            ),
+            onValueChange = state.onEmailChange,
+        )
+        if (state.email.isNotEmpty()) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickableSingle(onClick = state.onEmailClearClick),
+                imageVector = Icons.ic_cross_circle_24_filled,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+            )
+        }
     }
 }
 
@@ -239,6 +261,20 @@ private fun Preview_Empty() {
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
+private fun Preview_EmailError() {
+    TangemThemePreviewRedesign(alwaysShowBottomSheets = true) {
+        TangemPayWaitlistBottomSheet(
+            state = previewState(
+                email = "satoshi.nakamoto@tangem",
+                isSaveEnabled = true,
+                emailError = resourceReference(R.string.common_error_email_incorrect_format),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
 private fun Preview_Filled() {
     TangemThemePreviewRedesign(alwaysShowBottomSheets = true) {
         TangemPayWaitlistBottomSheet(
@@ -251,15 +287,22 @@ private fun Preview_Filled() {
     }
 }
 
-private fun previewState(email: String, isSaveEnabled: Boolean, isMarketingConsentGiven: Boolean = false) =
-    TangemPayWaitlistUM(
-        email = email,
-        isMarketingConsentGiven = isMarketingConsentGiven,
-        isSaveEnabled = isSaveEnabled,
-        onEmailChange = {},
-        onEmailClearClick = {},
-        onMarketingConsentClick = {},
-        onPrivacyPolicyClick = {},
-        onSaveClick = {},
-        onDismiss = {},
-    )
+private fun previewState(
+    email: String,
+    isSaveEnabled: Boolean,
+    isMarketingConsentGiven: Boolean = false,
+    isSaveInProgress: Boolean = false,
+    emailError: TextReference? = null,
+) = TangemPayWaitlistUM(
+    email = email,
+    emailError = emailError,
+    isMarketingConsentGiven = isMarketingConsentGiven,
+    isSaveEnabled = isSaveEnabled,
+    isSaveInProgress = isSaveInProgress,
+    onEmailChange = {},
+    onEmailClearClick = {},
+    onMarketingConsentClick = {},
+    onPrivacyPolicyClick = {},
+    onSaveClick = {},
+    onDismiss = {},
+)

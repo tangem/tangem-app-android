@@ -3,22 +3,26 @@ package com.tangem.data.jointaccount.converter
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
+import com.tangem.utils.converter.Converter
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /** Network DTO → domain. */
-internal class JointAccountInvitePreviewDtoConverter @Inject constructor() {
+@Singleton
+internal class JointAccountInvitePreviewDtoConverter @Inject constructor() :
+    Converter<JointAccountInvitePreviewDto, JointAccountInvitePreview> {
 
-    fun convert(dto: JointAccountInvitePreviewDto): JointAccountInvitePreview = JointAccountInvitePreview(
+    override fun convert(value: JointAccountInvitePreviewDto): JointAccountInvitePreview = JointAccountInvitePreview(
         config = JointAccountConfig(
-            name = dto.config.name,
-            icon = dto.config.icon,
-            iconColor = dto.config.iconColor,
-            membersCount = dto.config.membersCount,
-            threshold = dto.config.threshold,
+            name = value.config.name,
+            icon = value.config.icon,
+            iconColor = value.config.iconColor,
+            membersCount = value.config.membersCount,
+            threshold = value.config.threshold,
         ),
         creator = JointAccountInvitePreview.Creator(
-            name = dto.creator.name,
-            address = dto.creator.address,
+            name = value.creator.name,
+            address = value.creator.address,
         ),
     )
 }

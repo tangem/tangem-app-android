@@ -19,6 +19,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -36,6 +38,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_search_24
 import kotlinx.collections.immutable.persistentListOf
 
@@ -53,10 +56,12 @@ internal fun ResidencyListScreen(state: ResidencyListUM, modifier: Modifier = Mo
             )
         },
         overlay = {
-            ResidencySearchFooter(
-                state = state.search,
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
+            if (state.content.isSearchVisible) {
+                ResidencySearchFooter(
+                    state = state.search,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
         },
     ) { contentPadding ->
         AnimatedContent(
@@ -67,6 +72,10 @@ internal fun ResidencyListScreen(state: ResidencyListUM, modifier: Modifier = Mo
             when (content) {
                 is ResidencyListUM.Content.Loading -> LoadingContent(contentPadding = contentPadding)
                 is ResidencyListUM.Content.Empty -> EmptyContent(contentPadding = contentPadding)
+                is ResidencyListUM.Content.Error -> ErrorContent(
+                    content = content,
+                    contentPadding = contentPadding,
+                )
                 is ResidencyListUM.Content.Sections -> SectionsContent(
                     content = content,
                     contentPadding = contentPadding,
@@ -171,14 +180,42 @@ private fun LoadingContent(contentPadding: PaddingValues, modifier: Modifier = M
                     },
                     titleSlot = {
                         TangemShimmer(
-                            modifier = Modifier
-                                .width(width = 140.dp)
-                                .height(height = 20.dp),
+                            style = TangemTheme.typography3.body.medium,
+                            modifier = Modifier.weight(weight = 1f),
                         )
                     },
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ErrorContent(
+    content: ResidencyListUM.Content.Error,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .padding(horizontal = 64.dp),
+        verticalArrangement = Arrangement.spacedBy(space = 12.dp, alignment = Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        TangemButton(
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X10,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_20),
+            onClick = content.onRetryClick,
+        )
+        Text(
+            text = stringResourceSafe(R.string.tangempay_common_error_list_loading),
+            textAlign = TextAlign.Center,
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
+        )
     }
 }
 
@@ -215,9 +252,12 @@ private fun EmptyContent(contentPadding: PaddingValues, modifier: Modifier = Mod
     }
 }
 
+private val ResidencyListUM.Content.isSearchVisible: Boolean
+    get() = this is ResidencyListUM.Content.Sections || this is ResidencyListUM.Content.Empty
+
 private val FLAG_SIZE = 40.dp
 private val FOOTER_INSET = 88.dp
-private const val LOADING_ITEMS_COUNT = 12
+private const val LOADING_ITEMS_COUNT = 5
 
 @Preview(widthDp = 402, heightDp = 874, showBackground = true)
 @Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -233,6 +273,15 @@ private fun Preview_ResidencyListScreen_Countries() {
 private fun Preview_ResidencyListScreen_Loading() {
     TangemThemePreviewRedesign {
         ResidencyListScreen(state = previewState(content = ResidencyListUM.Content.Loading))
+    }
+}
+
+@Preview(widthDp = 402, heightDp = 874, showBackground = true)
+@Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ResidencyListScreen_Error() {
+    TangemThemePreviewRedesign {
+        ResidencyListScreen(state = previewState(content = ResidencyListUM.Content.Error(onRetryClick = {})))
     }
 }
 
