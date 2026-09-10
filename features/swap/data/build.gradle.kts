@@ -57,4 +57,5 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
+    testRuntimeOnly(deps.orgJson)
 }
