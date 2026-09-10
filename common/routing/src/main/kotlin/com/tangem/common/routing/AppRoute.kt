@@ -42,7 +42,15 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Home(
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
-    ) : AppRoute(path = "/home")
+        val entryReason: EntryReason = EntryReason.Launch,
+    ) : AppRoute(path = "/home") {
+
+        @Serializable
+        enum class EntryReason {
+            Launch,
+            LastWalletForgotten,
+        }
+    }
 
     @Serializable
     data class Welcome(
