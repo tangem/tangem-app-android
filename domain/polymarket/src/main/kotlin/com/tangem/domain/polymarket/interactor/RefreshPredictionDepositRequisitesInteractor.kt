@@ -15,6 +15,8 @@ import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Brings the funding requisites of an account in step with the bridge, and projects the day-one address onto the
@@ -37,12 +39,18 @@ class RefreshPredictionDepositRequisitesInteractor(
             PolymarketBridgeError.Unavailable
         }
 
-        val assets = bridgeRepository.getSupportedAssets().bind()
-
-        val addresses = bridgeRepository.createDepositAddresses(
-            walletId = userWalletId.stringValue,
-            depositWalletAddress = stored.depositWalletAddress,
-        ).bind()
+        val (assetsResult, addressesResult) = coroutineScope {
+            val assets = async { bridgeRepository.getSupportedAssets() }
+            val addresses = async {
+                bridgeRepository.createDepositAddresses(
+                    walletId = userWalletId.stringValue,
+                    depositWalletAddress = stored.depositWalletAddress,
+                )
+            }
+            assets.await() to addresses.await()
+        }
+        val assets = assetsResult.bind()
+        val addresses = addressesResult.bind()
 
         val requisites = PolymarketDepositRequisites(networks = groupIntoNetworks(assets, addresses))
 
@@ -60,22 +68,27 @@ class RefreshPredictionDepositRequisitesInteractor(
         .mapNotNull { (chainId, rows) ->
             val family = PolymarketChainFamily.of(chainId) ?: return@mapNotNull null
             val address = addresses.of(family) ?: return@mapNotNull null
+            val tokens = rows.mapNotNull(::toDepositToken).ifEmpty { return@mapNotNull null }
 
             PolymarketDepositNetwork(
                 chainId = chainId,
                 chainName = rows.first().chainName,
                 family = family,
                 address = address,
-                tokens = rows.map { row ->
-                    PolymarketDepositToken(
-                        symbol = row.tokenSymbol,
-                        address = row.tokenAddress,
-                        decimals = row.decimals,
-                        minCheckoutUsd = row.minCheckoutUsd,
-                    )
-                },
+                tokens = tokens,
             )
         }
+
+    private fun toDepositToken(row: PolymarketBridgeAsset): PolymarketDepositToken? {
+        val minCheckoutUsd = row.minCheckoutUsd ?: return null
+
+        return PolymarketDepositToken(
+            symbol = row.tokenSymbol,
+            address = row.tokenAddress,
+            decimals = row.decimals,
+            minCheckoutUsd = minCheckoutUsd,
+        )
+    }
 
     private fun PolymarketBridgeAddresses.of(family: PolymarketChainFamily): String? = when (family) {
         PolymarketChainFamily.EVM -> evm
