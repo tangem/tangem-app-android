@@ -12,9 +12,11 @@ import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 /**
  * Actions of a token of a joint account. The set mirrors what a personal account would offer in the same context —
  * an action a personal account would hide (no staking for the currency) stays hidden, one it would disable keeps its
- * natural reason — but everything a personal account could actually perform is held back with
- * [ScenarioUnavailabilityReason.JointAccount]: the token belongs to a Safe contract and the wallet's own keys spend
- * nothing from it. Receiving to the Safe address, copying it, analytics and hiding the token stay available.
+ * natural reason — but swap, buy, sell, stake and yield mode are held back with
+ * [ScenarioUnavailabilityReason.JointAccount], because the token belongs to a Safe contract and the wallet's own
+ * keys spend nothing from it. Send is the exception: it is a joint operation the Safe executes once the signatures
+ * are collected, so it follows the regular availability rules. Receiving to the Safe address, copying that address,
+ * analytics and hiding the token stay available.
  */
 internal class JointAccountActionsFactory(
     walletManagersFacade: WalletManagersFacade,
@@ -54,7 +56,7 @@ internal class JointAccountActionsFactory(
                 userWalletId = userWallet.walletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
             )
-            addHeldBack(natural = naturalSend) { ActionState.Send(unavailabilityReason = it) }
+            ActionState.Send(unavailabilityReason = naturalSend).addByReason()
 
             val naturalSwap = createSwapAction(
                 userWallet = userWallet,
