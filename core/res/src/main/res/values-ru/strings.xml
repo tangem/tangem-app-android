@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="access_code_alert_skip_description">Ваш кошелёк не защищён без кода доступа.</string>
-  <string name="access_code_alert_skip_ok">Сбросить все равно</string>
+  <string name="access_code_alert_skip_ok">Всё равно пропустить</string>
   <string name="access_code_alert_skip_title">Код доступа не задан</string>
   <string name="access_code_alert_validation_cancel">Изменить код</string>
   <string name="access_code_alert_validation_description">Ваш код доступа будет использоваться для разблокировки кошелька и защиты доступа к вашим активам.</string>
@@ -441,6 +441,7 @@
     <item>декабре</item>
   </string-array>
   <string name="common_more">Ещё</string>
+  <string name="common_negative">Негативно</string>
   <string name="common_network">Сеть</string>
   <string name="common_network_fee_title">Комиссия сети</string>
   <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
@@ -450,6 +451,7 @@
     <item quantity="many">%d сетей</item>
     <item quantity="other">%d сетях</item>
   </plurals>
+  <string name="common_neutral">Нейтрально</string>
   <string name="common_new_address">Новый адрес</string>
   <string name="common_news">Новости</string>
   <string name="common_next">Далее</string>
@@ -468,8 +470,10 @@
   <string name="common_or">или</string>
   <string name="common_origin_card">Основная карта</string>
   <string name="common_origin_ring">Основное кольцо</string>
+  <string name="common_other">Прочие</string>
   <string name="common_passphrase">Парольная фраза</string>
   <string name="common_paste">Вставить</string>
+  <string name="common_positive">Позитивно</string>
   <string name="common_privacy_policy">Политикой конфиденциальности</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -492,6 +496,7 @@
   <string name="common_second_no_param">сек</string>
   <string name="common_see_all">Показать всё</string>
   <string name="common_seed_phrase">Seed-фраза</string>
+  <string name="common_select_account">Выбор счета</string>
   <string name="common_select_action">Выберите действие</string>
   <string name="common_sell">Продать</string>
   <string name="common_send">Отправить</string>
@@ -508,7 +513,7 @@
   <string name="common_show_more">Подробнее</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
-  <string name="common_skip">Сбросить</string>
+  <string name="common_skip">Пропустить</string>
   <string name="common_something_went_wrong">Что-то пошло не так</string>
   <string name="common_stake">Застейкать</string>
   <string name="common_staked">Застейкано</string>
@@ -867,6 +872,7 @@
   <string name="hw_cloud_backup_confirm_password_description">Пароль необходим для шифрования секретной фразы в %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Подтвердите пароль</string>
   <string name="hw_cloud_backup_consent">Я понимаю, что Tangem не может восстановить пароль моей резервной копии. Если я утрачу этот пароль или свой Apple ID, мою резервную копию будет невозможно восстановить. Без фразы восстановления я также не смогу восстановить доступ к своим криптоактивам.</string>
+  <string name="hw_cloud_backup_consent_v2">Я понимаю, что Tangem не может восстановить пароль моей резервной копии. Если я утрачу этот пароль или свой %1$s, мою резервную копию будет невозможно восстановить. Без фразы восстановления я также не смогу восстановить доступ к своим криптоактивам.</string>
   <string name="hw_cloud_backup_delete_confirm_message">Вы не сможете восстановить этот кошелёк из %s. Новую резервную копию можно создать в любое время.</string>
   <string name="hw_cloud_backup_error_network">Нет соединения с интернетом. Проверьте сеть и повторите попытку.</string>
   <string name="hw_cloud_backup_error_title">Что-то пошло не так</string>
@@ -1030,6 +1036,10 @@
   <string name="manage_tokens_unavailable_description">Выбранный токен недоступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="market_chart_bubble_no_amount">Нет токенов \n/ стоимости активов</string>
+  <string name="market_chart_bubble_total_value">Общая стоимость</string>
+  <string name="market_chart_can_not_load_data">Не удалось загрузить данные</string>
+  <string name="market_chart_no_amount">Нет токенов или их стоимость неизвестна</string>
   <string name="market_chart_top_holding">%s вашего портфеля</string>
   <string name="markets_about_coin_header">О монете</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
@@ -2242,15 +2252,15 @@
   <string name="tangempay_newonboard_title">Откройте Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Без комиссии за покупки</string>
-  <string name="tangempay_newonboard_topright_body">В USDC, а не в непонятных токенах</string>
-  <string name="tangempay_newonboard_topright_title">Кэшбэк до 2%</string>
+  <string name="tangempay_newonboard_topright_body">Без сюрпризов</string>
+  <string name="tangempay_newonboard_topright_title">$0 в месяц, \n$0 за пополнение</string>
   <string name="tangempay_onboarding_banner_description">Бесплатная карта Tangem Pay с кэшбэком до 2%</string>
   <string name="tangempay_onboarding_banner_title">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
-  <string name="tangempay_onboarding_pay_description">С виртуальной картой в Apple Pay / Google Pay, без комиссий за покупки</string>
+  <string name="tangempay_onboarding_pay_description">Виртуальную карту можно добавить в Apple Pay и Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Покупайте где угодно</string>
-  <string name="tangempay_onboarding_purchases_description">За все покупки. Платим в USDC, а не баллах или неизвестных токенах</string>
-  <string name="tangempay_onboarding_purchases_title">Кэшбэк до 2%</string>
+  <string name="tangempay_onboarding_purchases_description">Никаких дополнительных комиссий за покупки</string>
+  <string name="tangempay_onboarding_purchases_title">Сколько видишь – столько платишь</string>
   <string name="tangempay_onboarding_security_description">Мы создадим отдельный платежный счет без раскрытия ваших активов \nи их адресов</string>
   <string name="tangempay_onboarding_security_title">Абсолютная приватность</string>
   <string name="tangempay_onboarding_setup_wallet_description">И привяжем Tangem Pay к нему</string>
@@ -2437,6 +2447,12 @@
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажи</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обмена с %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Недоступно для обмена</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">Топ %d актив</item>
+    <item quantity="few">Топ %d актива</item>
+    <item quantity="many">Топ %d активов</item>
+    <item quantity="other"></item>
+  </plurals>
   <string name="transaction_history_claiming_reward">Получение награды</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_disabling_yield_mode">Отключение режима доходности</string>
