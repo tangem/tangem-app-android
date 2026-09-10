@@ -22,11 +22,15 @@ import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawA
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoiceConfig
 import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoices
+import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.stub.TangemPayBankWithdrawStepStubComponent
+import kotlinx.collections.immutable.ImmutableList
 
 internal class TangemPayBankWithdrawComponent(
     appComponentContext: AppComponentContext,
@@ -98,10 +102,19 @@ internal class TangemPayBankWithdrawComponent(
             choice = BankWithdrawChoices.accountType(selected = model.draft.value.newRecipient.accountType),
             onSelected = { selectedId -> model.onAccountTypeSelected(BankWithdrawChoices.accountTypeOf(selectedId)) },
         )
-        TangemPayBankWithdrawInnerRoute.RecipientDetails,
-        TangemPayBankWithdrawInnerRoute.BankDetails,
-        TangemPayBankWithdrawInnerRoute.Preview,
-        -> TangemPayBankWithdrawStepStubComponent(
+        TangemPayBankWithdrawInnerRoute.RecipientDetails -> formChild(
+            step = config,
+            componentContext = componentContext,
+            fields = BankWithdrawFormFields.recipientDetails(
+                isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
+            ),
+        )
+        TangemPayBankWithdrawInnerRoute.BankDetails -> formChild(
+            step = config,
+            componentContext = componentContext,
+            fields = BankWithdrawFormFields.bankDetails,
+        )
+        TangemPayBankWithdrawInnerRoute.Preview -> TangemPayBankWithdrawStepStubComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawStepStubComponent.Params(draft = model.draft, step = config),
         )
@@ -120,6 +133,24 @@ internal class TangemPayBankWithdrawComponent(
             config = choice,
             onContinue = { selectedId ->
                 onSelected(selectedId)
+                pushNext(from = step)
+            },
+        ),
+    )
+
+    private fun formChild(
+        step: TangemPayBankWithdrawInnerRoute,
+        componentContext: ComponentContext,
+        fields: ImmutableList<BankWithdrawFormField>,
+    ): ComposableContentComponent = TangemPayBankWithdrawFormComponent(
+        appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        params = TangemPayBankWithdrawFormComponent.Params(
+            draft = model.draft,
+            step = step,
+            fields = fields,
+            onBack = model::onDetailsFilled,
+            onContinue = { values ->
+                model.onDetailsFilled(values)
                 pushNext(from = step)
             },
         ),
