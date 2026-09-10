@@ -21,6 +21,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.core.ui.res.generated.icons.ic_info_16
@@ -115,5 +116,5 @@ private fun PredictionSlippageRowPreview() {
 
 @Composable
 private fun PreviewSurface(content: @Composable () -> Unit) {
-    TangemSurface(color = TangemTheme.colors3.bg.secondary, content = content)
+    TangemSurface(color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape, content = content)
 }

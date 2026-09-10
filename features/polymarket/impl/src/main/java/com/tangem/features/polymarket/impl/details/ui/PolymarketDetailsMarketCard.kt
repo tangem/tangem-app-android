@@ -27,10 +27,10 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import kotlinx.collections.immutable.ImmutableList
 
-private val CardShape = RoundedCornerShape(16.dp)
 private val ChipShape = RoundedCornerShape(50.dp)
 
 /** One card per market, in the order the backend serves them. */
@@ -50,7 +50,7 @@ private fun MarketCard(state: PolymarketDetailsMarketUM, modifier: Modifier = Mo
     TangemSurface(
         modifier = modifier.fillMaxWidth(),
         color = TangemTheme.colors3.bg.secondary,
-        shape = CardShape,
+        shape = PolymarketCardShape,
     ) {
         Column(
             modifier = Modifier
