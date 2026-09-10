@@ -749,6 +749,7 @@ internal class WalletBackupModelTest {
 
     private fun backup(fileId: String = "file-1", walletId: String? = "011") = CloudBackupInfo(
         fileId = fileId,
+        backupName = "wallet",
         walletName = "wallet",
         createdAtMillis = 0L,
         walletId = walletId,
