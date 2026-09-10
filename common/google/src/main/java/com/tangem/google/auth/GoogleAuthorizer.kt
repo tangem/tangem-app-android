@@ -27,6 +27,12 @@ interface GoogleAuthorizer {
     ): Either<GoogleAuthError, GoogleAuthResult>
 
     /**
+     * Pins the following authorizations to [accountName], so an interactive [authorize] stops asking
+     * which account to use. Held until [clearAuthorization], like an account [authorize] picked itself.
+     */
+    fun selectAccount(accountName: String)
+
+    /**
      * Forgets whatever authorization state the implementation itself holds — including the picked
      * account, so the next interactive [authorize] asks for it again and the user can switch accounts.
      * The Google Identity `AuthorizationClient` exposes no way to revoke a granted authorization, so

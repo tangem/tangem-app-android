@@ -8,10 +8,13 @@ import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
 import com.tangem.domain.sociallogin.repository.SocialLoginProviderRepository
 import com.tangem.google.auth.GoogleIdTokenProvider
+import com.tangem.google.drive.AppDataDrive
+import com.tangem.google.drive.GoogleDriveTokenProvider
 import javax.inject.Inject
 
 internal class DefaultSocialLoginProviderRepository @Inject constructor(
     private val googleIdTokenProvider: GoogleIdTokenProvider,
+    @AppDataDrive private val appDataTokenProvider: GoogleDriveTokenProvider,
     private val nonceProvider: SocialLoginNonceProvider,
 ) : SocialLoginProviderRepository {
 
@@ -33,14 +36,22 @@ internal class DefaultSocialLoginProviderRepository @Inject constructor(
         return when (provider) {
             SocialLoginProvider.Google -> googleIdTokenProvider
                 .getIdToken(nonce = nonce.forProvider)
-                .map { idToken -> SocialProviderIdToken(value = idToken, nonce = nonce.forRequest) }
+                // The Drive authorization that follows would otherwise ask again for the account just
+                // chosen here, or reuse a token cached for a previous attempt's account.
+                .onRight { idToken -> appDataTokenProvider.switchAccount(idToken.accountName) }
+                .map { idToken -> SocialProviderIdToken(value = idToken.value, nonce = nonce.forRequest) }
                 .mapLeft(GoogleIdTokenErrorConverter::convert)
         }
     }
 
     override suspend fun signOut(provider: SocialLoginProvider) {
         when (provider) {
-            SocialLoginProvider.Google -> googleIdTokenProvider.signOut()
+            SocialLoginProvider.Google -> {
+                googleIdTokenProvider.signOut()
+                // Unpins the account, so a retry under another one stops writing into the previous
+                // account's folder. Not signOut: the grant is still good, re-consenting would be noise.
+                appDataTokenProvider.invalidate()
+            }
         }
     }
 }
