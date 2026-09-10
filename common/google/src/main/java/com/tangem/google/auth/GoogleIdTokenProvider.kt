@@ -19,10 +19,22 @@ interface GoogleIdTokenProvider {
      * @param nonce server-issued value the token is bound to, so a token captured elsewhere cannot be
      * replayed against the backend. `null` leaves the token unbound — pass it deliberately.
      */
-    suspend fun getIdToken(nonce: String?): Either<GoogleIdTokenError, String>
+    suspend fun getIdToken(nonce: String?): Either<GoogleIdTokenError, GoogleIdToken>
 
     /** Drops the credential state the providers keep — auto sign-in and the silently reused account */
     suspend fun signOut()
+}
+
+/**
+ * A completed sign-in.
+ *
+ * @property value the OIDC id token — a short-lived credential that must not reach logs or analytics.
+ * @property accountName the account the token was issued for, in the form [GoogleAuthorizer.selectAccount]
+ * expects — a scope grant that follows then has no reason to ask for it again.
+ */
+data class GoogleIdToken(val value: String, val accountName: String) {
+
+    override fun toString(): String = "GoogleIdToken(***)"
 }
 
 sealed interface GoogleIdTokenError {

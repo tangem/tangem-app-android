@@ -6,8 +6,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
+import com.tangem.google.auth.GoogleIdToken
 import com.tangem.google.auth.GoogleIdTokenError
 import com.tangem.google.auth.GoogleIdTokenProvider
+import com.tangem.google.drive.GoogleDriveTokenProvider
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.social.SignInNonce
 import com.tangem.lib.auth.social.SocialRecoveryError
@@ -27,16 +29,18 @@ import org.junit.jupiter.params.provider.MethodSource
 internal class DefaultSocialLoginProviderRepositoryTest {
 
     private val googleIdTokenProvider: GoogleIdTokenProvider = mockk()
+    private val appDataTokenProvider: GoogleDriveTokenProvider = mockk(relaxed = true)
     private val nonceProvider: SocialLoginNonceProvider = mockk()
 
     private val repository = DefaultSocialLoginProviderRepository(
         googleIdTokenProvider = googleIdTokenProvider,
+        appDataTokenProvider = appDataTokenProvider,
         nonceProvider = nonceProvider,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(googleIdTokenProvider, nonceProvider)
+        clearMocks(googleIdTokenProvider, appDataTokenProvider, nonceProvider)
         coEvery { nonceProvider.getNonce() } returns NONCE.right()
     }
 
@@ -73,8 +77,32 @@ internal class DefaultSocialLoginProviderRepositoryTest {
         val actual = repository.signIn(SocialLoginProvider.Google)
 
         // Assert
-        assertThat(actual).isEqualTo(SocialProviderIdToken(value = ID_TOKEN, nonce = PLAIN_NONCE).right())
+        assertThat(actual).isEqualTo(SocialProviderIdToken(value = ID_TOKEN.value, nonce = PLAIN_NONCE).right())
         coVerify(exactly = 1) { googleIdTokenProvider.getIdToken(HASHED_NONCE) }
+    }
+
+    @Test
+    fun `GIVEN sign-in succeeds WHEN signIn THEN the drive authorization moves to the same account`() = runTest {
+        // Arrange — a token cached for the account of a previous attempt would outlive the new pin
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns ID_TOKEN.right()
+
+        // Act
+        repository.signIn(SocialLoginProvider.Google)
+
+        // Assert
+        coVerify(exactly = 1) { appDataTokenProvider.switchAccount(ACCOUNT_NAME) }
+    }
+
+    @Test
+    fun `GIVEN sign-in fails WHEN signIn THEN no account is pinned`() = runTest {
+        // Arrange
+        coEvery { googleIdTokenProvider.getIdToken(HASHED_NONCE) } returns GoogleIdTokenError.Canceled.left()
+
+        // Act
+        repository.signIn(SocialLoginProvider.Google)
+
+        // Assert
+        coVerify(exactly = 0) { appDataTokenProvider.switchAccount(any()) }
     }
 
     @ParameterizedTest
@@ -106,7 +134,7 @@ internal class DefaultSocialLoginProviderRepositoryTest {
     }
 
     @Test
-    fun `GIVEN google provider WHEN signOut THEN credential state is cleared`() = runTest {
+    fun `GIVEN google provider WHEN signOut THEN credential state and the cached Drive token are cleared`() = runTest {
         // Arrange
         coEvery { googleIdTokenProvider.signOut() } returns Unit
 
@@ -115,6 +143,8 @@ internal class DefaultSocialLoginProviderRepositoryTest {
 
         // Assert
         coVerify(exactly = 1) { googleIdTokenProvider.signOut() }
+        // invalidate() drops the pinned account too, so a retry cannot reuse the abandoned one
+        coVerify(exactly = 1) { appDataTokenProvider.invalidate() }
     }
 
     data class ErrorModel(val providerError: GoogleIdTokenError, val expected: SocialLoginError)
@@ -145,6 +175,7 @@ internal class DefaultSocialLoginProviderRepositoryTest {
         const val PLAIN_NONCE = "server-nonce"
         const val HASHED_NONCE = "hashed-server-nonce"
         val NONCE = SignInNonce(forProvider = HASHED_NONCE, forRequest = PLAIN_NONCE)
-        const val ID_TOKEN = "google-id-token"
+        const val ACCOUNT_NAME = "user@gmail.com"
+        val ID_TOKEN = GoogleIdToken(value = "google-id-token", accountName = ACCOUNT_NAME)
     }
 }
