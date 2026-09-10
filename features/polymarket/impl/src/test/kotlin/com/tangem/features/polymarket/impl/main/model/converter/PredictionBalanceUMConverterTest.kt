@@ -49,6 +49,42 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
+    fun `GIVEN a zero balance WHEN converting THEN withdraw is disabled`() {
+        // Arrange
+        val status = active(balance = "0")
+
+        // Act
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
+                isTradingAllowed = true,
+            ),
+        )
+
+        // Assert
+        assertThat(actual.withdraw.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a positive balance and failed deposit requisites WHEN converting THEN withdraw stays enabled`() {
+        // Arrange
+        val status = active(balance = "12.5")
+
+        // Act
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                requisites = RequisitesState.Failed,
+                isTradingAllowed = true,
+            ),
+        )
+
+        // Assert
+        assertThat(actual.withdraw.isEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN a funded account WHEN converted THEN the balance is stated`() {
         // Arrange
         val status = active(balance = "12.5")
