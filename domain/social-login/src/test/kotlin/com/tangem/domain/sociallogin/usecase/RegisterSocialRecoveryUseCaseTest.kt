@@ -7,7 +7,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
-import com.tangem.domain.sociallogin.repository.SocialBackupRepository
 import com.tangem.domain.sociallogin.repository.SocialRecoveryRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -20,9 +19,8 @@ import org.junit.jupiter.api.Test
 internal class RegisterSocialRecoveryUseCaseTest {
 
     private val socialRecoveryRepository: SocialRecoveryRepository = mockk()
-    private val socialBackupRepository: SocialBackupRepository = mockk()
 
-    private val useCase = RegisterSocialRecoveryUseCase(socialRecoveryRepository, socialBackupRepository)
+    private val useCase = RegisterSocialRecoveryUseCase(socialRecoveryRepository)
 
     private val idToken = SocialProviderIdToken(value = "id-token", nonce = "nonce")
     private val walletId = UserWalletId(stringValue = "0011")
@@ -30,12 +28,11 @@ internal class RegisterSocialRecoveryUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(socialRecoveryRepository, socialBackupRepository)
-        coEvery { socialBackupRepository.setSocialBackupCompleted(walletId, true) } returns Unit.right()
+        clearMocks(socialRecoveryRepository)
     }
 
     @Test
-    fun `GIVEN key registered WHEN invoke THEN wallet is marked as socially backed up`() = runTest {
+    fun `GIVEN repository accepts WHEN invoke THEN the binding is registered`() = runTest {
         // Arrange
         coEvery { socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey) } returns Unit.right()
 
@@ -44,13 +41,11 @@ internal class RegisterSocialRecoveryUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) {
-            socialBackupRepository.setSocialBackupCompleted(walletId = walletId, isCompleted = true)
-        }
+        coVerify(exactly = 1) { socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey) }
     }
 
     @Test
-    fun `GIVEN registration fails WHEN invoke THEN wallet is not marked as socially backed up`() = runTest {
+    fun `GIVEN registration fails WHEN invoke THEN the failure is reported as is`() = runTest {
         // Arrange
         coEvery {
             socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey)
@@ -61,21 +56,5 @@ internal class RegisterSocialRecoveryUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(SocialLoginError.BindingConflict.left())
-        coVerify(exactly = 0) { socialBackupRepository.setSocialBackupCompleted(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN flag cannot be stored WHEN invoke THEN setup is not reported as complete`() = runTest {
-        // Arrange
-        coEvery { socialRecoveryRepository.registerRecoveryKey(idToken, walletId, recoveryKey) } returns Unit.right()
-        coEvery {
-            socialBackupRepository.setSocialBackupCompleted(walletId, true)
-        } returns SocialLoginError.PersistenceFailed().left()
-
-        // Act
-        val actual = useCase(idToken = idToken, walletId = walletId, recoveryKey = recoveryKey)
-
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.PersistenceFailed().left())
     }
 }
