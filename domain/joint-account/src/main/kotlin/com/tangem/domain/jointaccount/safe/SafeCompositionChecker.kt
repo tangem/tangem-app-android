@@ -16,6 +16,7 @@ import java.math.BigInteger
  */
 class SafeCompositionChecker(
     private val networkReader: JointNetworkReader,
+    private val safeAddressCalculator: SafeAddressCalculator,
 ) {
 
     suspend fun ensureMatches(
@@ -77,7 +78,7 @@ class SafeCompositionChecker(
         threshold: Int,
     ): Either<JointOperationCreateError, Unit> = either {
         val isAnySingletonMatching = SafeSingleton.entries.any { singleton ->
-            SafeAddress.compute(owners = owners, threshold = threshold, singleton = singleton)
+            safeAddressCalculator.compute(owners = owners, threshold = threshold, singleton = singleton)
                 // A composition that cannot produce an address at all is broken data, not an on-chain mismatch
                 .mapLeft { error ->
                     JointOperationCreateError.Failed(cause = IllegalStateException("Invalid composition: $error"))
