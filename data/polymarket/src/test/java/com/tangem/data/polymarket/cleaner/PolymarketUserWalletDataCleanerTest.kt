@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -179,6 +180,49 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { withdrawalStore.clear(WALLET_B) }
     }
 
+    @Test
+    fun `GIVEN a signed withdrawal awaiting delivery WHEN clear THEN a re-added wallet reads nothing in flight`() =
+        runTest {
+            // Arrange
+            val records = mutableMapOf(WALLET_A to RECORD)
+            val store = object : PredictionWithdrawalStore {
+                override suspend fun save(userWalletId: UserWalletId, record: PredictionWithdrawalRecord) {
+                    records[userWalletId] = record
+                }
+
+                override suspend fun get(userWalletId: UserWalletId): PredictionWithdrawalRecord? =
+                    records[userWalletId]
+
+                override suspend fun clear(userWalletId: UserWalletId) {
+                    records.remove(userWalletId)
+                }
+            }
+
+            // Act
+            PolymarketUserWalletDataCleaner(
+                credentialsStore = credentialsStore,
+                predictionAccountStatusStore = statusStore,
+                onboardedStore = onboardedStore,
+                requisitesStore = requisitesStore,
+                withdrawalStore = store,
+            ).clear(listOf(WALLET_A))
+
+            // Assert
+            assertThat(store.get(WALLET_A)).isNull()
+        }
+
+    @Test
+    fun `GIVEN the withdrawal store fails to clear WHEN clear THEN the other wallets are still cleared`() = runTest {
+        // Arrange
+        coEvery { withdrawalStore.clear(WALLET_A) } throws IllegalStateException("disk full")
+
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { withdrawalStore.clear(WALLET_B) }
+    }
+
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
             collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
@@ -201,6 +245,8 @@ internal class PolymarketUserWalletDataCleanerTest {
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
         )
+
+        val RECORD: PredictionWithdrawalRecord = mockk()
 
         val CREDENTIALS = PolymarketApiCredentials(
             apiKey = "key",

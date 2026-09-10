@@ -90,7 +90,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val balanceConverter = PredictionBalanceUMConverter(
         onAddFundsClick = ::onAddFundsClick,
-        onWithdrawClick = {},
+        onWithdrawClick = ::onWithdrawClick,
     )
 
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
@@ -394,6 +394,19 @@ internal class PolymarketMainModel @Inject constructor(
         }
 
         addFundsNavigation.activate(Unit)
+    }
+
+    private fun onWithdrawClick() {
+        val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = collateral,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                screenSource = AnalyticsParam.ScreensSources.Predictions.value,
+                accountFlow = AppRoute.Swap.AccountFlow.PredictionWithdraw,
+            ),
+        )
     }
 
     override fun onSwapClick() {
