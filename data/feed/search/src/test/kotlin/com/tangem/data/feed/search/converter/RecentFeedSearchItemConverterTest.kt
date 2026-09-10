@@ -13,6 +13,32 @@ import java.math.BigDecimal
 internal class RecentFeedSearchItemConverterTest {
 
     @Test
+    fun `GIVEN a region-restricted token WHEN stored and restored THEN the restriction survives`() {
+        // Arrange — a dropped flag re-enables the asset the moment it is reopened from Recent
+        val item = RecentFeedSearchItem.MarketToken(
+            token = TokenMarketParams(
+                id = CryptoCurrency.RawID("apple-xstock"),
+                name = "Apple xStock",
+                symbol = "AAPLX",
+                tokenQuotes = TokenMarketParams.Quotes(
+                    currentPrice = BigDecimal("242.1"),
+                    h24Percent = null,
+                    weekPercent = null,
+                    monthPercent = null,
+                ),
+                imageUrl = null,
+                isRestrictedForCountry = true,
+            ),
+        )
+
+        // Act
+        val restored = item.toDTO(timestamp = 1).toDomain()
+
+        // Assert
+        assertThat(restored).isEqualTo(item)
+    }
+
+    @Test
     fun `GIVEN a market token WHEN converted both ways THEN the snapshot survives the round trip`() {
         // Arrange
         val item = RecentFeedSearchItem.MarketToken(
