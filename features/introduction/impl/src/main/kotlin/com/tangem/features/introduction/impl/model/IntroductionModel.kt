@@ -149,11 +149,9 @@ internal class IntroductionModel @Inject constructor(
         }
         analyticsEventHandler.send(IntroductionProcess.WelcomeMediaError(stage))
         TangemLogger.e("Welcome background video failed at the ${stage.value} stage", error)
-        // The SurfaceView punches a hole through the window (see IntroductionScreen), so the shutter may only
-        // lift over a surface that already holds a frame: a failure before the first one, or one landing after
-        // the surface is gone, would uncover a blank hole instead of the design's background.
-        val canUncoverSurface = hasRenderedFrame && videoPlayer.isSurfaceAttached
-        uiState.update { it.copy(isVideoFailed = true, isVideoReady = it.isVideoReady || canUncoverSurface) }
+        // Only a rendered frame lifts the shutter, and the player never recovers from an error: uncovering the
+        // SurfaceView here would expose the hole it punches through the window (see IntroductionScreen).
+        uiState.update { it.copy(isVideoFailed = true) }
     }
 
     fun videoPositionMs(): Long = videoPlayer.positionMs
