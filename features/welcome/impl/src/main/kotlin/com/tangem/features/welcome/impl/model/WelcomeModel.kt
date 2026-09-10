@@ -106,12 +106,13 @@ internal class WelcomeModel @Inject constructor(
 
             launch {
                 walletsFetcher.userWallets
-                    .collectLatest {
-                        if (it.isEmpty()) {
-                            router.replaceAll(AppRoute.Home())
+                    .collectLatest { userWallets ->
+                        if (userWallets.isEmpty()) {
+                            val reason = AppRoute.Home.EntryReason.LastWalletForgotten
+                            router.replaceAll(AppRoute.Home(entryReason = reason))
                         }
 
-                        wallets.value = it
+                        wallets.value = userWallets
                     }
             }
 

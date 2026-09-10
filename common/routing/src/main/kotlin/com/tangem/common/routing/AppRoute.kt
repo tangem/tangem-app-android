@@ -23,6 +23,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
@@ -41,7 +42,15 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Home(
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
-    ) : AppRoute(path = "/home")
+        val entryReason: EntryReason = EntryReason.Launch,
+    ) : AppRoute(path = "/home") {
+
+        @Serializable
+        enum class EntryReason {
+            Launch,
+            LastWalletForgotten,
+        }
+    }
 
     @Serializable
     data class Welcome(
@@ -504,12 +513,14 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/joint_account_join/$inviteId")
 
     @Serializable
+    /** [cryptoAccountId] is null only in navigation state saved before the field existed: the screen falls back
+     * to the wallet's first joint account. */
     data class JointAccountMembers(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
-
-    @Serializable
-    data object JointSupportedNetworks : AppRoute(path = "/joint_account_supported_networks")
+        val cryptoAccountId: String? = null,
+    ) : AppRoute(
+        path = "/joint_account_members/${userWalletId.stringValue}" + cryptoAccountId?.let { "/$it" }.orEmpty(),
+    )
 
     @Serializable
     data class EditAccount(
@@ -534,6 +545,11 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
+
+    @Serializable
+    data class TangemPayCampaign(
+        val campaignKey: String,
+    ) : AppRoute(path = "/tangem_pay_campaign")
 
     @Serializable
     data class TangemPayOnboarding(
@@ -570,6 +586,12 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class TangemPayEligibility(
+        val userWalletId: UserWalletId,
+        val product: TangemPayProduct,
+    ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
     data class VirtualAccountOnboarding(

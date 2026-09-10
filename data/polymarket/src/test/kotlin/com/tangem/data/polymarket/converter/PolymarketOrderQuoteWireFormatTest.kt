@@ -2,8 +2,8 @@ package com.tangem.data.polymarket.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import org.junit.jupiter.api.Test
 
 /**
@@ -25,7 +25,7 @@ internal class PolymarketOrderQuoteWireFormatTest {
             {"status":"FULL","side":"BUY","shares":"40.81632","notional":"2.00",
             "expectedExecutionAmount":"41.66666","averagePrice":"0.048","worstCasePrice":"0.049",
             "fees":{"market":"0.00000","builder":"0.05000","total":"0.05000"},"total":"2.05000",
-            "builderCode":"0xe800ac","minOrderSize":"5","tickSize":"0.001","live":false}
+            "builderCode":"0xe800ac","minOrderSize":"5","minOrderAmount":"1","tickSize":"0.001","live":false}
         """.trimIndent()
 
         // Act
@@ -43,8 +43,25 @@ internal class PolymarketOrderQuoteWireFormatTest {
         assertThat(actual.total).isEqualTo("2.05000")
         assertThat(actual.builderCode).isEqualTo("0xe800ac")
         assertThat(actual.minOrderSize).isEqualTo("5")
+        assertThat(actual.minOrderAmount).isEqualTo("1")
         assertThat(actual.tickSize).isEqualTo("0.001")
         assertThat(actual.isLive).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a response without the taker floor WHEN decoded THEN the floor is absent rather than the quote`() {
+        // Arrange — the floor arrived later than the rest of the contract, so a BFF without it must still quote
+        val json = """
+            {"status":"FULL","side":"BUY","shares":"1","notional":"1","expectedExecutionAmount":"1",
+            "averagePrice":"0.1","worstCasePrice":"0.1","fees":{"market":"0","builder":"0","total":"0"},
+            "total":"1","builderCode":"0x","minOrderSize":"5","tickSize":"0.001","live":false}
+        """.trimIndent()
+
+        // Act
+        val actual = moshi.adapter(PolymarketOrderQuoteResponse::class.java).fromJson(json)!!
+
+        // Assert
+        assertThat(actual.minOrderAmount).isNull()
     }
 
     @Test

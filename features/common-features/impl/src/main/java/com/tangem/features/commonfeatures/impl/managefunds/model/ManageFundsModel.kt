@@ -20,7 +20,6 @@ import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.account.isMainAccount
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -252,7 +251,7 @@ internal class ManageFundsModel @Inject constructor(
                 .first()
                 .firstOrNull { it.userWalletId == mode.userWalletId }
                 ?.accountStatuses
-                ?.filterCryptoPortfolio()
+                ?.filterIsInstance<AccountStatus.CryptoPortfolio>()
                 ?.firstNotNullOfOrNull { accountStatus ->
                     accountStatus.tokenList.flattenCurrencies()
                         .firstOrNull { it.currency.id == mode.currency.id }
@@ -296,7 +295,7 @@ internal class ManageFundsModel @Inject constructor(
                 .mapNotNull { it.getOrNull() }
                 .firstOrNull()
                 ?: return@flatMap emptyList()
-            accountStatusList.accountStatuses.filterCryptoPortfolio().flatMap { accountStatus ->
+            accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Personal>().flatMap { accountStatus ->
                 accountStatus.tokenList.flattenCurrencies()
                     .filter { status ->
                         val id = status.currency.id.rawCurrencyId ?: return@filter false

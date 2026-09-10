@@ -261,7 +261,7 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
         yieldSupplyGetCurrentFeeUseCase = getCurrentFeeUseCase,
         yieldSupplyRepository = yieldSupplyRepository,
         yieldSupplyPendingTracker = pendingTracker,
-        appsFlyerStore = appsFlyerStore,
+        appsFlyerRepository = appsFlyerRepository,
     )
 
     private fun actionUM(): YieldSupplyActionUM = YieldSupplyActionUM(

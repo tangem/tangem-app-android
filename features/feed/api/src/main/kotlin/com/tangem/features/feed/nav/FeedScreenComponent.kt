@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 
 /**
  * Contract of a feed stack screen. Screens render inside the feed content viewport — the host's
@@ -18,11 +19,13 @@ interface FeedScreenComponent {
      * empty: screens whose header is the shared search bar (home, search) don't override it — the
      * host renders the search bar itself for those.
      *
-     * @param bottomSheetState expanded/collapsed state of the hosting shtorka
+     * @param sheetExpansion position the hosting shtorka is settling towards, so a navbar leads
+     * the motion rather than snapping after it; lets it adapt to the collapsed pill, where its
+     * screen's content is off screen
      * @param onExpandSheet raises the hosting shtorka to full
      */
     @Composable
-    fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
     }
 
     /**

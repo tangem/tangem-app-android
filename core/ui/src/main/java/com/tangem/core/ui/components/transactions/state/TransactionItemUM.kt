@@ -26,9 +26,10 @@ sealed interface TransactionItemUM {
     /**
      * Content state.
      *
-     * @property amount         signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
-     *                          `null` hides the numeric value while [currencySymbol] still shows.
-     * @property currencySymbol currency symbol shown alongside [amount], e.g. "BTC", "USDT"
+     * @property amount             signed numeric value, e.g. "+0.500913" / "-350.31"; no currency symbol embedded.
+     *                              `null` hides the numeric value while [currencySymbol] still shows.
+     * @property currencySymbol     currency symbol shown alongside [amount], e.g. "BTC", "USDT"
+     * @property isPendingSignature awaiting other co-signers (Joint account); shows a clock badge + "Pending" pill
      */
     data class Content(
         override val txHash: String,
@@ -43,6 +44,7 @@ sealed interface TransactionItemUM {
         val subtitle: ContentSubtitle,
         val timestamp: Long,
         val warning: TextReference? = null,
+        val isPendingSignature: Boolean = false,
     ) : TransactionItemUM {
 
         @Immutable
@@ -106,6 +108,28 @@ sealed interface TransactionItemUM {
             val walletName: String,
             val deviceIconUM: DeviceIconUM,
         ) : ContentSubtitle
+
+        /**
+         * Counterparty saved in one of the user's address books — renders as "to: <avatar> <contactName>" in place of
+         * the address. Outgoing transfers only; an incoming transfer's sender keeps showing its address.
+         */
+        data class Contact(
+            val direction: Direction,
+            val contactName: String,
+            val avatar: ContactAvatar,
+        ) : ContentSubtitle
+
+        /**
+
+         * app carries a letter [Monogram], while an icon picked in the contact editor renders as [Resource].
+         */
+        @Immutable
+        sealed interface ContactAvatar {
+
+            data class Monogram(val char: Char, val color: Color) : ContactAvatar
+
+            data class Resource(@DrawableRes val resId: Int, val color: Color) : ContactAvatar
+        }
 
         /**
          * Counterparty asset ticker — renders as "to/from: <icon> <SYMBOL>", optionally followed by the counterparty
