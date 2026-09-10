@@ -42,6 +42,7 @@ internal class ImportOptionsBottomSheetModelTest {
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "My Wallet",
         walletName = "My Wallet",
         createdAtMillis = 0L,
         walletId = "011",
