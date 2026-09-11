@@ -4,6 +4,7 @@ package com.tangem.features.collectibles.impl.onboarding.ui
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,13 +27,18 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.onboarding.OnboardingBenefitCard
 import com.tangem.common.ui.onboarding.OnboardingFaqItem
 import com.tangem.common.ui.onboarding.OnboardingHeadline
+import com.tangem.common.ui.onboarding.OnboardingHero
+import com.tangem.core.ui.R as UiR
 import com.tangem.features.collectibles.impl.onboarding.ui.state.CollectiblesOnboardingUM
 import kotlinx.collections.immutable.ImmutableList
 
-// Hero geometry as proportions of the design's 402pt-wide frame: the content column starts at 495,
-// and everything above it is the visual's placeholder.
+// Hero geometry as proportions of the design's 402pt-wide frame: the photo is 608 tall while the content
+// column starts at 480, so the headline overlaps the photo's lower edge.
 private const val HERO_FRAME_WIDTH = 402f
-private const val HERO_CONTENT_TOP = 495f
+private const val HERO_IMAGE_HEIGHT = 608f
+private const val HERO_CONTENT_TOP = 480f
+private const val TINT_START = 380f / HERO_IMAGE_HEIGHT
+private const val TINT_END = 600f / HERO_IMAGE_HEIGHT
 
 /**
  * Scrolling body of the Onboarding screen. Stateless — the pinned footer lives in the scaffold's overlay slot.
@@ -63,10 +69,22 @@ internal fun CollectiblesOnboardingContent(
                 end = contentPadding.calculateEndPadding(layoutDirection),
             ),
     ) {
-        HeroPlaceholder()
-        OnboardingHeadline(title = state.title, subtitle = state.subtitle)
-        OnboardingBenefits(benefits = state.benefits)
-        OnboardingFaq(faq = state.faq)
+        Box {
+            OnboardingHero(
+                imageResId = UiR.drawable.img_collectibles_welcome_hero,
+                frameWidth = HERO_FRAME_WIDTH,
+                imageHeight = HERO_IMAGE_HEIGHT,
+                tintStart = TINT_START,
+                tintEnd = TINT_END,
+            )
+
+            Column {
+                Spacer(modifier = Modifier.fillMaxWidth().aspectRatio(HERO_FRAME_WIDTH / HERO_CONTENT_TOP))
+                OnboardingHeadline(title = state.title, subtitle = state.subtitle)
+                OnboardingBenefits(benefits = state.benefits)
+                OnboardingFaq(faq = state.faq)
+            }
+        }
         Spacer(modifier = Modifier.height(trailingSpace))
     }
 }
@@ -77,15 +95,6 @@ internal fun CollectiblesOnboardingContent(
  * Sized by aspect ratio rather than a fixed height so it keeps the design's proportion on every screen
  * width. Empty on purpose: design has not supplied the visual for this area yet.
  */
-@Composable
-private fun HeroPlaceholder(modifier: Modifier = Modifier) {
-    Spacer(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(HERO_FRAME_WIDTH / HERO_CONTENT_TOP),
-    )
-}
-
 @Composable
 private fun OnboardingBenefits(
     benefits: ImmutableList<CollectiblesOnboardingUM.Benefit>,
