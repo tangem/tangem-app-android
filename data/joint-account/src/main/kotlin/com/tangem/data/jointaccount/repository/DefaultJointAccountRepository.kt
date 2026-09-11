@@ -174,7 +174,9 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 previewConverter.convert(dto).right()
             },
             onError = { error ->
-                val isInvalidLink = error is ApiResponseError.HttpException && error.code == Code.CONFLICT
+                // A link the backend does not know is as dead as one it refuses: retrying it can only fail again
+                val isInvalidLink = error is ApiResponseError.HttpException &&
+                    error.code in DEAD_INVITE_CODES
                 if (isInvalidLink) {
                     JointAccountInvitePreviewError.InvalidLink.left()
                 } else {
@@ -276,5 +278,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private companion object {
         const val TAG = "JointAccountRepository"
         const val NO_JOINT_ACCOUNTS = 0
+        val DEAD_INVITE_CODES = setOf(Code.CONFLICT, Code.NOT_FOUND)
     }
 }
