@@ -3,7 +3,8 @@
 Gacha packs from Collector Crypt. Users land on an onboarding screen, optionally watch a stories
 explainer, then browse a paginated catalogue of packs ("gacha machines") filtered by category and
 search. Buying a pack, the collection screen and the activity log are not built yet — the feature
-currently ships the catalogue plus stubbed account chrome.
+currently ships the catalogue plus the account chrome, whose balance is live and whose collection widget is
+still a stub.
 
 > This is **not** `features/nft` / `domain/nft`, which is the unrelated NFT-collection feature.
 > Collectibles owns its own vertical slice: `domain/collectibles`, `data/collectibles`, and the
@@ -197,9 +198,11 @@ table), `CollectiblesDiscoveryModelTest` (fake `BatchFlow` + captured `BatchingC
 
 ## Gotchas
 
-**`CollectiblesMainModel` injects no domain at all.** Balance and collection size come from
-`CollectiblesMainStubData` (`TODO([REDACTED_TASK_KEY])`); the model takes only `Router` + dispatchers. Discovery is
-the only part that talks to the backend — do not go looking for a repository behind the balance.
+**The main screen's balance is real, the collection size is not.** The balance comes from
+`CollectiblesAccountStatusSupplier` + `GetSelectedAppCurrencyUseCase`, mapped by `CollectiblesBalanceConverter`;
+an unread vault shows a dash rather than a zero. The collection widget is still hardcoded (`TODO([REDACTED_TASK_KEY])`).
+The vault's USDC is always zero until the blockchain SDK can read it, so today the fiat figure is the SOL on the
+vault owner key.
 
 **`actionsFlow` needs `replay = 1`.** The first `Reload` is emitted while pagination is still subscribing;
 a shared flow without a replay cache silently drops what it cannot deliver yet, and the catalogue never
