@@ -5,6 +5,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class IntroductionUM(
     val isVideoReady: Boolean,
+    val isVideoFailed: Boolean,
     val isMotionEnabled: Boolean,
     val scenes: ImmutableList<WelcomeSceneUM>,
     val bottomSheetConfig: TangemBottomSheetConfig?,
