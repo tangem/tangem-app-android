@@ -197,7 +197,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)
-    implementation(projects.core.datasource)
+    implementation(projects.core.datasourceImpl)
     implementation(projects.core.local)
     implementation(projects.spend.datasource)
     implementation(projects.store.datasource)
