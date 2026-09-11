@@ -88,7 +88,7 @@ internal class CollectiblesOnboardingUMConverter :
 
     private companion object {
 
-        const val TITLE = "Open Gacha account"
+        const val TITLE = "Create your Tangem Packs account"
 
         const val SUBTITLE = "Buy sealed packs of real graded collectible cards — Pokémon, One Piece, sports. " +
             "Whatever you open is yours: keep it in the insured physical vault, take the instant offer, " +
