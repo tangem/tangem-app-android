@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.eligibility
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.tangempay.eligibility.country.ResidencyListModel
+import com.tangem.features.tangempay.eligibility.country.CountrySelectorModel
 import com.tangem.features.tangempay.eligibility.waitlist.TangemPayWaitlistModel
 import dagger.Binds
 import dagger.Module
@@ -18,6 +19,11 @@ internal interface TangemPayEligibilityModelsModule {
     @IntoMap
     @ClassKey(ResidencyListModel::class)
     fun bindResidencyListModel(model: ResidencyListModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CountrySelectorModel::class)
+    fun bindCountrySelectorModel(model: CountrySelectorModel): Model
 
     @Binds
     @IntoMap
