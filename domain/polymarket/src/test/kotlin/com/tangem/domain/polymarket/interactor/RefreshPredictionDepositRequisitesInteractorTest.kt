@@ -95,7 +95,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     }
 
     @Test
-    fun `GIVEN a token without a minimum WHEN refreshed THEN that token is dropped`() = runTest {
+    fun `GIVEN a token without a minimum WHEN refreshed THEN it is kept without one`() = runTest {
         // Arrange
         stubBridge(
             assets = listOf(
@@ -109,24 +109,20 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
 
         // Assert
         val network = actual.getOrNull()?.networks?.single()
-        assertThat(network?.tokens?.map { it.address }).containsExactly(USDC)
+        assertThat(network?.tokens?.map { it.address }).containsExactly(USDC, OTHER).inOrder()
+        assertThat(network?.tokens?.map { it.minCheckoutUsd }).containsExactly(BigDecimal("2"), null).inOrder()
     }
 
     @Test
-    fun `GIVEN a chain whose only token has no minimum WHEN refreshed THEN that network is dropped`() = runTest {
+    fun `GIVEN polygon usdc has no minimum WHEN refreshed THEN it still is the default target`() = runTest {
         // Arrange
-        stubBridge(
-            assets = listOf(
-                asset(chainId = "137", tokenAddress = USDC),
-                asset(chainId = "8253038", chainName = "Bitcoin", tokenAddress = OTHER, minCheckoutUsd = null),
-            ),
-        )
+        stubBridge(assets = listOf(asset(chainId = "137", tokenAddress = USDC, minCheckoutUsd = null)))
 
         // Act
         val actual = interactor(userWalletId = USER_WALLET_ID)
 
         // Assert
-        assertThat(actual.getOrNull()?.networks?.map { it.chainId }).containsExactly("137")
+        assertThat(actual.getOrNull()?.default?.address).isEqualTo(EVM_ADDRESS)
     }
 
     @Test
@@ -157,6 +153,23 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
             delay(CALL_DURATION_MS)
             BRIDGE_ADDRESSES.right()
         }
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketBridgeError.Network.left())
+        assertThat(testScheduler.currentTime).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN the address call fails at once WHEN the catalogue is slow THEN the failure is not delayed`() = runTest {
+        // Arrange
+        coEvery { bridgeRepository.getSupportedAssets() } coAnswers {
+            delay(CALL_DURATION_MS)
+            listOf(asset(chainId = "137")).right()
+        }
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } returns PolymarketBridgeError.Network.left()
 
         // Act
         val actual = interactor(userWalletId = USER_WALLET_ID)

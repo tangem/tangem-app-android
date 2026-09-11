@@ -35,12 +35,11 @@ internal class PredictionBalanceUMConverter(
             addFunds = actionButton(
                 text = resourceReference(id = R.string.common_add_funds),
                 icon = Icons.ic_arrow_down_24,
-                isEnabled = active?.cryptoCurrencyStatus != null &&
-                    value.isTradingAllowed &&
-                    value.requisites !is RequisitesState.Loading,
+                isEnabled = value.isTradingAllowed && value.requisites.allowsAddFunds(active),
                 isLoading = isLoading,
+                isDimmed = value.requisites is RequisitesState.Failed,
                 onClick = onAddFundsClick,
-            ).copy(isDimmed = value.requisites is RequisitesState.Failed),
+            ),
             withdraw = actionButton(
                 text = resourceReference(id = R.string.prediction_main_withdraw),
                 icon = Icons.ic_arrow_up_24,
@@ -51,11 +50,18 @@ internal class PredictionBalanceUMConverter(
         )
     }
 
+    private fun RequisitesState.allowsAddFunds(active: PredictionAccountStatusValue.Active?): Boolean = when (this) {
+        RequisitesState.Loading -> false
+        RequisitesState.Failed -> active != null
+        is RequisitesState.Ready -> active?.cryptoCurrencyStatus != null
+    }
+
     private fun actionButton(
         text: TextReference,
         icon: ImageVector,
         isEnabled: Boolean,
         isLoading: Boolean,
+        isDimmed: Boolean = false,
         onClick: () -> Unit,
     ) = TangemButtonUM(
         text = text,
@@ -65,6 +71,7 @@ internal class PredictionBalanceUMConverter(
         ),
         type = TangemButtonType.Secondary,
         isEnabled = isEnabled,
+        isDimmed = isDimmed,
         isLoading = isLoading,
         onClick = onClick,
     )

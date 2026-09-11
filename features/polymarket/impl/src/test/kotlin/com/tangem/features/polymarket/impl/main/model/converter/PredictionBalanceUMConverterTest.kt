@@ -189,6 +189,39 @@ internal class PredictionBalanceUMConverterTest {
         assertThat(actual.addFunds.isEnabled).isFalse()
     }
 
+    @Test
+    fun `GIVEN no deposit address WHEN requisites failed THEN add funds is dimmed but still tappable`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE.copy(depositAddress = null),
+            requisites = RequisitesState.Failed,
+            isTradingAllowed = true,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isTrue()
+        assertThat(actual.addFunds.isDimmed).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the account is not active WHEN requisites failed THEN add funds stays disabled`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = PredictionAccountStatusValue.NotOnboarded,
+            requisites = RequisitesState.Failed,
+            isTradingAllowed = true,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isFalse()
+    }
+
     internal data class GatingModel(
         val status: PredictionAccountStatusValue,
         val addFundsEnabled: Boolean,
