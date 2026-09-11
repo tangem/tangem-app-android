@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,8 +24,6 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-
-private val CardShape = RoundedCornerShape(16.dp)
 
 /**
  * The chrome every Polymarket card shares: a surface with a title, a round icon on the right, an optional
@@ -46,7 +43,7 @@ internal fun PolymarketEventCardFrame(
     TangemSurface(
         modifier = modifier.fillMaxWidth(),
         color = TangemTheme.colors3.bg.secondary,
-        shape = CardShape,
+        shape = PolymarketCardShape,
         onClick = onClick,
     ) {
         Column(

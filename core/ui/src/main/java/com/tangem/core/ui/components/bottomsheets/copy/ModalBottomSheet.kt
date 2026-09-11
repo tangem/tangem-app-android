@@ -23,8 +23,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -242,10 +242,12 @@ internal fun BoxScope.ModalBottomSheetContent(
                 },
             )
             .bottomSheetDraggableAnchor(sheetState, Orientation.Vertical, peekHeightPx)
-            .anchoredDraggable(
-                state = sheetState.anchoredDraggableState,
+            .draggable(
+                state = sheetState.draggableState,
                 orientation = orientation,
-                enabled = sheetGesturesEnabled,
+                enabled = sheetGesturesEnabled && sheetState.isVisible,
+                startDragImmediately = sheetState.anchoredDraggableState.isAnimationRunning,
+                onDragStopped = { velocity -> settleToDismiss(velocity) },
             )
             .consumeWindowInsets(WindowInsets(top = sheetState.offset.toInt().coerceAtLeast(0)))
             .graphicsLayer {

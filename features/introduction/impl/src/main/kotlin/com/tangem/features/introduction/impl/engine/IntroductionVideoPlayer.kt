@@ -9,12 +9,17 @@ internal interface IntroductionVideoPlayer {
 
     val isSurfaceAttached: Boolean
 
+    /** Position inside the current pass of the loop: media3 counts per item, so it starts over at every wrap. */
+    val positionMs: Long
+
     fun attachSurface(surfaceView: SurfaceView)
 
     fun detachSurface(surfaceView: SurfaceView)
 
     /** Ignored while [isMotionEnabled] is `false`. */
     fun setRunning(isRunning: Boolean)
+
+    fun restart()
 
     fun release()
 
@@ -23,7 +28,7 @@ internal interface IntroductionVideoPlayer {
         /** Fires on every pass of the loop, not only on the first one. */
         fun onFirstFrameRendered()
 
-        fun onError()
+        fun onError(error: Throwable)
     }
 
     interface Factory {

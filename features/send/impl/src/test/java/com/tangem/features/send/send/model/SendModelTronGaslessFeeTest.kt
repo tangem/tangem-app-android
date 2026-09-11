@@ -94,6 +94,23 @@ internal class SendModelTronGaslessFeeTest : SendModelTestBase() {
         coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any()) }
     }
 
+    @Test
+    fun `GIVEN balance covers the fee but not the amount and the fee WHEN loadFeeExtended THEN gasless is kept`() =
+        runTest {
+            // Arrange
+            stubBalances(sentBalance = BigDecimal("5"))
+            val sendModel = createSendModel(this)
+            advanceUntilIdle()
+            sendModel.predefinedValues = deeplink(amount = "5.0")
+
+            // Act
+            val result = sendModel.loadFeeExtended(maybeToken = null)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(gaslessFee())
+            coVerify(exactly = 0) { getFeeForGaslessUseCase(any(), any(), any(), any()) }
+        }
+
     override fun defaultSendParams() = super.defaultSendParams().copy(currency = sentUsdt)
 
     private fun nativeFee() = TransactionFeeExtended(

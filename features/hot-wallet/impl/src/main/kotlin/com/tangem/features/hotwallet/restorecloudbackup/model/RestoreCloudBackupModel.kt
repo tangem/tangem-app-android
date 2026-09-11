@@ -272,7 +272,9 @@ internal class RestoreCloudBackupModel @Inject constructor(
             ifLeft = { error ->
                 when (error) {
                     HotWalletImportError.AlreadySaved -> showAlreadyAdded()
-                    is HotWalletImportError.Unknown -> showError(CloudBackupError.Unknown())
+                    is HotWalletImportError.PassphraseTooLong,
+                    is HotWalletImportError.Unknown,
+                    -> showError(CloudBackupError.Unknown())
                 }
             },
             ifRight = { userWalletId ->

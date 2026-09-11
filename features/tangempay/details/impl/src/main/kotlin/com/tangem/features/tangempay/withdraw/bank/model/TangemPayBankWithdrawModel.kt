@@ -5,9 +5,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +37,18 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     fun onRecipientSelected(account: BankAccount) {
         draft.update { it.copy(recipient = account) }
+    }
+
+    fun onTransferTypeSelected(isThirdParty: Boolean) {
+        draft.update { it.copy(newRecipient = it.newRecipient.copy(isThirdParty = isThirdParty)) }
+    }
+
+    fun onAccountTypeSelected(accountType: BankAccountType) {
+        draft.update { it.copy(newRecipient = it.newRecipient.copy(accountType = accountType)) }
+    }
+
+    fun onDetailsFilled(values: Map<BankWithdrawFormField, String>) {
+        draft.update { it.copy(newRecipient = it.newRecipient.copy(fields = it.newRecipient.fields + values)) }
     }
 
     fun onAmountConfirmed(result: BankWithdrawAmountResult) {
