@@ -203,6 +203,23 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         fee = Amount(BigDecimal.ZERO, Blockchain.Ethereum),
     )
 
+    /**
+     * A provider the SDK cannot build is permanent, unlike an address that has not arrived: labelling it as
+     * pending would send the caller into a retry that can never succeed.
+     */
+    @Test
+    fun `GIVEN the provider cannot be built WHEN getTxHistoryState THEN it fails instead of looking pending`() =
+        runTest {
+            // Arrange
+            every { sdkFactory.createExternalAddressBalanceProvider(Blockchain.Ethereum, SAFE_ADDRESS) } returns null
+
+            // Act
+            val actual = runCatching { facade.getTxHistoryState(userWalletId, jointEthereum) }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
+        }
+
     @Test
     fun `GIVEN a personal network without a wallet manager WHEN getTxHistoryState THEN it still fails loudly`() =
         runTest {
