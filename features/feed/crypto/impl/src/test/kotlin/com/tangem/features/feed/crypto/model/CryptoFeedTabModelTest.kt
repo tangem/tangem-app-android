@@ -17,7 +17,6 @@ import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
-import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
@@ -43,6 +42,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +52,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -74,7 +76,6 @@ internal class CryptoFeedTabModelTest {
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase = mockk()
-    private val feedFeatureToggles: FeedFeatureToggles = mockk()
     private val router: Router = mockk(relaxed = true)
 
     private val filterController = MarketCategoryFilterController()
@@ -87,12 +88,10 @@ internal class CryptoFeedTabModelTest {
             getMarketsTokenListFlowUseCase,
             getSelectedAppCurrencyUseCase,
             getMarketIndicatorsUseCase,
-            feedFeatureToggles,
             router,
         )
         actions.clear()
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
-        every { feedFeatureToggles.isRwaAndCategoriesEnabled } returns true
         coEvery { getMarketIndicatorsUseCase(any()) } returns noIndicators.right()
     }
 
@@ -124,10 +123,33 @@ internal class CryptoFeedTabModelTest {
         filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
         advanceUntilIdle()
 
-        // Assert — the id is the category's own, not the stable chip id used while inactive
+        // Assert
         val chip = model.chip() as TangemFilterItemUM.Active
-        assertThat(chip.id).isEqualTo("layer-1")
+        assertThat(chip.id).isEqualTo("crypto_categories")
         assertThat(chip.value).isEqualTo(TextReference.Str("Layer 1"))
+    }
+
+    @Test
+    fun `GIVEN categories applied in turn WHEN the chip follows them THEN its id never changes`() = runTest {
+        // Arrange — TangemFilterGroup keys its row on the id, so a change rebuilds the chip
+        // as a different item and its crossfade never runs
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val whenInactive = model.chip()?.id
+
+        // Act
+        filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
+        advanceUntilIdle()
+        val whenActive = model.chip()?.id
+
+        filterController.onSelectionApplied(selectionOf(id = "meme", name = "Meme"))
+        advanceUntilIdle()
+        val whenSwitched = model.chip()?.id
+
+        // Assert
+        assertThat(whenInactive).isEqualTo("crypto_categories")
+        assertThat(whenActive).isEqualTo(whenInactive)
+        assertThat(whenSwitched).isEqualTo(whenInactive)
     }
 
     @Test
@@ -320,6 +342,35 @@ internal class CryptoFeedTabModelTest {
             getMarketIndicatorsUseCase(euro)
         }
     }
+
+    @Test
+    fun `GIVEN loaded indicators WHEN the app currency changes THEN the old amount never shows the new symbol`() =
+        runTest {
+            // Arrange — the amount is converted server-side, so it only means anything next to its own currency
+            val slowResponseMillis = 1_000L
+            val appCurrency = MutableStateFlow(AppCurrency.Default.right())
+            every { getSelectedAppCurrencyUseCase() } returns appCurrency
+            coEvery { getMarketIndicatorsUseCase(AppCurrency.Default) } returns indicators().right()
+            coEvery { getMarketIndicatorsUseCase(euro) } coAnswers {
+                delay(slowResponseMillis)
+                indicators().copy(totalMarketCap = BigDecimal("0.46")).right()
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val inUsd = model.headline()
+
+            // Act — read the block while the refetch is still in flight
+            appCurrency.value = euro.right()
+            advanceTimeBy(slowResponseMillis / 2)
+            runCurrent()
+            val whileRefetching = model.headline()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(inUsd).contains("$")
+            assertThat(whileRefetching).isEqualTo(inUsd)
+            assertThat(model.headline()).contains("€")
+        }
 
     @Test
     fun `GIVEN loaded indicators WHEN a refresh fails THEN the readings stay on screen`() = runTest {

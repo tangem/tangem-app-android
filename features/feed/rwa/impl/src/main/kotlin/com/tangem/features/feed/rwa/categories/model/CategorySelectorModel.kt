@@ -74,7 +74,7 @@ internal class CategorySelectorModel @Inject constructor(
     private fun onSelectionChange(selection: CategorySelection) {
         appliedSelection = selection
 
-        updateState(selection = selection, isEdited = selection == params.categorySelection)
+        updateState(selection = selection, isEdited = selection != params.categorySelection)
     }
 
     private fun onReset() {
