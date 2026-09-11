@@ -215,6 +215,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             // Assert
             verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
             coVerify(exactly = 0) { singleAccountListFetcher.invoke(any()) }
+            coVerify(exactly = 0) { jointAccountListFetcher.invoke(params = any()) }
         }
 
     @Test
@@ -251,6 +252,46 @@ class DefaultJointAccountDeepLinkHandlerTest {
         // Assert
         verify { expandedAccountsHolder.expandAccount(jointAccount.accountId) }
     }
+
+    /**
+     * The push announces a changed composition, so the joint list is refreshed next to the account list — and
+     * a failure there must not cost the user the navigation the tap asked for.
+     */
+    @Test
+    fun `GIVEN the joint refresh fails WHEN handle deeplink THEN it ran for the resolved wallet and the account opens`() =
+        runTest {
+            // Arrange
+            val jointAccount = MockAccounts.createJointAccount(userWalletId = userWalletId)
+            mockUserWallet(userWalletId)
+            every { appRouter.popTo(any<AppRoute>(), any()) } answers {
+                secondArg<(Boolean) -> Unit>().invoke(true)
+            }
+            every { analyticsEventHandler.send(any()) } just Runs
+            every { expandedAccountsHolder.expandAccount(any()) } just Runs
+            every { walletDeepLinkActionTrigger.selectWallet(any()) } just Runs
+            every { singleAccountSupplier.filterJointAccount(jointAccount.accountId) } returns flowOf(jointAccount)
+            coEvery { singleAccountListFetcher.invoke(any()) } returns Either.Right(Unit)
+            coEvery { jointAccountListFetcher.invoke(params = any()) } returns
+                Either.Left(IllegalStateException("service unavailable"))
+
+            // Act
+            createHandler(
+                scope = this,
+                queryParams = mapOf(
+                    WALLET_ID_KEY to "011",
+                    ACCOUNT_ID_KEY to jointAccount.accountId.value,
+                    ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+                ),
+                isFromOnNewIntent = true,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                jointAccountListFetcher.invoke(params = SingleJointAccountListFetcher.Params(userWalletId))
+            }
+            verify { expandedAccountsHolder.expandAccount(jointAccount.accountId) }
+        }
 
     @Test
     fun `GIVEN refresh failed AND account missing WHEN handle deeplink THEN redirect to main`() = runTest {
