@@ -84,7 +84,7 @@ internal class JointAccountJoinModel @Inject constructor(
     private fun showAccountAdded() {
         uiMessageSender.send(
             SnackbarMessage(
-                message = resourceReference(CoreUiR.string.account_create_success_message),
+                message = resourceReference(CoreUiR.string.joint_account_join_success_message),
                 startIconId = CoreUiR.drawable.ic_success_20,
                 isIconTinted = false,
             ),

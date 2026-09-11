@@ -9,6 +9,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.ENTRY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.account.status.utils.MainExpandedAccountsHolder
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
@@ -43,6 +44,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val singleAccountListFetcher: SingleAccountListFetcher = mockk()
+    private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val expandedAccountsHolder: MainExpandedAccountsHolder = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger = mockk()
@@ -317,6 +319,7 @@ class DefaultJointAccountDeepLinkHandlerTest {
             resolveAndSelectUserWalletUseCase = resolveAndSelectUserWalletUseCase,
             singleAccountSupplier = singleAccountSupplier,
             singleAccountListFetcher = singleAccountListFetcher,
+            jointAccountListFetcher = jointAccountListFetcher,
             expandedAccountsHolder = expandedAccountsHolder,
             analyticsEventHandler = analyticsEventHandler,
             walletDeepLinkActionTrigger = walletDeepLinkActionTrigger,
