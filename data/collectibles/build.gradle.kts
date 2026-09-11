@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.ksp)
     id("configuration")
@@ -18,8 +19,10 @@ dependencies {
     // endregion
 
     // region Other libraries
+    implementation(deps.androidx.datastore)
     implementation(deps.androidx.datastore.core)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.serialization)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
     // endregion
@@ -58,6 +61,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.domain.collectibles.models)
     implementation(projects.domain.core)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
