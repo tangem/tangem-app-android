@@ -11,8 +11,8 @@ import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
-import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
