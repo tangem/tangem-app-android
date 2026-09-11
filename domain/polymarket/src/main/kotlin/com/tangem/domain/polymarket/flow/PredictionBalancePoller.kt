@@ -13,7 +13,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class PredictionBalancePoller(
-    private val refresher: PredictionBalanceRefresher,
+    private val fetcher: PredictionAccountStatusFetcher,
     private val config: PredictionBalancePollingConfig,
     private val appScope: AppCoroutineScope,
 ) {
@@ -53,7 +53,7 @@ class PredictionBalancePoller(
 
     private suspend fun run(userWalletId: UserWalletId) {
         while (currentCoroutineContext().isActive) {
-            refresher.refresh(userWalletId = userWalletId)
+            fetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
             delay(config.baseInterval)
         }
     }
