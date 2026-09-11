@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class PredictionFundingRequisites(
@@ -40,9 +41,11 @@ internal class PredictionFundingRequisites(
     }
 
     private fun launchRefresh(): Job = scope.launch {
-        state.value = refreshInteractor(userWalletId = userWalletId).fold(
-            ifLeft = { RequisitesState.Failed },
-            ifRight = { it.default?.let(RequisitesState::Ready) ?: RequisitesState.Failed },
+        refreshInteractor(userWalletId = userWalletId).fold(
+            ifLeft = { state.update { current -> current as? RequisitesState.Ready ?: RequisitesState.Failed } },
+            ifRight = { requisites ->
+                state.value = requisites.default?.let(RequisitesState::Ready) ?: RequisitesState.Failed
+            },
         )
     }.saveIn(jobHolder)
 }
