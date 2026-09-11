@@ -18,7 +18,10 @@ internal data class NewRecipientDraft(
 )
 
 internal fun NewRecipientDraft.isComplete(isBusiness: Boolean): Boolean {
-    val required = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) + BankWithdrawFormFields.bankDetails
+    val required = BankWithdrawFormFields.visible(
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) + BankWithdrawFormFields.bankDetails,
+        values = fields,
+    )
     return required.all { field -> !fields[field].isNullOrBlank() }
 }
 
@@ -56,7 +59,7 @@ internal fun NewRecipientDraft.toBankAccountDetails(rail: BankRail, isBusiness: 
 
 private fun NewRecipientDraft.postalAddress(address: AddressFields): PostalAddress {
     val countryCode = value(address.country).uppercase()
-    val region = value(address.region)
+    val region = fields[address.region].orEmpty().trim()
     return PostalAddress(
         line1 = value(address.line1),
         line2 = null,
