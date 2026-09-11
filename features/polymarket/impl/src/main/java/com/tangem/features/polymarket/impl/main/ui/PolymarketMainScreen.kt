@@ -236,7 +236,6 @@ private fun FeedList(
     val bottomPadding = contentPadding.calculateBottomPadding() + PolymarketSearchBarClearance
     val verticalPaddingPx = with(LocalDensity.current) { (topPadding + bottomPadding).roundToPx() }
 
-    // Nothing loaded, nothing to scroll to.
     val isAtTop by remember(listState) {
         derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
     }
@@ -246,7 +245,7 @@ private fun FeedList(
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
-        userScrollEnabled = !isFeedLoading || !isAtTop,
+        userScrollEnabled = !isFeedLoading || state.positions.isVisible || !isAtTop,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = KEY_HEADER) {
@@ -255,6 +254,7 @@ private fun FeedList(
                 addFunds = state.balance.addFunds,
                 withdraw = state.balance.withdraw,
                 onBalanceClick = {},
+                positions = state.positions,
             )
         }
 
