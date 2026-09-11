@@ -8,9 +8,11 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
+import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -50,6 +52,10 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketBridgeRepository(impl: DefaultPolymarketBridgeRepository): PolymarketBridgeRepository
+
+    @Binds
+    @Singleton
+    fun bindPolymarketBridgeAssetsStore(impl: DefaultPolymarketBridgeAssetsStore): PolymarketBridgeAssetsStore
 
     @Binds
     @Singleton

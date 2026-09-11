@@ -10,11 +10,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
-/**
- * The wallet total is the sum of every account's contribution, and a single [TotalFiatBalance.Loading] or
- * [TotalFiatBalance.Failed] one short-circuits it. A collectibles account holds no fiat in this phase, so every
- * state has to contribute a loaded zero — otherwise it hides the balance the user already had.
- */
 internal class CollectiblesAccountStatusValueTest {
 
     @Nested
@@ -32,7 +27,7 @@ internal class CollectiblesAccountStatusValueTest {
         }
 
         @Test
-        fun `GIVEN any state WHEN totalFiatBalance THEN the wallet total is neither stalled nor blanked`() {
+        fun `GIVEN no vault read WHEN totalFiatBalance THEN the wallet total is neither stalled nor blanked`() {
             // Arrange
             val values = allStates()
 
@@ -62,8 +57,34 @@ internal class CollectiblesAccountStatusValueTest {
                 expected = loadedZero(StatusSource.ONLY_CACHE),
             ),
             TotalFiatBalanceModel(
+                value = CollectiblesAccountStatusValue.MissedDerivation,
+                expected = loadedZero(StatusSource.ACTUAL),
+            ),
+            TotalFiatBalanceModel(
                 value = CollectiblesAccountStatusValue.Error.Unavailable,
                 expected = loadedZero(StatusSource.ACTUAL),
+            ),
+            TotalFiatBalanceModel(
+                value = CollectiblesAccountStatusValue.Onboarded(
+                    source = StatusSource.ACTUAL,
+                    vaultBalance = balance(usdc = "310", usdcRate = "1"),
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("310"), source = StatusSource.ACTUAL),
+            ),
+            TotalFiatBalanceModel(
+                value = CollectiblesAccountStatusValue.UpdateRequired(
+                    source = StatusSource.ONLY_CACHE,
+                    vaultBalance = balance(usdc = "310", usdcRate = "1"),
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("310"), source = StatusSource.ONLY_CACHE),
+            ),
+            // Something is in the vault and nothing can price it: withholding the total is the honest answer
+            TotalFiatBalanceModel(
+                value = CollectiblesAccountStatusValue.Onboarded(
+                    source = StatusSource.ACTUAL,
+                    vaultBalance = balance(usdc = "2", usdcRate = null),
+                ),
+                expected = TotalFiatBalance.Failed,
             ),
         )
     }
@@ -91,6 +112,7 @@ internal class CollectiblesAccountStatusValueTest {
             val fixed = listOf(
                 CollectiblesAccountStatusValue.Loading,
                 CollectiblesAccountStatusValue.NotOnboarded,
+                CollectiblesAccountStatusValue.MissedDerivation,
                 CollectiblesAccountStatusValue.Error.Unavailable,
             )
 
@@ -108,13 +130,18 @@ internal class CollectiblesAccountStatusValueTest {
 
         @Test
         fun `GIVEN a vault on chain WHEN isAccountCreated THEN true whichever device it answers to`() {
-            // Arrange
-            val onboarded = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
-            val updateRequired = CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.ACTUAL)
+            // Arrange — a vault this device cannot address yet is still a vault
+            val accounts = listOf(
+                CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
+                CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.ACTUAL),
+                CollectiblesAccountStatusValue.MissedDerivation,
+            )
 
-            // Act & Assert
-            Truth.assertThat(onboarded.isAccountCreated).isTrue()
-            Truth.assertThat(updateRequired.isAccountCreated).isTrue()
+            // Act
+            val actual = accounts.map { it.isAccountCreated }
+
+            // Assert
+            Truth.assertThat(actual).doesNotContain(false)
         }
 
         @Test
@@ -144,11 +171,17 @@ internal class CollectiblesAccountStatusValueTest {
 
         fun loadedZero(source: StatusSource) = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = source)
 
+        fun balance(usdc: String, usdcRate: String?) = CollectiblesVaultBalance(
+            usdcAmount = BigDecimal(usdc),
+            usdcFiatRate = usdcRate?.let(::BigDecimal),
+        )
+
         fun allStates() = listOf(
             CollectiblesAccountStatusValue.Loading,
             CollectiblesAccountStatusValue.NotOnboarded,
             CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
             CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.ACTUAL),
+            CollectiblesAccountStatusValue.MissedDerivation,
             CollectiblesAccountStatusValue.Error.Unavailable,
         )
     }
