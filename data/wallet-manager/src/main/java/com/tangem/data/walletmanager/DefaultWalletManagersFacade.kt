@@ -333,9 +333,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             network = currency.network,
         )
 
-        requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: ${currency.network}"
-        }
+        if (walletManager == null) requireJointNetwork(currency.network)
 
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
@@ -346,7 +344,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
                     currency = currency,
-                    networkTokens = walletManager.cardTokens.toSet(),
+                    networkTokens = walletManager?.cardTokens?.toSet().orEmpty(),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
@@ -360,9 +358,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private class TransactionHistorySource(val provider: TransactionHistoryProvider, val address: String)
 
     /**
-     * Only a joint network may legitimately have no history source: it reads by the Safe address, which can still
-     * be resolving, so the caller retries. For any other network a missing source means there is no wallet manager
-     * at all, which is a defect and stays loud.
+     * Only a joint network may legitimately lack a history source or a wallet manager: it reads by the Safe
+     * address, which can still be resolving, and it has no wallet manager by design. For any other network the
+     * absence means there is no wallet manager at all, which is a defect and stays loud.
      */
     private fun requireJointNetwork(network: Network) {
         require(network.derivationPath is Network.DerivationPath.Joint) {
