@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -70,6 +71,7 @@ internal class JointAccountMembersModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val supplier: SingleJointAccountListSupplier = mockk()
+    private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
@@ -446,6 +448,7 @@ internal class JointAccountMembersModelTest {
             uiMessageSender = uiMessageSender,
             shareManager = shareManager,
             jointAccountListSupplier = supplier,
+            jointAccountListFetcher = jointAccountListFetcher,
             getJointAccountInvitesUseCase = getInvitesUseCase,
             singleAccountSupplier = singleAccountSupplier,
             activateJointAccountUseCase = activateUseCase,
