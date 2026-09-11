@@ -220,7 +220,7 @@ internal class RwaFeedSearchTabModel @Inject constructor(
     private fun onCategoriesLoaded(categories: List<CoinCategory>) {
         val entry = categories
             .firstOrNull { it.code == ReservedCategoryCodes.REAL_WORLD_ASSETS }
-            ?.let { CategorySelection.Entry(id = it.id, displayName = it.displayName) }
+            ?.let { CategorySelection.Entry(id = it.id, displayName = it.displayName, code = it.code) }
 
         if (entry == null) {
             isCategoriesFailed.value = true

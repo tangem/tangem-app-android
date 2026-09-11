@@ -29,13 +29,13 @@ internal class CategorySelectorTransformer(
                 ).convert(categoryList),
                 // a lone sector filters no differently than its category, so the rail earns its place
                 // only from two sectors up — below that the category row is the whole filter
-                selectedCategory?.sectors
-                    ?.takeIf { it.size > 1 }
-                    ?.let { sectors ->
+                selectedCategory
+                    ?.takeIf { it.sectors.size > 1 }
+                    ?.let { category ->
                         CategorySectorConverter(
                             categorySelection = categorySelection,
                             onSelectionChange = onSelectionChange,
-                        ).convert(sectors)
+                        ).convert(category)
                     },
             ).toPersistentList(),
             isEdited = isEdited,
