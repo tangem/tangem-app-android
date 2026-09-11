@@ -26,4 +26,7 @@ internal class DefaultTangemPayFeatureToggles(
 
     override val isCustomCardsCobrandEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_17352_CUSTOM_CARDS_COBRAND_ENABLED)
+
+    override val isResidencyStepEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_17401_PAY_RESIDENCY_STEP_ENABLED)
 }

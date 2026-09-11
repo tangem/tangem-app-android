@@ -23,7 +23,7 @@ import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
-import com.tangem.features.tangempay.components.WalletSelectorListener
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -48,7 +48,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
-) : Model(), WalletSelectorListener, TangemPayCampaignIssueCardComponent.Listener {
+) : Model(), TangemPayWalletSelectorComponent.Listener, TangemPayCampaignIssueCardComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayCampaignComponent.Params>()
 
@@ -181,7 +181,7 @@ internal class TangemPayCampaignModel @Inject constructor(
                     )
                 }
                 TangemPayCampaignUM.Landing.Mode.NoPay -> {
-                    val walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+                    val walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
                     if (walletsIds.isEmpty()) {
                         TangemLogger.i("[TangemPay][Campaign] No eligible wallets for the campaign, closing")
                         onClose()

@@ -8,4 +8,5 @@ interface TangemPayFeatureToggles {
     val isPinBiometryGateEnabled: Boolean
     val isBankOfframpEnabled: Boolean
     val isCustomCardsCobrandEnabled: Boolean
+    val isResidencyStepEnabled: Boolean
 }
