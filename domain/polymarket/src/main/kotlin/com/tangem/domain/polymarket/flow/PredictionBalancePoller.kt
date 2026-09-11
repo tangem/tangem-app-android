@@ -20,7 +20,7 @@ class PredictionBalancePoller(
 
     private val loops = mutableMapOf<UserWalletId, Loop>()
 
-    fun subscribe(userWalletId: UserWalletId): Flow<Unit> = flow {
+    fun subscribe(userWalletId: UserWalletId): Flow<Nothing> = flow {
         val loop = acquire(userWalletId = userWalletId)
         try {
             awaitCancellation()
