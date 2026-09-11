@@ -30,6 +30,7 @@ import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
@@ -83,6 +84,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 
@@ -98,6 +100,7 @@ internal class PolymarketMainModelTest {
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
     private val balancePoller: PredictionBalancePoller = mockk()
+    private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -105,6 +108,7 @@ internal class PolymarketMainModelTest {
 
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
     private val positionsState = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
+    private val isFundingOpen = MutableStateFlow(false)
 
     private val batchState = MutableStateFlow(
         BatchListState<Int, PolymarketEventsBatch>(data = emptyList(), status = PaginationStatus.InitialLoading),
@@ -126,6 +130,9 @@ internal class PolymarketMainModelTest {
         coEvery { checkGeoblock() } returns false.right()
         clearMocks(balancePoller)
         every { balancePoller.subscribe(any()) } returns emptyFlow()
+        clearMocks(fundingWindow)
+        isFundingOpen.value = false
+        every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
     }
 
     init {
@@ -677,8 +684,32 @@ internal class PolymarketMainModelTest {
         assertThat(route.captured.fromCurrencyPosition).isEqualTo(AppRoute.Swap.CurrencyPosition.TO)
         assertThat(route.captured.accountFlow).isNull()
         assertThat(route.captured.screenSource).isEqualTo(AnalyticsParam.ScreensSources.Predictions.value)
+        verifyOrder {
+            fundingWindow.arm(USER_WALLET_ID)
+            router.push(any<AppRoute.Swap>(), any())
+        }
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN funding window opens WHEN state observed THEN awaiting funds banner shown and hidden with it`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            isFundingOpen.value = true
+            advanceUntilIdle()
+            val whileOpen = model.uiState.value.isAwaitingFunds
+            isFundingOpen.value = false
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(whileOpen).isTrue()
+            assertThat(model.uiState.value.isAwaitingFunds).isFalse()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN requisites ready WHEN receive row tapped THEN limits notification states the minimum`() = runTest {
@@ -996,6 +1027,7 @@ internal class PolymarketMainModelTest {
             predictionAccountStatusFetcher = accountStatusFetcher,
             positionsPreviewLoader = positionsPreviewLoader,
             predictionBalancePoller = balancePoller,
+            predictionFundingWindow = fundingWindow,
         ).also { model = it }
     }
 
