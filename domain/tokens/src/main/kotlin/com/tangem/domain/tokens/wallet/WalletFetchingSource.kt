@@ -33,6 +33,13 @@ sealed class WalletFetchingSource {
     data object Prediction : WalletFetchingSource()
 
     /**
+     * Collectibles account fetching source.
+     * Handled separately from standard balance sources via
+     * [com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher].
+     */
+    data object Collectibles : WalletFetchingSource()
+
+    /**
      * Standard balance fetching sources (NETWORK, QUOTE, STAKING).
      * Processed via [BalanceFetchingOperations.fetchAll].
      *
