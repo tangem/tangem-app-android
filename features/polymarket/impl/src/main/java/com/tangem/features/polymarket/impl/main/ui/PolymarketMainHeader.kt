@@ -59,7 +59,10 @@ internal fun PolymarketMainHeader(
     onBalanceClick: () -> Unit,
     modifier: Modifier = Modifier,
     positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Content(persistentListOf()),
+    onActivePositionsClick: (() -> Unit)? = null,
+    onFinishedPositionsClick: (() -> Unit)? = null,
 ) {
+    val arePositionsVisible = positions.isVisible || onFinishedPositionsClick != null
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -79,12 +82,14 @@ internal fun PolymarketMainHeader(
         PolymarketPositionsPreview(
             state = positions,
             modifier = Modifier.padding(top = 48.dp),
+            onActiveClick = onActivePositionsClick,
+            onFinishedClick = onFinishedPositionsClick,
         )
 
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if (positions.isVisible) 32.dp else 72.dp, start = 16.dp, end = 16.dp),
+                .padding(top = if (arePositionsVisible) 32.dp else 72.dp, start = 16.dp, end = 16.dp),
             text = stringResourceSafe(R.string.prediction_main_explore_events),
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.heading.small,
