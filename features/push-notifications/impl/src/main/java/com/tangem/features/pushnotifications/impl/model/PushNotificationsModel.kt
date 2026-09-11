@@ -110,7 +110,7 @@ internal class PushNotificationsModel @Inject constructor(
         if (params.isBottomSheet) {
             notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
         } else {
-            params.nextRoute?.let { appRouter.push(it) }
+            params.nextRoute?.let { appRouter.replaceAll(it) }
         }
         params.modelCallbacks.onDenySystemPermission()
     }
@@ -125,7 +125,7 @@ internal class PushNotificationsModel @Inject constructor(
             applyFirstActivationRule()
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
-                params.nextRoute?.let { appRouter.push(it) }
+                params.nextRoute?.let { appRouter.replaceAll(it) }
             }
         }
     }
@@ -141,7 +141,7 @@ internal class PushNotificationsModel @Inject constructor(
             markFirstActivationDoneForAllWallets()
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
-                params.nextRoute?.let { appRouter.push(it) }
+                params.nextRoute?.let { appRouter.replaceAll(it) }
             }
         }
     }

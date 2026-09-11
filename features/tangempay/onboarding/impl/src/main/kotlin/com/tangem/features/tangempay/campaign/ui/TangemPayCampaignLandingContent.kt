@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
@@ -20,17 +21,17 @@ import com.tangem.features.tangempay.ui.TangemPayOnboardingBlock
 
 @Composable
 internal fun TangemPayCampaignLandingContent(state: TangemPayCampaignUM.Landing, modifier: Modifier = Modifier) {
-    val onCloseClick = state.onCloseClick.takeIf { state.mode == TangemPayCampaignUM.Landing.Mode.NoPay }
+    val isNoWallet = state.mode == TangemPayCampaignUM.Landing.Mode.NoWallet
 
     TangemPayCampaignLayout(
         modifier = modifier,
-        topBar = { TangemPayCampaignTopBar(onCloseClick = onCloseClick) },
+        topBar = { TangemPayCampaignTopBar(onCloseClick = state.onCloseClick.takeUnless { isNoWallet }) },
         card = { TangemPayCampaignCardArt(cardArtUrl = state.cardArtUrl) },
         footer = {
             TangemPayCampaignFooter(
-                isCtaLoading = state.isCtaLoading,
-                onGetCardClick = state.onGetCardClick,
-                onTermsClick = state.onTermsClick,
+                state = state,
+                showLegalCaption = isNoWallet,
+                showCtaIcon = !isNoWallet,
             )
         },
         texts = {
@@ -57,22 +58,22 @@ private fun TangemPayCampaignBlocks(modifier: Modifier = Modifier) {
         )
         TangemPayOnboardingBlock(
             painterRes = R.drawable.ic_shopping_basket_24,
-            titleRef = resourceReference(R.string.tangempay_campaign_fees_title),
-            descriptionRef = resourceReference(R.string.tangempay_campaign_fees_description),
+            titleRef = resourceReference(R.string.tangempay_campaign_cashback_title),
+            descriptionRef = resourceReference(R.string.tangempay_campaign_cashback_description),
         )
         TangemPayOnboardingBlock(
             painterRes = R.drawable.ic_credit_card_add_24,
             titleRef = resourceReference(R.string.tangempay_onboarding_pay_title),
-            descriptionRef = resourceReference(R.string.tangempay_campaign_pay_description),
+            descriptionRef = resourceReference(R.string.tangempay_campaign_spend_description),
         )
     }
 }
 
 @Composable
 private fun TangemPayCampaignFooter(
-    isCtaLoading: Boolean,
-    onGetCardClick: () -> Unit,
-    onTermsClick: () -> Unit,
+    state: TangemPayCampaignUM.Landing,
+    showLegalCaption: Boolean,
+    showCtaIcon: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -81,21 +82,20 @@ private fun TangemPayCampaignFooter(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Secondary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.tangem_pay_terms_fees_limits),
-            onClick = onTermsClick,
-        )
+        if (showLegalCaption) {
+            LegalCaption(
+                onTermsOfServiceClick = state.onTermsOfServiceClick,
+                onPrivacyPolicyClick = state.onPrivacyPolicyClick,
+            )
+        }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_onboarding_get_card_button_text),
-            iconEnd = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24),
-            isLoading = isCtaLoading,
-            onClick = onGetCardClick,
+            iconEnd = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24).takeIf { showCtaIcon },
+            isLoading = state.isCtaLoading,
+            onClick = state.onGetCardClick,
         )
     }
 }
