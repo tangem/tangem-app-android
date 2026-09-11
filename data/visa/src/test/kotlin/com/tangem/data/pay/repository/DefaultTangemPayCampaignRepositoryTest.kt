@@ -50,7 +50,7 @@ internal class DefaultTangemPayCampaignRepositoryTest {
     }
 
     @Test
-    fun `GIVEN images without MAIN WHEN getCampaign THEN NotFound`() = runTest {
+    fun `GIVEN images without MAIN WHEN getCampaign THEN the campaign has no art`() = runTest {
         // Arrange
         coEvery { tangemPayApi.getImages(any()) } returns ApiResponse.Success(
             ImagesResponse(result = listOf(ImagesResponse.Image(type = "BACKGROUND", url = BACKGROUND_URL))),
@@ -61,11 +61,11 @@ internal class DefaultTangemPayCampaignRepositoryTest {
         val actual = repository.getCampaign(CAMPAIGN_KEY)
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.NotFound.left())
+        assertThat(actual).isEqualTo(TangemPayCampaign(cardArtUrl = null).right())
     }
 
     @Test
-    fun `GIVEN empty result WHEN getCampaign THEN NotFound`() = runTest {
+    fun `GIVEN empty result WHEN getCampaign THEN the campaign has no art`() = runTest {
         // Arrange
         coEvery { tangemPayApi.getImages(any()) } returns ApiResponse.Success(ImagesResponse(result = emptyList()))
         val repository = createRepository()
@@ -74,7 +74,22 @@ internal class DefaultTangemPayCampaignRepositoryTest {
         val actual = repository.getCampaign(CAMPAIGN_KEY)
 
         // Assert
-        assertThat(actual).isEqualTo(VisaApiError.NotFound.left())
+        assertThat(actual).isEqualTo(TangemPayCampaign(cardArtUrl = null).right())
+    }
+
+    @Test
+    fun `GIVEN a blank MAIN url WHEN getCampaign THEN the campaign has no art`() = runTest {
+        // Arrange
+        coEvery { tangemPayApi.getImages(any()) } returns ApiResponse.Success(
+            ImagesResponse(result = listOf(ImagesResponse.Image(type = "MAIN", url = " "))),
+        )
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getCampaign(CAMPAIGN_KEY)
+
+        // Assert
+        assertThat(actual).isEqualTo(TangemPayCampaign(cardArtUrl = null).right())
     }
 
     @Test
