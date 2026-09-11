@@ -24,6 +24,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
@@ -58,6 +59,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val shareManager: ShareManager,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
+    private val jointAccountListFetcher: SingleJointAccountListFetcher,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
@@ -97,6 +99,15 @@ internal class JointAccountMembersModel @Inject constructor(
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
         observeAccount()
+        refreshAccounts()
+    }
+
+    private fun refreshAccounts() {
+        modelScope.launch {
+            jointAccountListFetcher(
+                params = SingleJointAccountListFetcher.Params(userWalletId = params.userWalletId),
+            )
+        }
     }
 
     private fun observeAccount() {
