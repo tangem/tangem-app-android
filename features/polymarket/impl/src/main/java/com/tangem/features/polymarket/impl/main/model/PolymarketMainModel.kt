@@ -333,8 +333,8 @@ internal class PolymarketMainModel @Inject constructor(
             listOf(
                 async { tradingAllowance.refresh() },
                 async { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(params.userWalletId)) },
-                async { fundingRequisites.refresh() },
             ).awaitAll()
+            fundingRequisites.refresh()
 
             setRefreshing(isRefreshing = false)
         }.saveIn(refreshJobHolder)
