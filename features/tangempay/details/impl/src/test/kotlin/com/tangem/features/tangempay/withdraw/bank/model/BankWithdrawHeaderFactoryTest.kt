@@ -120,6 +120,23 @@ internal class BankWithdrawHeaderFactoryTest {
     }
 
     @Test
+    fun `GIVEN new personal entry WHEN create for preview THEN confirm transfer title without counter`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
+
+        // Act
+        val actual = BankWithdrawHeaderFactory.create(draft, TangemPayBankWithdrawInnerRoute.Preview)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankWithdrawHeaderUM(
+                title = resourceReference(R.string.tangempay_withdraw_bank_confirm_title),
+                subtitle = null,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN edit route WHEN create THEN recipient title without counter`() {
         // Arrange
         val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)

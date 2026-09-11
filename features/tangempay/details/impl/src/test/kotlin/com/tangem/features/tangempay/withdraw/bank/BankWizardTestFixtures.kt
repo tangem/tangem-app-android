@@ -11,6 +11,7 @@ import com.tangem.domain.pay.model.bankofframp.OfframpEta
 import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.domain.pay.model.bankofframp.OfframpToken
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.test.mock.MockAccounts
 import io.mockk.every
@@ -21,6 +22,25 @@ internal const val POLYGON_CHAIN_ID = 137L
 internal const val BASE_CHAIN_ID = 8453L
 internal const val USDC_POLYGON = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 internal const val USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+
+/** A complete personal recipient's 15 form answers, shared by the new-recipient-draft tests that need one. */
+internal val personalFormValues: Map<BankWithdrawFormField, String> = mapOf(
+    BankWithdrawFormField.AccountNumber to "1234567890",
+    BankWithdrawFormField.RoutingNumber to "021000021",
+    BankWithdrawFormField.FirstName to "Saburo",
+    BankWithdrawFormField.LastName to "Arasaka",
+    BankWithdrawFormField.Country to "US",
+    BankWithdrawFormField.Region to "CA",
+    BankWithdrawFormField.City to "Night City",
+    BankWithdrawFormField.AddressLine1 to "Megatower H10, 322F",
+    BankWithdrawFormField.PostalCode to "90001",
+    BankWithdrawFormField.BankName to "Arasaka Bank",
+    BankWithdrawFormField.BankCountry to "US",
+    BankWithdrawFormField.BankRegion to "CA",
+    BankWithdrawFormField.BankCity to "Night City",
+    BankWithdrawFormField.BankAddressLine1 to "Ebunike st., 32A",
+    BankWithdrawFormField.BankPostalCode to "90002",
+)
 
 internal fun paymentToken(
     networkId: String = "polygon",
