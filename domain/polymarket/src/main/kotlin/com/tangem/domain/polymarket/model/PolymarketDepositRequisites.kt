@@ -38,7 +38,7 @@ data class PolymarketDepositToken(
     val symbol: String,
     val address: String,
     val decimals: Int,
-    val minCheckoutUsd: BigDecimal,
+    val minCheckoutUsd: BigDecimal?,
 )
 
 data class PolymarketDepositTarget(

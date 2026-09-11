@@ -8,6 +8,7 @@ import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
@@ -127,6 +128,7 @@ internal object JointAccountDomainModule {
         gasBuilder: SafeTxGasBuilder,
         compositionChecker: SafeCompositionChecker,
         networkReader: JointNetworkReader,
+        payloadCodec: JointTransferPayloadCodec,
     ): CreateJointOperationUseCase {
         return CreateJointOperationUseCase(
             repository = repository,
@@ -136,12 +138,14 @@ internal object JointAccountDomainModule {
             gasBuilder = gasBuilder,
             compositionChecker = compositionChecker,
             networkReader = networkReader,
+            payloadCodec = payloadCodec,
         )
     }
 
     @Provides
     @Singleton
-    fun provideJointOperationVerifier(): JointOperationVerifier = JointOperationVerifier()
+    fun provideJointOperationVerifier(payloadCodec: JointTransferPayloadCodec): JointOperationVerifier =
+        JointOperationVerifier(payloadCodec = payloadCodec)
 
     @Provides
     @Singleton
