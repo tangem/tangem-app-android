@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
@@ -19,7 +20,7 @@ import com.tangem.core.ui.R as CoreUiR
 
 internal class JointOperationBannerConverterTest {
 
-    private val converter = JointOperationBannerConverter()
+    private val converter = JointOperationBannerConverter(isBalanceHidden = false)
 
     private val coin: CryptoCurrency.Coin = mockk {
         every { name } returns "Ethereum"
@@ -47,7 +48,7 @@ internal class JointOperationBannerConverterTest {
         assertThat(banner.title).isEqualTo(
             resourceReference(
                 id = CoreUiR.string.joint_operation_banner_title,
-                formatArgs = wrappedList("Jacob", "Ethereum"),
+                formatArgs = wrappedList(stringReference("Jacob"), "Ethereum"),
             ),
         )
         assertThat(banner.progress).isEqualTo(SignatureProgressUM(collected = 1, total = 3))
@@ -129,9 +130,30 @@ internal class JointOperationBannerConverterTest {
             .isEqualTo(
                 resourceReference(
                     id = CoreUiR.string.joint_operation_banner_title,
-                    formatArgs = wrappedList("0x333...3333", "Ethereum"),
+                    formatArgs = wrappedList(stringReference("0x333...3333"), "Ethereum"),
                 ),
             )
+    }
+
+    /** The backend can report no initiator at all, and an empty actor would render the title as " wants to send" */
+    @Test
+    fun `GIVEN no initiator reported at all WHEN convert THEN the title says a member did it`() {
+        // Arrange
+        val operation = operation(initiatorName = null, initiatorAddress = null)
+
+        // Act
+        val actual = converter.convert(listOf(operation))
+
+        // Assert
+        assertThat(actual.single().banner.title).isEqualTo(
+            resourceReference(
+                id = CoreUiR.string.joint_operation_banner_title,
+                formatArgs = wrappedList(
+                    resourceReference(CoreUiR.string.joint_account_invite_members_member),
+                    "Ethereum",
+                ),
+            ),
+        )
     }
 
     /** With equal thresholds this degenerates to sorting by `collected`, which hides the intended rule */
