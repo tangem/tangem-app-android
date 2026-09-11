@@ -66,13 +66,22 @@ class JointOperationVerifier(
      * beyond the transfer on screen. Each field is compared to what the creation path would have put there:
      * the native coin, our fee recipient, and one of the two known `baseGas` values. `gasPrice` is only capped
 
+     *
+     * Two of the fields mean something to the contract that a range check alone would miss. `refundReceiver` of
+     * the zero address is not a recipient but an instruction to pay `tx.origin`, so whoever executes the
+     * operation is paid — refused outright, because the fee recipient we compare against is only checked for
+     * being an address and could itself be zero by misconfiguration. A negative `gasPrice` is no uint256 at all
+     * and would otherwise pass the ceiling and fail later as a generic signing error instead of a refund
+     * mismatch. Zero is left alone deliberately: `execTransaction` pays nothing when `gasPrice` is zero.
      */
     private fun Raise<JointOperationSignError>.checkRefund(safeTx: SafeTx, bounds: RefundBounds) {
         val refundMismatch = VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH)
 
         ensure(safeTx.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true)) { refundMismatch }
+        ensure(!safeTx.refundReceiver.equals(ZERO_ADDRESS, ignoreCase = true)) { refundMismatch }
         ensure(safeTx.refundReceiver.equals(bounds.refundReceiver, ignoreCase = true)) { refundMismatch }
         ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
+        ensure(safeTx.gasPrice.signum() >= 0) { refundMismatch }
         ensure(safeTx.gasPrice <= bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER) { refundMismatch }
     }
 
@@ -146,5 +155,8 @@ class JointOperationVerifier(
          * decision on a risen price is to execute it as is. What this rejects is an absurd value, not drift.
          */
         val GAS_PRICE_CEILING_MULTIPLIER: BigInteger = BigInteger.valueOf(20)
+
+        /** `refundReceiver` of this value is not a recipient but an instruction to pay `tx.origin` */
+        const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
     }
 }

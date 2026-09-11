@@ -29,7 +29,7 @@ sealed interface JointOperationSignError {
             COMPOSITION_MISMATCH,
 
             /**
-             * The refund fields would pay someone or something other than the operation was built to pay.
+             * The refund fields would pay someone or something other than what the operation was built to pay.
              * Signing authorises `(baseGas + gasUsed) * gasPrice` in `gasToken` to leave the Safe for
              * `refundReceiver` on top of the transfer the user sees, so these four move money.
              */
