@@ -214,9 +214,18 @@ private fun OptionsStepPreview() {
     TangemThemePreviewRedesign(isDark = true) {
         OptionsStep(
             step = HaveWalletUM.Step.Options(
-                cardOrRing = previewOption(R.string.introduction_create_wallet_hardware_title),
-                socialLogin = previewOption(R.string.introduction_i_have_wallet_sign_in_google_title),
-                importWallet = previewOption(R.string.hw_import_existing_wallet),
+                cardOrRing = previewOption(
+                    titleRes = R.string.introduction_create_wallet_hardware_title,
+                    descriptionRes = R.string.introduction_i_have_wallet_hardware_description,
+                ),
+                socialLogin = previewOption(
+                    titleRes = R.string.introduction_i_have_wallet_sign_in_google_title,
+                    descriptionRes = R.string.introduction_create_wallet_seed_phrase_description,
+                ),
+                importWallet = previewOption(
+                    titleRes = R.string.hw_import_existing_wallet,
+                    descriptionRes = R.string.hw_import_existing_wallet_description,
+                ),
             ),
         )
     }
@@ -258,10 +267,10 @@ private fun ErrorStepPreview() {
     }
 }
 
-private fun previewOption(titleRes: Int) = WalletOptionUM(
+private fun previewOption(titleRes: Int, descriptionRes: Int) = WalletOptionUM(
     iconRes = CoreUiR.drawable.ic_tangem_card_24,
     title = resourceReference(titleRes),
-    description = resourceReference(R.string.introduction_create_wallet_seed_phrase_description),
+    description = resourceReference(descriptionRes),
     onClick = {},
 )
 // endregion Preview

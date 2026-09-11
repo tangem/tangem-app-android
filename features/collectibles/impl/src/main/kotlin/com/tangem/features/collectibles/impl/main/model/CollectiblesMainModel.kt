@@ -2,6 +2,7 @@ package com.tangem.features.collectibles.impl.main.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
@@ -11,7 +12,9 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesActionsConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuItem
@@ -31,12 +34,15 @@ import javax.inject.Inject
  */
 @ModelScoped
 internal class CollectiblesMainModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
+
+    private val params = paramsContainer.require<CollectiblesMainComponent.Params>()
 
     private val balanceConverter = CollectiblesBalanceConverter()
     private val actionsConverter = CollectiblesActionsConverter(
@@ -128,7 +134,7 @@ internal class CollectiblesMainModel @Inject constructor(
         onMenuDismiss()
 
         modelScope.launch {
-            val userWallet = userWalletsListRepository.selectedUserWalletSync() ?: return@launch
+            val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId) ?: return@launch
 
             closeCollectiblesVaultUseCase(userWallet).fold(
                 ifLeft = ::onCloseFailed,
