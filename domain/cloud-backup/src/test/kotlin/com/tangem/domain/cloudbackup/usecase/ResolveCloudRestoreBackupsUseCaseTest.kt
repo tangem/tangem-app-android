@@ -92,7 +92,13 @@ internal class ResolveCloudRestoreBackupsUseCaseTest {
     }
 
     private companion object {
-        val BACKUP = CloudBackupInfo(fileId = "file-1", walletName = "My Wallet", createdAtMillis = 0L, walletId = "011")
+        val BACKUP = CloudBackupInfo(
+            fileId = "file-1",
+            backupName = "My Wallet",
+            walletName = "My Wallet",
+            createdAtMillis = 0L,
+            walletId = "011",
+        )
         val ACCOUNT = CloudBackupAccount(email = "user@gmail.com", displayName = null, photoUrl = null)
     }
 }
