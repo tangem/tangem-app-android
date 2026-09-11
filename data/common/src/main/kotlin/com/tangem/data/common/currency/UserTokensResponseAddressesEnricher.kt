@@ -25,8 +25,9 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
         val isNotificationsEnabled = walletsRepository.isNotificationsEnabled(userWalletId)
 
         return withContext(dispatchers.default) {
-            val safeAddressByOwnerPath = jointSafeAddresses(userWalletId, response.tokens)
             val addressByToken = if (isNotificationsEnabled) {
+                val safeAddressByOwnerPath = jointSafeAddresses(userWalletId, response.tokens)
+
                 response.tokens.associateWith { token ->
                     val ownerPath = token.derivationPath
                     if (ownerPath != null && isJointAccountReservedPath(rawPath = ownerPath)) {
@@ -64,16 +65,18 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
     /**
      * A joint token must be registered on the Safe address: the wallet's own keys hold nothing on that network, so
      * a notification for the owner-key address would be about an address the user never receives to. The resolver
-     * waits for the accounts data, so it is asked only when a joint token is actually present.
+     * waits for the accounts data, so it is asked only about the joint paths this response actually carries.
      */
     private suspend fun jointSafeAddresses(
         userWalletId: UserWalletId,
         tokens: List<UserTokensResponse.Token>,
     ): Map<String, String> {
-        val hasJointToken = tokens.any { token ->
-            token.derivationPath?.let { isJointAccountReservedPath(rawPath = it) } == true
-        }
+        val jointPaths = tokens
+            .mapNotNull { token -> token.derivationPath?.takeIf { isJointAccountReservedPath(rawPath = it) } }
+            .toSet()
 
-        return if (hasJointToken) jointAccountSafeAddressResolver.get().resolveByOwnerPath(userWalletId) else emptyMap()
+        if (jointPaths.isEmpty()) return emptyMap()
+
+        return jointAccountSafeAddressResolver.get().resolveByOwnerPath(userWalletId, jointPaths)
     }
 }

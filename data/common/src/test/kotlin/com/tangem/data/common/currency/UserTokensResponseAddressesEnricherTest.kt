@@ -144,7 +144,7 @@ class UserTokensResponseAddressesEnricherTest {
             val response = createUserTokensResponse(tokens = listOf(jointToken))
 
             coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
-            coEvery { safeAddressResolver.resolveByOwnerPath(userWalletId) } returns mapOf(
+            coEvery { safeAddressResolver.resolveByOwnerPath(userWalletId, setOf(JOINT_OWNER_PATH)) } returns mapOf(
                 JOINT_OWNER_PATH to SAFE_ADDRESS,
             )
 
@@ -163,7 +163,7 @@ class UserTokensResponseAddressesEnricherTest {
         val response = createUserTokensResponse(tokens = listOf(jointToken))
 
         coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
-        coEvery { safeAddressResolver.resolveByOwnerPath(userWalletId) } returns emptyMap()
+        coEvery { safeAddressResolver.resolveByOwnerPath(userWalletId, setOf(JOINT_OWNER_PATH)) } returns emptyMap()
 
         // WHEN
         val result = enricher(userWalletId, response)
@@ -187,6 +187,22 @@ class UserTokensResponseAddressesEnricherTest {
         enricher(userWalletId, response)
 
         // THEN
+        coVerify { safeAddressResolver wasNot Called }
+    }
+
+    /** With notifications off every address is dropped anyway, so the wait for the accounts data is pure cost. */
+    @Test
+    fun `GIVEN notifications disabled WHEN invoke THEN the Safe address resolver is not asked at all`() = runTest {
+        // GIVEN
+        val response = createUserTokensResponse(tokens = listOf(createToken(derivationPath = JOINT_OWNER_PATH)))
+
+        coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns false
+
+        // WHEN
+        val result = enricher(userWalletId, response)
+
+        // THEN
+        assertThat(result.tokens.single().addresses).isEmpty()
         coVerify { safeAddressResolver wasNot Called }
     }
 
