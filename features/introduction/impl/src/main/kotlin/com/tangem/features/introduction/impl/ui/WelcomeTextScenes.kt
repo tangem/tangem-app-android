@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -22,35 +25,40 @@ import com.tangem.features.introduction.impl.ui.state.WelcomeSceneUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * The scenes are composed on top of each other and only their alpha and offset move, so a scene change never
- * recomposes anything: the position is read inside the draw phase. Under reduced motion the first scene simply stays.
+ * The scenes are composed on top of each other; animation frames read the position inside the draw phase, while the
+ * active scene recomposes when it changes to keep only that scene in accessibility semantics. Without a playing video
+ * the first scene stays.
  */
 @Composable
 internal fun WelcomeTextScenes(
     scenes: ImmutableList<WelcomeSceneUM>,
-    isMotionEnabled: Boolean,
+    isAnimated: Boolean,
     videoPositionMs: () -> Long,
     modifier: Modifier = Modifier,
 ) {
-    val positionMs = remember { mutableLongStateOf(0L) }
-    if (isMotionEnabled) {
+    val positionMs = remember { mutableLongStateOf(videoPositionMs()) }
+    if (isAnimated) {
         LaunchedEffect(Unit) {
             while (true) {
                 withFrameMillis { positionMs.longValue = videoPositionMs() }
             }
         }
     }
+    val activeScene by remember(isAnimated) {
+        derivedStateOf { if (isAnimated) WelcomeTextTimeline.activeScene(positionMs.longValue) else 0 }
+    }
     fun frameOf(scene: Int, line: Int): WelcomeTextTimeline.Frame = when {
-        isMotionEnabled -> WelcomeTextTimeline.frame(positionMs = positionMs.longValue, scene = scene, line = line)
+        isAnimated -> WelcomeTextTimeline.frame(positionMs = positionMs.longValue, scene = scene, line = line)
         scene == 0 -> WelcomeTextTimeline.steady
-        else -> WelcomeTextTimeline.Frame(alpha = 0f, offsetDp = 0f)
+        else -> WelcomeTextTimeline.hidden
     }
     Box(modifier = modifier) {
         scenes.forEachIndexed { scene, texts ->
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth(),
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth()
+                    .then(if (scene == activeScene) Modifier else Modifier.clearAndSetSemantics {}),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 SceneLine(
