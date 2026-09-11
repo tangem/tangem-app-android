@@ -23,6 +23,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.common)
+    implementation(projects.domain.swap)
     // endregion
 
     // region SDK
