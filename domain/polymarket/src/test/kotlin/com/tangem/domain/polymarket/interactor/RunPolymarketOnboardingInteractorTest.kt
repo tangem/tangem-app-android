@@ -736,4 +736,95 @@ internal class RunPolymarketOnboardingInteractorTest {
             coVerify(exactly = 0) { deployDepositWallet(any()) }
         }
     }
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StatusFromPostResponse {
+
+        @Test
+        fun `GIVEN the deploy answers DEPLOYMENT_FAILED WHEN collected THEN fails without another status read`() =
+            runTest {
+                // Arrange
+                coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.NOT_CREATED).right()
+                coEvery { deployDepositWallet(ADDRESSES) } returns PolymarketWalletStatus.DEPLOYMENT_FAILED.right()
+
+                // Act & Assert
+                useCase(USER_WALLET_ID).test {
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                    assertThat(awaitItem()).isEqualTo(
+                        PolymarketOnboardingProgress.Failed(
+                            error = PolymarketOnboardingError.DeploymentFailed,
+                            isRetryable = true,
+                        ),
+                    )
+                    awaitComplete()
+                }
+                coVerify(exactly = 1) { getWalletStatus(ADDRESSES) }
+                coVerify(exactly = 0) { deriveApiCredentials(any(), any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the approvals answer APPROVALS_FAILED WHEN collected THEN fails without another status read`() =
+            runTest {
+                // Arrange
+                coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.DEPLOYED).right()
+                coEvery { submitApprovals(ADDRESSES, SIGNED) } returns PolymarketWalletStatus.APPROVALS_FAILED.right()
+
+                // Act & Assert
+                useCase(USER_WALLET_ID).test {
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                    assertThat(awaitItem()).isEqualTo(
+                        PolymarketOnboardingProgress.Failed(
+                            error = PolymarketOnboardingError.ApprovalsFailed,
+                            isRetryable = true,
+                        ),
+                    )
+                    awaitComplete()
+                }
+                coVerify(exactly = 1) { getWalletStatus(ADDRESSES) }
+            }
+
+        @Test
+        fun `GIVEN the deploy answers READY_TO_TRADE WHEN collected THEN reaches Ready without approvals`() = runTest {
+            // Arrange
+            coEvery { getWalletStatus(ADDRESSES) } returns walletState(PolymarketWalletStatus.NOT_CREATED).right()
+            coEvery { deployDepositWallet(ADDRESSES) } returns PolymarketWalletStatus.READY_TO_TRADE.right()
+
+            // Act & Assert
+            useCase(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                awaitComplete()
+            }
+            coVerify(exactly = 1) { getWalletStatus(ADDRESSES) }
+            coVerify(exactly = 0) { submitApprovals(any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the deploy answers APPROVALS_IN_PROGRESS WHEN collected THEN waits without resubmitting`() =
+            runTest {
+                // Arrange
+                coEvery { getWalletStatus(ADDRESSES) } returnsMany listOf(
+                    walletState(PolymarketWalletStatus.NOT_CREATED).right(),
+                    walletState(PolymarketWalletStatus.READY_TO_TRADE).right(),
+                )
+                coEvery { deployDepositWallet(ADDRESSES) } returns
+                    PolymarketWalletStatus.APPROVALS_IN_PROGRESS.right()
+
+                // Act & Assert
+                useCase(USER_WALLET_ID).test {
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Deriving)
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.AwaitingSignature)
+                    assertThat(awaitItem()).isEqualTo(
+                        PolymarketOnboardingProgress.Working(PolymarketWalletStatus.APPROVALS_IN_PROGRESS),
+                    )
+                    assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
+                    awaitComplete()
+                }
+                coVerify(exactly = 2) { getWalletStatus(ADDRESSES) }
+                coVerify(exactly = 0) { submitApprovals(any(), any()) }
+            }
+    }
 }
