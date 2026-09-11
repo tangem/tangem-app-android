@@ -43,7 +43,18 @@ private val CardArtCornerRadius: Dp = 16.dp
 private const val RETRY_PARAMETER = "campaign_card_art_retry"
 
 @Composable
-fun TangemPayCampaignCardArt(cardArtUrl: String, modifier: Modifier = Modifier) {
+fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier) {
+    if (cardArtUrl == null) {
+        Box(
+            modifier = modifier
+                .cardArtSize()
+                .clip(RoundedCornerShape(CardArtCornerRadius)),
+        ) {
+            CardArtPlaceholder()
+        }
+        return
+    }
+
     var retryCount by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
     val request = remember(cardArtUrl, retryCount) {
@@ -80,6 +91,15 @@ private fun Modifier.cardArtSize(): Modifier = width(CardArtWidth).aspectRatio(C
 @Composable
 private fun CardArtLoading(modifier: Modifier = Modifier) {
     TangemShimmer(modifier = modifier.fillMaxSize(), radius = CardArtCornerRadius)
+}
+
+@Composable
+private fun CardArtPlaceholder(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(TangemTheme.colors3.bg.opaque.secondary),
+    )
 }
 
 @Composable

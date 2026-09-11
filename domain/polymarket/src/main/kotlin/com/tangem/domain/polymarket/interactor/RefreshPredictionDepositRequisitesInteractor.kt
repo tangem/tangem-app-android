@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.getOrElse
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
@@ -15,6 +16,8 @@ import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Brings the funding requisites of an account in step with the bridge, and projects the day-one address onto the
@@ -37,12 +40,20 @@ class RefreshPredictionDepositRequisitesInteractor(
             PolymarketBridgeError.Unavailable
         }
 
-        val assets = bridgeRepository.getSupportedAssets().bind()
-
-        val addresses = bridgeRepository.createDepositAddresses(
-            walletId = userWalletId.stringValue,
-            depositWalletAddress = stored.depositWalletAddress,
-        ).bind()
+        val (assets, addresses) = try {
+            coroutineScope {
+                val assets = async { bridgeRepository.getSupportedAssets().orFail() }
+                val addresses = async {
+                    bridgeRepository.createDepositAddresses(
+                        walletId = userWalletId.stringValue,
+                        depositWalletAddress = stored.depositWalletAddress,
+                    ).orFail()
+                }
+                assets.await() to addresses.await()
+            }
+        } catch (failure: BridgeCallFailed) {
+            raise(failure.error)
+        }
 
         val requisites = PolymarketDepositRequisites(networks = groupIntoNetworks(assets, addresses))
 
@@ -66,16 +77,18 @@ class RefreshPredictionDepositRequisitesInteractor(
                 chainName = rows.first().chainName,
                 family = family,
                 address = address,
-                tokens = rows.map { row ->
-                    PolymarketDepositToken(
-                        symbol = row.tokenSymbol,
-                        address = row.tokenAddress,
-                        decimals = row.decimals,
-                        minCheckoutUsd = row.minCheckoutUsd,
-                    )
-                },
+                tokens = rows.map(::toDepositToken),
             )
         }
+
+    private fun toDepositToken(row: PolymarketBridgeAsset) = PolymarketDepositToken(
+        symbol = row.tokenSymbol,
+        address = row.tokenAddress,
+        decimals = row.decimals,
+        minCheckoutUsd = row.minCheckoutUsd,
+    )
+
+    private fun <T> Either<PolymarketBridgeError, T>.orFail(): T = getOrElse { throw BridgeCallFailed(error = it) }
 
     private fun PolymarketBridgeAddresses.of(family: PolymarketChainFamily): String? = when (family) {
         PolymarketChainFamily.EVM -> evm
@@ -83,4 +96,6 @@ class RefreshPredictionDepositRequisitesInteractor(
         PolymarketChainFamily.BTC -> btc
         PolymarketChainFamily.TRON -> tron
     }
+
+    private class BridgeCallFailed(val error: PolymarketBridgeError) : Exception()
 }
