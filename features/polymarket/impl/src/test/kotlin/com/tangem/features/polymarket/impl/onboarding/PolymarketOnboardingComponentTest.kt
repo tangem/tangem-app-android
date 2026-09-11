@@ -102,6 +102,8 @@ internal class PolymarketOnboardingComponentTest {
         checkNewPolymarketAccountAllowed = mockk(relaxed = true),
         resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
         runPolymarketOnboardingInteractor = runPolymarketOnboardingInteractor,
+        shouldShowStoriesInteractor = mockk { coEvery { invokeSync(any()) } returns false },
+        getStoryContentUseCase = mockk { coEvery { invokeSync(id = any(), refresh = any()) } returns null.right() },
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 }

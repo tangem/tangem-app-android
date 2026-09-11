@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.onboarding.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -18,6 +19,9 @@ import com.tangem.domain.polymarket.model.PolymarketEntry
 import com.tangem.domain.polymarket.model.PolymarketNewAccountAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.ShouldShowStoriesInteractor
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
@@ -50,6 +54,8 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val checkNewPolymarketAccountAllowed: CheckNewPolymarketAccountAllowedInteractor,
     private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor,
     private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor,
+    private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -67,6 +73,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     init {
         resolveEntry()
+        prefetchStory()
     }
 
     fun onCloseClick() {
@@ -152,7 +159,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
             -> updateAction { it.copyInProgress(isInProgress = true) }
-            PolymarketOnboardingProgress.Ready -> openFeed()
+            PolymarketOnboardingProgress.Ready -> completeOnboarding()
             is PolymarketOnboardingProgress.Failed -> {
                 stopStarting()
                 reportFailure()
@@ -208,5 +215,26 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun openFeed() {
         router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId))
+    }
+
+    private fun completeOnboarding() {
+        modelScope.launch {
+            if (shouldShowStoriesInteractor.invokeSync(STORY_ID)) {
+                router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
+            }
+
+            openFeed()
+        }
+    }
+
+    private fun prefetchStory() {
+        modelScope.launch {
+            getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true)
+        }
+    }
+
+    private companion object {
+        val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
+        const val STORY_SOURCE = "Predictions"
     }
 }
