@@ -44,6 +44,15 @@ import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60_000L
 
+/**
+ * Stable identity of the category chip. `TangemFilterGroup` keys its row on it, so the id has to stay
+ * the same across `Inactive` and `Active` for the chip to crossfade between the two instead of being
+ * rebuilt as a different item.
+ */
+private const val CATEGORIES_FILTER_ID = "crypto_categories"
+
+private data class MarketIndicatorsSnapshot(val indicators: MarketIndicators, val appCurrency: AppCurrency)
+
 @Suppress("LongParameterList")
 @ModelScoped
 internal class CryptoFeedTabModel @Inject constructor(
@@ -63,8 +72,12 @@ internal class CryptoFeedTabModel @Inject constructor(
     private val updateQuotesJob = JobHolder()
     private val marketIndicatorsJob = JobHolder()
 
-    /** Last loaded indicators, kept so a currency switch can re-format them without a refetch */
-    private val marketIndicators = MutableStateFlow<MarketIndicators?>(null)
+    /**
+     * Last loaded indicators together with the currency they were requested with. The capitalisation is
+     * converted server-side, so the amount is only meaningful next to that currency — pairing it with the
+     * currency selected *now* would render the previous currency's figure under the new symbol.
+     */
+    private val marketIndicators = MutableStateFlow<MarketIndicatorsSnapshot?>(null)
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
         maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -107,16 +120,14 @@ internal class CryptoFeedTabModel @Inject constructor(
             .onEach { list -> updateMarketPulse { it.copy(list = list) } }
             .launchIn(modelScope)
 
-        combine(
-            flow = marketIndicators.filterNotNull(),
-            flow2 = currentAppCurrency,
-        ) { indicators, appCurrency ->
-            TotalMarketCapConverter(
-                appCurrency = appCurrency,
-                onIndexClick = ::showIndexInfo,
-                onInfoClick = ::onInfoClick,
-            ).convert(indicators)
-        }
+        marketIndicators.filterNotNull()
+            .map { (indicators, appCurrency) ->
+                TotalMarketCapConverter(
+                    appCurrency = appCurrency,
+                    onIndexClick = ::showIndexInfo,
+                    onInfoClick = ::onInfoClick,
+                ).convert(indicators)
+            }
             .distinctUntilChanged()
             .onEach { totalMarketCap -> uiState.update { it.copy(totalMarketCap = totalMarketCap) } }
             .launchIn(modelScope)
@@ -216,13 +227,13 @@ internal class CryptoFeedTabModel @Inject constructor(
     private fun categoriesFilterItem(selection: MarketCategorySelection): TangemFilterItemUM {
         val category = selection.category
             ?: return TangemFilterItemUM.Inactive(
-                id = "crypto_categories",
+                id = CATEGORIES_FILTER_ID,
                 label = resourceReference(R.string.market_categories),
                 onClick = ::openCategorySelector,
             )
 
         return TangemFilterItemUM.Active(
-            id = category.id,
+            id = CATEGORIES_FILTER_ID,
             value = stringReference(category.name),
             onClick = ::openCategorySelector,
             onClearClick = { categoryFilterController.onSelectionApplied(MarketCategorySelection()) },
@@ -273,8 +284,15 @@ internal class CryptoFeedTabModel @Inject constructor(
 
     private fun fetchMarketIndicators() {
         modelScope.launch {
-            getMarketIndicatorsUseCase(appCurrency = currentAppCurrency.value)
-                .onRight { indicators -> marketIndicators.value = indicators }
+            val appCurrency = currentAppCurrency.value
+
+            getMarketIndicatorsUseCase(appCurrency = appCurrency)
+                .onRight { indicators ->
+                    marketIndicators.value = MarketIndicatorsSnapshot(
+                        indicators = indicators,
+                        appCurrency = appCurrency,
+                    )
+                }
                 .onLeft(::onMarketIndicatorsFailure)
         }.saveIn(marketIndicatorsJob)
     }
