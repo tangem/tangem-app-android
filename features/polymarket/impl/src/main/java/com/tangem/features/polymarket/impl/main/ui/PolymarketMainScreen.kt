@@ -239,13 +239,14 @@ private fun FeedList(
     val isAtTop by remember(listState) {
         derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
     }
-    val hasEvents = state.content is PolymarketMainUM.ContentUM.Content
+    val isFeedLoading = state.content is PolymarketMainUM.ContentUM.Loading
+    val hasPositions = state.positions.isVisible || state.onFinishedPositionsClick != null
 
     LazyColumn(
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
-        userScrollEnabled = hasEvents || state.positions.isVisible || !isAtTop,
+        userScrollEnabled = !isFeedLoading || hasPositions || !isAtTop,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = KEY_HEADER) {
@@ -255,6 +256,8 @@ private fun FeedList(
                 withdraw = state.balance.withdraw,
                 onBalanceClick = {},
                 positions = state.positions,
+                onActivePositionsClick = state.onActivePositionsClick,
+                onFinishedPositionsClick = state.onFinishedPositionsClick,
             )
         }
 

@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
@@ -15,11 +16,14 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -30,13 +34,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
     private val gachaVaultRepository: GachaVaultRepository = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk(relaxed = true)
-
-    private val useCase = CreateOrReactivateCollectiblesAccountUseCase(
-        hotDelegate = hotDelegate,
-        ownerDeriver = ownerDeriver,
-        gachaVaultRepository = gachaVaultRepository,
-        accountRepository = accountRepository,
-    )
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk(relaxed = true)
 
     private val userWallet: UserWallet = mockk {
         every { walletId } returns WALLET_ID
@@ -44,7 +42,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(hotDelegate, ownerDeriver, gachaVaultRepository, accountRepository)
+        clearMocks(hotDelegate, ownerDeriver, gachaVaultRepository, accountRepository, accountStatusFetcher)
         coEvery { accountRepository.getStatusSync(any()) } returns null
         coEvery { accountRepository.saveAccount(any(), any()) } returns Unit
         coEvery { hotDelegate.getPublicKey(any()) } returns DELEGATE
@@ -56,7 +54,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         coEvery { accountRepository.getStatusSync(WALLET_ID) } returns ONBOARDED
 
         // Act
-        val actual = useCase(userWallet)
+        val actual = createUseCase(testScope = this)(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -74,7 +72,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         coEvery { gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
 
         // Act
-        val actual = useCase(userWallet)
+        val actual = createUseCase(testScope = this)(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -97,7 +95,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         coEvery { gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
 
         // Act
-        val actual = useCase(userWallet)
+        val actual = createUseCase(testScope = this)(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -112,7 +110,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         coEvery { hotDelegate.provision(any()) } returns error.left()
 
         // Act
-        val actual = useCase(userWallet)
+        val actual = createUseCase(testScope = this)(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(error.left())
@@ -127,7 +125,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
             CollectiblesAccountError.CardError(code = 50002, message = "50002").left()
 
         // Act
-        val actual = useCase(userWallet)
+        val actual = createUseCase(testScope = this)(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(CollectiblesAccountError.CardError(code = 50002, message = "50002").left())
@@ -142,7 +140,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         coEvery { gachaVaultRepository.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
 
         // Act
-        val actual = useCase(userWallet)
+        val actual = createUseCase(testScope = this)(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -151,6 +149,42 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
             accountRepository.saveAccount(WALLET_ID, ONBOARDED)
         }
     }
+
+    @Test
+    fun `GIVEN the account is recorded WHEN invoked THEN the vault balance is read`() = runTest {
+        // Arrange
+        coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns null
+        coEvery { gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
+
+        // Act
+        createUseCase(testScope = this)(userWallet)
+        advanceUntilIdle()
+
+        // Assert — the record alone leaves the account's row shimmering
+        coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the account already exists WHEN invoked THEN the vault is not read`() = runTest {
+        // Arrange
+        coEvery { accountRepository.getStatusSync(WALLET_ID) } returns ONBOARDED
+
+        // Act
+        createUseCase(testScope = this)(userWallet)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { accountStatusFetcher(any()) }
+    }
+
+    private fun createUseCase(testScope: TestScope) = CreateOrReactivateCollectiblesAccountUseCase(
+        hotDelegate = hotDelegate,
+        ownerDeriver = ownerDeriver,
+        gachaVaultRepository = gachaVaultRepository,
+        accountRepository = accountRepository,
+        accountStatusFetcher = accountStatusFetcher,
+        appScope = TestAppCoroutineScope(testScope),
+    )
 
     private companion object {
 

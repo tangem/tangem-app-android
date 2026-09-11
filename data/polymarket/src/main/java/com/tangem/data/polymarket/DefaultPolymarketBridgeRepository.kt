@@ -3,8 +3,8 @@ package com.tangem.data.polymarket
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
@@ -20,20 +20,19 @@ import javax.inject.Inject
 internal class DefaultPolymarketBridgeRepository @Inject constructor(
     private val bridgeApi: PolymarketBridgeApi,
     private val polymarketRepository: PolymarketRepository,
+    private val assetsStore: PolymarketBridgeAssetsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketBridgeRepository {
 
-    private val supportedAssetsCache = RuntimeSharedStore<List<PolymarketBridgeAsset>>()
-
     override suspend fun getSupportedAssets(): Either<PolymarketBridgeError, List<PolymarketBridgeAsset>> =
         withContext(dispatchers.io) {
-            supportedAssetsCache.getSyncOrNull()?.let { return@withContext it.right() }
+            assetsStore.getSyncOrNull()?.let { return@withContext it.right() }
 
             safeApiCall(
                 call = {
                     bridgeApi.getSupportedAssets().bind().supportedAssets
                         .map(::toAsset)
-                        .also { supportedAssetsCache.store(it) }
+                        .also { assetsStore.store(it) }
                         .right()
                 },
                 onError = { PolymarketBridgeError.Network.left() },
