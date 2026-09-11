@@ -7,8 +7,14 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.transactionhistory.TransactionHistoryState
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
+import com.tangem.blockchain.common.pagination.PaginationWrapper
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.core.local.assets.AssetLoader
+import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.walletmanager.store.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -41,15 +47,17 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         coEvery { getWalletManagerFactorySync() } returns sdkFactory
     }
     private val provider: ExternalAddressBalanceProvider = mockk(relaxUnitFun = true)
+    private val assetLoader: AssetLoader = mockk()
+    private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val providersStore = ExternalAddressBalanceProvidersStore()
 
     private val facade = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
         externalAddressBalanceProvidersStore = providersStore,
         userWalletsListRepository = userWalletsListRepository,
-        assetLoader = mockk(),
+        assetLoader = assetLoader,
         dispatchers = TestingCoroutineDispatcherProvider(),
-        gaslessTransactionRepository = mockk(),
+        gaslessTransactionRepository = gaslessTransactionRepository,
         jointAccountSafeAddressResolver = { safeAddressResolver },
         blockchainSDKFactory = blockchainSDKFactory,
     )
@@ -75,6 +83,8 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         every { provider.blockchain } returns Blockchain.Ethereum
         every { provider.address } returns SAFE_ADDRESS
         every { provider.recentTransactions } returns emptyList()
+        coEvery { assetLoader.loadMap<SmartContractMethod>(fileName = any(), type = any()) } returns emptyMap()
+        coEvery { gaslessTransactionRepository.getGaslessFeeAddresses() } returns emptySet()
         coEvery { safeAddressResolver.resolve(userWalletId, setOf(jointNetwork)) } returns mapOf(jointNetwork to SAFE_ADDRESS)
     }
 
@@ -155,6 +165,43 @@ internal class DefaultWalletManagersFacadeJointReadTest {
             // Assert
             assertThat(actual).isInstanceOf(TxHistoryStateError.AddressNotReady::class.java)
         }
+
+    /**
+     * A joint network has no wallet manager by design, so requiring one after the provider has already answered
+     * would drop every fetched item. Its tokens only name the approved token of an `approve`, and the viewed
+     * currency is the documented fallback for a contract the wallet does not track.
+     */
+    @Test
+    fun `GIVEN a resolved Safe address WHEN getTxHistoryItems THEN the fetched items come back`() = runTest {
+        // Arrange
+        providersStore.store(userWalletId, jointNetwork, provider)
+        val wrapper: PaginationWrapper<TransactionHistoryItem> = mockk {
+            every { nextPage } returns Page.LastPage
+            every { items } returns listOf(historyItem())
+        }
+        coEvery { provider.getTransactionsHistory(any()) } returns Result.Success(wrapper)
+
+        // Act
+        val actual = facade.getTxHistoryItems(userWalletId, jointEthereum, Page.Initial, pageSize = 20)
+
+        // Assert
+        assertThat(actual.items.map { it.txHash }).containsExactly("0xhash")
+        coVerify { walletManagersStore wasNot Called }
+    }
+
+    private fun historyItem() = TransactionHistoryItem(
+        txHash = "0xhash",
+        timestamp = 0L,
+        isOutgoing = true,
+        destinationType = TransactionHistoryItem.DestinationType.Single(
+            addressType = TransactionHistoryItem.AddressType.User("0x2"),
+        ),
+        sourceType = TransactionHistoryItem.SourceType.Single(SAFE_ADDRESS),
+        status = TransactionHistoryItem.TransactionStatus.Confirmed,
+        type = TransactionHistoryItem.TransactionType.Transfer,
+        amount = Amount(BigDecimal.ONE, Blockchain.Ethereum),
+        fee = Amount(BigDecimal.ZERO, Blockchain.Ethereum),
+    )
 
     @Test
     fun `GIVEN a personal network without a wallet manager WHEN getTxHistoryState THEN it still fails loudly`() =
