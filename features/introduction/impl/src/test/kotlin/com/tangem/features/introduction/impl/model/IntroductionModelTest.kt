@@ -172,23 +172,61 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
-        model.onError()
+        model.onError(PLAYBACK_ERROR)
         assertThat(model.uiState.value.isVideoReady).isTrue()
     }
 
     @Test
-    fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter lifts to the still frame`() {
+    fun `GIVEN nothing rendered yet WHEN playback fails THEN shutter stays down over the empty surface`() {
         // Arrange
         val model = createModel()
         surfaceAttached(isAttached = true)
         model.attachSurface(surfaceView)
 
         // Act
-        model.onError()
+        model.onError(PLAYBACK_ERROR)
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
+        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
+    }
+
+    @Test
+    fun `GIVEN a frame already rendered WHEN playback fails THEN shutter stays up on the still frame`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.onFirstFrameRendered()
+
+        // Act
+        model.onError(PLAYBACK_ERROR)
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isTrue()
-        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Load))
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
+        assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
+    }
+
+    @Test
+    fun `GIVEN a fresh surface after a rendered frame WHEN playback fails THEN shutter stays down`() {
+        // Arrange
+        val model = createModel()
+        surfaceAttached(isAttached = true)
+        model.attachSurface(surfaceView)
+        model.onFirstFrameRendered()
+        surfaceAttached(isAttached = false)
+        model.detachSurface(surfaceView)
+        surfaceAttached(isAttached = true)
+        model.attachSurface(otherSurfaceView)
+
+        // Act
+        model.onError(PLAYBACK_ERROR)
+
+        // Assert
+        assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
     }
 
     @Test
@@ -202,10 +240,11 @@ internal class IntroductionModelTest {
         model.detachSurface(surfaceView)
 
         // Act
-        model.onError()
+        model.onError(PLAYBACK_ERROR)
 
         // Assert
         assertThat(model.uiState.value.isVideoReady).isFalse()
+        assertThat(model.uiState.value.isVideoFailed).isTrue()
         assertThat(sentEvents.last()).isEqualTo(WelcomeMediaError(WelcomeMediaError.Stage.Playback))
     }
 
@@ -219,6 +258,19 @@ internal class IntroductionModelTest {
 
         // Assert
         assertThat(model.uiState.value.isMotionEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN playback under way WHEN the video position is read THEN the player position is returned`() {
+        // Arrange
+        every { videoPlayer.positionMs } returns 4_200L
+        val model = createModel()
+
+        // Act
+        val positionMs = model.videoPositionMs()
+
+        // Assert
+        assertThat(positionMs).isEqualTo(4_200L)
     }
 
     @Test
@@ -1175,6 +1227,8 @@ internal class IntroductionModelTest {
                 .isEqualTo(resourceReference(CoreResR.string.introduction_i_have_wallet_sign_in_google_title))
             assertThat(options.importWallet.title)
                 .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet))
+            assertThat(options.importWallet.description)
+                .isEqualTo(resourceReference(CoreResR.string.hw_import_existing_wallet_description))
         }
 
         private fun IntroductionModel.openHaveWallet(): HaveWalletUM.Step.Options {
@@ -1205,7 +1259,9 @@ internal class IntroductionModelTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun sheetReturns(model: StoryReturnModel) {
+        fun `GIVEN the story shown WHEN it ends THEN the welcome returns without a sheet and the video goes`(
+            model: StoryReturnModel,
+        ) {
             // Arrange
             val introductionModel = createModel()
             introductionModel.openStory()
@@ -1215,8 +1271,9 @@ internal class IntroductionModelTest {
             introductionModel.onStoryResult(model.result)
 
             // Assert
-            assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isTrue()
+            assertThat(introductionModel.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
             verify(exactly = 1) { videoPlayer.setRunning(isRunning = true) }
+            verify(exactly = 0) { videoPlayer.restart() }
         }
 
         private fun provideTestModels() = listOf(
@@ -1272,6 +1329,45 @@ internal class IntroductionModelTest {
         }
 
         @Test
+        fun `GIVEN the card row tapped WHEN the composition is unavailable THEN the scan starts from the intro`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+
+            // Act
+            model.onStoryResult(StoriesV2Result.Unavailable(StoriesV2Result.Unavailable.Reason.NO_CONTENT))
+
+            // Assert
+            coVerify(exactly = 1) {
+                cardScanner.scanAndOpenWallet(
+                    analyticsSource = AnalyticsParam.ScreensSources.Intro,
+                    onNavigatedAway = any(),
+                    onFailed = any(),
+                )
+            }
+            assertThat(sentEvents.last())
+                .isEqualTo(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+        }
+
+        @Test
+        fun `GIVEN a scan in flight WHEN the composition turns unavailable THEN the gone story is not resumed`() {
+            // Arrange
+            val model = createModel()
+            val action = pendingAction(actionId = "scan_wallet")
+            model.openStory()
+            model.onStoryAction(action)
+            model.onStoryResult(StoriesV2Result.Unavailable(StoriesV2Result.Unavailable.Reason.NO_USABLE_FRAME))
+
+            // Act
+            model.capturedScanCallbacks().onFailed()
+
+            // Assert
+            verify(exactly = 0) { action.resume() }
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
+        }
+
+        @Test
         fun `GIVEN the scan suspended the story WHEN the scan fails THEN the story resumes on the same slide`() {
             // Arrange
             val model = createModel()
@@ -1289,23 +1385,21 @@ internal class IntroductionModelTest {
         }
 
         @Test
-        fun `GIVEN the story closed during a scan WHEN the scan fails THEN the sheet returns instead`() {
+        fun `GIVEN the story closed during a scan WHEN the scan fails THEN the welcome stays without a sheet`() {
             // Arrange
             val model = createModel()
             model.openStory()
             val action = pendingAction(actionId = "scan_wallet")
             model.onStoryAction(action)
             model.onStoryResult(StoriesV2Result.Dismissed)
-            val openingsBefore = sentEvents.count { it is IntroductionProcess.CreateWalletIntroScreenOpened }
 
             // Act
             model.capturedScanCallbacks().onFailed()
 
             // Assert
             verify(exactly = 0) { action.resume() }
-            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isTrue()
-            assertThat(sentEvents.count { it is IntroductionProcess.CreateWalletIntroScreenOpened })
-                .isEqualTo(openingsBefore + 1)
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isNotEqualTo(true)
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
         }
 
         @Test
@@ -1376,6 +1470,58 @@ internal class IntroductionModelTest {
             // Assert
             verify(exactly = 1) { action.resume() }
             verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN the story closed WHEN the screen pauses and resumes THEN the video keeps its position`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            model.onStoryResult(StoriesV2Result.Dismissed)
+
+            // Act
+            model.setVideoRunning(isRunning = false)
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 0) { videoPlayer.restart() }
+        }
+
+        @Test
+        fun `GIVEN the scan left the screen WHEN the screen resumes THEN the video restarts from the beginning`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            model.onStoryAction(pendingAction(actionId = "scan_wallet"))
+            model.capturedScanCallbacks().onNavigatedAway()
+            model.setVideoRunning(isRunning = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+            model.setVideoRunning(isRunning = false)
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.restart() }
+        }
+
+        @Test
+        fun `GIVEN the recovery phrase import left the screen WHEN the screen resumes THEN the video restarts`() {
+            // Arrange
+            val model = createModel()
+            model.uiState.value.onIHaveWalletClick()
+            (model.haveWalletStep() as HaveWalletUM.Step.Options).importWallet.onClick()
+            model.currentImportStep().onRecoveryPhraseClick()
+            model.setVideoRunning(isRunning = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { videoPlayer.restart() }
+            verify(exactly = 1) {
+                router.push(AppRoute.AddExistingWallet(mode = AppRoute.AddExistingWallet.Mode.RecoveryPhrase))
+            }
         }
 
         private fun pendingAction(actionId: String): StoriesV2PendingAction {
@@ -1630,9 +1776,10 @@ internal class IntroductionModelTest {
         }
     }
 
+    /** Callbacks of the latest scan: a fallback scan can follow the one a story action started. */
     private fun IntroductionModel.capturedScanCallbacks(): ScanCallbacks {
-        val onNavigatedAway = slot<() -> Unit>()
-        val onFailed = slot<() -> Unit>()
+        val onNavigatedAway = mutableListOf<() -> Unit>()
+        val onFailed = mutableListOf<() -> Unit>()
         coVerify {
             cardScanner.scanAndOpenWallet(
                 analyticsSource = any(),
@@ -1640,7 +1787,7 @@ internal class IntroductionModelTest {
                 onFailed = capture(onFailed),
             )
         }
-        return ScanCallbacks(onNavigatedAway.captured, onFailed.captured)
+        return ScanCallbacks(onNavigatedAway.last(), onFailed.last())
     }
 
     private fun IntroductionModel.seedPhraseRow(): WalletOptionUM =
@@ -1690,11 +1837,14 @@ internal class IntroductionModelTest {
         cardScanner = cardScanner,
         mobileWalletCreator = mobileWalletCreator,
         referral = IntroductionReferral(appsFlyerRepository),
+        legalLinks = IntroductionLegalLinks(urlOpener, analyticsEventHandler),
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         uiMessageSender = uiMessageSender,
     )
 
     private companion object {
+        val PLAYBACK_ERROR = IllegalStateException("decoder failed")
+
         val SCREEN_OPENED = IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.NoWallets)
         val SHUTTER_DOWN = false to true
         const val BUY_LINK = "https://buy.tangem.com/en?utm_source=tangem-app"

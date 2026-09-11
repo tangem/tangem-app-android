@@ -19,6 +19,7 @@ dependencies {
 
     /* Compose */
     api(deps.compose.foundation)
+    implementation(deps.compose.material3)
 
     /* Project - Core */
     api(projects.core.decompose)

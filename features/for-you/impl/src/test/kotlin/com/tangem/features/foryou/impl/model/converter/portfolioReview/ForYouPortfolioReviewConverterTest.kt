@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.CoinIndicators
@@ -23,9 +24,11 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.components.isRingClosed
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.DonutSegmentUM
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
+import com.tangem.features.foryou.impl.components.visualSweepAngles
 import com.tangem.features.foryou.impl.createLoadedValue
 import com.tangem.features.foryou.impl.createStakedBalance
 import com.tangem.features.foryou.impl.createUnreachableValue
@@ -33,6 +36,7 @@ import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.utils.StringsSigns.THREE_STARS
+import com.tangem.utils.StringsSigns.TILDE_SIGN
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -48,6 +52,9 @@ internal class ForYouPortfolioReviewConverterTest {
      * single "Other" row, and into the donut's grey "Other" slice.
      */
     private val topHoldingsCount = 10
+
+    /** A holding far too small for the two-decimal percent rendering to show. */
+    private val dustBalance = BigDecimal("0.01")
 
     @Nested
     inner class AssetRanking {
@@ -567,6 +574,31 @@ internal class ForYouPortfolioReviewConverterTest {
         }
 
         @Test
+        fun `GIVEN shares that do not divide evenly WHEN convert THEN the slice weights still close the ring`() {
+            // Arrange — seven equal holdings, so every share is 0.142857... A share rounded to the fiat
+            // amount's own two decimals would be 0.14, and the seven together would fall 2% short of the
+            // circle: enough for the donut to reserve a grey wedge with no balance behind it.
+            val assetCount = 7
+            val balance = BigDecimal("100.00")
+            val statuses = (1..assetCount).map { rank ->
+                createStatus(
+                    createCoin(rawCurrencyId = "asset-$rank", symbol = "A$rank", networkId = "net-$rank"),
+                    loadedValue(BigDecimal.ONE, balance),
+                )
+            }
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = balance * assetCount.toBigDecimal())
+
+            // Assert — nothing was collapsed, so there is no grey slice to close the ring and the shares
+            // themselves have to, within the angle at which DonutChart stops calling the ring closed.
+            val segments = donutSegments(result)
+            assertThat(segments.map { it.color }).doesNotContain(DonutSegmentColor.Grey)
+            val sweeps = visualSweepAngles(weights = segments.map { it.weight.toFloat() }, capDeg = 0f)
+            assertThat(isRingClosed(sweeps)).isTrue()
+        }
+
+        @Test
         fun `GIVEN balance hidden WHEN convert THEN the grey Other slice value is masked`() {
             // Arrange
             val (statuses, total) = descendingAssets(topHoldingsCount + 1)
@@ -576,6 +608,53 @@ internal class ForYouPortfolioReviewConverterTest {
 
             // Assert
             assertThat(donutSegments(result).last().fiatValue).isEqualTo(stringReference(THREE_STARS))
+        }
+
+        @Test
+        fun `GIVEN an Other bucket too small to show WHEN convert THEN the top holding share is marked approximate`() {
+            // Arrange — a dust asset beyond the top holdings: the top assets are mathematically below 100%,
+            // but two decimal places round their share up to exactly it
+            val (topStatuses, topBalance) = descendingAssets(topHoldingsCount)
+            val dust = createStatus(
+                createCoin(rawCurrencyId = "dust", symbol = "DUST", networkId = "net-dust"),
+                loadedValue(BigDecimal.ONE, dustBalance),
+            )
+
+            // Act
+            val result = convert(topStatuses + dust, totalFiatBalance = topBalance + dustBalance)
+
+            // Assert
+            assertThat(topHoldingText(result)).isEqualTo(TILDE_SIGN + BigDecimal.ONE.format { percent() })
+        }
+
+        @Test
+        fun `GIVEN an Other bucket large enough to show WHEN convert THEN the top holding share is left bare`() {
+            // Arrange — one more asset than the top holdings, holding a visible share
+            val (statuses, total) = descendingAssets(topHoldingsCount + 1)
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = total)
+
+            // Assert — 945.00 of 1034.00; the rendering does not claim the whole portfolio, so nothing is marked
+            assertThat(topHoldingText(result)).isEqualTo(BigDecimal("0.9139").format { percent() })
+        }
+
+        @Test
+        fun `GIVEN no assets beyond the top holdings WHEN convert THEN the top holding share is left bare`() {
+            // Arrange
+            val (statuses, total) = descendingAssets(topHoldingsCount)
+
+            // Act
+            val result = convert(statuses, totalFiatBalance = total)
+
+            // Assert — the top assets really are the whole portfolio, so 100% is exact rather than rounded
+            assertThat(topHoldingText(result)).isEqualTo(BigDecimal.ONE.format { percent() })
+        }
+
+        /** The share substituted into `market_chart_top_holding`, as the converter rendered it. */
+        private fun topHoldingText(result: PortfolioReviewUM.Content): String {
+            val reference = (result.marketChartUM as MarketChartUM.Loaded).topHoldingPercent
+            return (reference as TextReference.Res).formatArgs.first() as String
         }
 
         private fun donutSegments(result: PortfolioReviewUM.Content): List<DonutSegmentUM> =
@@ -1006,10 +1085,10 @@ internal class ForYouPortfolioReviewConverterTest {
 
     /**
      * Fiat balance of the [rank]-th asset from [descendingAssets] — rank 1 is the largest. Scaled like a
-     * real fiat amount (`amount x rate`) rather than a bare integer, because `toForYouPercent` divides at
-     * the amount's own scale: a scale-0 balance would round every share to 0 or 1.
+     * fiat amount a backend would actually hand over, so the shares derived from it are exercised at a
+     * realistic precision rather than one chosen to flatter the arithmetic.
      */
-    private fun assetFiatBalance(rank: Int): BigDecimal = BigDecimal(100 - rank).setScale(8)
+    private fun assetFiatBalance(rank: Int): BigDecimal = BigDecimal(100 - rank).setScale(2)
 
     private fun selectedPortfolio(
         currencies: List<CryptoCurrencyStatus>,
