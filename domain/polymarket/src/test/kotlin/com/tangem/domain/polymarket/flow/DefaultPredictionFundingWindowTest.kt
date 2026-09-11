@@ -33,8 +33,10 @@ internal class DefaultPredictionFundingWindowTest {
     private val statusSupplier: PredictionAccountStatusSupplier = mockk()
     private val collateralFactory: PolymarketCollateralCurrencyFactory = mockk()
     private val userWallet: UserWallet = mockk()
+    private val otherWallet: UserWallet = mockk()
 
     private val swaps = MutableStateFlow<List<SwapTransactionListModel>?>(null)
+    private val otherSwaps = MutableStateFlow<List<SwapTransactionListModel>?>(null)
     private val status = MutableStateFlow<PredictionAccountStatusValue>(createActive(BigDecimal("1.00")))
     private var now = 1_000_000L
 
@@ -51,14 +53,17 @@ internal class DefaultPredictionFundingWindowTest {
     fun resetMocks() {
         clearMocks(userWalletsListRepository, swapTransactionRepository, statusSupplier, collateralFactory)
         swaps.value = null
+        otherSwaps.value = null
         status.value = createActive(BigDecimal("1.00"))
         now = 1_000_000L
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet, otherWallet))
         every { userWallet.walletId } returns WALLET_ID
+        every { otherWallet.walletId } returns OTHER_WALLET_ID
         every { collateralFactory.createDepositTarget() } returns COLLATERAL
         every { COLLATERAL.id } returns COLLATERAL_ID
         every { COLLATERAL_ID.value } returns "polygon-usdc"
         every { swapTransactionRepository.getTransactions(userWallet, COLLATERAL_ID) } returns swaps
+        every { swapTransactionRepository.getTransactions(otherWallet, COLLATERAL_ID) } returns otherSwaps
         every { statusSupplier(WALLET_ID) } returns status
     }
 
@@ -304,10 +309,47 @@ internal class DefaultPredictionFundingWindowTest {
         }
     }
 
+    @Test
+    fun `GIVEN armed WHEN swap from another wallet into this wallet appears THEN window opens`() = runTest {
+        // Arrange
+        val watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            window.arm(WALLET_ID)
+            otherSwaps.value = listOf(createSwapList(timestamp = now + 1, toUserWalletId = WALLET_ID.stringValue))
+
+            // Assert
+            assertThat(awaitItem()).isTrue()
+        }
+        watching.cancel()
+    }
+
+    @Test
+    fun `GIVEN armed WHEN swap into another wallet's collateral appears THEN window stays closed`() = runTest {
+        // Arrange
+        val watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            window.arm(WALLET_ID)
+            otherSwaps.value = listOf(createSwapList(timestamp = now + 1, toUserWalletId = OTHER_WALLET_ID.stringValue))
+            runCurrent()
+
+            // Assert
+            expectNoEvents()
+        }
+        watching.cancel()
+    }
+
     private fun createSwapList(
         timestamp: Long,
+        toUserWalletId: String = WALLET_ID.stringValue,
         toCryptoCurrencyId: String = COLLATERAL_ID.value,
     ): SwapTransactionListModel = mockk {
+        every { this@mockk.toUserWalletId } returns toUserWalletId
         every { this@mockk.toCryptoCurrencyId } returns toCryptoCurrencyId
         every { transactions } returns listOf(mockk<SwapTransactionModel> { every { this@mockk.timestamp } returns timestamp })
     }
@@ -322,6 +364,7 @@ internal class DefaultPredictionFundingWindowTest {
 
     private companion object {
         val WALLET_ID = UserWalletId("011")
+        val OTHER_WALLET_ID = UserWalletId("022")
         val COLLATERAL: CryptoCurrency.Token = mockk()
         val COLLATERAL_ID: CryptoCurrency.ID = mockk()
     }
