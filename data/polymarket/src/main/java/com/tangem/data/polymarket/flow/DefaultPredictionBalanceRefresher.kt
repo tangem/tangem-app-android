@@ -24,8 +24,10 @@ internal class DefaultPredictionBalanceRefresher @Inject constructor(
 ) : PredictionBalanceRefresher {
 
     override suspend fun refresh(userWalletId: UserWalletId): Either<Throwable, Unit> {
-        val active = statusStore.getSyncOrNull(userWalletId = userWalletId) as? PredictionAccountStatusValue.Active
-            ?: return statusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
+        val isActive = statusStore.getSyncOrNull(userWalletId = userWalletId) is PredictionAccountStatusValue.Active
+        if (!isActive) {
+            return statusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
+        }
 
         return Either.catchOn(dispatchers.default) {
             val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = userWalletId)
@@ -34,9 +36,12 @@ internal class DefaultPredictionBalanceRefresher @Inject constructor(
             val balanceAllowance = getPolymarketBalanceInteractor(addresses = addresses)
                 .getOrElse { error("Prediction balance is unavailable: $it") }
 
+            val current = statusStore.getSyncOrNull(userWalletId = userWalletId) as? PredictionAccountStatusValue.Active
+                ?: return@catchOn
+
             statusStore.store(
                 userWalletId = userWalletId,
-                value = active.copy(balance = balanceAllowance.balance, source = StatusSource.ACTUAL),
+                value = current.copy(balance = balanceAllowance.balance, source = StatusSource.ACTUAL),
             )
         }.onLeft { logger.e("Failed to refresh the prediction balance of $userWalletId", it) }
     }
