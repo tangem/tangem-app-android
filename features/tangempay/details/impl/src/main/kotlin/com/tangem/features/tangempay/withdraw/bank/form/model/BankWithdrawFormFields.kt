@@ -16,6 +16,8 @@ internal object BankWithdrawFormFields {
         BankWithdrawFormField.BankPostalCode,
     )
 
+    private val regionFields = setOf(BankWithdrawFormField.Region, BankWithdrawFormField.BankRegion)
+
     fun recipientDetails(isBusiness: Boolean): ImmutableList<BankWithdrawFormField> = buildList {
         add(BankWithdrawFormField.AccountNumber)
         add(BankWithdrawFormField.RoutingNumber)
@@ -31,4 +33,11 @@ internal object BankWithdrawFormFields {
         add(BankWithdrawFormField.AddressLine1)
         add(BankWithdrawFormField.PostalCode)
     }.toImmutableList()
+
+    fun visible(
+        fields: List<BankWithdrawFormField>,
+        values: Map<BankWithdrawFormField, String>,
+    ): ImmutableList<BankWithdrawFormField> = fields
+        .filterNot { field -> field in regionFields && values[field].isNullOrBlank() }
+        .toImmutableList()
 }

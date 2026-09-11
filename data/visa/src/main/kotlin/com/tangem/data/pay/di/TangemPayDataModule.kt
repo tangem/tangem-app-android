@@ -130,10 +130,6 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindResidencyRepository(repository: DefaultTangemPayResidencyRepository): TangemPayResidencyRepository
-
-    @Binds
-    @Singleton
     fun bindWaitlistRepository(repository: DefaultTangemPayWaitlistRepository): TangemPayWaitlistRepository
 
     @Suppress("TooManyFunctions", "LargeClass")
@@ -570,6 +566,14 @@ internal interface TangemPayDataModule {
         @Provides
         @Singleton
         fun provideBankOfframpRepository(): BankOfframpRepository = MockBankOfframpRepository()
+
+        // Geo endpoints are mocked while their country list is filled in; bind the default repository directly to
+        // go live. Eligibility checks still reach the backend through the delegate.
+        @Provides
+        @Singleton
+        fun provideTangemPayResidencyRepository(
+            repository: DefaultTangemPayResidencyRepository,
+        ): TangemPayResidencyRepository = MockTangemPayResidencyRepository(origin = repository)
 
         @Provides
         @Singleton

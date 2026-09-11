@@ -18,6 +18,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoiceConfig
@@ -35,6 +36,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal class TangemPayBankWithdrawComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
+    private val countrySelectorFactory: TangemPayCountrySelectorComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayBankWithdrawModel = getOrCreateModel(params = params)
@@ -154,6 +156,7 @@ internal class TangemPayBankWithdrawComponent(
                 pushNext(from = step)
             },
         ),
+        countrySelectorFactory = countrySelectorFactory,
     )
 
     private fun pushNext(from: TangemPayBankWithdrawInnerRoute) {

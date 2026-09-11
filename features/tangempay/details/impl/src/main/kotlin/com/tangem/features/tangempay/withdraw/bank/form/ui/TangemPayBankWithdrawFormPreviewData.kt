@@ -20,6 +20,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
         onBackClick = {},
         onValueChange = { _, _ -> },
         onFocusChange = { _, _ -> },
+        onSelectorClick = {},
         onContinueClick = {},
     )
 
@@ -48,6 +49,13 @@ internal object TangemPayBankWithdrawFormPreviewData {
             ),
             errors = mapOf(BankWithdrawFormField.RoutingNumber to BankWithdrawFieldError.InvalidRoutingNumber),
         ),
+    )
+
+    val personalWithoutRegion: TangemPayBankWithdrawFormUM = create(
+        draft = personalDraft,
+        step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        state = FormState(values = mapOf(BankWithdrawFormField.Country to "MC")),
     )
 
     val businessBank: TangemPayBankWithdrawFormUM = create(
