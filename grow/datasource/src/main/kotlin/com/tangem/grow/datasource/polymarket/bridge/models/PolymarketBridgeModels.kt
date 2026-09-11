@@ -14,7 +14,7 @@ data class PolymarketSupportedAssetDto(
     @Json(name = "chainId") val chainId: String,
     @Json(name = "chainName") val chainName: String,
     @Json(name = "token") val token: PolymarketBridgeTokenDto,
-    @Json(name = "minCheckoutUsd") val minCheckoutUsd: BigDecimal,
+    @Json(name = "minCheckoutUsd") val minCheckoutUsd: BigDecimal? = null,
 )
 
 @JsonClass(generateAdapter = true)
