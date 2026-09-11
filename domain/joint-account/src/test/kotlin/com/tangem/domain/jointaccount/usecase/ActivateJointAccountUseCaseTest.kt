@@ -286,24 +286,29 @@ internal class ActivateJointAccountUseCaseTest {
 
     /**
      * Every refusal reaches the user as the same generic dialog, so the log is the only place the reason
-     * survives — and the only thing a support request carries.
+     * survives — and the only thing a support request carries. The address must reach it unsanitized: the
+     * sanitizer replaces every hex run of 8 or more characters in the exported file.
      */
     @Test
-    fun `GIVEN backend address matches no singleton WHEN invoke THEN the announced address is logged`() = runTest {
-        // Arrange
-        mockkObject(TangemLogger)
-        val jointAccount = jointAccount(safeAddress = DEAD_ADDRESS)
-        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
-        val message = slot<String>()
-        every { TangemLogger.e(capture(message), any()) } just Runs
+    fun `GIVEN backend address matches no singleton WHEN invoke THEN both addresses are logged unsanitized`() =
+        runTest {
+            // Arrange
+            mockkObject(TangemLogger)
+            val jointAccount = jointAccount(safeAddress = DEAD_ADDRESS)
+            every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
+            val message = slot<String>()
+            val shouldSanitize = slot<Boolean>()
+            every { TangemLogger.e(capture(message), any(), capture(shouldSanitize)) } just Runs
 
-        // Act
-        useCase(account = account)
+            // Act
+            useCase(account = account)
 
-        // Assert
-        assertThat(message.captured).contains(DEAD_ADDRESS)
-        unmockkObject(TangemLogger)
-    }
+            // Assert
+            assertThat(message.captured).contains(DEAD_ADDRESS)
+            assertThat(message.captured).contains(computedSafeAddress(SafeSingleton.SAFE_L2))
+            assertThat(shouldSanitize.captured).isFalse()
+            unmockkObject(TangemLogger)
+        }
 
     @Test
     fun `GIVEN confirming account WHEN invoke THEN nothing is logged`() = runTest {
@@ -315,7 +320,7 @@ internal class ActivateJointAccountUseCaseTest {
         useCase(account = account)
 
         // Assert
-        verify(exactly = 0) { TangemLogger.e(any(), any()) }
+        verify(exactly = 0) { TangemLogger.e(any(), any(), any()) }
         unmockkObject(TangemLogger)
     }
 
