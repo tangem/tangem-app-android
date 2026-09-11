@@ -21,10 +21,7 @@ import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
-import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -50,7 +47,7 @@ internal class ResidencyListModel @Inject constructor(
         field = MutableStateFlow(getInitialState())
 
     private var step: Step = Step.Countries
-    private var dataState: DataState = DataState.Loading
+    private var data: ResidencyListData = ResidencyListData.Loading
     private var countries: List<TangemPayCountry> = emptyList()
     private var checkingItemId: String? = null
 
@@ -186,12 +183,12 @@ internal class ResidencyListModel @Inject constructor(
     }
 
     private fun setLoading() {
-        dataState = DataState.Loading
+        data = ResidencyListData.Loading
         updateContent()
     }
 
     private fun setCountriesLoaded() {
-        dataState = DataState.Loaded(
+        data = ResidencyListData.Loaded(
             suggested = countries.filter(TangemPayCountry::isSuggested).map(::toItem),
             all = countries.map(::toItem),
         )
@@ -199,7 +196,7 @@ internal class ResidencyListModel @Inject constructor(
     }
 
     private fun setRegionsLoaded(country: TangemPayCountry, regions: List<TangemPayRegion>) {
-        dataState = DataState.Loaded(
+        data = ResidencyListData.Loaded(
             suggested = regions.filter(TangemPayRegion::isSuggested).map { region ->
                 toItem(country = country, region = region)
             },
@@ -209,58 +206,28 @@ internal class ResidencyListModel @Inject constructor(
     }
 
     private fun setFailed(onRetry: () -> Unit) {
-        dataState = DataState.Failed(onRetry = onRetry)
+        data = ResidencyListData.Failed(onRetry = onRetry)
         updateContent()
     }
 
     private fun updateContent() {
-        uiState.update { state -> state.copy(content = buildContent(query = state.search.query)) }
-    }
-
-    private fun buildContent(query: String): Content {
-        val loaded = when (val state = dataState) {
-            DataState.Loading -> return Content.Loading
-            is DataState.Failed -> return Content.Error(onRetryClick = state.onRetry)
-            is DataState.Loaded -> state
-        }
-
-        if (query.isNotBlank()) {
-            val found = loaded.all.filter { item -> item.name.contains(query.trim(), ignoreCase = true) }
-            return if (found.isEmpty()) {
-                Content.Empty
-            } else {
-                Content.Sections(
-                    sections = persistentListOf(
-                        ResidencyListUM.SectionUM(
-                            id = SEARCH_SECTION_ID,
-                            title = null,
-                            items = found.map(::withLoadingState).toImmutableList(),
-                        ),
-                    ),
-                )
-            }
-        }
-
-        val sections = buildList {
-            if (loaded.suggested.isNotEmpty()) {
-                add(
-                    ResidencyListUM.SectionUM(
-                        id = SUGGESTED_SECTION_ID,
-                        title = suggestedSectionTitle(),
-                        items = loaded.suggested.map(::withLoadingState).toImmutableList(),
-                    ),
-                )
-            }
-            add(
-                ResidencyListUM.SectionUM(
-                    id = ALL_SECTION_ID,
-                    title = allSectionTitle(),
-                    items = loaded.all.map(::withLoadingState).toImmutableList(),
+        uiState.update { state ->
+            state.copy(
+                content = data.withLoadingState().toContent(
+                    query = state.search.query,
+                    suggestedTitle = suggestedSectionTitle(),
+                    allTitle = allSectionTitle(),
                 ),
             )
         }
+    }
 
-        return Content.Sections(sections = sections.toImmutableList())
+    private fun ResidencyListData.withLoadingState(): ResidencyListData = when (this) {
+        is ResidencyListData.Loaded -> copy(
+            suggested = suggested.map(::withLoadingState),
+            all = all.map(::withLoadingState),
+        )
+        else -> this
     }
 
     private fun withLoadingState(item: ResidencyListUM.ItemUM): ResidencyListUM.ItemUM {
@@ -298,7 +265,7 @@ internal class ResidencyListModel @Inject constructor(
                 onActiveChange = ::onActiveChange,
                 onCloseClick = null,
             ),
-            content = Content.Loading,
+            content = ResidencyListUM.Content.Loading,
             onBackClick = null,
             onCloseClick = router::pop,
         )
@@ -317,21 +284,5 @@ internal class ResidencyListModel @Inject constructor(
     private sealed interface Step {
         data object Countries : Step
         data class Regions(val country: TangemPayCountry) : Step
-    }
-
-    private sealed interface DataState {
-        data object Loading : DataState
-        data class Loaded(
-            val suggested: List<ResidencyListUM.ItemUM>,
-            val all: List<ResidencyListUM.ItemUM>,
-        ) : DataState
-
-        data class Failed(val onRetry: () -> Unit) : DataState
-    }
-
-    private companion object {
-        const val SUGGESTED_SECTION_ID = "suggested"
-        const val ALL_SECTION_ID = "all"
-        const val SEARCH_SECTION_ID = "search"
     }
 }
