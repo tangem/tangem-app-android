@@ -950,6 +950,23 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN the account swap toggle is off WHEN a prediction withdraw is built THEN the withdraw presentation holds`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+            stubResolvedPredictionPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.titleId).isEqualTo(R.string.prediction_main_withdraw)
+            assertThat((model.uiState.sendCardData as SwapCardState.SwapCardData).isSelectionLocked).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction withdraw WHEN to selector settings THEN Markets is hidden and payment tokens are hidden`() =
         runTest {
             // Arrange
