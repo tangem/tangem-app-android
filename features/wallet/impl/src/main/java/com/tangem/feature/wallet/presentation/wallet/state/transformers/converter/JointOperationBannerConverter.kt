@@ -3,7 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.tangem.common.ui.cosign.CosignRequestBannerUM
 import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -15,8 +17,9 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
-internal class JointOperationBannerConverter :
-    Converter<List<JointPendingOperation>, ImmutableList<JointOperationBannerUM>> {
+internal class JointOperationBannerConverter(
+    private val isBalanceHidden: Boolean,
+) : Converter<List<JointPendingOperation>, ImmutableList<JointOperationBannerUM>> {
 
     override fun convert(value: List<JointPendingOperation>): ImmutableList<JointOperationBannerUM> {
         return value
@@ -29,7 +32,7 @@ internal class JointOperationBannerConverter :
                         subtitle = resourceReference(
                             id = CoreUiR.string.joint_operation_banner_subtitle,
                             formatArgs = wrappedList(
-                                amountOf(operation),
+                                amountOf(operation).orMaskWithStars(isBalanceHidden),
                                 shorten(operation.transfer.intent.recipient),
                             ),
                         ),
@@ -66,10 +69,16 @@ internal class JointOperationBannerConverter :
         }
     }
 
-    /** The roster may not name the initiator yet; their address says who it is without inventing a name */
-    private fun initiatorOf(operation: JointPendingOperation): String {
-        return operation.initiatorName
-            ?: operation.initiatorAddress?.let(::shorten).orEmpty()
+    /**
+     * The roster may not name the initiator yet; their address says who it is without inventing a name. The
+     * backend can also report no initiator at all, and an empty actor would render the title as " wants to
+     * send Ethereum" — so the banner says a member did it rather than nobody.
+     */
+    private fun initiatorOf(operation: JointPendingOperation): TextReference {
+        val named = operation.initiatorName ?: operation.initiatorAddress?.let(::shorten)
+
+        return named?.let(::stringReference)
+            ?: resourceReference(CoreUiR.string.joint_account_invite_members_member)
     }
 
     private fun amountOf(operation: JointPendingOperation): String {
