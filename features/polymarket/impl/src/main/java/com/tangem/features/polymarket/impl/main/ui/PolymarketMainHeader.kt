@@ -72,17 +72,17 @@ internal fun PolymarketMainHeader(
             modifier = Modifier.padding(top = 56.dp),
         )
 
-        if (isAwaitingFunds) {
-            PredictionAwaitingFundsBanner(
-                modifier = Modifier.padding(top = 12.dp, start = 16.dp, end = 16.dp),
-            )
-        }
-
         ActionsRow(
             addFunds = addFunds,
             withdraw = withdraw,
             modifier = Modifier.padding(top = 32.dp),
         )
+
+        if (isAwaitingFunds) {
+            PredictionAwaitingFundsBanner(
+                modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
+            )
+        }
 
         PolymarketPositionsPreview(
             state = positions,
