@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketBridgeAddresses
@@ -30,15 +31,17 @@ internal class DefaultPolymarketBridgeRepositoryTest {
     private val bridgeApi: PolymarketBridgeApi = mockk()
     private val polymarketRepository: PolymarketRepository = mockk()
 
-    private val repository = DefaultPolymarketBridgeRepository(
-        bridgeApi = bridgeApi,
-        polymarketRepository = polymarketRepository,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-    )
+    private lateinit var repository: DefaultPolymarketBridgeRepository
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(bridgeApi, polymarketRepository)
+        repository = DefaultPolymarketBridgeRepository(
+            bridgeApi = bridgeApi,
+            polymarketRepository = polymarketRepository,
+            assetsStore = DefaultPolymarketBridgeAssetsStore(),
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
     }
 
     @Test
@@ -152,7 +155,7 @@ internal class DefaultPolymarketBridgeRepositoryTest {
     }
 
     @Test
-    fun `GIVEN catalogue already fetched WHEN asked again THEN the api is called again`() = runTest {
+    fun `GIVEN catalogue already fetched WHEN asked again THEN the api is called once`() = runTest {
         // Arrange
         coEvery { bridgeApi.getSupportedAssets() } returns responseWithOneAsset()
 
@@ -161,6 +164,21 @@ internal class DefaultPolymarketBridgeRepositoryTest {
         repository.getSupportedAssets()
 
         // Assert
+        coVerify(exactly = 1) { bridgeApi.getSupportedAssets() }
+    }
+
+    @Test
+    fun `GIVEN catalogue call failed WHEN asked again THEN the api is called again`() = runTest {
+        // Arrange
+        coEvery { bridgeApi.getSupportedAssets() } returnsMany listOf(networkError(), responseWithOneAsset())
+
+        // Act
+        val first = repository.getSupportedAssets()
+        val second = repository.getSupportedAssets()
+
+        // Assert
+        assertThat(first).isEqualTo(Either.Left(PolymarketBridgeError.Network))
+        assertThat(second.getOrNull()).hasSize(1)
         coVerify(exactly = 2) { bridgeApi.getSupportedAssets() }
     }
 
