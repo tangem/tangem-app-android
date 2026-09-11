@@ -133,7 +133,7 @@ class ActivateJointAccountUseCase(
         }
 
         val owners = jointAccount.members.map(JointAccount.Member::address)
-        val match = SafeSingleton.entries
+        val computed = SafeSingleton.entries
             .map { singleton ->
                 // A composition no Safe can be deployed from is a distinct failure, not a mismatch
                 SafeAddress.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
@@ -147,13 +147,17 @@ class ActivateJointAccountUseCase(
                     }
                     .bind()
             }
-            .firstOrNull { computed -> computed.equals(backendAddress, ignoreCase = true) }
+
+        val match = computed.firstOrNull { it.equals(backendAddress, ignoreCase = true) }
 
         return ensureNotNull(match) {
             refused(
                 error = JointAccountActivationError.AddressMismatch,
-                reason = "the announced Safe address $backendAddress differs from the one computed from " +
-                    "${owners.size} owners and threshold ${jointAccount.threshold} under every supported singleton",
+                reason = "the announced Safe address $backendAddress is none of ${computed.joinToString()}, " +
+                    "computed from ${owners.size} owners and threshold ${jointAccount.threshold}",
+                // Both addresses are the whole diagnostic, and the sanitizer replaces any hex run of 8 or more
+                // characters in the exported log file — the only build a user can send us logs from
+                shouldSanitize = false,
             )
         }
     }
@@ -206,8 +210,17 @@ class ActivateJointAccountUseCase(
      * level is `e` deliberately: only `e` and `i` reach the exported log file, and a refused activation is
      * exactly what a support request arrives with.
      */
-    private fun <E : JointAccountActivationError> refused(error: E, reason: String, cause: Throwable? = null): E {
-        TangemLogger.e(messageString = "Joint account activation refused: $reason", throwable = cause)
+    private fun <E : JointAccountActivationError> refused(
+        error: E,
+        reason: String,
+        cause: Throwable? = null,
+        shouldSanitize: Boolean = true,
+    ): E {
+        TangemLogger.e(
+            messageString = "Joint account activation refused: $reason",
+            throwable = cause,
+            shouldSanitize = shouldSanitize,
+        )
         return error
     }
 }
