@@ -17,6 +17,16 @@ value class FeedTabId(val value: String) {
     }
 }
 
+/** Amplitude `Section` value of this tab — deliberately not [FeedTabId.value], which is a backend id. */
+val FeedTabId.analyticsSection: String
+    get() = when (this) {
+        FeedTabId.Crypto -> "Crypto"
+        FeedTabId.RealAssets -> "Assets"
+        FeedTabId.Earn -> "Earn"
+        FeedTabId.Predictions -> "Predictions"
+        else -> value
+    }
+
 /**
  * One tab of the feed home. Features contribute implementations into the feed's tab set with
  * `@Binds/@Provides @IntoSet`; the host builds the tab row and the pager from the set.
