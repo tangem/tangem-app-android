@@ -807,6 +807,27 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
+    fun `GIVEN a successful prefetch WHEN a pull refresh fails THEN add funds keeps the known target`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
+            REQUISITES.right(),
+            PolymarketBridgeError.Network.left(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the first prefetch is still in flight WHEN a pull refresh succeeds first THEN the stale failure is dropped`() =
         runTest {
             // Arrange
