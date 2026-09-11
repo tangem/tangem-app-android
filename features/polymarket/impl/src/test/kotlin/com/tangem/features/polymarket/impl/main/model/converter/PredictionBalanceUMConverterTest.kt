@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
@@ -35,7 +36,7 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
-                depositTarget = DEPOSIT_TARGET,
+                requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 isTradingAllowed = model.isTradingAllowed,
             ),
         )
@@ -54,7 +55,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, depositTarget = null, isTradingAllowed = true),
+            PredictionBalanceUMConverter.Input(status = status, requisites = RequisitesState.Loading, isTradingAllowed = true),
         )
 
         // Assert
@@ -68,7 +69,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, depositTarget = null, isTradingAllowed = true),
+            PredictionBalanceUMConverter.Input(status = status, requisites = RequisitesState.Loading, isTradingAllowed = true),
         )
 
         // Assert
@@ -82,7 +83,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            PredictionBalanceUMConverter.Input(status = status, depositTarget = null, isTradingAllowed = true),
+            PredictionBalanceUMConverter.Input(status = status, requisites = RequisitesState.Loading, isTradingAllowed = true),
         )
 
         // Assert
@@ -90,11 +91,11 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
-    fun `GIVEN no deposit target WHEN converted THEN add funds is disabled and not loading`() {
+    fun `GIVEN requisites still loading WHEN converted THEN add funds is disabled and not loading`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            depositTarget = null,
+            requisites = RequisitesState.Loading,
             isTradingAllowed = true,
         )
 
@@ -103,15 +104,49 @@ internal class PredictionBalanceUMConverterTest {
 
         // Assert
         assertThat(actual.addFunds.isEnabled).isFalse()
+        assertThat(actual.addFunds.isDimmed).isFalse()
         assertThat(actual.addFunds.isLoading).isFalse()
     }
 
     @Test
-    fun `GIVEN a deposit target WHEN converted THEN add funds is enabled`() {
+    fun `GIVEN requisites failed WHEN converted THEN add funds is dimmed but still tappable`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            depositTarget = DEPOSIT_TARGET,
+            requisites = RequisitesState.Failed,
+            isTradingAllowed = true,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isTrue()
+        assertThat(actual.addFunds.isDimmed).isTrue()
+    }
+
+    @Test
+    fun `GIVEN requisites ready WHEN converted THEN add funds is not dimmed`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE,
+            requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
+            isTradingAllowed = true,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isDimmed).isFalse()
+    }
+
+    @Test
+    fun `GIVEN requisites ready WHEN converted THEN add funds is enabled`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE,
+            requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = true,
         )
 
@@ -123,11 +158,11 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
-    fun `GIVEN trading not allowed WHEN a deposit target exists THEN add funds stays disabled`() {
+    fun `GIVEN trading not allowed WHEN requisites are ready THEN add funds stays disabled`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            depositTarget = DEPOSIT_TARGET,
+            requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             isTradingAllowed = false,
         )
 
@@ -139,11 +174,44 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
-    fun `GIVEN no deposit address WHEN a deposit target exists THEN add funds stays disabled`() {
+    fun `GIVEN no deposit address WHEN requisites are ready THEN add funds stays disabled`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
-            depositTarget = DEPOSIT_TARGET,
+            requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
+            isTradingAllowed = true,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no deposit address WHEN requisites failed THEN add funds is dimmed but still tappable`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE.copy(depositAddress = null),
+            requisites = RequisitesState.Failed,
+            isTradingAllowed = true,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isTrue()
+        assertThat(actual.addFunds.isDimmed).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the account is not active WHEN requisites failed THEN add funds stays disabled`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = PredictionAccountStatusValue.NotOnboarded,
+            requisites = RequisitesState.Failed,
             isTradingAllowed = true,
         )
 

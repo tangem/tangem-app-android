@@ -8,5 +8,5 @@ data class PolymarketBridgeAsset(
     val tokenSymbol: String,
     val tokenAddress: String,
     val decimals: Int,
-    val minCheckoutUsd: BigDecimal,
+    val minCheckoutUsd: BigDecimal?,
 )

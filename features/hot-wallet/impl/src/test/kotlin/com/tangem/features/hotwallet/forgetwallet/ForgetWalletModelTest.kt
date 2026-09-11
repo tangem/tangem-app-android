@@ -260,6 +260,7 @@ internal class ForgetWalletModelTest {
 
     private fun backup(fileId: String = this.fileId, walletId: String? = "011") = CloudBackupInfo(
         fileId = fileId,
+        backupName = "wallet",
         walletName = "wallet",
         createdAtMillis = 0L,
         walletId = walletId,
