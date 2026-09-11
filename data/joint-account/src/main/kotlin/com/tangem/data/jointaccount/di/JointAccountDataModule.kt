@@ -14,6 +14,7 @@ import com.tangem.data.jointaccount.converter.JointAccountDMConverter
 import com.tangem.data.jointaccount.fetcher.DefaultSingleJointAccountListFetcher
 import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProducer
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
+import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
 import com.tangem.data.jointaccount.repository.DefaultJointAccountRepository
 import com.tangem.data.jointaccount.store.DefaultJointAccountInvitesStore
 import com.tangem.data.jointaccount.store.JointAccountDM
@@ -29,6 +30,7 @@ import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
+import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -55,6 +57,10 @@ internal interface JointAccountDataModule {
     @Binds
     @Singleton
     fun bindJointTransferPayloadCodec(codec: DefaultJointTransferPayloadCodec): JointTransferPayloadCodec
+
+    @Binds
+    @Singleton
+    fun bindSafeAddressCalculator(calculator: DefaultSafeAddressCalculator): SafeAddressCalculator
 
     @Binds
     @Singleton
