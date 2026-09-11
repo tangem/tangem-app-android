@@ -24,6 +24,7 @@ import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.common.tariffPlan
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
@@ -46,6 +47,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
     private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
+    private val countrySelectorComponentFactory: TangemPayCountrySelectorComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -170,6 +172,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 userWalletId = params.initialStatus.userWalletId,
                 entry = config.entry,
             ),
+            countrySelectorFactory = countrySelectorComponentFactory,
         )
     }
 
