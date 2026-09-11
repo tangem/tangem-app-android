@@ -39,14 +39,15 @@ internal class DefaultJointAccountSafeAddressResolver @Inject constructor(
             .toMap()
     }
 
-    override suspend fun resolveByOwnerPath(userWalletId: UserWalletId): Map<String, String> {
-        return awaitSafeAddresses(userWalletId) { it.isNotEmpty() }
+    override suspend fun resolveByOwnerPath(userWalletId: UserWalletId, ownerPaths: Set<String>): Map<String, String> {
+        if (ownerPaths.isEmpty()) return emptyMap()
+
+        return awaitSafeAddresses(userWalletId) { byPath -> ownerPaths.any(byPath::containsKey) }
     }
 
     /**
-     * Waits until [isEnough] accepts what is known so far. The callers differ in what is enough: asking about
-     * particular networks must wait for one of *those* addresses, because another joint account already having one
-     * says nothing about the account being asked about, while asking for all of them takes whatever exists.
+     * Waits until [isEnough] accepts what is known so far: one of the addresses actually asked about, because
+     * another joint account already having one says nothing about the account being asked about.
      *
      * The two sources are combined rather than read one after the other, so an address arriving after the first
      * snapshot is still seen — reading them in sequence would pin a stale half.
