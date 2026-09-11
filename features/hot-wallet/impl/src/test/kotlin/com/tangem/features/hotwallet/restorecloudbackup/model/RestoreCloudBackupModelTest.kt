@@ -57,12 +57,14 @@ internal class RestoreCloudBackupModelTest {
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "My Wallet",
         walletName = "My Wallet",
         createdAtMillis = 0L,
         walletId = "011",
     )
     private val secondBackupInfo = CloudBackupInfo(
         fileId = "file-2",
+        backupName = "Savings",
         walletName = "Savings",
         createdAtMillis = 1_000L,
         walletId = "012",
