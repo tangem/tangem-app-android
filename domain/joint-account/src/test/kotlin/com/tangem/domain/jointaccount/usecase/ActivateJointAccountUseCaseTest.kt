@@ -21,12 +21,18 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
+import com.tangem.utils.logging.TangemLogger
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.slot
+import io.mockk.unmockkObject
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -136,7 +142,7 @@ internal class ActivateJointAccountUseCaseTest {
     fun `GIVEN backend address matches no singleton WHEN invoke THEN AddressMismatch and the card is never asked`() =
         runTest {
             // Arrange
-            val jointAccount = jointAccount(safeAddress = "0x000000000000000000000000000000000000dEaD")
+            val jointAccount = jointAccount(safeAddress = DEAD_ADDRESS)
             every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
 
             // Act
@@ -278,6 +284,41 @@ internal class ActivateJointAccountUseCaseTest {
         assertThat(actual).isEqualTo(Unit.right())
     }
 
+    /**
+     * Every refusal reaches the user as the same generic dialog, so the log is the only place the reason
+     * survives — and the only thing a support request carries.
+     */
+    @Test
+    fun `GIVEN backend address matches no singleton WHEN invoke THEN the announced address is logged`() = runTest {
+        // Arrange
+        mockkObject(TangemLogger)
+        val jointAccount = jointAccount(safeAddress = DEAD_ADDRESS)
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount))
+        val message = slot<String>()
+        every { TangemLogger.e(capture(message), any()) } just Runs
+
+        // Act
+        useCase(account = account)
+
+        // Assert
+        assertThat(message.captured).contains(DEAD_ADDRESS)
+        unmockkObject(TangemLogger)
+    }
+
+    @Test
+    fun `GIVEN confirming account WHEN invoke THEN nothing is logged`() = runTest {
+        // Arrange
+        mockkObject(TangemLogger)
+        every { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount()))
+
+        // Act
+        useCase(account = account)
+
+        // Assert
+        verify(exactly = 0) { TangemLogger.e(any(), any()) }
+        unmockkObject(TangemLogger)
+    }
+
     private fun jointAccount(
         status: JointAccount.Status = JointAccount.Status.CONFIRMING,
         safeAddress: String? = computedSafeAddress(SafeSingleton.SAFE_L2),
@@ -312,6 +353,7 @@ internal class ActivateJointAccountUseCaseTest {
     private companion object {
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
         const val MEMBER_ADDRESS = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF"
+        const val DEAD_ADDRESS = "0x000000000000000000000000000000000000dEaD"
         const val SIGNATURE = "0xdeadbeef"
     }
 }
