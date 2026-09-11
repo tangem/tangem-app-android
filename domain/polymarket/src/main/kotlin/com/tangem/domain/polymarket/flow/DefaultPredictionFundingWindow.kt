@@ -42,9 +42,11 @@ class DefaultPredictionFundingWindow(
         return states.map { it[userWalletId] is State.Open }.distinctUntilChanged()
     }
 
-    override suspend fun watch(userWalletId: UserWalletId): Unit = coroutineScope {
-        launch { openOnFundingSwap(userWalletId = userWalletId) }
-        launch { closeWhenSettled(userWalletId = userWalletId) }
+    override suspend fun watch(userWalletId: UserWalletId) {
+        coroutineScope {
+            launch { openOnFundingSwap(userWalletId = userWalletId) }
+            launch { closeWhenSettled(userWalletId = userWalletId) }
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
