@@ -7,6 +7,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -14,8 +15,6 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
-import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
-import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
@@ -92,7 +91,11 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
 
-    private val requisitesState = MutableStateFlow<RequisitesState>(RequisitesState.Loading)
+    private val fundingRequisites = PredictionFundingRequisites(
+        refreshInteractor = refreshPredictionDepositRequisitesInteractor,
+        userWalletId = params.userWalletId,
+        scope = modelScope,
+    )
 
     private val tradingAllowance = PredictionTradingAllowance(
         checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
@@ -100,8 +103,6 @@ internal class PolymarketMainModel @Inject constructor(
     )
 
     private val refreshJobHolder = JobHolder()
-
-    private val requisitesJobHolder = JobHolder()
 
     val addFundsNavigation = SlotNavigation<Unit>()
 
@@ -113,7 +114,7 @@ internal class PolymarketMainModel @Inject constructor(
                 balance = balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
-                        depositTarget = null,
+                        requisites = RequisitesState.Loading,
                         isTradingAllowed = false,
                     ),
                 ),
@@ -135,7 +136,7 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         combine(
             predictionAccountStatusSupplier(userWalletId = params.userWalletId),
-            requisitesState,
+            fundingRequisites.state,
             tradingAllowance.isAllowed,
         ) { status, requisites, isTradingAllowed ->
             activeStatus.value = status as? PredictionAccountStatusValue.Active
@@ -143,7 +144,7 @@ internal class PolymarketMainModel @Inject constructor(
             balanceConverter.convert(
                 PredictionBalanceUMConverter.Input(
                     status = status,
-                    depositTarget = requisites.depositTarget,
+                    requisites = requisites,
                     isTradingAllowed = isTradingAllowed,
                 ),
             )
@@ -155,7 +156,7 @@ internal class PolymarketMainModel @Inject constructor(
         predictionAccountStatusSupplier(userWalletId = params.userWalletId)
             .filterIsInstance<PredictionAccountStatusValue.Active>()
             .take(count = 1)
-            .onEach { prefetchRequisites() }
+            .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
 
         positionsPreviewLoader.state
@@ -179,7 +180,7 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         observeEvents()
         loadCategories()
-        loadTradingAllowance()
+        modelScope.launch { tradingAllowance.refresh() }
     }
 
     fun onBackClick() {
@@ -224,7 +225,7 @@ internal class PolymarketMainModel @Inject constructor(
         isScreenResumed = true
         positionsPreviewLoader.resume(modelScope, params.userWalletId)
         activeFeed.value?.poller?.resume()
-        if (requisitesState.value is RequisitesState.Failed) prefetchRequisites()
+        fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(modelScope)
             .saveIn(balancePollJobHolder)
@@ -338,10 +339,6 @@ internal class PolymarketMainModel @Inject constructor(
         )
     }
 
-    private fun loadTradingAllowance() {
-        modelScope.launch { tradingAllowance.refresh() }
-    }
-
     private fun onRefresh() {
         setRefreshing(isRefreshing = true)
 
@@ -350,6 +347,7 @@ internal class PolymarketMainModel @Inject constructor(
                 async { tradingAllowance.refresh() },
                 async { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(params.userWalletId)) },
             ).awaitAll()
+            fundingRequisites.refresh()
 
             setRefreshing(isRefreshing = false)
         }.saveIn(refreshJobHolder)
@@ -361,20 +359,20 @@ internal class PolymarketMainModel @Inject constructor(
         }
     }
 
-    private fun prefetchRequisites() {
-        if (requisitesState.value is RequisitesState.Ready || requisitesJobHolder.isActive) return
-
-        modelScope.launch {
-            refreshPredictionDepositRequisitesInteractor(userWalletId = params.userWalletId).fold(
-                ifLeft = { requisitesState.value = RequisitesState.Failed },
-                ifRight = { requisitesState.value = RequisitesState.Ready(requisites = it) },
+    private fun onAddFundsClick() {
+        when (fundingRequisites.state.value) {
+            is RequisitesState.Loading -> Unit
+            is RequisitesState.Failed -> messageSender.send(
+                DialogMessage(message = resourceReference(R.string.prediction_add_funds_error_description)),
             )
-        }.saveIn(requisitesJobHolder)
+            is RequisitesState.Ready -> openAddFunds()
+        }
     }
 
-    private fun onAddFundsClick() {
-        if (requisitesState.value.depositTarget == null) return reportFundingUnavailable()
-        if (activeStatus.value?.cryptoCurrencyStatus == null) return reportFundingUnavailable()
+    private fun openAddFunds() {
+        if (activeStatus.value?.cryptoCurrencyStatus == null) {
+            return messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
+        }
 
         addFundsNavigation.activate(Unit)
     }
@@ -395,7 +393,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     override fun onReceiveClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
-        val target = requisitesState.value.depositTarget ?: return
+        val target = fundingRequisites.target ?: return
         receiveNavigation.activate(
             PolymarketReceiveConfigFactory.create(
                 cryptoCurrency = collateral,
@@ -409,10 +407,6 @@ internal class PolymarketMainModel @Inject constructor(
         addFundsNavigation.dismiss()
     }
 
-    private fun reportFundingUnavailable() {
-        messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
-    }
-
     private fun onOutcomeClick(eventId: String, marketId: String, assetId: String) {
         router.push(
             PolymarketRoute.EventDetails(
@@ -424,12 +418,3 @@ internal class PolymarketMainModel @Inject constructor(
         )
     }
 }
-
-private sealed interface RequisitesState {
-    data object Loading : RequisitesState
-    data class Ready(val requisites: PolymarketDepositRequisites) : RequisitesState
-    data object Failed : RequisitesState
-}
-
-private val RequisitesState.depositTarget: PolymarketDepositTarget?
-    get() = (this as? RequisitesState.Ready)?.requisites?.default
