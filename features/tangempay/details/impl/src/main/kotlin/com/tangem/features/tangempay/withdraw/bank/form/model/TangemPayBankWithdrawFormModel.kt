@@ -10,6 +10,7 @@ import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUMFactory
+import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,11 +43,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         ),
     )
 
-    private val state = MutableStateFlow(
-        FormState(
-            values = form.fields.associateWith { field -> form.draft.value.newRecipient.fields[field].orEmpty() },
-        ),
-    )
+    private val state = MutableStateFlow(FormState())
 
     val uiState: StateFlow<TangemPayBankWithdrawFormUM>
         field = MutableStateFlow(umFactory.create(draft = form.draft.value, state = state.value))
@@ -66,7 +63,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
         state.update { current ->
             current.copy(
-                values = current.values + (field to country.code) +
+                edits = current.edits + (field to country.code) +
                     listOfNotNull(regionField?.to(region?.code.orEmpty())),
                 errors = current.errors - staleFields.toSet(),
             )
@@ -75,23 +72,27 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     fun onRegionSelected(field: BankWithdrawFormField, region: TangemPayRegion) {
         state.update { current ->
-            current.copy(values = current.values + (field to region.code), errors = current.errors - field)
+            current.copy(edits = current.edits + (field to region.code), errors = current.errors - field)
         }
     }
 
     private fun onBackClick() {
-        form.onBack(result())
+        // Edit mode means "cancel": Continue validates before writing to the draft, but Back does not, so
+        // discarding here avoids committing a half-typed value or a blanked required field.
+        if (form.step !is TangemPayBankWithdrawInnerRoute.Edit) {
+            form.onBack(result())
+        }
         router.pop()
     }
 
     private fun onValueChange(field: BankWithdrawFormField, value: String) {
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
-        state.update { it.copy(values = it.values + (field to value), errors = it.errors - staleFields) }
+        state.update { it.copy(edits = it.edits + (field to value), errors = it.errors - staleFields) }
     }
 
     private fun onFocusChange(field: BankWithdrawFormField, isFocused: Boolean) {
         if (isFocused) return
-        val error = BankWithdrawFormValidator.validate(field = field, values = state.value.values)
+        val error = BankWithdrawFormValidator.validate(field = field, values = currentValues())
         // An empty field is only reported on Continue, so tabbing through the form stays quiet.
         if (error == null || error == BankWithdrawFieldError.Required) return
         state.update { it.copy(errors = it.errors + (field to error)) }
@@ -114,25 +115,27 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     private fun onContinueClick() {
-        val current = state.value
-        val visibleFields = BankWithdrawFormFields.visible(fields = form.fields, values = current.values)
-        val errors = BankWithdrawFormValidator.validateAll(fields = visibleFields, values = current.values)
+        val values = currentValues()
+        val visibleFields = BankWithdrawFormFields.visible(fields = form.fields, values = values)
+        val errors = BankWithdrawFormValidator.validateAll(fields = visibleFields, values = values)
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors) }
         } else {
-            state.update { it.copy(errors = emptyMap()) }
-            form.onContinue(result())
+            form.onContinue(values.mapValues { (_, value) -> value.trim() })
+            state.update { it.copy(edits = emptyMap(), errors = emptyMap()) }
         }
     }
 
-    private fun result(): Map<BankWithdrawFormField, String> =
-        state.value.values.mapValues { (_, value) -> value.trim() }
+    /** This screen's fields, the user's local edits layered over the draft's current values. */
+    private fun currentValues(): Map<BankWithdrawFormField, String> = state.value.values(form.fields, form.draft.value)
+
+    private fun result(): Map<BankWithdrawFormField, String> = currentValues().mapValues { (_, value) -> value.trim() }
 
     private fun regionConfig(
         field: BankWithdrawFormField,
         countryField: BankWithdrawFormField,
     ): CountrySelectorConfig? {
-        return state.value.values[countryField]
+        return currentValues()[countryField]
             ?.takeIf(String::isNotEmpty)
             ?.let { CountrySelectorConfig.Region(field = field, countryCode = it) }
     }
