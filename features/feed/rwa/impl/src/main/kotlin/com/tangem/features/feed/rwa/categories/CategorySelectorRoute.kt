@@ -5,11 +5,10 @@ import com.tangem.features.feed.rwa.categories.components.CategorySelectorCompon
 import kotlinx.serialization.Serializable
 
 /**
- * The Category selector sheet, pushed to the feed stack by the Real assets tab.
+ * The Category selector screen, pushed to the feed stack by the Real assets tab.
  *
- * Carries the applied selection because a [FeedRoute] is pure data — no callback can travel with a
- * push — so the sheet has to be told what to open pre-checked. The result travels back through
- * [CategorySelection].
+ * [categorySelection] is what the screen opens pre-checked with; the chosen one comes back by calling
+ * [callback], not through the route.
  */
 @Serializable
 internal class CategorySelectorRoute(
