@@ -1,6 +1,5 @@
 package com.tangem.features.polymarket.impl.onboarding.model
 
-import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -128,23 +127,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
                 }
             }
 
-            val result = resolvePolymarketEntryInteractor(userWalletId)
-
-            ensureActive()
-
-            val entry = result.getOrElse {
-                stopStarting()
-                reportFailure()
-                return@launch
-            }
-
-            when (entry) {
-                is PolymarketEntry.Onboard,
-                PolymarketEntry.Undetermined,
-                PolymarketEntry.Reconnect,
-                -> runOnboarding()
-                PolymarketEntry.Onboarded -> openFeed()
-            }
+            runOnboarding()
         }.saveIn(onboardingJob)
     }
 

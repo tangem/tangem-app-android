@@ -1,22 +1,29 @@
 package com.tangem.tests.tangempay
 
+import android.Manifest
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.REFERRAL_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.utils.getWcUri
+import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.createConnectionViaPasteFromClipboardButton
 import com.tangem.scenarios.openAddFundsChooseTokenSheet
 import com.tangem.scenarios.openAddTokensPortfolioSelector
 import com.tangem.scenarios.openMainScreenWithPayAndTwoAccounts
 import com.tangem.scenarios.openMarketsAddToPortfolioSelector
 import com.tangem.scenarios.openReferralPortfolioSelector
 import com.tangem.scenarios.openTransferChooseTokenSheet
+import com.tangem.scenarios.openWalletConnectScreen
 import com.tangem.scenarios.openWalletSettingsScreen
+import com.tangem.scenarios.openWcConnectionAccountSelector
 import com.tangem.scenarios.setTangemPayWithTwoAccountsScenarios
 import com.tangem.screens.onAddToPortfolioScreen
 import com.tangem.screens.onChooseTokenBottomSheet
 import com.tangem.screens.onPortfolioSelectorSheet
 import com.tangem.screens.onWalletSettingsScreen
+import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -182,6 +189,51 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
             }
             step("Open the referral 'Account for rewards' picker") {
                 openReferralPortfolioSelector()
+            }
+            step("Assert '$firstAccountName' and '$secondAccountName' are displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onPortfolioSelectorSheet { portfolioOption(firstAccountName).assertIsDisplayed() }
+                }
+                onPortfolioSelectorSheet { portfolioOption(secondAccountName).assertIsDisplayed() }
+            }
+            step("Assert '$payAccountName' is not displayed") {
+                onPortfolioSelectorSheet { portfolioOption(payAccountName).assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("11472")
+    @DisplayName("Tangem Pay: the Pay account is not offered when connecting a dApp via WalletConnect")
+    @Test
+    fun payAccountNotOfferedWhenConnectingDAppViaWalletConnectTest() {
+        val context = device.context
+        val packageName = BuildConfig.APPLICATION_ID
+        val permissionName = Manifest.permission.CAMERA
+
+        setupHooks(
+            additionalBeforeSection = {
+                device.uiDevice.executeShellCommand("pm grant $packageName $permissionName")
+            },
+        ).run {
+            step("Set WireMock scenarios for a Pay wallet with two accounts") {
+                setTangemPayWithTwoAccountsScenarios()
+            }
+            step("Open 'Main' screen with the Pay wallet holding two accounts") {
+                openMainScreenWithPayAndTwoAccounts()
+            }
+            step("Open 'Wallet Connect' screen") {
+                openWalletConnectScreen()
+            }
+            // Fetched after the import, not before it: a pairing URI expires, and importing the
+            // wallet takes minutes.
+            step("Set WalletConnect URI to clipboard") {
+                setClipboardText(context, getWcUri())
+            }
+            step("Create connection via 'Paste from clipboard' button") {
+                createConnectionViaPasteFromClipboardButton()
+            }
+            step("Open the account selector on the connection sheet") {
+                openWcConnectionAccountSelector()
             }
             step("Assert '$firstAccountName' and '$secondAccountName' are displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
