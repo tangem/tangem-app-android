@@ -188,6 +188,9 @@ internal class SingleAccountStatusListProducerContributionsTest {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(PredictionAccountStatusValue.Loading)
             },
             polymarketFeatureToggles = mockk { every { isPolymarketEnabled } returns true },
+            // the toggle is off, so the supplier is never invoked
+            collectiblesAccountStatusSupplier = mockk(),
+            collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
             networksRepository = mockk<NetworksRepository> {
                 coEvery { hasCachedStatuses(id) } returns true
             },
