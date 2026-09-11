@@ -1,7 +1,7 @@
 package com.tangem.data.collectibles.account.cleaner
 
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -12,10 +12,9 @@ import javax.inject.Inject
 /**
  * Removes the recorded collectibles account and the hot delegate key of deleted wallets.
  *
- * [UserWalletId] is derived from the wallet key, so re-adding the same wallet reproduces both storage keys.
- * Without this, a re-added wallet opens straight on the main screen — the record says it has an account — while
- * signing spins with a delegate the vault may no longer point at, and neither entry is reachable by any later
- * cleanup. The owner key needs no clearing here: it lives in the wallet's derivations, which go with the wallet.
+ * [UserWalletId] is derived from the wallet key, so re-adding the same wallet reproduces both storage keys: a
+ * re-added wallet would open straight on the main screen and sign spins with a delegate the vault may no longer
+ * point at. The owner key needs no clearing — it lives in the wallet's derivations, which go with the wallet.
  *
  * @property accountRepository record of whether the wallet has a collectibles account
  * @property hotDelegate       custodian of the vault's `hot_delegate` key

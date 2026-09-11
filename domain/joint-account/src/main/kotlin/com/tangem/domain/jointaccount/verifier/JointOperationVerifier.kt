@@ -11,10 +11,9 @@ import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSignError.VerificationFailed
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.Erc20TransferEncoder
+import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddress
 import com.tangem.domain.jointaccount.safe.SafeSingleton
-import java.math.BigInteger
 
 /**
  * The local checks a co-signer runs before anything reaches the card — each blocks the signature on its own:
@@ -24,7 +23,7 @@ import java.math.BigInteger
  * 3. the `SafeTx` decodes to exactly what the UI shows the user — recipient, amount, asset;
  * 4. the payload has one of the two allowed shapes and never targets the Safe itself.
  */
-class JointOperationVerifier {
+class JointOperationVerifier(private val payloadCodec: JointTransferPayloadCodec) {
 
     fun verify(
         jointAccount: JointAccount,
@@ -68,17 +67,18 @@ class JointOperationVerifier {
         ensure(isMember) { VerificationFailed(reason = VerificationFailed.Reason.NOT_A_MEMBER) }
     }
 
+    /**
+
+     * to what the operation actually carries. Re-encoding rather than decoding is deliberate: it is the payload
+     * bytes that get signed, so they are what must match.
+     */
     private fun Raise<JointOperationSignError>.checkDisplayedPayload(safeTx: SafeTx, displayed: JointTransferIntent) {
-        val isMatching = when (displayed) {
-            is JointTransferIntent.Native ->
-                safeTx.to.equals(displayed.recipient, ignoreCase = true) &&
-                    safeTx.value == displayed.amountWei &&
-                    normalized(safeTx.data) == EMPTY_CALLDATA
-            is JointTransferIntent.Erc20 ->
-                safeTx.to.equals(displayed.tokenContract, ignoreCase = true) &&
-                    safeTx.value == BigInteger.ZERO &&
-                    normalized(safeTx.data) == displayed.encodedTransferOrNull()
-        }
+        val expected = payloadCodec.encode(displayed)
+
+        val isMatching = expected != null &&
+            safeTx.to.equals(expected.to, ignoreCase = true) &&
+            safeTx.value == expected.value &&
+            normalized(safeTx.data) == normalized(expected.data)
 
         ensure(isMatching) { VerificationFailed(reason = VerificationFailed.Reason.PAYLOAD_MISMATCH) }
     }
@@ -91,29 +91,16 @@ class JointOperationVerifier {
             VerificationFailed(reason = VerificationFailed.Reason.FORBIDDEN_FORM)
         }
 
-        val calldata = normalized(safeTx.data)
-        val isNative = safeTx.value > BigInteger.ZERO && calldata == EMPTY_CALLDATA
-        val isErc20Transfer = safeTx.value == BigInteger.ZERO &&
-            calldata.startsWith(prefix = TRANSFER_CALLDATA_PREFIX) &&
-            calldata.length == TRANSFER_CALLDATA_LENGTH
-
-        ensure(isNative || isErc20Transfer) {
+        // The two allowed shapes are exactly the ones the codec can read back
+        ensure(payloadCodec.decode(safeTx) != null) {
             VerificationFailed(reason = VerificationFailed.Reason.FORBIDDEN_FORM)
         }
     }
 
-    /** `null` when the displayed transfer cannot be encoded at all — it then matches no calldata */
-    private fun JointTransferIntent.Erc20.encodedTransferOrNull(): String? = runCatching {
-        Erc20TransferEncoder.encodeTransfer(recipient = recipient, amount = amountWei)
-    }.getOrNull()
-
     private fun normalized(data: String): String = "0x" + data.lowercase().removePrefix(prefix = "0x")
 
     private companion object {
-        const val EMPTY_CALLDATA = "0x"
-
-        // "0x" + transfer(address,uint256) selector + two 32-byte ABI words
-        const val TRANSFER_CALLDATA_PREFIX = "0xa9059cbb"
+        // "0x" + transfer(address,uint256) selector + two 32-byte ABI words — nothing allowed is longer
         const val TRANSFER_CALLDATA_LENGTH = 2 + 8 + 64 + 64
     }
 }
