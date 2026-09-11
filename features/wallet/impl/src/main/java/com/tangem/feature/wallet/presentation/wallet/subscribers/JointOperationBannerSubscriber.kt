@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -15,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
 /**
- * Keeps the wallet screen's pending joint operation banner in step with the wallet's joint accounts. A wallet
+ * Keeps the wallet screen's pending joint operation banners in step with the wallet's joint accounts. A wallet
  * without them never leaves the empty state, so nothing is announced and nothing is subscribed to downstream.
  */
 internal class JointOperationBannerSubscriber @AssistedInject constructor(
@@ -23,11 +25,25 @@ internal class JointOperationBannerSubscriber @AssistedInject constructor(
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val stateController: WalletStateController,
     private val getPendingJointOperationsUseCase: GetPendingJointOperationsUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : BasicWalletSubscriber() {
 
-    private val bannerConverter = JointOperationBannerConverter()
-
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
+        // The subtitle carries the transfer amount, so it is rebuilt when balances are hidden or shown again
+        return combine(
+            flow = operationsFlow(),
+            flow2 = getBalanceHidingSettingsUseCase().map { it.isBalanceHidden }.distinctUntilChanged(),
+        ) { operations, isBalanceHidden ->
+            stateController.update(
+                SetJointOperationBannersTransformer(
+                    userWalletId = userWallet.walletId,
+                    banners = JointOperationBannerConverter(isBalanceHidden = isBalanceHidden).convert(operations),
+                ),
+            )
+        }
+    }
+
+    private fun operationsFlow(): Flow<List<JointPendingOperation>> {
         return jointAccountsFlow()
             .flatMapLatest { accounts ->
                 if (accounts.isEmpty()) {
@@ -35,14 +51,6 @@ internal class JointOperationBannerSubscriber @AssistedInject constructor(
                 } else {
                     getPendingJointOperationsUseCase(userWalletId = userWallet.walletId, accounts = accounts)
                 }
-            }
-            .onEach { operations ->
-                stateController.update(
-                    SetJointOperationBannersTransformer(
-                        userWalletId = userWallet.walletId,
-                        banners = bannerConverter.convert(operations),
-                    ),
-                )
             }
     }
 
