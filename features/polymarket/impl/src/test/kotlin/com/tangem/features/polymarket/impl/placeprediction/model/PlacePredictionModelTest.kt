@@ -17,6 +17,7 @@ import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
@@ -54,6 +55,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -72,7 +74,9 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import kotlinx.coroutines.test.runCurrent
 
@@ -1019,6 +1023,58 @@ internal class PlacePredictionModelTest {
         coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
 
         model.onDestroy()
+    }
+
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TradingAllowance {
+
+        @Test
+        fun `GIVEN the region cannot be read WHEN the screen opens THEN no restriction is claimed`() = runTest {
+            // Arrange
+            coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.tradingPermission).isEqualTo(TradingPermissionUM.Unknown)
+            assertThat(model.uiState.value.notifications).doesNotContain(PredictionNotificationUM.RegionRestricted)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the region could not be read WHEN the screen is shown again THEN it is read again`() = runTest {
+            // Arrange
+            coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenShown()
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 2) { checkGeoblockUseCase() }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the region was read WHEN the screen is shown again THEN it is not read again`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenShown()
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { checkGeoblockUseCase() }
+            model.onDestroy()
+        }
     }
 
     private fun createModel(testScope: TestScope): PlacePredictionModel {
