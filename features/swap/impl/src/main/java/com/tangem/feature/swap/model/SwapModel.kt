@@ -2728,7 +2728,7 @@ internal class SwapModel @Inject constructor(
      * button is deliberately left alone: it keeps its dynamic Transfer/Swap label in account flows too.
      */
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
-        if (!isAccountFlowActive) return this
+        if (!isAccountFlowActive && !isPredictionWithdrawFlow) return this
         val flow = accountFlow ?: return this
         val titledState = copy(
             titleId = when (flow) {
