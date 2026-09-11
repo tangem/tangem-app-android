@@ -13,7 +13,7 @@ internal sealed interface TangemPayCampaignUM {
     ) : TangemPayCampaignUM
 
     data class Landing(
-        val cardArtUrl: String,
+        val cardArtUrl: String?,
         val mode: Mode,
         val isCtaLoading: Boolean,
         val onGetCardClick: () -> Unit,
