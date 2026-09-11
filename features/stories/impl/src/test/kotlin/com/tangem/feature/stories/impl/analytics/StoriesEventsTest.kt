@@ -23,6 +23,22 @@ internal class StoriesEventsTest {
     }
 
     @Test
+    fun `GIVEN the yield promo story WHEN it is watched THEN its own event is reported`() {
+        // Act
+        val actual = StoriesEvents.storyShown(
+            storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
+            source = "TokenDetails",
+            watchCount = "3",
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            StoriesEvents.YieldPromoStory(source = "TokenDetails", watchCount = "3"),
+        )
+        assertThat(actual.event).isEqualTo("Yield Promo Story")
+    }
+
+    @Test
     fun `GIVEN the swap story WHEN it is watched THEN the swap event is reported`() {
         // Act
         val actual = StoriesEvents.storyShown(
