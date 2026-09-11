@@ -28,6 +28,7 @@ data class CustomerMeResponse(
         @Json(name = "country") val country: String? = null,
         @Json(name = "phone_mask") val phoneMask: String? = null,
         @Json(name = "email") val email: String? = null,
+        @Json(name = "emboss_name") val embossName: String? = null,
     )
 
     @JsonClass(generateAdapter = true)
