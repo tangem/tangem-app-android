@@ -291,7 +291,7 @@ internal class DefaultPredictionFundingWindowTest {
         window.isOpen(WALLET_ID).test {
             assertThat(awaitItem()).isFalse()
             window.arm(WALLET_ID)
-            swaps.value = listOf(createSwapList(timestamp = now + 1))
+            swaps.value = listOf(createSwapList(timestamp = now))
             assertThat(awaitItem()).isTrue()
             watching.cancel()
             now += 10_000
@@ -299,6 +299,49 @@ internal class DefaultPredictionFundingWindowTest {
             // Act
             watching = launch { window.watch(WALLET_ID) }
             runCurrent()
+            advanceTimeBy(19.seconds)
+            runCurrent()
+            expectNoEvents()
+            advanceTimeBy(1.seconds)
+            runCurrent()
+
+            // Assert
+            assertThat(expectMostRecentItem()).isFalse()
+            watching.cancel()
+        }
+    }
+
+    @Test
+    fun `GIVEN armed WHEN swap is first observed after its deadline THEN window never opens`() = runTest {
+        // Arrange
+        window.arm(WALLET_ID)
+        swaps.value = listOf(createSwapList(timestamp = now + 1))
+        now += 31_000
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
+
+            // Assert
+            expectNoEvents()
+            watching.cancel()
+        }
+    }
+
+    @Test
+    fun `GIVEN armed WHEN swap is first observed mid window THEN it closes at the swap deadline`() = runTest {
+        // Arrange
+        window.arm(WALLET_ID)
+        swaps.value = listOf(createSwapList(timestamp = now))
+        now += 10_000
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            val watching = launch { window.watch(WALLET_ID) }
+            assertThat(awaitItem()).isTrue()
             advanceTimeBy(19.seconds)
             runCurrent()
             expectNoEvents()
