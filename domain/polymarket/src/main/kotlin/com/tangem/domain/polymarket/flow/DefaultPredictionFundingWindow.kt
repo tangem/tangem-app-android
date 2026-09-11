@@ -1,7 +1,6 @@
 package com.tangem.domain.polymarket.flow
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -11,9 +10,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -45,14 +47,27 @@ class DefaultPredictionFundingWindow(
     }
 
     private suspend fun openOnFundingSwap(userWalletId: UserWalletId) {
-        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId) ?: return
         val collateralId = collateralCurrencyFactory.createDepositTarget().id
 
-        swapTransactionRepository.getTransactions(userWallet = userWallet, cryptoCurrencyId = collateralId)
+        userWalletsListRepository.userWallets
+            .flatMapLatest { wallets ->
+                val allWallets = wallets.orEmpty()
+                if (allWallets.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    combine(
+                        allWallets.map {
+                            swapTransactionRepository.getTransactions(userWallet = it, cryptoCurrencyId = collateralId)
+                        },
+                    ) { swapLists -> swapLists.flatMap { it.orEmpty() } }
+                }
+            }
             .collect { swapLists ->
                 val armed = states.value[userWalletId] as? State.Armed ?: return@collect
-                val isFunded = swapLists.orEmpty()
-                    .filter { it.toCryptoCurrencyId == collateralId.value }
+                val isFunded = swapLists
+                    .filter {
+                        it.toUserWalletId == userWalletId.stringValue && it.toCryptoCurrencyId == collateralId.value
+                    }
                     .flatMap { it.transactions }
                     .any { it.timestamp >= armed.armedAt }
 
