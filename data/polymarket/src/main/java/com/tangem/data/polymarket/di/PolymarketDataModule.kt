@@ -106,10 +106,12 @@ internal interface PolymarketDataModule {
         @Singleton
         fun providePredictionBalancePoller(
             fetcher: PredictionAccountStatusFetcher,
+            fundingWindow: PredictionFundingWindow,
             config: PredictionBalancePollingConfig,
             appScope: AppCoroutineScope,
         ): PredictionBalancePoller = PredictionBalancePoller(
             fetcher = fetcher,
+            fundingWindow = fundingWindow,
             config = config,
             appScope = appScope,
         )

@@ -5,15 +5,18 @@ import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class PredictionBalancePoller(
     private val fetcher: PredictionAccountStatusFetcher,
+    private val fundingWindow: PredictionFundingWindow,
     private val config: PredictionBalancePollingConfig,
     private val appScope: AppCoroutineScope,
 ) {
@@ -51,10 +54,16 @@ class PredictionBalancePoller(
         }
     }
 
-    private suspend fun run(userWalletId: UserWalletId) {
-        while (currentCoroutineContext().isActive) {
-            fetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
-            delay(config.baseInterval)
+    private suspend fun run(userWalletId: UserWalletId): Unit = coroutineScope {
+        launch { fundingWindow.watch(userWalletId = userWalletId) }
+
+        fundingWindow.isOpen(userWalletId = userWalletId).collectLatest { isOpen ->
+            val interval = if (isOpen) config.fundingInterval else config.baseInterval
+
+            while (currentCoroutineContext().isActive) {
+                fetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
+                delay(interval)
+            }
         }
     }
 
