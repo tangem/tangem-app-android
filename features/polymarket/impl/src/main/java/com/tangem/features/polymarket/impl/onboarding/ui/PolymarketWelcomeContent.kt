@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.onboarding.OnboardingBenefitCard
 import com.tangem.common.ui.onboarding.OnboardingFaqItem
 import com.tangem.common.ui.onboarding.OnboardingHeadline
+import com.tangem.common.ui.onboarding.OnboardingHero
+import com.tangem.core.ui.R as UiR
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -60,7 +62,13 @@ internal fun PolymarketWelcomeContent(
     ) {
         // No top padding: the hero is full-bleed and scrolls under the status bar and the top navigation.
         Box {
-            PolymarketOnboardingHero()
+            OnboardingHero(
+                imageResId = UiR.drawable.img_prediction_welcome_hero,
+                frameWidth = HERO_FRAME_WIDTH,
+                imageHeight = HERO_IMAGE_HEIGHT,
+                tintStart = TINT_START,
+                tintEnd = TINT_END,
+            )
             Column {
                 Spacer(
                     modifier = Modifier
