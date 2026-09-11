@@ -5,53 +5,53 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.ADDRESS_HEX_LENG
 import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.extensions.isValidHex
 import com.tangem.domain.jointaccount.model.SafeTx
+import kotlinx.serialization.json.Json
 import java.math.BigInteger
 
 /**
  * The `eth_signTypedData_v4` payload of a [SafeTx] and the EIP-712 digest of that payload.
  *
  * The digest is hashed by the blockchain SDK out of the very JSON the Blockaid gate is shown, so the bytes the card
- * signs and the payload the user is vetted against cannot drift apart. What stays here is the Safe v1.5.0 schema —
- * the type strings and the field order — which is the part no generic EIP-712 encoder can know.
+ * signs and the payload the user is vetted against cannot drift apart. What stays here is turning a [SafeTx] into
+ * that payload and refusing one the schema cannot hold; the schema itself is [SafeTxTypedData].
  */
 internal object SafeTxTypedDataBuilder {
 
     private val UINT8_RANGE = 0..255
     private const val UINT256_BITS = 256
 
-    fun digest(safeTx: SafeTx, chainId: Long, verifyingContract: String): ByteArray {
-        val json = buildJson(safeTx = safeTx, chainId = chainId, verifyingContract = verifyingContract)
+    /** The schema lives in the defaults of [SafeTxTypedData], so they have to be written out */
+    private val json = Json { encodeDefaults = true }
 
-        return EthereumUtils.makeTypedDataHash(rawMessage = json)
+    fun digest(safeTx: SafeTx, chainId: Long, verifyingContract: String): ByteArray {
+        val payload = buildJson(safeTx = safeTx, chainId = chainId, verifyingContract = verifyingContract)
+
+        return EthereumUtils.makeTypedDataHash(rawMessage = payload)
     }
 
     fun buildJson(safeTx: SafeTx, chainId: Long, verifyingContract: String): String {
         requireHashable(safeTx = safeTx, chainId = chainId, verifyingContract = verifyingContract)
 
-        return buildString {
-            append("""{"types":{"EIP712Domain":[""")
-            append("""{"name":"chainId","type":"uint256"},{"name":"verifyingContract","type":"address"}""")
-            append("""],"SafeTx":[""")
-            append("""{"name":"to","type":"address"},{"name":"value","type":"uint256"},""")
-            append("""{"name":"data","type":"bytes"},{"name":"operation","type":"uint8"},""")
-            append("""{"name":"safeTxGas","type":"uint256"},{"name":"baseGas","type":"uint256"},""")
-            append("""{"name":"gasPrice","type":"uint256"},{"name":"gasToken","type":"address"},""")
-            append("""{"name":"refundReceiver","type":"address"},{"name":"nonce","type":"uint256"}""")
-            append("""]},"primaryType":"SafeTx","domain":{""")
-            append(""""chainId":$chainId,"verifyingContract":"${normalizedAddress(verifyingContract)}"""")
-            append("""},"message":{""")
-            append(""""to":"${normalizedAddress(safeTx.to)}",""")
-            append(""""value":"${safeTx.value}",""")
-            append(""""data":"${normalizedData(safeTx.data)}",""")
-            append(""""operation":${safeTx.operation},""")
-            append(""""safeTxGas":"${safeTx.safeTxGas}",""")
-            append(""""baseGas":"${safeTx.baseGas}",""")
-            append(""""gasPrice":"${safeTx.gasPrice}",""")
-            append(""""gasToken":"${normalizedAddress(safeTx.gasToken)}",""")
-            append(""""refundReceiver":"${normalizedAddress(safeTx.refundReceiver)}",""")
-            append(""""nonce":"${safeTx.nonce}"""")
-            append("}}")
-        }
+        val typedData = SafeTxTypedData(
+            domain = SafeTxTypedData.Domain(
+                chainId = chainId,
+                verifyingContract = normalizedAddress(verifyingContract),
+            ),
+            message = SafeTxTypedData.Message(
+                to = normalizedAddress(safeTx.to),
+                value = safeTx.value.toString(),
+                data = normalizedData(safeTx.data),
+                operation = safeTx.operation,
+                safeTxGas = safeTx.safeTxGas.toString(),
+                baseGas = safeTx.baseGas.toString(),
+                gasPrice = safeTx.gasPrice.toString(),
+                gasToken = normalizedAddress(safeTx.gasToken),
+                refundReceiver = normalizedAddress(safeTx.refundReceiver),
+                nonce = safeTx.nonce.toString(),
+            ),
+        )
+
+        return json.encodeToString(typedData)
     }
 
     /**
