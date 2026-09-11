@@ -34,6 +34,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.model.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.choice.model.TangemPayBankWithdrawChoiceModel
 import com.tangem.features.tangempay.withdraw.bank.form.model.TangemPayBankWithdrawFormModel
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
+import com.tangem.features.tangempay.withdraw.bank.preview.model.TangemPayBankWithdrawPreviewModel
 import com.tangem.features.tangempay.withdraw.bank.recipients.model.TangemPayBankWithdrawRecipientsModel
 import com.tangem.features.tangempay.withdraw.hub.model.TangemPayWithdrawHubModel
 import dagger.Binds
@@ -211,6 +212,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayBankWithdrawFormModel::class)
     fun bindTangemPayBankWithdrawFormModel(model: TangemPayBankWithdrawFormModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayBankWithdrawPreviewModel::class)
+    fun bindTangemPayBankWithdrawPreviewModel(model: TangemPayBankWithdrawPreviewModel): Model
 
     @Binds
     @IntoMap
