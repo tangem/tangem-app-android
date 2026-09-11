@@ -35,6 +35,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedScrollPosition
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketMainUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
@@ -95,6 +96,9 @@ internal class PolymarketMainModelTest {
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
     )
+
+    private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
+    private val positionsState = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
 
     private val batchState = MutableStateFlow(
         BatchListState<Int, PolymarketEventsBatch>(data = emptyList(), status = PaginationStatus.InitialLoading),
@@ -877,8 +881,29 @@ internal class PolymarketMainModelTest {
         }
     }
 
+    @Test
+    fun `GIVEN positions update WHEN main resumes and pauses THEN forwards state and lifecycle`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val positions = PolymarketPositionsPreviewUM.Error(onRetry = {})
+
+        // Act
+        positionsState.value = positions
+        model.onResume()
+        model.onPause()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.positions).isEqualTo(positions)
+        verify(exactly = 1) { positionsPreviewLoader.resume(any(), USER_WALLET_ID) }
+        verify(exactly = 1) { positionsPreviewLoader.pause() }
+    }
+
     private fun createModel(testScope: TestScope): PolymarketMainModel {
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
+        every { positionsPreviewLoader.state } returns positionsState
 
         every { getEventsBatchFlowUseCase(capture(contextSlot), any()) } answers {
             val feedActions = mutableListOf<BatchAction<Int, PolymarketEventsListConfig,
@@ -933,6 +958,7 @@ internal class PolymarketMainModelTest {
             refreshPredictionDepositRequisitesInteractor = refreshRequisites,
             checkPolymarketGeoblockUseCase = checkGeoblock,
             predictionAccountStatusFetcher = accountStatusFetcher,
+            positionsPreviewLoader = positionsPreviewLoader,
         ).also { model = it }
     }
 
