@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,12 +23,12 @@ internal class PredictionFundingRequisites(
     val target: PolymarketDepositTarget?
         get() = (state.value as? RequisitesState.Ready)?.target
 
-    private val prefetchJobHolder = JobHolder()
+    private val jobHolder = JobHolder()
 
     fun prefetchOnce() {
-        if (state.value is RequisitesState.Ready || prefetchJobHolder.isActive) return
+        if (state.value is RequisitesState.Ready || jobHolder.isActive) return
 
-        scope.launch { refresh() }.saveIn(prefetchJobHolder)
+        launchRefresh()
     }
 
     fun retryIfFailed() {
@@ -35,9 +36,13 @@ internal class PredictionFundingRequisites(
     }
 
     suspend fun refresh() {
+        launchRefresh().join()
+    }
+
+    private fun launchRefresh(): Job = scope.launch {
         state.value = refreshInteractor(userWalletId = userWalletId).fold(
             ifLeft = { RequisitesState.Failed },
             ifRight = { it.default?.let(RequisitesState::Ready) ?: RequisitesState.Failed },
         )
-    }
+    }.saveIn(jobHolder)
 }
