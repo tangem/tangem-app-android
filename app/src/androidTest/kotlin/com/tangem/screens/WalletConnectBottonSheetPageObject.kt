@@ -1,6 +1,8 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasClickAction as withClickAction
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseButtonTestTags
@@ -65,6 +67,14 @@ class WalletConnectBottomSheetPageObject(semanticsProvider: SemanticsNodeInterac
 
     val walletName: KNode = child {
         hasTestTag(WalletConnectBottomSheetTestTags.WALLET_NAME)
+        useUnmergedTree = true
+    }
+
+    // Matched by click action + name tag because the row itself is untagged, and the sheet has no
+    // container tag to scope through: TangemModalBottomSheetWithFooter sets no BaseBottomSheetTestTags.
+    val portfolioSelectRow: KNode = child {
+        addSemanticsMatcher(withClickAction())
+        hasAnyDescendant(withTestTag(WalletConnectBottomSheetTestTags.WALLET_NAME))
         useUnmergedTree = true
     }
 

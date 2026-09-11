@@ -11,7 +11,7 @@ interface TangemPayCampaignIssueCardComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val campaignKey: String,
-        val cardArtUrl: String,
+        val cardArtUrl: String?,
         val feeAmount: BigDecimal,
         val feeCurrency: Currency,
         val listener: Listener,

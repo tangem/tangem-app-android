@@ -19,6 +19,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -65,7 +66,7 @@ import javax.inject.Inject
 /** Model of the Discovery feed screen. */
 @OptIn(ExperimentalCoroutinesApi::class)
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class PolymarketMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -78,6 +79,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader,
+    private val predictionBalancePoller: PredictionBalancePoller,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -173,6 +175,8 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val categoriesJob = JobHolder()
 
+    private val balancePollJobHolder = JobHolder()
+
     init {
         observeEvents()
         loadCategories()
@@ -222,12 +226,16 @@ internal class PolymarketMainModel @Inject constructor(
         positionsPreviewLoader.resume(modelScope, params.userWalletId)
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
+        predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
+            .launchIn(modelScope)
+            .saveIn(balancePollJobHolder)
     }
 
     fun onPause() {
         isScreenResumed = false
         positionsPreviewLoader.pause()
         activeFeed.value?.poller?.pause()
+        balancePollJobHolder.cancel()
     }
 
     private fun loadCategories() {
