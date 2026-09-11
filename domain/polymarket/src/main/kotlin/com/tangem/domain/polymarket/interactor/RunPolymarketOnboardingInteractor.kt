@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.interactor
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -48,6 +49,7 @@ class RunPolymarketOnboardingInteractor(
     private val submitApprovals: SubmitApprovalsUseCase,
     private val syncBalanceAllowance: SyncBalanceAllowanceUseCase,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
+    private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Flow<PolymarketOnboardingProgress> = flow {
@@ -180,7 +182,13 @@ class RunPolymarketOnboardingInteractor(
     ) {
         polymarketOnboardedStore.markOnboarded(addresses.userWalletId)
         primeBalanceCache(addresses, credentials)
+        refreshAccountStatus(addresses.userWalletId)
         emit(PolymarketOnboardingProgress.Ready)
+    }
+
+    private suspend fun refreshAccountStatus(userWalletId: UserWalletId) {
+        predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
+            .onLeft { error -> TangemLogger.e("Prediction account refresh after onboarding failed", error) }
     }
 
     /** Best-effort refresh of the CLOB's cached balance and allowance; onboarding is complete either way. */
