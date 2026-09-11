@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.domain.swap.SwapTransactionRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,7 @@ class DefaultPredictionFundingWindow(
         launch { closeWhenSettled(userWalletId = userWalletId) }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun openOnFundingSwap(userWalletId: UserWalletId) {
         val collateralId = collateralCurrencyFactory.createDepositTarget().id
 
@@ -90,7 +92,7 @@ class DefaultPredictionFundingWindow(
                 if (open == null) return@collectLatest
 
                 val remainingMillis = (open.openedAt + config.fundingWindow.inWholeMilliseconds - currentTimeMillis())
-                    .coerceAtLeast(0)
+                    .coerceIn(0, config.fundingWindow.inWholeMilliseconds)
 
                 withTimeoutOrNull(remainingMillis) {
                     predictionAccountStatusSupplier(userWalletId = userWalletId)
