@@ -52,6 +52,7 @@ class DefaultPredictionFundingWindow(
             .collect { swapLists ->
                 val armed = states.value[userWalletId] as? State.Armed ?: return@collect
                 val isFunded = swapLists.orEmpty()
+                    .filter { it.toCryptoCurrencyId == collateralId.value }
                     .flatMap { it.transactions }
                     .any { it.timestamp >= armed.armedAt }
 
@@ -63,7 +64,8 @@ class DefaultPredictionFundingWindow(
         val status = predictionAccountStatusSupplier(userWalletId = userWalletId).first()
         val balanceAtOpen = (status as? PredictionAccountStatusValue.Active)?.balance
 
-        states.update { it + (userWalletId to State.Open(balanceAtOpen = balanceAtOpen)) }
+        val open = State.Open(openedAt = currentTimeMillis(), balanceAtOpen = balanceAtOpen)
+        states.update { it + (userWalletId to open) }
     }
 
     private suspend fun closeWhenSettled(userWalletId: UserWalletId) {
@@ -72,18 +74,21 @@ class DefaultPredictionFundingWindow(
             .collectLatest { open ->
                 if (open == null) return@collectLatest
 
-                withTimeoutOrNull(config.fundingWindow) {
+                val remainingMillis = (open.openedAt + config.fundingWindow.inWholeMilliseconds - currentTimeMillis())
+                    .coerceAtLeast(0)
+
+                withTimeoutOrNull(remainingMillis) {
                     predictionAccountStatusSupplier(userWalletId = userWalletId)
                         .filterIsInstance<PredictionAccountStatusValue.Active>()
                         .first { open.balanceAtOpen != null && it.balance.compareTo(open.balanceAtOpen) != 0 }
                 }
 
-                states.update { it - userWalletId }
+                states.update { if (it[userWalletId] == open) it - userWalletId else it }
             }
     }
 
     private sealed interface State {
         data class Armed(val armedAt: Long) : State
-        data class Open(val balanceAtOpen: BigDecimal?) : State
+        data class Open(val openedAt: Long, val balanceAtOpen: BigDecimal?) : State
     }
 }
