@@ -79,7 +79,8 @@ internal class StoriesModel @Inject constructor(
                                 stories = configs,
                                 onClose = { watchCount ->
                                     analyticsEventHandler.send(
-                                        StoriesEvents.SwapStories(
+                                        StoriesEvents.storyShown(
+                                            storyId = params.storyId,
                                             source = params.screenSource,
                                             watchCount = watchCount.toString(),
                                         ),
