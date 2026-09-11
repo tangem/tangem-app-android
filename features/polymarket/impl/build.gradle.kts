@@ -39,6 +39,8 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.polymarket)
     implementation(projects.domain.core)
+    implementation(projects.domain.stories)
+    implementation(projects.domain.stories.models)
 
     /** Kotlin */
     implementation(deps.jodatime)

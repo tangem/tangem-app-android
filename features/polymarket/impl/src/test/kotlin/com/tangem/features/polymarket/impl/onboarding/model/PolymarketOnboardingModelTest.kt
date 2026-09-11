@@ -11,6 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.CheckNewPolymarketAccountAllowedInteractor
 import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
@@ -21,6 +22,9 @@ import com.tangem.domain.polymarket.model.PolymarketNewAccountAllowance
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.ShouldShowStoriesInteractor
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.test.core.ProvideTestModels
@@ -51,6 +55,8 @@ internal class PolymarketOnboardingModelTest {
     private val checkNewAccountAllowed: CheckNewPolymarketAccountAllowedInteractor = mockk()
     private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor = mockk()
     private val runOnboardingUseCase: RunPolymarketOnboardingInteractor = mockk()
+    private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor = mockk()
+    private val getStoryContentUseCase: GetStoryContentUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
@@ -64,11 +70,15 @@ internal class PolymarketOnboardingModelTest {
             checkNewAccountAllowed,
             resolvePolymarketEntryInteractor,
             runOnboardingUseCase,
+            shouldShowStoriesInteractor,
+            getStoryContentUseCase,
             router,
             urlOpener,
             messageSender,
         )
         allowsNewAccount(PolymarketNewAccountAllowance.ALLOWED)
+        storyWasSeen()
+        coEvery { getStoryContentUseCase.invokeSync(id = any(), refresh = any()) } returns null.right()
     }
 
     @Test
@@ -425,6 +435,75 @@ internal class PolymarketOnboardingModelTest {
     }
 
     @Test
+    fun `GIVEN the story is unseen WHEN run reports ready THEN the story is shown over the feed`() = runTest {
+        // Arrange
+        owesOnboarding()
+        storyIsUnseen()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
+        }
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the story was seen WHEN run reports ready THEN only the feed is opened`() = runTest {
+        // Arrange
+        owesOnboarding()
+        storyWasSeen()
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN entry is Onboarded WHEN model created THEN no story is shown`() = runTest {
+        // Arrange
+        gateResolves(PolymarketEntry.Onboarded)
+        storyIsUnseen()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the gate is opened WHEN model created THEN the story content is refreshed`() = runTest {
+        // Arrange
+        owesOnboarding()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN run reports ready WHEN collected THEN opens the feed in trading mode`() = runTest {
         // Arrange
         owesOnboarding()
@@ -735,6 +814,14 @@ internal class PolymarketOnboardingModelTest {
         coEvery { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) } returns error.left()
     }
 
+    private fun storyIsUnseen() {
+        coEvery { shouldShowStoriesInteractor.invokeSync(STORY_ID) } returns true
+    }
+
+    private fun storyWasSeen() {
+        coEvery { shouldShowStoriesInteractor.invokeSync(STORY_ID) } returns false
+    }
+
     private fun allowsNewAccount(allowance: PolymarketNewAccountAllowance) {
         coEvery { checkNewAccountAllowed(userWalletId) } returns allowance
     }
@@ -751,10 +838,14 @@ internal class PolymarketOnboardingModelTest {
         checkNewPolymarketAccountAllowed = checkNewAccountAllowed,
         resolvePolymarketEntryInteractor = resolvePolymarketEntryInteractor,
         runPolymarketOnboardingInteractor = runOnboardingUseCase,
+        shouldShowStoriesInteractor = shouldShowStoriesInteractor,
+        getStoryContentUseCase = getStoryContentUseCase,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 
     private companion object {
         const val RESOLUTION_DELAY_MILLIS = 1_000L
+        val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
+        const val STORY_SOURCE = "Predictions"
     }
 }
