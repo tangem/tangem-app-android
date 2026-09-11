@@ -10,6 +10,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
@@ -25,7 +26,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -66,27 +66,54 @@ internal class JointAccountInvitePreviewModelTest {
     @Test
     fun `GIVEN wallets repository still loading WHEN model created THEN load waits instead of failing immediately`() =
         runTest {
-            // Arrange — mirrors a cold start via deep link: the repository takes a moment to finish loading
-            coEvery { userWalletsListRepository.userWalletsSync() } coAnswers {
-                delay(1_000)
-                listOf(wallet)
-            }
+            // Arrange — mirrors a cold start via deep link: the list is null until the repository finishes
+            val wallets = MutableStateFlow<List<UserWallet>?>(value = null)
+            every { userWalletsListRepository.userWallets } returns wallets
             coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
 
             // Act
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            val whileLoading = model.uiState.value
+            wallets.value = listOf(wallet)
+            advanceUntilIdle()
 
             // Assert
+            assertThat(whileLoading).isInstanceOf(JointAccountInvitePreviewUM.Loading::class.java)
             assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
             coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
             model.onDestroy()
         }
 
+    /**
+     * The endpoint answers per wallet — 409 when *this* wallet already holds a slot — so a pick in the selector
+     * has to be previewed again rather than reusing the first wallet's answer.
+     */
+    @Test
+    fun `GIVEN another wallet is picked WHEN it changes THEN the invite is previewed for that wallet`() = runTest {
+        // Arrange
+        val other = mockWallet(id = OTHER_WALLET_ID, locked = false)
+        val picked = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(value = null)
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet, other))
+        every { portfolioSelectorController.selectedAccountWithData(any()) } returns picked
+        coEvery { getJointAccountInvitePreviewUseCase(any(), INVITE_ID) } returns preview().right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        picked.value = other to mockk()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) }
+        coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) }
+        model.onDestroy()
+    }
+
     @Test
     fun `GIVEN no unlocked wallets after sync WHEN model created THEN state is Failed`() = runTest {
         // Arrange
-        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
 
         // Act
         val model = createModel(testScope = this)
@@ -127,6 +154,7 @@ internal class JointAccountInvitePreviewModelTest {
     private fun mockWallet(id: UserWalletId, locked: Boolean): UserWallet = mockk<UserWallet.Cold> {
         every { walletId } returns id
         every { isLocked } returns locked
+        every { name } returns "Wallet ${id.stringValue}"
     }
 
     private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
@@ -143,5 +171,6 @@ internal class JointAccountInvitePreviewModelTest {
     private companion object {
         const val INVITE_ID = "invite-id"
         val WALLET_ID = UserWalletId("aabbcc")
+        val OTHER_WALLET_ID = UserWalletId("ddeeff")
     }
 }
