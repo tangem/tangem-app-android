@@ -92,8 +92,8 @@ interface TangemTechMarketsApi {
      * Returns the global market indicators of the "Total market cap" block: total capitalisation
      * with its 24h change, the Fear & Greed index and the Altcoin Season index.
      *
-     * Takes no parameters — the capitalisation is always in USD and the index labels are localised
-     * by the backend.
+     * The capitalisation is converted server-side into [currency], so a currency switch has to go back
+     * to the backend; the index labels are localised by the backend into [language].
      */
     @GET("api/v1/market-indicators")
     suspend fun getMarketIndicators(
