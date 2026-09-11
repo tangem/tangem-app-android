@@ -47,7 +47,7 @@ internal fun segmentTooltipPositionProvider(
     // padding differs and the anchor drifts off the drawn slice end.
     val sweeps = visualSweepAngles(
         weights = segments.map { it.weight.toFloat() },
-        capDeg = lastSegmentOverlapDeg(strokePx, diameter - strokePx),
+        capDeg = capPaddingDeg(strokePx, diameter - strokePx),
     )
     val endAngleDeg = startAngle + sweeps.take(selectedIndex + 1).sum()
     val endAngleRad = Math.toRadians(endAngleDeg.toDouble())
