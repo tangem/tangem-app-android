@@ -3,13 +3,6 @@ package com.tangem.data.markets
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.local.datastore.RuntimeStateStore
-import org.joda.time.Duration
-import io.mockk.every
-import com.tangem.datasource.local.markets.CoinCategoriesSnapshotStore
-import com.tangem.core.remote.config.managers.ApiConfigsManager
-import com.tangem.core.remote.config.ApiEnvironmentConfig
-import com.tangem.core.remote.config.ApiEnvironment
-import com.tangem.core.local.datastore.RuntimeSharedMapStore
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.cache.CacheRegistry
@@ -35,7 +28,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -54,9 +46,6 @@ internal class DefaultMarketsTokenRepositoryTest {
 
     private val marketsApi: TangemTechMarketsApi = mockk()
     private val cacheRegistry: CacheRegistry = mockk()
-    private val coinCategoriesStore: RuntimeSharedMapStore<String, List<Category>> = RuntimeSharedMapStore()
-    private val coinCategoriesSnapshotStore: CoinCategoriesSnapshotStore = mockk()
-    private val apiConfigsManager: ApiConfigsManager = mockk()
 
     private val repository = DefaultMarketsTokenRepository(
         marketsApi = marketsApi,
@@ -66,21 +55,13 @@ internal class DefaultMarketsTokenRepositoryTest {
         analyticsEventHandler = mockk(relaxed = true),
         cacheRegistry = cacheRegistry,
         tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
-        coinCategoriesStore = coinCategoriesStore,
-        coinCategoriesSnapshotStore = coinCategoriesSnapshotStore,
-        apiConfigsManager = apiConfigsManager,
         networkFactory = mockk(),
         excludedBlockchains = ExcludedBlockchains(),
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(marketsApi, cacheRegistry, coinCategoriesSnapshotStore, apiConfigsManager)
-        runBlocking { coinCategoriesStore.clear() }
-        every { apiConfigsManager.getEnvironmentConfig(any()) } returns ApiEnvironmentConfig(
-            environment = ApiEnvironment.PROD,
-            baseUrl = "https://api.tangem.org/",
-        )
+        clearMocks(marketsApi, cacheRegistry)
     }
 
     @Nested
@@ -88,131 +69,59 @@ internal class DefaultMarketsTokenRepositoryTest {
     inner class GetCoinCategories {
 
         @Test
-        fun `GIVEN a country WHEN getCoinCategories THEN it travels in the request and the snapshot is kept`() =
-            runTest {
-                // Arrange
-                givenCacheExpired()
-                val dto = category(id = "42", code = "stocks", displayName = "Stocks")
-                coEvery { marketsApi.getCoinCategories(country = "US") } returns
-                    ApiResponse.Success(CoinCategoriesResponse(listOf(dto)))
-                coEvery { coinCategoriesSnapshotStore.store(any(), any(), any()) } returns Unit
+        fun `GIVEN a country WHEN getCoinCategories THEN it travels in the request`() = runTest {
+            // Arrange
+            coEvery { marketsApi.getCoinCategories(country = "US") } returns
+                ApiResponse.Success(CoinCategoriesResponse(listOf(category(id = "42"))))
 
-                // Act
-                val actual = repository.getCoinCategories(country = "US")
+            // Act
+            val actual = repository.getCoinCategories(country = "US")
 
-                // Assert
-                assertThat(actual).containsExactly(coinCategory(id = "42", code = "stocks", displayName = "Stocks"))
-                coVerify(exactly = 1) {
-                    coinCategoriesSnapshotStore.store(
-                        country = "US",
-                        environment = "PROD",
-                        categories = listOf(dto),
-                    )
-                }
-            }
+            // Assert
+            assertThat(actual).containsExactly(coinCategory(id = "42"))
+            coVerify(exactly = 1) { marketsApi.getCoinCategories(country = "US") }
+        }
 
         @Test
-        fun `GIVEN no country WHEN getCoinCategories THEN the snapshot is not kept`() = runTest {
-            // Arrange — an answer without a country is unrestricted by definition; keeping it would poison the fallback
-            givenCacheExpired()
-            val dto = category(id = "42", code = "stocks", displayName = "Stocks")
+        fun `GIVEN no country WHEN getCoinCategories THEN the request carries none`() = runTest {
+            // Arrange
             coEvery { marketsApi.getCoinCategories(country = null) } returns
-                ApiResponse.Success(CoinCategoriesResponse(listOf(dto)))
+                ApiResponse.Success(CoinCategoriesResponse(listOf(category(id = "42"))))
 
             // Act
             val actual = repository.getCoinCategories(country = null)
 
             // Assert
-            assertThat(actual).containsExactly(coinCategory(id = "42", code = "stocks", displayName = "Stocks"))
-            coVerify(exactly = 0) { coinCategoriesSnapshotStore.store(any(), any(), any()) }
+            assertThat(actual).containsExactly(coinCategory(id = "42"))
+            coVerify(exactly = 1) { marketsApi.getCoinCategories(country = null) }
         }
 
         @Test
-        fun `GIVEN a failing request and a snapshot WHEN getCoinCategories THEN the snapshot is served and retried`() =
-            runTest {
-                // Arrange
-                givenCacheExpired()
-                val saved = category(id = "7", code = "commodities", displayName = "Commodities")
-                coEvery { marketsApi.getCoinCategories(country = "US") } returns networkError()
-                coEvery {
-                    coinCategoriesSnapshotStore.getSyncOrNull(country = "US", environment = "PROD")
-                } returns listOf(saved)
-                coEvery { cacheRegistry.invalidate(key = any<String>()) } returns Unit
+        fun `GIVEN repeated calls WHEN getCoinCategories THEN every one reaches the api`() = runTest {
+            // Arrange — the endpoint is deliberately uncached: the restriction flags it carries must never
+            // outlive the answer they came with
+            coEvery { marketsApi.getCoinCategories(country = "US") } returns
+                ApiResponse.Success(CoinCategoriesResponse(listOf(category(id = "42"))))
 
-                // Act
-                val actual = repository.getCoinCategories(country = "US")
+            // Act
+            repository.getCoinCategories(country = "US")
+            repository.getCoinCategories(country = "US")
 
-                // Assert — a fallback is not a fresh answer, so the key must not stay warm for the whole TTL
-                assertThat(actual)
-                    .containsExactly(coinCategory(id = "7", code = "commodities", displayName = "Commodities"))
-                coVerify(exactly = 1) { cacheRegistry.invalidate(key = "coins/categories/PROD/US") }
-            }
+            // Assert
+            coVerify(exactly = 2) { marketsApi.getCoinCategories(country = "US") }
+            coVerify(exactly = 0) { cacheRegistry.invokeOnExpire(any(), any(), any(), any()) }
+        }
 
         @Test
-        fun `GIVEN a failing request and no snapshot WHEN getCoinCategories THEN the error propagates`() = runTest {
+        fun `GIVEN a failing request WHEN getCoinCategories THEN the error propagates`() = runTest {
             // Arrange — the method is deliberately not total; the Either boundary lives in the use case
-            givenCacheExpired()
             coEvery { marketsApi.getCoinCategories(country = "US") } returns networkError()
-            coEvery { coinCategoriesSnapshotStore.getSyncOrNull(country = "US", environment = "PROD") } returns null
 
             // Act
             val error = runCatching { repository.getCoinCategories(country = "US") }.exceptionOrNull()
 
             // Assert
             assertThat(error).isInstanceOf(ApiResponseError.NetworkException::class.java)
-        }
-
-        @Test
-        fun `GIVEN valid cache WHEN getCoinCategories THEN the api is not called and the kept entry is returned`() =
-            runTest {
-                // Arrange
-                givenCacheValid()
-                val dto = category(id = "7", code = "commodities", displayName = "Commodities")
-                coinCategoriesStore.store(key = "coins/categories/PROD/US", value = listOf(dto))
-
-                // Act
-                val actual = repository.getCoinCategories(country = "US")
-
-                // Assert
-                assertThat(actual)
-                    .containsExactly(coinCategory(id = "7", code = "commodities", displayName = "Commodities"))
-                coVerify(exactly = 0) { marketsApi.getCoinCategories(country = any<String>()) }
-            }
-
-        @Test
-        fun `GIVEN a cached country WHEN getCoinCategories for another one THEN the cached list is not reused`() =
-            runTest {
-                // Arrange — the key is per country, the store must be too, or a stale region would leak through
-                givenCacheValid()
-                coinCategoriesStore.store(
-                    key = "coins/categories/PROD/US",
-                    value = listOf(category(id = "7", code = "commodities", displayName = "Commodities")),
-                )
-
-                // Act
-                val actual = repository.getCoinCategories(country = "DE")
-
-                // Assert
-                assertThat(actual).isEmpty()
-            }
-
-        @Test
-        fun `GIVEN a country WHEN getCoinCategories THEN the cache key carries environment and country`() = runTest {
-            // Arrange
-            givenCacheValid()
-
-            // Act
-            repository.getCoinCategories(country = "US")
-
-            // Assert — the country decides the restricted flag and ids differ per stand, so both must key the cache
-            coVerify(exactly = 1) {
-                cacheRegistry.invokeOnExpire(
-                    key = "coins/categories/PROD/US",
-                    skipCache = false,
-                    expireIn = Duration.standardHours(24),
-                    block = any(),
-                )
-            }
         }
     }
 
@@ -763,16 +672,6 @@ internal class DefaultMarketsTokenRepositoryTest {
      * scope at the end of the test.
      */
     private fun TestScope.testSourceScope(): CoroutineScope = CoroutineScope(coroutineContext + Job())
-
-    private fun givenCacheExpired() {
-        coEvery { cacheRegistry.invokeOnExpire(any(), any(), any(), any()) } coAnswers {
-            arg<suspend () -> Unit>(3).invoke()
-        }
-    }
-
-    private fun givenCacheValid() {
-        coEvery { cacheRegistry.invokeOnExpire(any(), any(), any(), any()) } returns Unit
-    }
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> networkError(): ApiResponse<T> =
