@@ -102,10 +102,14 @@ internal class TangemPayOrderCardDataModel @Inject constructor(
     )
 
     private fun embossNameField(info: CustomerInfo?): FieldUM {
-        val intent = params.intent as? TangemPayOrderCardIntent.ReissuePlastic
-        val prefill = intent?.let { info?.sourceCardEmbossName(it.sourceProductInstanceId) }.orEmpty()
+        val prefill = when (val intent = params.intent) {
+            TangemPayOrderCardIntent.Issue -> info?.embossName
+            is TangemPayOrderCardIntent.ReissuePlastic -> info?.sourceCardEmbossName(intent.sourceProductInstanceId)
+        }
 
-        return emptyField(OrderFormField.EmbossName).copy(value = prefill)
+        val embossable = prefill?.takeIf(OrderFormField.EmbossName.isContentValid)
+
+        return emptyField(OrderFormField.EmbossName).copy(value = embossable.orEmpty())
     }
 
     private fun emptyField(field: OrderFormField) = FieldUM(
