@@ -83,6 +83,8 @@ import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
@@ -110,6 +112,7 @@ internal fun WalletScreen(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
+    collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
@@ -163,6 +166,7 @@ internal fun WalletScreen(
         promoBannersBlockComponent = promoBannersBlockComponent,
         virtualAccountComponent = virtualAccountComponent,
         polymarketComponent = polymarketComponent,
+        collectiblesComponent = collectiblesComponent,
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
@@ -196,6 +200,7 @@ private fun WalletContent(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
+    collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
@@ -392,6 +397,7 @@ private fun WalletContent(
                                         walletId = currentWalletId,
                                         virtualAccountComponent = virtualAccountComponent,
                                         polymarketComponent = polymarketComponent,
+                                        collectiblesComponent = collectiblesComponent,
                                         jointAccountComponent = jointAccountComponent,
                                         onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
                                             { bounds ->
@@ -938,6 +944,14 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             polymarketComponent = object : PolymarketWalletBlockComponent {
                 override fun LazyListScope.polymarketWalletBlockContent(
                     state: PolymarketWalletBlockUM,
+                    isBalanceHidden: Boolean,
+                    modifier: Modifier,
+                ) {
+                }
+            },
+            collectiblesComponent = object : CollectiblesWalletBlockComponent {
+                override fun LazyListScope.collectiblesWalletBlockContent(
+                    state: CollectiblesWalletBlockUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
