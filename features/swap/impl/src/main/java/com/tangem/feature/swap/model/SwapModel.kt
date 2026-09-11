@@ -23,6 +23,8 @@ import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.backup.BackupErrorWarningSender
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -88,6 +90,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -624,6 +627,11 @@ internal class SwapModel @Inject constructor(
         val selectedUserWallet = result.wallet
         val selectedCurrencyStatus = result.currency
         val selectedAccount = result.account.account
+
+        if (isFromDirection && selectedAccount is Account.Joint) {
+            showJointAccountSwapSourceUnavailableAlert()
+            return
+        }
 
         if (isTopUpBlockedByBackupError(isFromDirection = isFromDirection, userWallet = selectedUserWallet)) return
 
@@ -2150,6 +2158,19 @@ internal class SwapModel @Inject constructor(
             DialogMessage(
                 title = resourceReference(id = R.string.warning_demo_mode_title),
                 message = resourceReference(id = R.string.warning_demo_mode_message),
+                firstAction = EventMessageAction(
+                    title = resourceReference(id = R.string.common_ok),
+                    onClick = {},
+                ),
+            ),
+        )
+    }
+
+    private fun showJointAccountSwapSourceUnavailableAlert() {
+        messageSender.send(
+            DialogMessage(
+                title = ScenarioUnavailabilityReason.JointAccount.getUnavailabilityReasonTitle(),
+                message = ScenarioUnavailabilityReason.JointAccount.getUnavailabilityReasonText(),
                 firstAction = EventMessageAction(
                     title = resourceReference(id = R.string.common_ok),
                     onClick = {},
