@@ -4,10 +4,6 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
 
-/**
- * Wallet picker shown before a Tangem Pay product onboarding continues: on the residency step once the
- * region is confirmed, and in the product onboardings that pick the wallet themselves.
- */
 interface TangemPayWalletSelectorComponent : ComposableBottomSheetComponent {
 
     data class Params(
