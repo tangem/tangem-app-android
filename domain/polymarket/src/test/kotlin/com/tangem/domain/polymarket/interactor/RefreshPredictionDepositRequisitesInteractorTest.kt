@@ -150,6 +150,23 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     }
 
     @Test
+    fun `GIVEN the catalogue fails at once WHEN the address call is slow THEN the failure is not delayed`() = runTest {
+        // Arrange
+        coEvery { bridgeRepository.getSupportedAssets() } returns PolymarketBridgeError.Network.left()
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } coAnswers {
+            delay(CALL_DURATION_MS)
+            BRIDGE_ADDRESSES.right()
+        }
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketBridgeError.Network.left())
+        assertThat(testScheduler.currentTime).isEqualTo(0)
+    }
+
+    @Test
     fun `GIVEN a successful refresh WHEN it completes THEN both stores are written`() = runTest {
         // Arrange
         stubBridge(assets = listOf(asset(chainId = "137", tokenAddress = USDC)))
