@@ -93,8 +93,9 @@ class RunPolymarketOnboardingInteractor(
         credentials: PolymarketApiCredentials?,
     ) {
         var current = entry
-        if (entry.needsDeploy()) {
+        if (current.needsDeploy()) {
             current = step { deployDepositWallet(addresses) } ?: return
+            if (reportFailure(current)) return
         }
 
         val activeCredentials = credentials ?: step {
@@ -106,11 +107,12 @@ class RunPolymarketOnboardingInteractor(
             )
         } ?: return
 
-        if (entry.owesApprovals()) {
-            if (!entry.isDeployComplete()) {
+        if (current.owesApprovals()) {
+            if (!current.isDeployComplete()) {
                 current = awaitStatus(addresses, PolymarketWalletStatus.DEPLOYED, from = current) ?: return
             }
             current = step { submitApprovals(addresses, signed) } ?: return
+            if (reportFailure(current)) return
         }
 
         awaitStatus(addresses, PolymarketWalletStatus.READY_TO_TRADE, from = current) ?: return
@@ -152,10 +154,7 @@ class RunPolymarketOnboardingInteractor(
             val status = state?.status
             if (status == target) return status
             if (status != null) {
-                status.toFailure()?.let { failure ->
-                    emit(PolymarketOnboardingProgress.Failed(failure, isRetryable = failure.isRetryable()))
-                    return null
-                }
+                if (reportFailure(status)) return null
                 if (status != reported) {
                     TangemLogger.v("Poll: status changed to $status")
                     emit(PolymarketOnboardingProgress.Working(status))
@@ -165,6 +164,14 @@ class RunPolymarketOnboardingInteractor(
 
             delay(POLL_INTERVAL_MILLIS)
         }
+    }
+
+    private suspend fun FlowCollector<PolymarketOnboardingProgress>.reportFailure(
+        status: PolymarketWalletStatus,
+    ): Boolean {
+        val failure = status.toFailure() ?: return false
+        emit(PolymarketOnboardingProgress.Failed(error = failure, isRetryable = failure.isRetryable()))
+        return true
     }
 
     private suspend fun FlowCollector<PolymarketOnboardingProgress>.finish(

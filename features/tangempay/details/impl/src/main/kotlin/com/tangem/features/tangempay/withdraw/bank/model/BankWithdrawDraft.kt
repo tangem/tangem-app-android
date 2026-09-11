@@ -9,6 +9,7 @@ import java.math.BigDecimal
 internal data class BankWithdrawDraft(
     val entry: BankWithdrawEntry,
     val recipient: BankAccount? = null,
+    val newRecipient: NewRecipientDraft = NewRecipientDraft(),
     val amount: BigDecimal? = null,
     val source: BankWithdrawSource? = null,
     val destination: OfframpDestination? = null,
