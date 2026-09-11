@@ -30,8 +30,8 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
-import com.tangem.features.tangempay.withdraw.bank.stub.TangemPayBankWithdrawStepStubComponent
 import kotlinx.collections.immutable.ImmutableList
 
 internal class TangemPayBankWithdrawComponent(
@@ -111,9 +111,13 @@ internal class TangemPayBankWithdrawComponent(
             fields = BankWithdrawFormFields.bankDetails,
             returnToPreview = false,
         )
-        TangemPayBankWithdrawInnerRoute.Preview -> TangemPayBankWithdrawStepStubComponent(
+        TangemPayBankWithdrawInnerRoute.Preview -> TangemPayBankWithdrawPreviewComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayBankWithdrawStepStubComponent.Params(draft = model.draft, step = config),
+            params = TangemPayBankWithdrawPreviewComponent.Params(
+                userWalletId = params.userWalletId,
+                draft = model.draft,
+                onOrderCreated = model::onOrderCreated,
+            ),
         )
         is TangemPayBankWithdrawInnerRoute.Edit -> editChild(step = config, componentContext = componentContext)
     }
