@@ -32,6 +32,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.operator.map
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
@@ -60,6 +61,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
     private val searchBarController: DefaultFeedSearchBarController,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedV2Component, AppComponentContext by context {
 
     override val isSheetBlurEnabled: StateFlow<Boolean>
@@ -176,6 +178,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             is FeedHomeRoute -> FeedHomeComponent(
                 context = childContext,
                 portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+                analyticsEventHandler = analyticsEventHandler,
             )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()
