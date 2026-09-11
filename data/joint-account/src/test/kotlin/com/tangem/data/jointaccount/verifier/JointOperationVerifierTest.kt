@@ -44,6 +44,43 @@ internal class JointOperationVerifierTest {
         assertThat(actual).isEqualTo(Unit.right())
     }
 
+    /**
+     * `execTransaction` guards the refund with `if (gasPrice > 0)`, so a signed zero pays nothing at all — the
+     * safest value there is, and refusing it would refuse an operation that costs the Safe no refund.
+     */
+    @Test
+    fun `GIVEN a zero gas price WHEN verify THEN the signature is allowed because no refund is paid`() = runTest {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(gasPrice = BigInteger.ZERO)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+    }
+
+    /** The fee recipient is only checked for being an address by creation, and the zero address is one */
+    @Test
+    fun `GIVEN the configured fee recipient is itself zero WHEN verify THEN the refund is still refused`() = runTest {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(refundReceiver = ZERO_ADDRESS)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(refundReceiver = ZERO_ADDRESS),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left(),
+        )
+    }
+
     @Test
     fun `GIVEN erc20 operation matching what the user sees WHEN verify THEN the signature is allowed`() = runTest {
         // Act
@@ -179,6 +216,20 @@ internal class JointOperationVerifierTest {
             expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
         ),
         NegativeModel(
+            name = "the refund would be paid to whoever executes the operation",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(refundReceiver = ZERO_ADDRESS),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
+            name = "a gas price that is no uint256 at all",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(gasPrice = BigInteger.ONE.negate()),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
             name = "the refund would be paid in a token instead of the native coin",
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx().copy(gasToken = TOKEN),
@@ -233,6 +284,9 @@ internal class JointOperationVerifierTest {
         const val TOKEN = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         const val FOREIGN_SAFE = "0x5afe000000000000000000000000000000000001"
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+        /** What creation puts into an operation: the zero address would be an instruction to pay `tx.origin` */
+        const val FEE_RECIPIENT = "0xfee0000000000000000000000000000000000001"
         val AMOUNT: BigInteger = BigInteger("1000000000000000000")
 
         /** The fixtures carry ×2 of this, the cap creation applies */
@@ -257,7 +311,7 @@ internal class JointOperationVerifierTest {
 
         /** Matches what the fixtures carry, so a test that is not about the refund passes it unchanged */
         fun refundBounds(
-            refundReceiver: String = ZERO_ADDRESS,
+            refundReceiver: String = FEE_RECIPIENT,
             networkGasPrice: BigInteger = NETWORK_GAS_PRICE,
         ) = JointOperationVerifier.RefundBounds(
             refundReceiver = refundReceiver,
@@ -286,8 +340,8 @@ internal class JointOperationVerifierTest {
             safeTxGas = BigInteger("150000"),
             baseGas = BigInteger("110000"),
             gasPrice = BigInteger("60000000000"),
-            gasToken = "0x0000000000000000000000000000000000000000",
-            refundReceiver = "0x0000000000000000000000000000000000000000",
+            gasToken = ZERO_ADDRESS,
+            refundReceiver = FEE_RECIPIENT,
             nonce = BigInteger.ZERO,
         )
 
