@@ -57,6 +57,7 @@ internal class DefaultPredictionFundingWindowTest {
         every { userWallet.walletId } returns WALLET_ID
         every { collateralFactory.createDepositTarget() } returns COLLATERAL
         every { COLLATERAL.id } returns COLLATERAL_ID
+        every { COLLATERAL_ID.value } returns "polygon-usdc"
         every { swapTransactionRepository.getTransactions(userWallet, COLLATERAL_ID) } returns swaps
         every { statusSupplier(WALLET_ID) } returns status
     }
@@ -199,7 +200,115 @@ internal class DefaultPredictionFundingWindowTest {
         watching.cancel()
     }
 
-    private fun createSwapList(timestamp: Long): SwapTransactionListModel = mockk {
+    @Test
+    fun `GIVEN armed WHEN swap out of the collateral appears THEN window stays closed`() = runTest {
+        // Arrange
+        val watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            window.arm(WALLET_ID)
+            swaps.value = listOf(createSwapList(timestamp = now + 1, toCryptoCurrencyId = "other-token"))
+            runCurrent()
+
+            // Assert
+            expectNoEvents()
+        }
+        watching.cancel()
+    }
+
+    @Test
+    fun `GIVEN armed WHEN swap timestamp equals arming time THEN window opens`() = runTest {
+        // Arrange
+        val watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+
+            // Act
+            window.arm(WALLET_ID)
+            swaps.value = listOf(createSwapList(timestamp = now))
+
+            // Assert
+            assertThat(awaitItem()).isTrue()
+        }
+        watching.cancel()
+    }
+
+    @Test
+    fun `GIVEN open window WHEN balance changes only in scale THEN it stays open`() = runTest {
+        // Arrange
+        val watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            awaitItem()
+            window.arm(WALLET_ID)
+            swaps.value = listOf(createSwapList(timestamp = now + 1))
+            assertThat(awaitItem()).isTrue()
+
+            // Act
+            status.value = createActive(BigDecimal("1.0"))
+            runCurrent()
+
+            // Assert
+            expectNoEvents()
+        }
+        watching.cancel()
+    }
+
+    @Test
+    fun `GIVEN open window WHEN watch restarts after the deadline THEN it closes without waiting`() = runTest {
+        // Arrange
+        var watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+            window.arm(WALLET_ID)
+            swaps.value = listOf(createSwapList(timestamp = now + 1))
+            assertThat(awaitItem()).isTrue()
+            watching.cancel()
+            now += 31_000
+
+            // Act
+            watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
+
+            // Assert
+            assertThat(awaitItem()).isFalse()
+            watching.cancel()
+        }
+    }
+
+    @Test
+    fun `GIVEN open window WHEN watch restarts mid window THEN it closes at the original deadline`() = runTest {
+        // Arrange
+        var watching = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isFalse()
+            window.arm(WALLET_ID)
+            swaps.value = listOf(createSwapList(timestamp = now + 1))
+            assertThat(awaitItem()).isTrue()
+            watching.cancel()
+            now += 10_000
+
+            // Act
+            watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
+            advanceTimeBy(19.seconds)
+            runCurrent()
+            expectNoEvents()
+            advanceTimeBy(1.seconds)
+            runCurrent()
+
+            // Assert
+            assertThat(awaitItem()).isFalse()
+            watching.cancel()
+        }
+    }
+
+    private fun createSwapList(
+        timestamp: Long,
+        toCryptoCurrencyId: String = COLLATERAL_ID.value,
+    ): SwapTransactionListModel = mockk {
+        every { this@mockk.toCryptoCurrencyId } returns toCryptoCurrencyId
         every { transactions } returns listOf(mockk<SwapTransactionModel> { every { this@mockk.timestamp } returns timestamp })
     }
 
