@@ -21,6 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
@@ -53,6 +54,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -1104,6 +1106,34 @@ internal class PolymarketMainModelTest {
                 event.onComplete(configuration, old)
             }
         }
+    }
+
+    @Test
+    fun `GIVEN main preview WHEN see all tapped THEN opens Active for the settled wallet`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+
+        // Act
+        requireNotNull(model.uiState.value.onActivePositionsClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Positions(USER_WALLET_ID, PolymarketPositionsTab.ACTIVE)) }
+    }
+
+    @Test
+    fun `GIVEN empty active preview WHEN Finished tapped THEN history remains reachable`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        positionsState.value = PolymarketPositionsPreviewUM.Content(persistentListOf())
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        requireNotNull(model.uiState.value.onFinishedPositionsClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Positions(USER_WALLET_ID, PolymarketPositionsTab.FINISHED)) }
     }
 
     @Test
