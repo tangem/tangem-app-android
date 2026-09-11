@@ -16,8 +16,14 @@ internal class CustomerInfoConverterProfileTest {
         val info = CustomerInfoConverter.convert(result(profile = model.profile))
 
         // Assert
-        assertThat(ProfileFields(country = info.country, phoneMask = info.phoneMask, email = info.email))
-            .isEqualTo(model.expected)
+        assertThat(
+            ProfileFields(
+                country = info.country,
+                phoneMask = info.phoneMask,
+                email = info.email,
+                embossName = info.embossName,
+            ),
+        ).isEqualTo(model.expected)
     }
 
     internal data class ProfileModel(
@@ -25,20 +31,43 @@ internal class CustomerInfoConverterProfileTest {
         val expected: ProfileFields,
     )
 
-    internal data class ProfileFields(val country: String?, val phoneMask: String?, val email: String?)
+    internal data class ProfileFields(
+        val country: String?,
+        val phoneMask: String?,
+        val email: String?,
+        val embossName: String?,
+    )
 
     private fun provideTestModels() = listOf(
         ProfileModel(
-            profile = profile(country = "US", phoneMask = "+1 ###-###-####", email = "a@b.co"),
-            expected = ProfileFields(country = "US", phoneMask = "+1 ###-###-####", email = "a@b.co"),
+            profile = profile(
+                country = "US",
+                phoneMask = "+1 ###-###-####",
+                email = "a@b.co",
+                embossName = "JOHNNY SILVERHAND",
+            ),
+            expected = ProfileFields(
+                country = "US",
+                phoneMask = "+1 ###-###-####",
+                email = "a@b.co",
+                embossName = "JOHNNY SILVERHAND",
+            ),
         ),
         ProfileModel(
             profile = null,
-            expected = ProfileFields(country = null, phoneMask = null, email = null),
+            expected = ProfileFields(country = null, phoneMask = null, email = null, embossName = null),
         ),
         ProfileModel(
-            profile = profile(country = "DE", phoneMask = null, email = null),
-            expected = ProfileFields(country = "DE", phoneMask = null, email = null),
+            profile = profile(country = "DE", phoneMask = null, email = null, embossName = null),
+            expected = ProfileFields(country = "DE", phoneMask = null, email = null, embossName = null),
+        ),
+        ProfileModel(
+            profile = profile(country = "DE", phoneMask = null, email = null, embossName = "  V ARASAKA  "),
+            expected = ProfileFields(country = "DE", phoneMask = null, email = null, embossName = "V ARASAKA"),
+        ),
+        ProfileModel(
+            profile = profile(country = "DE", phoneMask = null, email = null, embossName = "   "),
+            expected = ProfileFields(country = "DE", phoneMask = null, email = null, embossName = null),
         ),
     )
 
@@ -56,9 +85,11 @@ internal class CustomerInfoConverterProfileTest {
         profile = profile,
     )
 
-    private fun profile(country: String?, phoneMask: String?, email: String?) = CustomerMeResponse.Profile(
-        country = country,
-        phoneMask = phoneMask,
-        email = email,
-    )
+    private fun profile(country: String?, phoneMask: String?, email: String?, embossName: String?) =
+        CustomerMeResponse.Profile(
+            country = country,
+            phoneMask = phoneMask,
+            email = email,
+            embossName = embossName,
+        )
 }
