@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.eligibility
 
+import com.tangem.features.tangempay.eligibility.country.DefaultTangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.eligibility.waitlist.DefaultTangemPayWaitlistComponent
 import dagger.Binds
 import dagger.Module
@@ -12,6 +13,11 @@ internal interface TangemPayEligibilityFeatureModule {
 
     @Binds
     fun bindFactory(impl: DefaultTangemPayEligibilityComponent.Factory): TangemPayEligibilityComponent.Factory
+
+    @Binds
+    fun bindCountrySelectorFactory(
+        impl: DefaultTangemPayCountrySelectorComponent.Factory,
+    ): TangemPayCountrySelectorComponent.Factory
 
     @Binds
     fun bindWaitlistFactory(impl: DefaultTangemPayWaitlistComponent.Factory): TangemPayWaitlistComponent.Factory
