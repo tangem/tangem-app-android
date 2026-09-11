@@ -3,8 +3,10 @@ package com.tangem.data.jointaccount.safe
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.ADDRESS_HEX_LENGTH
 import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.extensions.formatHex
+import com.tangem.blockchain.extensions.isValidHex
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.model.SafeTx
@@ -57,8 +59,14 @@ internal class DefaultJointTransferPayloadCodec @Inject constructor() : JointTra
         else -> null
     }
 
+    /**
+     * Unlike the token branch, nothing decodes the recipient here — it is the call target itself. An address the
+     * schema cannot hold would be shown as a transfer to a meaningless recipient and only fail later, when the
+     * typed data is built, as a signing error rather than an operation that cannot be displayed.
+     */
     private fun nativeTransfer(safeTx: SafeTx): JointTransferIntent? {
         if (safeTx.value <= BigInteger.ZERO) return null
+        if (!safeTx.to.isAddress()) return null
 
         return JointTransferIntent.Native(recipient = safeTx.to, amountWei = safeTx.value)
     }
@@ -75,6 +83,12 @@ internal class DefaultJointTransferPayloadCodec @Inject constructor() : JointTra
     }
 
     private fun BigInteger.asRawAmount(): Amount = Amount(value = toBigDecimal(), blockchain = Blockchain.Unknown)
+
+    private fun String.isAddress(): Boolean {
+        val hex = removePrefix(prefix = HEX_PREFIX).removePrefix(prefix = HEX_PREFIX.uppercase())
+
+        return hex.length == ADDRESS_HEX_LENGTH && hex.isValidHex()
+    }
 
     private fun String.isEmptyPayload(): Boolean =
         removePrefix(prefix = HEX_PREFIX).removePrefix(prefix = HEX_PREFIX.uppercase()).isEmpty()
