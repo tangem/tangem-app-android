@@ -8,10 +8,14 @@ import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
@@ -57,6 +61,13 @@ class DefaultSingleAccountListProducerTest {
     private val polymarketOnboardedStore = mockk<PolymarketOnboardedStore> {
         every { isOnboarded(any()) } returns flowOf(false)
     }
+    private val collectiblesFeatureToggles = mockk<CollectiblesFeatureToggles> {
+        every { isCollectiblesEnabled } returns false
+    }
+    private val collectiblesAccountRepository = mockk<CollectiblesAccountRepository> {
+        every { getStatus(any()) } returns flowOf(null)
+    }
+    private val onboardedStatus = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL)
 
     private val producer = DefaultSingleAccountListProducer(
         params = SingleAccountListProducer.Params(userWalletId = userWalletId),
@@ -66,6 +77,8 @@ class DefaultSingleAccountListProducerTest {
         virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
         polymarketOnboardedStore = polymarketOnboardedStore,
+        collectiblesFeatureToggles = collectiblesFeatureToggles,
+        collectiblesAccountRepository = collectiblesAccountRepository,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -115,6 +128,8 @@ class DefaultSingleAccountListProducerTest {
             virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,
             polymarketOnboardedStore = polymarketOnboardedStore,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
+            collectiblesAccountRepository = collectiblesAccountRepository,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
@@ -292,11 +307,108 @@ class DefaultSingleAccountListProducerTest {
         verify(exactly = 0) { onboardedStore.isOnboarded(any()) }
     }
 
+    @Test
+    fun `GIVEN collectibles disabled WHEN produce THEN the account status is never read`() = runTest {
+        // Arrange
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+        val accountRepository = mockk<CollectiblesAccountRepository> {
+            every { getStatus(any()) } returns flowOf(onboardedStatus)
+        }
+        val producer = createCollectiblesProducer(
+            isCollectiblesEnabled = false,
+            statusFlow = flowOf(onboardedStatus),
+            accountRepository = accountRepository,
+        )
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount())
+        verify(exactly = 0) { accountRepository.getStatus(any()) }
+    }
+
+    @Test
+    fun `GIVEN collectibles enabled but not onboarded WHEN produce THEN there is no collectibles account`() =
+        runTest {
+            // Arrange
+            val accountList = AccountList.empty(userWalletId)
+            every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+            val producer = createCollectiblesProducer(isCollectiblesEnabled = true, statusFlow = flowOf(null))
+
+            // Act
+            val actual = producer.produce().let(::getEmittedValues)
+
+            // Assert
+            Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount())
+        }
+
+    @Test
+    fun `GIVEN an onboarded wallet WHEN produce THEN account list has exactly one collectibles account`() = runTest {
+        // Arrange
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+        val producer = createCollectiblesProducer(isCollectiblesEnabled = true, statusFlow = flowOf(onboardedStatus))
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        Truth.assertThat(actual).containsExactly(accountList.withPaymentAccount().withCollectiblesAccount())
+    }
+
+    @Test
+    fun `GIVEN onboarding happens WHEN produce THEN the collectibles account appears without resubscribing`() =
+        runTest {
+            // Arrange
+            val accountList = AccountList.empty(userWalletId)
+            every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+            val onboarded = MutableStateFlow<CollectiblesAccountStatusValue?>(value = null)
+            val producer = createCollectiblesProducer(isCollectiblesEnabled = true, statusFlow = onboarded)
+
+            // Act & Assert
+            producer.produce().test {
+                Truth.assertThat(awaitItem()).isEqualTo(accountList.withPaymentAccount())
+
+                onboarded.value = onboardedStatus
+
+                Truth.assertThat(awaitItem())
+                    .isEqualTo(accountList.withPaymentAccount().withCollectiblesAccount())
+            }
+        }
+
     private fun AccountList.withPaymentAccount(): AccountList = plus(Account.Payment(userWalletId))
         .getOrElse { error("Unable to add payment account: $it") }
 
     private fun AccountList.withPredictionAccount(): AccountList = plus(Account.Prediction(userWalletId))
         .getOrElse { error("Unable to add prediction account: $it") }
+
+    private fun AccountList.withCollectiblesAccount(): AccountList = plus(Account.Collectibles(userWalletId))
+        .getOrElse { error("Unable to add collectibles account: $it") }
+
+    private fun createCollectiblesProducer(
+        isCollectiblesEnabled: Boolean,
+        statusFlow: Flow<CollectiblesAccountStatusValue?>,
+        accountRepository: CollectiblesAccountRepository = mockk {
+            every { getStatus(any()) } returns statusFlow
+        },
+    ): DefaultSingleAccountListProducer {
+        return DefaultSingleAccountListProducer(
+            params = SingleAccountListProducer.Params(userWalletId = userWalletId),
+            walletAccountListFlowFactory = walletAccountListFlowFactory,
+            flowProducerTools = flowProducerTools,
+            userWalletsListRepository = userWalletsListRepository,
+            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            polymarketFeatureToggles = polymarketFeatureToggles,
+            polymarketOnboardedStore = polymarketOnboardedStore,
+            collectiblesFeatureToggles = mockk {
+                every { this@mockk.isCollectiblesEnabled } returns isCollectiblesEnabled
+            },
+            collectiblesAccountRepository = accountRepository,
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+    }
 
     private fun createProducer(
         isPolymarketEnabled: Boolean,
@@ -316,6 +428,8 @@ class DefaultSingleAccountListProducerTest {
                 every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
             },
             polymarketOnboardedStore = onboardedStore,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
+            collectiblesAccountRepository = collectiblesAccountRepository,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
     }
