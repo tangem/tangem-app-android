@@ -16,6 +16,8 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
@@ -100,6 +102,17 @@ internal fun LazyListScope.polymarketWalletBlock(
 ) {
     with(polymarketComponent) {
         polymarketWalletBlockContent(modifier = modifier, state = polymarketUM, isBalanceHidden = isBalanceHidden)
+    }
+}
+
+internal fun LazyListScope.collectiblesWalletBlock(
+    collectiblesComponent: CollectiblesWalletBlockComponent,
+    collectiblesUM: CollectiblesWalletBlockUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    with(collectiblesComponent) {
+        collectiblesWalletBlockContent(modifier = modifier, state = collectiblesUM, isBalanceHidden = isBalanceHidden)
     }
 }
 
