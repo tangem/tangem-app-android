@@ -48,6 +48,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
@@ -285,8 +286,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
-        val source = requireNotNull(getTransactionHistorySource(userWalletId, currency.network)) {
-            "Unable to get a transaction history source for blockchain: ${currency.network}"
+        val source = getTransactionHistorySource(userWalletId, currency.network)
+        if (source == null) {
+            requireJointNetwork(currency.network)
+            return TxHistoryState.AddressNotReady
         }
 
         val transactionHistoryState = source.provider.getTransactionHistoryState(
@@ -303,8 +306,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         page: Page,
         pageSize: Int,
     ): PaginationWrapper<TxInfo> {
-        val source = requireNotNull(getTransactionHistorySource(userWalletId, currency.network)) {
-            "Unable to get a transaction history source for blockchain: ${currency.network}"
+        val source = getTransactionHistorySource(userWalletId, currency.network)
+        if (source == null) {
+            requireJointNetwork(currency.network)
+            throw TxHistoryStateError.AddressNotReady()
         }
 
         val itemsResult = source.provider.getTransactionsHistory(
@@ -329,9 +334,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             network = currency.network,
         )
 
-        requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: ${currency.network}"
-        }
+        if (walletManager == null) requireJointNetwork(currency.network)
 
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
@@ -342,7 +345,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
                     currency = currency,
-                    networkTokens = walletManager.cardTokens.toSet(),
+                    networkTokens = walletManager?.cardTokens?.toSet().orEmpty(),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
@@ -354,6 +357,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     /** What a wallet manager knows about its wallet, the provider of a joint network knows about the Safe address */
     private class TransactionHistorySource(val provider: TransactionHistoryProvider, val address: String)
+
+    /**
+     * Only a joint network may legitimately lack a history source or a wallet manager: it reads by the Safe
+     * address, which can still be resolving, and it has no wallet manager by design. For any other network the
+     * absence means there is no wallet manager at all, which is a defect and stays loud.
+     */
+    private fun requireJointNetwork(network: Network) {
+        require(network.derivationPath is Network.DerivationPath.Joint) {
+            "Unable to get a transaction history source for blockchain: $network"
+        }
+    }
 
     private suspend fun getTransactionHistorySource(
         userWalletId: UserWalletId,
@@ -371,6 +385,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     /**
      * The balance fetch caches the provider first; until it runs, the Safe address is resolved from the accounts.
      * The resolver is lazy: it sits behind the accounts fetcher, which reaches this facade through the tokens saver.
+     *
+     * `null` means one thing only — the Safe address has not arrived yet, so the caller may retry. A provider the
+     * SDK cannot build for the network is a permanent condition and stays loud instead of looking like waiting.
      */
     private suspend fun getJointAddressProvider(
         userWalletId: UserWalletId,
@@ -383,7 +400,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return null
         }
 
-        return getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress)
+        return requireNotNull(getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress)) {
+            "Unable to create a balance provider for the joint network: $network"
+        }
     }
 
     private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
@@ -714,10 +733,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
-        if (network.derivationPath is Network.DerivationPath.Joint) {
-            TangemLogger.e(jointNetworkRefusalMessage(network))
-            return null
-        }
+        if (network.derivationPath is Network.DerivationPath.Joint) return null
         val blockchain = network.toBlockchain()
         return getOrCreateWalletManager(
             userWalletId = userWalletId,
