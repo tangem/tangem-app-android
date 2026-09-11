@@ -273,11 +273,13 @@ internal class DefaultPredictionFundingWindowTest {
             now += 31_000
 
             // Act
+            val before = testScheduler.currentTime
             watching = launch { window.watch(WALLET_ID) }
             runCurrent()
 
             // Assert
-            assertThat(awaitItem()).isFalse()
+            assertThat(expectMostRecentItem()).isFalse()
+            assertThat(testScheduler.currentTime - before).isEqualTo(0)
             watching.cancel()
         }
     }
@@ -304,7 +306,7 @@ internal class DefaultPredictionFundingWindowTest {
             runCurrent()
 
             // Assert
-            assertThat(awaitItem()).isFalse()
+            assertThat(expectMostRecentItem()).isFalse()
             watching.cancel()
         }
     }
