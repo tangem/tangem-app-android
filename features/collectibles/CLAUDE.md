@@ -46,8 +46,9 @@ quirk here.) Impl has no `res/`, no `AndroidManifest.xml` and no `androidTest/`;
 
 | Symbol | Role | Path |
 |---|---|---|
-| `CollectiblesEntryComponent` | The whole public API; `Params` is `Unit` | `api/.../collectibles/api/CollectiblesEntryComponent.kt` |
+| `CollectiblesEntryComponent` | The whole public API; `Params` carry the wallet and which screen to start on | `api/.../collectibles/api/CollectiblesEntryComponent.kt` |
 | `DefaultCollectiblesEntryComponent` | Owns the inner `childStack` + `InnerRouter`; the only public impl | `impl/.../impl/DefaultCollectiblesEntryComponent.kt` |
+| `FeedTopBlocksModel` | Outside this feature: settles the wallet and the start screen before pushing the route | `features/feed/impl/.../feed/model/v2/FeedTopBlocksModel.kt` |
 | `CollectiblesMainComponent` | Hosts the screen and embeds discovery as a plain `child(key = "discovery")` | `impl/.../impl/main/CollectiblesMainComponent.kt` |
 | `CollectiblesDiscoveryModel` | Catalogue orchestration: categories, search debounce, pagination actions | `impl/.../impl/discovery/model/CollectiblesDiscoveryModel.kt` |
 | `CollectiblesDiscoveryContentTransformer` | Pure `PaginationStatus` → `ContentUM` mapping; de-dup + row chunking | `impl/.../discovery/model/transformer/…Transformer.kt` |
@@ -58,21 +59,37 @@ quirk here.) Impl has no `res/`, no `AndroidManifest.xml` and no `androidTest/`;
 ## Navigation
 
 ```
-AppRoute.Collectibles → DefaultCollectiblesEntryComponent   (childStack "collectiblesStack")
-  ├─ CollectiblesRoute.Onboarding (initial) → CollectiblesOnboardingComponent → CollectiblesOnboardingModel
-  │     onCreateAccountClick → router.replaceAll(Main, Stories)   [Stories pushed on top of Main]
-  ├─ CollectiblesRoute.Stories              → CollectiblesStoriesComponent    → CollectiblesStoriesModel
+AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComponent  (childStack "collectiblesStack")
+  ├─ CollectiblesRoute.Onboarding(userWalletId) → CollectiblesOnboardingComponent → CollectiblesOnboardingModel
+  │     onCreateAccountClick → router.replaceAll(Main(id), Stories)   [Stories pushed on top of Main]
+  ├─ CollectiblesRoute.Stories                  → CollectiblesStoriesComponent    → CollectiblesStoriesModel
   │     last-slide continue / close → router.pop() → lands on Main
-  └─ CollectiblesRoute.Main                 → CollectiblesMainComponent       → CollectiblesMainModel
+  └─ CollectiblesRoute.Main(userWalletId)       → CollectiblesMainComponent       → CollectiblesMainModel
         menu "How it works" → router.push(Stories)
         embedded child (NOT a stack or slot entry): child(key = "discovery")
             → CollectiblesDiscoveryComponent → CollectiblesDiscoveryModel
 ```
 
-Reached from exactly one place: `FeedTopBlocksComponent` pushes `AppRoute.Collectibles`, and
-`ChildFactory` maps that route to `CollectiblesEntryComponent.Factory` with `params = Unit`. Tile
-visibility comes from `CollectiblesFeatureToggles.isCollectiblesEnabled` threaded through
-`DefaultFeedV2Component` → `FeedHomeComponent(isCollectiblesVisible = …)`.
+**The feature decides nothing about where it opens** — the caller does, and the route says so:
+`AppRoute.Collectibles(userWalletId, startRoute)` with `CollectiblesStartRoute` (`Onboarding` / `Main`, in
+`common/routing/.../entity/CollectiblesStartRoute.kt`). `DefaultCollectiblesEntryComponent` maps it to the
+stack's `initialConfiguration` in one `when`; there are no slots, no gate, no loader route.
+
+**The wallet and the start screen are settled outside, in the feed.** `FeedTopBlocksModel`
+(`features/feed/impl`, the Shtorka 2.0 home screen) takes every unlocked wallet on a block tap: one → picked
+silently, several → the `PortfolioSelectorComponent` sheet in `FeedTopBlocksComponent`'s `childSlot`, none →
+nothing happens. Then `SingleAccountListSupplier` decides the start screen: an `Account.Collectibles` in the
+wallet's list means the vault exists, so `Main`; its absence — or an unreadable list — means `Onboarding`.
+
+Why there and not here: `AppRoute.Collectibles` is a full-screen entry of the root stack, and `Children`
+draws only the active child, so a modal sheet raised inside this feature scrims an empty screen. Until
+`Account.Collectibles` is added to `DefaultSingleAccountListProducer` (next task, together with the wallet
+block), the list never holds it and every entry lands on `Onboarding` — harmless, because
+`CreateOrReactivateCollectiblesAccountUseCase` returns early for an already-onboarded wallet.
+
+Reached from one place today: `FeedTopBlocksComponent`; the wallet-screen account block will push the same
+route with `startRoute = Main`. Tile visibility comes from `CollectiblesFeatureToggles.isCollectiblesEnabled`
+threaded through `DefaultFeedV2Component` → `FeedHomeComponent(isCollectiblesVisible = …)`.
 
 Inner navigation is an `InnerRouter<CollectiblesRoute>` — routes of that type go to the inner stack,
 everything else falls through to the app `AppRouter`. `onChildBack()` reads
