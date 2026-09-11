@@ -1,6 +1,7 @@
 package com.tangem.features.feed.rwa.model
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,7 +15,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.nav.FeedRoute
+import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.nav.analyticsSection
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
@@ -67,6 +71,7 @@ internal class RwaFeedTabModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
     private val userCountryResolver: UserCountryResolver,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
 ) : Model(), CategorySelectorComponent.ModelCallback {
 
@@ -169,6 +174,13 @@ internal class RwaFeedTabModel @Inject constructor(
             uiState.update { it.copy(sortTabs = sortTabs(selected = sort)) }
             reloadList()
         }.launchIn(modelScope)
+
+        // every tab model is built when the feed opens, so only a real user change may report
+        combine(selectedSort, selectedInterval, ::Pair)
+            .drop(1)
+            .distinctUntilChanged()
+            .onEach { (sort, interval) -> sendSortByAnalytics(sort, interval) }
+            .launchIn(modelScope)
 
         featuredManager.state
             .onEach { featured -> uiState.update { it.copy(featured = featured) } }
@@ -329,6 +341,16 @@ internal class RwaFeedTabModel @Inject constructor(
         selectedInterval.value = interval
     }
 
+    private fun sendSortByAnalytics(sort: RwaSort, interval: RwaInterval) {
+        analyticsEventHandler.send(
+            FeedSectionAnalyticsEvent.SortBy(
+                section = FeedTabId.RealAssets.analyticsSection,
+                type = sort.toAnalyticsType(),
+                period = interval.toAnalyticsPeriod(),
+            ),
+        )
+    }
+
     private fun selectSort(sort: RwaSort) {
         selectedSort.value = sort
     }
@@ -360,6 +382,12 @@ internal class RwaFeedTabModel @Inject constructor(
     }
 
     override fun onCategorySelect(selection: CategorySelection) {
+        analyticsEventHandler.send(
+            FeedSectionAnalyticsEvent.SelectCategory(
+                section = FeedTabId.RealAssets.analyticsSection,
+                categoryId = selection.category?.code ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
+            ),
+        )
         uiState.update {
             it.copy(appliedSelection = selection, categoriesFilter = categoriesFilterItem(selection = selection))
         }

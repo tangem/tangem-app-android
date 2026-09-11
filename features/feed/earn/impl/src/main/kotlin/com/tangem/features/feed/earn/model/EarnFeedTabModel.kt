@@ -154,6 +154,12 @@ internal class EarnFeedTabModel @Inject constructor(
         }
     }
 
+    /**
+     * The chips follow both the filter and the networks response, but the list query only follows the
+     * networks when the filter scopes by them. Reloading on every emission therefore sent the first page
+     * twice on a cold start — once with [earnNetworks] still null, once when it arrived — so the reload is
+     * gated on the request config the manager will actually use.
+     */
     private fun subscribeOnActiveFilters() {
         modelScope.launch(dispatchers.default) {
             combine(getEarnFilterUseCase(), earnNetworks) { filter, networks ->
@@ -163,8 +169,10 @@ internal class EarnFeedTabModel @Inject constructor(
                         filters = filterChipsFactory.create(filter = filter, networks = networks),
                     ),
                 )
-                batchFlowManager.reload()
-            }.collect()
+                earnListConfigProvider()
+            }
+                .distinctUntilChanged()
+                .collect { batchFlowManager.reload() }
         }
     }
 
