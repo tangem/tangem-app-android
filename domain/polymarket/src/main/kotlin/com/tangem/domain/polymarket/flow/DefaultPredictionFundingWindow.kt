@@ -68,22 +68,28 @@ class DefaultPredictionFundingWindow(
             }
             .collect { swapLists ->
                 val armed = states.value[userWalletId] as? State.Armed ?: return@collect
-                val isFunded = swapLists
+                val fundingSwapAt = swapLists
                     .filter {
                         it.toUserWalletId == userWalletId.stringValue && it.toCryptoCurrencyId == collateralId.value
                     }
                     .flatMap { it.transactions }
-                    .any { it.timestamp >= armed.armedAt }
+                    .mapNotNull { it.timestamp.takeIf { timestamp -> timestamp >= armed.armedAt } }
+                    .maxOrNull() ?: return@collect
 
-                if (isFunded) open(userWalletId = userWalletId)
+                open(userWalletId = userWalletId, openedAt = fundingSwapAt)
             }
     }
 
-    private suspend fun open(userWalletId: UserWalletId) {
+    private suspend fun open(userWalletId: UserWalletId, openedAt: Long) {
+        if (openedAt + config.fundingWindow.inWholeMilliseconds <= currentTimeMillis()) {
+            states.update { it - userWalletId }
+            return
+        }
+
         val status = predictionAccountStatusSupplier(userWalletId = userWalletId).first()
         val balanceAtOpen = (status as? PredictionAccountStatusValue.Active)?.balance
 
-        val open = State.Open(openedAt = currentTimeMillis(), balanceAtOpen = balanceAtOpen)
+        val open = State.Open(openedAt = openedAt, balanceAtOpen = balanceAtOpen)
         states.update { it + (userWalletId to open) }
     }
 
