@@ -56,7 +56,9 @@ internal class SetTxHistoryCountErrorTransformer(
         is TxHistoryStateError.EmptyTxHistories -> {
             TxHistoryState.Empty(onExploreClick = clickIntents::onExploreClick)
         }
-        is TxHistoryStateError.DataError -> {
+        is TxHistoryStateError.DataError,
+        is TxHistoryStateError.AddressNotReady,
+        -> {
             TxHistoryState.Error(
                 onReloadClick = clickIntents::onReloadClick,
                 onExploreClick = clickIntents::onExploreClick,
