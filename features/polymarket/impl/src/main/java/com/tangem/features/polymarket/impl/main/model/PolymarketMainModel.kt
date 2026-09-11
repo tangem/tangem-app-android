@@ -21,6 +21,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -81,6 +82,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader,
     private val predictionBalancePoller: PredictionBalancePoller,
+    private val predictionFundingWindow: PredictionFundingWindow,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -153,6 +155,11 @@ internal class PolymarketMainModel @Inject constructor(
             )
         }
             .onEach { balance -> uiState.update { it.copy(balance = balance) } }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+
+        predictionFundingWindow.isOpen(userWalletId = params.userWalletId)
+            .onEach { isOpen -> uiState.update { it.copy(isAwaitingFunds = isOpen) } }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
 
@@ -386,6 +393,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     override fun onSwapClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
+        predictionFundingWindow.arm(userWalletId = params.userWalletId)
         addFundsNavigation.dismiss()
         router.push(
             AppRoute.Swap(
