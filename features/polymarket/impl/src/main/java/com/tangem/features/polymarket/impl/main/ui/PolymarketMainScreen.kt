@@ -253,6 +253,7 @@ private fun FeedList(
                 balance = state.balance.balance,
                 addFunds = state.balance.addFunds,
                 withdraw = state.balance.withdraw,
+                isAwaitingFunds = state.isAwaitingFunds,
                 onBalanceClick = {},
                 positions = state.positions,
             )
@@ -480,6 +481,37 @@ private fun PolymarketMainScreenContentPreview() {
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            ),
+            onBackClick = {},
+            onSearchClick = {},
+            onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
+        )
+    }
+}
+
+@Preview(name = "Awaiting Funds Light", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Awaiting Funds Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun PolymarketMainScreenAwaitingFundsPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketMainScreen(
+            state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
+                categories = previewCategories(),
+                content = PolymarketMainUM.ContentUM.Content(
+                    events = previewEvents(),
+                    footer = PolymarketFeedFooterUM.Loading,
+                ),
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+                isAwaitingFunds = true,
             ),
             onBackClick = {},
             onSearchClick = {},
