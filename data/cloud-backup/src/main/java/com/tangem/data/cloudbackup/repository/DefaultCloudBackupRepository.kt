@@ -86,18 +86,20 @@ internal class DefaultCloudBackupRepository(
             val existingFile = existingFiles.firstOrNull { file ->
                 file.appProperties?.get(KEY_WALLET_ID) == walletId
             }
+            val takenNames = existingFiles
+                .filter { it.id != existingFile?.id }
+                .mapNotNull(DriveFile::name)
+                .toSet()
+            val backupName = resolveUniqueBackupName(walletName, BACKUP_FILE_EXTENSION, takenNames)
+            val fileName = "$backupName.$BACKUP_FILE_EXTENSION"
             val fileId = if (existingFile != null) {
-                val existingNames = existingFiles
-                    .filter { it.id != existingFile.id }
-                    .mapNotNull(DriveFile::name)
-                    .toSet()
                 // refresh metadata so the backups list and file name reflect the latest wallet name / timestamp
                 execute(errorHandler = { CloudBackupError.WriteError(it) }) {
                     api.updateFileMetadata(
                         authorization = auth,
                         fileId = existingFile.id,
                         metadata = DriveFileMetadata(
-                            name = resolveUniqueBackupName(walletName, BACKUP_FILE_EXTENSION, existingNames),
+                            name = fileName,
                             appProperties = backupAppProperties(walletId, walletName, createdAtMillis),
                         ),
                     )
@@ -109,7 +111,7 @@ internal class DefaultCloudBackupRepository(
                     walletId = walletId,
                     walletName = walletName,
                     createdAtMillis = createdAtMillis,
-                    existingNames = existingFiles.mapNotNull(DriveFile::name).toSet(),
+                    fileName = fileName,
                 )
             }
 
@@ -123,6 +125,7 @@ internal class DefaultCloudBackupRepository(
 
             CloudBackupInfo(
                 fileId = fileId,
+                backupName = backupName,
                 walletName = walletName,
                 createdAtMillis = createdAtMillis,
                 walletId = walletId,
@@ -143,9 +146,11 @@ internal class DefaultCloudBackupRepository(
                 val supported =
                     if (validateContent) filterSupported(files, cipher) { downloadContentWith(auth, it) } else files
                 supported.map { file ->
+                    val walletName = file.appProperties?.get(KEY_WALLET_NAME) ?: file.name.orEmpty()
                     CloudBackupInfo(
                         fileId = file.id,
-                        walletName = file.appProperties?.get(KEY_WALLET_NAME) ?: file.name.orEmpty(),
+                        backupName = file.name?.removeSuffix(".$BACKUP_FILE_EXTENSION") ?: walletName,
+                        walletName = walletName,
                         createdAtMillis = file.resolveCreatedAtMillis(),
                         walletId = file.appProperties?.get(KEY_WALLET_ID),
                     )
@@ -270,12 +275,6 @@ internal class DefaultCloudBackupRepository(
         store.setBackedUp(walletId, backedUp)
     }
 
-    // legacy backups may miss the createdAt appProperty — fall back to the Drive file's createdTime
-    private fun DriveFile.resolveCreatedAtMillis(): Long {
-        appProperties?.get(KEY_CREATED_AT)?.toLongOrNull()?.let { return it }
-        return createdTime?.let { runCatching { Instant.parse(it).toEpochMilliseconds() }.getOrNull() } ?: 0L
-    }
-
     private suspend fun <T> withAuthRetry(
         interactive: Boolean = true,
         block: suspend Raise<CloudBackupError>.(interactive: Boolean) -> T,
@@ -307,14 +306,14 @@ internal class DefaultCloudBackupRepository(
         walletId: String,
         walletName: String,
         createdAtMillis: Long,
-        existingNames: Set<String>,
+        fileName: String,
     ): String {
         val folderId = ensureBackupsFolder(auth)
         val file = execute(errorHandler = { CloudBackupError.WriteError(it) }) {
             api.createFile(
                 authorization = auth,
                 metadata = DriveFileMetadata(
-                    name = resolveUniqueBackupName(walletName, BACKUP_FILE_EXTENSION, existingNames),
+                    name = fileName,
                     parents = listOf(folderId),
                     appProperties = backupAppProperties(walletId, walletName, createdAtMillis),
                 ),
@@ -322,19 +321,6 @@ internal class DefaultCloudBackupRepository(
         }
         return ensureNotNull(file?.id) { CloudBackupError.WriteError() }
     }
-
-    /**
-     * Drive rejects the whole request when a single property exceeds [DRIVE_PROPERTY_MAX_BYTES] (key + value,
-     * UTF-8), so a long wallet name is stored here truncated — it is only the label of the backups list.
-     * The full name always travels inside the file itself ([CloudBackupFileData.name]).
-     */
-    private fun backupAppProperties(walletId: String, walletName: String, createdAtMillis: Long): Map<String, String> =
-        mapOf(
-            KEY_IS_TANGEM_BACKUP to "true",
-            KEY_WALLET_ID to walletId,
-            KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.utf8Size()),
-            KEY_CREATED_AT to createdAtMillis.toString(),
-        )
 
     /** Returns the id of the visible backups folder, creating it if needed */
     private suspend fun Raise<CloudBackupError>.ensureBackupsFolder(auth: String): String {
@@ -399,6 +385,25 @@ internal class DefaultCloudBackupRepository(
     }
 }
 
+// legacy backups may miss the createdAt appProperty — fall back to the Drive file's createdTime
+private fun DriveFile.resolveCreatedAtMillis(): Long {
+    appProperties?.get(KEY_CREATED_AT)?.toLongOrNull()?.let { return it }
+    return createdTime?.let { runCatching { Instant.parse(it).toEpochMilliseconds() }.getOrNull() } ?: 0L
+}
+
+/**
+ * Drive rejects the whole request when a single property exceeds [DRIVE_PROPERTY_MAX_BYTES] (key + value,
+ * UTF-8), so a long wallet name is stored here truncated — it is only the label of the backups list.
+ * The full name always travels inside the file itself ([CloudBackupFileData.name]).
+ */
+private fun backupAppProperties(walletId: String, walletName: String, createdAtMillis: Long): Map<String, String> =
+    mapOf(
+        KEY_IS_TANGEM_BACKUP to "true",
+        KEY_WALLET_ID to walletId,
+        KEY_WALLET_NAME to walletName.truncateToUtf8Bytes(DRIVE_PROPERTY_MAX_BYTES - KEY_WALLET_NAME.utf8Size()),
+        KEY_CREATED_AT to createdAtMillis.toString(),
+    )
+
 private const val BACKUPS_FOLDER_NAME = "Tangem"
 private const val BACKUP_FILE_EXTENSION = "backup.json"
 private const val DRIVE_ROOT = "root"
@@ -427,19 +432,22 @@ private const val UTF8_CONTINUATION_MARKER = 0x80
  *
  * A wallet name that doesn't fit into [DRIVE_FILE_NAME_MAX_BYTES] together with the suffix and the
  * extension is truncated — the full name is kept inside the file.
+ *
+ * Returns the name without the extension, because the same deduplicated name is reused as the username
+ * the backup password is stored under in the password manager.
  */
 internal fun resolveUniqueBackupName(walletName: String, extension: String, existingNames: Set<String>): String {
-    val base = buildBackupFileName(walletName, suffix = "", extension = extension)
-    if (base !in existingNames) return base
+    val base = buildBackupName(walletName, suffix = "", extension = extension)
+    if ("$base.$extension" !in existingNames) return base
 
     return generateSequence(1) { it + 1 }
-        .map { index -> buildBackupFileName(walletName, suffix = " ($index)", extension = extension) }
-        .first { it !in existingNames }
+        .map { index -> buildBackupName(walletName, suffix = " ($index)", extension = extension) }
+        .first { "$it.$extension" !in existingNames }
 }
 
-private fun buildBackupFileName(walletName: String, suffix: String, extension: String): String {
+private fun buildBackupName(walletName: String, suffix: String, extension: String): String {
     val tail = "$suffix.$extension"
-    return walletName.truncateToUtf8Bytes(DRIVE_FILE_NAME_MAX_BYTES - tail.utf8Size()) + tail
+    return walletName.truncateToUtf8Bytes(DRIVE_FILE_NAME_MAX_BYTES - tail.utf8Size()) + suffix
 }
 
 private fun String.utf8Size(): Int = encodeToByteArray().size
