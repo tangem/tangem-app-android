@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
@@ -54,6 +56,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_down_20
 import com.tangem.core.ui.res.generated.icons.ic_cross_circle_20_filled
 import com.tangem.features.tangempay.details.impl.R
 
@@ -90,12 +93,112 @@ internal fun TextInput(
 ) {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isDisabled = state is TextInputState.Disabled
-    val labelText = inputLabel(label = label, isOptional = isOptional)
     val errorText = (state as? TextInputState.Error)?.text?.resolveReference()
 
+    InputContainer(
+        label = label,
+        isOptional = isOptional,
+        isDisabled = isDisabled,
+        errorText = errorText,
+        dividerColor = dividerColor(errorText = errorText, isFocused = isFocused),
+        modifier = modifier,
+    ) {
+        InputField(
+            value = value,
+            onValueChange = onValueChange,
+            isDisabled = isDisabled,
+            errorText = errorText,
+            placeholder = placeholder?.takeUnless { isDisabled },
+            visualTransformation = visualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            interactionSource = interactionSource,
+            onFocusChange = onFocusChange,
+            modifier = Modifier.weight(1f),
+        )
+        if (isFocused && value.isNotEmpty() && !isDisabled) {
+            Icon(
+                modifier = Modifier
+                    .focusProperties { canFocus = false }
+                    .clickable(role = Role.Button) { onValueChange("") }
+                    .padding(start = 8.dp)
+                    .clip(CircleShape)
+                    .size(CLEAR_ICON_SIZE),
+                imageVector = Icons.ic_cross_circle_20_filled,
+                tint = TangemTheme.colors3.icon.tertiary,
+                contentDescription = stringResourceSafe(R.string.tangempay_order_data_clear_field),
+            )
+        }
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+internal fun SelectorInput(
+    label: TextReference,
+    value: String,
+    placeholder: TextReference?,
+    state: TextInputState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isDisabled = state is TextInputState.Disabled
+    val errorText = (state as? TextInputState.Error)?.text?.resolveReference()
+    val textStyle = TangemTheme.typography3.body.medium.copy(
+        platformStyle = PlatformTextStyle(includeFontPadding = false),
+    )
+
+    InputContainer(
+        label = label,
+        isOptional = false,
+        isDisabled = isDisabled,
+        errorText = errorText,
+        dividerColor = dividerColor(errorText = errorText, isFocused = false),
+        modifier = modifier
+            .semantics {
+                role = Role.DropdownList
+                if (isDisabled) disabled()
+                if (errorText != null) error(errorText)
+            }
+            .clickable(enabled = !isDisabled, onClick = onClick),
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = value.ifEmpty { placeholder?.resolveReference().orEmpty() },
+            style = textStyle,
+            color = when {
+                isDisabled -> TangemTheme.colors3.text.tertiary
+                value.isEmpty() -> TangemTheme.colors3.text.tertiary
+                else -> TangemTheme.colors3.text.primary
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Icon(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .size(CLEAR_ICON_SIZE),
+            imageVector = Icons.ic_chevron_down_20,
+            tint = if (isDisabled) TangemTheme.colors3.icon.tertiary else TangemTheme.colors3.icon.secondary,
+            contentDescription = null,
+        )
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun InputContainer(
+    label: TextReference,
+    isOptional: Boolean,
+    isDisabled: Boolean,
+    errorText: String?,
+    dividerColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
     Column(modifier = modifier) {
         Text(
-            text = labelText,
+            text = inputLabel(label = label, isOptional = isOptional),
             style = TangemTheme.typography3.caption.medium,
             color = if (isDisabled) TangemTheme.colors3.text.tertiary else TangemTheme.colors3.text.secondary,
             maxLines = 2,
@@ -105,40 +208,14 @@ internal fun TextInput(
         Row(
             modifier = Modifier.heightIn(min = CLEAR_ICON_SIZE),
             verticalAlignment = Alignment.CenterVertically,
-        ) {
-            InputField(
-                value = value,
-                onValueChange = onValueChange,
-                isDisabled = isDisabled,
-                errorText = errorText,
-                placeholder = placeholder?.takeUnless { isDisabled },
-                visualTransformation = visualTransformation,
-                keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
-                interactionSource = interactionSource,
-                onFocusChange = onFocusChange,
-                modifier = Modifier.weight(1f),
-            )
-            if (isFocused && value.isNotEmpty() && !isDisabled) {
-                Icon(
-                    modifier = Modifier
-                        .focusProperties { canFocus = false }
-                        .clickable(role = Role.Button) { onValueChange("") }
-                        .padding(start = 8.dp)
-                        .clip(CircleShape)
-                        .size(CLEAR_ICON_SIZE),
-                    imageVector = Icons.ic_cross_circle_20_filled,
-                    tint = TangemTheme.colors3.icon.tertiary,
-                    contentDescription = stringResourceSafe(R.string.tangempay_order_data_clear_field),
-                )
-            }
-        }
+            content = content,
+        )
         SpacerH(12.dp)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(dividerColor(errorText = errorText, isFocused = isFocused)),
+                .background(dividerColor),
         )
         if (errorText != null) {
             SpacerH(4.dp)
@@ -271,6 +348,22 @@ private fun TextInputPreview() {
                 onValueChange = {},
                 modifier = Modifier.fillMaxWidth(),
                 state = TextInputState.Error(stringReference("Error text")),
+            )
+            SelectorInput(
+                label = stringReference("Country"),
+                value = "US",
+                placeholder = stringReference("Select"),
+                state = TextInputState.Default,
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+            )
+            SelectorInput(
+                label = stringReference("Region / state"),
+                value = "",
+                placeholder = stringReference("Select"),
+                state = TextInputState.Disabled,
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
