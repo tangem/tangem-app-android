@@ -7,6 +7,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,18 +18,21 @@ import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.router.pages.Pages
 import com.arkivanov.decompose.router.pages.childPages
 import com.arkivanov.decompose.value.Value
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
-import com.tangem.features.feed.nav.FeedTabComponent
-import com.tangem.features.feed.nav.FeedTabContributor
-import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.ui.v2.FeedV2Content
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Root of the v2 feed stack ([FeedHomeRoute]): top blocks + the tab pager.
@@ -39,6 +43,7 @@ import com.tangem.features.feed.ui.v2.FeedV2Content
 internal class FeedHomeComponent(
     context: AppComponentContext,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     override val isPartialExpansionSupported: Boolean = true
@@ -62,6 +67,21 @@ internal class FeedHomeComponent(
         childFactory = ::createTab,
     )
 
+    private val sheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
+
+    init {
+        sheetState
+            .filter { state -> state == BottomSheetState.EXPANDED }
+            .onEach {
+                analyticsEventHandler.send(
+                    event = FeedSectionAnalyticsEvent.MarketsScreenOpened(
+                        pages.value.items[pages.value.selectedIndex].configuration.analyticsSection,
+                    ),
+                )
+            }
+            .launchIn(componentScope)
+    }
+
     @Composable
     override fun Content(
         bottomSheetState: State<BottomSheetState>,
@@ -70,6 +90,9 @@ internal class FeedHomeComponent(
         modifier: Modifier,
     ) {
         val pagesState by pages.subscribeAsState()
+
+        val currentSheetState = bottomSheetState.value
+        LaunchedEffect(currentSheetState) { sheetState.value = currentSheetState }
 
         FeedV2Content(
             tabs = model.tabs,

@@ -111,6 +111,49 @@ internal class EarnFeedTabModelTest {
     }
 
     @Test
+    fun `GIVEN a filter that ignores networks WHEN the networks arrive THEN the list is requested once`() = runTest {
+        // Arrange — the default filter is AllNetworks, so the request config does not read the networks at all
+        createModel(testScope = this)
+        filterFlow.emit(createEarnFilter())
+        advanceUntilIdle()
+
+        // Act
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions.filterIsInstance<BatchAction.Reload<EarnTokensListConfig>>()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN a filter scoped to my networks WHEN the networks arrive THEN the list is requested again`() = runTest {
+        // Arrange — here the networks do change the config, so the second request is the point
+        createModel(testScope = this)
+        filterFlow.emit(createEarnFilter(network = EarnFilterNetwork.MyNetworks(isSelected = true)))
+        advanceUntilIdle()
+
+        // Act
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions.filterIsInstance<BatchAction.Reload<EarnTokensListConfig>>())
+            .containsExactly(
+                BatchAction.Reload(
+                    requestParams = EarnTokensListConfig(type = null, networks = listOf("-1"), isForEarn = false),
+                ),
+                BatchAction.Reload(
+                    requestParams = EarnTokensListConfig(
+                        type = null,
+                        networks = listOf("ethereum"),
+                        isForEarn = false,
+                    ),
+                ),
+            )
+            .inOrder()
+    }
+
+    @Test
     fun `GIVEN the top tokens have not arrived WHEN the tab loads THEN the carousel shimmers`() = runTest {
         // Act
         val underTest = createModel(testScope = this)
