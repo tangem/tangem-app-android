@@ -386,6 +386,7 @@ internal class TokenDetailsModel @Inject constructor(
                         clickIntents = this@TokenDetailsModel,
                         analyticsEventHandler = analyticsEventsHandler,
                         onActionDispatched = bottomSheetNavigation::dismiss,
+                        isJointAccount = account is Account.Joint,
                     ),
                 )
                 redesignStateController.update(
@@ -898,16 +899,21 @@ internal class TokenDetailsModel @Inject constructor(
                     ),
                 )
             } else {
-                appRouter.push(
-                    AppRoute.Swap(
-                        fromCryptoCurrency = cryptoCurrency,
-                        userWalletId = userWalletId,
-                        screenSource = AnalyticsParam.ScreensSources.Token.value,
-                    ),
-                )
+                appRouter.push(swapRoute())
             }
         }
     }
+
+    private fun swapRoute(): AppRoute.Swap = AppRoute.Swap(
+        fromCryptoCurrency = cryptoCurrency,
+        userWalletId = userWalletId,
+        screenSource = AnalyticsParam.ScreensSources.Token.value,
+        fromCurrencyPosition = if (account is Account.Joint) {
+            AppRoute.Swap.CurrencyPosition.TO
+        } else {
+            AppRoute.Swap.CurrencyPosition.ANY
+        },
+    )
 
     override fun onHideClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
@@ -1385,13 +1391,7 @@ internal class TokenDetailsModel @Inject constructor(
             when (tokenAction) {
                 TokenAction.Receive -> navigateToReceive()
                 TokenAction.Send -> sendCurrency()
-                TokenAction.Swap -> appRouter.push(
-                    AppRoute.Swap(
-                        fromCryptoCurrency = cryptoCurrency,
-                        userWalletId = userWalletId,
-                        screenSource = AnalyticsParam.ScreensSources.Token.value,
-                    ),
-                )
+                TokenAction.Swap -> appRouter.push(swapRoute())
                 TokenAction.Info -> Unit
             }
         }
