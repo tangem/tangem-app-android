@@ -38,6 +38,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
@@ -61,6 +62,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val searchBarController: DefaultFeedSearchBarController,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : FeedV2Component, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<FeedRoute>()
@@ -171,6 +173,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 tabSet = tabSet,
                 isPredictionsEntryVisible = polymarketFeatureToggles.isPolymarketEnabled,
                 isCollectiblesVisible = collectiblesFeatureToggles.isCollectiblesEnabled,
+                portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
             )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()
