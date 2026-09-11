@@ -43,6 +43,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             country = value.profile?.country,
             phoneMask = value.profile?.phoneMask,
             email = value.profile?.email,
+            embossName = value.profile?.embossName?.trim()?.ifEmpty { null },
         )
     }
 
