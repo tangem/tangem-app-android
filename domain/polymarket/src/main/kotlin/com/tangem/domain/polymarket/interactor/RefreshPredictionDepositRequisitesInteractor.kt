@@ -39,7 +39,7 @@ class RefreshPredictionDepositRequisitesInteractor(
             PolymarketBridgeError.Unavailable
         }
 
-        val (assetsResult, addressesResult) = coroutineScope {
+        val (assets, addresses) = coroutineScope {
             val assets = async { bridgeRepository.getSupportedAssets() }
             val addresses = async {
                 bridgeRepository.createDepositAddresses(
@@ -47,10 +47,8 @@ class RefreshPredictionDepositRequisitesInteractor(
                     depositWalletAddress = stored.depositWalletAddress,
                 )
             }
-            assets.await() to addresses.await()
+            assets.await().bind() to addresses.await().bind()
         }
-        val assets = assetsResult.bind()
-        val addresses = addressesResult.bind()
 
         val requisites = PolymarketDepositRequisites(networks = groupIntoNetworks(assets, addresses))
 
