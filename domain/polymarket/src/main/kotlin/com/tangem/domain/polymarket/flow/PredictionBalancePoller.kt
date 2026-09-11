@@ -54,7 +54,7 @@ class PredictionBalancePoller(
         }
     }
 
-    private suspend fun run(userWalletId: UserWalletId): Unit = coroutineScope {
+    private suspend fun run(userWalletId: UserWalletId) = coroutineScope {
         launch { fundingWindow.watch(userWalletId = userWalletId) }
 
         fundingWindow.isOpen(userWalletId = userWalletId).collectLatest { isOpen ->
