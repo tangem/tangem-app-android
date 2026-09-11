@@ -11,9 +11,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketCategory
@@ -26,8 +24,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveConfigFactory
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketCategoryTabUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
@@ -79,6 +77,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+    private val positionsPreviewLoader: PolymarketPositionsPreviewLoader,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -157,6 +156,10 @@ internal class PolymarketMainModel @Inject constructor(
             .take(count = 1)
             .onEach { fundingRequisites.prefetchOnce() }
             .launchIn(modelScope)
+
+        positionsPreviewLoader.state
+            .onEach { positions -> uiState.update { it.copy(positions = positions) } }
+            .launchIn(modelScope)
     }
 
     // Kept for as long as the screen lives: coming back to a tab must not cost a reload.
@@ -216,12 +219,14 @@ internal class PolymarketMainModel @Inject constructor(
 
     fun onResume() {
         isScreenResumed = true
+        positionsPreviewLoader.resume(modelScope, params.userWalletId)
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
     }
 
     fun onPause() {
         isScreenResumed = false
+        positionsPreviewLoader.pause()
         activeFeed.value?.poller?.pause()
     }
 
@@ -382,24 +387,10 @@ internal class PolymarketMainModel @Inject constructor(
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
         val target = fundingRequisites.target ?: return
         receiveNavigation.activate(
-            TokenReceiveConfig(
-                shouldShowWarning = true,
+            PolymarketReceiveConfigFactory.create(
                 cryptoCurrency = collateral,
                 userWalletId = params.userWalletId,
-                showMemoDisclaimer = false,
-                receiveAddress = listOf(
-                    ReceiveAddressModel(
-                        displayType = ReceiveAddressModel.DisplayType.Default,
-                        value = target.address,
-                    ),
-                ),
-                tokenReceiveNotification = listOf(
-                    TokenReceiveNotification(
-                        title = R.string.prediction_add_funds_notification_limits_title,
-                        subtitle = R.string.prediction_add_funds_notification_limits_description,
-                        formatArgs = listOf(target.token.minCheckoutUsd.formatPolymarketEnteredAmount()),
-                    ),
-                ),
+                target = target,
             ),
         )
     }

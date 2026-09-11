@@ -26,6 +26,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainParams
+import com.tangem.features.polymarket.impl.main.model.PolymarketPositionsPreviewLoader
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
@@ -62,10 +64,12 @@ internal class PolymarketMainComponentTest {
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk<CheckPolymarketGeoblockUseCase>().also {
         coEvery { it() } returns false.right()
     }
+    private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
 
     init {
+        every { positionsPreviewLoader.state } returns MutableStateFlow(PolymarketPositionsPreviewUM.Loading)
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
@@ -141,5 +145,6 @@ internal class PolymarketMainComponentTest {
         refreshPredictionDepositRequisitesInteractor = refreshRequisites,
         checkPolymarketGeoblockUseCase = checkGeoblock,
         predictionAccountStatusFetcher = mockk(relaxed = true),
+        positionsPreviewLoader = positionsPreviewLoader,
     )
 }
