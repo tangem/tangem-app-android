@@ -27,6 +27,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionCompon
 import com.tangem.features.polymarket.impl.onboarding.PolymarketOnboardingComponent
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -122,6 +123,10 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.Search -> PolymarketSearchComponent(
             appComponentContext = factoryContext,
             params = PolymarketSearchComponent.Params(userWalletId = configuration.userWalletId),
+        )
+        is PolymarketRoute.Positions -> PolymarketPositionsComponent(
+            appComponentContext = factoryContext,
+            params = PolymarketPositionsComponent.Params(configuration.userWalletId, configuration.initialTab),
         )
     }
 
