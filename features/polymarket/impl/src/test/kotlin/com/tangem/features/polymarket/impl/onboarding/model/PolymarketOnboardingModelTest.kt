@@ -242,6 +242,7 @@ internal class PolymarketOnboardingModelTest {
 
                 // Assert
                 coVerify(exactly = 0) { resolvePolymarketEntryInteractor(userWalletId) }
+                coVerify(exactly = 1) { resolvePolymarketEntryInteractor.withoutPrompting(userWalletId) }
                 verify(exactly = 1) { runOnboardingUseCase(userWalletId) }
                 model.onDestroy()
             }
