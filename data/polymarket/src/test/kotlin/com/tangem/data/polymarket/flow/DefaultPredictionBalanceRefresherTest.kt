@@ -111,17 +111,49 @@ internal class DefaultPredictionBalanceRefresherTest {
         coVerify(exactly = 0) { statusStore.store(any(), any()) }
     }
 
-    private fun createActive(balance: BigDecimal, source: StatusSource) = PredictionAccountStatusValue.Active(
+    @Test
+    fun `GIVEN deposit address written during the balance read WHEN refresh THEN the fresh address is kept`() =
+        runTest {
+            // Arrange
+            val activeWithoutAddress = createActive(BigDecimal.ONE, StatusSource.ONLY_CACHE, depositAddress = null)
+            val activeWithAddress = activeWithoutAddress.copy(depositAddress = FRESH_ADDRESS)
+            coEvery { statusStore.getSyncOrNull(WALLET_ID) } returnsMany
+                listOf(activeWithoutAddress, activeWithAddress)
+            coEvery { deriveAddresses.stored(WALLET_ID) } returns ADDRESSES
+            coEvery { balanceInteractor(ADDRESSES) } returns
+                PolymarketBalanceAllowance(balance = BigDecimal("3.50"), allowances = null).right()
+
+            // Act
+            val result = refresher.refresh(WALLET_ID)
+
+            // Assert
+            assertEitherRight(result)
+            coVerify(exactly = 1) {
+                statusStore.store(
+                    WALLET_ID,
+                    activeWithAddress.copy(balance = BigDecimal("3.50"), source = StatusSource.ACTUAL),
+                )
+            }
+        }
+
+    private fun createActive(
+        balance: BigDecimal,
+        source: StatusSource,
+        depositAddress: String? = DEPOSIT_ADDRESS,
+    ) = PredictionAccountStatusValue.Active(
         source = source,
         balance = balance,
         fiatRate = null,
         depositCurrency = DEPOSIT_CURRENCY,
-        depositAddress = null,
+        depositAddress = depositAddress,
     )
 
     private companion object {
         val WALLET_ID = UserWalletId("011")
         val ADDRESSES: PolymarketAddresses = mockk()
         val DEPOSIT_CURRENCY: CryptoCurrency.Token = mockk()
+
+        const val DEPOSIT_ADDRESS = "0xbridge"
+        const val FRESH_ADDRESS = "0xfresh"
     }
 }
