@@ -33,10 +33,10 @@ import com.tangem.features.collectibles.impl.onboarding.ui.state.CollectiblesOnb
 import kotlinx.collections.immutable.ImmutableList
 
 // Hero geometry as proportions of the design's 402pt-wide frame: the photo is 608 tall while the content
-// column starts at 480, so the headline overlaps the photo's lower edge.
+// column starts at 495, so the headline overlaps the photo's lower edge.
 private const val HERO_FRAME_WIDTH = 402f
 private const val HERO_IMAGE_HEIGHT = 608f
-private const val HERO_CONTENT_TOP = 480f
+private const val HERO_CONTENT_TOP = 495f
 private const val TINT_START = 380f / HERO_IMAGE_HEIGHT
 private const val TINT_END = 600f / HERO_IMAGE_HEIGHT
 
