@@ -170,5 +170,9 @@
     {
         "name": "AND_17136_GEO_COUNTRY_CACHE_FALLBACK_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_17401_PAY_RESIDENCY_STEP_ENABLED",
+        "version": "undefined"
     }
 ]
