@@ -63,6 +63,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -794,6 +795,59 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
+    fun `GIVEN the first prefetch is still in flight WHEN a pull refresh succeeds first THEN the stale failure is dropped`() =
+        runTest {
+            // Arrange
+            val prefetchHangs = CompletableDeferred<Unit>()
+            var calls = 0
+            coEvery { refreshRequisites(USER_WALLET_ID) } coAnswers {
+                if (++calls == 1) {
+                    prefetchHangs.await()
+                    PolymarketBridgeError.Network.left()
+                } else {
+                    REQUISITES.right()
+                }
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+            prefetchHangs.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+            assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a slow account status fetch WHEN pulled to refresh THEN requisites are requested after it`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        coEvery { accountStatusFetcher(any()) } coAnswers {
+            delay(STATUS_FETCH_MS)
+            Unit.right()
+        }
+        var requisitesRequestedAt = -1L
+        coEvery { refreshRequisites(USER_WALLET_ID) } coAnswers {
+            requisitesRequestedAt = testScheduler.currentTime
+            REQUISITES.right()
+        }
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requisitesRequestedAt).isEqualTo(STATUS_FETCH_MS)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a refresh is still in flight from ready WHEN observed THEN add funds stays enabled`() = runTest {
         // Arrange
         val refreshHangs = CompletableDeferred<Unit>()
@@ -1132,6 +1186,7 @@ internal class PolymarketMainModelTest {
 
     private companion object {
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
+        const val STATUS_FETCH_MS = 1_000L
         const val REQUISITES_ADDRESS = "0xrequisites00000000000000000000000000002"
 
         val USER_WALLET_ID = UserWalletId("011")
