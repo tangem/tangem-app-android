@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.SafeTxTypedDataBuilder
+import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWalletId

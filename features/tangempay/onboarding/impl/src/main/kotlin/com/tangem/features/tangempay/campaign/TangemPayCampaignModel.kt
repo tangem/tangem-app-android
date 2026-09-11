@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -17,6 +18,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.model.TangemPayCampaignResolution
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
@@ -45,6 +47,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val onboardingStarter: TangemPayOnboardingStarter,
+    private val analytics: AnalyticsEventHandler,
 ) : Model(), WalletSelectorListener, TangemPayCampaignIssueCardComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayCampaignComponent.Params>()
@@ -117,6 +120,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     }
 
     private fun showIssueCard(resolution: TangemPayCampaignResolution.IssueCard) {
+        analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay())
         childNavigation.activate(
             TangemPayCampaignChild.IssueCard(
                 userWalletId = resolution.userWalletId,
@@ -133,6 +137,12 @@ internal class TangemPayCampaignModel @Inject constructor(
         } else {
             TangemPayCampaignUM.Landing.Mode.NoPay
         }
+        analytics.send(
+            when (mode) {
+                TangemPayCampaignUM.Landing.Mode.NoWallet -> TangemPayAnalyticsEvents.CobrandOnboardingNewHotWallet()
+                TangemPayCampaignUM.Landing.Mode.NoPay -> TangemPayAnalyticsEvents.CobrandOnboardingNotInPay()
+            },
+        )
         uiState.value = TangemPayCampaignUM.Landing(
             cardArtUrl = campaign.cardArtUrl,
             mode = mode,
@@ -170,12 +180,20 @@ internal class TangemPayCampaignModel @Inject constructor(
                         callbacks = starterCallbacks,
                     )
                 }
-                TangemPayCampaignUM.Landing.Mode.NoPay -> onboardingStarter.proceedWithWallets(
-                    walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
-                    mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
-                    campaignKey = params.campaignKey,
-                    callbacks = starterCallbacks,
-                )
+                TangemPayCampaignUM.Landing.Mode.NoPay -> {
+                    val walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+                    if (walletsIds.isEmpty()) {
+                        TangemLogger.i("[TangemPay][Campaign] No eligible wallets for the campaign, closing")
+                        onClose()
+                        return@launch
+                    }
+                    onboardingStarter.proceedWithWallets(
+                        walletsIds = walletsIds,
+                        mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                        campaignKey = params.campaignKey,
+                        callbacks = starterCallbacks,
+                    )
+                }
             }
         }
     }
@@ -185,7 +203,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     }
 
     private fun onPrivacyPolicyClick() {
-        urlOpener.openUrl(TangemPayConstants.PRIVACY_POLICY_LINK)
+        urlOpener.openUrl(TangemPayConstants.privacyPolicyLink())
     }
 
     private fun setCtaLoading(isLoading: Boolean) {

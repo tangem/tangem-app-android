@@ -1,14 +1,18 @@
 package com.tangem.data.cloudbackup.di
 
 import android.content.Context
+import androidx.credentials.CredentialManager
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
+import com.tangem.data.cloudbackup.repository.CredentialManagerPasswordRepository
 import com.tangem.data.cloudbackup.repository.DefaultCloudBackupRepository
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.data.cloudbackup.store.DefaultCloudBackupStore
+import com.tangem.domain.cloudbackup.repository.BackupPasswordRepository
 import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
@@ -57,6 +61,20 @@ internal object CloudBackupDataModule {
             cipher = CloudBackupCipher(),
             dispatchers = dispatchers,
             featureTogglesManager = featureTogglesManager,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideBackupPasswordRepository(
+        @ApplicationContext context: Context,
+        foregroundActivityProvider: ForegroundActivityProvider,
+        dispatchers: CoroutineDispatcherProvider,
+    ): BackupPasswordRepository {
+        return CredentialManagerPasswordRepository(
+            credentialManager = CredentialManager.create(context),
+            foregroundActivityProvider = foregroundActivityProvider,
+            dispatchers = dispatchers,
         )
     }
 }

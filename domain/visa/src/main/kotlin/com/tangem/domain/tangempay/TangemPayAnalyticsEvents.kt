@@ -264,6 +264,21 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Permanent Button Clicked",
     )
 
+    class CobrandOnboardingNewHotWallet : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Cobrand Design Onboarding New HotWallet",
+    )
+
+    class CobrandOnboardingNotInPay : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Cobrand Design Onboarding Not In Pay",
+    )
+
+    class CobrandOnboardingExistPay : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Cobrand Design Onboarding Exist Pay",
+    )
+
     class CardIconClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Card Icon Clicked",

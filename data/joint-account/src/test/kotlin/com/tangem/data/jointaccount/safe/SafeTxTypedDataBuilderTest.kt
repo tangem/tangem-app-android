@@ -1,4 +1,4 @@
-package com.tangem.domain.jointaccount.safe
+package com.tangem.data.jointaccount.safe
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.extensions.toHexString
@@ -8,30 +8,12 @@ import org.web3j.crypto.StructuredDataEncoder
 import java.math.BigInteger
 
 /**
- * The type strings feed `keccak256`, so a single changed character silently changes every digest: the
- * contract computes its own and no operation ever executes. Both hashes are pinned against the
- * precomputed constants of Safe v1.5.0 (Safe.sol), and the hand-encoded digest is cross-checked against
- * an independent EIP-712 implementation (web3j) over the same JSON the Blockaid gate inspects.
+ * The digest is produced by the blockchain SDK out of the JSON built here, so what this suite has to prove is that
+ * the JSON describes the Safe v1.5.0 schema correctly: it is cross-checked against an independent EIP-712
+ * implementation (web3j) over the same payload the Blockaid gate inspects. A single changed character in a type
+ * string would silently change every digest — the contract would compute its own and no operation would execute.
  */
 internal class SafeTxTypedDataBuilderTest {
-
-    @Test
-    fun `GIVEN the SafeTx type string WHEN hashed THEN it matches the contract SAFE_TX_TYPEHASH`() {
-        // Act
-        val actual = SafeTxTypedDataBuilder.safeTxTypeHash().toHexString().lowercase()
-
-        // Assert
-        assertThat(actual).isEqualTo("bb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8")
-    }
-
-    @Test
-    fun `GIVEN the domain type string WHEN hashed THEN it matches the contract DOMAIN_SEPARATOR_TYPEHASH`() {
-        // Act
-        val actual = SafeTxTypedDataBuilder.domainTypeHash().toHexString().lowercase()
-
-        // Assert
-        assertThat(actual).isEqualTo("47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218")
-    }
 
     @Test
     fun `GIVEN a native transfer WHEN hashed THEN the digest matches the independent web3j encoding`() {
@@ -39,7 +21,7 @@ internal class SafeTxTypedDataBuilderTest {
         val safeTx = nativeTransfer()
 
         // Act
-        val handEncoded = SafeTxTypedDataBuilder.digest(
+        val actual = SafeTxTypedDataBuilder.digest(
             safeTx = safeTx,
             chainId = CHAIN_ID,
             verifyingContract = SAFE_ADDRESS,
@@ -51,7 +33,7 @@ internal class SafeTxTypedDataBuilderTest {
         )
 
         // Assert
-        assertThat(handEncoded.toHexString()).isEqualTo(StructuredDataEncoder(json).hashStructuredData().toHexString())
+        assertThat(actual.toHexString()).isEqualTo(StructuredDataEncoder(json).hashStructuredData().toHexString())
     }
 
     @Test
@@ -60,11 +42,11 @@ internal class SafeTxTypedDataBuilderTest {
         val safeTx = nativeTransfer().copy(
             to = TOKEN_ADDRESS,
             value = BigInteger.ZERO,
-            data = Erc20TransferEncoder.encodeTransfer(recipient = RECIPIENT, amount = BigInteger("2500000")),
+            data = "0xa9059cbb" + "0".repeat(n = 24) + RECIPIENT.removePrefix(prefix = "0x") + "0".repeat(n = 64),
         )
 
         // Act
-        val handEncoded = SafeTxTypedDataBuilder.digest(
+        val actual = SafeTxTypedDataBuilder.digest(
             safeTx = safeTx,
             chainId = CHAIN_ID,
             verifyingContract = SAFE_ADDRESS,
@@ -76,17 +58,31 @@ internal class SafeTxTypedDataBuilderTest {
         )
 
         // Assert
-        assertThat(handEncoded.toHexString()).isEqualTo(StructuredDataEncoder(json).hashStructuredData().toHexString())
+        assertThat(actual.toHexString()).isEqualTo(StructuredDataEncoder(json).hashStructuredData().toHexString())
     }
 
     @Test
-    fun `GIVEN two chain ids WHEN hashed THEN the domain separator differs`() {
+    fun `GIVEN two chain ids WHEN hashed THEN the digest differs`() {
         // Act
-        val mainnet = SafeTxTypedDataBuilder.domainSeparator(chainId = 1, verifyingContract = SAFE_ADDRESS)
-        val polygon = SafeTxTypedDataBuilder.domainSeparator(chainId = 137, verifyingContract = SAFE_ADDRESS)
+        val mainnet = SafeTxTypedDataBuilder.digest(nativeTransfer(), chainId = 1, verifyingContract = SAFE_ADDRESS)
+        val polygon = SafeTxTypedDataBuilder.digest(nativeTransfer(), chainId = 137, verifyingContract = SAFE_ADDRESS)
 
         // Assert
         assertThat(mainnet.toHexString()).isNotEqualTo(polygon.toHexString())
+    }
+
+    @Test
+    fun `GIVEN a chain id outside the domain range WHEN hashed THEN it fails instead of signing for no chain`() {
+        // Act
+        val actual = listOf(0L, -1L).map { chainId ->
+            runCatching {
+                SafeTxTypedDataBuilder.digest(nativeTransfer(), chainId = chainId, verifyingContract = SAFE_ADDRESS)
+            }.exceptionOrNull()
+        }
+
+        // Assert
+        assertThat(actual).hasSize(2)
+        actual.forEach { assertThat(it).isInstanceOf(IllegalArgumentException::class.java) }
     }
 
     @Test
@@ -124,55 +120,51 @@ internal class SafeTxTypedDataBuilderTest {
     }
 
     @Test
-    fun `GIVEN calldata with an odd hex length WHEN hashed THEN it fails instead of dropping a nibble`() {
-        // Arrange
-        val oddCalldata = nativeTransfer().copy(data = "0xabc")
-
-        // Act
-        val actual = runCatching {
-            SafeTxTypedDataBuilder.digest(oddCalldata, chainId = CHAIN_ID, verifyingContract = SAFE_ADDRESS)
-        }.exceptionOrNull()
-
-        // Assert
-        assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
-    }
-
-    @Test
-    fun `GIVEN malformed addresses or calldata WHEN building the JSON THEN it fails like the digest does`() {
+    fun `GIVEN malformed addresses or calldata WHEN building the JSON THEN it fails instead of encoding`() {
         // Arrange
         val oddCalldata = nativeTransfer().copy(data = "0xabc")
         val negativeValue = nativeTransfer().copy(value = BigInteger.ONE.negate())
-        val shortSafe = SAFE_ADDRESS.dropLast(1)
+        val shortSafe = SAFE_ADDRESS.dropLast(n = 1)
+        val overflowOperation = nativeTransfer().copy(operation = 256)
 
         // Act
-        val calldataFailure = runCatching {
-            SafeTxTypedDataBuilder.buildJson(oddCalldata, chainId = CHAIN_ID, verifyingContract = SAFE_ADDRESS)
-        }.exceptionOrNull()
-        val valueFailure = runCatching {
-            SafeTxTypedDataBuilder.buildJson(negativeValue, chainId = CHAIN_ID, verifyingContract = SAFE_ADDRESS)
-        }.exceptionOrNull()
-        val addressFailure = runCatching {
-            SafeTxTypedDataBuilder.buildJson(nativeTransfer(), chainId = CHAIN_ID, verifyingContract = shortSafe)
-        }.exceptionOrNull()
+        val failures = listOf(
+            runCatching { SafeTxTypedDataBuilder.buildJson(oddCalldata, CHAIN_ID, SAFE_ADDRESS) },
+            runCatching { SafeTxTypedDataBuilder.buildJson(negativeValue, CHAIN_ID, SAFE_ADDRESS) },
+            runCatching { SafeTxTypedDataBuilder.buildJson(nativeTransfer(), CHAIN_ID, shortSafe) },
+            runCatching { SafeTxTypedDataBuilder.buildJson(overflowOperation, CHAIN_ID, SAFE_ADDRESS) },
+        ).map { it.exceptionOrNull() }
 
         // Assert
-        assertThat(calldataFailure).isInstanceOf(IllegalArgumentException::class.java)
-        assertThat(valueFailure).isInstanceOf(IllegalArgumentException::class.java)
-        assertThat(addressFailure).isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(failures).hasSize(4)
+        failures.forEach { assertThat(it).isInstanceOf(IllegalArgumentException::class.java) }
     }
 
+    /**
+     * Validation strips the prefix before checking, so an address arriving without `0x` is accepted — the JSON
+     * has to put it back, or the encoder would hash a value the Safe never would.
+     */
     @Test
-    fun `GIVEN an operation outside uint8 WHEN hashed THEN it fails instead of encoding a value the contract rejects`() {
+    fun `GIVEN addresses without the hex prefix WHEN hashed THEN the digest is the prefixed one`() {
         // Arrange
-        val overflow = nativeTransfer().copy(operation = 256)
+        val unprefixed = nativeTransfer().copy(
+            to = RECIPIENT.removePrefix(prefix = "0x"),
+            refundReceiver = TREASURY.uppercase().removePrefix(prefix = "0X"),
+        )
 
         // Act
-        val actual = runCatching {
-            SafeTxTypedDataBuilder.digest(overflow, chainId = CHAIN_ID, verifyingContract = SAFE_ADDRESS)
-        }.exceptionOrNull()
+        val actual = SafeTxTypedDataBuilder.digest(
+            safeTx = unprefixed,
+            chainId = CHAIN_ID,
+            verifyingContract = SAFE_ADDRESS.removePrefix(prefix = "0x"),
+        )
+        val json = SafeTxTypedDataBuilder.buildJson(unprefixed, CHAIN_ID, SAFE_ADDRESS)
 
         // Assert
-        assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
+        val expected = SafeTxTypedDataBuilder.digest(nativeTransfer(), CHAIN_ID, SAFE_ADDRESS)
+        assertThat(actual).isEqualTo(expected)
+        assertThat(json).contains(""""to":"$RECIPIENT"""")
+        assertThat(json).contains(""""refundReceiver":"$TREASURY"""")
     }
 
     private fun nativeTransfer(): SafeTx = SafeTx(

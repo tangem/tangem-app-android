@@ -26,12 +26,14 @@ internal object PolymarketReceiveConfigFactory {
                 value = target.address,
             ),
         ),
-        tokenReceiveNotification = listOf(
-            TokenReceiveNotification(
-                title = R.string.prediction_add_funds_notification_limits_title,
-                subtitle = R.string.prediction_add_funds_notification_limits_description,
-                formatArgs = listOf(target.token.minCheckoutUsd.formatPolymarketEnteredAmount()),
-            ),
+        tokenReceiveNotification = listOfNotNull(
+            target.token.minCheckoutUsd?.let { minimum ->
+                TokenReceiveNotification(
+                    title = R.string.prediction_add_funds_notification_limits_title,
+                    subtitle = R.string.prediction_add_funds_notification_limits_description,
+                    formatArgs = listOf(minimum.formatPolymarketEnteredAmount()),
+                )
+            },
         ),
     )
 }
