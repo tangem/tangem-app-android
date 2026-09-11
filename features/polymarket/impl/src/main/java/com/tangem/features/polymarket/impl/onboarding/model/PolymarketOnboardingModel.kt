@@ -30,6 +30,8 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -71,9 +73,10 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private val onboardingJob = JobHolder()
 
+    private var storyContentPrefetch: Deferred<Boolean>? = null
+
     init {
         resolveEntry()
-        prefetchStory()
     }
 
     fun onCloseClick() {
@@ -106,8 +109,13 @@ internal class PolymarketOnboardingModel @Inject constructor(
             )
             PolymarketEntry.Undetermined -> uiState.value = welcome(isInProgress = false)
             PolymarketEntry.Reconnect -> uiState.value = reconnect()
-            PolymarketEntry.Onboarded -> openFeed()
+            PolymarketEntry.Onboarded -> {
+                openFeed()
+                return
+            }
         }
+
+        prefetchStory()
     }
 
     private fun startOnboarding() {
@@ -219,7 +227,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private fun completeOnboarding() {
         modelScope.launch {
-            if (shouldShowStoriesInteractor.invokeSync(STORY_ID)) {
+            if (isStoryAvailable()) {
                 router.push(AppRoute.Stories(storyId = STORY_ID, screenSource = STORY_SOURCE))
             }
 
@@ -228,9 +236,19 @@ internal class PolymarketOnboardingModel @Inject constructor(
     }
 
     private fun prefetchStory() {
-        modelScope.launch {
-            getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true)
-        }
+        storyContentPrefetch = modelScope.async { fetchStoryContent() }
+    }
+
+    private suspend fun isStoryAvailable(): Boolean {
+        val isPrefetched = storyContentPrefetch?.await() == true
+
+        if (!isPrefetched) fetchStoryContent()
+
+        return shouldShowStoriesInteractor.invokeSync(STORY_ID)
+    }
+
+    private suspend fun fetchStoryContent(): Boolean {
+        return getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true).getOrNull() != null
     }
 
     private companion object {
