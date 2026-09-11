@@ -75,7 +75,7 @@ class ResolveTangemPayCampaignUseCase(
     }
 
     private suspend fun findWalletWithIssuableAccount(): Either<VisaApiError, UserWalletId?> = either {
-        eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+        eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
             .firstOrNull { walletId -> canIssueCard(walletId).bind() }
     }
 
