@@ -24,8 +24,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, the
- * exchanges are held back with [ScenarioUnavailabilityReason.JointAccount] and send keeps its natural availability.
+ * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, buy,
+ * sell and stake are held back with [ScenarioUnavailabilityReason.JointAccount], and send and swap keep their
+ * natural availability.
  */
 internal class JointAccountActionsFactoryTest {
 
@@ -46,7 +47,7 @@ internal class JointAccountActionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN everything a personal account offers WHEN create THEN exchanges are held back and send is offered`() =
+    fun `GIVEN everything a personal account offers WHEN create THEN buy sell and stake are held back`() =
         runTest {
             // Arrange
             val status = statusWithAddress(SAFE)
@@ -66,12 +67,30 @@ internal class JointAccountActionsFactoryTest {
                 ActionState.Receive(ScenarioUnavailabilityReason.None),
                 ActionState.Stake(ScenarioUnavailabilityReason.JointAccount, option = null),
                 ActionState.Send(ScenarioUnavailabilityReason.None),
-                ActionState.Swap(ScenarioUnavailabilityReason.JointAccount, shouldShowBadge = false),
+                ActionState.Swap(ScenarioUnavailabilityReason.None, shouldShowBadge = false),
                 ActionState.Buy(ScenarioUnavailabilityReason.JointAccount),
                 ActionState.Sell(ScenarioUnavailabilityReason.JointAccount),
                 ActionState.HideToken(ScenarioUnavailabilityReason.None),
             ).inOrder()
         }
+
+    @Test
+    fun `GIVEN swap natural reason present WHEN create THEN swap keeps the natural reason`() = runTest {
+        // Arrange
+        val status = statusWithAddress(SAFE, isCustom = true)
+
+        // Act
+        val actual = factory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = status,
+            stakingAvailability = StakingAvailability.Unavailable,
+            yieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+        )
+
+        // Assert
+        assertThat(actual.filterIsInstance<ActionState.Swap>().single().unavailabilityReason)
+            .isEqualTo(ScenarioUnavailabilityReason.CustomToken(currency.name))
+    }
 
     @Test
     fun `GIVEN an empty balance WHEN create THEN send keeps the natural reason`() = runTest {
@@ -207,14 +226,19 @@ internal class JointAccountActionsFactoryTest {
         assertThat(actual.filterIsInstance<ActionState.YieldMode>()).isEmpty()
     }
 
-    private fun statusWithAddress(address: String?): CryptoCurrencyStatus {
+    private fun statusWithAddress(address: String?, isCustom: Boolean = false): CryptoCurrencyStatus {
         val networkAddress = address?.let {
             NetworkAddress.Single(NetworkAddress.Address(value = it, type = NetworkAddress.Address.Type.Primary))
         }
         val value = mockk<CryptoCurrencyStatus.Value> { every { this@mockk.networkAddress } returns networkAddress }
+        val statusCurrency = if (isCustom) {
+            (currency as CryptoCurrency.Coin).copy(isCustom = true)
+        } else {
+            currency
+        }
 
         return mockk {
-            every { this@mockk.currency } returns this@JointAccountActionsFactoryTest.currency
+            every { this@mockk.currency } returns statusCurrency
             every { this@mockk.value } returns value
         }
     }
