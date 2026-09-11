@@ -2,16 +2,20 @@ package com.tangem.domain.polymarket.flow
 
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -25,12 +29,17 @@ import kotlin.time.Duration.Companion.seconds
 internal class PredictionBalancePollerTest {
 
     private val fetcher: PredictionAccountStatusFetcher = mockk()
-    private val config = PredictionBalancePollingConfig(baseInterval = 30.seconds)
+    private val fundingWindow: PredictionFundingWindow = mockk()
+    private val isOpen = MutableStateFlow(false)
+    private val config = PredictionBalancePollingConfig(baseInterval = 30.seconds, fundingInterval = 5.seconds)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(fetcher)
+        clearMocks(fetcher, fundingWindow)
         coEvery { fetcher(any()) } returns Unit.right()
+        isOpen.value = false
+        every { fundingWindow.isOpen(any()) } returns isOpen
+        coEvery { fundingWindow.watch(any()) } coAnswers { awaitCancellation() }
     }
 
     @Test
@@ -141,6 +150,7 @@ internal class PredictionBalancePollerTest {
         } throws IllegalStateException("boom") andThen Unit.right()
         val poller = PredictionBalancePoller(
             fetcher = fetcher,
+            fundingWindow = fundingWindow,
             config = config,
             appScope = TestAppCoroutineScope(
                 coroutineContext = StandardTestDispatcher(testScheduler) +
@@ -172,6 +182,7 @@ internal class PredictionBalancePollerTest {
             } throws IllegalStateException("boom") andThen Unit.right()
             val poller = PredictionBalancePoller(
                 fetcher = fetcher,
+                fundingWindow = fundingWindow,
                 config = config,
                 appScope = TestAppCoroutineScope(
                     coroutineContext = StandardTestDispatcher(testScheduler) +
@@ -219,8 +230,81 @@ internal class PredictionBalancePollerTest {
         runCurrent()
     }
 
+    @Test
+    fun `GIVEN window opens mid pause WHEN it opens THEN next refresh is at once and then every funding interval`() = runTest {
+        // Arrange
+        val poller = createPoller()
+        val subscription = poller.subscribe(WALLET_ID).launchIn(this)
+        advanceTimeBy(10.seconds)
+        runCurrent()
+
+        // Act
+        isOpen.value = true
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        advanceTimeBy(5.seconds)
+        runCurrent()
+        coVerify(exactly = 3) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+
+        subscription.cancel()
+        runCurrent()
+    }
+
+    @Test
+    fun `GIVEN window closes WHEN next pause runs THEN base interval is back`() = runTest {
+        // Arrange
+        isOpen.value = true
+        val poller = createPoller()
+        val subscription = poller.subscribe(WALLET_ID).launchIn(this)
+        runCurrent()
+
+        // Act
+        isOpen.value = false
+        runCurrent()
+        advanceTimeBy(29.seconds)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+        advanceTimeBy(1.seconds)
+        runCurrent()
+        coVerify(exactly = 3) { fetcher(PredictionAccountStatusFetcher.Params(WALLET_ID)) }
+
+        subscription.cancel()
+        runCurrent()
+    }
+
+    @Test
+    fun `GIVEN subscriber WHEN subscribed THEN window is watched until last unsubscribe`() = runTest {
+        // Arrange
+        var isWatching = false
+        coEvery { fundingWindow.watch(WALLET_ID) } coAnswers {
+            isWatching = true
+            try {
+                awaitCancellation()
+            } finally {
+                isWatching = false
+            }
+        }
+        val poller = createPoller()
+
+        // Act
+        val subscription = poller.subscribe(WALLET_ID).launchIn(this)
+        runCurrent()
+        val whileSubscribed = isWatching
+        subscription.cancel()
+        runCurrent()
+
+        // Assert
+        assertThat(whileSubscribed).isTrue()
+        assertThat(isWatching).isFalse()
+    }
+
     private fun TestScope.createPoller() = PredictionBalancePoller(
         fetcher = fetcher,
+        fundingWindow = fundingWindow,
         config = config,
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
     )
