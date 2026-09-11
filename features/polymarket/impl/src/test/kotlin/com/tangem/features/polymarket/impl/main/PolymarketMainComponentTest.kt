@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
@@ -65,6 +66,7 @@ internal class PolymarketMainComponentTest {
         coEvery { it() } returns false.right()
     }
     private val positionsPreviewLoader: PolymarketPositionsPreviewLoader = mockk(relaxed = true)
+    private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private val userWalletId = UserWalletId("011")
 
@@ -74,6 +76,7 @@ internal class PolymarketMainComponentTest {
         coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
             flowOf(PredictionAccountStatusValue.Loading)
+        every { fundingWindow.isOpen(any()) } returns MutableStateFlow(false)
         every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
             override val state = MutableStateFlow(
                 BatchListState<Int, PolymarketEventsBatch>(
@@ -147,5 +150,6 @@ internal class PolymarketMainComponentTest {
         predictionAccountStatusFetcher = mockk(relaxed = true),
         positionsPreviewLoader = positionsPreviewLoader,
         predictionBalancePoller = mockk(relaxed = true),
+        predictionFundingWindow = fundingWindow,
     )
 }
