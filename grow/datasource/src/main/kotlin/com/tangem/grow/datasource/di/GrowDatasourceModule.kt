@@ -56,7 +56,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object GrowDatasourceModule {
 
-    private const val TIMEOUT_20_SECONDS = 20L
     private const val TIMEOUT_60_SECONDS = 60L
     private const val TIMEOUT_90_SECONDS = 90L
     private const val TIMEOUT_120_SECONDS = 120L
@@ -320,12 +319,6 @@ internal object GrowDatasourceModule {
                 apiConfigId = PolymarketBridge.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
-                timeouts = Timeouts(
-                    callTimeoutSeconds = TIMEOUT_20_SECONDS,
-                    connectTimeoutSeconds = TIMEOUT_20_SECONDS,
-                    readTimeoutSeconds = TIMEOUT_20_SECONDS,
-                    writeTimeoutSeconds = TIMEOUT_20_SECONDS,
-                ),
             ),
         )
     }
