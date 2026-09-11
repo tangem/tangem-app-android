@@ -124,7 +124,8 @@ internal class AccountItemsDelegate @Inject constructor(
             jointAccounts.size < AccountList.MAX_JOINT_ACCOUNTS_COUNT
         val isAddAccountEnabled = isAddCryptoAccountEnabled || isAddJointAccountEnabled
         val shouldShowDescription = accountItems.size > 1
-        val isArchivedAccountsEnabled = accounts.size != accountStatusList.totalAccounts
+        val isArchivedAccountsEnabled = accounts.size != accountStatusList.totalAccounts ||
+            jointAccounts.size != accountStatusList.totalJointAccounts
 
         val footer = WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",

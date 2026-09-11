@@ -342,8 +342,9 @@ internal class DefaultJointAccountRepositoryTest {
         assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
     }
 
+    /** A link the backend does not know is as dead as one it refuses — retrying it can only fail again */
     @Test
-    fun `GIVEN not found response WHEN getInvitePreview THEN LoadFailed`() = runTest {
+    fun `GIVEN not found response WHEN getInvitePreview THEN InvalidLink`() = runTest {
         // Arrange
         val response = invitePreviewErrorResponse(code = ApiResponseError.HttpException.Code.NOT_FOUND)
         coEvery { jointAccountApi.getJointAccountInvite(any(), any()) } returns response
@@ -352,8 +353,7 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.getInvitePreview(walletId = WALLET_ID, inviteId = INVITE_A)
 
         // Assert
-        val expectedCause = (response as ApiResponse.Error).cause
-        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.LoadFailed(cause = expectedCause)))
+        assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.InvalidLink))
     }
 
     @Test
