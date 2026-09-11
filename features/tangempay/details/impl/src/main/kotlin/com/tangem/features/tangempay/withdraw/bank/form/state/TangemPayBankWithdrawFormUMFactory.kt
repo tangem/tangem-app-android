@@ -24,43 +24,50 @@ internal class TangemPayBankWithdrawFormUMFactory(
 ) {
 
     fun create(draft: BankWithdrawDraft, state: FormState): TangemPayBankWithdrawFormUM {
-        val visibleFields = BankWithdrawFormFields.visible(fields = fields, values = state.values)
+        val values = state.values(fields, draft)
+        val visibleFields = BankWithdrawFormFields.visible(fields = fields, values = values)
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
             fields = visibleFields
                 .mapIndexed { index, field ->
-                    createField(field = field, state = state, isLast = index == visibleFields.lastIndex)
+                    createField(
+                        field = field,
+                        value = values[field].orEmpty(),
+                        error = state.errors[field]?.toText(),
+                        isLast = index == visibleFields.lastIndex,
+                    )
                 }
                 .toImmutableList(),
-            isContinueEnabled = visibleFields.all { field -> !state.values[field].isNullOrBlank() },
+            isContinueEnabled = visibleFields.all { field -> !values[field].isNullOrBlank() },
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )
     }
 
-    private fun createField(field: BankWithdrawFormField, state: FormState, isLast: Boolean): FieldUM {
-        val error = state.errors[field]?.toText()
-        val value = state.values[field].orEmpty()
-        return when (val kind = field.kind) {
-            is BankWithdrawFieldKind.TextField -> FieldUM.Text(
-                field = field,
-                value = value,
-                error = error,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = kind.capitalization,
-                    keyboardType = kind.keyboardType,
-                    imeAction = if (isLast) ImeAction.Done else ImeAction.Next,
-                ),
-                onValueChange = { newValue -> callbacks.onValueChange(field, newValue) },
-                onFocusChange = { isFocused -> callbacks.onFocusChange(field, isFocused) },
-            )
-            BankWithdrawFieldKind.SelectorField -> FieldUM.Selector(
-                field = field,
-                value = value,
-                error = error,
-                onClick = { callbacks.onSelectorClick(field) },
-            )
-        }
+    private fun createField(
+        field: BankWithdrawFormField,
+        value: String,
+        error: TextReference?,
+        isLast: Boolean,
+    ): FieldUM = when (val kind = field.kind) {
+        is BankWithdrawFieldKind.TextField -> FieldUM.Text(
+            field = field,
+            value = value,
+            error = error,
+            keyboardOptions = KeyboardOptions(
+                capitalization = kind.capitalization,
+                keyboardType = kind.keyboardType,
+                imeAction = if (isLast) ImeAction.Done else ImeAction.Next,
+            ),
+            onValueChange = { newValue -> callbacks.onValueChange(field, newValue) },
+            onFocusChange = { isFocused -> callbacks.onFocusChange(field, isFocused) },
+        )
+        BankWithdrawFieldKind.SelectorField -> FieldUM.Selector(
+            field = field,
+            value = value,
+            error = error,
+            onClick = { callbacks.onSelectorClick(field) },
+        )
     }
 
     private fun BankWithdrawFieldError.toText(): TextReference = when (this) {
