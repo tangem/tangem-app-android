@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -40,10 +41,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEachIndexed
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -54,6 +55,7 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -73,6 +75,7 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardT
 import com.tangem.features.tangempay.orderCard.impl.ui.state.availableTypesOf
 import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
@@ -110,19 +113,22 @@ private fun OrderTypeContent(
     detailsPagerState: PagerState,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary),
-    ) {
-        Image(
-            painter = painterResource(id = state.backgroundRes()),
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth,
+    Box(modifier = modifier.fillMaxSize()) {
+        Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth(),
-        )
+                .matchParentSize()
+                .hazeSourceTangem()
+                .background(TangemTheme.colors3.bg.primary),
+        ) {
+            Image(
+                painter = painterResource(id = state.backgroundRes()),
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth(),
+            )
+        }
         Column(modifier = Modifier.fillMaxSize()) {
             OrderTypeTopBar(onCloseClick = state.onBackClick)
             if (state.isError) {
@@ -271,23 +277,32 @@ private fun CardTypeTabs(
             }
     }
 
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        availableTypes.fastForEachIndexed { index, type ->
-            TangemTabItem(
-                state = TangemTabItemUM.Content(
+    val currentOnTypeClick by rememberUpdatedState(onTypeClick)
+    val selectedPage = pagerState.currentPage
+    val tabs = remember(availableTypes, selectedPage) {
+        availableTypes
+            .mapIndexed { index, type ->
+                TangemTabItemUM.Content(
                     id = type.name,
                     label = resourceReference(type.titleRes()),
                     counter = type.labelSuffixRes()?.let { resourceReference(it) },
-                    isSelected = pagerState.currentPage == index,
+                    isSelected = index == selectedPage,
                     onClick = {
-                        onTypeClick(type)
+                        currentOnTypeClick(type)
                         if (pagerState.currentPage != index) tabDrivenPage = index
                         scope.launch { pagerState.animateScrollToPage(index) }
                     },
-                ),
-            )
-        }
+                )
+            }
+            .toImmutableList()
     }
+
+    TangemTabNavigation(
+        tabs = tabs,
+        modifier = modifier,
+        variant = TangemTabItem.Variant.Material,
+        contentPadding = PaddingValues(0.dp),
+    )
 }
 
 @Suppress("MagicNumber")
