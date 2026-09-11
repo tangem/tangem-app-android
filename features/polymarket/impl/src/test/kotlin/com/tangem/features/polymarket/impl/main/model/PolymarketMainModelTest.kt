@@ -21,7 +21,9 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
@@ -52,18 +54,24 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -73,6 +81,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
@@ -92,6 +102,7 @@ internal class PolymarketMainModelTest {
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
+    private val balancePoller: PredictionBalancePoller = mockk()
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -118,6 +129,8 @@ internal class PolymarketMainModelTest {
     @BeforeEach
     fun allowTradingByDefault() {
         coEvery { checkGeoblock() } returns false.right()
+        clearMocks(balancePoller)
+        every { balancePoller.subscribe(any()) } returns emptyFlow()
     }
 
     init {
@@ -706,19 +719,188 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN a failed prefetch WHEN add funds clicked THEN nothing opens and it is reported`() = runTest {
+    fun `GIVEN a failed prefetch WHEN the screen opens THEN add funds is dimmed but tappable`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN add funds clicked THEN nothing opens and the error alert is shown`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
         val model = createModel(testScope = this)
         val slot = FakeSlotHost(model.addFundsNavigation)
         advanceUntilIdle()
+        val message = slot<EventMessage>()
+        every { messageSender.send(capture(message)) } returns Unit
 
         // Act
         model.uiState.value.balance.addFunds.onClick()
 
         // Assert
         assertThat(slot.configuration).isNull()
-        verify { messageSender.send(SnackbarMessage(resourceReference(R.string.common_unknown_error))) }
+        assertThat((message.captured as DialogMessage).message)
+            .isEqualTo(resourceReference(R.string.prediction_add_funds_error_description))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN add funds clicked THEN no request is made`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Network.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.balance.addFunds.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a successful prefetch WHEN pulled to refresh THEN requisites are requested again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a failed prefetch WHEN pulled to refresh and the bridge recovers THEN add funds is enabled`() =
+        runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
+                PolymarketBridgeError.Network.left(),
+                REQUISITES.right(),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+            assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+            assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a successful prefetch WHEN a pull refresh fails THEN add funds keeps the known target`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
+            REQUISITES.right(),
+            PolymarketBridgeError.Network.left(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the first prefetch is still in flight WHEN a pull refresh succeeds first THEN the stale failure is dropped`() =
+        runTest {
+            // Arrange
+            val prefetchHangs = CompletableDeferred<Unit>()
+            var calls = 0
+            coEvery { refreshRequisites(USER_WALLET_ID) } coAnswers {
+                if (++calls == 1) {
+                    prefetchHangs.await()
+                    PolymarketBridgeError.Network.left()
+                } else {
+                    REQUISITES.right()
+                }
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+            prefetchHangs.complete(Unit)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+            assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a slow account status fetch WHEN pulled to refresh THEN requisites are requested after it`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        coEvery { accountStatusFetcher(any()) } coAnswers {
+            delay(STATUS_FETCH_MS)
+            Unit.right()
+        }
+        var requisitesRequestedAt = -1L
+        coEvery { refreshRequisites(USER_WALLET_ID) } coAnswers {
+            requisitesRequestedAt = testScheduler.currentTime
+            REQUISITES.right()
+        }
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(requisitesRequestedAt).isEqualTo(STATUS_FETCH_MS)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a refresh is still in flight from ready WHEN observed THEN add funds stays enabled`() = runTest {
+        // Arrange
+        val refreshHangs = CompletableDeferred<Unit>()
+        var calls = 0
+        coEvery { refreshRequisites(USER_WALLET_ID) } coAnswers {
+            calls++
+            if (calls == 1) REQUISITES.right() else { refreshHangs.await(); REQUISITES.right() }
+        }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
         model.onDestroy()
     }
 
@@ -794,7 +976,7 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
-    fun `GIVEN requisites without a default target WHEN the screen opens THEN add funds stays disabled`() = runTest {
+    fun `GIVEN requisites without a default target WHEN the screen opens THEN add funds is dimmed`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_DEFAULT.right()
 
@@ -803,8 +985,25 @@ internal class PolymarketMainModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
+        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
+        assertThat(model.uiState.value.balance.addFunds.isDimmed).isTrue()
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN requisites without a default target WHEN the screen resumes THEN they are retried`() = runTest {
+        // Arrange
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES_WITHOUT_DEFAULT.right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+        model.onDestroy()
+
+        // Assert
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
     }
 
     @Test
@@ -858,6 +1057,34 @@ internal class PolymarketMainModelTest {
         coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
     }
 
+    @Test
+    fun `GIVEN screen resumed WHEN paused THEN balance poll subscription is released`() = runTest {
+        // Arrange
+        val subscribers = MutableStateFlow(0)
+        every { balancePoller.subscribe(USER_WALLET_ID) } returns flow {
+            subscribers.update { it + 1 }
+            try {
+                awaitCancellation()
+            } finally {
+                subscribers.update { it - 1 }
+            }
+        }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+        val whileResumed = subscribers.value
+        model.onPause()
+        runCurrent()
+
+        // Assert
+        assertThat(whileResumed).isEqualTo(1)
+        assertThat(subscribers.value).isEqualTo(0)
+        model.onDestroy()
+    }
+
     private fun activeStatus(depositAddress: String?, balance: String = "12.5") =
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
@@ -879,6 +1106,34 @@ internal class PolymarketMainModelTest {
                 event.onComplete(configuration, old)
             }
         }
+    }
+
+    @Test
+    fun `GIVEN main preview WHEN see all tapped THEN opens Active for the settled wallet`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+
+        // Act
+        requireNotNull(model.uiState.value.onActivePositionsClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Positions(USER_WALLET_ID, PolymarketPositionsTab.ACTIVE)) }
+    }
+
+    @Test
+    fun `GIVEN empty active preview WHEN Finished tapped THEN history remains reachable`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        positionsState.value = PolymarketPositionsPreviewUM.Content(persistentListOf())
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        requireNotNull(model.uiState.value.onFinishedPositionsClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Positions(USER_WALLET_ID, PolymarketPositionsTab.FINISHED)) }
     }
 
     @Test
@@ -959,6 +1214,7 @@ internal class PolymarketMainModelTest {
             checkPolymarketGeoblockUseCase = checkGeoblock,
             predictionAccountStatusFetcher = accountStatusFetcher,
             positionsPreviewLoader = positionsPreviewLoader,
+            predictionBalancePoller = balancePoller,
         ).also { model = it }
     }
 
@@ -1044,6 +1300,7 @@ internal class PolymarketMainModelTest {
 
     private companion object {
         const val DEPOSIT_ADDRESS = "0xbridge0000000000000000000000000000000001"
+        const val STATUS_FETCH_MS = 1_000L
         const val REQUISITES_ADDRESS = "0xrequisites00000000000000000000000000002"
 
         val USER_WALLET_ID = UserWalletId("011")

@@ -112,6 +112,8 @@ internal class PlacePredictionModel @Inject constructor(
 
     private val quoteJobHolder = JobHolder()
 
+    private val tradingAllowanceJobHolder = JobHolder()
+
     private var isMarketLive = false
 
     private var isNegRiskMarket: Boolean? = null
@@ -127,21 +129,25 @@ internal class PlacePredictionModel @Inject constructor(
 
     /**
      * Whether the region allows trading — read here rather than carried in on the route, because a route
-     * cannot know it and a screen that assumes it would be confidently wrong. An unreadable region is
-     * treated as blocked: this gate exists to stop an order, so it fails shut.
+     * cannot know it and a screen that assumes it would be confidently wrong. An unreadable region keeps the
+     * gate shut, but as [TradingPermissionUM.Unknown]: refusing the order is this gate's job, claiming the
+     * user is restricted is not.
      */
     private fun loadTradingAllowance() {
+        if (tradingAllowanceJobHolder.isActive) return
+
         modelScope.launch {
-            val isBlocked = withContext(dispatchers.default) {
-                checkPolymarketGeoblockUseCase().getOrElse { true }
+            val permission = withContext(dispatchers.default) {
+                checkPolymarketGeoblockUseCase().fold(
+                    ifLeft = { TradingPermissionUM.Unknown },
+                    ifRight = { isBlocked ->
+                        if (isBlocked) TradingPermissionUM.Restricted else TradingPermissionUM.Allowed
+                    },
+                )
             }
 
-            uiState.update(
-                SetTradingPermissionTransformer(
-                    permission = if (isBlocked) TradingPermissionUM.Restricted else TradingPermissionUM.Allowed,
-                ),
-            )
-        }
+            uiState.update(SetTradingPermissionTransformer(permission = permission))
+        }.saveIn(tradingAllowanceJobHolder)
     }
 
     /**
@@ -150,6 +156,7 @@ internal class PlacePredictionModel @Inject constructor(
      */
     fun onScreenShown() {
         isScreenShown = true
+        if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
         restartQuoteLoop(withDebounce = false)
     }
 
