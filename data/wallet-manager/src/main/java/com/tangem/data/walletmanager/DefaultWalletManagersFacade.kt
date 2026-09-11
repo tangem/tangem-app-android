@@ -384,6 +384,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     /**
      * The balance fetch caches the provider first; until it runs, the Safe address is resolved from the accounts.
      * The resolver is lazy: it sits behind the accounts fetcher, which reaches this facade through the tokens saver.
+     *
+     * `null` means one thing only — the Safe address has not arrived yet, so the caller may retry. A provider the
+     * SDK cannot build for the network is a permanent condition and stays loud instead of looking like waiting.
      */
     private suspend fun getJointAddressProvider(
         userWalletId: UserWalletId,
@@ -396,7 +399,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return null
         }
 
-        return getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress)
+        return requireNotNull(getOrCreateExternalAddressBalanceProvider(userWalletId, network, safeAddress)) {
+            "Unable to create a balance provider for the joint network: $network"
+        }
     }
 
     private fun CryptoCurrency.toTransactionHistoryFilterType(): TransactionHistoryRequest.FilterType {
