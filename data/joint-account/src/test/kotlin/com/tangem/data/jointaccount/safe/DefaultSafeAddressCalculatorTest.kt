@@ -1,16 +1,18 @@
-package com.tangem.domain.jointaccount.safe
+package com.tangem.data.jointaccount.safe
 
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
+import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.spongycastle.crypto.digests.KeccakDigest
 
 /**
  * Vectors produced by the backend itself cross-checked against `predictSafeAddress` from `@safe-global/protocol-kit`
@@ -27,13 +29,15 @@ import org.spongycastle.crypto.digests.KeccakDigest
  * - the address from the other singleton's column — the singleton is mixed up.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class SafeAddressTest {
+internal class DefaultSafeAddressCalculatorTest {
+
+    private val calculator = DefaultSafeAddressCalculator()
 
     @ParameterizedTest
     @ProvideTestModels
     fun compute(model: VectorModel) {
         // Act
-        val actual = SafeAddress.compute(
+        val actual = calculator.compute(
             owners = OWNERS.take(model.members),
             threshold = model.threshold,
             singleton = model.singleton,
@@ -59,12 +63,12 @@ internal class SafeAddressTest {
     @Test
     fun `GIVEN 2-of-2 vector WHEN build initializer THEN bytes and salt match the backend intermediates`() {
         // Act
-        val initializer = SafeAddress.initializer(owners = OWNERS.take(2), threshold = 2)
-        val salt = (initializer.keccak() + ByteArray(size = 32)).keccak()
+        val initializer = calculator.initializer(owners = OWNERS.take(2), threshold = 2)
+        val salt = (initializer.toKeccak() + ByteArray(size = 32)).toKeccak()
 
         // Assert
         assertThat(initializer.toHexString().lowercase()).isEqualTo(EXPECTED_INITIALIZER_2_OF_2)
-        assertThat(initializer.keccak().toHexString().lowercase())
+        assertThat(initializer.toKeccak().toHexString().lowercase())
             .isEqualTo("243e7295bbdb34d1fb79dc8de1012aae3b8272dcfad97252eb1d88b01b68af80")
         assertThat(salt.toHexString().lowercase())
             .isEqualTo("9218b0c85d8557a14eed0ca93a9abf7f67db02b365524658a80e2fd0c211b307")
@@ -76,28 +80,23 @@ internal class SafeAddressTest {
         val shuffled = OWNERS.reversed().map { it.uppercase().replace(oldValue = "0X", newValue = "0x") }
 
         // Act
-        val actual = SafeAddress.compute(owners = shuffled, threshold = 3, singleton = SafeSingleton.SAFE)
+        val actual = calculator.compute(owners = shuffled, threshold = 3, singleton = SafeSingleton.SAFE)
 
         // Assert
-        val expected = SafeAddress.compute(owners = OWNERS, threshold = 3, singleton = SafeSingleton.SAFE)
+        val expected = calculator.compute(owners = OWNERS, threshold = 3, singleton = SafeSingleton.SAFE)
         assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `GIVEN proxy creation code WHEN hash THEN matches the factory blob hash`() {
         // Act
-        val actual = SafeAddress.PROXY_CREATION_CODE.hexToBytes().keccak()
+        val actual = DefaultSafeAddressCalculator.PROXY_CREATION_CODE.hexToBytes().toKeccak()
 
         // Assert
         assertThat(actual.toHexString().lowercase())
             .isEqualTo("941b3e88811b2f33b8e26783c7407d2e978404581a21c9f07abf2cad9cb87e12")
     }
 
-    private fun ByteArray.keccak(): ByteArray {
-        val digest = KeccakDigest(KECCAK_BITS)
-        digest.update(this, 0, size)
-        return ByteArray(digest.digestSize).also { digest.doFinal(it, 0) }
-    }
 
     /**
      * A composition that no Safe can have must be rejected before hashing: every case here would otherwise
@@ -111,7 +110,7 @@ internal class SafeAddressTest {
         @ProvideTestModels
         fun compute(model: ValidationModel) {
             // Act
-            val actual = SafeAddress.compute(
+            val actual = calculator.compute(
                 owners = model.owners,
                 threshold = model.threshold,
                 singleton = SafeSingleton.SAFE,
@@ -125,50 +124,50 @@ internal class SafeAddressTest {
             ValidationModel(
                 owners = emptyList(),
                 threshold = 1,
-                expected = SafeAddress.Error.NoOwners,
+                expected = SafeAddressCalculator.Error.NoOwners,
             ),
             ValidationModel(
                 owners = listOf(OWNERS[0].dropLast(n = 1)),
                 threshold = 1,
-                expected = SafeAddress.Error.MalformedOwnerAddress(address = OWNERS[0].dropLast(n = 1)),
+                expected = SafeAddressCalculator.Error.MalformedOwnerAddress(address = OWNERS[0].dropLast(n = 1)),
             ),
             ValidationModel(
                 owners = listOf(OWNERS[0] + "00"),
                 threshold = 1,
-                expected = SafeAddress.Error.MalformedOwnerAddress(address = OWNERS[0] + "00"),
+                expected = SafeAddressCalculator.Error.MalformedOwnerAddress(address = OWNERS[0] + "00"),
             ),
             ValidationModel(
                 owners = listOf(OWNERS[0].removePrefix(prefix = "0x")),
                 threshold = 1,
-                expected = SafeAddress.Error.MalformedOwnerAddress(address = OWNERS[0].removePrefix(prefix = "0x")),
+                expected = SafeAddressCalculator.Error.MalformedOwnerAddress(address = OWNERS[0].removePrefix(prefix = "0x")),
             ),
             ValidationModel(
                 owners = listOf(NON_HEX_ADDRESS),
                 threshold = 1,
-                expected = SafeAddress.Error.MalformedOwnerAddress(address = NON_HEX_ADDRESS),
+                expected = SafeAddressCalculator.Error.MalformedOwnerAddress(address = NON_HEX_ADDRESS),
             ),
             // A Safe whose owners differ only in case is not deployable, and the duplicate is invisible
             // once the composition is lowercased for the initializer
             ValidationModel(
                 owners = listOf(OWNERS[0], OWNERS[0].uppercase().replace(oldValue = "0X", newValue = "0x")),
                 threshold = 2,
-                expected = SafeAddress.Error.DuplicateOwners(address = OWNERS[0].lowercase()),
+                expected = SafeAddressCalculator.Error.DuplicateOwners(address = OWNERS[0].lowercase()),
             ),
             ValidationModel(
                 owners = OWNERS.take(n = 2),
                 threshold = 0,
-                expected = SafeAddress.Error.ThresholdOutOfRange(threshold = 0, ownersCount = 2),
+                expected = SafeAddressCalculator.Error.ThresholdOutOfRange(threshold = 0, ownersCount = 2),
             ),
             ValidationModel(
                 owners = OWNERS.take(n = 2),
                 threshold = 3,
-                expected = SafeAddress.Error.ThresholdOutOfRange(threshold = 3, ownersCount = 2),
+                expected = SafeAddressCalculator.Error.ThresholdOutOfRange(threshold = 3, ownersCount = 2),
             ),
             // Encoded by `word` as a small positive number rather than two's complement, so it would pass silently
             ValidationModel(
                 owners = OWNERS.take(n = 2),
                 threshold = -1,
-                expected = SafeAddress.Error.ThresholdOutOfRange(threshold = -1, ownersCount = 2),
+                expected = SafeAddressCalculator.Error.ThresholdOutOfRange(threshold = -1, ownersCount = 2),
             ),
         )
     }
@@ -176,7 +175,7 @@ internal class SafeAddressTest {
     internal data class ValidationModel(
         val owners: List<String>,
         val threshold: Int,
-        val expected: SafeAddress.Error,
+        val expected: SafeAddressCalculator.Error,
     )
 
     internal data class VectorModel(
