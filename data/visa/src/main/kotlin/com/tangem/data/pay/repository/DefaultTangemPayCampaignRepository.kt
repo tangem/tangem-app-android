@@ -1,8 +1,6 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.repository.TangemPayCampaignRepository
@@ -28,16 +26,15 @@ internal class DefaultTangemPayCampaignRepository @Inject constructor(
 
     private suspend fun fetchCampaign(campaignKey: String): Either<VisaApiError, TangemPayCampaign> {
         return requestHelper.performWithStaticToken { tangemPayApi.getImages(deeplinkValue = campaignKey) }
-            .flatMap { response -> response.toCampaign(campaignKey) }
+            .map { response -> response.toCampaign(campaignKey) }
     }
 
-    private fun ImagesResponse.toCampaign(campaignKey: String): Either<VisaApiError, TangemPayCampaign> {
+    private fun ImagesResponse.toCampaign(campaignKey: String): TangemPayCampaign {
         val cardArtUrl = result.firstOrNull { it.type.equals(MAIN_IMAGE_TYPE, ignoreCase = true) }?.url
         if (cardArtUrl.isNullOrBlank()) {
-            TangemLogger.e("[TangemPay][Campaign] No $MAIN_IMAGE_TYPE image for key=$campaignKey")
-            return VisaApiError.NotFound.left()
+            TangemLogger.i("[TangemPay][Campaign] No $MAIN_IMAGE_TYPE image for key=$campaignKey")
         }
-        return TangemPayCampaign(cardArtUrl = cardArtUrl).right()
+        return TangemPayCampaign(cardArtUrl = cardArtUrl?.takeIf(String::isNotBlank))
     }
 
     private companion object {

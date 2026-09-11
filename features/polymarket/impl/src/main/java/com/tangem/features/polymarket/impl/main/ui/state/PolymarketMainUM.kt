@@ -16,6 +16,7 @@ internal data class PolymarketMainUM(
     val content: ContentUM,
     val pullToRefreshConfig: PullToRefreshConfig,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
+    val positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Loading,
 ) {
 
     @Immutable
