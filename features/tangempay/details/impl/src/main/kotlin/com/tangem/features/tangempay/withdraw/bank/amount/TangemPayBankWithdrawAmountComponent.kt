@@ -13,6 +13,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.model.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.amount.ui.TangemPayBankWithdrawAmountScreen
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import kotlinx.coroutines.flow.StateFlow
 
 internal class TangemPayBankWithdrawAmountComponent(
@@ -32,6 +33,7 @@ internal class TangemPayBankWithdrawAmountComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val draft: StateFlow<BankWithdrawDraft>,
+        val step: TangemPayBankWithdrawInnerRoute,
         val onContinue: (BankWithdrawAmountResult) -> Unit,
     )
 }
