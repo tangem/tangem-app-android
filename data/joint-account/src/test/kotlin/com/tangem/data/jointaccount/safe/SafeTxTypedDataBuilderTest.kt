@@ -140,6 +140,33 @@ internal class SafeTxTypedDataBuilderTest {
         failures.forEach { assertThat(it).isInstanceOf(IllegalArgumentException::class.java) }
     }
 
+    /**
+     * Validation strips the prefix before checking, so an address arriving without `0x` is accepted — the JSON
+     * has to put it back, or the encoder would hash a value the Safe never would.
+     */
+    @Test
+    fun `GIVEN addresses without the hex prefix WHEN hashed THEN the digest is the prefixed one`() {
+        // Arrange
+        val unprefixed = nativeTransfer().copy(
+            to = RECIPIENT.removePrefix(prefix = "0x"),
+            refundReceiver = TREASURY.uppercase().removePrefix(prefix = "0X"),
+        )
+
+        // Act
+        val actual = SafeTxTypedDataBuilder.digest(
+            safeTx = unprefixed,
+            chainId = CHAIN_ID,
+            verifyingContract = SAFE_ADDRESS.removePrefix(prefix = "0x"),
+        )
+        val json = SafeTxTypedDataBuilder.buildJson(unprefixed, CHAIN_ID, SAFE_ADDRESS)
+
+        // Assert
+        val expected = SafeTxTypedDataBuilder.digest(nativeTransfer(), CHAIN_ID, SAFE_ADDRESS)
+        assertThat(actual).isEqualTo(expected)
+        assertThat(json).contains(""""to":"$RECIPIENT"""")
+        assertThat(json).contains(""""refundReceiver":"$TREASURY"""")
+    }
+
     private fun nativeTransfer(): SafeTx = SafeTx(
         to = RECIPIENT,
         value = BigInteger("1000000000000000000"),

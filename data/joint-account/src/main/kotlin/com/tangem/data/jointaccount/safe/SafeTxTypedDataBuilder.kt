@@ -38,17 +38,17 @@ internal object SafeTxTypedDataBuilder {
             append("""{"name":"gasPrice","type":"uint256"},{"name":"gasToken","type":"address"},""")
             append("""{"name":"refundReceiver","type":"address"},{"name":"nonce","type":"uint256"}""")
             append("""]},"primaryType":"SafeTx","domain":{""")
-            append(""""chainId":$chainId,"verifyingContract":"${verifyingContract.lowercase()}"""")
+            append(""""chainId":$chainId,"verifyingContract":"${normalizedAddress(verifyingContract)}"""")
             append("""},"message":{""")
-            append(""""to":"${safeTx.to.lowercase()}",""")
+            append(""""to":"${normalizedAddress(safeTx.to)}",""")
             append(""""value":"${safeTx.value}",""")
             append(""""data":"${normalizedData(safeTx.data)}",""")
             append(""""operation":${safeTx.operation},""")
             append(""""safeTxGas":"${safeTx.safeTxGas}",""")
             append(""""baseGas":"${safeTx.baseGas}",""")
             append(""""gasPrice":"${safeTx.gasPrice}",""")
-            append(""""gasToken":"${safeTx.gasToken.lowercase()}",""")
-            append(""""refundReceiver":"${safeTx.refundReceiver.lowercase()}",""")
+            append(""""gasToken":"${normalizedAddress(safeTx.gasToken)}",""")
+            append(""""refundReceiver":"${normalizedAddress(safeTx.refundReceiver)}",""")
             append(""""nonce":"${safeTx.nonce}"""")
             append("}}")
         }
@@ -86,6 +86,8 @@ internal object SafeTxTypedDataBuilder {
     }
 
     private fun normalizedData(data: String): String = HEX_PREFIX + data.withoutHexPrefix().lowercase()
+
+    private fun normalizedAddress(address: String): String = HEX_PREFIX + address.withoutHexPrefix().lowercase()
 
     private fun String.withoutHexPrefix(): String =
         if (startsWith(prefix = HEX_PREFIX, ignoreCase = true)) drop(n = HEX_PREFIX.length) else this
