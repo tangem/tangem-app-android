@@ -5,8 +5,8 @@ import java.math.BigDecimal
 /**
  * Global market indicators of the "Total market cap" block
  *
- * @property totalMarketCap     total capitalisation in USD, regardless of the selected app currency;
- *                              `null` when the backend has no value
+ * @property totalMarketCap     total capitalisation, already converted by the backend into the currency
+ *                              the request asked for; `null` when the backend has no value
  * @property marketCapChange24h 24h capitalisation change as a **fraction** (`-0.0161` for -1.61%),
  *                              matching [MarketCategory]; `null` when the backend has no value
  * @property fearGreed          Fear & Greed index; `null` when the backend has no value
