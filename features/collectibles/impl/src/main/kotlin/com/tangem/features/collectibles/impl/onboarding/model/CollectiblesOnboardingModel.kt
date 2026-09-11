@@ -2,6 +2,7 @@ package com.tangem.features.collectibles.impl.onboarding.model
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -12,7 +13,9 @@ import arrow.core.left
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
 import com.tangem.features.collectibles.impl.onboarding.model.converter.CollectiblesOnboardingUMConverter
 import com.tangem.features.collectibles.impl.onboarding.ui.state.CollectiblesOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,7 +27,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class CollectiblesOnboardingModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val messageSender: UiMessageSender,
@@ -32,6 +37,8 @@ internal class CollectiblesOnboardingModel @Inject constructor(
     private val createOrReactivateCollectiblesAccountUseCase: CreateOrReactivateCollectiblesAccountUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
+
+    private val params = paramsContainer.require<CollectiblesOnboardingComponent.Params>()
 
     val uiState: StateFlow<CollectiblesOnboardingUM>
         field = MutableStateFlow(
@@ -85,21 +92,20 @@ internal class CollectiblesOnboardingModel @Inject constructor(
     }
 
     private suspend fun prepareAccount(): Either<CollectiblesAccountError, Unit> {
-        val userWallet = userWalletsListRepository.selectedUserWalletSync()
+        val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            ?: return CollectiblesAccountError.Unsupported.left()
 
         // TODO([REDACTED_TASK_KEY]): also check the geo block and whether the user is allowed to create a gacha account
-        if (userWallet == null) {
-            return CollectiblesAccountError.Unsupported.left()
-        }
-
         return createOrReactivateCollectiblesAccountUseCase(userWallet)
     }
 
     private fun onPrepared() {
+        val main = CollectiblesRoute.Main(userWalletId = params.userWalletId)
+
         if (isStoryReady()) {
-            router.replaceAll(CollectiblesRoute.Main, CollectiblesRoute.Stories)
+            router.replaceAll(main, CollectiblesRoute.Stories)
         } else {
-            router.replaceAll(CollectiblesRoute.Main)
+            router.replaceAll(main)
         }
     }
 
