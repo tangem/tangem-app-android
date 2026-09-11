@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import org.junit.jupiter.api.Test
@@ -114,6 +115,26 @@ internal class BankWithdrawHeaderFactoryTest {
             BankWithdrawHeaderUM(
                 title = resourceReference(R.string.tangempay_withdraw_bank_account_type_screen_title),
                 subtitle = resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(2, 4)),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN edit route WHEN create THEN recipient title without counter`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
+
+        // Act
+        val actual = BankWithdrawHeaderFactory.create(
+            draft = draft,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankWithdrawHeaderUM(
+                title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
+                subtitle = null,
             ),
         )
     }
