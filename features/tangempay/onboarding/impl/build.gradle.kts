@@ -29,6 +29,7 @@ dependencies {
     api(projects.features.wallet.api)
     implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.eligibility.api)
 
     /** Domain */
     api(projects.domain.common)
@@ -67,7 +68,6 @@ dependencies {
     api(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization.core)
 
     /** Test */
