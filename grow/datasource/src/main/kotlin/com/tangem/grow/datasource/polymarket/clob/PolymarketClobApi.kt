@@ -3,6 +3,7 @@ package com.tangem.grow.datasource.polymarket.clob
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
 import okhttp3.RequestBody
@@ -10,6 +11,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface PolymarketClobApi {
@@ -51,6 +53,17 @@ interface PolymarketClobApi {
         @Query("token_id") tokenId: String,
         @Query("side") side: String,
     ): ApiResponse<PolymarketPriceResponse>
+
+    /**
+     * One placed order as the book sees it. L2-authenticated, and the signed path carries the id. Polled after
+     * `POST /order` answers `delayed`: the order is accepted first and matched later, and this is where the fill
+     * shows up.
+     */
+    @GET("data/order/{id}")
+    suspend fun getOrder(
+        @HeaderMap headers: Map<String, String>,
+        @Path("id") orderId: String,
+    ): ApiResponse<PolymarketOrderResponse>
 
     @GET("balance-allowance")
     suspend fun getBalanceAllowance(
