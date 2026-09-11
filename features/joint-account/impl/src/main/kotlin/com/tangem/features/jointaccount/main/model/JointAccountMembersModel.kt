@@ -212,8 +212,6 @@ internal class JointAccountMembersModel @Inject constructor(
         }
     }
 
-    // TODO: a separate task tells the cases apart (no network, a mismatching address, not the creator) — for now
-    //  they share the generic dialog, like the creation flow
     private fun onActivationError(error: JointAccountActivationError) {
         when (error) {
             // Dismissing the signing is not a failure: the screen stays as it was
@@ -222,14 +220,8 @@ internal class JointAccountMembersModel @Inject constructor(
             JointAccountActivationError.NotReadyForActivation,
             JointAccountActivationError.AddressMismatch,
             JointAccountActivationError.NotCreator,
-            -> {
-                TangemLogger.e("Joint account activation failed: $error")
-                showActivationError()
-            }
-            is JointAccountFlowError.Failed -> {
-                TangemLogger.e("Joint account activation failed", error.cause)
-                showActivationError()
-            }
+            is JointAccountFlowError.Failed,
+            -> showActivationError()
         }
     }
 
