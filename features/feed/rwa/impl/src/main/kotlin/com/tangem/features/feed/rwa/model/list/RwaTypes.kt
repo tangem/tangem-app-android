@@ -4,6 +4,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.markets.TokenMarketListConfig
+import com.tangem.features.feed.analytics.FeedSortPeriod
+import com.tangem.features.feed.analytics.FeedSortType
 import com.tangem.features.feed.rwa.categories.CategorySelection
 
 internal enum class RwaInterval(val title: TextReference) {
@@ -19,6 +21,14 @@ internal enum class RwaInterval(val title: TextReference) {
             M1 -> TokenMarketListConfig.Interval.MONTH
         }
     }
+
+    fun toAnalyticsPeriod(): FeedSortPeriod {
+        return when (this) {
+            H24 -> FeedSortPeriod.H24
+            D7 -> FeedSortPeriod.D7
+            M1 -> FeedSortPeriod.M1
+        }
+    }
 }
 
 internal enum class RwaSort(val id: String, val title: TextReference) {
@@ -32,6 +42,15 @@ internal enum class RwaSort(val id: String, val title: TextReference) {
             MarketCap -> TokenMarketListConfig.Order.ByRating
             TopGainers -> TokenMarketListConfig.Order.TopGainers
             TopLosers -> TokenMarketListConfig.Order.TopLosers
+        }
+    }
+
+    /** [MarketCap] reports as [FeedSortType.Rating]: it is the same `ByRating` order the pre-tabs list sent. */
+    fun toAnalyticsType(): FeedSortType {
+        return when (this) {
+            MarketCap -> FeedSortType.Rating
+            TopGainers -> FeedSortType.Gainers
+            TopLosers -> FeedSortType.Losers
         }
     }
 }

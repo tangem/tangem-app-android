@@ -4,8 +4,13 @@ import arrow.core.left
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
+import com.tangem.features.feed.analytics.FeedSortPeriod
+import com.tangem.features.feed.analytics.FeedSortType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -25,6 +30,7 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.features.feed.crypto.model.entity.FeedCryptoTabBottomSheetConfig
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopGainers
+import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopLosers
 import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
 import com.tangem.features.feed.crypto.ui.state.MarketPulseIntervalUM
 import com.tangem.features.feed.crypto.ui.state.TotalMarketCapUM
@@ -35,9 +41,11 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.Runs
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -77,6 +85,8 @@ internal class CryptoFeedTabModelTest {
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val sentEvents = mutableListOf<AnalyticsEvent>()
 
     private val filterController = MarketCategoryFilterController()
     private val actions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
@@ -89,8 +99,11 @@ internal class CryptoFeedTabModelTest {
             getSelectedAppCurrencyUseCase,
             getMarketIndicatorsUseCase,
             router,
+            analyticsEventHandler,
         )
         actions.clear()
+        sentEvents.clear()
+        every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
         every { getSelectedAppCurrencyUseCase() } returns flowOf(AppCurrency.Default.right())
         coEvery { getMarketIndicatorsUseCase(any()) } returns noIndicators.right()
     }
@@ -465,6 +478,118 @@ internal class CryptoFeedTabModelTest {
         altcoinSeason = null,
     )
 
+    @Test
+    fun `GIVEN the tab is built WHEN the user touches nothing THEN nothing is reported`() = runTest {
+        // Act — every tab model is built when the feed opens, including ones never visited
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sectionEvents()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN the tab open WHEN the sort changes THEN sort by is reported for the crypto section`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.sortTab(TopGainers).onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sectionEvents()).containsExactly(
+            FeedSectionAnalyticsEvent.SortBy(
+                section = "Crypto",
+                type = FeedSortType.Gainers,
+                period = FeedSortPeriod.H24,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN the tab open WHEN the interval changes THEN sort by is reported with the new period`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.intervalMenu().onOptionClick(MarketPulseInterval.M1)
+        advanceUntilIdle()
+
+        // Assert — the default sort still travels with it
+        assertThat(sectionEvents()).containsExactly(
+            FeedSectionAnalyticsEvent.SortBy(
+                section = "Crypto",
+                type = FeedSortType.Rating,
+                period = FeedSortPeriod.M1,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN the tab open WHEN a category is applied THEN select category carries its stable id`() = runTest {
+        // Arrange
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sectionEvents()).containsExactly(
+            FeedSectionAnalyticsEvent.SelectCategory(section = "Crypto", categoryId = "layer-1"),
+        )
+    }
+
+    @Test
+    fun `GIVEN a category applied WHEN the filter is cleared THEN select category reports All`() = runTest {
+        // Arrange
+        createModel(testScope = this)
+        advanceUntilIdle()
+        filterController.onSelectionApplied(selectionOf(id = "layer-1", name = "Layer 1"))
+        advanceUntilIdle()
+        sentEvents.clear()
+
+        // Act
+        filterController.onSelectionApplied(MarketCategorySelection())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sectionEvents()).containsExactly(
+            FeedSectionAnalyticsEvent.SelectCategory(section = "Crypto", categoryId = "All"),
+        )
+    }
+
+    @Test
+    fun `GIVEN reported events WHEN inspected THEN they carry the agreed params`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.sortTab(TopLosers).onClick()
+        filterController.onSelectionApplied(selectionOf(id = "meme", name = "Meme"))
+        advanceUntilIdle()
+
+        // Assert
+        val sortBy = sectionEvents().first { it is FeedSectionAnalyticsEvent.SortBy }
+        assertThat(sortBy.id).isEqualTo("[Markets] Sort By")
+        assertThat(sortBy.params).containsExactlyEntriesIn(
+            mapOf("Section" to "Crypto", "Type" to "Losers", "Period" to "24h"),
+        )
+
+        val selectCategory = sectionEvents().first { it is FeedSectionAnalyticsEvent.SelectCategory }
+        assertThat(selectCategory.id).isEqualTo("[Markets] Select Category")
+        assertThat(selectCategory.params).containsExactlyEntriesIn(
+            mapOf("Section" to "Crypto", "Category" to "meme"),
+        )
+    }
+
+    private fun sectionEvents() = sentEvents.filterIsInstance<FeedSectionAnalyticsEvent>()
+
     private fun selectionOf(id: String, name: String) = MarketCategorySelection(
         category = MarketCategorySelection.Entry(id = id, name = name),
     )
@@ -512,6 +637,7 @@ internal class CryptoFeedTabModelTest {
             getMarketIndicatorsUseCase = getMarketIndicatorsUseCase,
             categoryFilterController = filterController,
             router = router,
+            analyticsEventHandler = analyticsEventHandler,
         ).also { model = it }
     }
 
