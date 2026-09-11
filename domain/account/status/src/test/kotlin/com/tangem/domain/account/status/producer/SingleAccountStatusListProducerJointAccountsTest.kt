@@ -179,6 +179,9 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                 )
             },
             polymarketFeatureToggles = mockk { every { this@mockk.isPolymarketEnabled } returns false },
+            // the toggle is off, so the supplier is never invoked
+            collectiblesAccountStatusSupplier = mockk(),
+            collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
             networksRepository = mockk<NetworksRepository> { coEvery { hasCachedStatuses(walletId) } returns true },
             dispatchers = TestingCoroutineDispatcherProvider(),
             networkStatusSupplier = mockk<MultiNetworkStatusSupplier> {
