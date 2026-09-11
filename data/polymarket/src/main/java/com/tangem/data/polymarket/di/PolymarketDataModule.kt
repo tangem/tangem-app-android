@@ -11,6 +11,7 @@ import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
@@ -20,11 +21,14 @@ import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.flow.DefaultPredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
+import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -108,12 +112,30 @@ internal interface PolymarketDataModule {
         @Singleton
         fun providePredictionBalancePoller(
             fetcher: PredictionAccountStatusFetcher,
+            fundingWindow: PredictionFundingWindow,
             config: PredictionBalancePollingConfig,
             appScope: AppCoroutineScope,
         ): PredictionBalancePoller = PredictionBalancePoller(
             fetcher = fetcher,
+            fundingWindow = fundingWindow,
             config = config,
             appScope = appScope,
+        )
+
+        @Provides
+        @Singleton
+        fun providePredictionFundingWindow(
+            userWalletsListRepository: UserWalletsListRepository,
+            swapTransactionRepository: SwapTransactionRepository,
+            predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+            collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
+            config: PredictionBalancePollingConfig,
+        ): PredictionFundingWindow = DefaultPredictionFundingWindow(
+            userWalletsListRepository = userWalletsListRepository,
+            swapTransactionRepository = swapTransactionRepository,
+            predictionAccountStatusSupplier = predictionAccountStatusSupplier,
+            collateralCurrencyFactory = collateralCurrencyFactory,
+            config = config,
         )
     }
 }
