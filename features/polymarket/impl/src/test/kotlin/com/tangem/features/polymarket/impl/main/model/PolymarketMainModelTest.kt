@@ -22,6 +22,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
+import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
@@ -53,12 +54,16 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -95,6 +100,7 @@ internal class PolymarketMainModelTest {
     private val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
+    private val balancePoller: PredictionBalancePoller = mockk()
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -121,6 +127,8 @@ internal class PolymarketMainModelTest {
     @BeforeEach
     fun allowTradingByDefault() {
         coEvery { checkGeoblock() } returns false.right()
+        clearMocks(balancePoller)
+        every { balancePoller.subscribe(any()) } returns emptyFlow()
     }
 
     init {
@@ -1026,6 +1034,34 @@ internal class PolymarketMainModelTest {
         coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
     }
 
+    @Test
+    fun `GIVEN screen resumed WHEN paused THEN balance poll subscription is released`() = runTest {
+        // Arrange
+        val subscribers = MutableStateFlow(0)
+        every { balancePoller.subscribe(USER_WALLET_ID) } returns flow {
+            subscribers.update { it + 1 }
+            try {
+                awaitCancellation()
+            } finally {
+                subscribers.update { it - 1 }
+            }
+        }
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        runCurrent()
+        val whileResumed = subscribers.value
+        model.onPause()
+        runCurrent()
+
+        // Assert
+        assertThat(whileResumed).isEqualTo(1)
+        assertThat(subscribers.value).isEqualTo(0)
+        model.onDestroy()
+    }
+
     private fun activeStatus(depositAddress: String?, balance: String = "12.5") =
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
@@ -1127,6 +1163,7 @@ internal class PolymarketMainModelTest {
             checkPolymarketGeoblockUseCase = checkGeoblock,
             predictionAccountStatusFetcher = accountStatusFetcher,
             positionsPreviewLoader = positionsPreviewLoader,
+            predictionBalancePoller = balancePoller,
         ).also { model = it }
     }
 
