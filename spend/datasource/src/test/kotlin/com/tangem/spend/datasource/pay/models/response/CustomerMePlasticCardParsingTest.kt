@@ -60,6 +60,7 @@ internal class CustomerMePlasticCardParsingTest {
                 country = "US",
                 phoneMask = "+1 ###-###-####",
                 email = "j.silverhand@gmail.com",
+                embossName = "JOHNNY SILVERHAND",
             ),
         )
     }
@@ -169,7 +170,8 @@ internal class CustomerMePlasticCardParsingTest {
               "profile": {
                 "country": "US",
                 "phone_mask": "+1 ###-###-####",
-                "email": "j.silverhand@gmail.com"
+                "email": "j.silverhand@gmail.com",
+                "emboss_name": "JOHNNY SILVERHAND"
               }
             }
         """.trimIndent()

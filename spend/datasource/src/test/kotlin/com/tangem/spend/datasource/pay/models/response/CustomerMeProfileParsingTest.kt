@@ -21,7 +21,7 @@ internal class CustomerMeProfileParsingTest {
     private val adapter = moshi.adapter(CustomerMeResponse.Result::class.java)
 
     @Test
-    fun `GIVEN profile with country phone_mask and email WHEN parse THEN maps all fields`() {
+    fun `GIVEN profile with country phone_mask email and emboss_name WHEN parse THEN maps all fields`() {
         // Arrange
         val json = """
             {
@@ -32,7 +32,8 @@ internal class CustomerMeProfileParsingTest {
                 "review_answer": "GREEN", "created_at": "2026-01-01T00:00:00Z"
               },
               "profile": {
-                "country": "US", "phone_mask": "+1 ###-###-####", "email": "a@b.co"
+                "country": "US", "phone_mask": "+1 ###-###-####", "email": "a@b.co",
+                "emboss_name": "JOHNNY SILVERHAND"
               }
             }
         """.trimIndent()
@@ -42,7 +43,12 @@ internal class CustomerMeProfileParsingTest {
 
         // Assert
         assertThat(result.profile).isEqualTo(
-            CustomerMeResponse.Profile(country = "US", phoneMask = "+1 ###-###-####", email = "a@b.co"),
+            CustomerMeResponse.Profile(
+                country = "US",
+                phoneMask = "+1 ###-###-####",
+                email = "a@b.co",
+                embossName = "JOHNNY SILVERHAND",
+            ),
         )
     }
 
@@ -83,7 +89,7 @@ internal class CustomerMeProfileParsingTest {
 
         // Assert
         assertThat(result.profile).isEqualTo(
-            CustomerMeResponse.Profile(country = "DE", phoneMask = null, email = null),
+            CustomerMeResponse.Profile(country = "DE", phoneMask = null, email = null, embossName = null),
         )
     }
 }
