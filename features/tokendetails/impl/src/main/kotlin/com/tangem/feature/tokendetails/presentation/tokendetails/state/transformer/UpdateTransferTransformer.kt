@@ -18,6 +18,7 @@ internal class UpdateTransferTransformer(
     private val clickIntents: TokenDetailsClickIntents,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onActionDispatched: () -> Unit,
+    private val isJointAccount: Boolean = false,
 ) : Transformer<TokenDetailsUM> {
 
     override fun transform(prevState: TokenDetailsUM): TokenDetailsUM {
@@ -55,14 +56,19 @@ internal class UpdateTransferTransformer(
         // a joint account's row stays, and the tap explains the reason.
         val swapAndSendRow = swapAction
             ?.takeIf { it.unavailabilityReason.rendersActionAsEnabled() }
-            ?.let {
+            ?.let { action ->
+                val clickReason = if (isJointAccount) {
+                    ScenarioUnavailabilityReason.JointAccount
+                } else {
+                    action.unavailabilityReason
+                }
                 TransferUM.Row(
                     isLoading = false,
                     isEnabled = true,
                     onClick = {
                         analyticsEventHandler.send(TransferAnalyticsEvent.ButtonSwapAndSend())
                         onActionDispatched()
-                        clickIntents.onSwapAndSendClick(it.unavailabilityReason)
+                        clickIntents.onSwapAndSendClick(clickReason)
                     },
                 )
             }

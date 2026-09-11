@@ -49,6 +49,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 title = resourceReference(R.string.swapping_from_title),
                 chooserBlock = ChooserBlock.Market,
                 paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+                isJointAccountsShown = true,
             )
 
             /**
@@ -65,6 +66,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 title = resourceReference(R.string.swapping_to_title),
                 chooserBlock = ChooserBlock.Market,
                 paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+                isJointAccountsShown = true,
             )
             val AddFunds = Settings(
                 title = resourceReference(R.string.swapping_to_title),
