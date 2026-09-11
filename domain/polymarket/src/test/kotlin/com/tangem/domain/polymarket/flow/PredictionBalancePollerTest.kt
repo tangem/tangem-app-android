@@ -35,7 +35,7 @@ internal class PredictionBalancePollerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(fetcher)
+        clearMocks(fetcher, fundingWindow)
         coEvery { fetcher(any()) } returns Unit.right()
         isOpen.value = false
         every { fundingWindow.isOpen(any()) } returns isOpen
