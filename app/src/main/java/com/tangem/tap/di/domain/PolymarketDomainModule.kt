@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -218,6 +219,7 @@ internal object PolymarketDomainModule {
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
         polymarketOnboardedStore: PolymarketOnboardedStore,
+        predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
@@ -229,6 +231,7 @@ internal object PolymarketDomainModule {
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
         polymarketOnboardedStore = polymarketOnboardedStore,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
     )
 
     @Provides
