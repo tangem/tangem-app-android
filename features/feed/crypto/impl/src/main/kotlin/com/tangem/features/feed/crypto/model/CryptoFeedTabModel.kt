@@ -3,6 +3,7 @@ package com.tangem.features.feed.crypto.model
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -19,6 +20,7 @@ import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.MarketIndicators
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
@@ -30,6 +32,8 @@ import com.tangem.features.feed.crypto.model.list.MarketPulseCategory
 import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
 import com.tangem.features.feed.crypto.ui.state.*
 import com.tangem.features.feed.nav.FeedRoute
+import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.nav.analyticsSection
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -61,6 +65,7 @@ internal class CryptoFeedTabModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase,
     private val categoryFilterController: MarketCategoryFilterController,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
 ) : Model() {
 
@@ -160,6 +165,13 @@ internal class CryptoFeedTabModel @Inject constructor(
             listManager.reload()
         }.launchIn(modelScope)
 
+        // every tab model is built when the feed opens, so only a real user change may report
+        combine(selectedCategory, selectedInterval, ::Pair)
+            .drop(1)
+            .distinctUntilChanged()
+            .onEach { (category, interval) -> sendSortByAnalytics(category, interval) }
+            .launchIn(modelScope)
+
         // the selector screen publishes here; drop(1) skips the value initialState already rendered
         categoryFilterController.selection.drop(1)
             .onEach(::applyCategorySelection)
@@ -216,8 +228,24 @@ internal class CryptoFeedTabModel @Inject constructor(
     }
 
     private fun applyCategorySelection(selection: MarketCategorySelection) {
+        analyticsEventHandler.send(
+            FeedSectionAnalyticsEvent.SelectCategory(
+                section = FeedTabId.Crypto.analyticsSection,
+                categoryId = selection.category?.id ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
+            ),
+        )
         updateMarketPulse { it.copy(categoriesFilter = categoriesFilterItem(selection)) }
         listManager.reload()
+    }
+
+    private fun sendSortByAnalytics(category: MarketPulseCategory, interval: MarketPulseInterval) {
+        analyticsEventHandler.send(
+            FeedSectionAnalyticsEvent.SortBy(
+                section = FeedTabId.Crypto.analyticsSection,
+                type = category.toAnalyticsType(),
+                period = interval.toAnalyticsPeriod(),
+            ),
+        )
     }
 
     private fun openCategorySelector() {
