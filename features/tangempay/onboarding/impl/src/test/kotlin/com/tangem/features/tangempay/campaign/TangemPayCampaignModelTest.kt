@@ -351,7 +351,7 @@ internal class TangemPayCampaignModelTest {
             // Arrange
             givenWallets(WALLET_ID)
             coEvery {
-                eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
             } returns listOf(WALLET_ID)
             val model = createModel(testScope = this)
             advanceUntilIdle()
@@ -378,7 +378,7 @@ internal class TangemPayCampaignModelTest {
                 // Arrange
                 givenWallets(WALLET_ID)
                 coEvery {
-                    eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false)
+                    eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
                 } returns emptyList()
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
