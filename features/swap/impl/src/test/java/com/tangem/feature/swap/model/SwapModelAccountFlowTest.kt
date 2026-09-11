@@ -126,6 +126,55 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a target-only destination WHEN state emitted THEN reverse button HIDDEN`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val from = buildSwapCurrencyStatus(userWallet = mockk(relaxed = true))
+        val to = from.copy(account = Account.Prediction(userWalletId))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to to)
+
+        // Act
+        val model = createModel(accountFlow = null)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+    }
+
+    @Test
+    fun `GIVEN a portfolio destination WHEN state emitted THEN reverse button not forced hidden`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+        val from = buildSwapCurrencyStatus(userWallet = mockk(relaxed = true))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to from)
+
+        // Act
+        val model = createModel(accountFlow = null)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.changeCardsButtonState).isNotEqualTo(ChangeCardsButtonState.HIDDEN)
+    }
+
+    @Test
     fun `GIVEN account flow and toggle ON WHEN state emitted THEN reverse button HIDDEN`() = runTest {
         // Arrange & Act
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true

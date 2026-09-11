@@ -163,7 +163,9 @@ internal class ForYouPortfolioReviewTokenRowConverter(
     /** Bottom-end: percentage share for resolved states, no-address / unreachable treatment otherwise. */
     private fun toRowBottomEnd(state: RowState, fiatAmount: BigDecimal): TangemTokenRowUM.EndContentUM = when (state) {
         is RowState.Normal -> TangemTokenRowUM.EndContentUM.Content(
-            text = stringReference(fiatAmount.toForYouPercent(totalFiatBalance).orZero().format { percent() }),
+            text = stringReference(
+                fiatAmount.toForYouPercent(totalFiatBalance).orZero().format { percent(canBeLower = true) },
+            ),
             isFlickering = state.isFlickering,
         )
         RowState.NoAddress -> attentionEndContent(R.string.common_no_address)

@@ -88,7 +88,8 @@ internal class CreateCloudBackupModelTest {
     private val mnemonic: Mnemonic = mockk {
         every { mnemonicComponents } returns listOf("alpha", "bravo", "charlie")
     }
-    private val privateInfo = SeedPhrasePrivateInfo(mnemonic = mnemonic, passphrase = null)
+    private val privateInfo =
+        SeedPhrasePrivateInfo(mnemonic = mnemonic, passphrase = null, shouldNormalizePassphrase = true)
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
@@ -299,7 +300,11 @@ internal class CreateCloudBackupModelTest {
         runTest {
             // Arrange
             coEvery { exportSeedPhraseUseCase.invoke(hotWalletId) } answers {
-                SeedPhrasePrivateInfo(mnemonic = mnemonic, passphrase = PASSPHRASE.toCharArray()).right()
+                SeedPhrasePrivateInfo(
+                    mnemonic = mnemonic,
+                    passphrase = PASSPHRASE.toCharArray(),
+                    shouldNormalizePassphrase = true,
+                ).right()
             }
             val secrets = mutableListOf<CloudBackupSecretData>()
             coEvery {
