@@ -14,6 +14,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithd
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
+import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -219,6 +220,82 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
+    fun `GIVEN edit step WHEN back clicked THEN nothing reported and router pops`() {
+        // Arrange
+        val model = createModel(step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails))
+        fill(model, BankWithdrawFormField.FirstName, "Basit")
+
+        // Act
+        model.uiState.value.onBackClick()
+
+        // Assert
+        verify(exactly = 0) { onBack(any()) }
+        verify(exactly = 1) { router.pop() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN untouched field WHEN draft changes after construction THEN new draft value shown`() {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        setDraftFirstName("Night City")
+
+        // Assert
+        assertThat(textField(model, BankWithdrawFormField.FirstName).value).isEqualTo("Night City")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN user typed a value WHEN draft changes afterwards THEN typed value still shown`() {
+        // Arrange
+        val model = createModel()
+        fill(model, BankWithdrawFormField.FirstName, "Basit")
+
+        // Act
+        setDraftFirstName("Night City")
+
+        // Assert
+        assertThat(textField(model, BankWithdrawFormField.FirstName).value).isEqualTo("Basit")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN continue committed WHEN draft changes afterwards THEN field follows the new draft value`() {
+        // Arrange
+        val model = createModel()
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+        fill(model, BankWithdrawFormField.RoutingNumber, "021000021")
+        fill(model, BankWithdrawFormField.FirstName, "Basit")
+        model.uiState.value.onContinueClick()
+
+        // Act
+        setDraftFirstName("Night City")
+
+        // Assert
+        assertThat(textField(model, BankWithdrawFormField.FirstName).value).isEqualTo("Night City")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN postal code error under US WHEN country changes THEN error cleared`() {
+        // Arrange
+        val model = createModel(formFields = usAddressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+        fill(model, BankWithdrawFormField.PostalCode, "12")
+        textField(model, BankWithdrawFormField.PostalCode).onFocusChange(false)
+        assertThat(textField(model, BankWithdrawFormField.PostalCode).error).isNotNull()
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = greatBritain, region = null)
+
+        // Assert
+        assertThat(textField(model, BankWithdrawFormField.PostalCode).error).isNull()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN picked residency WHEN only region changed THEN country kept`() {
         // GIVEN
         val model = createModel(formFields = addressFields)
@@ -420,6 +497,11 @@ internal class TangemPayBankWithdrawFormModelTest {
     private fun selectorField(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField) =
         model.uiState.value.fields.filterIsInstance<FieldUM.Selector>().first { it.field == field }
 
+    private fun setDraftFirstName(value: String) {
+        val draftFields = mapOf(BankWithdrawFormField.FirstName to value)
+        draft.value = draft.value.copy(newRecipient = draft.value.newRecipient.copy(fields = draftFields))
+    }
+
     private fun createModel(
         formFields: ImmutableList<BankWithdrawFormField> = fields,
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.RecipientDetails,
@@ -442,6 +524,11 @@ internal class TangemPayBankWithdrawFormModelTest {
 
     private companion object {
         val addressFields = persistentListOf(BankWithdrawFormField.Country, BankWithdrawFormField.Region)
+        val usAddressFields = persistentListOf(
+            BankWithdrawFormField.Country,
+            BankWithdrawFormField.Region,
+            BankWithdrawFormField.PostalCode,
+        )
         val bankAddressFields =
             persistentListOf(BankWithdrawFormField.BankCountry, BankWithdrawFormField.BankRegion)
         val usa = TangemPayCountry("US", "United States", null, isSuggested = true, hasRegions = true)
