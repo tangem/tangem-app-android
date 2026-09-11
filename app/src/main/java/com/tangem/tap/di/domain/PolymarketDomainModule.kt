@@ -14,6 +14,7 @@ import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisite
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
@@ -179,6 +180,16 @@ internal object PolymarketDomainModule {
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
     ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
+    fun provideAwaitDelayedPredictionOrderUseCase(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): AwaitDelayedPredictionOrderUseCase = AwaitDelayedPredictionOrderUseCase(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
     )
