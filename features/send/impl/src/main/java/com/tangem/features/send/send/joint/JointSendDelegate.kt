@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.models.account.Account
@@ -16,7 +17,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.send.joint.JointTransferIntentFactory.toSafeInnerCall
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
@@ -26,6 +26,7 @@ internal class JointSendDelegate @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val gasBuilder: SafeTxGasBuilder,
     private val createJointOperationUseCase: CreateJointOperationUseCase,
+    private val payloadCodec: JointTransferPayloadCodec,
 ) {
 
     suspend fun findJointAccount(userWalletId: UserWalletId, account: Account.Joint): JointAccount? {
@@ -65,9 +66,11 @@ internal class JointSendDelegate @Inject constructor(
     ): Either<GetFeeError, TransactionFee> {
         val intent = JointTransferIntentFactory.create(amountUM, destinationUM, currency)
             ?: return GetFeeError.DataError(IllegalStateException("The joint transfer form is incomplete")).left()
+        val call = payloadCodec.encode(intent)
+            ?: return GetFeeError.DataError(IllegalStateException("The joint transfer cannot be encoded")).left()
 
         return gasBuilder
-            .build(userWalletId = userWalletId, network = currency.network, call = intent.toSafeInnerCall())
+            .build(userWalletId = userWalletId, network = currency.network, call = call)
             .map(JointSendFeeConverter(network = currency.network)::convert)
             .mapLeft(GetFeeError::DataError)
     }

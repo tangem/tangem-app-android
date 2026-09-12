@@ -188,6 +188,21 @@ fun BaseTestCase.confirmWcConnection() {
     }
 }
 
+/**
+ * From the WalletConnect connection proposal sheet, opens the portfolio (account) selector behind the
+ * wallet/account row.
+ */
+fun BaseTestCase.openWcConnectionAccountSelector() {
+    step("Assert the connection account row is displayed") {
+        awaitSuccess(timeoutMillis = TestConstants.WAIT_UNTIL_TIMEOUT_LONG) {
+            onWalletConnectBottomSheet { portfolioSelectRow.assertIsDisplayed() }
+        }
+    }
+    step("Click on the connection account row") {
+        onWalletConnectBottomSheet { portfolioSelectRow.clickWithAssertion() }
+    }
+}
+
 fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
     waitForIdle()
     step("Assert connection details title is displayed") {

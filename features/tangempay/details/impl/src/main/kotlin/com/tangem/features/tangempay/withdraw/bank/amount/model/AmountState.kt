@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.model
 
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.model.bankofframp.AmountLimits
@@ -20,7 +21,7 @@ internal data class AmountState(
     val options: BankOfframpOptions? = null,
     val networks: List<PaymentNetworkStatus>? = null,
     val currencyCode: String? = null,
-    val value: String = "",
+    val value: String? = null,
     val selectedSourceId: String? = null,
     val selectedRail: BankRail? = null,
     val sheet: AmountSheet? = null,
@@ -38,14 +39,17 @@ internal data class AmountState(
         val preferredSourceId = selectedSourceId ?: draft.source?.id
         val source = sources.firstOrNull { it.id == preferredSourceId }
             ?: BankWithdrawSourceResolver.default(sources)
-        val amount = value.parseBigDecimalOrNull()
+        val currency = Currency.getInstance(currencyCode ?: destination.fee.currency)
+        val displayValue = displayValue(draft = draft, currency = currency)
+        val amount = displayValue.parseBigDecimalOrNull()
         return AmountSelection(
-            currency = Currency.getInstance(currencyCode ?: destination.fee.currency),
+            currency = currency,
             limits = options.amountLimits,
             sources = sources,
             source = source,
             destinations = destinations,
             destination = destination,
+            displayValue = displayValue,
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
                 amount = amount,
@@ -55,6 +59,13 @@ internal data class AmountState(
             ),
         )
     }
+
+    /**
+     * The user's own typing on this screen — even once cleared back to blank — or, before they have typed
+     * anything at all, the draft's amount.
+     */
+    private fun displayValue(draft: BankWithdrawDraft, currency: Currency): String =
+        value ?: draft.amount?.parseBigDecimal(decimals = currency.defaultFractionDigits).orEmpty()
 }
 
 internal data class AmountSelection(
@@ -64,6 +75,7 @@ internal data class AmountSelection(
     val source: BankWithdrawSource?,
     val destinations: List<OfframpDestination>,
     val destination: OfframpDestination,
+    val displayValue: String,
     val amount: BigDecimal?,
     val validation: BankWithdrawAmountValidator.Result,
 ) {

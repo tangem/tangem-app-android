@@ -131,9 +131,9 @@ transformer omits the section below that threshold — the category row is then 
 `sectorId` is sent. Section presence is decided there, in the `listOfNotNull`; the UI renders whatever
 sections it is given.
 
-This is the only place in the feed family that builds its UM with a real
-`com.tangem.utils.transformer.Transformer` plus `Converter`s. Extend that pattern here rather than the
-inline `uiState.update { it.copy(...) }` style `RwaFeedTabModel` uses.
+Both category selectors build their UM with a real `com.tangem.utils.transformer.Transformer` plus
+`Converter`s (the Crypto one is `MarketCategorySelectorTransformer`), unlike the inline
+`uiState.update { it.copy(...) }` style `RwaFeedTabModel` uses. Extend the transformer pattern here.
 
 ## Request flow
 
@@ -149,9 +149,9 @@ applied is deliberately not uniform:
 
 The **Featured rail is a second, independent request** against the same endpoint, and the only caller in
 the app that sends `TokenMarketListConfig.Order.ByCategory` (`order=category`) — the curated order is the
-whole point of the rail, and any other order re-sorts the bucket and discards it. It is one batch
-(`BatchFlowType.Featured`, `nextBatchSize = 0`) and never pages, so the bucket's size is the backend's
-decision.
+whole point of the rail, and any other order re-sorts the bucket and discards it. The manager never
+emits `LoadMore`, so the rail never pages and shows whatever the first `BatchFlowType.Featured` batch
+returns (capped at `firstBatchSize = 10` in `GetMarketsTokenListFlowUseCase`).
 
 **An interval change never reloads the rail.** A token carries the change percent for *every* interval at
 once (`price_change_percentage` holds `24h`/`1w`/`30d` regardless of the `interval` param), so the rail
@@ -174,9 +174,10 @@ and the disagreement is unrepresentable. `isEmptyResultState` likewise drops Cry
 predicate reading a value outside its own upstream only recomputes when the batch state happens to move,
 and so stays stale across the whole gap between a new query and its reload.
 
-**`RwaBatchFlowManager.request` is a `StateFlow` that is never collected.** It is only `.value`-read
-inside `reload()`. Writing to `RwaFeedTabModel.listRequest` therefore does nothing to the list on its own —
-the model must call `reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
+**`RwaBatchFlowManager.request` is a `StateFlow` that is never collected.** It is only `.value`-read —
+in `reload()`, and for the interval the item converter renders with. Writing to
+`RwaFeedTabModel.listRequest` therefore does nothing to the list on its own — the model must call
+`reload()` afterwards. Don't add a filter field and assume the flow will pick it up.
 
 `RwaFeaturedAssetsManager` is the opposite: it takes the model's `selectedInterval` flow and *does* collect
 it, to re-map the rail. It deliberately does not see `listRequest`, so it is unaffected by the one gap in
@@ -214,8 +215,15 @@ change, so `sortTabs` is a real twin there too.
 
 being destroyed, so holding scroll position in the component is what makes it survive tab switches.
 
-**Category and sector names still come from the backend `displayName`.** Localized keys exist
-(`markets_real_assets_category_*`, `markets_real_assets_sector_xstocks_*`) and are meant to be resolved
-from the category `code` with `displayName` as the fallback. Categories can already do that; sectors
-cannot — `CoinCategory.Sector` carries no `code`, so those keys stay unused until the data layer adds
-one. DS3 component rules are in `.claude/rules/codestyle/design-system.md`.
+**Category and sector names are resolved from their `code`, never from the backend `displayName`.**
+`RwaCategoryNames` maps a category code — and a (category code, sector code) pair, since a sector code
+is only unique within its category — to `markets_real_assets_category_*` /
+`markets_real_assets_sector_xstocks_*`, falling back to `displayName` for anything it does not know, so
+a category the server adds before the app ships a key degrades rather than breaks. Only `xstocks`
+sectors have keys so far, and only `values-de` and `values-pt-rBR` are translated — every other locale
+resolves to the English base.
+
+The code travels in `CategorySelection.Entry` so the applied-filter chip resolves names the same way as
+the selector. **Don't confuse it with `id`:** `id` is the identity the selector matches on and the value
+`RwaBatchFlowManager` sends as `sectorId`; `code` is only ever the localization key. DS3 component rules
+are in `.claude/rules/codestyle/design-system.md`.

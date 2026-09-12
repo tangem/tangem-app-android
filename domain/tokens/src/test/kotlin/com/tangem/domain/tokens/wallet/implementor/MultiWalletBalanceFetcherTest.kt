@@ -56,6 +56,7 @@ class MultiWalletBalanceFetcherTest {
             WalletFetchingSource.TangemPay,
             WalletFetchingSource.VirtualAccount,
             WalletFetchingSource.Prediction,
+            WalletFetchingSource.Collectibles,
         )
         Truth.assertThat(actual).isEqualTo(expected)
     }

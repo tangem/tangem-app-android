@@ -16,7 +16,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.campaign.ui.TangemPayCampaignScreen
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
-import com.tangem.features.tangempay.components.TangemPayWalletSelectorComponent
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -26,6 +26,7 @@ internal class DefaultTangemPayCampaignComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: TangemPayCampaignComponent.Params,
     private val issueCardComponentFactory: TangemPayCampaignIssueCardComponent.Factory,
+    private val walletSelectorComponentFactory: TangemPayWalletSelectorComponent.Factory,
 ) : TangemPayCampaignComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayCampaignModel = getOrCreateModel(params)
@@ -82,8 +83,8 @@ internal class DefaultTangemPayCampaignComponent @AssistedInject constructor(
     ): ComposableBottomSheetComponent {
         val context = childByContext(componentContext)
         return when (navigation) {
-            is TangemPayOnboardingNavigation.WalletSelector -> TangemPayWalletSelectorComponent(
-                appComponentContext = context,
+            is TangemPayOnboardingNavigation.WalletSelector -> walletSelectorComponentFactory.create(
+                context = context,
                 params = TangemPayWalletSelectorComponent.Params(listener = model, walletsIds = navigation.walletsIds),
             )
         }
