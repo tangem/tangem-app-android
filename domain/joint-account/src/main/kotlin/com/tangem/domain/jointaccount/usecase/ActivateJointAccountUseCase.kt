@@ -17,7 +17,7 @@ import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.safe.SafeAddress
+import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -34,6 +34,7 @@ class ActivateJointAccountUseCase(
     private val signer: JointAccountSigner,
     private val fetcher: SingleJointAccountListFetcher,
     private val supplier: SingleJointAccountListSupplier,
+    private val safeAddressCalculator: SafeAddressCalculator,
 ) {
 
     suspend operator fun invoke(account: Account.Joint): Either<JointAccountActivationError, Unit> = either {
@@ -136,7 +137,11 @@ class ActivateJointAccountUseCase(
         val computed = SafeSingleton.entries
             .map { singleton ->
                 // A composition no Safe can be deployed from is a distinct failure, not a mismatch
-                SafeAddress.compute(owners = owners, threshold = jointAccount.threshold, singleton = singleton)
+                safeAddressCalculator.compute(
+                    owners = owners,
+                    threshold = jointAccount.threshold,
+                    singleton = singleton,
+                )
                     .mapLeft { addressError ->
                         refused(
                             error = JointAccountFlowError.Failed(

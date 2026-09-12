@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -14,6 +15,7 @@ import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisite
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
@@ -185,6 +187,16 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideAwaitDelayedPredictionOrderUseCase(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): AwaitDelayedPredictionOrderUseCase = AwaitDelayedPredictionOrderUseCase(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
     fun provideGetPolymarketBalanceInteractor(
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
@@ -207,6 +219,7 @@ internal object PolymarketDomainModule {
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
         polymarketOnboardedStore: PolymarketOnboardedStore,
+        predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
@@ -218,6 +231,7 @@ internal object PolymarketDomainModule {
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
         polymarketOnboardedStore = polymarketOnboardedStore,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
     )
 
     @Provides

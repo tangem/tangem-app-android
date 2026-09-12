@@ -438,7 +438,7 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
             loadMore = {},
         ),
         appliedSelection = CategorySelection(
-            category = CategorySelection.Entry(id = "rwa_categories", displayName = "Stocks"),
+            category = CategorySelection.Entry(id = "rwa_categories", displayName = "Stocks", code = "xstocks"),
         ),
     )
 }

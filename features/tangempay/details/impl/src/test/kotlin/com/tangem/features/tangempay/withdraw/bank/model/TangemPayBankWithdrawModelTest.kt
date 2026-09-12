@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
@@ -167,6 +168,20 @@ internal class TangemPayBankWithdrawModelTest {
             BankWithdrawFormField.AccountNumber, "4830019271",
             BankWithdrawFormField.BankName, "Test Bank",
         )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft WHEN order created THEN draft keeps order`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        val order = BankOfframpOrderResult(orderId = "order-1", bankAccountId = "acc-9")
+
+        // Act
+        model.onOrderCreated(order)
+
+        // Assert
+        assertThat(model.draft.value.order).isEqualTo(order)
         model.onDestroy()
     }
 

@@ -8,6 +8,8 @@ import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
+import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
@@ -82,12 +84,14 @@ internal object JointAccountDomainModule {
         signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
         supplier: SingleJointAccountListSupplier,
+        safeAddressCalculator: SafeAddressCalculator,
     ): ActivateJointAccountUseCase {
         return ActivateJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,
             supplier = supplier,
+            safeAddressCalculator = safeAddressCalculator,
         )
     }
 
@@ -113,8 +117,14 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideSafeCompositionChecker(networkReader: JointNetworkReader): SafeCompositionChecker {
-        return SafeCompositionChecker(networkReader = networkReader)
+    fun provideSafeCompositionChecker(
+        networkReader: JointNetworkReader,
+        safeAddressCalculator: SafeAddressCalculator,
+    ): SafeCompositionChecker {
+        return SafeCompositionChecker(
+            networkReader = networkReader,
+            safeAddressCalculator = safeAddressCalculator,
+        )
     }
 
     @Provides
@@ -127,6 +137,7 @@ internal object JointAccountDomainModule {
         gasBuilder: SafeTxGasBuilder,
         compositionChecker: SafeCompositionChecker,
         networkReader: JointNetworkReader,
+        payloadCodec: JointTransferPayloadCodec,
     ): CreateJointOperationUseCase {
         return CreateJointOperationUseCase(
             repository = repository,
@@ -136,12 +147,19 @@ internal object JointAccountDomainModule {
             gasBuilder = gasBuilder,
             compositionChecker = compositionChecker,
             networkReader = networkReader,
+            payloadCodec = payloadCodec,
         )
     }
 
     @Provides
     @Singleton
-    fun provideJointOperationVerifier(): JointOperationVerifier = JointOperationVerifier()
+    fun provideJointOperationVerifier(
+        payloadCodec: JointTransferPayloadCodec,
+        safeAddressCalculator: SafeAddressCalculator,
+    ): JointOperationVerifier = JointOperationVerifier(
+        payloadCodec = payloadCodec,
+        safeAddressCalculator = safeAddressCalculator,
+    )
 
     @Provides
     @Singleton

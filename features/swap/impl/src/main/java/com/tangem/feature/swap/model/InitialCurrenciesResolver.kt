@@ -104,7 +104,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
             accountStatus.account.isSwapTargetOnly
         }
 
-        val cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten()
+        val fromEligibleAccounts = cryptoPortfolioAccounts.filterKeys { !it.account.isSwapTargetOnly }
+        val cryptoCurrencyList = fromEligibleAccounts.values.flatten()
 
         val (from, to) = if (initialCryptoCurrency != null) {
             resolveInitialPair(
@@ -112,11 +113,11 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 swapCurrencyPosition = swapCurrencyPosition,
                 lookupAccounts = if (isPaymentAccount) cryptoPaymentAccounts else cryptoPortfolioAccounts,
                 targetOnlyAccounts = targetOnlyAccounts,
-                cryptoPortfolioAccounts = cryptoPortfolioAccounts,
+                cryptoPortfolioAccounts = fromEligibleAccounts,
             )
         } else {
             selectCryptoCurrency(
-                cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+                cryptoPortfolioAccountsMap = fromEligibleAccounts,
                 cryptoCurrencyList = cryptoCurrencyList,
             ) to null
         }
@@ -131,7 +132,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
             !isAccountFlowEnabled -> from
             accountFlow is AccountFlow.TopUp -> resolveAccountTopUpFromPriority(
                 userWalletId = userWalletId,
-                cryptoPortfolioAccounts = cryptoPortfolioAccounts,
+                cryptoPortfolioAccounts = fromEligibleAccounts,
                 cryptoCurrencyList = cryptoCurrencyList,
             )
             accountFlow is AccountFlow.Withdraw -> mostFundedAccountCurrency(cryptoPaymentAccounts) ?: from
@@ -270,8 +271,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
                     (accountStatus.value as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus,
                 )
                 is AccountStatus.Collectibles -> emptyList()
-                // Joint currencies live on the Safe contract and never swap through the participant's EOA
-                is AccountStatus.Joint -> emptyList()
+                is AccountStatus.Joint -> accountStatus.flattenCurrencies()
             }
             val availabilityStates = rampStateManager.availableForSwap(
                 userWalletId,

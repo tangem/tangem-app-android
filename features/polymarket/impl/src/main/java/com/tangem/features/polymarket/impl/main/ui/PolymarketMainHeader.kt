@@ -44,7 +44,9 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
+import com.tangem.features.polymarket.impl.common.funding.PredictionAwaitingFundsBanner
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -55,9 +57,14 @@ internal fun PolymarketMainHeader(
     balance: TextReference,
     addFunds: TangemButtonUM,
     withdraw: TangemButtonUM,
+    isAwaitingFunds: Boolean,
     onBalanceClick: () -> Unit,
     modifier: Modifier = Modifier,
+    positions: PolymarketPositionsPreviewUM = PolymarketPositionsPreviewUM.Content(persistentListOf()),
+    onActivePositionsClick: (() -> Unit)? = null,
+    onFinishedPositionsClick: (() -> Unit)? = null,
 ) {
+    val arePositionsVisible = positions.isVisible || onFinishedPositionsClick != null
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -74,10 +81,23 @@ internal fun PolymarketMainHeader(
             modifier = Modifier.padding(top = 32.dp),
         )
 
+        if (isAwaitingFunds) {
+            PredictionAwaitingFundsBanner(
+                modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
+            )
+        }
+
+        PolymarketPositionsPreview(
+            state = positions,
+            modifier = Modifier.padding(top = 48.dp),
+            onActiveClick = onActivePositionsClick,
+            onFinishedClick = onFinishedPositionsClick,
+        )
+
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 72.dp, start = 16.dp, end = 16.dp),
+                .padding(top = if (arePositionsVisible) 32.dp else 72.dp, start = 16.dp, end = 16.dp),
             text = stringResourceSafe(R.string.prediction_main_explore_events),
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.heading.small,
@@ -167,6 +187,7 @@ private fun PolymarketMainHeaderPreview(
             balance = state.balance,
             addFunds = state.addFunds,
             withdraw = state.withdraw,
+            isAwaitingFunds = false,
             onBalanceClick = {},
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
@@ -176,6 +197,29 @@ private fun PolymarketMainHeaderPreview(
 private class PolymarketMainHeaderPreviewProvider : CollectionPreviewParameterProvider<BigDecimal>(
     collection = listOf(BigDecimal.ZERO, BigDecimal("1234.56")),
 )
+
+@Preview(name = "Header Awaiting Funds Light", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Header Awaiting Funds Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun PolymarketMainHeaderAwaitingFundsPreview() {
+    TangemThemePreviewRedesign {
+        val state = previewPredictionBalance(BigDecimal("1234.56"))
+
+        PolymarketMainHeader(
+            balance = state.balance,
+            addFunds = state.addFunds,
+            withdraw = state.withdraw,
+            isAwaitingFunds = true,
+            onBalanceClick = {},
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+        )
+    }
+}
 
 internal fun previewPredictionBalance(balance: BigDecimal) = PredictionBalanceUM(
     balance = balance.formatPolymarketMoneyStyled(

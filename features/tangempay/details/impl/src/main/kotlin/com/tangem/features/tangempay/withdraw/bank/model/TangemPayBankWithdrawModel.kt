@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
@@ -55,6 +56,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         draft.update {
             it.copy(amount = result.amount, source = result.source, destination = result.destination)
         }
+    }
+
+    fun onOrderCreated(result: BankOfframpOrderResult) {
+        draft.update { it.copy(order = result) }
     }
 
     private fun loadSavedRecipient() {
