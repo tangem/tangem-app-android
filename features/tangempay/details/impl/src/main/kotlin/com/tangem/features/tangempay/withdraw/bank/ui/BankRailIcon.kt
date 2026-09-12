@@ -1,4 +1,4 @@
-package com.tangem.features.tangempay.withdraw.bank.amount.ui
+package com.tangem.features.tangempay.withdraw.bank.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

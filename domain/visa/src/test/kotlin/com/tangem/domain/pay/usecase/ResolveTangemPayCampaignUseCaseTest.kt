@@ -44,7 +44,7 @@ internal class ResolveTangemPayCampaignUseCaseTest {
         clearMocks(onboardingRepository, campaignRepository, eligibilityManager, getCustomerOffersUseCase)
         coEvery { onboardingRepository.validateDeeplink(CAMPAIGN_LINK) } returns true.right()
         coEvery { campaignRepository.getCampaign(CAMPAIGN_KEY) } returns CAMPAIGN.right()
-        coEvery { eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
     }
 
     @Test
@@ -160,7 +160,7 @@ internal class ResolveTangemPayCampaignUseCaseTest {
     @Test
     fun `GIVEN the Pay check fails WHEN invoked THEN the error is propagated`() = runTest {
         // Arrange
-        coEvery { eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
             listOf(WALLET_ID)
         coEvery { onboardingRepository.hasTangemPayInWallet(WALLET_ID) } returns VisaApiError.Unspecified.left()
 
@@ -249,7 +249,7 @@ internal class ResolveTangemPayCampaignUseCaseTest {
     }
 
     private fun givenWallets(vararg wallets: Pair<UserWalletId, Boolean>) {
-        coEvery { eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
+        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
             wallets.map { it.first }
         wallets.forEach { (walletId, hasPay) ->
             coEvery { onboardingRepository.hasTangemPayInWallet(walletId) } returns hasPay.right()
