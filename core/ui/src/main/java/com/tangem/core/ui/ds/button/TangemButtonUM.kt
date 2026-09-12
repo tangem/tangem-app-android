@@ -12,6 +12,8 @@ import com.tangem.core.ui.extensions.TextReference
  * @param tangemIconUM       Icon for the icon to be displayed in the button (optional).
  * @param iconPosition       Position of the icon (Start or End).
  * @param isEnabled          Boolean indicating whether the button is enabled.
+ * @param isDimmed           When `true`, the button takes the disabled appearance but still routes clicks to
+ *                           [onClick] — for an action that is unavailable yet wants to explain why when tapped.
  * @param isLoading          Boolean indicating whether the button is in a loading state.
  * @param size               TangemButtonSize defining the size of the button.
  * @param shape              TangemButtonShape defining the shape of the button. UPD all buttons are rounded.
@@ -28,6 +30,7 @@ data class TangemButtonUM(
     val tangemIconUM: TangemIconUM? = null,
     val iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     val isEnabled: Boolean = true,
+    val isDimmed: Boolean = false,
     val isLoading: Boolean = false,
     val size: TangemButtonSize = TangemButtonSize.X15,
     val shape: TangemButtonShape = TangemButtonShape.Default,

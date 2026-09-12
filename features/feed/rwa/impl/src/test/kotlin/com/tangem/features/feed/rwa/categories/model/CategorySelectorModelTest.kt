@@ -3,6 +3,8 @@ package com.tangem.features.feed.rwa.categories.model
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
@@ -110,7 +112,13 @@ internal class CategorySelectorModelTest {
 
         // Assert
         assertThat(callback.selection).isEqualTo(
-            CategorySelection(category = CategorySelection.Entry(id = bonds.id, displayName = bonds.displayName)),
+            CategorySelection(
+                category = CategorySelection.Entry(
+                    id = bonds.id,
+                    displayName = bonds.displayName,
+                    code = bonds.code,
+                ),
+            ),
         )
     }
 
@@ -120,7 +128,11 @@ internal class CategorySelectorModelTest {
             // Arrange
             stubCategories(umbrella, bonds)
             val selection = CategorySelection(
-                category = CategorySelection.Entry(id = bonds.id, displayName = bonds.displayName),
+                category = CategorySelection.Entry(
+                    id = bonds.id,
+                    displayName = bonds.displayName,
+                    code = bonds.code,
+                ),
             )
 
             // Act
@@ -136,7 +148,7 @@ internal class CategorySelectorModelTest {
         // Arrange
         stubCategories(umbrella, stocks)
         val selection = CategorySelection(
-            category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName),
+            category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName, code = stocks.code),
         )
 
         // Act
@@ -207,6 +219,97 @@ internal class CategorySelectorModelTest {
     private fun stubCategories(vararg categories: CoinCategory) {
         coEvery { getCoinCategoriesUseCase() } returns Either.Right(categories.toList())
     }
+
+    @Test
+    fun `GIVEN no filter WHEN model created THEN the footer is hidden`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.content().isEdited).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no filter WHEN another category tapped THEN the footer is shown`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.items().items.first { it.id == stocks.id }.onItemClick()
+
+        // Assert
+        assertThat(model.content().isEdited).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an edited selection WHEN reset tapped THEN the footer is hidden again`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.items().items.first { it.id == stocks.id }.onItemClick()
+
+        // Act
+        model.content().footer.onReset()
+
+        // Assert
+        assertThat(model.content().isEdited).isFalse()
+    }
+
+    @Test
+    fun `GIVEN applied category WHEN the same category tapped THEN the footer stays hidden`() = runTest {
+        // Arrange
+        stubCategories(umbrella, stocks)
+        val model = createModel(testScope = this, selection = stocksWithTechnology)
+        advanceUntilIdle()
+
+        // Act
+        model.items().items.first { it.id == stocks.id }.onItemClick()
+
+        // Assert
+        assertThat(model.content().isEdited).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a sector whose id differs from its code WHEN model created THEN the label comes from the code`() =
+        runTest {
+            // Arrange — a backend serving uuid ids must still resolve names through the stable code
+            val xstocks = createCategory(
+                id = "6",
+                code = "xstocks",
+                displayName = "xStocks",
+                displayOrder = 6,
+                sectors = listOf(
+                    createSector(id = "3f9a-uuid", code = "technology", displayName = "Technology"),
+                    createSector(id = "7b2c-uuid", code = "healthcare", displayName = "Healthcare"),
+                ),
+            )
+            stubCategories(umbrella, xstocks)
+            val selection = CategorySelection(
+                category = CategorySelection.Entry(
+                    id = xstocks.id,
+                    displayName = xstocks.displayName,
+                    code = xstocks.code,
+                ),
+            )
+
+            // Act
+            val model = createModel(testScope = this, selection = selection)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.sectors()?.sectors?.map { it.label }).containsExactly(
+                resourceReference(R.string.common_all),
+                resourceReference(R.string.markets_real_assets_sector_xstocks_technology),
+                resourceReference(R.string.markets_real_assets_sector_xstocks_healthcare),
+            ).inOrder()
+        }
 
     private fun createModel(
         testScope: TestScope,
@@ -292,18 +395,19 @@ internal class CategorySelectorModelTest {
         )
 
         val stocksWithTechnology = CategorySelection(
-            category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName),
-            sector = CategorySelection.Entry(id = "technology", displayName = "Technology"),
+            category = CategorySelection.Entry(id = stocks.id, displayName = stocks.displayName, code = stocks.code),
+            sector = CategorySelection.Entry(id = "technology", displayName = "Technology", code = "technology"),
         )
 
         fun createSector(
             id: String,
             displayName: String,
+            code: String = id,
             displayOrder: Int = 0,
             tokensCount: Int = 7,
         ) = CoinCategory.Sector(
             id = id,
-            code = id,
+            code = code,
             displayName = displayName,
             displayOrder = displayOrder,
             tokensCount = tokensCount,

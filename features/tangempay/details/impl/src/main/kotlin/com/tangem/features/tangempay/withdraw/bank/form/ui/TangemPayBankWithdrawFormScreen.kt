@@ -1,20 +1,9 @@
 package com.tangem.features.tangempay.withdraw.bank.form.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,9 +18,11 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.tangempay.common.SelectorInput
 import com.tangem.features.tangempay.common.TextInput
 import com.tangem.features.tangempay.common.TextInputState
 import com.tangem.features.tangempay.common.revealAboveFooter
@@ -77,26 +68,49 @@ internal fun TangemPayBankWithdrawFormScreen(state: TangemPayBankWithdrawFormUM,
 
 @Composable
 private fun FormField(state: FieldUM) {
+    val modifier = Modifier
+        .fillMaxWidth()
+        .revealAboveFooter(footerHeight = FooterHeight)
+    when (state) {
+        is FieldUM.Text -> TextField(state = state, modifier = modifier)
+        is FieldUM.Selector -> SelectorField(state = state, modifier = modifier)
+    }
+}
+
+@Composable
+private fun TextField(state: FieldUM.Text, modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current
-    val error = state.error
     TextInput(
         label = state.field.label,
         value = state.value,
         onValueChange = state.onValueChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .revealAboveFooter(footerHeight = FooterHeight),
-        state = if (error != null) TextInputState.Error(text = error) else TextInputState.Default,
+        modifier = modifier,
+        state = inputState(error = state.error),
         placeholder = state.field.placeholder,
-        keyboardOptions = KeyboardOptions(
-            capitalization = state.field.capitalization,
-            keyboardType = state.field.keyboardType,
-            imeAction = state.imeAction,
-        ),
+        keyboardOptions = state.keyboardOptions,
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
         onFocusChange = state.onFocusChange,
     )
 }
+
+@Composable
+private fun SelectorField(state: FieldUM.Selector, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
+    SelectorInput(
+        label = state.field.label,
+        value = state.value,
+        placeholder = state.field.placeholder,
+        state = inputState(error = state.error),
+        onClick = {
+            focusManager.clearFocus()
+            state.onClick()
+        },
+        modifier = modifier,
+    )
+}
+
+private fun inputState(error: TextReference?): TextInputState =
+    if (error != null) TextInputState.Error(text = error) else TextInputState.Default
 
 @Composable
 private fun FormFooter(isContinueEnabled: Boolean, onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -127,6 +141,7 @@ private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdr
     override val values: Sequence<TangemPayBankWithdrawFormUM> = sequenceOf(
         TangemPayBankWithdrawFormPreviewData.personalEmpty,
         TangemPayBankWithdrawFormPreviewData.personalWithError,
+        TangemPayBankWithdrawFormPreviewData.personalWithoutRegion,
         TangemPayBankWithdrawFormPreviewData.businessBank,
     )
 }

@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
@@ -31,6 +32,8 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
+import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
@@ -99,6 +102,7 @@ internal class PlacePredictionModel @Inject constructor(
     private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
     private val signPredictionOrderInteractor: SignPredictionOrderInteractor,
     private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
+    private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
 ) : Model(), PlacePredictionIntents {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -107,6 +111,8 @@ internal class PlacePredictionModel @Inject constructor(
         field = MutableStateFlow(PlacePredictionUM.initial())
 
     private val quoteJobHolder = JobHolder()
+
+    private val tradingAllowanceJobHolder = JobHolder()
 
     private var isMarketLive = false
 
@@ -123,21 +129,25 @@ internal class PlacePredictionModel @Inject constructor(
 
     /**
      * Whether the region allows trading — read here rather than carried in on the route, because a route
-     * cannot know it and a screen that assumes it would be confidently wrong. An unreadable region is
-     * treated as blocked: this gate exists to stop an order, so it fails shut.
+     * cannot know it and a screen that assumes it would be confidently wrong. An unreadable region keeps the
+     * gate shut, but as [TradingPermissionUM.Unknown]: refusing the order is this gate's job, claiming the
+     * user is restricted is not.
      */
     private fun loadTradingAllowance() {
+        if (tradingAllowanceJobHolder.isActive) return
+
         modelScope.launch {
-            val isBlocked = withContext(dispatchers.default) {
-                checkPolymarketGeoblockUseCase().getOrElse { true }
+            val permission = withContext(dispatchers.default) {
+                checkPolymarketGeoblockUseCase().fold(
+                    ifLeft = { TradingPermissionUM.Unknown },
+                    ifRight = { isBlocked ->
+                        if (isBlocked) TradingPermissionUM.Restricted else TradingPermissionUM.Allowed
+                    },
+                )
             }
 
-            uiState.update(
-                SetTradingPermissionTransformer(
-                    permission = if (isBlocked) TradingPermissionUM.Restricted else TradingPermissionUM.Allowed,
-                ),
-            )
-        }
+            uiState.update(SetTradingPermissionTransformer(permission = permission))
+        }.saveIn(tradingAllowanceJobHolder)
     }
 
     /**
@@ -146,6 +156,7 @@ internal class PlacePredictionModel @Inject constructor(
      */
     fun onScreenShown() {
         isScreenShown = true
+        if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -257,7 +268,12 @@ internal class PlacePredictionModel @Inject constructor(
                     placedAt = System.currentTimeMillis(),
                 )
             }
-            .fold(ifLeft = ::onPlaceError, ifRight = ::onPlaceOutcome)
+            .fold(
+                ifLeft = ::onPlaceError,
+                ifRight = { outcome ->
+                    onPlaceOutcome(outcome = outcome, addresses = addresses, quotedAmount = frozen.quote.notional)
+                },
+            )
     }
 
     private suspend fun spendingPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
@@ -303,10 +319,64 @@ internal class PlacePredictionModel @Inject constructor(
         }
     }
 
-    private fun onPlaceOutcome(outcome: PlaceOutcome) {
+    private suspend fun onPlaceOutcome(
+        outcome: PlaceOutcome,
+        addresses: PolymarketAddresses,
+        quotedAmount: BigDecimal,
+    ) {
         when (outcome) {
             is PlaceOutcome.Reportable -> showResult(result = outcome.result)
             is PlaceOutcome.Anomalous -> showPlaceFailure(reason = outcome.reason)
+            is PlaceOutcome.Delayed -> awaitDelayedFill(
+                addresses = addresses,
+                orderId = outcome.orderId,
+                quotedAmount = quotedAmount,
+                placedAt = outcome.placedAt,
+            )
+        }
+    }
+
+    /**
+     * The exchange accepted the order into a matching delay, so the answer to "did it fill" is read back from
+     * the book. A match ends on the result screen like an immediate one; anything else is a dialog over the
+     * summary, since the order did not place and the same one can be placed again.
+     */
+    private suspend fun awaitDelayedFill(
+        addresses: PolymarketAddresses,
+        orderId: String,
+        quotedAmount: BigDecimal,
+        placedAt: Long,
+    ) {
+        uiState.update(SetSubmitTransformer(submit = SubmitUM.AwaitingFill))
+
+        val outcome = withContext(dispatchers.default) {
+            awaitDelayedPredictionOrderUseCase(addresses = addresses, orderId = orderId)
+        }
+
+        when (outcome) {
+            is DelayedPredictionOrderOutcome.Matched -> {
+                val result = PlaceResultUMConverter.convert(
+                    order = outcome.order,
+                    quotedAmount = quotedAmount,
+                    placedAt = placedAt,
+                )
+                if (result == null) {
+                    showPlaceFailure(reason = "Delayed order $orderId matched, but its fill cannot be read")
+                } else {
+                    showResult(result = result)
+                }
+            }
+            is DelayedPredictionOrderOutcome.Failed -> {
+                showPlaceFailure(reason = "Delayed order $orderId did not fill: ${outcome.detail}")
+            }
+            is DelayedPredictionOrderOutcome.Unconfirmed -> {
+                logger.e("Delayed order $orderId: the book did not say whether it matched within the reads allowed")
+                returnToIdle()
+                showFailureDialog(
+                    title = resourceReference(R.string.prediction_place_delayed_timeout_title),
+                    message = resourceReference(R.string.prediction_place_delayed_timeout_description),
+                )
+            }
         }
     }
 
@@ -323,10 +393,17 @@ internal class PlacePredictionModel @Inject constructor(
         logger.e(reason)
         returnToIdle()
 
+        showFailureDialog(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.prediction_place_error_description),
+        )
+    }
+
+    private fun showFailureDialog(title: TextReference, message: TextReference) {
         messageSender.send(
             DialogMessage(
-                title = resourceReference(R.string.common_something_went_wrong),
-                message = resourceReference(R.string.prediction_place_error_description),
+                title = title,
+                message = message,
                 firstActionBuilder = {
                     EventMessageAction(
                         title = resourceReference(R.string.common_support),
@@ -386,7 +463,15 @@ internal class PlacePredictionModel @Inject constructor(
         router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
     }
 
-    fun isSubmitting(): Boolean = uiState.value.submit.let { it is SubmitUM.Signing || it is SubmitUM.Posting }
+    fun isSubmitting(): Boolean = when (uiState.value.submit) {
+        is SubmitUM.Signing,
+        is SubmitUM.Posting,
+        is SubmitUM.AwaitingFill,
+        -> true
+        is SubmitUM.Idle,
+        is SubmitUM.Result,
+        -> false
+    }
 
     private fun loadMarket() {
         modelScope.launch {
