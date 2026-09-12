@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
@@ -13,6 +14,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.utils.coroutines.AppCoroutineScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -26,6 +29,8 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
     private val ownerDeriver: CollectiblesOwnerDeriver,
     private val gachaVaultRepository: GachaVaultRepository,
     private val accountRepository: CollectiblesAccountRepository,
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val appScope: AppCoroutineScope,
 ) {
 
     suspend operator fun invoke(userWallet: UserWallet): Either<CollectiblesAccountError, Unit> = either {
@@ -46,6 +51,10 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
             userWalletId = userWallet.walletId,
             status = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
         )
+
+        appScope.launch {
+            accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId))
+        }
     }
 
     /** Costs no card tap either way: the delegate is a local ed25519 keypair, created on first use. */
