@@ -18,12 +18,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class RefreshPredictionDepositRequisitesInteractorTest {
 
@@ -92,6 +95,91 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     }
 
     @Test
+    fun `GIVEN a token without a minimum WHEN refreshed THEN it is kept without one`() = runTest {
+        // Arrange
+        stubBridge(
+            assets = listOf(
+                asset(chainId = "137", tokenAddress = USDC, minCheckoutUsd = BigDecimal("2")),
+                asset(chainId = "137", tokenAddress = OTHER, minCheckoutUsd = null),
+            ),
+        )
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        val network = actual.getOrNull()?.networks?.single()
+        assertThat(network?.tokens?.map { it.address }).containsExactly(USDC, OTHER).inOrder()
+        assertThat(network?.tokens?.map { it.minCheckoutUsd }).containsExactly(BigDecimal("2"), null).inOrder()
+    }
+
+    @Test
+    fun `GIVEN polygon usdc has no minimum WHEN refreshed THEN it still is the default target`() = runTest {
+        // Arrange
+        stubBridge(assets = listOf(asset(chainId = "137", tokenAddress = USDC, minCheckoutUsd = null)))
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.default?.address).isEqualTo(EVM_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN both bridge calls are slow WHEN refreshed THEN they run concurrently`() = runTest {
+        // Arrange
+        coEvery { bridgeRepository.getSupportedAssets() } coAnswers {
+            delay(CALL_DURATION_MS)
+            listOf(asset(chainId = "137")).right()
+        }
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } coAnswers {
+            delay(CALL_DURATION_MS)
+            BRIDGE_ADDRESSES.right()
+        }
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+        assertThat(testScheduler.currentTime).isEqualTo(CALL_DURATION_MS)
+    }
+
+    @Test
+    fun `GIVEN the catalogue fails at once WHEN the address call is slow THEN the failure is not delayed`() = runTest {
+        // Arrange
+        coEvery { bridgeRepository.getSupportedAssets() } returns PolymarketBridgeError.Network.left()
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } coAnswers {
+            delay(CALL_DURATION_MS)
+            BRIDGE_ADDRESSES.right()
+        }
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketBridgeError.Network.left())
+        assertThat(testScheduler.currentTime).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN the address call fails at once WHEN the catalogue is slow THEN the failure is not delayed`() = runTest {
+        // Arrange
+        coEvery { bridgeRepository.getSupportedAssets() } coAnswers {
+            delay(CALL_DURATION_MS)
+            listOf(asset(chainId = "137")).right()
+        }
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } returns PolymarketBridgeError.Network.left()
+
+        // Act
+        val actual = interactor(userWalletId = USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketBridgeError.Network.left())
+        assertThat(testScheduler.currentTime).isEqualTo(0)
+    }
+
+    @Test
     fun `GIVEN a successful refresh WHEN it completes THEN both stores are written`() = runTest {
         // Arrange
         stubBridge(assets = listOf(asset(chainId = "137", tokenAddress = USDC)))
@@ -136,6 +224,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
     fun `GIVEN the catalogue call failed WHEN refreshed THEN nothing is stored`() = runTest {
         // Arrange
         coEvery { bridgeRepository.getSupportedAssets() } returns PolymarketBridgeError.Network.left()
+        coEvery { bridgeRepository.createDepositAddresses(any(), any()) } returns BRIDGE_ADDRESSES.right()
 
         // Act
         val actual = interactor(userWalletId = USER_WALLET_ID)
@@ -167,7 +256,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
         tokenSymbol: String = "USDC",
         tokenAddress: String = USDC,
         decimals: Int = 6,
-        minCheckoutUsd: BigDecimal = BigDecimal("2"),
+        minCheckoutUsd: BigDecimal? = BigDecimal("2"),
     ) = PolymarketBridgeAsset(
         chainId = chainId,
         chainName = chainName,
@@ -196,6 +285,7 @@ internal class RefreshPredictionDepositRequisitesInteractorTest {
         val USDC = PolymarketContracts.USDC_TOKEN_ADDRESS
         const val OTHER = "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6"
         const val DEPOSIT_WALLET_ADDRESS = "0xdeposit"
+        const val CALL_DURATION_MS = 1_000L
 
         val BRIDGE_ADDRESSES = PolymarketBridgeAddresses(
             evm = EVM_ADDRESS,
