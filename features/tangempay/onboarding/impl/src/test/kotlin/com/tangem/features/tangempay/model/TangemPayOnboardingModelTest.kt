@@ -148,7 +148,7 @@ internal class TangemPayOnboardingModelTest {
         runTest {
             // Arrange
             coEvery {
-                eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true)
+                eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
             } returns emptyList()
             val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
             advanceUntilIdle()
@@ -159,7 +159,7 @@ internal class TangemPayOnboardingModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify { eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true) }
+            coVerify { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true) }
             model.onDestroy()
         }
 
