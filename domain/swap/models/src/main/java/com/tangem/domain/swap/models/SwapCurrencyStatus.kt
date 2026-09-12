@@ -42,4 +42,4 @@ data class SwapCurrencyStatus(
  * integration's own, so the wallet has no key that could spend it.
  */
 val Account.isSwapTargetOnly: Boolean
-    get() = this is Account.Prediction
+    get() = this is Account.Prediction || this is Account.Joint

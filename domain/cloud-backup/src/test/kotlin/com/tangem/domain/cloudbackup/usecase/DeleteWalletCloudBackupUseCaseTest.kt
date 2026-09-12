@@ -82,6 +82,7 @@ internal class DeleteWalletCloudBackupUseCaseTest {
 
     private fun backup(fileId: String = "file-1", walletId: String?) = CloudBackupInfo(
         fileId = fileId,
+        backupName = "wallet",
         walletName = "wallet",
         createdAtMillis = 0L,
         walletId = walletId,

@@ -57,6 +57,8 @@ import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -98,6 +100,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -188,19 +192,25 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
 
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
-            paymentAccountStatusSupplier.invoke(userWalletId = walletId),
-            virtualAccountStatusSupplier.invoke(userWalletId = walletId),
-            predictionStatusFlow(userWallet = userWallet),
-        ) { paymentStatus, virtualStatus, predictionValue ->
+            flow = paymentAccountStatusSupplier.invoke(userWalletId = walletId),
+            flow2 = virtualAccountStatusSupplier.invoke(userWalletId = walletId),
+            flow3 = predictionStatusFlow(userWallet = userWallet),
+            flow4 = collectiblesStatusFlow(walletId = walletId),
+        ) { paymentStatus, virtualStatus, predictionValue, collectiblesValue ->
             val predictionStatus = AccountStatus.Prediction(
                 account = Account.Prediction(userWalletId = walletId),
                 value = predictionValue,
+            )
+            val collectiblesStatus = AccountStatus.Collectibles(
+                account = Account.Collectibles(userWalletId = walletId),
+                value = collectiblesValue,
             )
 
             mapOf(
                 paymentStatus.accountId to paymentStatus,
                 virtualStatus.accountId to virtualStatus,
                 predictionStatus.accountId to predictionStatus,
+                collectiblesStatus.accountId to collectiblesStatus,
             )
         }
 
@@ -288,6 +298,15 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
      * Subscribed only for a wallet that can hold the account, and seeded before the join: this flow gates every
      * account on the screen, so a supplier that goes quiet must cost one loading row rather than all of them.
      */
+    private fun collectiblesStatusFlow(walletId: UserWalletId): Flow<CollectiblesAccountStatusValue> {
+        if (!collectiblesFeatureToggles.isCollectiblesEnabled) {
+            return flowOf(CollectiblesAccountStatusValue.Error.Unavailable)
+        }
+
+        return collectiblesAccountStatusSupplier(userWalletId = walletId)
+            .onStart { emit(CollectiblesAccountStatusValue.Loading) }
+    }
+
     private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
         if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
             return flowOf(PredictionAccountStatusValue.Error.Unavailable)
