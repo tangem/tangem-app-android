@@ -24,15 +24,18 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Currency
 
-internal class TangemPayBankWithdrawAmountUMFactory(private val callbacks: Callbacks) {
+internal class TangemPayBankWithdrawAmountUMFactory(
+    private val step: TangemPayBankWithdrawInnerRoute,
+    private val callbacks: Callbacks,
+) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
 
     fun create(draft: BankWithdrawDraft, state: AmountState): TangemPayBankWithdrawAmountUM {
         val selection = state.resolve(draft)
         return TangemPayBankWithdrawAmountUM(
-            header = BankWithdrawHeaderFactory.create(draft = draft, step = TangemPayBankWithdrawInnerRoute.Amount),
-            amount = createAmountField(value = state.value, selection = selection),
+            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            amount = createAmountField(value = selection?.displayValue ?: state.value.orEmpty(), selection = selection),
             source = selection?.source?.let { createSourceRow(it, selection.currency) } ?: SourceRowUM.Loading,
             route = selection?.let(::createRouteRow) ?: RouteRowUM.Loading,
             isContinueEnabled = selection?.isContinueEnabled == true,

@@ -14,6 +14,10 @@ internal data class CategorySelection(
     val sector: Entry? = null,
 ) {
 
+    /**
+     * @property id   identity of the pick: what the selector matches on and what the list request sends
+     * @property code stable key the localized name is resolved from, via [RwaCategoryNames]
+     */
     @Serializable
-    data class Entry(val id: String, val displayName: String)
+    data class Entry(val id: String, val displayName: String, val code: String)
 }

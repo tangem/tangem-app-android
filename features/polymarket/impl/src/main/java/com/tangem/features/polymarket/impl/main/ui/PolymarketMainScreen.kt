@@ -239,13 +239,14 @@ private fun FeedList(
     val isAtTop by remember(listState) {
         derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
     }
-    val hasEvents = state.content is PolymarketMainUM.ContentUM.Content
+    val isFeedLoading = state.content is PolymarketMainUM.ContentUM.Loading
+    val hasPositions = state.positions.isVisible || state.onFinishedPositionsClick != null
 
     LazyColumn(
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(top = topPadding, bottom = bottomPadding),
-        userScrollEnabled = hasEvents || state.positions.isVisible || !isAtTop,
+        userScrollEnabled = !isFeedLoading || hasPositions || !isAtTop,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = KEY_HEADER) {
@@ -253,8 +254,11 @@ private fun FeedList(
                 balance = state.balance.balance,
                 addFunds = state.balance.addFunds,
                 withdraw = state.balance.withdraw,
+                isAwaitingFunds = state.isAwaitingFunds,
                 onBalanceClick = {},
                 positions = state.positions,
+                onActivePositionsClick = state.onActivePositionsClick,
+                onFinishedPositionsClick = state.onFinishedPositionsClick,
             )
         }
 
@@ -480,6 +484,37 @@ private fun PolymarketMainScreenContentPreview() {
                     footer = PolymarketFeedFooterUM.Loading,
                 ),
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+            ),
+            onBackClick = {},
+            onSearchClick = {},
+            onLoadMore = {},
+            onVisibleEventsChange = {},
+            onScrollIdle = { _, _ -> },
+            onScrollPositionRestore = {},
+        )
+    }
+}
+
+@Preview(name = "Awaiting Funds Light", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Awaiting Funds Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun PolymarketMainScreenAwaitingFundsPreview() {
+    TangemThemePreviewRedesign {
+        PolymarketMainScreen(
+            state = PolymarketMainUM(
+                balance = previewPredictionBalance(BigDecimal("1234.56")),
+                categories = previewCategories(),
+                content = PolymarketMainUM.ContentUM.Content(
+                    events = previewEvents(),
+                    footer = PolymarketFeedFooterUM.Loading,
+                ),
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+                isAwaitingFunds = true,
             ),
             onBackClick = {},
             onSearchClick = {},
