@@ -1,11 +1,14 @@
 package com.tangem.features.tangempay.withdraw.bank.form.state
 
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldError
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldKind
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.form.model.FormState
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
@@ -20,24 +23,52 @@ internal class TangemPayBankWithdrawFormUMFactory(
     private val callbacks: Callbacks,
 ) {
 
-    fun create(draft: BankWithdrawDraft, state: FormState): TangemPayBankWithdrawFormUM = TangemPayBankWithdrawFormUM(
-        header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
-        fields = fields
-            .mapIndexed { index, field ->
-                FieldUM(
-                    field = field,
-                    value = state.values[field].orEmpty(),
-                    error = state.errors[field]?.toText(),
-                    imeAction = if (index == fields.lastIndex) ImeAction.Done else ImeAction.Next,
-                    onValueChange = { value -> callbacks.onValueChange(field, value) },
-                    onFocusChange = { isFocused -> callbacks.onFocusChange(field, isFocused) },
-                )
-            }
-            .toImmutableList(),
-        isContinueEnabled = fields.all { field -> !state.values[field].isNullOrBlank() },
-        onBackClick = callbacks.onBackClick,
-        onContinueClick = callbacks.onContinueClick,
-    )
+    fun create(draft: BankWithdrawDraft, state: FormState): TangemPayBankWithdrawFormUM {
+        val values = state.values(fields, draft)
+        val visibleFields = BankWithdrawFormFields.visible(fields = fields, values = values)
+        return TangemPayBankWithdrawFormUM(
+            header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
+            fields = visibleFields
+                .mapIndexed { index, field ->
+                    createField(
+                        field = field,
+                        value = values[field].orEmpty(),
+                        error = state.errors[field]?.toText(),
+                        isLast = index == visibleFields.lastIndex,
+                    )
+                }
+                .toImmutableList(),
+            isContinueEnabled = visibleFields.all { field -> !values[field].isNullOrBlank() },
+            onBackClick = callbacks.onBackClick,
+            onContinueClick = callbacks.onContinueClick,
+        )
+    }
+
+    private fun createField(
+        field: BankWithdrawFormField,
+        value: String,
+        error: TextReference?,
+        isLast: Boolean,
+    ): FieldUM = when (val kind = field.kind) {
+        is BankWithdrawFieldKind.TextField -> FieldUM.Text(
+            field = field,
+            value = value,
+            error = error,
+            keyboardOptions = KeyboardOptions(
+                capitalization = kind.capitalization,
+                keyboardType = kind.keyboardType,
+                imeAction = if (isLast) ImeAction.Done else ImeAction.Next,
+            ),
+            onValueChange = { newValue -> callbacks.onValueChange(field, newValue) },
+            onFocusChange = { isFocused -> callbacks.onFocusChange(field, isFocused) },
+        )
+        BankWithdrawFieldKind.SelectorField -> FieldUM.Selector(
+            field = field,
+            value = value,
+            error = error,
+            onClick = { callbacks.onSelectorClick(field) },
+        )
+    }
 
     private fun BankWithdrawFieldError.toText(): TextReference = when (this) {
         BankWithdrawFieldError.Required -> resourceReference(R.string.tangempay_order_data_field_required)
@@ -51,6 +82,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
         val onBackClick: () -> Unit,
         val onValueChange: (field: BankWithdrawFormField, value: String) -> Unit,
         val onFocusChange: (field: BankWithdrawFormField, isFocused: Boolean) -> Unit,
+        val onSelectorClick: (field: BankWithdrawFormField) -> Unit,
         val onContinueClick: () -> Unit,
     )
 }
