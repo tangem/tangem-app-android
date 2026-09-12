@@ -3,11 +3,11 @@ package com.tangem.features.feed.rwa.categories.model.converter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
+import com.tangem.features.feed.rwa.categories.RwaCategoryNames
 import com.tangem.features.feed.rwa.categories.ui.state.CategoryItemUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorSectionUM
 import com.tangem.utils.converter.Converter
@@ -45,7 +45,7 @@ internal class CategoryTagConverter(
                     title = if (isUmbrella) {
                         resourceReference(R.string.common_all)
                     } else {
-                        stringReference(category.displayName)
+                        RwaCategoryNames.category(code = category.code, fallback = category.displayName)
                     },
                     caption = pluralReference(
                         id = R.plurals.common_assets_count,
@@ -62,6 +62,7 @@ internal class CategoryTagConverter(
                                     category = CategorySelection.Entry(
                                         id = category.id,
                                         displayName = category.displayName,
+                                        code = category.code,
                                     ),
                                 )
                             },

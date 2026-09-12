@@ -12,8 +12,8 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
+import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -35,10 +35,9 @@ internal class PredictionBalanceUMConverter(
             addFunds = actionButton(
                 text = resourceReference(id = R.string.common_add_funds),
                 icon = Icons.ic_arrow_down_24,
-                isEnabled = active?.cryptoCurrencyStatus != null &&
-                    value.isTradingAllowed &&
-                    value.depositTarget != null,
+                isEnabled = value.isTradingAllowed && value.requisites.allowsAddFunds(active),
                 isLoading = isLoading,
+                isDimmed = value.requisites is RequisitesState.Failed,
                 onClick = onAddFundsClick,
             ),
             withdraw = actionButton(
@@ -51,11 +50,18 @@ internal class PredictionBalanceUMConverter(
         )
     }
 
+    private fun RequisitesState.allowsAddFunds(active: PredictionAccountStatusValue.Active?): Boolean = when (this) {
+        RequisitesState.Loading -> false
+        RequisitesState.Failed -> active != null
+        is RequisitesState.Ready -> active?.cryptoCurrencyStatus != null
+    }
+
     private fun actionButton(
         text: TextReference,
         icon: ImageVector,
         isEnabled: Boolean,
         isLoading: Boolean,
+        isDimmed: Boolean = false,
         onClick: () -> Unit,
     ) = TangemButtonUM(
         text = text,
@@ -65,13 +71,14 @@ internal class PredictionBalanceUMConverter(
         ),
         type = TangemButtonType.Secondary,
         isEnabled = isEnabled,
+        isDimmed = isDimmed,
         isLoading = isLoading,
         onClick = onClick,
     )
 
     data class Input(
         val status: PredictionAccountStatusValue,
-        val depositTarget: PolymarketDepositTarget?,
+        val requisites: RequisitesState,
         val isTradingAllowed: Boolean,
     )
 }
