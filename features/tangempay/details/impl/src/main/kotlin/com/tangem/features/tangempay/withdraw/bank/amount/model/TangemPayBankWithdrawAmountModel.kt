@@ -46,6 +46,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
 
     private val umFactory = TangemPayBankWithdrawAmountUMFactory(
+        step = params.step,
         callbacks = TangemPayBankWithdrawAmountUMFactory.Callbacks(
             onBackClick = router::pop,
             onValueChange = ::onValueChange,
@@ -147,6 +148,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private fun onContinueClick() {
         val result = state.value.resolve(params.draft.value)?.toResult() ?: return
         params.onContinue(result)
+        state.update { it.copy(value = null) }
     }
 }
 
