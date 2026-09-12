@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.ds2.button.Close
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.combinedReference
@@ -48,11 +50,10 @@ internal fun MarketIndexInfoBottomSheet(state: MarketIndexInfoBottomSheetContent
         ),
         title = {
             TangemTopNavigation(
-                title = stringReference("Info"),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 windowInsets = WindowInsets(0),
                 fadeEnabled = false,
-                onClose = onDismiss,
+                endButton = { TangemButton.Close(onClick = onDismiss) },
             )
         },
         content = { content -> Content(index = content.index) },

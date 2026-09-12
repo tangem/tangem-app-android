@@ -7,106 +7,100 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.tangempay.details.impl.R
 
-/** Every input the recipient and bank details steps can ask for; each step lists its own ordered subset. */
+internal sealed interface BankWithdrawFieldKind {
+
+    data class TextField(
+        val keyboardType: KeyboardType,
+        val capitalization: KeyboardCapitalization,
+    ) : BankWithdrawFieldKind
+
+    data object SelectorField : BankWithdrawFieldKind
+}
+
 internal enum class BankWithdrawFormField(
     val label: TextReference,
     val placeholder: TextReference,
-    val keyboardType: KeyboardType,
-    val capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
+    val kind: BankWithdrawFieldKind,
 ) {
     AccountNumber(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_account_number),
         placeholder = stringReference(NUMBER_PLACEHOLDER),
-        keyboardType = KeyboardType.Number,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Number, KeyboardCapitalization.None),
     ),
     RoutingNumber(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_routing_number),
         placeholder = stringReference(NUMBER_PLACEHOLDER),
-        keyboardType = KeyboardType.Number,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Number, KeyboardCapitalization.None),
     ),
     FirstName(
         label = resourceReference(R.string.tangempay_order_data_first_name),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_first_name),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Words,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
     LastName(
         label = resourceReference(R.string.tangempay_order_data_last_name),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_last_name),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Words,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
     BusinessName(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_business_name),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_business_name),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Words,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
     Country(
         label = resourceReference(R.string.tangempay_order_data_country),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_country),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Characters,
+        kind = BankWithdrawFieldKind.SelectorField,
     ),
     Region(
         label = resourceReference(R.string.tangempay_order_data_region),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_region),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Characters,
+        kind = BankWithdrawFieldKind.SelectorField,
     ),
     City(
         label = resourceReference(R.string.tangempay_order_data_city),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_city),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Words,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
     AddressLine1(
         label = resourceReference(R.string.tangempay_order_data_address_line1),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_address_line1),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Sentences,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Sentences),
     ),
     PostalCode(
         label = resourceReference(R.string.tangempay_order_data_postal_code),
         placeholder = stringReference(POSTAL_CODE_PLACEHOLDER),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Characters,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Characters),
     ),
     BankName(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_name),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_bank_name),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Words,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
     BankCountry(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_country),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_country),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Characters,
+        kind = BankWithdrawFieldKind.SelectorField,
     ),
     BankRegion(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_region),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_region),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Characters,
+        kind = BankWithdrawFieldKind.SelectorField,
     ),
     BankCity(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_city),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_city),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Words,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
     BankAddressLine1(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_address_line1),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_address_line1),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Sentences,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Sentences),
     ),
     BankPostalCode(
         label = resourceReference(R.string.tangempay_order_data_postal_code),
         placeholder = stringReference(POSTAL_CODE_PLACEHOLDER),
-        keyboardType = KeyboardType.Text,
-        capitalization = KeyboardCapitalization.Characters,
+        kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Characters),
     ),
 }
 
