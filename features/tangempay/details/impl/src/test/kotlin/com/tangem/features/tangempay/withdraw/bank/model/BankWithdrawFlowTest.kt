@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -60,6 +61,30 @@ internal class BankWithdrawFlowTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN edit route WHEN nextStep THEN null`() {
+        // Act
+        val actual = BankWithdrawFlow.nextStep(
+            entry = BankWithdrawEntry.NewPersonal,
+            current = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
+        )
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN edit route WHEN stepCounter THEN null so the header shows no counter`() {
+        // Act
+        val actual = BankWithdrawFlow.stepCounter(
+            entry = BankWithdrawEntry.NewPersonal,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.RecipientDetails),
+        )
+
+        // Assert
+        assertThat(actual).isNull()
     }
 
     data class StepsModel(val entry: BankWithdrawEntry, val expected: List<TangemPayBankWithdrawInnerRoute>)

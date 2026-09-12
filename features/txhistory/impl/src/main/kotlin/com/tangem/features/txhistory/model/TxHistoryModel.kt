@@ -329,10 +329,9 @@ internal class TxHistoryModel @Inject constructor(
 
     private fun handleErrorState(error: TxHistoryStateError) {
         when (error) {
-            is TxHistoryStateError.DataError -> stateController.setError(
-                onReloadClick = ::reload,
-                onExploreClick = ::openExplorer,
-            )
+            is TxHistoryStateError.DataError,
+            is TxHistoryStateError.AddressNotReady,
+            -> stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
             TxHistoryStateError.EmptyTxHistories -> stateController.setEmpty(onExploreClick = ::openExplorer)
             TxHistoryStateError.TxHistoryNotImplemented -> stateController.setNotSupported(
                 onExploreClick = ::openExplorer,

@@ -1,6 +1,7 @@
 package com.tangem.features.feed.rwa.categories.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -64,13 +65,12 @@ private fun SectionsContent(state: CategorySelectorUM.Content, modifier: Modifie
                 }
             }
 
-            if (state.isEdited) {
-                SpacerH(128.dp)
-            }
+            SpacerH(128.dp)
         }
 
         Footer(
             state = state.footer,
+            isEnabled = state.isEdited,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -148,32 +148,37 @@ private fun SectorsRail(tags: ImmutableList<CategorySectorUM>, modifier: Modifie
 }
 
 @Composable
-private fun Footer(state: CategorySelectorFooterUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, TangemTheme.colors3.bg.primary),
-                ),
-            )
-            .padding(all = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+private fun Footer(state: CategorySelectorFooterUM, isEnabled: Boolean, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        visible = isEnabled,
+        modifier = modifier.fillMaxWidth(),
     ) {
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Secondary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_reset),
-            onClick = state.onReset,
-        )
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            variant = TangemButton.Variant.Primary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_apply),
-            onClick = state.onApply,
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, TangemTheme.colors3.bg.primary),
+                    ),
+                )
+                .padding(all = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+        ) {
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_reset),
+                onClick = state.onReset,
+            )
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_apply),
+                onClick = state.onApply,
+            )
+        }
     }
 }
 

@@ -20,6 +20,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
         onBackClick = {},
         onValueChange = { _, _ -> },
         onFocusChange = { _, _ -> },
+        onSelectorClick = {},
         onContinueClick = {},
     )
 
@@ -27,7 +28,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
         fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
-        state = FormState(values = emptyMap()),
+        state = FormState(edits = emptyMap()),
     )
 
     val personalWithError: TangemPayBankWithdrawFormUM = create(
@@ -35,7 +36,7 @@ internal object TangemPayBankWithdrawFormPreviewData {
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
         fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
         state = FormState(
-            values = mapOf(
+            edits = mapOf(
                 BankWithdrawFormField.AccountNumber to "000000000000",
                 BankWithdrawFormField.RoutingNumber to "0210",
                 BankWithdrawFormField.FirstName to "John",
@@ -50,11 +51,18 @@ internal object TangemPayBankWithdrawFormPreviewData {
         ),
     )
 
+    val personalWithoutRegion: TangemPayBankWithdrawFormUM = create(
+        draft = personalDraft,
+        step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        state = FormState(edits = mapOf(BankWithdrawFormField.Country to "MC")),
+    )
+
     val businessBank: TangemPayBankWithdrawFormUM = create(
         draft = businessDraft,
         step = TangemPayBankWithdrawInnerRoute.BankDetails,
         fields = BankWithdrawFormFields.bankDetails,
-        state = FormState(values = mapOf(BankWithdrawFormField.BankName to "Arasaka Bank")),
+        state = FormState(edits = mapOf(BankWithdrawFormField.BankName to "Arasaka Bank")),
     )
 
     private fun create(
