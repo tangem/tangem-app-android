@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.campaign.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -11,14 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.opportunities.OpportunitiesBG
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
@@ -31,6 +32,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.campaign.TangemPayCampaignIssueCardUM
 import com.tangem.features.tangempay.common.TangemPayCampaignCardArt
@@ -38,11 +40,19 @@ import com.tangem.features.tangempay.details.impl.R
 
 @Composable
 internal fun TangemPayCampaignIssueCardScreen(state: TangemPayCampaignIssueCardUM, modifier: Modifier = Modifier) {
-    OpportunitiesBG(
-        icon = TangemIconUM.Url(url = state.cardArtUrl, fallbackRes = R.drawable.ill_tangempay_order_card_bg),
-        shape = RectangleShape,
-        modifier = modifier.fillMaxSize(),
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(TangemTheme.colors3.bg.primary),
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.ill_tangempay_campaign_card_bg),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth(),
+        )
         Column(modifier = Modifier.fillMaxSize()) {
             TangemTopNavigation(
                 title = resourceReference(R.string.tangempay_campaign_issue_card_title),
@@ -89,7 +99,7 @@ private fun ColumnScope.IssueCardDetails(state: TangemPayCampaignIssueCardUM) {
             title = resourceReference(R.string.tangempay_campaign_issue_time),
             value = resourceReference(R.string.tangempay_order_type_delivery_time_instant),
         )
-        SpacerH(16.dp)
+        SpacerH(64.dp)
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,

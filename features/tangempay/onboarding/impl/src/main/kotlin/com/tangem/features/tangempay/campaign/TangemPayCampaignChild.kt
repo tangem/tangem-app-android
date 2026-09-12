@@ -11,7 +11,7 @@ internal sealed class TangemPayCampaignChild {
     @Serializable
     data class IssueCard(
         val userWalletId: UserWalletId,
-        val cardArtUrl: String,
+        val cardArtUrl: String?,
         val feeAmount: SerializedBigDecimal,
         val feeCurrency: SerializedCurrency,
     ) : TangemPayCampaignChild()

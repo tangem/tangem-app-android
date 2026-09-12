@@ -10,7 +10,6 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
@@ -19,6 +18,7 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
+import com.tangem.features.feed.rwa.categories.RwaCategoryNames
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent
 import com.tangem.features.feed.rwa.model.list.RwaBatchFlowManager
 import com.tangem.features.feed.rwa.model.list.RwaFeaturedAssetsManager
@@ -217,7 +217,11 @@ internal class RwaFeedTabModel @Inject constructor(
         if (umbrella == null) {
             categoriesState.update { it.copy(isFailed = true) }
         } else {
-            val entry = CategorySelection.Entry(id = umbrella.id, displayName = umbrella.displayName)
+            val entry = CategorySelection.Entry(
+                id = umbrella.id,
+                displayName = umbrella.displayName,
+                code = umbrella.code,
+            )
             categoriesState.update { it.copy(rwaCategory = entry) }
             reloadList()
         }
@@ -261,9 +265,19 @@ internal class RwaFeedTabModel @Inject constructor(
                 onClick = ::openCategorySelector,
             )
 
+        val sector = selection.sector
+
         return TangemFilterItemUM.Active(
             id = CATEGORIES_FILTER_ID,
-            value = stringReference(selection.sector?.displayName ?: category.displayName),
+            value = if (sector == null) {
+                RwaCategoryNames.category(code = category.code, fallback = category.displayName)
+            } else {
+                RwaCategoryNames.sector(
+                    categoryCode = category.code,
+                    sectorCode = sector.code,
+                    fallback = sector.displayName,
+                )
+            },
             onClick = ::openCategorySelector,
             onClearClick = { onCategorySelect(CategorySelection()) },
         )

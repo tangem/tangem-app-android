@@ -12,7 +12,7 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.jointaccount.derivation.jointAccountOwnerDerivationPath
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.SafeTxTypedDataBuilder
+import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.models.account.OwnerKeyIndex
 import com.tangem.domain.models.wallet.UserWallet

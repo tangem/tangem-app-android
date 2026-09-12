@@ -21,8 +21,9 @@ import java.math.RoundingMode
 /**
  * Converts [MarketIndicators] to the state of the "Total market cap" block.
  *
- * The capitalisation is published in USD only, so it is re-formatted here into [appCurrency] and the
- * device locale instead of being displayed as the backend spells it.
+ * The backend already converts the capitalisation into the currency it was asked for, so [appCurrency]
+ * only formats it for the device locale — and must be the currency that amount was fetched with, never
+ * whichever one is selected at render time.
  */
 internal class TotalMarketCapConverter(
     private val appCurrency: AppCurrency,

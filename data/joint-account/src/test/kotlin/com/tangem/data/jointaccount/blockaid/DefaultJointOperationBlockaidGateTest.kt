@@ -11,7 +11,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.model.SafeTx
-import com.tangem.domain.jointaccount.safe.SafeTxTypedDataBuilder
+import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
 import com.tangem.domain.models.network.Network
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider

@@ -2,12 +2,9 @@ package com.tangem.features.send.send.joint
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.jointaccount.model.JointTransferIntent
-import com.tangem.domain.jointaccount.model.SafeInnerCall
-import com.tangem.domain.jointaccount.safe.Erc20TransferEncoder
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import java.math.BigDecimal
-import java.math.BigInteger
 
 internal object JointTransferIntentFactory {
 
@@ -28,18 +25,5 @@ internal object JointTransferIntentFactory {
                 amountWei = amountWei,
             )
         }
-    }
-
-    fun JointTransferIntent.toSafeInnerCall(): SafeInnerCall = when (this) {
-        is JointTransferIntent.Native -> SafeInnerCall(
-            to = recipient.lowercase(),
-            value = amountWei,
-            data = "0x",
-        )
-        is JointTransferIntent.Erc20 -> SafeInnerCall(
-            to = tokenContract.lowercase(),
-            value = BigInteger.ZERO,
-            data = Erc20TransferEncoder.encodeTransfer(recipient = recipient, amount = amountWei),
-        )
     }
 }

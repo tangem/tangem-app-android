@@ -27,6 +27,8 @@ import com.tangem.features.tangempay.withdraw.bank.availableNetwork
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
+import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.offrampOptions
 import com.tangem.features.tangempay.withdraw.bank.offrampSource
@@ -58,6 +60,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     private val usdcPolygon = paymentToken()
     private val usdcBase = paymentToken(networkId = "base", networkName = "Base", contractAddress = USDC_BASE)
     private val confirmed = mutableListOf<BankWithdrawAmountResult>()
+    private lateinit var draftFlow: MutableStateFlow<BankWithdrawDraft>
 
     @BeforeEach
     fun resetMocks() {
@@ -362,6 +365,53 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN draft with amount WHEN reopened for editing THEN amount prefilled and continue enabled`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            amount = BigDecimal("500"),
+            source = bankWithdrawSource(),
+            destination = offrampDestination(),
+        )
+        val model = createModel(
+            draft = draft,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
+        )
+
+        // Act
+        emitStatus()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.value).isEqualTo("500")
+        assertThat(state.isContinueEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN prefilled amount WHEN cleared THEN stays empty instead of reverting to the draft`() {
+        // Arrange
+        val draft = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            amount = BigDecimal("500"),
+            source = bankWithdrawSource(),
+            destination = offrampDestination(),
+        )
+        val model = createModel(
+            draft = draft,
+            step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
+        )
+        emitStatus()
+
+        // Act
+        model.uiState.value.amount.onValueChange("")
+
+        // Assert
+        assertThat(model.uiState.value.amount.value).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN options fail WHEN model created THEN error message shown and wizard closed`() {
         // Arrange
         coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
@@ -429,6 +479,34 @@ internal class TangemPayBankWithdrawAmountModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN edit step WHEN model created THEN header has no step counter`() {
+        // Act
+        val model = createModel(step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount))
+
+        // Assert
+        assertThat(model.uiState.value.header.subtitle).isNull()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN continue committed WHEN draft amount changes afterwards THEN new amount shown and reported`() {
+        // Arrange
+        val model = createModel()
+        emitStatus()
+        model.uiState.value.amount.onValueChange("500")
+        model.uiState.value.onContinueClick()
+
+        // Act
+        draftFlow.value = draftFlow.value.copy(amount = BigDecimal("700"))
+
+        // Assert
+        assertThat(model.uiState.value.amount.value).isEqualTo("700")
+        model.uiState.value.onContinueClick()
+        assertThat(confirmed.last().amount).isEqualTo(BigDecimal("700"))
+        model.onDestroy()
+    }
+
     private fun emitStatus() {
         val status = MockAccounts.createPaymentAccountStatus(
             userWalletId = userWalletId,
@@ -442,18 +520,23 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
     private fun createModel(
         draft: BankWithdrawDraft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
-    ): TangemPayBankWithdrawAmountModel = TangemPayBankWithdrawAmountModel(
-        paramsContainer = MutableParamsContainer(
-            TangemPayBankWithdrawAmountComponent.Params(
-                userWalletId = userWalletId,
-                draft = MutableStateFlow(draft),
-                onContinue = confirmed::add,
+        step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.Amount,
+    ): TangemPayBankWithdrawAmountModel {
+        draftFlow = MutableStateFlow(draft)
+        return TangemPayBankWithdrawAmountModel(
+            paramsContainer = MutableParamsContainer(
+                TangemPayBankWithdrawAmountComponent.Params(
+                    userWalletId = userWalletId,
+                    draft = draftFlow,
+                    step = step,
+                    onContinue = confirmed::add,
+                ),
             ),
-        ),
-        dispatchers = dispatchers,
-        router = router,
-        uiMessageSender = uiMessageSender,
-        paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-        getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
-    )
+            dispatchers = dispatchers,
+            router = router,
+            uiMessageSender = uiMessageSender,
+            paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+            getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
+        )
+    }
 }
