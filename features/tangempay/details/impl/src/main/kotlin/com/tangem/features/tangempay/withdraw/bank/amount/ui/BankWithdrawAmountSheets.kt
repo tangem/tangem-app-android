@@ -23,6 +23,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteItemUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.TokenItemUM
+import com.tangem.features.tangempay.withdraw.bank.ui.BankRailIcon
 
 @Composable
 internal fun BankWithdrawAmountSheets(sheet: SheetUM) {

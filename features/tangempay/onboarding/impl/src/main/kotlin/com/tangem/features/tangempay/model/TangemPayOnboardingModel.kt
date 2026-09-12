@@ -17,7 +17,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
-import com.tangem.features.tangempay.components.WalletSelectorListener
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
@@ -41,7 +41,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingStarter: TangemPayOnboardingStarter,
-) : Model(), WalletSelectorListener {
+) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
@@ -130,7 +130,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         ) {
             modelScope.launch {
                 proceedWithWallets(
-                    walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
+                    walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true),
                 )
             }
         } else {

@@ -132,6 +132,24 @@ internal class DefaultJointTransferPayloadCodecTest {
         assertThat(actual).containsExactly(null, null, null, null, null)
     }
 
+    /**
+     * Nothing decodes the recipient of a plain call — it is the call target itself, so a target the schema cannot
+     * hold would otherwise be shown as a transfer to a meaningless address and fail only at signing.
+     */
+    @Test
+    fun `GIVEN a plain call to a malformed target WHEN decoded THEN there is no transfer`() {
+        // Arrange
+        val tooShort = safeTx(to = RECIPIENT.dropLast(n = 1), value = AMOUNT, data = "0x")
+        val notHex = safeTx(to = "0x" + "z".repeat(n = 40), value = AMOUNT, data = "0x")
+        val empty = safeTx(to = "", value = AMOUNT, data = "0x")
+
+        // Act
+        val actual = listOf(codec.decode(tooShort), codec.decode(notHex), codec.decode(empty))
+
+        // Assert
+        assertThat(actual).containsExactly(null, null, null)
+    }
+
     private fun erc20() = JointTransferIntent.Erc20(
         tokenContract = TOKEN,
         recipient = RECIPIENT,
