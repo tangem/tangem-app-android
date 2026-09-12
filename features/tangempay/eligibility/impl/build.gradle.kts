@@ -18,8 +18,12 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Features api */
     api(projects.features.tangempay.eligibility.api)
+    implementation(projects.features.wallet.api)
 
     /** Domain */
     implementation(projects.domain.models)
