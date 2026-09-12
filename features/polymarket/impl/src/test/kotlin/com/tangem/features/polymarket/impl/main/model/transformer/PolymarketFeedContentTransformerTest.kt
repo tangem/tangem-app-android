@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchListState
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.main.model.RequisitesState
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
@@ -254,7 +255,7 @@ internal class PolymarketFeedContentTransformerTest {
                 .convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
-                        depositTarget = null,
+                        requisites = RequisitesState.Loading,
                         isTradingAllowed = false,
                     ),
                 ),

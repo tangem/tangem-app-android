@@ -1,4 +1,4 @@
-package com.tangem.features.tangempay.ui
+package com.tangem.features.tangempay.eligibility.wallet
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -25,11 +26,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.tangempay.onboarding.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun WalletSelectorBottomSheet(state: WalletSelectorBSContentUM) {
+internal fun TangemPayWalletSelectorBottomSheet(state: TangemPayWalletSelectorUM) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -59,7 +59,7 @@ internal fun WalletSelectorBottomSheet(state: WalletSelectorBSContentUM) {
 }
 
 @Composable
-private fun Content(state: WalletSelectorBSContentUM, modifier: Modifier = Modifier) {
+private fun Content(state: TangemPayWalletSelectorUM, modifier: Modifier = Modifier) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     Column(
@@ -93,10 +93,10 @@ private fun Content(state: WalletSelectorBSContentUM, modifier: Modifier = Modif
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewWalletSelectorBottomSheet() {
+private fun PreviewTangemPayWalletSelectorBottomSheet() {
     TangemThemePreview {
-        WalletSelectorBottomSheet(
-            state = WalletSelectorBSContentUM(
+        TangemPayWalletSelectorBottomSheet(
+            state = TangemPayWalletSelectorUM(
                 userWallets = persistentListOf(
                     UserWalletItemUM(
                         id = "1",
