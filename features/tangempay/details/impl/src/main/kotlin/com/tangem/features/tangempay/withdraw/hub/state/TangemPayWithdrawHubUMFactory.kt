@@ -7,8 +7,12 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
+import com.tangem.features.tangempay.withdraw.hub.model.RecentsState
+import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.ActionCardUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 import com.tangem.features.tangempay.withdraw.toShortName
@@ -16,7 +20,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
 
-    fun create(): TangemPayWithdrawHubUM = TangemPayWithdrawHubUM(
+    fun create(state: WithdrawHubState): TangemPayWithdrawHubUM = TangemPayWithdrawHubUM(
         swapSection = TangemPayWithdrawHubUM.SwapSectionUM(
             withinPortfolio = ActionCardUM(
                 icon = TangemIconUM.Icon(
@@ -27,7 +31,14 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
                 onClick = callbacks.onWithinPortfolioClick,
             ),
         ),
-        bankSection = TangemPayWithdrawHubUM.BankSectionUM(
+        bankSection = createBankSection(state),
+        onBackClick = callbacks.onBackClick,
+    )
+
+    private fun createBankSection(state: WithdrawHubState): BankSectionUM = when (state.options) {
+        OptionsState.Loading -> BankSectionUM.Loading
+        OptionsState.Unavailable -> BankSectionUM.Error(onRetryClick = callbacks.onRetryBankSectionClick)
+        is OptionsState.Ready -> BankSectionUM.Content(
             toPersonalAccount = ActionCardUM(
                 icon = TangemIconUM.Icon(
                     iconRes = R.drawable.ic_user_filled_16,
@@ -44,23 +55,23 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
                 title = resourceReference(R.string.tangempay_withdraw_hub_to_business_account),
                 onClick = callbacks.onToBusinessAccountClick,
             ),
-            recents = RecentsUM.Loading,
-        ),
-        onBackClick = callbacks.onBackClick,
-    )
-
-    fun createRecents(recents: List<BankAccount>, hasSavedAccounts: Boolean): RecentsUM {
-        if (recents.isEmpty()) {
-            return RecentsUM.Empty(onSeeAllClick = callbacks.onSeeAllClick.takeIf { hasSavedAccounts })
-        }
-        return RecentsUM.Content(
-            recipients = recents.map(::toRecipient).toImmutableList(),
-            onRecipientClick = callbacks.onRecentRecipientClick,
-            onSeeAllClick = callbacks.onSeeAllClick,
+            recents = createRecents(state.recents),
         )
     }
 
-    fun createRecentsError(): RecentsUM = RecentsUM.Error(onRetryClick = callbacks.onRetryRecentsClick)
+    private fun createRecents(state: RecentsState): RecentsUM = when (state) {
+        RecentsState.Loading -> RecentsUM.Loading
+        RecentsState.Failed -> RecentsUM.Error(onRetryClick = callbacks.onRetryRecentsClick)
+        is RecentsState.Loaded -> if (state.accounts.isEmpty()) {
+            RecentsUM.Empty(onSeeAllClick = callbacks.onSeeAllClick.takeIf { state.hasSavedAccounts })
+        } else {
+            RecentsUM.Content(
+                recipients = state.accounts.map(::toRecipient).toImmutableList(),
+                onRecipientClick = callbacks.onRecentRecipientClick,
+                onSeeAllClick = callbacks.onSeeAllClick,
+            )
+        }
+    }
 
     private fun toRecipient(account: BankAccount): RecentRecipientUM {
         val name = account.details.beneficiary.toShortName()
@@ -81,5 +92,6 @@ internal class TangemPayWithdrawHubUMFactory(private val callbacks: Callbacks) {
         val onRecentRecipientClick: (bankAccountId: String) -> Unit,
         val onSeeAllClick: () -> Unit,
         val onRetryRecentsClick: () -> Unit,
+        val onRetryBankSectionClick: () -> Unit,
     )
 }

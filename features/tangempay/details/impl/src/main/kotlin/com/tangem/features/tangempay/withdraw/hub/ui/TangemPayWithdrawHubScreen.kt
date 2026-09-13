@@ -39,8 +39,10 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFactory
@@ -151,55 +153,78 @@ private fun HubActionCard(state: TangemPayWithdrawHubUM.ActionCardUM, modifier: 
     }
 }
 
-private class RecentsPreviewProvider : PreviewParameterProvider<RecentsUM> {
-    override val values: Sequence<RecentsUM> = sequenceOf(
-        RecentsUM.Content(
-            recipients = persistentListOf(
-                RecentRecipientUM(
-                    id = "1",
-                    initial = "A",
-                    accent = AvatarAccent.VIOLET,
-                    name = "Andrei M.",
-                    accountNumber = "0000000000",
+private class BankSectionPreviewProvider : PreviewParameterProvider<BankSectionUM> {
+    override val values: Sequence<BankSectionUM> = sequenceOf(
+        BankSectionUM.Loading,
+        BankSectionUM.Error(onRetryClick = {}),
+        previewContent(
+            recents = RecentsUM.Content(
+                recipients = persistentListOf(
+                    RecentRecipientUM(
+                        id = "1",
+                        initial = "A",
+                        accent = AvatarAccent.VIOLET,
+                        name = "Andrei M.",
+                        accountNumber = "0000000000",
+                    ),
+                    RecentRecipientUM(
+                        id = "2",
+                        initial = "J",
+                        accent = AvatarAccent.YELLOW,
+                        name = "Johnny S.",
+                        accountNumber = "0000000000",
+                    ),
                 ),
-                RecentRecipientUM(
-                    id = "2",
-                    initial = "J",
-                    accent = AvatarAccent.YELLOW,
-                    name = "Johnny S.",
-                    accountNumber = "0000000000",
-                ),
+                onRecipientClick = {},
+                onSeeAllClick = {},
             ),
-            onRecipientClick = {},
-            onSeeAllClick = {},
         ),
-        RecentsUM.Loading,
-        RecentsUM.Empty(onSeeAllClick = null),
-        RecentsUM.Empty(onSeeAllClick = {}),
-        RecentsUM.Error(onRetryClick = {}),
+        previewContent(recents = RecentsUM.Loading),
+        previewContent(recents = RecentsUM.Empty(onSeeAllClick = null)),
+        previewContent(recents = RecentsUM.Empty(onSeeAllClick = {})),
+        previewContent(recents = RecentsUM.Error(onRetryClick = {})),
     )
 }
 
-private fun previewState(recents: RecentsUM): TangemPayWithdrawHubUM {
-    val state = TangemPayWithdrawHubUMFactory(
-        callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
-            onBackClick = {},
-            onWithinPortfolioClick = {},
-            onToPersonalAccountClick = {},
-            onToBusinessAccountClick = {},
-            onRecentRecipientClick = {},
-            onSeeAllClick = {},
-            onRetryRecentsClick = {},
-        ),
-    ).create()
-    return state.copy(bankSection = state.bankSection.copy(recents = recents))
-}
+private fun previewContent(recents: RecentsUM): BankSectionUM.Content = BankSectionUM.Content(
+    toPersonalAccount = previewActionCard(
+        iconRes = R.drawable.ic_user_filled_16,
+        titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
+    ),
+    toBusinessAccount = previewActionCard(
+        iconRes = R.drawable.ic_briefcase_filled_16,
+        titleRes = R.string.tangempay_withdraw_hub_to_business_account,
+    ),
+    recents = recents,
+)
+
+private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHubUM.ActionCardUM =
+    TangemPayWithdrawHubUM.ActionCardUM(
+        icon = TangemIconUM.Icon(iconRes = iconRes, tintReference = { TangemTheme.colors3.icon.staticDark }),
+        title = resourceReference(titleRes),
+        onClick = {},
+    )
+
+private fun previewState(bankSection: BankSectionUM): TangemPayWithdrawHubUM = TangemPayWithdrawHubUMFactory(
+    callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
+        onBackClick = {},
+        onWithinPortfolioClick = {},
+        onToPersonalAccountClick = {},
+        onToBusinessAccountClick = {},
+        onRecentRecipientClick = {},
+        onSeeAllClick = {},
+        onRetryRecentsClick = {},
+        onRetryBankSectionClick = {},
+    ),
+).create(WithdrawHubState()).copy(bankSection = bankSection)
 
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemPayWithdrawHubScreenPreview(@PreviewParameter(RecentsPreviewProvider::class) recents: RecentsUM) {
+private fun TangemPayWithdrawHubScreenPreview(
+    @PreviewParameter(BankSectionPreviewProvider::class) bankSection: BankSectionUM,
+) {
     TangemThemePreviewRedesign {
-        TangemPayWithdrawHubScreen(state = previewState(recents))
+        TangemPayWithdrawHubScreen(state = previewState(bankSection))
     }
 }
