@@ -1,0 +1,94 @@
+package com.tangem.grow.datasource.config
+
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
+import com.tangem.core.remote.header.RequestHeader
+
+import com.tangem.grow.datasource.BuildConfig
+import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.info.AppInfoProvider
+
+/** YieldSupply [ApiConfig] */
+class YieldSupply(
+    private val growEnvironmentConfig: GrowEnvironmentConfig,
+    private val cardAuthHeader: CardAuthHeaderProvider,
+    private val appInfoProvider: AppInfoProvider,
+) : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
+
+    override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
+
+    override val environmentConfigs = listOf(
+        createDevEnvironment(),
+        createStageEnvironment(),
+        createMockedEnvironment(),
+        createProdEnvironment(),
+    )
+
+    private fun getInitialEnvironment(): ApiEnvironment {
+        return when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK
+            DEBUG_BUILD_TYPE,
+            INTERNAL_BUILD_TYPE,
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+    }
+
+    private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.DEV,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(ApiEnvironment.DEV),
+    )
+
+    private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.STAGE,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(ApiEnvironment.STAGE),
+    )
+
+    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.MOCK,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(ApiEnvironment.MOCK),
+    )
+
+    private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.PROD,
+        baseUrl = "https://yield.tangem.org/",
+        headers = createHeaders(ApiEnvironment.PROD),
+    )
+
+    private fun createHeaders(apiEnvironment: ApiEnvironment) = buildMap {
+        put(key = "api-key", value = ProviderSuspend {
+            getApiKey(apiEnvironment)
+        })
+        putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
+        putAll(from = cardAuthHeader.get().values)
+    }
+
+    private fun getApiKey(apiEnvironment: ApiEnvironment): String {
+        return when (apiEnvironment) {
+            ApiEnvironment.MOCK,
+            ApiEnvironment.DEV,
+            ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_3,
+            ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
+            ApiEnvironment.STAGE_3,
+            -> growEnvironmentConfig.yieldModuleApiKeyDev
+            ApiEnvironment.PROD -> growEnvironmentConfig.yieldModuleApiKey
+        } ?: error("No tangem tech api config provided")
+    }
+
+    companion object {
+        const val KEY = "YieldSupply"
+        val ID = ApiConfig.ID(KEY)
+    }
+}

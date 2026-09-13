@@ -38,18 +38,14 @@ internal fun TangemPayActionButton(
             variant = TangemButton.Variant.Material,
             size = TangemButton.Size.X14,
             onClick = onClick,
-            iconStart = TangemIconUM.Icon(
-                iconRes = iconRes,
-                tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            iconStart = TangemIconUM.Icon(iconRes),
             isLoading = isLoading,
             isEnabled = isEnabled,
         )
-
         Text(
             text = title.resolveAnnotatedReference(),
             style = TangemTheme.typography3.subheading.medium,
-            color = TangemTheme.colors3.text.primary,
+            color = if (isEnabled) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.tertiary,
             autoSize = TextAutoSize.StepBased(
                 minFontSize = TangemTheme.typography3.caption.medium.fontSize,
                 maxFontSize = TangemTheme.typography3.subheading.medium.fontSize,
@@ -59,14 +55,30 @@ internal fun TangemPayActionButton(
     }
 }
 
+@Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemPayActionButtonPreview() {
+private fun Preview() {
     TangemThemePreviewRedesign {
-        TangemPayActionButton(
-            title = stringReference("Action"),
-            iconRes = R.drawable.ic_arrow_down_24,
-            onClick = {},
-        )
+        Column {
+            TangemPayActionButton(
+                title = stringReference("Action"),
+                iconRes = R.drawable.ic_arrow_down_24,
+                onClick = {},
+            )
+            TangemPayActionButton(
+                title = stringReference("Action"),
+                iconRes = R.drawable.ic_arrow_down_24,
+                onClick = {},
+                isEnabled = false,
+            )
+            TangemPayActionButton(
+                title = stringReference("Action"),
+                iconRes = R.drawable.ic_arrow_down_24,
+                onClick = {},
+                isEnabled = true,
+                isLoading = true,
+            )
+        }
     }
 }

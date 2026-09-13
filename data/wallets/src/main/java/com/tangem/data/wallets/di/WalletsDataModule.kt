@@ -11,10 +11,14 @@ import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotMapDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
+import com.tangem.data.wallets.store.PendingWalletCardsBackup
+import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.create
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
@@ -62,10 +66,17 @@ internal object WalletsDataModule {
     @Singleton
     fun provideWalletCardsBackupRepository(
         tangemTechApi: TangemTechApi,
+        dataStoreFactory: AppDataStoreFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
         return DefaultWalletCardsBackupRepository(
             tangemTechApi = tangemTechApi,
+            pendingStore = PendingWalletCardsBackupStore(
+                dataStore = dataStoreFactory.create(
+                    defaultValue = emptyList<PendingWalletCardsBackup>(),
+                    fileName = "pending_wallet_cards_backups",
+                ),
+            ),
             dispatchers = dispatchers,
         )
     }

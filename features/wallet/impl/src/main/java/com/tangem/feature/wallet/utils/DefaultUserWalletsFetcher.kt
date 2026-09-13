@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.features.wallet.utils.UserWalletsFetcher
@@ -40,6 +41,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     @Assisted private val onWalletClick: (UserWalletId) -> Unit,
     @Assisted private val messageSender: UiMessageSender,
     @Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean,
@@ -68,13 +70,15 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             flow2 = getBalanceHidingSettingsUseCase().distinctUntilChanged(),
             flow3 = getTotalBalanceFlow(wallets),
             flow4 = userWalletImageFetcher.walletsImage(wallets, ArtworkSize.SMALL),
-        ) { maybeAppCurrency, balanceHidingSettings, maybeBalances, artworks ->
+            flow5 = backedUpFlow(wallets),
+        ) { maybeAppCurrency, balanceHidingSettings, maybeBalances, artworks, backedUp ->
             createUiModels(
                 wallets = wallets,
                 maybeAppCurrency = maybeAppCurrency,
                 maybeBalances = maybeBalances,
                 balanceHidingSettings = balanceHidingSettings,
                 artworks = artworks,
+                backedUp = backedUp,
             )
         }
             .collectLatest { lceItems: Lce<Error, ImmutableList<UserWalletItemUM>> ->
@@ -103,12 +107,20 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
         }
     }
 
+    private fun backedUpFlow(wallets: List<UserWallet>): Flow<Map<UserWalletId, Boolean>> {
+        if (wallets.isEmpty()) return flowOf(emptyMap())
+        return combine(
+            wallets.map { wallet -> isWalletBackedUpUseCase.flow(wallet).map { wallet.walletId to it } },
+        ) { pairs -> pairs.toMap() }
+    }
+
     private fun createUiModels(
         wallets: List<UserWallet>,
         maybeAppCurrency: Either<SelectedAppCurrencyError, AppCurrency>,
         maybeBalances: Lce<TokenListError, Map<UserWalletId, TotalFiatBalance>>,
         balanceHidingSettings: BalanceHidingSettings,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
+        backedUp: Map<UserWalletId, Boolean>,
     ): Lce<Error, ImmutableList<UserWalletItemUM>> = lce {
         val balances = withError(
             transform = { Error.UnableToGetBalances },
@@ -132,7 +144,9 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
                     artwork = artworks[userWallet.walletId],
-                    endIcon = if (isAuthMode.not() && userWallet is UserWallet.Hot && !userWallet.backedUp) {
+                    endIcon = if (isAuthMode.not() && userWallet is UserWallet.Hot &&
+                        backedUp[userWallet.walletId] == false
+                    ) {
                         UserWalletItemUM.EndIcon.Warning
                     } else {
                         UserWalletItemUM.EndIcon.None

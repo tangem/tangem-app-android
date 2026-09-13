@@ -11,6 +11,6 @@ internal class DefaultSendFeatureToggles @Inject constructor(
 
     override val isTronGaslessEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.AND_16063_TRON_GASLESS_ENABLED,
+            toggle = FeatureToggles.TWI_1259_TRON_GASLESS_ENABLED,
         )
 }

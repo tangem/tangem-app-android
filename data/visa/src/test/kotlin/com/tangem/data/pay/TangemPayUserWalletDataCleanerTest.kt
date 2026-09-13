@@ -5,7 +5,7 @@ import com.tangem.data.pay.repository.TangemPayRequestPerformer
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
 import com.tangem.data.pay.store.TangemPayStorage
-import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
+import com.tangem.spend.datasource.pay.store.TangemPayTxHistoryItemsStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import io.mockk.Runs

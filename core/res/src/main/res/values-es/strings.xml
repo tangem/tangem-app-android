@@ -323,6 +323,8 @@
   <string name="common_copy">Copiar</string>
   <string name="common_copy_address">Copiar la dirección</string>
   <string name="common_create">Crear</string>
+  <string name="common_create_account">Crear cuenta</string>
+  <string name="common_crypto_account">Cuenta de criptomonedas</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">Personalizado</string>
   <plurals name="common_days">
@@ -353,6 +355,7 @@
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore historial de transacciones</string>
   <string name="common_explorer">Explorador</string>
+  <string name="common_featured">Destacado</string>
   <string name="common_fee_error">No se pudo obtener la tarifa</string>
   <string name="common_fee_selector_footer">Las tarifas de red son cargos que los usuarios pagan para procesar y confirmar transacciones. El importe de la tarifa puede verse afectado por la congestión de la red, el tamaño de la transacción y la prioridad de ejecución. %s</string>
   <string name="common_fee_selector_option_fast">Rápido</string>
@@ -363,6 +366,7 @@
   <string name="common_forget">Olvidar</string>
   <string name="common_free">Gratis</string>
   <string name="common_from">De</string>
+  <string name="common_from_wallet">Desde la billetera</string>
   <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_get">Comprar</string>
@@ -386,6 +390,8 @@
   <string name="common_in">en</string>
   <string name="common_in_progress">En progreso</string>
   <string name="common_insufficient_balance">Fondos insuficientes</string>
+  <string name="common_joint">Conjunta</string>
+  <string name="common_joint_account">Cuenta conjunta</string>
   <string name="common_later">Más tarde</string>
   <string name="common_learn_more">Más información</string>
   <string name="common_left">%1$s quedan</string>
@@ -398,7 +404,22 @@
     <item quantity="other">Hace %d minutos</item>
   </plurals>
   <string name="common_month">mes</string>
+  <string-array name="common_month_in">
+    <item>Enero</item>
+    <item>Febrero</item>
+    <item>Marzo</item>
+    <item>Abril</item>
+    <item>Mayo</item>
+    <item>Junio</item>
+    <item>Julio</item>
+    <item>Agosto</item>
+    <item>Septiembre</item>
+    <item>Octubre</item>
+    <item>Noviembre</item>
+    <item>Diciembre</item>
+  </string-array>
   <string name="common_more">Más</string>
+  <string name="common_negative">Negativo</string>
   <string name="common_network">Red</string>
   <string name="common_network_fee_title">Tarifa de la red</string>
   <string name="common_network_fee_warning_content">La cantidad enviada se reducirá en %1$s (%2$s) para cubrir el nivel de tarifa seleccionado</string>
@@ -406,6 +427,7 @@
     <item quantity="one">%d red</item>
     <item quantity="other">%d redes</item>
   </plurals>
+  <string name="common_neutral">Neutral</string>
   <string name="common_new_address">Nueva dirección</string>
   <string name="common_news">Noticias</string>
   <string name="common_next">Siguiente</string>
@@ -423,8 +445,10 @@
   <string name="common_or">o</string>
   <string name="common_origin_card">Tarjeta principal</string>
   <string name="common_origin_ring">Anillo primario</string>
+  <string name="common_other">Otros</string>
   <string name="common_passphrase">Frase de contraseña</string>
   <string name="common_paste">Pegar</string>
+  <string name="common_positive">Positivo</string>
   <string name="common_privacy_policy">Política de privacidad</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -446,6 +470,7 @@
   <string name="common_second_no_param">seg</string>
   <string name="common_see_all">Ver todo</string>
   <string name="common_seed_phrase">Seed phrase</string>
+  <string name="common_select_account">Seleccionar cuenta</string>
   <string name="common_select_action">Seleccione una acción</string>
   <string name="common_sell">Vender</string>
   <string name="common_send">Enviar</string>
@@ -494,6 +519,7 @@
   <string name="common_transfer">Transferencia</string>
   <string name="common_transferred">Transferido</string>
   <string name="common_try_again_later">Por favor, inténtelo de nuevo más tarde.</string>
+  <string name="common_type">Tipo</string>
   <string name="common_unable_to_load">No se pueden cargar los datos…</string>
   <string name="common_understand">Entiendo</string>
   <string name="common_understand_continue">Entiendo, continuar</string>
@@ -505,6 +531,7 @@
   <string name="common_value_copied">Valor copiado</string>
   <string name="common_view_all">Ver todo</string>
   <string name="common_voting">Votación</string>
+  <string name="common_wallet">Billetera</string>
   <string name="common_wallets">Billeteras</string>
   <string name="common_warning">Alerta</string>
   <string name="common_week">semana</string>
@@ -718,6 +745,15 @@
   <string name="feedback_subject_support_tangem">Comentarios en Tangem</string>
   <string name="feedback_subject_tx_failed">No se puede completar una transacción</string>
   <string name="feedback_token_description_error">Error de descripción de moneda</string>
+  <string name="for_you_description">Revise su portafolio y explore oportunidades para generar ingresos.</string>
+  <string name="for_you_earn_opportunities">Oportunidades para ganar dinero</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">Todos sus activos están en acción: explore nuevas oportunidades</string>
+  <string name="for_you_earn_opportunities_explore">Explore todos los tokens</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">Consigue hasta %1$s al año</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">Recompensas máximas posibles %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/año</string>
+  <string name="for_you_portfolio_review_title">Revisión del portafolio</string>
+  <string name="for_you_title">Para Ud.</string>
   <string name="force_update_action">Actualizar ahora</string>
   <string name="force_update_banner_message">Actualice la aplicación Tangem para desbloquear nuevas funciones y disfrutar de las últimas mejoras.</string>
   <string name="force_update_banner_title">Nueva versión disponible</string>
@@ -794,8 +830,8 @@
   <string name="hw_backup_to_upgrade_description">Para actualizar a una billetera de hardware, complete el proceso de copia de seguridad.</string>
   <string name="hw_backup_upgrade_description">Actualice su billetera móvil a una billetera de hardware Tangem para obtener la máxima seguridad. Importe su billetera o transfiera fondos a una nueva.</string>
   <string name="hw_backup_upgrade_title">Actualizar a billetera fría</string>
-  <string name="hw_cloud_backup_access_unavailable_description">Permite que Tangem utilice %1$s en la configuración de su dispositivo y, a continuación, vuelva a intentar guardar su copia de seguridad.</string>
-  <string name="hw_cloud_backup_access_unavailable_title">No puedo acceder %1$s</string>
+  <string name="hw_cloud_backup_access_unavailable_description">Permita que Tangem utilice %1$s en la configuración de su dispositivo y, a continuación, vuelva a intentar guardar su copia de seguridad.</string>
+  <string name="hw_cloud_backup_access_unavailable_title">Acceso no disponible a %1$s</string>
   <string name="hw_cloud_backup_cancel_setup_cancel">Cancelar copia de seguridad</string>
   <string name="hw_cloud_backup_cancel_setup_continue">Continuar con la copia de seguridad</string>
   <string name="hw_cloud_backup_cancel_setup_description">Su billetera no se respaldará en %s. Puede configurarlo más adelante en los ajustes de la billetera.</string>
@@ -805,7 +841,8 @@
   <string name="hw_cloud_backup_completed_title">Copia de seguridad completada</string>
   <string name="hw_cloud_backup_confirm_password_description">Se requiere una contraseña para cifrar su frase secreta en %s.</string>
   <string name="hw_cloud_backup_confirm_password_title">Confirmar contraseña</string>
-  <string name="hw_cloud_backup_consent">Entiendo que si pierdo u olvido esta contraseña, perderé el acceso a mis criptomonedas.</string>
+  <string name="hw_cloud_backup_consent">Entiendo que Tangem no puede recuperar mi contraseña de copia de seguridad. Si la pierdo, o si pierdo mi Apple ID, mi copia de seguridad será irrecuperable. Sin mi frase de recuperación, mis criptomonedas tampoco se podrán recuperar.</string>
+  <string name="hw_cloud_backup_consent_v2">Entiendo que Tangem no puede recuperar mi contraseña de copia de seguridad. Si la pierdo, o si pierdo mi %1$s, mi copia de seguridad será irrecuperable. Sin mi frase de recuperación, mis criptomonedas tampoco se podrán recuperar.</string>
   <string name="hw_cloud_backup_delete_confirm_message">No podrá restaurar esta billetera desde %s. Puede crear una nueva copia de seguridad en cualquier momento.</string>
   <string name="hw_cloud_backup_error_network">No hay conexión a internet. Compruebe su conexión de red e inténtelo de nuevo.</string>
   <string name="hw_cloud_backup_error_title">Ha surgido un problema</string>
@@ -817,7 +854,7 @@
   <string name="hw_cloud_backup_no_access_title">No puedo acceder a Google Drive.</string>
   <string name="hw_cloud_backup_no_backups_description">Inicie sesión en otra cuenta o importe su frase de recuperación.</string>
   <string name="hw_cloud_backup_not_found_create">Crear copia de seguridad</string>
-  <string name="hw_cloud_backup_not_found_description">Ya se había realizado una copia de seguridad de esta billetera, pero no hemos podido encontrar el archivo de copia de seguridad en su Google Drive.</string>
+  <string name="hw_cloud_backup_not_found_description">Ya se había hecho una copia de seguridad de esta billetera, pero no hemos podido encontrarla.</string>
   <string name="hw_cloud_backup_not_found_forget">Olvidar la copia de seguridad</string>
   <string name="hw_cloud_backup_not_found_title">No se encontró ninguna copia de seguridad</string>
   <string name="hw_cloud_backup_password_hint">Contraseña</string>
@@ -826,7 +863,7 @@
   <string name="hw_cloud_backup_permissions_description">Faltan algunos permisos. Concédenos acceso completo para que podamos guardar la copia de seguridad de su billetera en Google Drive.</string>
   <string name="hw_cloud_backup_permissions_description_v2">Faltan algunos permisos. Otorgue acceso completo para que podamos guardar la copia de seguridad de su billetera en %1$s.</string>
   <string name="hw_cloud_backup_permissions_title">Acceso completo a Google Drive</string>
-  <string name="hw_cloud_backup_permissions_title_v2">Acceso completo a %1$s</string>
+  <string name="hw_cloud_backup_permissions_title_v2">Permitir acceso completo a %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s copia de seguridad</string>
   <string name="hw_cloud_backup_removed">Copia de seguridad eliminada</string>
   <string name="hw_cloud_backup_restore_error_title">Ha surgido un problema</string>
@@ -836,11 +873,11 @@
   <string name="hw_cloud_backup_restore_passphrase_description">Introduzca la passphrase exacta para esta billetera. Se distingue entre mayúsculas y minúsculas, una frase diferente abre un conjunto diferente de direcciones.</string>
   <string name="hw_cloud_backup_restore_passphrase_title">Introduzca la passphrase</string>
   <string name="hw_cloud_backup_restore_password_button">Restaurar</string>
-  <string name="hw_cloud_backup_restore_password_description">Está restaurando %1$s desde una copia de seguridad de %2$s creada el %3$s</string>
+  <string name="hw_cloud_backup_restore_password_description">Está restaurando \"%1$s\" desde una copia de seguridad de %2$s creada en %3$s</string>
   <string name="hw_cloud_backup_restore_password_navtitle">Restaurar billetera</string>
   <string name="hw_cloud_backup_restore_password_title">Introduzca la contraseña</string>
   <string name="hw_cloud_backup_restore_use_recovery_phrase">Importar frase de recuperación</string>
-  <string name="hw_cloud_backup_restore_wrong_password">Contraseña incorrecta. Inténtelo de nuevo.</string>
+  <string name="hw_cloud_backup_restore_wrong_password">Contraseña incorrecta</string>
   <string name="hw_cloud_backup_retry">Inténtelo de nuevo</string>
   <string name="hw_cloud_backup_set_password_button">Establecer contraseña</string>
   <string name="hw_cloud_backup_set_password_description">Se requiere una contraseña para cifrar su frase de recuperación en %s.</string>
@@ -869,14 +906,14 @@
   <string name="hw_create_upgrade_description">Transfiera su billetera móvil a una tarjeta o anillo Tangem en cualquier momento, de forma segura.</string>
   <string name="hw_create_upgrade_title">Actualización a billetera de hardware</string>
   <string name="hw_import_existing_wallet">Importar billetera existente</string>
-  <string name="hw_import_existing_wallet_description">Siga utilizando una cartera que ya tenga importándola o restaurándola</string>
+  <string name="hw_import_existing_wallet_description">Siga utilizando una billetera que ya tenga importándola o restaurándola</string>
   <string name="hw_import_restore_cloud_backup">Restaurar una copia de seguridad de %s</string>
   <string name="hw_import_restore_cloud_backup_not_found">%s No se encontró ninguna copia de seguridad</string>
   <string name="hw_import_seed_phrase_already_imported">Esta frase de recuperación ya ha sido importada</string>
   <string name="hw_mobile_wallet">Billetera móvil</string>
   <string name="hw_remove_wallet_action_forget_title">Olvidar billetera</string>
   <string name="hw_remove_wallet_attention_description">Esta billetera se eliminará permanentemente de su dispositivo.</string>
-  <string name="hw_remove_wallet_cloud_backup_description">La billetera se eliminará de este dispositivo. %s La copia de seguridad permanece a salvo: puede restaurar esta billetera en cualquier momento con su contraseña.</string>
+  <string name="hw_remove_wallet_cloud_backup_description">La billetera se eliminará de este dispositivo. La copia de seguridad %s permanece a salvo: puede restaurar esta billetera en cualquier momento con su contraseña.</string>
   <string name="hw_remove_wallet_cloud_backup_title">¿Olvidar esta billetera?</string>
   <string name="hw_remove_wallet_confirmation_title">¿Está seguro que desea hacer esto?</string>
   <string name="hw_remove_wallet_confirmation_with_cloud_backup">Si olvida esta billetera, también se eliminará su copia de seguridad de Google Drive. Asegúrese de poder acceder a su frase de recuperación; esta acción es irreversible.</string>
@@ -891,7 +928,7 @@
   <string name="hw_remove_wallet_notification_description_has_backup_v2">Existe una copia de seguridad de esta billetera. Revísela antes de olvidarla para asegurarse de poder recuperarla más adelante.</string>
   <string name="hw_remove_wallet_notification_description_without_backup">Si olvida esta billetera sin una copia de seguridad, perderá permanentemente el acceso a sus fondos.</string>
   <string name="hw_remove_wallet_notification_title">¿Estás seguro de que desea olvidar esta billetera?</string>
-  <string name="hw_remove_wallet_notification_title_v2">¿Olvidaste esta billetera?</string>
+  <string name="hw_remove_wallet_notification_title_v2">¿Olvidar esta billetera?</string>
   <string name="hw_remove_wallet_warning_access">Entiendo que si no he hecho una copia de seguridad de mi billetera antes de eliminarla, perderé el acceso a ella.</string>
   <string name="hw_remove_wallet_warning_device">Entiendo que quitar mi billetera no la borra, solo la elimina de mi dispositivo.</string>
   <string name="hw_upgrade">Actualizar</string>
@@ -908,7 +945,7 @@
   <string name="hw_upgrade_key_migration_description">Las claves privadas se transferirán de la aplicación a su billetera de hardware Tangem</string>
   <string name="hw_upgrade_key_migration_title">Migración de claves</string>
   <string name="hw_upgrade_save_seed_action">Guardar frase de recuperación</string>
-  <string name="hw_upgrade_save_seed_description">Tras la actualización, ya no podrá volver a verlo. Su billetera móvil y la copia de seguridad en la nube se borrarán, así que anótelo ahora como método de recuperación de la copia de seguridad.</string>
+  <string name="hw_upgrade_save_seed_description">Tras la actualización, ya no podrá volver a verla. Su billetera móvil y la copia de seguridad en la nube se borrarán, así que anótela ahora como método de recuperación.</string>
   <string name="hw_upgrade_save_seed_title">Guarde su frase de recuperación antes de actualizar.</string>
   <string name="hw_upgrade_scan_device">Escanear dispositivo</string>
   <string name="hw_upgrade_start_action">Iniciar actualización</string>
@@ -970,6 +1007,10 @@
   <string name="manage_tokens_unavailable_description">El token seleccionado no está disponible actualmente para acciones dentro de la billetera cripto. Pero no se preocupa, puede expresar su interés votando a favor.</string>
   <string name="manage_tokens_unavailable_vote">Votar a favor</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">La billetera no admite más de una red</string>
+  <string name="market_chart_bubble_no_amount">Sin tokens \n/ valor de activos</string>
+  <string name="market_chart_bubble_total_value">Valor total</string>
+  <string name="market_chart_can_not_load_data">No se pudieron cargar los datos</string>
+  <string name="market_chart_no_amount">Sin tokens o valor desconocido</string>
   <string name="markets_about_coin_header">Sobre la moneda</string>
   <string name="markets_add_to_my_portfolio_description">Para comprar, intercambiar o recibir este activo, agréguelo a su portafolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Este activo no está disponible en la billetera</string>
@@ -1873,7 +1914,7 @@
   <string name="tangem_pay_freeze_card_alert_body">Mantén tu dinero seguro. Puedes desbloquear en cualquier momento.</string>
   <string name="tangem_pay_freeze_card_alert_title">¿Congelar tu tarjeta?</string>
   <string name="tangem_pay_freeze_card_failed">No se pudo congelar la tarjeta. Inténtalo de nuevo más tarde.</string>
-  <string name="tangem_pay_freeze_card_freeze">Mantén tu dinero seguro. Puedes desbloquear en cualquier momento.</string>
+  <string name="tangem_pay_freeze_card_freeze">Congelar</string>
   <string name="tangem_pay_freeze_card_success">Tu tarjeta está congelada.</string>
   <string name="tangem_pay_freeze_card_unfreeze">Descongelar</string>
   <string name="tangem_pay_get_help">Obtener ayuda</string>
@@ -1895,7 +1936,7 @@
   <string name="tangem_pay_transaction_details_cashback_below_min">Importe mín.</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">Límite mensual alcanzado</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC excluido</string>
-  <string name="tangem_pay_transaction_details_cashback_none">Sin cashback</string>
+  <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">Devolución de compra</string>
   <string name="tangem_pay_transaction_details_cashback_region_excluded">Región excluida</string>
   <string name="tangem_pay_transaction_details_category">Categoría</string>
@@ -1914,6 +1955,8 @@
   <string name="tangempay_account_unable_to_use_rooted">No se puede usar en un dispositivo rooteado</string>
   <string name="tangempay_available_balance">Saldo</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_error_subtitle">Toca para recargar</string>
+  <string name="tangempay_bank_transfer_fee_error_title">Error al cargar la información de la comisión</string>
   <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
   <string name="tangempay_bank_transfer_fee_header">Comisión de onramp</string>
   <string name="tangempay_bank_transfer_intro_subtitle">Los USD recibidos se convierten a USDC a 1:1</string>
@@ -1923,8 +1966,23 @@
   <string name="tangempay_bank_transfer_success_subtitle">Esto puede tardar un poco</string>
   <string name="tangempay_bank_transfer_success_title">Preparando sus datos bancarios</string>
   <string name="tangempay_bank_transfer_swift_warning">No se aceptan transferencias SWIFT; se devolverán los fondos</string>
+  <string name="tangempay_bank_transfer_terms_of_use">Términos del servicio</string>
   <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">Contacta con el soporte</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">Has superado el número de intentos de activación</string>
+  <string name="tangempay_card_activation_description">Introduce los últimos 4 dígitos del número de tu tarjeta</string>
+  <string name="tangempay_card_activation_error">Dígitos incorrectos. Inténtalo de nuevo</string>
+  <string name="tangempay_card_activation_error_already_active">Esta tarjeta ya está activa.</string>
+  <string name="tangempay_card_activation_error_in_progress">La activación ya está en curso. Espera un momento.</string>
+  <string name="tangempay_card_activation_error_not_physical">Esta no es una tarjeta física</string>
+  <string name="tangempay_card_activation_error_not_ready">Esta tarjeta aún no está lista para activarse. Inténtalo de nuevo cuando la recibas.</string>
+  <string name="tangempay_card_activation_in_progress">Activando tu tarjeta</string>
   <string name="tangempay_card_default_name">Tarjeta Tangem Pay 1</string>
+  <string name="tangempay_card_delivery_banner_description">Actívala cuando llegue</string>
+  <string name="tangempay_card_delivery_banner_description_many">Actívalas cuando lleguen</string>
+  <string name="tangempay_card_delivery_banner_title">Tu tarjeta está en camino</string>
+  <string name="tangempay_card_delivery_banner_title_many">Tus tarjetas están en camino</string>
+  <string name="tangempay_card_details_activate">Activar tarjeta</string>
   <string name="tangempay_card_details_add_funds">Agregar fondos</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opciones de recarga</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Añadir a Google Wallet</string>
@@ -1936,11 +1994,13 @@
   <string name="tangempay_card_details_change_pin_success_description">La tarjeta está completamente lista para pagos.</string>
   <string name="tangempay_card_details_change_pin_success_title">Código PIN creado</string>
   <string name="tangempay_card_details_cvc">CVC</string>
+  <string name="tangempay_card_details_delivery_description">Tu tarjeta está en camino. Recibirás actualizaciones de la empresa de mensajería en %s</string>
   <string name="tangempay_card_details_error_text">Error al cargar datos. Inténtalo de nuevo más tarde.</string>
   <string name="tangempay_card_details_expiry">Expira</string>
   <string name="tangempay_card_details_freeze_card">Congelar tarjeta</string>
   <string name="tangempay_card_details_hide_details">Ocultar detalles</string>
   <string name="tangempay_card_details_hide_text">Ocultar</string>
+  <string name="tangempay_card_details_name_on_card">Nombre del titular</string>
   <string name="tangempay_card_details_open_wallet_button">Abrir Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Configura Tangem Pay en unos pocos toques y empieza a pagar con Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Configura Tangem Pay en unos pocos toques y empieza a pagar con Apple Pay</string>
@@ -1982,6 +2042,7 @@
   <string name="tangempay_card_edit_name_placeholder">Nombre de la tarjeta</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Establecer un límite desde %s</string>
   <string name="tangempay_card_limit_setup_error_message">No se pudo establecer el límite. Por favor, inténtalo de nuevo.</string>
+  <string name="tangempay_card_page_activating_banner_title">Activando tu tarjeta física</string>
   <string name="tangempay_card_page_closing_banner_description">Normalmente tarda unos 5 minutos</string>
   <string name="tangempay_card_page_closing_banner_title">Cerrando su tarjeta</string>
   <string name="tangempay_card_page_daily_limit_change">Cambiar</string>
@@ -1999,7 +2060,7 @@
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">Procesamos las compras en 5 días y contamos solo las transacciones completadas</string>
   <string name="tangempay_cashback_accruals_calc_title">¿Cómo calculamos el cashback?</string>
-  <string name="tangempay_cashback_accruals_exceptions_description">Sin cashback por compras presenciales en la UE, ni por retiros, transferencias, cuasi-efectivo, facturas móviles, servicios públicos y otras categorías</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">Actualmente no se aplica cashback en pagos presenciales por terminal (TPV) en tiendas físicas de la UE. Tampoco aplica para retiros de efectivo, operaciones de casi-efectivo, recargas de móvil, trámites públicos ni ciertas categorías adicionales.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Excepciones</string>
   <string name="tangempay_cashback_accruals_pay_description">Del 2 al 5 del mes siguiente</string>
   <string name="tangempay_cashback_accruals_pay_title">¿Cómo pagamos el cashback?</string>
@@ -2013,20 +2074,26 @@
   <string name="tangempay_cashback_deposit_banner">Cashback %1$s por %2$s se depositará antes del %3$s</string>
   <string name="tangempay_cashback_deposited_on">Se deposita el %1$s</string>
   <string name="tangempay_cashback_details_cap">%1$s máx/mes</string>
-  <string name="tangempay_cashback_details_eu_excluded">Sin cashback por compras presenciales en la UE</string>
+  <string name="tangempay_cashback_details_eu_excluded">Actualmente, sin cashback por compras presenciales en la UE</string>
   <string name="tangempay_cashback_details_paid_in">Pagado en %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% en compras con tarjetas %2$s, compra mín. %3$s</string>
   <string name="tangempay_cashback_earned_title">%1$s ganado en %2$s</string>
   <string name="tangempay_cashback_empty_subtitle">El importe acumulado se mostrará aquí</string>
   <string name="tangempay_cashback_empty_title">Gaste\\ny gane cashback</string>
   <string name="tangempay_cashback_error_title">Error al cargar.\\nToque para recargar</string>
+  <string name="tangempay_cashback_menu_item_loading">Cargando...</string>
+  <string name="tangempay_cashback_menu_item_title">Cashback en %s</string>
   <string name="tangempay_cashback_rate_subtitle">Con su plan %1$s</string>
   <string name="tangempay_cashback_rate_title">Cashback %1$s%%</string>
   <string name="tangempay_cashback_rate_title_up_to">Cashback hasta %1$s%%</string>
   <string name="tangempay_cashback_refund_banner">Reembolso recibido por una compra ya acreditada en cashback</string>
   <string name="tangempay_cashback_title">Cashback</string>
   <string name="tangempay_cashback_total_earned">%1$s ganado en total</string>
-  <string name="tangempay_cashback_widget_title">%1$s de cashback en %2$s</string>
+  <string name="tangempay_cashback_widget_empty_description">Empieza a gastar y gana cashback</string>
+  <string name="tangempay_cashback_widget_error_description">Toca para recargar</string>
+  <string name="tangempay_cashback_widget_error_title">Cashback no disponible</string>
+  <string name="tangempay_cashback_widget_refund_description">Reducido por devolución de compras</string>
+  <string name="tangempay_cashback_widget_title">%1$s en %2$s</string>
   <string name="tangempay_change_pin_code">Cambiar código PIN</string>
   <string name="tangempay_changing_plan">Cambiando plan</string>
   <string name="tangempay_choose_network_fast_way">Vía rápida</string>
@@ -2035,10 +2102,12 @@
   <string name="tangempay_choose_network_row_loading">Preparando dirección…</string>
   <string name="tangempay_come_back_if_forget_pin">Vuelve a la app si lo olvidas.</string>
   <string name="tangempay_common_card">Tarjeta</string>
-  <string name="tangempay_common_error_loading">Error al cargar</string>
+  <string name="tangempay_common_error_loading">—</string>
   <string name="tangempay_current_plan_active_till_notification">Plan %1$s activo hasta %2$s, luego pasará a %3$s. No se cobrará %4$s.</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">Estamos cambiando su plan a %s y esperando el pago de la tarifa</string>
   <string name="tangempay_current_plan_change">Cambiar plan</string>
   <string name="tangempay_current_plan_fee_charged_notification">Cuota mensual de %1$s se cobrará el %2$s</string>
+  <string name="tangempay_current_plan_full_terms">Términos completos</string>
   <string name="tangempay_current_plan_section_card">Tarjeta</string>
   <string name="tangempay_current_plan_section_plan">Plan</string>
   <string name="tangempay_current_plan_stay_button">Permanecer en %1$s</string>
@@ -2072,7 +2141,7 @@
   <string name="tangempay_failed_to_issue_card_support_description">Ha ocurrido un error técnico, por favor contacta con el soporte</string>
   <string name="tangempay_feature_will_be_available_soon">Estará disponible pronto</string>
   <string name="tangempay_feature_will_be_available_soon_description">Podrás emitir tarjetas adicionales para tu cuenta de pago</string>
-  <string name="tangempay_get_banner_description">Obtén tu tarjeta virtual Tangem Visa gratuita</string>
+  <string name="tangempay_get_banner_description">Tarjeta Tangem Pay gratis con hasta un 2% de cashback</string>
   <string name="tangempay_get_tangem_pay">Obtener Tangem Pay</string>
   <string name="tangempay_go_to_support">Ir a Soporte</string>
   <string name="tangempay_issue_additional_card_description">Genera un nuevo conjunto de datos de la tarjeta</string>
@@ -2088,16 +2157,16 @@
   <string name="tangempay_issuing_your_card_description">La tarjeta suele emitirse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, la emisión puede tardar hasta 48 horas.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirmar cancelación</string>
-  <string name="tangempay_kyc_confirm_cancellation_description">¿Seguro que desea detener el proceso KYC? Puede retomarlo en cualquier momento.</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">¿Seguro que quieres interrumpir la verificación? Puedes retomarla en cualquier momento.</string>
   <string name="tangempay_kyc_failed_description">No pudimos verificar tu perfil. Si tienes alguna pregunta, contacta con el soporte.</string>
   <string name="tangempay_kyc_failed_title">Lamentablemente, no pudimos verificar tu identidad</string>
-  <string name="tangempay_kyc_has_failed">KYC rechazado</string>
-  <string name="tangempay_kyc_in_progress">KYC en curso</string>
+  <string name="tangempay_kyc_has_failed">Verificación rechazado</string>
+  <string name="tangempay_kyc_in_progress">Verificación en curso</string>
   <string name="tangempay_kyc_in_progress_notification_button">Ver estado</string>
-  <string name="tangempay_kyc_in_progress_notification_title">KYC en progreso para Tangem Pay</string>
+  <string name="tangempay_kyc_in_progress_notification_title">Verificación en progreso para Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Los documentos suelen verificarse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, el proceso puede tardar hasta 48 horas.</string>
   <string name="tangempay_kyc_rejected">Rechazado</string>
-  <string name="tangempay_kyc_rejected_button_text">Ocultar el bloque KYC</string>
+  <string name="tangempay_kyc_rejected_button_text">Ocultar verificación</string>
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
   <string name="tangempay_main_select_plan">Seleccionar plan</string>
@@ -2106,14 +2175,16 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">Límite de tarjetas alcanzado para este plan</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Mejorar plan</string>
   <string name="tangempay_maximum_cards_issued_title">Número máximo de tarjetas emitidas</string>
-  <string name="tangempay_newonboard_Q1_body">Sí — para usar una tarjeta Visa regulada, la verificación de identidad es obligatoria. El KYC lo gestiona Sumsub, socio de compliance.</string>
-  <string name="tangempay_newonboard_Q1_title">¿Tengo que compartir mis documentos?</string>
-  <string name="tangempay_newonboard_Q2_body">No. El KYC se aplica solo a la cuenta Tangem Pay. Tu Tangem Wallet sigue siendo un entorno independiente, de autocustodia y sin KYC.</string>
-  <string name="tangempay_newonboard_Q2_title">¿El KYC se vincula con mi wallet?</string>
-  <string name="tangempay_newonboard_Q3_body">Sumsub — un proveedor global de KYC regulado y de confianza para más de 4,000 instituciones financieras — verifica tu identidad y guarda los resultados de forma segura conforme a las normas ISO 27001 y SOC 2.</string>
-  <string name="tangempay_newonboard_Q3_title">¿Quién almacena mis datos personales y cómo se protegen?</string>
-  <string name="tangempay_newonboard_Q4_body">El saldo de la tarjeta está denominado en USDC en Polygon, pero puedes recargarlo con cualquier activo (USDT, SOL, ETH, BTC, XRP, etc.) usando los swaps integrados de Tangem.</string>
-  <string name="tangempay_newonboard_Q4_title">¿Qué cripto puedo gastar?</string>
+  <string name="tangempay_multichain_show_qr">Mostrar QR</string>
+  <string name="tangempay_multinetwork">USD</string>
+  <string name="tangempay_newonboard_Q1_body">Recarga tu cuenta de pagos con USDT o USDC desde cualquier red y sin comisiones. En Ethereum, Base, Polygon, BSC y Arbitrum, también tendrás una tasa de 1:1.</string>
+  <string name="tangempay_newonboard_Q1_title">¿Qué cripto puedo gastar?</string>
+  <string name="tangempay_newonboard_Q2_body">Sí, se requiere una verificación de identidad para usar una tarjeta Visa regulada. La verificación la realiza Sumsub, nuestro socio de cumplimiento normativo.</string>
+  <string name="tangempay_newonboard_Q2_title">¿Tengo que compartir mis documentos?</string>
+  <string name="tangempay_newonboard_Q3_body">No. La verificación solo se aplica a tu cuenta de Tangem Pay. Tu Tangem Wallet sigue siendo independiente, de autocustodia y no está vinculada a tu identidad. Solo se utiliza como clave de acceso a la cuenta de pagos.</string>
+  <string name="tangempay_newonboard_Q3_title">¿La verificación está vinculada a mi billetera, activos o direcciones?</string>
+  <string name="tangempay_newonboard_Q4_body">Sumsub — un proveedor global de KYC regulado y de confianza para más de 4,000 instituciones financieras — verifica tu identidad y guarda los resultados de forma segura conforme a las normas ISO 27001 y SOC 2.</string>
+  <string name="tangempay_newonboard_Q4_title">¿Quién almacena mis datos personales y cómo se protegen?</string>
   <string name="tangempay_newonboard_body">Gasta cripto en cualquier lugar — sin bancos, sin intermediarios y sin exchanges. El poder de la autocustodia unido a los pagos del día a día.</string>
   <string name="tangempay_newonboard_bottomleft_body">Compra online y con Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">En todo el mundo</string>
@@ -2124,8 +2195,8 @@
   <string name="tangempay_newonboard_topleft_title">Sin comisiones por compra</string>
   <string name="tangempay_newonboard_topright_body">Sin sorpresas</string>
   <string name="tangempay_newonboard_topright_title">$0 al mes,\n$0 de recarga</string>
-  <string name="tangempay_onboarding_banner_description">Obtén tu tarjeta virtual Tangem Visa gratuita</string>
-  <string name="tangempay_onboarding_banner_title">Usa USDC para pagos cotidianos</string>
+  <string name="tangempay_onboarding_banner_description">Tarjeta Tangem Pay gratis con hasta un 2% de cashback</string>
+  <string name="tangempay_onboarding_banner_title">Gaste sus criptos en el día a día</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtener tarjeta</string>
   <string name="tangempay_onboarding_pay_description">Con tarjeta digital que funciona con Apple Pay y Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Gasta tus activos en cualquier lugar</string>
@@ -2136,10 +2207,59 @@
   <string name="tangempay_onboarding_setup_wallet_description">Y vincularemos Tangem Pay a esta wallet</string>
   <string name="tangempay_onboarding_setup_wallet_title">Crearemos una nueva wallet</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
+  <string name="tangempay_order_card_error_active_order">Ya hay un pedido de tarjeta en curso.</string>
+  <string name="tangempay_order_card_error_insufficient_balance">Fondos insuficientes para el envío. Agrega fondos e inténtalo de nuevo.</string>
+  <string name="tangempay_order_card_error_invalid_address">Comprueba la dirección de envío e inténtalo de nuevo.</string>
+  <string name="tangempay_order_card_error_invalid_source_card">Esta tarjeta no se puede reemplazar.</string>
+  <string name="tangempay_order_card_error_offer_unavailable">Esta tarjeta ya no está disponible.</string>
+  <string name="tangempay_order_data_address_line1">Dirección línea 1</string>
+  <string name="tangempay_order_data_address_line2">Dirección línea 2</string>
+  <string name="tangempay_order_data_city">Ciudad</string>
+  <string name="tangempay_order_data_clear_field">Borrar campo</string>
+  <string name="tangempay_order_data_country">País</string>
+  <string name="tangempay_order_data_email">Correo electrónico</string>
+  <string name="tangempay_order_data_field_invalid">Texto no válido</string>
+  <string name="tangempay_order_data_field_latin_only">Usa solo caracteres latinos</string>
+  <string name="tangempay_order_data_field_optional">Opcional</string>
+  <string name="tangempay_order_data_field_required">Campo obligatorio</string>
+  <string name="tangempay_order_data_first_name">Nombre</string>
+  <string name="tangempay_order_data_last_name">Apellidos</string>
+  <string name="tangempay_order_data_name_on_card">Nombre en la tarjeta</string>
+  <string name="tangempay_order_data_order_button">Solicitar tarjeta</string>
+  <string name="tangempay_order_data_phone">Teléfono</string>
+  <string name="tangempay_order_data_postal_code">Código postal</string>
+  <string name="tangempay_order_data_region">Región</string>
+  <string name="tangempay_order_data_subtitle">Comprueba los datos</string>
+  <string name="tangempay_order_data_success_title">Tarjeta solicitada</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="one">La entrega tarda hasta %d día hábil</item>
+    <item quantity="other">La entrega tarda hasta %d días hábiles</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">En un plazo de 3 días hábiles, recibirá un correo de la empresa de mensajería en %s</string>
+  <string name="tangempay_order_success_show_card">Mostrar tarjeta</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">País de residencia</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="one">Hasta %d día hábil</item>
+    <item quantity="other">Hasta %d días hábiles</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d días hábiles</string>
+  <string name="tangempay_order_type_delivery_fee">Coste de envío</string>
+  <string name="tangempay_order_type_delivery_time">Plazo de entrega</string>
+  <string name="tangempay_order_type_delivery_time_instant">Instantáneo</string>
+  <string name="tangempay_order_type_delivery_to">Envío a</string>
+  <string name="tangempay_order_type_first_delivery_free">Primer envío gratis</string>
+  <string name="tangempay_order_type_issue_fee">Comisión de emisión</string>
+  <string name="tangempay_order_type_not_enough_money">Fondos insuficientes</string>
+  <string name="tangempay_order_type_segment_plastic">Física</string>
+  <string name="tangempay_order_type_segment_virtual">Virtual</string>
+  <string name="tangempay_order_type_select">Seleccionar</string>
+  <string name="tangempay_order_type_title">Solicitar nueva tarjeta</string>
+  <string name="tangempay_order_type_unavailable">No disponible</string>
   <string name="tangempay_other_networks_header">Otras redes</string>
-  <string name="tangempay_other_networks_subtitle">Luego cámbielo a la cuenta de pago a 1:1 sin comisiones</string>
-  <string name="tangempay_other_networks_title">Envíe USDT/USDC en cualquier red a su Tangem Wallet</string>
-  <string name="tangempay_pay_support">Soporte Pay</string>
+  <string name="tangempay_other_networks_subtitle">Luego cámbielo a la cuenta de pago sin comisiones</string>
+  <string name="tangempay_other_networks_title">Envíe USDT/USDC en cualquier EVM-red a su Tangem Wallet</string>
+  <string name="tangempay_pay_support">Soporte</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
@@ -2153,6 +2273,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Deposita USDC en la cuenta de pago para cubrir la comisión de emisión</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">No se pudo cubrir la comisión</string>
   <string name="tangempay_reissue_card_title">¿Reemitir tu tarjeta?</string>
+  <string name="tangempay_reissue_plastic_description">Tu tarjeta física actual se cerrará de inmediato. Recibirás una nueva tarjeta física con nuevos datos.</string>
+  <string name="tangempay_reissue_plastic_title">¿Reemplazar la tarjeta física?</string>
   <string name="tangempay_remove_account">Eliminar cuenta</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay se eliminará de la pantalla principal y no volverá a aparecer, incluso después de reinstalar la aplicación.</string>
   <string name="tangempay_remove_account_alert_title">¿Eliminar cuenta?</string>
@@ -2185,11 +2307,11 @@
   <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_button">Restablecer acceso</string>
   <string name="tangempay_sync_needed_title">Tangem Pay sesión expirada</string>
-  <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
+  <string name="tangempay_tangem_visa_card">Gaste sus criptos en el día a día</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">Reciba USD vía ACH</string>
-  <string name="tangempay_topup_bank_transfer_title">Transferencia bancaria</string>
+  <string name="tangempay_topup_bank_transfer_body">Recibir USD desde una cuenta bancaria mediante ACH/FedWire</string>
+  <string name="tangempay_topup_bank_transfer_title">Desde una cuenta bancaria</string>
   <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
   <string name="tangempay_topup_receive_body_multichain">Envíe USDC o USDT a la dirección de su cuenta</string>
   <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
@@ -2202,8 +2324,7 @@
   <string name="tangempay_va_banking_details_error_title">No se pudieron cargar los datos bancarios</string>
   <string name="tangempay_va_limit_resetting_everyday">El límite se restablece a diario</string>
   <string name="tangempay_visa_benefits">Visa Benefits</string>
-  <string name="tangempay_withdrawal_note_description">Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain Polygon ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras</string>
-  <string name="tangempay_withdrawal_note_title">Tenga en cuenta</string>
+  <string name="tangempay_withdraw_hub_recents_empty">Sus tarjetas %1$s se cerrarán</string>
   <string name="tangempay_your_pin_code">Tu código PIN</string>
   <string name="this_is_my_wallet_title">Esta es mi billetera</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>
@@ -2244,18 +2365,18 @@
   <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Mostrar código QR</string>
   <string name="token_summary_can_not_load_token">No se pueden cargar los datos del token.</string>
-  <string name="token_summary_galaxy_score_description">Galaxy Score combina el rendimiento del mercado y la actividad en las redes sociales en una única puntuación del 0 al 100 que refleja el estado general del activo. Fuente: LunarCrush.</string>
+  <string name="token_summary_galaxy_score_description">El Galaxy Score™ combina el rendimiento del activo, el sentimiento y la actividad social en una única puntuación de 0 a 100 que refleja la salud general del activo.\n\nUn Galaxy Score™ más alto indica que el activo registra un fuerte interés y un sentimiento positivo.\n\nLógica de interpretación:\nPositivo ≧70\nNeutral 31–69\nNegativo ≦30\n\nFuente: lunarcrush.com\nSolo a título informativo. No constituye asesoramiento de inversión.</string>
   <string name="token_summary_go_to_swap_button">Ir a intercambiar</string>
   <string name="token_summary_last_update_subtitle">Última actualización: %1$s</string>
-  <string name="token_summary_ma_cross_description">El MA Cross compara los precios medios de 50 y 200 días para mostrar si el activo cotiza por encima o por debajo de su tendencia a largo plazo. Fuente: taapi.io.</string>
-  <string name="token_summary_macd_description">El indicador MACD compara el impulso de precios a corto y largo plazo para mostrar si el impulso de un activo se está fortaleciendo o debilitando. Fuente: taapi.io.</string>
+  <string name="token_summary_ma_cross_description">El MA Cross (cruce de medias móviles) es un indicador de análisis técnico que compara las medias móviles simples de 50 y de 200 días del precio del activo. Muestra si el activo cotiza por encima o por debajo de su tendencia a largo plazo.\n\nLógica de interpretación:\nPositivo: la SMA de 50 supera a la SMA de 200 en más de un 0,5 %\nNeutral: la diferencia entre ambas es inferior al 0,5 %\nNegativo: la SMA de 50 está por debajo de la SMA de 200 en más de un 0,5 %\n\nImportante:\nIndicador calculado sobre el feed de precios en USD.\nSe utilizan periodos de 1 día independientemente del intervalo seleccionado.\nSe muestra el porcentaje en el que la SMA de 50 está por encima o por debajo de la SMA de 200.\n\nFuente: taapi.io\nSolo a título informativo. No constituye asesoramiento de inversión.</string>
+  <string name="token_summary_macd_description">El MACD (Convergencia/Divergencia de Medias Móviles) es un indicador de análisis técnico que busca mostrar si el impulso del activo se está fortaleciendo o debilitando.\n\nEl histograma MACD es la línea MACD menos la línea de señal. La línea MACD es la diferencia entre las medias móviles exponenciales de 12 y de 26 periodos del precio. La línea de señal es la media móvil exponencial de 9 periodos.\n\nLógica de interpretación:\nPositivo: histograma &gt; 0 y en aumento, o acaba de cruzar por encima de 0\nNegativo: histograma &lt; 0 y en descenso, o acaba de cruzar por debajo de 0\nNeutral: cualquier otro estado\n\nNotas de cálculo:\nIndicador calculado sobre el feed de precios en USD.\nPeriodos utilizados: día — 1 h, semana — 4 h, mes — 1 d.\nSe muestra el último valor del histograma MACD.\n\nFuente: taapi.io\nSolo a título informativo. No constituye asesoramiento de inversión.</string>
   <string name="token_summary_negative_outlook_title">Perspectiva negativa</string>
   <string name="token_summary_neutral_outlook_title">Perspectiva neutral</string>
   <string name="token_summary_outlook_is_not_available">No hay previsiones disponibles para este token.</string>
   <string name="token_summary_positive_outlook_title">Perspectiva positiva</string>
-  <string name="token_summary_rsi_description">El RSI (Índice de Fuerza Relativa) mide si un activo ha sido objeto de un volumen excesivo de compras o ventas en los últimos 14 períodos, lo que permite detectar posibles situaciones de sobrecompra o sobreventa. Fuente: taapi.io.</string>
-  <string name="token_summary_sentiment_description">El índice de sentimiento evalúa el tono de las publicaciones en redes sociales sobre el activo en una escala del 1 al 5, en la que una puntuación más alta indica un debate más positivo. Fuente: LunarCrush.</string>
-  <string name="token_summary_title">Resumen del token</string>
+  <string name="token_summary_rsi_description">El RSI (Índice de Fuerza Relativa) es un indicador de análisis técnico que mide la velocidad y la magnitud de las variaciones recientes del precio. Puede indicar si un activo se ha comprado o vendido en exceso durante los últimos 14 periodos, señalando posibles condiciones de sobrecompra o sobreventa. Cuanto más bajo es el RSI, mayor es el potencial de subida.\n\nLógica de interpretación:\nPositivo ≦30\nNeutral 30–70\nNegativo ≧70\n\nNotas de cálculo:\nIndicador calculado sobre el feed de precios en USD.\nPeriodos utilizados: día — 1 h, semana — 4 h, mes — 1 d.\n\nFuente: taapi.io\nSolo a título informativo. No constituye asesoramiento de inversión.</string>
+  <string name="token_summary_sentiment_description">El Sentimiento mide el tono de las publicaciones sobre el activo en redes sociales en una escala de 0 a 100, ponderada por la interacción: cuanto más alto, más positiva es la conversación.\n\nLógica de interpretación:\nPositivo ≧70\nNeutral 31–69\nNegativo ≦30\n\nFuente: lunarcrush.com\nSolo a título informativo. No constituye asesoramiento de inversión.</string>
+  <string name="token_summary_title">Indicadores de mercado • beta</string>
   <string name="token_swap_changelly_promotion_message">Cambie este token por otro por una tarifa de servicio de %1$s del %2$s al %3$s de febrero.</string>
   <string name="token_swap_changelly_promotion_title">Intercambie con Changelly, %s comisiones</string>
   <string name="token_swap_promotion_button">Intercambie ahora</string>
@@ -2264,6 +2385,10 @@
   <string name="tokens_list_unavailable_to_sell_header">No disponible para vender</string>
   <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">No disponible para intercambio</string>
+  <plurals name="top_assets_count">
+    <item quantity="one">Activo principal</item>
+    <item quantity="other">%d principales activos</item>
+  </plurals>
   <string name="transaction_history_claiming_reward">Reclamar recompensa</string>
   <string name="transaction_history_contract_address">contacto: %s</string>
   <string name="transaction_history_disabling_yield_mode">Desactivar el modo Rendimiento</string>
@@ -2323,6 +2448,11 @@
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
   <string name="user_push_notification_banner_subtitle">Active las notificaciones push y le avisaremos al instante cuando le lleguen fondos.</string>
   <string name="user_push_notification_banner_title">No se pierda ninguna transacción</string>
+  <string name="user_wallet_add_hardware_description">Escanee una tarjeta Tangem para añadirla.</string>
+  <string name="user_wallet_add_hardware_title">Agregar billetera de hardware</string>
+  <string name="user_wallet_add_mobile_description">Cree una nueva billetera en este dispositivo.</string>
+  <string name="user_wallet_add_mobile_title">Agregar billetera móvil</string>
+  <string name="user_wallet_coming_soon_dialog_description">Estamos trabajando en la posibilidad de crear más de una billetera móvil.</string>
   <string name="user_wallet_list_add_button">Agregar billetera</string>
   <string name="user_wallet_list_delete_hw_prompt">Si olvida esta billetera sin una copia de seguridad, perderá permanentemente el acceso a sus fondos.</string>
   <string name="user_wallet_list_delete_prompt">¿Estás seguro de que deseas olvidar esta billetera?</string>
@@ -2492,7 +2622,9 @@
   <string name="warning_approval_in_progress_message">El proceso de obtención de permisos está actualmente en marcha y se completará pronto.</string>
   <string name="warning_approval_in_progress_title">Aprobación en curso</string>
   <string name="warning_backup_error_add_funds_message">Esta billetera tiene un problema de copia de seguridad. Comuníquese con el soporte técnico para solucionarlo.</string>
+  <string name="warning_backup_error_add_funds_message_v2">La wallet que quieres depositar tiene un problema con la copia de seguridad. Transfiere tus fondos a otra wallet y restablécela.</string>
   <string name="warning_backup_error_add_funds_title">Agregar fondos está deshabilitado.</string>
+  <string name="warning_backup_error_add_funds_title_v2">Se ha detectado un problema con la copia de seguridad.</string>
   <string name="warning_backup_error_attention_message">Sus tarjetas no se han activado correctamente. Para proteger sus fondos, transfiérelos a otra billetera, restablezca las tarjetas a ajustes de fábrica y vuelva a activarlas antes de continuar.</string>
   <string name="warning_backup_error_attention_title">Acción requerida: restablezca su billetera</string>
   <string name="warning_backup_errors_message">La activación no se completó correctamente. Esto podría deberse a un problema de NFC o a una lectura incorrecta. Contacte con nuestro equipo de soporte para obtener ayuda.</string>

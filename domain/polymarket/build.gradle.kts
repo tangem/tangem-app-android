@@ -1,28 +1,38 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
+}
+
+android {
+    namespace = "com.tangem.domain.polymarket"
 }
 
 dependencies {
 
-    // region Kotlin
+    // region Other libraries
+    api(deps.arrow.core)
     api(deps.kotlin.coroutines)
     // endregion
 
-    // region Other libraries
-    api(deps.arrow.core)
+    // region Core
+    api(projects.core.pagination)
     // endregion
 
     // region Domain
     api(projects.domain.core)
     api(projects.domain.models)
+    api(projects.domain.common)
+    // endregion
+
+    // region SDK
+    implementation(projects.core.utils)
+    implementation(tangemDeps.blockchain)
     // endregion
 
     // region Tests
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(projects.test.core)
     // endregion
 }

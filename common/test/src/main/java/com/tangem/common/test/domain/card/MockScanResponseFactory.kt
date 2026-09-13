@@ -101,7 +101,11 @@ object MockScanResponseFactory {
     }
 
     private fun createSettings(): CardWallet.Settings {
-        val constructor = CardWallet.Settings::class.java.declaredConstructors[0]
+        // `Settings` declares two constructors — `(Boolean)` and `(SettingsMask)` — and `declaredConstructors`
+        // returns them in no particular order, so the first entry is not reliably the boolean one.
+        val constructor = CardWallet.Settings::class.java.declaredConstructors.first { constructor ->
+            constructor.parameterTypes.singleOrNull() == Boolean::class.javaPrimitiveType
+        }
         constructor.isAccessible = true
 
         val instance = constructor.newInstance(false) as? CardWallet.Settings

@@ -2,7 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.stories.GetStoryContentUseCase
 import com.tangem.domain.stories.StoriesRepository
-import com.tangem.domain.stories.ShouldShowStoriesUseCase
+import com.tangem.domain.stories.ShouldShowStoriesInteractor
 import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -16,8 +16,11 @@ internal object StoriesDomainModule {
 
     @Provides
     @Singleton
-    fun provideShouldShowStoriesUseCase(storiesRepository: StoriesRepository): ShouldShowStoriesUseCase {
-        return ShouldShowStoriesUseCase(storiesRepository)
+    fun provideShouldShowStoriesInteractor(
+        storiesRepository: StoriesRepository,
+        getStoryContentUseCase: GetStoryContentUseCase,
+    ): ShouldShowStoriesInteractor {
+        return ShouldShowStoriesInteractor(storiesRepository, getStoryContentUseCase)
     }
 
     @Provides

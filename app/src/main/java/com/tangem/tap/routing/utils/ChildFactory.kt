@@ -1,6 +1,7 @@
 package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
@@ -20,6 +21,13 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
+import com.tangem.features.introduction.IntroductionComponent
+import com.tangem.features.introduction.IntroductionFeatureToggles
+import com.tangem.features.jointaccount.creation.JointAccountCreationComponent
+import com.tangem.features.jointaccount.join.JointAccountJoinComponent
+import com.tangem.features.jointaccount.main.JointAccountMembersComponent
+import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
+import com.tangem.features.collectibles.api.CollectiblesEntryComponent
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -79,12 +87,15 @@ internal class ChildFactory @Inject constructor(
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
     private val homeComponentFactory: HomeComponent.Factory,
+    private val introductionComponentFactory: IntroductionComponent.Factory,
+    private val introductionFeatureToggles: IntroductionFeatureToggles,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
     private val appCurrencySelectorComponentFactory: AppCurrencySelectorComponent.Factory,
     private val appSettingsComponentFactory: AppSettingsComponent.Factory,
+    private val collectiblesEntryComponentFactory: CollectiblesEntryComponent.Factory,
     private val securityModeComponentFactory: SecurityModeComponent.Factory,
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
@@ -108,6 +119,7 @@ internal class ChildFactory @Inject constructor(
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
     private val walletActivationComponentFactory: WalletActivationComponent.Factory,
     private val createWalletBackupComponentFactory: CreateWalletBackupComponent.Factory,
+    private val createCloudBackupComponentFactory: CreateCloudBackupComponent.Factory,
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val viewPhraseComponentFactory: ViewPhraseComponent.Factory,
     private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
@@ -116,6 +128,10 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
+    private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
+    private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
+    private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
+    private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
@@ -332,13 +348,9 @@ internal class ChildFactory @Inject constructor(
                             AppRoute.Swap.CurrencyPosition.TO -> SwapComponent.Params.CurrencyPosition.TO
                             AppRoute.Swap.CurrencyPosition.ANY -> SwapComponent.Params.CurrencyPosition.ANY
                         },
-                        tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
-                            SwapComponent.Params.TangemPayInput(
-                                cryptoAmount = tangemPayInput.cryptoAmount,
-                                fiatAmount = tangemPayInput.fiatAmount,
-                                depositAddress = tangemPayInput.depositAddress,
-                            )
-                        },
+                        fromAmount = route.fromAmount,
+                        providerId = route.providerId,
+                        accountFlow = route.accountFlow,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -359,11 +371,23 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                createComponentChild(
-                    context = context,
-                    params = HomeComponent.Params(route.launchMode),
-                    componentFactory = homeComponentFactory,
-                )
+                // An NFC launch stays on the legacy screen, which is the only one that auto-starts the card
+                // scan. Routing it to the redesign would consume the tag and do nothing.
+                val isRedesign = introductionFeatureToggles.isIntroductionRedesignEnabled &&
+                    route.launchMode != InitScreenLaunchMode.WithCardScan
+                if (isRedesign) {
+                    createComponentChild(
+                        context = context,
+                        params = IntroductionComponent.Params(route.launchMode),
+                        componentFactory = introductionComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        context = context,
+                        params = HomeComponent.Params(route.launchMode),
+                        componentFactory = homeComponentFactory,
+                    )
+                }
             }
             is AppRoute.WalletConnectSessions -> {
                 createComponentChild(
@@ -414,6 +438,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = appSettingsComponentFactory,
+                )
+            }
+            is AppRoute.Collectibles -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = collectiblesEntryComponentFactory,
                 )
             }
             is AppRoute.DetailsSecurity -> {
@@ -566,7 +597,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.AddExistingWallet -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = AddExistingWalletComponent.Params(mode = route.mode),
                     componentFactory = addExistingWalletComponentFactory,
                 )
             }
@@ -594,6 +625,15 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = createWalletBackupComponentFactory,
                 )
             }
+            is AppRoute.CreateCloudBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = CreateCloudBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = createCloudBackupComponentFactory,
+                )
+            }
             is AppRoute.UpdateAccessCode -> {
                 createComponentChild(
                     context = context,
@@ -602,6 +642,7 @@ internal class ChildFactory @Inject constructor(
                         source = route.source,
                         nextScreen = route.nextScreen,
                         shouldShowBackButton = route.shouldShowBackButton,
+                        canSkip = route.canSkip,
                     ),
                     componentFactory = updateAccessCodeComponentFactory,
                 )
@@ -620,6 +661,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = ForgetWalletComponent.Params(
                         userWalletId = route.userWalletId,
+                        shouldDeleteCloudBackup = route.shouldDeleteCloudBackup,
                     ),
                     componentFactory = forgetWalletComponentFactory,
                 )
@@ -642,6 +684,38 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = accountCreateEditComponentFactory,
+                )
+            }
+            is AppRoute.JointAccountCreation -> {
+                createComponentChild(
+                    context = context,
+                    params = JointAccountCreationComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = jointAccountCreationComponentFactory,
+                )
+            }
+            is AppRoute.JointAccountJoin -> {
+                createComponentChild(
+                    context = context,
+                    params = JointAccountJoinComponent.Params(inviteId = route.inviteId),
+                    componentFactory = jointAccountJoinComponentFactory,
+                )
+            }
+            is AppRoute.JointAccountMembers -> {
+                createComponentChild(
+                    context = context,
+                    params = JointAccountMembersComponent.Params(
+                        userWalletId = route.userWalletId,
+                        mode = JointAccountMembersComponent.Mode.Invite,
+                        isCreator = true,
+                    ),
+                    componentFactory = jointAccountMembersComponentFactory,
+                )
+            }
+            is AppRoute.JointSupportedNetworks -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = jointSupportedNetworksComponentFactory,
                 )
             }
             is AppRoute.EditAccount -> {

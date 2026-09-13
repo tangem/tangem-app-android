@@ -67,7 +67,6 @@ dependencies {
 
     // region Kotlin
     api(deps.kotlin.coroutines)
-    api(deps.kotlin.datetime)
     api(deps.kotlin.serialization)
     // endregion
 
@@ -129,7 +128,6 @@ dependencies {
     api(projects.domain.onramp.models)
     api(projects.domain.staking.models)
     api(projects.domain.txhistory.models)
-    api(projects.domain.visa.models)
     api(projects.domain.walletConnect.models)
     api(projects.domain.wallets.models)
     api(projects.domain.yieldSupply.models)
@@ -137,5 +135,6 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(projects.grow.datasource)
     // endregion
 }

@@ -13,6 +13,23 @@ internal class PolymarketHmacSignerTest {
 
     private val signer = PolymarketHmacSigner(jvmCodec)
 
+    /**
+     * The only vector here that comes from outside this repository: `tests/signing/test_hmac.py` of
+     * Polymarket's own `py-clob-client-v2` (identical in v1). Every other case below pins our own output,
+     * which proves consistency but not correctness — this one proves the algorithm.
+     */
+    @Test
+    fun `GIVEN the vendor SDK vector WHEN sign THEN matches its expected signature`() {
+        // Act
+        val actual = signer.sign(
+            secret = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            message = "1000000test-sign/orders{\"hash\": \"0x123\"}",
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo("ZwAdJKvoYRlEKDkNMwd5BuwNNtg93kNaR_oU2HrfVvc=")
+    }
+
     @Test
     fun `GIVEN GET message WHEN sign THEN matches the known-answer vector`() {
         // Act

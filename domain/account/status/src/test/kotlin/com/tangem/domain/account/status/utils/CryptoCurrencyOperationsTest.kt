@@ -151,7 +151,7 @@ class CryptoCurrencyOperationsTest {
         @Test
         fun `returns None when currency id is not found in CryptoPortfolio`() {
             // Arrange
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
@@ -169,7 +169,7 @@ class CryptoCurrencyOperationsTest {
         @Test
         fun `returns Some when currency id is found in CryptoPortfolio`() {
             // Arrange
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
@@ -182,7 +182,7 @@ class CryptoCurrencyOperationsTest {
         @Test
         fun `returns None when CryptoPortfolio has no currencies`() {
             // Arrange
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = emptyList(),
             )
@@ -196,7 +196,7 @@ class CryptoCurrencyOperationsTest {
         fun `returns Some with matching currency when multiple currencies exist`() {
             // Arrange
             val currencies = cryptoCurrencyFactory.ethereumAndStellar
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = currencies,
             )

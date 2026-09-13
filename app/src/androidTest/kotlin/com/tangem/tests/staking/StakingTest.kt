@@ -1,14 +1,15 @@
 package com.tangem.tests.staking
 
+import com.kaspersky.kaspresso.testcases.core.testcontext.TestContext
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.extractText
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.extensions.swipeVertical
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -29,11 +30,7 @@ class StakingTest : BaseTestCase() {
         val scenarioName = "staking_eth_pol_balances"
         val scenarioState = "Staked"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -81,11 +78,7 @@ class StakingTest : BaseTestCase() {
         val scenarioState = "Staked"
         val stakingAmount = "1"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -140,11 +133,7 @@ class StakingTest : BaseTestCase() {
         val stakingAmount = "1"
         val stakingApy = "2.84%"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
@@ -211,13 +200,7 @@ class StakingTest : BaseTestCase() {
         val stakingWithdrawableState = "Withdrawable"
         val stakingStartedState = "Started"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -299,13 +282,7 @@ class StakingTest : BaseTestCase() {
         val stakingRewardsState = "Rewards"
         val stakingStakedState = "Staked"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -364,9 +341,20 @@ class StakingTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onStakingSuccessScreen { closeButton.performClick() }
             }
+            // Re-enters the screen instead of only waiting: 'Staking details' has no pull-to-refresh, so if the
+            // staking balance was already cached before the scenario switched, nothing re-reads it and waiting
+            // alone never succeeds (green locally, red on CI). Leaving and opening it again reloads the data.
+            // Re-enters the screen between attempts instead of only waiting: 'Staking details' has no
+            // pull-to-refresh, so when the staking balance was cached before the scenario switched, nothing
+            // re-reads it and waiting alone never succeeds (green locally, red on CI). Re-opening reloads it.
             step("Assert 'Rewards' block shows no rewards to claim after claiming") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onStakingDetailsScreen { noRewardsToClaimText.assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 5_000) {
+                    var noRewards = false
+                    onStakingDetailsScreen { noRewards = noRewardsToClaimText.isDisplayedSafely() }
+                    if (!noRewards) {
+                        reopenStakingDetails()
+                        throw AssertionError("Rewards are still claimable — the staking balance has not reloaded")
+                    }
                 }
             }
         }
@@ -385,13 +373,7 @@ class StakingTest : BaseTestCase() {
         val stakingStakedState = "Staked"
         val stakingUnstakingState = "Unstaking"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -479,13 +461,7 @@ class StakingTest : BaseTestCase() {
         val stakingStartedState = "Started"
         val stakingStakedState = "Staked"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -548,9 +524,17 @@ class StakingTest : BaseTestCase() {
             step("Click on 'Close' button") {
                 onStakingSuccessScreen { closeButton.performClick() }
             }
+            // Re-enters the screen between attempts, the same way claimRewardsTest does: 'Staking details' has
+            // no pull-to-refresh, so a staking balance cached before the scenario switched is never re-read and
+            // 'Your stakes' never appears no matter how long the wait is.
             step("Check 'Staking details' screen after initial stake") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onStakingDetailsScreen { yourStakesTitle.assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 5_000) {
+                    var staked = false
+                    onStakingDetailsScreen { staked = yourStakesTitle.isDisplayedSafely() }
+                    if (!staked) {
+                        reopenStakingDetails()
+                        throw AssertionError("'Your stakes' is still missing — the staking balance has not reloaded")
+                    }
                 }
                 checkStakingDetailsAfterInitialStake()
             }
@@ -611,6 +595,23 @@ class StakingTest : BaseTestCase() {
                     onMainScreen { totalBalanceText.assertTextContains(totalWalletBalance, substring = true) }
                 }
             }
+        }
+    }
+
+    /**
+     * Best-effort reload of 'Staking details': the screen has no pull-to-refresh, so leaving and entering it
+     * again is the only way to re-read the staking balance.
+     *
+     * Deliberately swallows its own failures. It runs between retries of an assertion, and if the close
+     * click lands mid-animation the app can end up on neither screen — that must not fail the test, because
+     * the next retry can still succeed. Note the two screens share the TOKEN_DETAILS_SCREEN_CONTAINER tag,
+     * so the staking block is the only reliable evidence of being back on 'Token details'.
+     */
+    private fun TestContext<Unit>.reopenStakingDetails() {
+        runCatching {
+            onSendScreen { closeButton.performClick() }
+            awaitSuccess { onTokenDetailsScreen { stakingBlock.assertIsDisplayed() } }
+            onTokenDetailsScreen { stakingBlock.clickWithAssertion() }
         }
     }
 }

@@ -11,7 +11,6 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -20,13 +19,13 @@ import java.util.Currency
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
-    private val isMultipleCardsEnabled: Boolean,
+    private val isAccountMultichainEnabled: Boolean,
 ) : Converter<AccountStatus.Payment, TangemPayMainUM> {
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun convert(value: AccountStatus.Payment): TangemPayMainUM {
         return when (val statusValue = value.value) {
             is PaymentAccountStatusValue.Error.CardIssueFailed -> TangemPayMainUM.FailedToIssue(
-                onClick = { tangemPayClickIntents.onIssuingFailedClicked(statusValue.customerId) },
+                onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Error.ExposedDevice -> TangemPayMainUM.ExposedDevice
             is PaymentAccountStatusValue.Error.NotSynced -> TangemPayMainUM.SyncNeeded
@@ -62,7 +61,7 @@ internal class TangemPayMainBlockConverter(
                 subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(statusValue.balance),
-                balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
+                balanceSubtitle = getBalanceSubtitle(statusValue.cryptoCurrency.symbol),
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
@@ -71,28 +70,30 @@ internal class TangemPayMainBlockConverter(
                     return TangemPayMainUM.IssuingCard(onClick = { tangemPayClickIntents.openDetails(value) })
                 }
                 val cardsCount = statusValue.cards.count()
-                val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
-                val subtitle = when {
-                    isMultipleCardsEnabled -> pluralReference(
-                        id = R.plurals.tangempay_cards_count,
-                        count = cardsCount,
-                        formatArgs = wrappedList(cardsCount),
-                    )
-                    card.state == TangemPayCardState.Reissuing -> resourceReference(R.string.tangempay_status_replacing)
-                    // The backend can omit the card payload for an operational account — no digits to show then.
-                    card.lastDigits.isEmpty() -> stringReference(DASH_SIGN)
-                    else -> stringReference("*${card.lastDigits}")
-                }
+                if (cardsCount == 0) return TangemPayMainUM.TemporaryUnavailable
+                val subtitle = pluralReference(
+                    id = R.plurals.tangempay_cards_count,
+                    count = cardsCount,
+                    formatArgs = wrappedList(cardsCount),
+                )
                 TangemPayMainUM.Content(
                     subtitle = subtitle,
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(statusValue.balance),
-                    balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
+                    balanceSubtitle = getBalanceSubtitle(statusValue.cryptoCurrency.symbol),
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
                     onClick = { tangemPayClickIntents.openDetails(value) },
                 )
             }
         }
+    }
+
+    /**
+     * A multichain account aggregates several stablecoins, so no single token symbol describes the
+     * balance — it is denominated in USD instead.
+     */
+    private fun getBalanceSubtitle(currencySymbol: String): TextReference {
+        return stringReference(if (isAccountMultichainEnabled) USD_CURRENCY_CODE else currencySymbol)
     }
 
     /** Balance figure, or a dash when the account exists but its balances are unavailable. */
@@ -106,5 +107,9 @@ internal class TangemPayMainBlockConverter(
                 spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
             )
         }
+    }
+
+    private companion object {
+        const val USD_CURRENCY_CODE = "USD"
     }
 }

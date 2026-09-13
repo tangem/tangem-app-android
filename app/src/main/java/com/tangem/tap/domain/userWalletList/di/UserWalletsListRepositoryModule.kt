@@ -18,6 +18,8 @@ import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -59,6 +61,8 @@ internal object UserWalletsListRepositoryModule {
         hotWalletRepository: HotWalletRepository,
         clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
         userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
+        isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+        getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -111,6 +115,8 @@ internal object UserWalletsListRepositoryModule {
             hotWalletRepository = hotWalletRepository,
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             userWalletSelectedHandler = userWalletSelectedHandler,
+            isWalletBackedUpUseCase = isWalletBackedUpUseCase,
+            getCompletedBackupsUseCase = getCompletedBackupsUseCase,
         )
     }
 
