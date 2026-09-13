@@ -43,10 +43,12 @@ import com.tangem.core.ui.utils.dashedBorder
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.AvatarAccent
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 
 private val CardWidth = 156.dp
 private val RecentsCardHeight = 136.dp
+private val ActionCardHeight = 64.dp
 private val RecentsCardCornerRadius = 24.dp
 private val ActionCardCornerRadius = 20.dp
 private val IconCircleSize = 32.dp
@@ -55,7 +57,7 @@ private val DashGap = 4.dp
 private const val SHIMMER_CARDS_COUNT = 3
 
 @Composable
-internal fun BankSection(state: TangemPayWithdrawHubUM.BankSectionUM, modifier: Modifier = Modifier) {
+internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         HubSectionHeader(
             title = resourceReference(R.string.tangempay_withdraw_hub_bank_section_title),
@@ -68,14 +70,41 @@ internal fun BankSection(state: TangemPayWithdrawHubUM.BankSectionUM, modifier: 
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item(key = "bank_actions") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BankActionCard(state = state.toPersonalAccount)
-                    BankActionCard(state = state.toBusinessAccount)
+            when (state) {
+                BankSectionUM.Loading -> loadingItems()
+                is BankSectionUM.Error -> item(key = "bank_error") {
+                    UnableToLoadCard(onRetryClick = state.onRetryClick)
+                }
+                is BankSectionUM.Content -> {
+                    item(key = "bank_actions") {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BankActionCard(state = state.toPersonalAccount)
+                            BankActionCard(state = state.toBusinessAccount)
+                        }
+                    }
+                    recentsItems(recents = state.recents)
                 }
             }
-            recentsItems(recents = state.recents)
         }
+    }
+}
+
+private fun LazyListScope.loadingItems() {
+    item(key = "bank_actions_shimmer") {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(times = 2) {
+                TangemShimmer(
+                    modifier = Modifier.size(width = CardWidth, height = ActionCardHeight),
+                    radius = ActionCardCornerRadius,
+                )
+            }
+        }
+    }
+    items(count = SHIMMER_CARDS_COUNT, key = { index -> "recents_shimmer_$index" }) {
+        TangemShimmer(
+            modifier = Modifier.size(width = CardWidth, height = RecentsCardHeight),
+            radius = RecentsCardCornerRadius,
+        )
     }
 }
 
@@ -96,7 +125,7 @@ private fun LazyListScope.recentsItems(recents: RecentsUM) {
                 item(key = "recents_see_all") { SeeAllCard(onClick = onSeeAllClick) }
             }
         }
-        is RecentsUM.Error -> item(key = "recents_error") { RecentsErrorCard(onRetryClick = recents.onRetryClick) }
+        is RecentsUM.Error -> item(key = "recents_error") { UnableToLoadCard(onRetryClick = recents.onRetryClick) }
         is RecentsUM.Content -> {
             items(items = recents.recipients, key = { it.id }) { recipient ->
                 RecentRecipientCard(
@@ -187,7 +216,7 @@ private fun RecentsEmptyCard() {
 }
 
 @Composable
-private fun RecentsErrorCard(onRetryClick: () -> Unit) {
+private fun UnableToLoadCard(onRetryClick: () -> Unit) {
     RecentsCard(isDashed = true, onClick = onRetryClick) {
         SecondaryIconCircle(imageVector = Icons.ic_arrow_refresh_20)
         Text(
