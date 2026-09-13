@@ -29,7 +29,6 @@ import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
-import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
@@ -164,13 +163,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayWithdrawHubComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
-            ),
-        )
-        is TangemPayAccountDetailsInnerRoute.BankWithdraw -> TangemPayBankWithdrawComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayBankWithdrawComponent.Params(
-                userWalletId = params.initialStatus.userWalletId,
-                entry = config.entry,
             ),
             countrySelectorFactory = countrySelectorComponentFactory,
         )

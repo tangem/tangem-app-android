@@ -27,12 +27,14 @@ import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFor
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFlow
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.TangemPayBankWithdrawModel
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.StateFlow
 
 internal class TangemPayBankWithdrawComponent(
     appComponentContext: AppComponentContext,
@@ -152,8 +154,8 @@ internal class TangemPayBankWithdrawComponent(
     ): ComposableContentComponent = TangemPayBankWithdrawAmountComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = TangemPayBankWithdrawAmountComponent.Params(
-            userWalletId = params.userWalletId,
             draft = model.draft,
+            options = params.options,
             step = step,
             onContinue = { result ->
                 model.onAmountConfirmed(result)
@@ -228,5 +230,6 @@ internal class TangemPayBankWithdrawComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val entry: BankWithdrawEntry,
+        val options: StateFlow<BankWithdrawOptions>,
     )
 }

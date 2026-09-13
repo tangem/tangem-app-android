@@ -28,7 +28,7 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onValueChange = {},
     )
 
-    private val source = SourceRowUM.Content(
+    private val source = SourceRowUM(
         icon = CurrencyIconState.Loading,
         symbol = "USDC",
         subtitle = stringReference("Polygon · $2,325.55"),
@@ -36,7 +36,7 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onClick = {},
     )
 
-    private val route = RouteRowUM.Content(
+    private val route = RouteRowUM(
         rail = BankRail.ACH,
         title = resourceReference(R.string.tangempay_bank_transfer_fee_ach),
         eta = stringReference("1–3 business days"),
@@ -44,11 +44,11 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onClick = {},
     )
 
-    val loading = TangemPayBankWithdrawAmountUM(
+    val empty = TangemPayBankWithdrawAmountUM(
         header = header,
         amount = amount.copy(value = ""),
-        source = SourceRowUM.Loading,
-        route = RouteRowUM.Loading,
+        source = source,
+        route = route,
         isContinueEnabled = false,
         sheet = SheetUM.Hidden,
         onBackClick = {},
