@@ -6,13 +6,14 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.utils.coroutines.combine7
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.utils.coroutines.combine8
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -33,16 +34,17 @@ internal class AccountListSubscriber @AssistedInject constructor(
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
+    override val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) : BasicAccountListSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         val walletId = userWallet.walletId.stringValue
-        TangemLogger.i("$TAG[$walletId]: create() called, building combine7")
-        return combine7(
+        TangemLogger.i("$TAG[$walletId]: create() called, building combine8")
+        return combine8(
             flow1 = getAccountStatusListFlow()
                 .onStart { TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList subscribed") }
                 .onEach { list ->
@@ -67,19 +69,23 @@ internal class AccountListSubscriber @AssistedInject constructor(
             flow7 = stakingAvailabilityFlow()
                 .onStart { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability subscribed") }
                 .onEach { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability emitted (size=${it.size})") },
+            flow8 = isWalletBackedUpUseCase.flow(userWallet).distinctUntilChanged()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow8 isBackedUp subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow8 isBackedUp emitted=$it") },
         ) {
                 accountList, appCurrency, expandedAccounts, isAccountMode,
-                yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap,
+                yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap, isHotBackedUp,
             ->
             TangemLogger.i(
-                "$TAG[$walletId]: combine7 transform fired — " +
+                "$TAG[$walletId]: combine8 transform fired — " +
                     "currencies=${accountList.flattenCurrencies().size}, " +
                     "appCurrency=${appCurrency.code}, " +
                     "expanded=${expandedAccounts.size}, " +
                     "isAccountMode=$isAccountMode, " +
                     "apyMap=${yieldSupplyApyMap.size}, " +
                     "promo=$shouldShowMainPromo, " +
-                    "stakingMap=${stakingAvailabilityMap.size}",
+                    "stakingMap=${stakingAvailabilityMap.size}, " +
+                    "isBackedUp=$isHotBackedUp",
             )
             updateState2(
                 accountList = accountList,
@@ -89,8 +95,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 yieldSupplyApyMap = yieldSupplyApyMap,
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
-                isMultipleCardsEnabled = true,
-                isPolymarketEnabled = polymarketFeatureToggles.isPolymarketEnabled,
+                isHotBackedUp = isHotBackedUp,
             )
         }
     }

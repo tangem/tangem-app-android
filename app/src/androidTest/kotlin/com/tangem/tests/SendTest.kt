@@ -2,7 +2,6 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -28,12 +27,7 @@ class SendTest : BaseTestCase() {
         val balanceState = "ZeroBalance"
         val tokensState = "SolanaUSDC"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(balanceScenarioName)
-                resetWireMockScenarioState(tokensScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario: '$tokensScenarioName' to state: '$tokensState'") {
                 setWireMockScenarioState(scenarioName = tokensScenarioName, state = tokensState)
             }

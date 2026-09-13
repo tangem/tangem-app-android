@@ -59,6 +59,8 @@ sealed interface PaymentAccountStatusValueDM {
     data class CardIssueFailed(
         @Json(name = "card_issue_failed") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
+        @Json(name = "fiat_rate") val fiatRate: BigDecimal? = null,
+        @Json(name = "balance") val balance: BalanceDM? = null,
     ) : PaymentAccountStatusValueDM
 
     /** Balance fields are nullable for the same reason as in [ActiveAccount]. */
@@ -71,6 +73,14 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM?,
         @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal?,
     ) : PaymentAccountStatusValueDM
+
+    /** @see [com.tangem.domain.models.account.PaymentAccountStatusValue.Balance] */
+    @JsonClass(generateAdapter = true)
+    data class BalanceDM(
+        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
+        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
+        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal,
+    )
 
     @JsonClass(generateAdapter = true)
     data class FiatBalanceDM(
@@ -100,6 +110,8 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "last_digits") val lastDigits: String,
         @Json(name = "images") val images: List<ImageDM>,
         @Json(name = "state") val state: String,
+        @Json(name = "emboss_name") val embossName: String?,
+        @Json(name = "card_type") val cardType: String? = null,
     )
 
     @JsonClass(generateAdapter = true)

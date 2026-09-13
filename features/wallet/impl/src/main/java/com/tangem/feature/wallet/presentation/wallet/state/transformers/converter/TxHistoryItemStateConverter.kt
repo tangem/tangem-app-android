@@ -128,14 +128,14 @@ internal class TxHistoryItemStateConverter(
             } else {
                 when (type) {
                     is TransactionType.YieldSupply.Enter -> {
-                        val amount = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                        val amount = amount.format { crypto(currency) }
                         resourceReference(
                             R.string.yield_module_transaction_enter_subtitle,
                             wrappedList(amount),
                         )
                     }
                     TransactionType.YieldSupply.Topup -> {
-                        val amount = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                        val amount = amount.format { crypto(currency) }
                         resourceReference(
                             R.string.yield_module_transaction_topup_subtitle,
                             wrappedList(amount),
@@ -145,8 +145,7 @@ internal class TxHistoryItemStateConverter(
                         if (isOutgoing || !type.isYieldSupplyWithdraw) {
                             extractSubtitleByAddressType()
                         } else {
-                            val amount =
-                                amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                            val amount = amount.format { crypto(currency) }
                             resourceReference(
                                 R.string.yield_module_transaction_exit_subtitle,
                                 wrappedList(amount),
@@ -154,7 +153,7 @@ internal class TxHistoryItemStateConverter(
                         }
                     }
                     is TransactionType.YieldSupply.Exit -> {
-                        val amount = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                        val amount = amount.format { crypto(currency) }
                         resourceReference(
                             R.string.yield_module_transaction_exit_subtitle,
                             wrappedList(amount),

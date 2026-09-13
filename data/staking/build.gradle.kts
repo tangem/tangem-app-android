@@ -50,6 +50,7 @@ dependencies {
     api(projects.core.datasource)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.grow.datasource)
     // endregion
 
     // region Data
@@ -63,6 +64,7 @@ dependencies {
     api(projects.domain.staking)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
+    api(projects.domain.txhistory)
     implementation(projects.domain.card)
     // endregion
 

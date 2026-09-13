@@ -29,6 +29,20 @@ adb shell am instrument -w \
   com.tangem.wallet.mocked.test/com.tangem.common.HiltTestRunner
 ```
 
+## Raw `am instrument` leaves animations ON
+
+`connectedAndroidTest` disables animations for the run (`testOptions { animationsDisabled = true }`) and
+restores them afterwards. A raw `am instrument` run does **not** — the device keeps whatever scales it
+had, gestures and idle-synchronisation behave differently from CI, and results are not comparable with
+Gradle runs. Set them yourself before a raw run:
+
+```bash
+for s in window_animation_scale transition_animation_scale animator_duration_scale; do
+  adb shell settings put global $s 0
+done
+adb shell settings get global window_animation_scale   # must print 0
+```
+
 ## Harness: orchestrator vs. raw `am instrument`
 
 The app is configured `execution = "ANDROIDX_TEST_ORCHESTRATOR"` (`app/build.gradle.kts`). The orchestrator
@@ -70,6 +84,23 @@ app's API base URLs point at `wiremock.tests-d.com` — i.e. tests **always** ta
 real backend. By default that's the **remote** WireMock at `wiremock.tests-d.com`. To use a **local**
 WireMock instead, pass `wiremockBaseUrl`: `WireMockRedirectInterceptor` then rewrites every
 `wiremock.tests-d.com` request to your local instance.
+
+**Start the local instance the way CI does, or you will chase phantom failures.** CI builds the image
+from `tangem-api-mocks/Dockerfile`, whose entrypoint carries flags the official image does not default
+to. Without `--global-response-templating`, templated responses are served raw and tests fail locally
+while being perfectly green on CI:
+
+```bash
+docker rm -f wiremock 2>/dev/null
+docker run -d --name wiremock -p 8081:8080 \
+  -v "$PWD/../tangem-api-mocks/mocks:/home/wiremock" \
+  wiremock/wiremock --global-response-templating --disable-gzip --verbose
+docker inspect wiremock --format '{{.Config.Cmd}}'   # must list the three flags
+```
+
+Check the mocks branch too — CI uses `main`; a local checkout parked on a feature branch is another
+source of "fails only locally". Mount + `POST /__admin/mappings/reset` picks up a branch switch without
+recreating the container.
 
 Emulator addressing matters — `localhost` inside an emulator is the **emulator itself**, not your host:
 
@@ -148,6 +179,10 @@ Distinguish:
 Without a `wiremockBaseUrl` arg the app hits the **remote** WireMock (`wiremock.tests-d.com`); pass the
 arg to redirect to a local instance (see "Running against local WireMock"). Default local port: `8081`.
 
+`BaseTestCase.setupHooks` already resets every scenario state before each test, so the curls below are
+for manual poking and for inspecting what a run left behind — a test never needs them. Note the reset
+hits whichever instance `wiremockBaseUrl` points at, the shared remote one included.
+
 ```bash
 # Set a scenario state — PUT, not POST
 curl -X PUT http://localhost:8081/__admin/scenarios/<name>/state \
@@ -161,6 +196,20 @@ curl http://localhost:8081/__admin/mappings | jq
 curl http://localhost:8081/__admin/scenarios | jq '.scenarios[] | {name, state}'
 ```
 
+- **One URL can be served by two scenarios split on query params — check before picking a state.** The
+  Dogecoin mocks answer `/dogecoin/api/v2/address/{addr}` twice: the **query-less** request (the one the
+  wallet manager refreshes balances from, and therefore the one that decides whether 'Send' is blocked)
+  comes from `dogecoin_balance`, while `?details=txs` comes from `dogecoin_tx_history`. So a state like
+  `UnconfirmedOutgoing` puts a pending transaction on the **history screen only**, and the wallet still
+  sees none. Before trusting a state name, confirm which mapping actually answered:
+  ```bash
+  curl -s 'http://localhost:8081/__admin/requests?limit=100' \
+    | jq -r '.requests[] | select(.request.url | test("<endpoint>")) |
+             "\(.request.url)  <- \(.stubMapping.scenarioName)/\(.stubMapping.requiredScenarioState)"'
+  ```
+- **Running one test on CI: Marathon does not understand `Class#method`.** Passing it as `test_class`
+  filters everything out — Marathon finishes in seconds, uploads no results, and the workflow reports
+  **success**. A green run that took under a minute ran zero tests; always confirm the test count.
 - Mocks repo: default to the sibling directory `../tangem-api-mocks/` (i.e. next to
   `tangem-app-android`). If that path doesn't exist, **ask the user** where the mocks repo is rather
   than guessing.

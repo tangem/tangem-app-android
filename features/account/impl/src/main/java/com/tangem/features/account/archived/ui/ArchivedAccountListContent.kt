@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.common.ui.account.AccountIconPreviewData
-import com.tangem.common.ui.account.AccountRow
+import com.tangem.common.ui.account.AccountRowLegacy
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
@@ -141,7 +141,7 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
                 item.networksInfo.resolveReference(),
             ),
         )
-        AccountRow(
+        AccountRowLegacy(
             title = item.accountName,
             subtitle = stringReference(subtitle),
             icon = item.accountIconUM,

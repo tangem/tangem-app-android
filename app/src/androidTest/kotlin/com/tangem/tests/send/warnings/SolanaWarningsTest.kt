@@ -1,12 +1,9 @@
 package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openSendConfirmScreenViaNextButton
 import com.tangem.scenarios.openSendScreen
@@ -34,12 +31,7 @@ class SolanaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: warning is displayed, if after send balance is less than rent amount (SOLANA)")
     @Test
     fun warningIsDisplayedWhenLeaveLessThanRent() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
             }
@@ -71,12 +63,7 @@ class SolanaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: warning is not displayed, if after send balance is greater than rent amount (SOLANA)")
     @Test
     fun warningIsNotDisplayedWhenLeaveGreaterThanRent() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
             }
@@ -111,12 +98,7 @@ class SolanaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: warning is not displayed, if after send balance is equal to rent amount (SOLANA)")
     @Test
     fun warningIsNotDisplayedWhenLeaveOnlyRent() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
             }
@@ -149,12 +131,7 @@ class SolanaWarningsTest : BaseTestCase() {
     @DisplayName("Warnings: warning is not displayed, if after send balance is zero (SOLANA)")
     @Test
     fun warningIsNotDisplayedWhenLeaveZeroSol() {
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-            }
-        ).run {
+        setupHooks().run {
             step("Open 'Send Screen' with token: $tokenName") {
                 openSendScreen(tokenName)
             }

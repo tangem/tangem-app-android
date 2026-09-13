@@ -13,8 +13,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.tangempay.common.TangemPayActionButton
+import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun TangemPayCardPageSettingsButtonsBlock(
@@ -48,7 +52,7 @@ private fun TangemPayCardPageSettingsButtonsBlockPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors3.bg.secondary),
-            settings = TangemPayCardPageSetting.stubList(),
+            settings = previewSettings(isFrozen = false),
         )
     }
 }
@@ -62,7 +66,36 @@ private fun TangemPayCardPageSettingsButtonsBlockFrozenPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TangemTheme.colors3.bg.secondary),
-            settings = TangemPayCardPageSetting.stubList(isFrozen = true),
+            settings = previewSettings(isFrozen = true),
         )
     }
 }
+
+private fun previewSettings(isFrozen: Boolean): ImmutableList<TangemPayCardPageSetting> = persistentListOf(
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.Details,
+        title = resourceReference(R.string.details_title),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+    ),
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.Freeze,
+        title = resourceReference(
+            if (isFrozen) {
+                R.string.tangem_pay_freeze_card_unfreeze
+            } else {
+                R.string.tangem_pay_freeze_card_freeze
+            },
+        ),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_freeze_24,
+        isLoading = true,
+    ),
+    TangemPayCardPageSetting(
+        id = TangemPayCardPageSetting.Id.ChangePin,
+        title = resourceReference(R.string.tangem_pay_pin_code_title),
+        onClick = {},
+        iconRes = CoreUiR.drawable.ic_card_pin_24,
+        isEnabled = false,
+    ),
+)

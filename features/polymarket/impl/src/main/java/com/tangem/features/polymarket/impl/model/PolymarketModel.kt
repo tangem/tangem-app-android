@@ -19,6 +19,6 @@ internal class PolymarketModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    /** Initial route of the feature stack — the gate decides where the user actually lands. */
-    val initialRoute: PolymarketRoute = PolymarketRoute.Onboarding
+    /** Initial route of the feature stack — [PolymarketRoute.Entry] decides where the user actually lands. */
+    val initialRoute: PolymarketRoute = PolymarketRoute.Entry
 }

@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Project - Common */
+    implementation(projects.common)
     api(projects.common.ui)
     implementation(projects.common.uiMarkets)
     implementation(projects.common.routing)
@@ -41,24 +42,31 @@ dependencies {
     api(projects.domain.account.status)
     api(projects.domain.appCurrency)
     api(projects.domain.common)
-    api(projects.domain.wallets)
     api(projects.domain.earn)
     api(projects.domain.markets)
     api(projects.domain.yieldSupply)
+    api(projects.domain.staking)
     implementation(projects.domain.account)
     api(projects.domain.balanceHiding)
+    api(projects.domain.wallets)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
+    implementation(projects.data.common)
 
     /** Project - Domain models */
     implementation(projects.domain.appCurrency.models)
-    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.core.pagination)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.yieldSupply.models)
+    implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
 
     /** Compose */
     api(deps.compose.animation)
     api(deps.compose.foundation)
     implementation(deps.compose.material3)
-    implementation(deps.compose.reorderable)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
 
@@ -75,10 +83,16 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.annotation)
+    implementation(deps.jodatime)
     kapt(deps.hilt.kapt)
 
     /** Tests */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(deps.androidx.annotation)
+    testImplementation(deps.kotlin.datetime)
+    testImplementation(tangemDeps.blockchain)
+    testImplementation(tangemDeps.card.core)
 }

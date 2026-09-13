@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
-import com.tangem.datasource.utils.KotlinxDataStoreSerializer
+import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.tap.data.DefaultOfframpRepository

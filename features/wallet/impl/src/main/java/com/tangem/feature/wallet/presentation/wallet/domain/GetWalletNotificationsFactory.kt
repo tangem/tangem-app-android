@@ -22,18 +22,22 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -52,27 +56,48 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase,
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) {
+    private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
+        if (userWallet is UserWallet.Hot) {
+            observeAssetsDiscoveryUseCase(userWallet.walletId).distinctUntilChanged()
+        } else {
+            flowOf(AssetsDiscoveryProgress.Idle)
+        }
+
+    /**
+     * The [snapshot] handed to [create] is taken when the screen subscribes and goes stale while the screen
+     * stays alive: finishing activation (setting an access code, backing the wallet up) mutates the stored
+     * wallet without recreating the subscriber. Only the finalize-activation gate reads the re-fetched
+     * wallet — it is the one that depends on [UserWallet.Hot.hotWalletId] and [UserWallet.Hot.backedUp],
+     * both of which the activation flow changes in place.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun freshWalletWithBackupFlow(snapshot: UserWallet): Flow<Pair<UserWallet, Boolean>> {
+        return getUserWalletUseCase.invokeFlow(snapshot.walletId)
+            .map { it.getOrNull() ?: snapshot }
+            .distinctUntilChanged()
+            .flatMapLatest { wallet -> isWalletBackedUpUseCase.flow(wallet).map { wallet to it } }
+            .distinctUntilChanged()
+    }
+
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
         val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
 
-        val assetsDiscoveryProgressFlow =
-            if (userWallet is UserWallet.Hot) {
-                observeAssetsDiscoveryUseCase(userWallet.walletId).distinctUntilChanged()
-            } else {
-                flowOf(AssetsDiscoveryProgress.Idle)
-            }
-
-        return combine(
-            flow = accountStatusListFlow,
+        return combine6(
+            flow1 = accountStatusListFlow,
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
-            flow4 = assetsDiscoveryProgressFlow,
+            flow4 = assetsDiscoveryProgressFlow(userWallet),
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
-        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped, assetsDiscoveryProgress, appUpdateState ->
+            flow6 = freshWalletWithBackupFlow(userWallet),
+        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped, discoveryProgress, appUpdateState, activationState ->
+            val (activationWallet, isWalletBackedUp) = activationState
+
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
 
@@ -95,7 +120,8 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 if (!isAddFundsBannerShown) {
                     addFinishWalletActivationNotification(
-                        userWallet = userWallet,
+                        userWallet = activationWallet,
+                        isBackupExists = isWalletBackedUp,
                         totalFiatBalance = totalFiatBalance,
                         clickIntents = clickIntents,
                         shouldAccessCodeSkipped = shouldAccessCodeSkipped,
@@ -119,7 +145,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 addAssetsDiscoveryCompletedNotification(
                     userWallet = userWallet,
-                    assetsDiscoveryProgress = assetsDiscoveryProgress,
+                    assetsDiscoveryProgress = discoveryProgress,
                     clickIntents = clickIntents,
                 )
 
@@ -351,6 +377,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
     private fun MutableList<WalletNotificationUM>.addFinishWalletActivationNotification(
         userWallet: UserWallet,
+        isBackupExists: Boolean,
         totalFiatBalance: TotalFiatBalance,
         clickIntents: WalletClickIntents,
         shouldAccessCodeSkipped: Boolean,
@@ -359,7 +386,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
         if (totalFiatBalance is TotalFiatBalance.Loading) return
 
-        val isBackupExists = userWallet.backedUp
         val isAccessCodeRequired = userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword &&
             !shouldAccessCodeSkipped
         val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired

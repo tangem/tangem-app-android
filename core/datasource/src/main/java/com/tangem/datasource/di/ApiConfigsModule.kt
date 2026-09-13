@@ -1,12 +1,12 @@
 package com.tangem.datasource.di
 
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
+import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.api.auth.ExpressAuthProvider
-import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
-import com.tangem.datasource.api.auth.StakeKitAuthProvider
+import com.tangem.datasource.utils.AuthenticationHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -21,104 +21,29 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoMap
-    @StringKey(Express.KEY)
-    fun provideExpressConfig(
-        environmentConfig: EnvironmentConfig,
-        expressAuthProvider: ExpressAuthProvider,
-        appInfoProvider: AppInfoProvider,
-    ): ApiConfig {
-        return Express(
-            environmentConfig = environmentConfig,
-            expressAuthProvider = expressAuthProvider,
-            appInfoProvider = appInfoProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(StakeKit.KEY)
-    fun provideStakeKitConfig(stakeKitAuthProvider: StakeKitAuthProvider): ApiConfig {
-        return StakeKit(stakeKitAuthProvider)
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(P2PEthPool.KEY)
-    fun provideP2PEthPoolConfig(p2pAuthProvider: P2PEthPoolAuthProvider): ApiConfig {
-        return P2PEthPool(p2pAuthProvider)
-    }
-
-    @Provides
-    @IntoMap
     @StringKey(TangemTech.KEY)
-    fun provideTangemTechConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
-        return TangemTech(
-            authProvider = authProvider,
-            appInfoProvider = appInfoProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(News.KEY)
-    fun provideNewsConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
-        return News(
-            appInfoProvider = appInfoProvider,
-            authProvider = authProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(YieldSupply.KEY)
-    fun provideYieldSupplyConfig(
-        environmentConfig: EnvironmentConfig,
-        authProvider: AuthProvider,
+    fun provideTangemTechConfig(
+        apiKeyHeaderProvider: TangemApiKeyHeaderProvider,
+        cardAuthHeaderProvider: CardAuthHeaderProvider,
         appInfoProvider: AppInfoProvider,
     ): ApiConfig {
-        return YieldSupply(
-            environmentConfig = environmentConfig,
-            authProvider = authProvider,
+        return TangemTech(
+            apiKeyHeader = apiKeyHeaderProvider,
+            cardAuthHeader = cardAuthHeaderProvider,
             appInfoProvider = appInfoProvider,
         )
     }
 
     @Provides
-    @IntoMap
-    @StringKey(BlockAid.KEY)
-    fun provideBlockAidConfig(environmentConfig: EnvironmentConfig): ApiConfig {
-        return BlockAid(environmentConfig)
+    fun provideTangemApiKeyHeaderProvider(authProvider: AuthProvider): TangemApiKeyHeaderProvider {
+        return TangemApiKeyHeaderProvider { environment ->
+            TangemApiKeyHeader(authProvider, environment)
+        }
     }
 
     @Provides
-    @IntoMap
-    @StringKey(MoonPay.KEY)
-    fun provideMoonPayConfig(): ApiConfig {
-        return MoonPay()
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(GaslessTxService.KEY)
-    fun provideGaslessServiceConfig(authProvider: AuthProvider, appInfoProvider: AppInfoProvider): ApiConfig {
-        return GaslessTxService(
-            authProvider = authProvider,
-            appInfoProvider = appInfoProvider,
-        )
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(SurveySparrow.KEY)
-    fun provideSurveySparrowConfig(environmentConfig: EnvironmentConfig): ApiConfig {
-        return SurveySparrow(environmentConfig)
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey(Auth.KEY)
-    fun provideAuthConfig(): ApiConfig {
-        return Auth()
+    fun provideCardAuthHeaderProvider(authProvider: AuthProvider): CardAuthHeaderProvider {
+        return CardAuthHeaderProvider { AuthenticationHeader(authProvider) }
     }
 
     @Provides

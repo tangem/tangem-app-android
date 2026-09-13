@@ -1,25 +1,30 @@
 package com.tangem.features.polymarket.impl.onboarding.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.polymarket.model.PolymarketAccessMode
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
+import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.model.PolymarketEntry
+import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingProgress
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
-import com.tangem.domain.polymarket.usecase.RunPolymarketOnboardingUseCase
-import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,38 +32,36 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Model of the entry gate.
+ * Model of the entry gate. The wallet is already settled by `PolymarketEntryModel`.
  *
- * Resolving the entry may open a card session, so it runs once per gate and is repeated only when the user
- * retries. A failed resolution never falls through to the feed: the region is unknown, and treating that as
- * permission would let a restricted user trade — it raises the error overlay instead, which offers only retry.
+ * Opening the gate prompts for nothing: an undetermined wallet lands on Welcome with an idle button rather than
+ * an unasked-for card prompt, and the full decision is taken when the user presses it.
  *
- * A superseded resolution never reports its outcome: the use case turns cancellation into a failure instead of
- * propagating it, so a retried attempt would otherwise overwrite the fresh state with the stale error.
- *
- * A failed run returns the button to idle rather than raising an overlay: pressing Start again resumes the
- * run, which the use case supports. A failure the backend reports as not retryable will fail again — the
- * known gap the error design has to close.
+ * Nothing blocks the screen on a failure. Welcome is the gate's only content and its button is the only retry,
+ * so a failed resolution and a failed run both leave it idle and report through a snackbar.
  */
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketOnboardingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val urlOpener: UrlOpener,
-    private val resolvePolymarketEntryUseCase: ResolvePolymarketEntryUseCase,
-    private val runPolymarketOnboardingUseCase: RunPolymarketOnboardingUseCase,
+    private val messageSender: UiMessageSender,
+    private val resolvePolymarketEntryInteractor: ResolvePolymarketEntryInteractor,
+    private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    private val params = paramsContainer.require<PolymarketComponent.Params>()
+    private val userWalletId: UserWalletId = paramsContainer.require<PolymarketOnboardingParams>().userWalletId
 
-    private val onPolymarketTermsClick: () -> Unit = { urlOpener.openUrl(POLYMARKET_TERMS_URL) }
-    private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(TANGEM_TERMS_URL) }
+    private val onPolymarketTermsClick: () -> Unit = {
+        urlOpener.openUrl(PolymarketLegalUrls.polymarketTerms)
+    }
+    private val onTangemTermsClick: () -> Unit = { urlOpener.openUrl(PolymarketLegalUrls.TANGEM_TERMS) }
 
     val uiState: StateFlow<PolymarketOnboardingUM>
-        field = MutableStateFlow(welcome(isStarting = true))
+        field = MutableStateFlow<PolymarketOnboardingUM>(PolymarketOnboardingUM.Resolving)
 
-    private val resolveJob = JobHolder()
     private val onboardingJob = JobHolder()
 
     init {
@@ -69,55 +72,74 @@ internal class PolymarketOnboardingModel @Inject constructor(
         router.pop()
     }
 
-    private fun onRegionRestrictionsDismiss() {
-        openFeed(accessMode = PolymarketAccessMode.READ_ONLY)
-    }
-
     private fun resolveEntry() {
         modelScope.launch {
-            uiState.value = welcome(isStarting = true)
+            val result = resolvePolymarketEntryInteractor.withoutPrompting(userWalletId)
 
-            val result = resolvePolymarketEntryUseCase(params.userWalletId)
-
+            // The use case reports cancellation as a failure rather than propagating it, so a gate the user has
+            // already left would otherwise report itself — and the snackbar is global, landing on their new screen.
             ensureActive()
 
             result.fold(
                 ifLeft = {
-                    uiState.value = welcome(
-                        isStarting = false,
-                        overlay = PolymarketOnboardingUM.Overlay.Error(onRetryClick = ::resolveEntry),
-                    )
+                    uiState.value = welcome(isInProgress = false)
+                    reportFailure()
                 },
-                ifRight = { entry ->
-                    when (entry) {
-                        is PolymarketEntry.Onboard -> uiState.value = welcome(
-                            isStarting = false,
-                            startButtonText = startButtonText(status = entry.status),
-                        )
-                        is PolymarketEntry.Onboarded -> openFeed(accessMode = entry.accessMode)
-                        PolymarketEntry.RegionBlocked -> uiState.value = welcome(
-                            isStarting = false,
-                            overlay = PolymarketOnboardingUM.Overlay.RegionRestrictions(
-                                onDismiss = ::onRegionRestrictionsDismiss,
-                            ),
-                        )
-                    }
-                },
+                ifRight = { entry -> renderEntry(entry) },
             )
-        }.saveIn(resolveJob)
+        }
+    }
+
+    private fun renderEntry(entry: PolymarketEntry) {
+        when (entry) {
+            is PolymarketEntry.Onboard -> uiState.value = welcome(
+                isInProgress = false,
+                startButtonText = startButtonText(status = entry.status),
+            )
+            PolymarketEntry.Undetermined -> uiState.value = welcome(isInProgress = false)
+            PolymarketEntry.Onboarded -> openFeed()
+        }
     }
 
     private fun startOnboarding() {
-        if (uiState.value.isStarting) return
+        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
+        if (current.isInProgress) return
 
-        uiState.value = uiState.value.copy(isStarting = true)
+        uiState.value = current.copy(isInProgress = true)
 
         modelScope.launch {
-            runPolymarketOnboardingUseCase(params.userWalletId).collect { progress ->
-                ensureActive()
-                render(progress)
+            val result = resolvePolymarketEntryInteractor(userWalletId)
+
+            ensureActive()
+
+            val entry = result.getOrElse {
+                stopStarting()
+                reportFailure()
+                return@launch
+            }
+
+            when (entry) {
+                is PolymarketEntry.Onboard,
+                PolymarketEntry.Undetermined,
+                -> runOnboarding()
+                PolymarketEntry.Onboarded -> openFeed()
             }
         }.saveIn(onboardingJob)
+    }
+
+    private fun showRegionRestrictions() {
+        updateWelcome { it.copy(isInProgress = false, isRegionRestrictionsShown = true) }
+    }
+
+    private fun dismissRegionRestrictions() {
+        updateWelcome { it.copy(isRegionRestrictionsShown = false) }
+    }
+
+    private suspend fun CoroutineScope.runOnboarding() {
+        runPolymarketOnboardingInteractor(userWalletId).collect { progress ->
+            ensureActive()
+            render(progress)
+        }
     }
 
     private fun render(progress: PolymarketOnboardingProgress) {
@@ -125,23 +147,44 @@ internal class PolymarketOnboardingModel @Inject constructor(
             PolymarketOnboardingProgress.Deriving,
             PolymarketOnboardingProgress.AwaitingSignature,
             is PolymarketOnboardingProgress.Working,
-            -> uiState.value = uiState.value.copy(isStarting = true)
-            PolymarketOnboardingProgress.Ready -> openFeed(accessMode = PolymarketAccessMode.TRADING)
-            is PolymarketOnboardingProgress.Failed -> uiState.value = uiState.value.copy(isStarting = false)
+            -> updateWelcome { it.copy(isInProgress = true) }
+            PolymarketOnboardingProgress.Ready -> openFeed()
+            is PolymarketOnboardingProgress.Failed ->
+                if (progress.error == PolymarketOnboardingError.RegionBlocked) {
+                    showRegionRestrictions()
+                } else {
+                    stopStarting()
+                    reportFailure()
+                }
         }
     }
 
+    private fun stopStarting() {
+        updateWelcome { it.copy(isInProgress = false) }
+    }
+
+    /** Leaves the state alone unless the gate is showing Welcome — the only state these updates apply to. */
+    private fun updateWelcome(update: (PolymarketOnboardingUM.Welcome) -> PolymarketOnboardingUM.Welcome) {
+        val current = uiState.value as? PolymarketOnboardingUM.Welcome ?: return
+        uiState.value = update(current)
+    }
+
+    private fun reportFailure() {
+        messageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
+    }
+
     private fun welcome(
-        isStarting: Boolean,
+        isInProgress: Boolean,
         startButtonText: TextReference = resourceReference(R.string.prediction_onboarding_start_button),
-        overlay: PolymarketOnboardingUM.Overlay? = null,
-    ) = PolymarketOnboardingUM(
-        isStarting = isStarting,
+        isRegionRestrictionsShown: Boolean = false,
+    ) = PolymarketOnboardingUM.Welcome(
+        isInProgress = isInProgress,
         startButtonText = startButtonText,
         onStartClick = ::startOnboarding,
         onPolymarketTermsClick = onPolymarketTermsClick,
         onTangemTermsClick = onTangemTermsClick,
-        overlay = overlay,
+        isRegionRestrictionsShown = isRegionRestrictionsShown,
+        onRegionRestrictionsDismiss = ::dismissRegionRestrictions,
     )
 
     private fun startButtonText(status: PolymarketWalletStatus): TextReference = when (status) {
@@ -149,12 +192,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
         else -> resourceReference(R.string.common_continue)
     }
 
-    private fun openFeed(accessMode: PolymarketAccessMode) {
-        router.replaceAll(PolymarketRoute.Main(accessMode = accessMode))
-    }
-
-    private companion object {
-        const val POLYMARKET_TERMS_URL = "https://polymarket.com/tos"
-        const val TANGEM_TERMS_URL = "https://tangem.com/tangem_tos.html"
+    private fun openFeed() {
+        router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId))
     }
 }

@@ -1,7 +1,6 @@
 package com.tangem.data.marketing.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.marketing.DefaultMarketingRepository
@@ -12,7 +11,8 @@ import com.tangem.data.marketing.store.MarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.MarketingDismissStore
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsCacheEntry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
@@ -36,8 +36,9 @@ internal object MarketingDataModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): MarketingCampaignsCacheStore = DefaultMarketingCampaignsCacheStore(
-        dataStore = DataStoreFactory.create(
+        dataStore = dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 moshi = moshi,
                 types = mapWithStringKeyTypes<MarketingCampaignsCacheEntry>(),
@@ -54,8 +55,9 @@ internal object MarketingDataModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         appScope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
     ): MarketingDismissStore = DefaultMarketingDismissStore(
-        dataStore = DataStoreFactory.create(
+        dataStore = dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 moshi = moshi,
                 types = setTypes<Int>(),

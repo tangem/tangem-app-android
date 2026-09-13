@@ -52,6 +52,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
     private val swapRepository: SwapRepository,
     private val orderRepository: CustomerOrderRepository,
+    private val withdrawSourceResolver: WithdrawSourceResolver,
     private val withdrawPollingScope: AppCoroutineScope,
 ) : TangemPayWithdrawRepository {
 
@@ -62,13 +63,20 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         userWallet: UserWallet,
         receiverAddress: String,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
         exchangeData: TangemPayWithdrawExchangeState,
     ): Either<UniversalError, WithdrawalResult> {
-        val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
+        val amountInCents = getAmountInCents(cryptoAmount, sourceCurrency)
         if (amountInCents.isNullOrEmpty()) return Either.Left(VisaApiError.WithdrawalDataError)
+        val source = withdrawSourceResolver.resolve(userWallet.walletId, sourceCurrency)
+            ?: return Either.Left(VisaApiError.WithdrawalDataError)
         return requestHelper.performRequest(userWallet.walletId) { authHeader ->
-            val request = WithdrawDataRequest(amountInCents = amountInCents, recipientAddress = receiverAddress)
+            val request = WithdrawDataRequest(
+                amountInCents = amountInCents,
+                recipientAddress = receiverAddress,
+                chainId = source.chainId,
+                tokenContractAddress = source.tokenContractAddress,
+            )
             tangemPayApi.getWithdrawData(authHeader = authHeader, body = request)
         }.map { data ->
             val result = data.result ?: return VisaApiError.WithdrawalDataError.left()
@@ -89,6 +97,8 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                             adminSalt = result.salt,
                             senderAddress = result.senderAddress,
                             adminSignature = signatureResult.signature.addHexPrefix(),
+                            chainId = source.chainId,
+                            tokenContractAddress = source.tokenContractAddress,
                         )
                         tangemPayApi.withdraw(authHeader = authHeader, body = request)
                     }
@@ -225,13 +235,20 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         userWallet: UserWallet,
         receiverAddress: String,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
     ): Either<UniversalError, WithdrawalResult> {
-        val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
+        val amountInCents = getAmountInCents(cryptoAmount, sourceCurrency)
         if (amountInCents.isNullOrEmpty()) return VisaApiError.WithdrawalDataError.left()
+        val source = withdrawSourceResolver.resolve(userWallet.walletId, sourceCurrency)
+            ?: return VisaApiError.WithdrawalDataError.left()
 
         return requestHelper.performRequest(userWallet.walletId) { authHeader ->
-            val request = WithdrawDataRequest(amountInCents = amountInCents, recipientAddress = receiverAddress)
+            val request = WithdrawDataRequest(
+                amountInCents = amountInCents,
+                recipientAddress = receiverAddress,
+                chainId = source.chainId,
+                tokenContractAddress = source.tokenContractAddress,
+            )
             tangemPayApi.getWithdrawData(authHeader = authHeader, body = request)
         }.map { data ->
             val result = data.result ?: return VisaApiError.WithdrawalDataError.left()
@@ -250,6 +267,8 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                         adminSalt = result.salt,
                         senderAddress = result.senderAddress,
                         adminSignature = signatureResult.signature.addHexPrefix(),
+                        chainId = source.chainId,
+                        tokenContractAddress = source.tokenContractAddress,
                     )
                     tangemPayApi.withdraw(authHeader = authHeader, body = request)
                 }.fold(
@@ -308,7 +327,8 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         }
     }
 
-    private suspend fun getAmountInCents(cryptoAmount: BigDecimal, cryptoCurrencyId: CryptoCurrency.RawID): String? {
+    private suspend fun getAmountInCents(cryptoAmount: BigDecimal, sourceCurrency: CryptoCurrency): String? {
+        val cryptoCurrencyId = sourceCurrency.id.rawCurrencyId ?: return null
         val fiatRate = getFiatRate(cryptoCurrencyId) ?: return null
         val amountInDollars = cryptoAmount.multiply(fiatRate)
         val defaultFractionDigits = Currency.getInstance(Locale.US).defaultFractionDigits

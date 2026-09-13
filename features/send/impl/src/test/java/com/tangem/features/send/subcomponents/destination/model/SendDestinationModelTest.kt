@@ -9,6 +9,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -96,6 +97,7 @@ internal class SendDestinationModelTest {
         mockk(relaxed = true)
     private val sendDestinationAlertFactory: SendDestinationAlertFactory = mockk(relaxed = true)
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase = mockk(relaxed = true)
+    private val backupErrorFeatureToggles: BackupErrorFeatureToggles = mockk()
     private val getVerifiedContactsInteractor: GetVerifiedContactsInteractor = mockk(relaxed = true)
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase = mockk(relaxed = true)
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase = mockk(relaxed = true)
@@ -127,6 +129,7 @@ internal class SendDestinationModelTest {
         every { getVerifiedContactsInteractor.getVerifiedContacts(any(), any()) } returns flowOf(emptyList())
         every { contactSelectionListener.resultFlow } returns MutableSharedFlow()
         coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns null
+        every { backupErrorFeatureToggles.isTopUpWarningEnabled } returns true
         every { cryptoCurrency.network.rawId } returns networkRawId
     }
 
@@ -166,19 +169,19 @@ internal class SendDestinationModelTest {
             }
 
         @Test
-        fun `GIVEN valid backup-problematic address WHEN address entered THEN show recipient backup error alert`() =
+        fun `GIVEN toggle off AND backup-problematic address WHEN address entered THEN show backup error alert`() =
             runTest {
                 // Arrange
+                every { backupErrorFeatureToggles.isTopUpWarningEnabled } returns false
                 coEvery {
                     validateWalletAddressUseCase(
                         any(),
                         any(),
                         any(),
                         any<List<CryptoCurrencyAddress>>(),
-                        any()
+                        any(),
                     )
-                } returns
-                    AddressValidation.Success.Valid.right()
+                } returns AddressValidation.Success.Valid.right()
                 coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns testUserWalletId
                 val sut = buildModel()
                 advanceUntilIdle()
@@ -192,6 +195,34 @@ internal class SendDestinationModelTest {
                 // backup override flips the (format-valid) result to error → analytics reports it as invalid
                 verify(exactly = 1) {
                     analyticsEventHandler.send(match<SendDestinationAnalyticEvents.AddressEntered> { !it.isValid })
+                }
+            }
+
+        @Test
+        fun `GIVEN toggle on AND backup-problematic address WHEN address entered THEN no backup error alert`() =
+            runTest {
+                // Arrange
+                coEvery {
+                    validateWalletAddressUseCase(
+                        any(),
+                        any(),
+                        any(),
+                        any<List<CryptoCurrencyAddress>>(),
+                        any(),
+                    )
+                } returns AddressValidation.Success.Valid.right()
+                coEvery { getBackupProblematicWalletForAddressUseCase(any()) } returns testUserWalletId
+                val sut = buildModel()
+                advanceUntilIdle()
+
+                // Act
+                sut.onRecipientAddressValueChange("problematicAddr", EnterAddressSource.InputField)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 0) { sendDestinationAlertFactory.showRecipientBackupErrorAlert(any()) }
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(match<SendDestinationAnalyticEvents.AddressEntered> { it.isValid })
                 }
             }
 
@@ -823,6 +854,7 @@ internal class SendDestinationModelTest {
             getBackupProblematicWalletForAddressUseCase = getBackupProblematicWalletForAddressUseCase,
             sendDestinationAlertFactory = sendDestinationAlertFactory,
             sendBackupProblemEmailUseCase = sendBackupProblemEmailUseCase,
+            backupErrorFeatureToggles = backupErrorFeatureToggles,
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
             isAddressBookCompatibleUseCase = isAddressBookCompatibleUseCase,

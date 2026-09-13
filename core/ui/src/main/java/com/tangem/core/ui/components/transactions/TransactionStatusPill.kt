@@ -83,7 +83,7 @@ private fun Pill(state: TransactionItemUM.Pill, isBalanceHidden: Boolean) {
             )
             if (state.amount != null) {
                 Text(
-                    text = state.amount.orMaskWithStars(isBalanceHidden),
+                    text = state.amount.orMaskWithStars(isBalanceHidden).resolveReference(),
                     color = secondaryColor,
                     style = TangemTheme.typography2.captionMedium12,
                 )
@@ -170,7 +170,7 @@ private fun TransactionItemUM.Pill.failedBody(isBalanceHidden: Boolean): String 
     append(label.resolveReference())
     amount?.let { value ->
         append(' ')
-        append(value.orMaskWithStars(isBalanceHidden))
+        append(value.orMaskWithStars(isBalanceHidden).resolveReference())
     }
     currencySymbol?.let { symbol ->
         append(' ')
@@ -193,7 +193,7 @@ private fun previewPill(
     kind = kind,
     status = status,
     label = stringReference(label),
-    amount = amount,
+    amount = amount?.let { stringReference(it) },
     currencySymbol = currencySymbol,
     subtitle = subtitle,
     timestamp = 0L,
@@ -302,6 +302,19 @@ private fun Preview_TransactionStatusPill_Approve() {
                     status = Status.Failed,
                     label = "Approving",
                     amount = "2,350.00",
+                    currencySymbol = "USDT",
+                    subtitle = PillSubtitle.Address(
+                        rawAddress = "33BdfSXXXXXXXXXXXXXXXXXXXXXXga2B",
+                        briefAddress = "33BdfS...ga2B",
+                    ),
+                ),
+                // Unlimited allowance variant — "Unlimited" stands in for the number
+                previewPill(
+                    txHash = "apa-unlimited",
+                    kind = PillKind.APPROVE,
+                    status = Status.Confirmed,
+                    label = "Approved",
+                    amount = "Unlimited",
                     currencySymbol = "USDT",
                     subtitle = PillSubtitle.Address(
                         rawAddress = "33BdfSXXXXXXXXXXXXXXXXXXXXXXga2B",

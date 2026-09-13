@@ -15,6 +15,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -24,6 +26,7 @@ import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
@@ -57,6 +60,10 @@ internal class WalletBalanceFetcherTest {
     private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles = mockk {
         every { isVirtualAccountsEnabled } returns false
     }
+    private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
+    private val polymarketFeatureToggles: PolymarketFeatureToggles = mockk {
+        every { isPolymarketEnabled } returns false
+    }
 
     private val fetcher = WalletBalanceFetcher(
         userWalletsListRepository = userWalletsListRepository,
@@ -69,8 +76,10 @@ internal class WalletBalanceFetcherTest {
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
         virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        polymarketFeatureToggles = polymarketFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -85,6 +94,10 @@ internal class WalletBalanceFetcherTest {
             multiNetworkStatusFetcher,
             multiQuoteStatusFetcher,
             multiStakingBalanceFetcher,
+            // PER_CLASS: a fetcher left out here carries its calls into the next test
+            paymentAccountStatusFetcher,
+            virtualAccountStatusFetcher,
+            predictionAccountStatusFetcher,
         )
         mockkStatic(UserWalletsListRepository::getSyncStrict)
     }
@@ -881,6 +894,140 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
         }
     }
+
+    @Test
+    fun `GIVEN prediction source and polymarket enabled WHEN fetch THEN prediction status is fetched`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            predictionAccountStatusFetcher(params = PredictionAccountStatusFetcher.Params(userWalletId))
+        }
+    }
+
+    @Test
+    fun `GIVEN prediction source and polymarket disabled WHEN fetch THEN prediction status is not fetched`() =
+        runTest {
+            // Arrange
+            arrangePredictionFetch()
+
+            // Act
+            val actual = createFetcher(isPolymarketEnabled = false).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+            // Assert
+            assertEither(actual, Unit.right())
+            coVerify(inverse = true) { predictionAccountStatusFetcher(params = any()) }
+        }
+
+    /**
+     * The collateral is priced from the app's USDC quote, and a cached balance needs that rate as much as a
+     * freshly read one — so the quote is read here, beside the status, and not by the status refresh itself.
+     */
+    @Test
+    fun `GIVEN prediction source and polymarket enabled WHEN fetch THEN the collateral quote is fetched`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(
+                    currenciesIds = setOf(PredictionCollateral.RAW_ID),
+                    appCurrencyId = null,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the prediction status fails WHEN fetch THEN the collateral quote is fetched anyway`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns IllegalStateException("Error").left()
+
+        // Act
+        createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        coVerify(exactly = 1) {
+            multiQuoteStatusFetcher(
+                params = MultiQuoteStatusFetcher.Params(
+                    currenciesIds = setOf(PredictionCollateral.RAW_ID),
+                    appCurrencyId = null,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the prediction fetch fails WHEN fetch THEN the whole wallet fetch still succeeds`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns IllegalStateException("Error").left()
+
+        // Act
+        val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
+    }
+
+    /** The succeeding network fetch is deliberate: without a balance source the result is `Right` regardless. */
+    private fun arrangePredictionFetch() {
+        val cardTypesResolver = mockk<CardTypesResolver> {
+            every { isMultiwalletAllowed() } returns true
+        }
+        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
+
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK)),
+            WalletFetchingSource.Prediction,
+        )
+        coEvery {
+            multiNetworkStatusFetcher(
+                params = MultiNetworkStatusFetcher.Params(
+                    userWalletId = userWalletId,
+                    networks = currencies.mapTo(destination = hashSetOf(), transform = CryptoCurrency::network),
+                ),
+            )
+        } returns Unit.right()
+        coEvery { multiQuoteStatusFetcher(params = any()) } returns Unit.right()
+    }
+
+    private fun createFetcher(isPolymarketEnabled: Boolean): WalletBalanceFetcher = WalletBalanceFetcher(
+        userWalletsListRepository = userWalletsListRepository,
+        expressServiceFetcher = expressServiceFetcher,
+        multiWalletBalanceFetcher = multiWalletBalanceFetcher,
+        singleWalletWithTokenBalanceFetcher = singleWalletWithTokenBalanceFetcher,
+        singleWalletBalanceFetcher = singleWalletBalanceFetcher,
+        multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+        multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        stakingIdFactory = stakingIdFactory,
+        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        polymarketFeatureToggles = mockk {
+            every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
+        },
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     private fun mockColdWallet(cardTypesResolver: CardTypesResolver) {
         val coldWallet = mockk<UserWallet.Cold>()

@@ -1,20 +1,24 @@
 package com.tangem.features.foryou.impl.components
 
-/** 7% of the full circle — the minimum visual share any non-zero segment (and the grey gap) is drawn at. */
-internal const val MIN_VISUAL_SWEEP_FRACTION = 0.07f
+/**
+ * Minimum visual share, as a fraction of the full circle, that any non-zero segment (and the grey gap) is
+ * drawn at. A tuning knob — nothing should restate its value, in docs or in tests.
+ *
+ */
+internal const val MIN_VISUAL_SWEEP_FRACTION = 0.01f
 
 private const val FULL_CIRCLE_DEG = 360f
-
-/** Share of the round cap width the last segment is compensated for at its lapped-over seams. */
-private const val LAST_SEGMENT_CAP_COMP_FACTOR = 0.75f
 
 /** Float-noise tolerance (deg): a remainder this small counts as "no gap" so an all-in ring stays full. */
 private const val GREY_GAP_EPSILON_DEG = 0.01f
 
+/** Tolerance (deg) for calling the ring closed, so an exact-complement slice leaves no hairline of track. */
+private const val CLOSED_RING_EPSILON_DEG = 0.01f
+
 /**
  * Maps normalized segment [weights] (each expected in `0f..1f`) to sweep angles in degrees, guaranteeing
- * that every non-zero segment is drawn at least [MIN_VISUAL_SWEEP_FRACTION] of the full circle (7% → 25.2°),
- * so a tiny holding never collapses into an invisible sliver.
+ * that every non-zero segment is drawn at least [MIN_VISUAL_SWEEP_FRACTION] of the full circle, so a tiny
+ * holding never collapses into an invisible sliver.
  *
  * This is a purely **visual** transform: the returned angles drive the arc drawing, hit-testing, and the
  * tooltip anchor. The real share shown in the tooltip must still come from the original `weight`.
@@ -32,18 +36,17 @@ private const val GREY_GAP_EPSILON_DEG = 0.01f
  *   hairline sliver. Because both neighbouring slices' round caps bulge into the grey, the reserved floor
  *   is padded by [capDeg] so the *visible* grey lands at [MIN_VISUAL_SWEEP_FRACTION]. Segments are never
  *   squeezed below their own floors to make room for it. [GREY_GAP_EPSILON_DEG] absorbs float noise so an
- *   ≈100% portfolio still reads as a full ring instead of snapping to a 7% grey gap.
+ *   ≈100% portfolio still reads as a full ring instead of snapping to a floored grey gap.
  * - If there are so many segments that even the floor can't fit (`n * floor > 360°`), it falls back to an
  *   equal `360°/n` split.
- * - [capDeg] compensates the round-cap squeeze on the **last segment only** (see [lastSegmentOverlapDeg] for
- *   the angle), and **only on a full ring** (no grey gap): there slice 0's start cap laps over the last
- *   slice's end (a second seam beyond the one every slice has), so it loses ~[capDeg] more visible width.
- *   Once a grey gap exists the last slice has a free end and is no worse off than a middle slice, so no bump.
+ * - No segment is widened to pay for a round cap. A cap extends only forward, over the slice's successor,
+ *   so every slice's visible width is exactly its sweep, however narrow. [capDeg] affects only the grey
+ *   gap, which has two caps reaching into it and none of its own — see [capPaddingDeg].
  *
- * @param capDeg round-cap overlap width in degrees. It feeds both the last-segment compensation and the grey
- *   gap padding, so it must match the geometry actually drawn: every caller involved in drawing, hit-testing
- *   or tooltip anchoring computes it with [lastSegmentOverlapDeg] from the same stroke and arc diameter.
- *   Pass `0f` only when there is no round cap (e.g. pure-geometry tests).
+ * @param capDeg round-cap overlap width in degrees, for the grey gap padding. It must match the geometry
+ *   actually drawn: every caller involved in drawing, hit-testing or tooltip anchoring computes it with
+ *   [capPaddingDeg] from the same stroke and arc diameter. Pass `0f` only when there is no round
+ *   cap (e.g. pure-geometry tests).
  *
  * The returned list has the same size and order as [weights].
  */
@@ -65,16 +68,7 @@ internal fun visualSweepAngles(weights: List<Float>, capDeg: Float): List<Float>
     val hasGrey = naturalGap > GREY_GAP_EPSILON_DEG
     val greyFloor = if (hasGrey) baseFloor + capDeg else 0f
 
-    // Compensation for the LAST segment only, and only on a full ring (no grey gap). There the last slice is
-    // lapped-over by a round cap at both seams (its start by the previous slice's end cap, its end by
-    // slice 0's start cap), so it loses ~[capDeg] more visible width than the others. Once a grey gap exists
-    // the last slice has a free end, so it's no worse off than a middle slice and gets no bump.
-    val comp = if (hasGrey) 0f else capDeg * LAST_SEGMENT_CAP_COMP_FACTOR
-    val lastActive = activeIndices.last()
-    val floorOf = { index: Int ->
-        if (index == lastActive) (baseFloor + comp).coerceAtMost(FULL_CIRCLE_DEG / n) else baseFloor
-    }
-    val floorsSum = activeIndices.sumOf { floorOf(it).toDouble() }.toFloat()
+    val floorsSum = baseFloor * n
     // Segments occupy [budget]; the grey gap is the rest. Preserve the filled sweep when the floors fit,
     // grow into the track when they don't, then reserve [greyFloor] for the grey by capping at 360° − floor
     // — without ever pushing the segments below their own floors.
@@ -91,16 +85,16 @@ internal fun visualSweepAngles(weights: List<Float>, capDeg: Float): List<Float>
     while (true) {
         val freeIndices = activeIndices.filter { it !in pinned }
         if (freeIndices.isEmpty()) {
-            pinned.forEach { result[it] = floorOf(it) }
+            pinned.forEach { result[it] = baseFloor }
             break
         }
-        val freeBudget = budget - pinned.sumOf { floorOf(it).toDouble() }.toFloat()
+        val freeBudget = budget - baseFloor * pinned.size
         val freeBaseSum = freeIndices.sumOf { base[it].toDouble() }.toFloat()
         freeIndices.forEach { result[it] = freeBudget * base[it] / freeBaseSum }
 
-        val newlyBelow = freeIndices.filter { result[it] < floorOf(it) }
+        val newlyBelow = freeIndices.filter { result[it] < baseFloor }
         if (newlyBelow.isEmpty()) {
-            pinned.forEach { result[it] = floorOf(it) }
+            pinned.forEach { result[it] = baseFloor }
             break
         }
         pinned.addAll(newlyBelow)
@@ -109,17 +103,46 @@ internal fun visualSweepAngles(weights: List<Float>, capDeg: Float): List<Float>
 }
 
 /**
- * Exact extra sweep (degrees) a round cap laps over one arc seam — the `capDeg` [visualSweepAngles] expects.
+ * Whether the slices leave no room for the track — i.e. their sweeps span the whole circle. The track is
+ * translucent, so a caller must skip it here rather than paint it under a covering slice and darken it
+ * twice.
+ */
+internal fun isRingClosed(sweeps: List<Float>): Boolean = sweeps.sum() >= FULL_CIRCLE_DEG - CLOSED_RING_EPSILON_DEG
+
+/**
+ * Index of the slice whose **start** is a free end rather than a seam — the first drawn slice of a ring the
+ * slices don't close, which keeps a backward cap so the ring's tail stays rounded against the track.
+ *
+ * `null` on a closed ring: there the last slice's forward cap covers that point, so nothing is left to
+ * round. Every slice's *end* always carries a forward cap, so it needs no such question.
+ */
+internal fun freeStartSliceIndex(sweeps: List<Float>): Int? =
+    sweeps.indices.firstOrNull { sweeps[it] > 0f }?.takeIf { !isRingClosed(sweeps) }
+
+/**
+ * The indices to paint, back to front: the first entry ends up at the bottom and the last on top — so
+ * slice 0, the largest holding, sits above its neighbour and its round end cap tucks over it. Slices with
+ * nothing to draw are left out, so the caller paints every index it is handed.
+ *
+ * The caps are painted in a second pass over this same order, after every body — which is what lets the
+ * last slice's forward cap land on slice 0 without the wrap needing a special case.
+ */
+internal fun slicePaintOrder(sweeps: List<Float>): List<Int> = sweeps.indices.filter { sweeps[it] > 0f }.reversed()
+
+/**
+ * Width (degrees) of the two round caps that bulge into an unfilled remainder — the `capDeg`
+ * [visualSweepAngles] expects, and its only use.
  *
  * A round cap bulges past its arc's angular end by one cap radius (`strokePx / 2`), i.e.
  * `capAngle = toDegrees((strokePx / 2) / R)` with `R = arcDiameter / 2` → `toDegrees(strokePx / arcDiameter)`.
- * A middle slice loses one such bulge at its start (covered by the previous slice's end cap) but keeps its
- * own end cap, so its visible width equals its sweep. The last slice on a full ring additionally has its end
- * covered by slice 0's start cap at the wrap — a second cap's worth — so it needs `2 × capAngle` back. The
- * grey gap likewise has both neighbouring caps bulging into it. Both compensations are sized off this value.
+ * A gap has two such bulges reaching into it and no cap of its own — the last slice's forward cap at one
+ * end, the first slice's backward cap at the other ([freeStartSliceIndex]) — hence twice that angle.
+ *
+ * The slices themselves need no allowance: a cap extends only *forward*, over the slice's successor, so
+ * every slice's visible width is exactly its sweep, however narrow.
  *
  * [arcDiameter] is the ring centerline diameter — `min(width, height) − strokePx` in the draw/hit-test/tooltip
  * passes — so all three produce the same angles from the same stroke.
  */
-internal fun lastSegmentOverlapDeg(strokePx: Float, arcDiameter: Float): Float =
+internal fun capPaddingDeg(strokePx: Float, arcDiameter: Float): Float =
     2f * Math.toDegrees((strokePx / arcDiameter).toDouble()).toFloat()

@@ -109,9 +109,10 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             network = network,
             name = blockchain.getCoinName(),
             symbol = blockchain.getSymbolForCoin(responseToken),
-            decimals = responseToken.decimals,
+            decimals = blockchain.decimals(),
             iconUrl = getCoinIconUrl(blockchain),
             isCustom = isCustomCoin(network),
+            displayDecimals = blockchain.displayDecimals(),
         )
     }
 

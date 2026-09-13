@@ -14,21 +14,31 @@ dependencies {
 
     /** Feature */
     implementation(projects.features.polymarket.api)
+    api(projects.features.commonFeatures.api)
+
+    /** Common */
+    implementation(projects.common.ui)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
 
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
+    implementation(projects.core.pagination)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.polymarket)
+    implementation(projects.domain.core)
 
     /** Kotlin */
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization.core)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -43,7 +53,15 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
+    implementation(deps.arrow.core)
+    implementation(deps.compose.coil)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     kapt(deps.hilt.kapt)
+    api(projects.core.utils)
 
     /** Tests */
     testImplementation(projects.test.core)

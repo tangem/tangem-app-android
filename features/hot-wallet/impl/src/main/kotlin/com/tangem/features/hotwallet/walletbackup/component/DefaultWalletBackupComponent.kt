@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.hotwallet.WalletBackupComponent
@@ -19,6 +20,10 @@ internal class DefaultWalletBackupComponent @AssistedInject constructor(
 ) : WalletBackupComponent, AppComponentContext by context {
 
     private val model: WalletBackupModel = getOrCreateModel(params)
+
+    init {
+        lifecycle.subscribe(onResume = model::onScreenResumed)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {

@@ -12,8 +12,8 @@ android {
 
 dependencies {
     /* AndroidX */
-    implementation(deps.lifecycle.compose)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.lifecycle.compose)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -24,7 +24,6 @@ dependencies {
     /** Core modules */
     implementation(projects.core.ui)
     implementation(projects.core.utils)
-    implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.decompose)
 
@@ -38,5 +37,8 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.decompose)
+    implementation(deps.kotlin.coroutines)
     kapt(deps.hilt.kapt)
 }

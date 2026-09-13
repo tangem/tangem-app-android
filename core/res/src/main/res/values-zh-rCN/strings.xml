@@ -277,6 +277,7 @@
   <string name="common_added">已添加</string>
   <string name="common_address">地址</string>
   <string name="common_all">全部</string>
+  <string name="common_all_accounts">所有账户</string>
   <string name="common_allow">允许</string>
   <string name="common_amount">金额</string>
   <string name="common_analytics">分析</string>
@@ -286,6 +287,9 @@
   <string name="common_approve">批准</string>
   <string name="common_approved">已批准</string>
   <string name="common_approving">批准</string>
+  <plurals name="common_assets_count" formatted="false">
+    <item quantity="other">%d资产\n%d资产</item>
+  </plurals>
   <string name="common_attention">请注意</string>
   <string name="common_available_networks">可用网络</string>
   <string name="common_backup">备份</string>
@@ -320,6 +324,7 @@
   <string name="common_create">创建</string>
   <string name="common_crypto_fiat_format">%1$s (%2$s)</string>
   <string name="common_custom">定制</string>
+  <string name="common_day">天</string>
   <plurals name="common_days">
     <item quantity="other">%d天</item>
   </plurals>
@@ -355,6 +360,9 @@
   <string name="common_forget">忘记</string>
   <string name="common_free">免费</string>
   <string name="common_from">从</string>
+  <string name="common_from_account">从账户</string>
+  <string name="common_from_address">从地址</string>
+  <string name="common_from_wallet">从钱包</string>
   <string name="common_from_wallet_name">从 %s</string>
   <string name="common_generate_addresses">同步地址</string>
   <string name="common_get">得到</string>
@@ -388,13 +396,29 @@
     <item quantity="other">分钟之前</item>
   </plurals>
   <string name="common_month">月</string>
+  <string-array name="common_month_in">
+    <item>1月</item>
+    <item>2月</item>
+    <item>3月</item>
+    <item>4月</item>
+    <item>5月</item>
+    <item>6月</item>
+    <item>7月</item>
+    <item>8月</item>
+    <item>9月</item>
+    <item>10月</item>
+    <item>11月</item>
+    <item>12月</item>
+  </string-array>
   <string name="common_more">更多的</string>
+  <string name="common_negative">负面</string>
   <string name="common_network">网络</string>
   <string name="common_network_fee_title">网络费用</string>
   <string name="common_network_fee_warning_content">汇款金额将减少 %1$s （%2$s）以支付所选费用等级</string>
   <plurals name="common_networks_count">
     <item quantity="other">%d网络</item>
   </plurals>
+  <string name="common_neutral">中性</string>
   <string name="common_new_address">新地址</string>
   <string name="common_news">新闻</string>
   <string name="common_next">下一个</string>
@@ -402,6 +426,7 @@
   <string name="common_no">不</string>
   <string name="common_no_address">无地址</string>
   <string name="common_no_results">无结果</string>
+  <string name="common_none">无</string>
   <string name="common_not_added">未添加</string>
   <string name="common_not_available">不可用</string>
   <string name="common_not_now">现在不要</string>
@@ -412,8 +437,10 @@
   <string name="common_or">或者</string>
   <string name="common_origin_card">主卡</string>
   <string name="common_origin_ring">主指环</string>
+  <string name="common_other">其他</string>
   <string name="common_passphrase">密码短语</string>
   <string name="common_paste">粘贴</string>
+  <string name="common_positive">正面</string>
   <string name="common_privacy_policy">隐私政策</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
@@ -436,6 +463,7 @@
   <string name="common_second_no_param">秒</string>
   <string name="common_see_all">查看全部</string>
   <string name="common_seed_phrase">助记词</string>
+  <string name="common_select_account">选择账户</string>
   <string name="common_select_action">选择操作</string>
   <string name="common_sell">出售</string>
   <string name="common_send">发送</string>
@@ -443,7 +471,7 @@
   <string name="common_send_tx_error">交易发送失败</string>
   <string name="common_send_with_swap">发送和交换</string>
   <string name="common_sending">发送中</string>
-  <string name="common_sent">发送</string>
+  <string name="common_sent">已发送</string>
   <string name="common_server_unavailable">服务器不可用，请稍后再试。</string>
   <string name="common_session_expired">会话已过期</string>
   <string name="common_share">分享</string>
@@ -464,7 +492,7 @@
   <string name="common_supported_networks">支持的网络</string>
   <string name="common_swap">兑换</string>
   <string name="common_swapped">已兑换</string>
-  <string name="common_swapping">兑换...</string>
+  <string name="common_swapping">兑换中</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem钱包</string>
   <string name="common_tap_and_hold_hint">点击并按住</string>
@@ -620,7 +648,7 @@
   <string name="express_error_swap_unavailable">目前无法进行兑换。请稍后再试。（代码：） %s）</string>
   <string name="express_estimated_amount">预估金额</string>
   <string name="express_exchange_by">由 %s交易</string>
-  <string name="express_exchange_notification_failed_text">访问提供商网站退款</string>
+  <string name="express_exchange_notification_failed_text">请访问服务提供商的网站办理退款</string>
   <string name="express_exchange_notification_failed_title">提供商操作失败</string>
   <string name="express_exchange_notification_long_transaction_time_text">您的兑换所需时间比平时长，但您的资金完全安全并会到账。如有任何疑问，您可以联系服务提供商的客服团队。</string>
   <string name="express_exchange_notification_long_transaction_time_title">交易时间长</string>
@@ -712,6 +740,14 @@
   <string name="feedback_subject_support_tangem">Tangem反馈</string>
   <string name="feedback_subject_tx_failed">无法发送交易</string>
   <string name="feedback_token_description_error">代币描述错误</string>
+  <string name="for_you_description">查看投资组合，探索获利机会</string>
+  <string name="for_you_earn_opportunities">收益机会</string>
+  <string name="for_you_earn_opportunities_all_tokens_active">您的所有资产都在生效中，请探索新机会</string>
+  <string name="for_you_earn_opportunities_explore">查看所有代币</string>
+  <string name="for_you_earn_opportunities_no_available_tokens">每年最高可获得 %1$s</string>
+  <string name="for_you_earn_opportunities_tokens_rewards">最高潜在回报 %1$s</string>
+  <string name="for_you_earn_per_year">%1$s/年</string>
+  <string name="for_you_portfolio_review_title">持仓资产总览</string>
   <string name="force_update_action">立即更新</string>
   <string name="force_update_banner_message">请将应用更新至最新版本，以确保其正常运行</string>
   <string name="force_update_banner_title">需要更新</string>
@@ -764,6 +800,7 @@
   <string name="hw_backup_alert_title">您确定要取消激活吗？</string>
   <string name="hw_backup_banner_description">让您的加密货币安全离线存储。轻薄如信用卡，安全胜过银行金库。</string>
   <string name="hw_backup_close_description">如果确定现在退出，您需要从头再来。</string>
+  <string name="hw_backup_cloud_delete_confirm_title">删除 %s 备份？</string>
   <string name="hw_backup_google_drive_description">通过 Google 云端硬盘备份恢复现有钱包</string>
   <string name="hw_backup_google_drive_dialog_message">我们正在改进 Google 云盘备份功能，使钱包恢复更加便捷。</string>
   <string name="hw_backup_google_drive_dialog_title">Google 云盘备份功能即将推出</string>
@@ -787,6 +824,72 @@
   <string name="hw_backup_to_upgrade_description">要升级到硬件钱包，请完成备份过程。</string>
   <string name="hw_backup_upgrade_description">将您的手机钱包升级到 Tangem 硬件钱包，享受最高级别的安全性。导入您的钱包或将资金转移到新钱包。</string>
   <string name="hw_backup_upgrade_title">升级到冷钱包</string>
+  <string name="hw_cloud_backup_access_unavailable_description">在您的设备设置中允许 Tangem 使用 %1$s，然后再次尝试保存备份。</string>
+  <string name="hw_cloud_backup_access_unavailable_title">无法访问 %1$s</string>
+  <string name="hw_cloud_backup_cancel_setup_cancel">取消备份</string>
+  <string name="hw_cloud_backup_cancel_setup_continue">继续备份</string>
+  <string name="hw_cloud_backup_cancel_setup_description">您的钱包不会备份到 %s。您稍后可以在钱包设置中进行配置。</string>
+  <string name="hw_cloud_backup_cancel_setup_title">取消备份设置？</string>
+  <string name="hw_cloud_backup_cell_description">将您的钱包保存至 %s ，以便轻松恢复。数据经过安全加密。</string>
+  <string name="hw_cloud_backup_completed_description">您的钱包已设置完毕，可以开始使用了！</string>
+  <string name="hw_cloud_backup_completed_title">备份已完成</string>
+  <string name="hw_cloud_backup_confirm_password_description">在 %s上，需要输入密码才能对您的种子助记词进行加密。</string>
+  <string name="hw_cloud_backup_confirm_password_title">确认密码</string>
+  <string name="hw_cloud_backup_consent">我明白Tangem无法恢复我的备份密码。一旦丢失该密码或Apple ID，我的备份就无法恢复了。如果没有我的恢复短语，我的加密资产也无法恢复。</string>
+  <string name="hw_cloud_backup_consent_v2">我明白 Tangem 无法恢复我的备份密码。一旦丢失该密码或 %1s，我的备份就无法恢复了。如果没有我的恢复短语，我的加密资产也无法恢复。</string>
+  <string name="hw_cloud_backup_delete_confirm_message">您将无法通过 %s恢复此钱包。您可以随时创建新的备份。</string>
+  <string name="hw_cloud_backup_error_network">没有互联网连接。请检查网络连接，然后重试。</string>
+  <string name="hw_cloud_backup_error_title">出现了一些问题</string>
+  <string name="hw_cloud_backup_error_unavailable">此设备不支持云备份。</string>
+  <string name="hw_cloud_backup_error_write">无法保存您的备份。请重试。</string>
+  <string name="hw_cloud_backup_hide_password">隐藏密码</string>
+  <string name="hw_cloud_backup_no_access_description">请再次登录您的 Google 账户，以保存您的钱包备份。</string>
+  <string name="hw_cloud_backup_no_access_sign_in">登录</string>
+  <string name="hw_cloud_backup_no_backups_description">请登录另一个账户或导入您的助记词。</string>
+  <string name="hw_cloud_backup_not_found_create">创建备份</string>
+  <string name="hw_cloud_backup_not_found_description">这个钱包之前已经备份过了，但我们找不到备份文件。</string>
+  <string name="hw_cloud_backup_not_found_forget">忘记备份</string>
+  <string name="hw_cloud_backup_not_found_title">未找到备份</string>
+  <string name="hw_cloud_backup_password_hint">密码</string>
+  <string name="hw_cloud_backup_password_rule_v2">请使用 %d 或更多字符，其中应包含大写字母、小写字母、数字和符号。</string>
+  <string name="hw_cloud_backup_passwords_dont_match">密码不匹配</string>
+  <string name="hw_cloud_backup_permissions_description">缺少某些权限。请授予完全访问权限，以便我们将您的钱包备份保存到 Google 云端硬盘。</string>
+  <string name="hw_cloud_backup_permissions_description_v2">缺少某些权限。请授予完全访问权限，以便我们将您的钱包备份保存到 %1$s。</string>
+  <string name="hw_cloud_backup_permissions_title">完全访问 Google 云端硬盘</string>
+  <string name="hw_cloud_backup_permissions_title_v2">允许完全访问 %1$s</string>
+  <string name="hw_cloud_backup_remove_title">%1$s %2$s 备份</string>
+  <string name="hw_cloud_backup_removed">备份已删除</string>
+  <string name="hw_cloud_backup_restore_error_title">出现了一些问题</string>
+  <string name="hw_cloud_backup_restore_error_with_recovery">请稍后再试，或导入您的恢复短语。</string>
+  <string name="hw_cloud_backup_restore_navtitle_v2">%1$s 备份</string>
+  <string name="hw_cloud_backup_restore_passphrase_description">请输入此钱包准确的密码短语。该密码短语区分大小写，因此不同的密码短语会打开不同的地址集。</string>
+  <string name="hw_cloud_backup_restore_passphrase_title">输入密码短语</string>
+  <string name="hw_cloud_backup_restore_password_button">还原</string>
+  <string name="hw_cloud_backup_restore_password_description">您正在从 %2$s 备份中恢复“%1$s”，该备份创建于 %3$s</string>
+  <string name="hw_cloud_backup_restore_password_navtitle">恢复钱包</string>
+  <string name="hw_cloud_backup_restore_password_title">输入密码</string>
+  <string name="hw_cloud_backup_restore_use_recovery_phrase">导入恢复短语</string>
+  <string name="hw_cloud_backup_restore_wrong_password">密码错误</string>
+  <string name="hw_cloud_backup_retry">请重试</string>
+  <string name="hw_cloud_backup_set_password_button">设置密码</string>
+  <string name="hw_cloud_backup_set_password_description">在 %s上，您需要输入密码才能对恢复短语进行加密。</string>
+  <string name="hw_cloud_backup_set_password_title">设置密码</string>
+  <string name="hw_cloud_backup_sheet_backup_time">备份时间： %1$s</string>
+  <string name="hw_cloud_backup_sheet_remove">删除备份</string>
+  <string name="hw_cloud_backup_show_password">显示密码</string>
+  <string name="hw_cloud_backup_status_action_required">需要采取的行动</string>
+  <string name="hw_cloud_backup_status_network_error">网络错误</string>
+  <string name="hw_cloud_backup_strength_hint_almost">长度差不多够了——再加几个字符就好</string>
+  <string name="hw_cloud_backup_strength_hint_keep_going_v2">继续写下去，目标至少达到 %d 个字符</string>
+  <string name="hw_cloud_backup_strength_hint_lowercase">在其中加入一个小写字母</string>
+  <string name="hw_cloud_backup_strength_hint_number">试着加个数字</string>
+  <string name="hw_cloud_backup_strength_hint_ok">干得不错！这得花很长时间才能破解。</string>
+  <string name="hw_cloud_backup_strength_hint_symbol">添加一个符号，比如 ! 或 @，以加强安全性</string>
+  <string name="hw_cloud_backup_strength_hint_uppercase">在其中加入一个大写字母</string>
+  <string name="hw_cloud_backup_strength_medium">普通密码</string>
+  <string name="hw_cloud_backup_strength_none">密码强度</string>
+  <string name="hw_cloud_backup_strength_strong">强密码</string>
+  <string name="hw_cloud_backup_strength_weak">弱密码</string>
   <string name="hw_create_keys_description">您的私人密钥已安全加密并存储在手机中</string>
   <string name="hw_create_keys_title">私钥会保留在您的设备上。</string>
   <string name="hw_create_seed_description">使用恢复短语创建或恢复钱包。</string>
@@ -795,19 +898,28 @@
   <string name="hw_create_upgrade_description">随时安全地将手机钱包转移到 Tangem 卡片或指环上。</string>
   <string name="hw_create_upgrade_title">升级到硬件钱包</string>
   <string name="hw_import_existing_wallet">导入现有钱包</string>
+  <string name="hw_import_existing_wallet_description">通过导入或恢复，继续使用您已拥有的钱包</string>
+  <string name="hw_import_restore_cloud_backup">恢复 %s 备份</string>
+  <string name="hw_import_restore_cloud_backup_not_found">%s 未找到备份</string>
   <string name="hw_import_seed_phrase_already_imported">此恢复短语已导入</string>
   <string name="hw_mobile_wallet">移动钱包</string>
   <string name="hw_remove_wallet_action_forget_title">忘记钱包</string>
   <string name="hw_remove_wallet_attention_description">此钱包将从您的设备中永久移除。</string>
+  <string name="hw_remove_wallet_cloud_backup_description">钱包将从此设备中移除。您的 %s 备份安全无虞——您可以随时使用密码恢复此钱包。</string>
+  <string name="hw_remove_wallet_cloud_backup_title">忘记这个钱包吗？</string>
   <string name="hw_remove_wallet_confirmation_title">你确定要这么做吗？</string>
+  <string name="hw_remove_wallet_forget_and_delete_backup">忘记并删除备份</string>
   <string name="hw_remove_wallet_nav_title">忘记钱包</string>
   <string name="hw_remove_wallet_notification_action_backup_go">转到备份</string>
   <string name="hw_remove_wallet_notification_action_backup_view">查看恢复短语</string>
+  <string name="hw_remove_wallet_notification_action_backup_view_v2">查看备份</string>
   <string name="hw_remove_wallet_notification_action_forget">忘记钱包</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">确定忘记</string>
   <string name="hw_remove_wallet_notification_description_has_backup">这个钱包有备份。在忘记钱包之前，请确保你能找回备份。</string>
+  <string name="hw_remove_wallet_notification_description_has_backup_v2">该钱包已有备份。在忘记之前请先查看一下，以确保日后能够恢复。</string>
   <string name="hw_remove_wallet_notification_description_without_backup">如果您忘记了这个钱包而又没有备份，您将永远无法使用您的资金。</string>
   <string name="hw_remove_wallet_notification_title">你确定要忘记这个钱包吗？</string>
+  <string name="hw_remove_wallet_notification_title_v2">忘记这个钱包吗？</string>
   <string name="hw_remove_wallet_warning_access">我知道，如果我在移除钱包之前没有备份钱包，我将无法访问钱包。</string>
   <string name="hw_remove_wallet_warning_device">我知道移除钱包并不会将其删除，只会将其从我的设备中移除。</string>
   <string name="hw_upgrade">升级</string>
@@ -819,9 +931,13 @@
   <string name="hw_upgrade_funds_access_description">在此过程中，您的资金将保持安全且完全可用。</string>
   <string name="hw_upgrade_funds_access_title">获得资金</string>
   <string name="hw_upgrade_general_security_description">升级后，您的移动钱包将从应用程序中移除并存储在您的 Tangem 硬件钱包中。您的助记词将保留在您身边。</string>
+  <string name="hw_upgrade_general_security_description_v2">升级后，您的移动钱包和 %1$s 备份将被删除。您的助记词将存储在您的 Tangem 硬件钱包中。</string>
   <string name="hw_upgrade_general_security_title">一般安全</string>
   <string name="hw_upgrade_key_migration_description">私钥将从应用程序转移到您的 Tangem 硬件钱包。</string>
   <string name="hw_upgrade_key_migration_title">私钥迁移</string>
+  <string name="hw_upgrade_save_seed_action">保存恢复短语</string>
+  <string name="hw_upgrade_save_seed_description">升级后，您将无法再次查看该信息。您的手机钱包和云端备份都将被删除，因此请立即将其记录下来，作为备份恢复方法。</string>
+  <string name="hw_upgrade_save_seed_title">升级前请保存您的恢复短语</string>
   <string name="hw_upgrade_scan_device">扫描设备</string>
   <string name="hw_upgrade_start_action">开始升级</string>
   <string name="hw_upgrade_start_description">您即将升级到我们的硬件钱包。它会将您的资产安全地存储在冷存储中。</string>
@@ -881,6 +997,11 @@
   <string name="manage_tokens_unavailable_description">所选代币目前无法在加密钱包中进行操作。不过别担心，您可以点赞来表达您的兴趣。</string>
   <string name="manage_tokens_unavailable_vote">点赞</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">该钱包不支持多个网络</string>
+  <string name="market_chart_bubble_no_amount">无代币 \n/ 资产价值</string>
+  <string name="market_chart_bubble_total_value">总价值</string>
+  <string name="market_chart_can_not_load_data">无法加载数据</string>
+  <string name="market_chart_no_amount">没有代币，或无法确定其价值</string>
+  <string name="market_chart_top_holding">最大持有占比 %s</string>
   <string name="markets_about_coin_header">关于硬币</string>
   <string name="markets_add_to_my_portfolio_description">要购买、交换或接收此资产，请将其添加到您的投资组合中。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">钱包目前不支持此资产。</string>
@@ -1787,7 +1908,7 @@
   <string name="tangem_pay_transaction_details_cashback_below_min">最低交易金额为</string>
   <string name="tangem_pay_transaction_details_cashback_cap_reached">已达月度上限</string>
   <string name="tangem_pay_transaction_details_cashback_mcc_excluded">MCC 已排除</string>
-  <string name="tangem_pay_transaction_details_cashback_none">无返现</string>
+  <string name="tangem_pay_transaction_details_cashback_none">—</string>
   <string name="tangem_pay_transaction_details_cashback_refund">购买退款</string>
   <string name="tangem_pay_transaction_details_cashback_region_excluded">已排除的地区</string>
   <string name="tangem_pay_transaction_details_category">分类</string>
@@ -1806,6 +1927,8 @@
   <string name="tangempay_account_unable_to_use_rooted">无法在已root的设备上使用</string>
   <string name="tangempay_available_balance">可用余额</string>
   <string name="tangempay_bank_transfer_fee_ach">ACH</string>
+  <string name="tangempay_bank_transfer_fee_error_subtitle">点击重新加载</string>
+  <string name="tangempay_bank_transfer_fee_error_title">加载手续费信息失败</string>
   <string name="tangempay_bank_transfer_fee_fedwire">FedWire</string>
   <string name="tangempay_bank_transfer_fee_header">入金手续费</string>
   <string name="tangempay_bank_transfer_intro_subtitle">收到的美元将按 1:1 的汇率转换为 USDC</string>
@@ -1815,8 +1938,23 @@
   <string name="tangempay_bank_transfer_success_subtitle">这可能需要一些时间</string>
   <string name="tangempay_bank_transfer_success_title">正在准备您的银行信息</string>
   <string name="tangempay_bank_transfer_swift_warning">不接受 SWIFT 转账，款项将退回</string>
-  <string name="tangempay_cancel_kyc">从主屏幕隐藏 KYC 页面</string>
+  <string name="tangempay_bank_transfer_terms_of_use">服务条款</string>
+  <string name="tangempay_cancel_kyc">从主屏幕隐藏身份验证</string>
+  <string name="tangempay_card_activation_attempts_exceeded_description">请联系客服</string>
+  <string name="tangempay_card_activation_attempts_exceeded_title">您已超过激活尝试次数</string>
+  <string name="tangempay_card_activation_description">输入您卡号的最后 4 位数字</string>
+  <string name="tangempay_card_activation_error">末位数字有误，请重试</string>
+  <string name="tangempay_card_activation_error_already_active">该卡已激活。</string>
+  <string name="tangempay_card_activation_error_in_progress">激活正在进行中，请稍候。</string>
+  <string name="tangempay_card_activation_error_not_physical">这不是实体卡</string>
+  <string name="tangempay_card_activation_error_not_ready">该卡尚未准备好激活。请在收到卡片后重试。</string>
+  <string name="tangempay_card_activation_in_progress">正在激活您的卡片</string>
   <string name="tangempay_card_default_name">Tangem 支付卡 1</string>
+  <string name="tangempay_card_delivery_banner_description">收到后请激活</string>
+  <string name="tangempay_card_delivery_banner_description_many">收到后请激活</string>
+  <string name="tangempay_card_delivery_banner_title">您的卡片正在配送中</string>
+  <string name="tangempay_card_delivery_banner_title_many">您的卡片正在配送中</string>
+  <string name="tangempay_card_details_activate">激活卡片</string>
   <string name="tangempay_card_details_add_funds">增加资金</string>
   <string name="tangempay_card_details_add_funds_subtitle">充值选项</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">添加到 Google 钱包</string>
@@ -1828,11 +1966,13 @@
   <string name="tangempay_card_details_change_pin_success_description">该卡已完全准备好用于支付。</string>
   <string name="tangempay_card_details_change_pin_success_title">已创建 PIN 码</string>
   <string name="tangempay_card_details_cvc">CVC</string>
+  <string name="tangempay_card_details_delivery_description"> 您的卡片正在配送途中。物流公司将通过 %s 向您发送最新进度。</string>
   <string name="tangempay_card_details_error_text">数据加载失败，请稍后再试。</string>
   <string name="tangempay_card_details_expiry">到期</string>
   <string name="tangempay_card_details_freeze_card">冻结卡片</string>
   <string name="tangempay_card_details_hide_details">隐藏详情</string>
   <string name="tangempay_card_details_hide_text">隐藏</string>
+  <string name="tangempay_card_details_name_on_card">持卡人姓名</string>
   <string name="tangempay_card_details_open_wallet_button">打开 Google 钱包</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">只需轻点几下即可设置 Tangem Pay，然后即可开始使用 Google Pay 付款。</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">只需轻点几下即可设置 Tangem Pay，然后即可开始使用 Apple Pay 付款。</string>
@@ -1855,7 +1995,7 @@
   <string name="tangempay_card_details_receive_error_description">检测到技术问题。请稍后再试或联系技术支持。</string>
   <string name="tangempay_card_details_receive_error_title">目前无法接收</string>
   <string name="tangempay_card_details_reissue_card">重新发行卡片</string>
-  <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字。</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字</string>
   <string name="tangempay_card_details_rename_card_invalid_title">无效字符</string>
   <string name="tangempay_card_details_rename_card_placeholder">卡片名称</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
@@ -1863,7 +2003,7 @@
   <string name="tangempay_card_details_system_downgrade_subtitle">如果余额持续为负，您的 %1$s 卡片将于 %2$s 关闭</string>
   <string name="tangempay_card_details_system_downgrade_title">请尽快为您的账户充值</string>
   <string name="tangempay_card_details_title">卡片详情</string>
-  <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试。</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">请稍后再试</string>
   <string name="tangempay_card_details_unfreeze_card">解冻卡片</string>
   <string name="tangempay_card_details_view_pin_code_description">如果忘记了，请返回应用查看。</string>
   <string name="tangempay_card_details_view_pin_code_title">您的PIN码</string>
@@ -1874,6 +2014,7 @@
   <string name="tangempay_card_edit_name_placeholder">卡片名称</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">从 %s设定一个限额</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
+  <string name="tangempay_card_page_activating_banner_title">正在激活您的实体卡</string>
   <string name="tangempay_card_page_closing_banner_description">通常需要最多 5 分钟</string>
   <string name="tangempay_card_page_closing_banner_title">关闭您的卡片</string>
   <string name="tangempay_card_page_daily_limit_change">改变</string>
@@ -1890,7 +2031,7 @@
   </plurals>
   <string name="tangempay_cashback_accruals_calc_description">我们会在交易发生后 5 天内处理购买，且仅计入已完成的交易</string>
   <string name="tangempay_cashback_accruals_calc_title">我们如何计算返现？</string>
-  <string name="tangempay_cashback_accruals_exceptions_description">在欧盟商户的线下/店内消费不享受返现；提现、转账、准现金交易、手机话费、政府服务及某些其他类别同样不适用</string>
+  <string name="tangempay_cashback_accruals_exceptions_description">暂不支持欧盟线下门店消费返现。提现、准现金交易、话费充值、政务缴费等部分特定类别同样不参与返现。</string>
   <string name="tangempay_cashback_accruals_exceptions_title">例外情况</string>
   <string name="tangempay_cashback_accruals_pay_description">下月 2 日至 5 日</string>
   <string name="tangempay_cashback_accruals_pay_title">我们如何支付返现？</string>
@@ -1904,20 +2045,26 @@
   <string name="tangempay_cashback_deposit_banner">%2$s 的返现 %1$s 将于 %3$s 前存入</string>
   <string name="tangempay_cashback_deposited_on">将于 %1$s 存入</string>
   <string name="tangempay_cashback_details_cap">每月最高 %1$s</string>
-  <string name="tangempay_cashback_details_eu_excluded">在欧盟商户的线下消费不享受返现</string>
+  <string name="tangempay_cashback_details_eu_excluded">暂不支持欧盟线下门店消费返现</string>
   <string name="tangempay_cashback_details_paid_in">以 %1$s 支付</string>
   <string name="tangempay_cashback_details_tier">使用您的 %2$s 卡片消费可享 %1$s%%，最低消费 %3$s</string>
   <string name="tangempay_cashback_earned_title">%2$s 已赚取 %1$s</string>
   <string name="tangempay_cashback_empty_subtitle">累计金额将显示在此处</string>
   <string name="tangempay_cashback_empty_title">开始消费\n即可赚取返现</string>
   <string name="tangempay_cashback_error_title">页面加载失败。\n点击重新加载</string>
+  <string name="tangempay_cashback_menu_item_loading">加载中...</string>
+  <string name="tangempay_cashback_menu_item_title">%s 返现</string>
   <string name="tangempay_cashback_rate_subtitle">使用您的 %1$s 套餐</string>
   <string name="tangempay_cashback_rate_title">返现 %1$s%%</string>
   <string name="tangempay_cashback_rate_title_up_to">最高 %1$s%% 返现</string>
   <string name="tangempay_cashback_refund_banner">我们收到了一笔此前已获得返现的购买的退款</string>
   <string name="tangempay_cashback_title">返现</string>
   <string name="tangempay_cashback_total_earned">累计赚取 %1$s</string>
-  <string name="tangempay_cashback_widget_title">%2$s 中的 %1$s 返现</string>
+  <string name="tangempay_cashback_widget_empty_description">开始消费即可赚取返现</string>
+  <string name="tangempay_cashback_widget_error_description">点击重新加载</string>
+  <string name="tangempay_cashback_widget_error_title">返现不可用</string>
+  <string name="tangempay_cashback_widget_refund_description">因退货而减少</string>
+  <string name="tangempay_cashback_widget_title">%2$s 月获 %1$s</string>
   <string name="tangempay_change_pin_code">更改PIN码</string>
   <string name="tangempay_changing_plan">正在更改您的套餐</string>
   <string name="tangempay_choose_network_fast_way">快速方式</string>
@@ -1926,10 +2073,12 @@
   <string name="tangempay_choose_network_row_loading">正在准备地址…</string>
   <string name="tangempay_come_back_if_forget_pin">如果忘记了，请返回应用程序。</string>
   <string name="tangempay_common_card">卡片</string>
-  <string name="tangempay_common_error_loading">加载出错</string>
+  <string name="tangempay_common_error_loading">—</string>
   <string name="tangempay_current_plan_active_till_notification">您的 %1$s 套餐将持续有效至 %2$s，之后我们将为您切换到 %3$s。不会向您收取 %4$s。</string>
+  <string name="tangempay_current_plan_awaiting_deposit_notification">我们正在为您切换至 %s 套餐，等待套餐费用支付</string>
   <string name="tangempay_current_plan_change">更改套餐</string>
   <string name="tangempay_current_plan_fee_charged_notification">月费 %1$s 将于 %2$s 扣除</string>
+  <string name="tangempay_current_plan_full_terms">完整条款</string>
   <string name="tangempay_current_plan_section_card">卡片相关</string>
   <string name="tangempay_current_plan_section_plan">套餐相关</string>
   <string name="tangempay_current_plan_stay_button">保留 %1$s</string>
@@ -1963,7 +2112,7 @@
   <string name="tangempay_failed_to_issue_card_support_description">发生技术故障，请联系技术支持。</string>
   <string name="tangempay_feature_will_be_available_soon">该功能即将上线</string>
   <string name="tangempay_feature_will_be_available_soon_description">您将可以为您的支付账户发行额外的卡。</string>
-  <string name="tangempay_get_banner_description">免费领取您的 Tangem Visa 虚拟卡</string>
+  <string name="tangempay_get_banner_description">免费 Tangem Pay 卡，享最高 2% 返现</string>
   <string name="tangempay_get_tangem_pay">获取 Tangem Pay</string>
   <string name="tangempay_go_to_support">前往支持页面</string>
   <string name="tangempay_issue_additional_card_description">它会生成一组新的卡片详细信息。</string>
@@ -1979,16 +2128,16 @@
   <string name="tangempay_issuing_your_card_description">该卡通常会在 5 分钟内自动发放。极少数情况下，如果需要人工审核，则可能需要长达 48 小时。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">确认取消</string>
-  <string name="tangempay_kyc_confirm_cancellation_description">您确定要停止 KYC 流程吗？您可以随时返回继续。</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">您确定要停止 身份验证 流程吗？您可以随时返回继续。</string>
   <string name="tangempay_kyc_failed_description">我们无法验证您的个人资料。如有任何疑问，请联系客服。</string>
   <string name="tangempay_kyc_failed_title">很抱歉，我们无法验证您的身份。 </string>
-  <string name="tangempay_kyc_has_failed">KYC 被拒</string>
-  <string name="tangempay_kyc_in_progress">KYC正在进行中</string>
+  <string name="tangempay_kyc_has_failed">身份验证 被拒</string>
+  <string name="tangempay_kyc_in_progress">身份验证正在进行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">查看状态</string>
-  <string name="tangempay_kyc_in_progress_notification_title">Tangem Pay 的 KYC 流程正在进行中</string>
+  <string name="tangempay_kyc_in_progress_notification_title">Tangem Pay 的 身份验证 流程正在进行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">文件通常会在 5 分钟内自动验证。极少数情况下，如果需要人工审核，则可能需要长达 48 小时。</string>
   <string name="tangempay_kyc_rejected">已拒绝</string>
-  <string name="tangempay_kyc_rejected_button_text">隐藏 KYC 块</string>
+  <string name="tangempay_kyc_rejected_button_text">隐藏验证</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我们无法验证</string>
   <string name="tangempay_kyc_rejected_description_span">您的个人资料。</string>
   <string name="tangempay_main_select_plan">选择套餐</string>
@@ -1997,14 +2146,16 @@
   <string name="tangempay_maximum_cards_issued_for_plan_title">该套餐的卡片数量已达上限</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">升级套餐</string>
   <string name="tangempay_maximum_cards_issued_title">最大发卡量</string>
-  <string name="tangempay_newonboard_Q1_body">需要。使用合规监管的 Visa 卡，必须完成身份验证。KYC 由 Sumsub（的合规合作伙伴）处理。</string>
-  <string name="tangempay_newonboard_Q1_title">我需要提供证件吗？</string>
-  <string name="tangempay_newonboard_Q2_body">不会。KYC 仅适用于 Tangem Pay 账户。你的 Tangem Wallet 仍是独立的、自托管、无需 KYC 的环境。</string>
-  <string name="tangempay_newonboard_Q2_title">KYC 会关联我的钱包吗？</string>
-  <string name="tangempay_newonboard_Q3_body">Sumsub 是受全球监管的 KYC 服务商，已获 4,000+ 家金融机构信赖；其依据 ISO 27001 和 SOC 2 标准验证身份并安全保存结果。</string>
-  <string name="tangempay_newonboard_Q3_title">谁会存储我的个人数据？如何保护？</string>
-  <string name="tangempay_newonboard_Q4_body">卡片余额以 Polygon 上的 USDC 计价，但你可通过 Tangem 内置的便捷兑换功能，使用任意资产（USDT、SOL、ETH、BTC、XRP 等）充值。</string>
-  <string name="tangempay_newonboard_Q4_title">我可以花哪些加密资产？</string>
+  <string name="tangempay_multichain_show_qr">显示二维码</string>
+  <string name="tangempay_multinetwork">美元</string>
+  <string name="tangempay_newonboard_Q1_body">使用任意网络的 USDT 或 USDC 为您的支付账户充值，零手续费。在 Ethereum、Base、Polygon、BSC 和 Arbitrum 网络上，还可享受 1:1 汇率。</string>
+  <string name="tangempay_newonboard_Q1_title">我可以花哪些加密资产？</string>
+  <string name="tangempay_newonboard_Q2_body">是的，使用受监管的 Visa 卡需完成身份验证。身份验证由我们的合规合作伙伴 Sumsub 提供。</string>
+  <string name="tangempay_newonboard_Q2_title">我需要提供证件吗？</string>
+  <string name="tangempay_newonboard_Q3_body">不会。身份验证仅适用于您的 Tangem Pay 账户。Tangem Wallet 仍是独立的自托管钱包，不与您的身份关联，仅作为访问支付账户的密钥。</string>
+  <string name="tangempay_newonboard_Q3_title">身份验证会关联到我的钱包、资产或地址吗？</string>
+  <string name="tangempay_newonboard_Q4_body">Sumsub 是受全球监管的 KYC 服务商，已获 4,000+ 家金融机构信赖；其依据 ISO 27001 和 SOC 2 标准验证身份并安全保存结果。</string>
+  <string name="tangempay_newonboard_Q4_title">谁会存储我的个人数据？如何保护？</string>
   <string name="tangempay_newonboard_body">随时随地花加密资产——无需银行、无需中介、无需交易所。自托管的自由，结合日常支付体验。</string>
   <string name="tangempay_newonboard_bottomleft_body">可在线支付，也支持 Apple Pay</string>
   <string name="tangempay_newonboard_bottomleft_title">全球受理</string>
@@ -2015,8 +2166,8 @@
   <string name="tangempay_newonboard_topleft_title">无消费手续费，\n1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topright_body">没有隐藏费用</string>
   <string name="tangempay_newonboard_topright_title">月费 0 美元，\n充值费 0 美元</string>
-  <string name="tangempay_onboarding_banner_description">免费领取您的 Tangem Visa 虚拟卡</string>
-  <string name="tangempay_onboarding_banner_title">使用 USDC 进行日常支付</string>
+  <string name="tangempay_onboarding_banner_description">免费 Tangem Pay 卡，享最高 2% 返现</string>
+  <string name="tangempay_onboarding_banner_title">在现实生活中随心消费加密资产</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
   <string name="tangempay_onboarding_pay_description">数字卡可与 Apple Pay 和 Google Pay 一起使用</string>
   <string name="tangempay_onboarding_pay_title">随意支配您的资产</string>
@@ -2027,9 +2178,56 @@
   <string name="tangempay_onboarding_setup_wallet_description">并将 Tangem Pay 绑定到该钱包</string>
   <string name="tangempay_onboarding_setup_wallet_title">我们将创建新钱包</string>
   <string name="tangempay_onboarding_title">立即获取你的 Tangem Pay 卡</string>
+  <string name="tangempay_order_card_error_active_order">卡片订单正在处理中。</string>
+  <string name="tangempay_order_card_error_insufficient_balance">余额不足以支付配送费。请增加资金后重试。</string>
+  <string name="tangempay_order_card_error_invalid_address">请检查配送地址后重试。</string>
+  <string name="tangempay_order_card_error_invalid_source_card">该卡无法更换。</string>
+  <string name="tangempay_order_card_error_offer_unavailable">该卡已不再提供。</string>
+  <string name="tangempay_order_data_address_line1">地址第 1 行</string>
+  <string name="tangempay_order_data_address_line2">地址第 2 行</string>
+  <string name="tangempay_order_data_city">城市</string>
+  <string name="tangempay_order_data_clear_field">清空输入框</string>
+  <string name="tangempay_order_data_country">国家/地区</string>
+  <string name="tangempay_order_data_email">电子邮箱</string>
+  <string name="tangempay_order_data_field_invalid">包含无效字符</string>
+  <string name="tangempay_order_data_field_latin_only">仅可使用拉丁字符</string>
+  <string name="tangempay_order_data_field_optional">选填</string>
+  <string name="tangempay_order_data_field_required">必填项</string>
+  <string name="tangempay_order_data_first_name">名字</string>
+  <string name="tangempay_order_data_last_name">姓氏</string>
+  <string name="tangempay_order_data_name_on_card">卡面姓名</string>
+  <string name="tangempay_order_data_order_button">订购卡片</string>
+  <string name="tangempay_order_data_phone">电话</string>
+  <string name="tangempay_order_data_postal_code">邮政编码</string>
+  <string name="tangempay_order_data_region">省/州</string>
+  <string name="tangempay_order_data_subtitle">核对信息</string>
+  <string name="tangempay_order_data_success_title">卡片已订购</string>
+  <plurals name="tangempay_order_success_delivery_eta">
+    <item quantity="other">配送最多需要 %d 个工作日</item>
+  </plurals>
+  <string name="tangempay_order_success_email_note">您将在 3 个工作日内通过 %s 收到物流公司的邮件</string>
+  <string name="tangempay_order_success_show_card">查看卡片</string>
+  <string name="tangempay_order_type_beta">Beta</string>
+  <string name="tangempay_order_type_country_of_residence">居住国家/地区</string>
+  <plurals name="tangempay_order_type_delivery_eta">
+    <item quantity="other">最多 %d 个工作日</item>
+  </plurals>
+  <string name="tangempay_order_type_delivery_eta_range">%1$d–%2$d 个工作日</string>
+  <string name="tangempay_order_type_delivery_fee">配送费</string>
+  <string name="tangempay_order_type_delivery_time">配送时间</string>
+  <string name="tangempay_order_type_delivery_time_instant">即时</string>
+  <string name="tangempay_order_type_delivery_to">配送至</string>
+  <string name="tangempay_order_type_first_delivery_free">首次配送免费</string>
+  <string name="tangempay_order_type_issue_fee">发卡费</string>
+  <string name="tangempay_order_type_not_enough_money">余额不足</string>
+  <string name="tangempay_order_type_segment_plastic">实体卡</string>
+  <string name="tangempay_order_type_segment_virtual">虚拟卡</string>
+  <string name="tangempay_order_type_select">选择</string>
+  <string name="tangempay_order_type_title">订购新卡</string>
+  <string name="tangempay_order_type_unavailable">不可用</string>
   <string name="tangempay_other_networks_header">其他网络</string>
   <string name="tangempay_other_networks_subtitle">然后以 1:1 汇率、零手续费兑换到支付账户</string>
-  <string name="tangempay_other_networks_title">在任意链上将 USDT / USDC 发送至您的 Tangem 钱包</string>
+  <string name="tangempay_other_networks_title">在任意链上将 USDT/USDC 发送至您的 Tangem 钱包</string>
   <string name="tangempay_pay_support">支付支持</string>
   <string name="tangempay_payment_account">支付账户</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay 会话已过期</string>
@@ -2044,6 +2242,8 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">将USDC存入支付账户以支付发行费用</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">无法支付费用</string>
   <string name="tangempay_reissue_card_title">要重新发行您的卡片吗？</string>
+  <string name="tangempay_reissue_plastic_description">您当前的实体卡将立即被关闭。您将收到一张带有新卡片信息的实体卡。</string>
+  <string name="tangempay_reissue_plastic_title">要更换实体卡吗？</string>
   <string name="tangempay_remove_account">删除账户</string>
   <string name="tangempay_remove_account_alert_description">Tangem Pay 将从主屏幕中移除，即使重新安装该应用，它也不会再次出现。</string>
   <string name="tangempay_remove_account_alert_title">删除账号？</string>
@@ -2076,11 +2276,11 @@
   <string name="tangempay_sync_needed_body">用卡或戒指续期会话</string>
   <string name="tangempay_sync_needed_button">恢复访问权限</string>
   <string name="tangempay_sync_needed_title">Tangem Pay 会话已过期</string>
-  <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
+  <string name="tangempay_tangem_visa_card">在现实生活中随心消费加密资产</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_topup_bank_transfer_body">通过 ACH 接收法定美元</string>
-  <string name="tangempay_topup_bank_transfer_title">银行转账</string>
+  <string name="tangempay_topup_bank_transfer_body">通过 ACH/FedWire 从银行账户接收美元</string>
+  <string name="tangempay_topup_bank_transfer_title">从银行账户</string>
   <string name="tangempay_topup_receive_body">將 USDC Polygon 發送至您帳戶地址</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
   <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
@@ -2093,8 +2293,6 @@
   <string name="tangempay_va_banking_details_error_title">无法加载银行信息</string>
   <string name="tangempay_va_limit_resetting_everyday">限额每日重置</string>
   <string name="tangempay_visa_benefits">Visa 权益</string>
-  <string name="tangempay_withdrawal_note_description">您的Polygon链上 USDC  余额与您的卡片余额不同，并在购买后 2 个工作日内更新。购物退款的资金不会退还至您的链上余额，也不能提现，但会保留在您的卡片余额中用于购物。</string>
-  <string name="tangempay_withdrawal_note_title">请注意</string>
   <string name="tangempay_your_pin_code">您的PIN码</string>
   <string name="this_is_my_wallet_title">这是我的钱包</string>
   <string name="toast_balances_hidden">余额已隐藏</string>
@@ -2134,11 +2332,14 @@
   <string name="token_details_unable_hide_alert_title">无法隐藏 %s</string>
   <string name="token_market_metrics_no_data">不适用</string>
   <string name="token_receive_show_qr_code_title">显示二维码</string>
-  <string name="token_summary_galaxy_score_description">Galaxy Score 将市场表现与社交媒体活跃度结合起来，生成一个0到100分的综合评分，反映资产的整体健康状况。来源：LunarCrush。</string>
-  <string name="token_summary_ma_cross_description">MA Cross 通过对比 50 日均价和 200 日均价，来显示该资产的交易价格是高于还是低于其长期趋势。来源：taapi.io。</string>
-  <string name="token_summary_macd_description">MACD通过比较短期和长期的价格动能，来显示某项资产的动能是正在增强还是减弱。来源：taapi.io。</string>
-  <string name="token_summary_rsi_description">RSI（相对强弱指数）用于衡量某资产在过去14个周期内是否被过度买入或卖出，从而提示潜在的超买或超卖状况。来源：taapi.io。</string>
-  <string name="token_summary_sentiment_description">情绪评分以1到5的评分标准衡量社交媒体上关于该资产的帖子基调，分数越高意味着讨论越积极。来源：LunarCrush。</string>
+  <string name="token_summary_galaxy_score_description">Galaxy Score™ 将资产表现、市场情绪和社交活跃度综合为 0 至 100 的单一评分，反映资产的整体健康状况。\n\nGalaxy Score™ 越高，说明该资产的参与度越强、情绪越正面。\n\n判定标准：\n正面 ≧70\n中性 31–69\n负面 ≦30\n\n数据来源：lunarcrush.com\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_go_to_swap_button">去交换</string>
+  <string name="token_summary_ma_cross_description">MA Cross（均线交叉）是一项技术分析指标，用于比较资产价格的 50 日与 200 日简单移动平均线，显示资产当前处于长期趋势之上还是之下。\n\n判定标准：\n正面：50 日均线高于 200 日均线超过 0.5%\n中性：两者相差在 0.5% 以内\n负面：50 日均线低于 200 日均线超过 0.5%\n\n请注意：\n指标基于美元价格数据计算。\n无论所选时间范围如何，均采用 1 天周期。\n显示的是 50 日均线高于或低于 200 日均线的百分比。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_macd_description">MACD（指数平滑异同移动平均线）是一项技术分析指标，用于显示资产的动能正在增强还是减弱。\n\nMACD 柱状图 = MACD 线 − 信号线。MACD 线为价格的 12 周期与 26 周期指数移动平均线之差，信号线为 9 周期指数移动平均线。\n\n判定标准：\n正面：柱状图 &gt; 0 且上升，或刚刚上穿 0\n负面：柱状图 &lt; 0 且下降，或刚刚下穿 0\n中性：其他情形\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n显示的是最新的 MACD 柱状图数值。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_outlook_is_not_available">该代币的展望信息不可用</string>
+  <string name="token_summary_rsi_description">RSI（相对强弱指数）是一项技术分析指标，用于衡量近期价格变动的速度与幅度。它可以反映资产在过去 14 个周期内是否被过度买入或卖出，潜在的超买或超卖状态。RSI 越低，潜在上行空间越大。\n\n判定标准：\n正面 ≦30\n中性 30–70\n负面 ≧70\n\n计算说明：\n指标基于美元价格数据计算。\n所用周期：日 — 1 小时，周 — 4 小时，月 — 1 天。\n\n数据来源：taapi.io\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_sentiment_description">Sentiment（市场情绪）以 0 至 100 的区间衡量社交媒体上关于该资产的讨论基调，并按互动量加权，分值越高表示讨论越正面。\n\n判定标准：\n正面 ≧70\n中性 31–69\n负面 ≦30\n\n数据来源：lunarcrush.com\n仅供参考，不构成投资建议。</string>
+  <string name="token_summary_title">市场指标 • β</string>
   <string name="token_swap_changelly_promotion_message">从 2 月 %2$s-%3$s，兑换另一个代币的服务费为 %1$s 。</string>
   <string name="token_swap_changelly_promotion_title">用Changelly 兑换， %s 费用</string>
   <string name="token_swap_promotion_button">立即兑换</string>
@@ -2147,6 +2348,9 @@
   <string name="tokens_list_unavailable_to_sell_header">无法出售</string>
   <string name="tokens_list_unavailable_to_swap_header">无法从 %s兑换</string>
   <string name="tokens_list_unavailable_to_swap_source_header">无法兑换</string>
+  <plurals name="top_assets_count" formatted="false">
+    <item quantity="other">%d资产\n%d资产</item>
+  </plurals>
   <string name="transaction_history_claiming_reward">领取奖励</string>
   <string name="transaction_history_contract_address">合约： %s</string>
   <string name="transaction_history_disabling_yield_mode">禁用收益模式</string>
@@ -2209,6 +2413,11 @@
   <string name="user_push_notification_agreement_header">您想使用推送通知吗？</string>
   <string name="user_push_notification_banner_subtitle">启用推送通知，即可在资金到账时收到提醒。</string>
   <string name="user_push_notification_banner_title">不要错过任何一笔交易</string>
+  <string name="user_wallet_add_hardware_description">扫描一张Tangem卡即可添加</string>
+  <string name="user_wallet_add_hardware_title">添加硬件钱包</string>
+  <string name="user_wallet_add_mobile_description">在此设备上创建一个新钱包</string>
+  <string name="user_wallet_add_mobile_title">添加移动钱包</string>
+  <string name="user_wallet_coming_soon_dialog_description">我们正在开发支持创建多个移动钱包的功能。</string>
   <string name="user_wallet_list_add_button">添加钱包</string>
   <string name="user_wallet_list_delete_hw_prompt">如果您在没有备份的情况下删除此钱包，您将永久失去对您的资金的访问权限。</string>
   <string name="user_wallet_list_delete_prompt">您确定要忘记这个钱包吗？</string>
@@ -2377,6 +2586,7 @@
   <string name="warning_approval_in_progress_message">许可审批程序目前正在进行中，并将很快完成。</string>
   <string name="warning_approval_in_progress_title">审批中</string>
   <string name="warning_backup_error_add_funds_message">此钱包存在备份问题。请联系客服解决。</string>
+  <string name="warning_backup_error_add_funds_message_v2">您想要充值的钱包存在备份问题。请将资金从该钱包转至另一个钱包，然后重置该钱包。</string>
   <string name="warning_backup_error_add_funds_title">充值功能已禁用</string>
   <string name="warning_backup_error_attention_message">您的卡片未正确激活。为保护您的资金安全，请先将资金转至其他钱包，将卡片恢复出厂设置，然后重新激活，再继续操作。</string>
   <string name="warning_backup_error_attention_title">操作提示：请重置您的钱包</string>

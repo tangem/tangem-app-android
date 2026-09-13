@@ -58,6 +58,25 @@ internal class IssueAdditionalCardUseCaseTest {
     }
 
     @Test
+    fun `GIVEN an offer without a spec name WHEN invoked THEN no order is created`() = runTest {
+        // Arrange
+        coEvery { offersRepository.getOffers(userWalletId) } returns
+            listOf(offer.copy(data = offer.data.copy(specificationName = null))).right()
+        coEvery {
+            orderRepository.findOrders(userWalletId, types = any(), statuses = any())
+        } returns emptyList<Order>().right()
+
+        // Act
+        val result = useCase(userWalletId)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+        coVerify(exactly = 0) {
+            orderRepository.createOrder(any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `WHEN active issue order exists THEN reuses it without calling createOrder`() = runTest {
         val existing = order(
             id = "existing",
@@ -72,6 +91,7 @@ internal class IssueAdditionalCardUseCaseTest {
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                    OrderType.CARD_ISSUE_PLASTIC_RAIN,
                 ),
                 statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
@@ -96,6 +116,7 @@ internal class IssueAdditionalCardUseCaseTest {
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                    OrderType.CARD_ISSUE_PLASTIC_RAIN,
                 ),
                 statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )
@@ -124,6 +145,7 @@ internal class IssueAdditionalCardUseCaseTest {
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC,
                     OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+                    OrderType.CARD_ISSUE_PLASTIC_RAIN,
                 ),
                 statuses = setOf(OrderStatus.NEW, OrderStatus.PROCESSING),
             )

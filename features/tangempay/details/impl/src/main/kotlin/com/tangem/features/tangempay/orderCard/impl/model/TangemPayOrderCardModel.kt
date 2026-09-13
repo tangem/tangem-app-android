@@ -11,6 +11,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.issue.TangemPayIssueAdditionalCardComponent
 import com.tangem.features.tangempay.common.balanceOrNull
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
@@ -35,10 +36,12 @@ internal class TangemPayOrderCardModel @Inject constructor(
 
     private val params = paramsContainer.require<TangemPayOrderCardComponent.Params>()
     private val issueJobHolder = JobHolder()
+    private val showOrderedCardJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayOrderCardNavigation> = SlotNavigation()
 
     private var availableFiatBalance: BigDecimal = BigDecimal.ZERO
+    private var isOrderFlowClosed = false
 
     init {
         modelScope.launch {
@@ -63,6 +66,21 @@ internal class TangemPayOrderCardModel @Inject constructor(
                 ),
             )
         }.saveIn(issueJobHolder)
+    }
+
+    fun onOrderAccepted() {
+        modelScope.launch { paymentAccountStatusFetcher.invoke(params.userWalletId) }.saveIn(showOrderedCardJobHolder)
+    }
+
+    fun onShowOrderedCard() {
+        if (isOrderFlowClosed) return
+        isOrderFlowClosed = true
+        if (!showOrderedCardJobHolder.isActive) {
+            modelScope.launch {
+                paymentAccountStatusFetcher.invoke(params.userWalletId)
+            }.saveIn(showOrderedCardJobHolder)
+        }
+        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 
     override fun onIssueAdditionalCardDismissed() {

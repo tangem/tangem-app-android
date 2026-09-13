@@ -1,7 +1,7 @@
 package com.tangem.features.txhistory.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
+import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType

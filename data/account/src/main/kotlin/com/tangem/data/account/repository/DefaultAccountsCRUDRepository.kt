@@ -5,9 +5,14 @@ import arrow.core.Option
 import arrow.core.raise.option
 import arrow.core.toOption
 import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.core.local.datastore.RuntimeStateStore
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.core.res.getStringSafe
+import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.converter.ArchivedAccountConverter
+import com.tangem.data.account.converter.SaveWalletAccountsResponseConverter
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
@@ -15,13 +20,9 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.ETAG_HEADER
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
-import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
@@ -42,7 +43,7 @@ import kotlinx.coroutines.withContext
  */
 @Suppress("LongParameterList")
 internal class DefaultAccountsCRUDRepository(
-    private val tangemTechApi: TangemTechApi,
+    private val walletAccountsApi: WalletAccountsApi,
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
@@ -101,7 +102,7 @@ internal class DefaultAccountsCRUDRepository(
         val response = safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
-                    tangemTechApi.getWalletArchivedAccounts(
+                    walletAccountsApi.getArchivedAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = eTag,
                     )
@@ -140,14 +141,16 @@ internal class DefaultAccountsCRUDRepository(
         )
     }
 
+    /**
+     * The document is written whole, and a row missing from it archives that account on the backend — so every
+     * account of the list goes into the body, joint ones included. Dropping them here would archive the wallet's
+     * joint accounts on any edit of an ordinary one.
+     */
     override suspend fun saveAccounts(accountList: AccountList) {
-        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
-
-        val accountDTOs = converter.convertListBack(
-            input = accountList.accounts.filterIsInstance<Account.CryptoPortfolio>(),
+        val syncedResponse = walletAccountsSaver.push(
+            userWalletId = accountList.userWalletId,
+            body = SaveWalletAccountsResponseConverter.convert(value = accountList),
         )
-
-        val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
             ?: error("Failed to push accounts for wallet: ${accountList.userWalletId}")
 
         walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
@@ -156,8 +159,14 @@ internal class DefaultAccountsCRUDRepository(
     override suspend fun saveAccount(account: Account.CryptoPortfolio) {
         val store = getAccountsResponseStore(userWalletId = account.userWalletId)
 
-        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = account.userWalletId)
-        val newAccountDTO = converter.convertBack(value = account)
+        val newAccountDTO = when (account) {
+            is Account.Personal -> convertersContainer
+                .createCryptoPortfolioConverter(userWalletId = account.userWalletId)
+                .convertBack(value = account)
+            is Account.Joint -> convertersContainer
+                .createJointAccountConverter(userWalletId = account.userWalletId)
+                .convertBack(value = account)
+        }
 
         store.updateData { response ->
             response ?: return@updateData response

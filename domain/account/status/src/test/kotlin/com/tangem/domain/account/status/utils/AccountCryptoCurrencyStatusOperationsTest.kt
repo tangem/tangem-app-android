@@ -174,7 +174,7 @@ class AccountCryptoCurrencyStatusOperationsTest {
         currencies: List<CryptoCurrency>,
         currencyStatuses: List<CryptoCurrencyStatus> = emptyList(),
     ): AccountStatusList {
-        val account = Account.CryptoPortfolio.createMainAccount(
+        val account = Account.Personal.createMainAccount(
             userWalletId = userWalletId,
             cryptoCurrencies = currencies,
         )

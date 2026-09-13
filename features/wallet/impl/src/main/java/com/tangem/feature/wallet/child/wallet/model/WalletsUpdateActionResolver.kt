@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
@@ -15,13 +16,15 @@ import javax.inject.Inject
  * Resolver that determines which update action will be performed
  *
  * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @property isWalletBackedUpUseCase      whether a wallet has any backup (seed phrase or cloud)
  */
 @ModelScoped
 internal class WalletsUpdateActionResolver @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
 ) {
 
-    fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
+    suspend fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
         if (wallets.isEmpty()) {
             return Action.EmptyWallets
         }
@@ -54,7 +57,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         )
     }
 
-    private fun getUpdateContentAction(
+    private suspend fun getUpdateContentAction(
         state: WalletScreenState,
         wallets: List<UserWallet>,
         selectedWallet: UserWallet,
@@ -66,6 +69,13 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                     unlockedWallets = getJustUnlockedWallets(state = state, wallets = wallets),
                 )
             }
+            // structural list changes go first: a per-wallet content refresh must never swallow a new or removed wallet
+            isWalletsCountChanged(state, wallets) -> {
+                getChangeWalletsListAction(state, wallets, selectedWallet)
+            }
+            isWalletsOrderChanged(state, wallets) -> {
+                Action.ReorderWallets(wallets = wallets)
+            }
             isAnyWalletNameChanged(state, wallets) -> {
                 getRenameWalletsAction(state, wallets)
             }
@@ -74,12 +84,6 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             }
             isAnyHotWalletBackedUpChange(state, wallets) -> {
                 getHotWalletsBackedUpAction(state, wallets)
-            }
-            isWalletsCountChanged(state, wallets) -> {
-                getChangeWalletsListAction(state, wallets, selectedWallet)
-            }
-            isWalletsOrderChanged(state, wallets) -> {
-                Action.ReorderWallets(wallets = wallets)
             }
             isAnotherWalletSelected(state, selectedWallet) -> {
                 Action.ReinitializeNewWallet(
@@ -94,10 +98,10 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         }
     }
 
-    private fun isAnyHotWalletBackedUpChange(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+    private suspend fun isAnyHotWalletBackedUpChange(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
         val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
         return wallets.any {
-            it is UserWallet.Hot && it.backedUp && incompleteActivationWalletIds.contains(it.walletId)
+            it is UserWallet.Hot && incompleteActivationWalletIds.contains(it.walletId) && isWalletBackedUpUseCase(it)
         }
     }
 
@@ -186,14 +190,14 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         return prevWalletsIds == newWalletsIds && isAnyNameChanged
     }
 
-    private fun getHotWalletsBackedUpAction(
+    private suspend fun getHotWalletsBackedUpAction(
         state: WalletScreenState,
         wallets: List<UserWallet>,
     ): Action.ReloadWallets {
         val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
 
         val walletsToUpdate = wallets.filter {
-            it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
+            it is UserWallet.Hot && incompleteActivationWalletIds.contains(it.walletId) && isWalletBackedUpUseCase(it)
         }
 
         return Action.ReloadWallets(walletsToUpdate)
@@ -263,16 +267,20 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             ?: error("Previous selected wallet is not found")
     }
 
+    /**
+     * Wallets whose UI state still shows them as not backed up. The activation banner alone is not enough:
+     * it also stays for a backed-up wallet without an access code, and treating that as "not backed up"
+     * would make the backed-up check fire on every update, shadowing the checks below it.
+     */
     private fun WalletScreenState.incompleteActivationWalletIds(): List<UserWalletId> {
         return wallets.mapNotNull { wallet ->
-            if (wallet.warnings.any { it is WalletNotification.FinishWalletActivation } ||
-                wallet is WalletState.MultiCurrency &&
-                wallet.walletCardState.additionalInfo?.isHotBackedUp == false
-            ) {
-                wallet.walletCardState.id
-            } else {
-                null
+            val hasNoBackupWarning = wallet.warnings.any {
+                it is WalletNotification.FinishWalletActivation && !it.isBackupExists
             }
+            val isNotBackedUp = wallet is WalletState.MultiCurrency &&
+                wallet.walletCardState.additionalInfo?.isHotBackedUp == false
+
+            wallet.walletCardState.id.takeIf { hasNoBackupWarning || isNotBackedUp }
         }
     }
 

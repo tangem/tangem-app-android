@@ -3,6 +3,9 @@ package com.tangem.features.txhistory.converter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction as RowDirection
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
+import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
@@ -10,7 +13,6 @@ import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Conten
 import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -23,6 +25,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.ResolvedOwner
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.resolveSwapLegOwners
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -36,12 +41,16 @@ import java.math.BigDecimal
  * express statuses collapse into the three [Status] buckets (those drive title/icon/amount colors in the row UI).
  *
  * The counterparty ticker symbol+icon come from the resolved [ExpressTransactionAsset.cryptoCurrency] (swap);
- * onramp shows the fiat code with the onramp country flag as the icon (fiat carries no `CryptoCurrency`). The row click routes through
- * [TxHistoryUiActions.onTransactionClick] (express rows open the in-app details sheet).
+ * onramp shows the fiat code with the onramp country flag as the icon (fiat carries no `CryptoCurrency`). When a swap's
+ * counterparty leg settled in a different own portfolio (a different account, or wallet in wallet mode), the subtitle
+ * gains an "in {owner}" tail resolved via [lookup]; a swap within one portfolio, an external counterparty, or a
+ * single-wallet own leg adds no tail. The row click routes through [TxHistoryUiActions.onTransactionClick] (express
+ * rows open the in-app details sheet).
  */
 internal class ExpressTxToTransactionItemUMConverter(
     private val currency: CryptoCurrency,
     private val txHistoryUiActions: TxHistoryUiActions,
+    private val lookup: TxHistoryLookupContext? = null,
 ) : Converter<ExpressTx, TransactionItemUM> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -73,9 +82,38 @@ internal class ExpressTxToTransactionItemUMConverter(
                 direction = if (swap.isOutgoing) SubtitleDirection.TO else SubtitleDirection.FROM,
                 symbol = counterparty.displaySymbol,
                 icon = counterparty.cryptoCurrency?.let(iconStateConverter::convert),
+                owner = swap.counterpartyOwner(),
             ),
             warning = swapWarning(swap),
         )
+    }
+
+    /**
+     * The own portfolio the swap's counterparty leg settled in — the payout (to) leg for an outgoing swap, the pay-in
+     * (from) leg for an incoming one — as the "in {owner}" subtitle tail, or `null` when there is nothing to
+     * disambiguate (see [resolveSwapLegOwners]) or no [lookup] is available.
+     */
+    private fun ExpressTx.Swap.counterpartyOwner(): ContentSubtitle.AssetOwner? {
+        val legOwners = lookup?.resolveSwapLegOwners(this) ?: return null
+        val owner = if (isOutgoing) legOwners.to else legOwners.from
+        return owner?.toAssetOwner()
+    }
+
+    /** Maps a resolved counterparty owner to the subtitle tail; an external address adds no tail (`null`). */
+    private fun ResolvedOwner.toAssetOwner(): ContentSubtitle.AssetOwner? = when (this) {
+        is ResolvedOwner.OwnAccount -> ContentSubtitle.AssetOwner.Account(
+            name = account.accountName.toUM().value,
+            iconResId = account.icon.value.getResId(),
+            iconBackgroundColor = account.icon.color.getUiColor(),
+        )
+        is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.AssetOwner.PaymentAccount(
+            name = account.accountName.toUM().value,
+        )
+        is ResolvedOwner.OwnWallet -> ContentSubtitle.AssetOwner.Wallet(
+            name = walletInfo.name,
+            deviceIconUM = walletInfo.deviceIconUM,
+        )
+        is ResolvedOwner.External -> null
     }
 
     private fun onrampContent(onramp: ExpressTx.Onramp): TransactionItemUM.Content {
@@ -96,7 +134,7 @@ internal class ExpressTxToTransactionItemUMConverter(
                 direction = SubtitleDirection.FROM,
                 symbol = onramp.tx.fromFiat.currencySymbol,
                 icon = CurrencyIconState.FiatIcon(
-                    url = onramp.tx.country?.image,
+                    url = onramp.tx.fiatCurrency?.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
             ),
@@ -133,22 +171,18 @@ internal class ExpressTxToTransactionItemUMConverter(
     }
 
     private fun formatAmount(amount: BigDecimal?, prefix: String): String? =
-        amount?.let { prefix + it.format { crypto(symbol = "", decimals = currency.decimals) }.trim() }
+        amount?.let { prefix + it.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim() }
 
     private fun swapTitle(status: Status): TextReference = when (status) {
         is Status.Confirmed -> resourceReference(R.string.common_swapped)
         is Status.Unconfirmed -> resourceReference(R.string.common_swapping)
-        is Status.Failed ->
-            resourceReference(R.string.common_action_failed, wrappedList(resourceReference(R.string.common_swapping)))
+        is Status.Failed -> resourceReference(R.string.transaction_history_status_swap_failed)
     }
 
     private fun onrampTitle(status: Status): TextReference = when (status) {
         is Status.Confirmed -> resourceReference(R.string.tx_history_onramp_topped_up)
-        is Status.Unconfirmed -> resourceReference(R.string.tx_history_onramp_top_up)
-        is Status.Failed -> resourceReference(
-            R.string.common_action_failed,
-            wrappedList(resourceReference(R.string.tx_history_onramp_top_up)),
-        )
+        is Status.Unconfirmed -> resourceReference(R.string.transaction_history_status_topping_up)
+        is Status.Failed -> resourceReference(R.string.transaction_history_status_top_up_failed)
     }
 
     /**

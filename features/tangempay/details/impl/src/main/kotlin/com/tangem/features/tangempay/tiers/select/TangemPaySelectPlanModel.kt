@@ -7,11 +7,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.TangemPayTariffPlan
+import com.tangem.domain.models.account.mainImageUrl
 import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanTransitionsUseCase
 import com.tangem.domain.pay.usecase.SubmitTariffTransitionUseCase
@@ -41,6 +43,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private val submitTariffTransitionUseCase: SubmitTariffTransitionUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
@@ -174,6 +177,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         onPlanSelected = ::onPlanSelected,
         onBackClick = ::onBackClick,
         onCloseClick = ::onCloseClick,
+        onPointLinkClick = urlOpener::openUrl,
         content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
         compare = if (showPlanCompare) buildCompare() else null,
     )
@@ -312,7 +316,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private fun TangemPayTariffPlan.toPlanUM() = TangemPaySelectPlanUM.PlanUM(
         name = stringReference(name),
-        imageUrl = images.firstOrNull { it.type == TangemPayTariffPlan.Image.Type.MAIN }?.url,
+        imageUrl = mainImageUrl,
         points = descriptionItems
             .filter { it.section == TangemPayTariffPlan.Section.ONBOARDING_RELATED }
             .sortedBy { it.order }

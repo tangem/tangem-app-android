@@ -183,7 +183,7 @@ class EthereumWalletConnectTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 device.uiDevice.executeShellCommand("pm grant $packageName $permissionName")
-            },
+            }
         ).run {
             step("Set URI to clipboard") {
                 setClipboardText(context, deepLinkUri)

@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.staking.model.stakingSource
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
@@ -15,7 +16,7 @@ internal class SetConfirmationStateResetAssentTransformer(
             confirmationState = if (confirmationState is StakingStates.ConfirmationState.Data) {
                 confirmationState.copy(
                     isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
-                        sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
+                        sources.networkSource.isActual() && stakingSource.isActual()
                     },
                     innerState = InnerConfirmationStakingState.ASSENT,
                 )

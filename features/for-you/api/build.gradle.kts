@@ -18,5 +18,7 @@ dependencies {
 
     /** Project - Domain */
     api(projects.domain.models)
+    api(deps.kotlin.serialization.core)
+    api(deps.kotlin.coroutines)
     api(projects.domain.markets.models)
 }

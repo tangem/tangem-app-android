@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.TangemPayCardDetailsController
 import com.tangem.features.tangempay.card.view.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.details.impl.R
@@ -35,6 +36,7 @@ internal class TangemPayAddToWalletModel @Inject constructor(
             isEditingNameEnabled = false,
             shouldShowCardDetailsButtonOnCard = true,
         ),
+        cardDetailsEventListener = CardDetailsEventListener.default(),
         onEditNameClick = {},
     )
 

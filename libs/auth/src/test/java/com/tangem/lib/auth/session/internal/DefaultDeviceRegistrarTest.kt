@@ -8,13 +8,14 @@ import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
-import com.tangem.datasource.api.auth.models.response.NonceApiResponse
-import com.tangem.datasource.api.auth.models.response.TokenApiResponse
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.RegisterApiRequest
+import com.tangem.lib.auth.api.models.response.NonceApiResponse
+import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.lib.auth.session.AuthPreferenceKeys
+import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrationError
@@ -28,6 +29,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -45,6 +47,7 @@ class DefaultDeviceRegistrarTest {
     private val nonceDecryptor: AuthNonceDecryptor = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val attestationProvider: AttestationProvider = mockk()
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -59,18 +62,20 @@ class DefaultDeviceRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor)
+        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
         }
+        coEvery { attestationProvider.getAttestationToken(any()) } returns null
         registrar = DefaultDeviceRegistrar(
             authApi = authApi,
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
             signedRequestPayload = signedRequestPayload,
+            attestationProvider = attestationProvider,
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -90,12 +95,12 @@ class DefaultDeviceRegistrarTest {
         coVerify { authApi.requestDeviceNonce(any()) }
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
 
     @Test
     fun `register short-circuits without network when the flag is already set`() = runTest {
-        preferencesDataStore.edit { it[PreferencesKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
 
         val result = registrar.register()
 
@@ -114,7 +119,7 @@ class DefaultDeviceRegistrarTest {
         assertThat(result.leftOrNull()).isEqualTo(DeviceRegistrationError.DeviceKeyUnavailable)
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
@@ -133,7 +138,7 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
@@ -186,7 +191,7 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
         coVerify(exactly = 0) { store.save(any()) }
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
     @Test
@@ -210,7 +215,7 @@ class DefaultDeviceRegistrarTest {
 
         // Device is already registered server-side — no error, flag set, but no tokens minted here.
         assertThat(result.isRight()).isTrue()
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
         coVerify(exactly = 0) { store.save(any()) }
     }
 
@@ -223,7 +228,85 @@ class DefaultDeviceRegistrarTest {
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.PersistenceFailed::class.java)
         // Flag must stay unset so the next launch retries cleanly.
-        assertThat(preferencesDataStore.current()[PreferencesKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
+    }
+
+    @Test
+    fun `register attaches attestation token from provider to the signed payload`() = runTest {
+        stubHappyPath()
+        coEvery { attestationProvider.getAttestationToken("decrypted") } returns "attest-token"
+        val slot = slot<RegisterApiRequest>()
+        coEvery { authApi.registerDevice(capture(slot)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "fresh-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "fresh-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = registrar.register()
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.payload.attestationToken).isEqualTo("attest-token")
+        coVerify { attestationProvider.getAttestationToken("decrypted") }
+    }
+
+    @Test
+    fun `register proceeds with null token when attestation provider throws`() = runTest {
+        stubHappyPath()
+        coEvery { attestationProvider.getAttestationToken(any()) } throws IllegalStateException("Play Integrity down")
+        val slot = slot<RegisterApiRequest>()
+        coEvery { authApi.registerDevice(capture(slot)) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "fresh-access",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "fresh-rt",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+
+        val result = registrar.register()
+
+        assertThat(result.isRight()).isTrue()
+        assertThat(slot.captured.payload.attestationToken).isNull()
+    }
+
+    @Test
+    fun `reregister ignores the stale flag and re-runs registration`() = runTest {
+        // Arrange — the local flag says "registered", but the backend lost the record.
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        stubHappyPath()
+
+        // Act
+        val result = registrar.reregister()
+
+        // Assert — it did NOT short-circuit on the flag; it hit the network and re-persisted.
+        assertThat(result.isRight()).isTrue()
+        coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
+        coVerify { store.save(any()) }
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+    }
+
+    @Test
+    fun `reregister leaves the flag unset when re-registration fails so the next launch retries`() = runTest {
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(65))
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.requestDeviceNonce(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS,
+                message = "rate-limited",
+                errorBody = null,
+            ),
+        ) as ApiResponse<NonceApiResponse>
+
+        val result = registrar.reregister()
+
+        assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isEqualTo(false)
     }
 
     private fun stubHappyPath() {

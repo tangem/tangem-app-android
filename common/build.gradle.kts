@@ -39,6 +39,9 @@ dependencies {
     // region Tests
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
+    testImplementation(deps.kotlin.datetime)
     testImplementation(projects.test.core)
+    testImplementation(projects.libs.blockchainSdk)
+    testImplementation(tangemDeps.blockchain)
     // endregion
 }

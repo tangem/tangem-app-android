@@ -21,11 +21,14 @@ import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
+import com.tangem.domain.cloudbackup.usecase.GetCloudBackupStatusUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.analytics.toAnalyticsState
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.WalletHardwareBackupComponent
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.wallethardwarebackup.entity.WalletHardwareBackupUM
@@ -51,43 +54,11 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val getCloudBackupStatusUseCase: GetCloudBackupStatusUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
-
-    private val makeBackupAtFirstAlertBS
-        get() = run {
-            analyticsEventHandler.send(
-                WalletSettingsAnalyticEvents.NoticeBackupFirst(
-                    source = AnalyticsParam.ScreensSources.HardwareWallet.value,
-                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
-                ),
-            )
-            bottomSheetMessage {
-                infoBlock {
-                    icon(R.drawable.ic_passcode_lock_32) {
-                        type = MessageBottomSheetUM.Icon.Type.Accent
-                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
-                    }
-                    title = resourceReference(R.string.hw_backup_need_finish_first)
-                    body = resourceReference(R.string.hw_backup_to_upgrade_description)
-                }
-                primaryButton {
-                    text = resourceReference(R.string.hw_backup_need_action)
-                    onClick {
-                        router.push(
-                            AppRoute.CreateWalletBackup(
-                                userWalletId = params.userWalletId,
-                                isUpgradeFlow = true,
-                                analyticsSource = AnalyticsParam.ScreensSources.HardwareWallet.value,
-                                analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Upgrade.value,
-                            ),
-                        )
-                        closeBs()
-                    }
-                }
-            }
-        }
 
     internal val uiState: StateFlow<WalletHardwareBackupUM>
         field = MutableStateFlow(
@@ -124,6 +95,41 @@ internal class WalletHardwareBackupModel @Inject constructor(
         super.onDestroy()
     }
 
+    private fun saveSeedPhraseBeforeUpgradeBS(cloudBackupState: AnalyticsParam.CloudBackupState?) = run {
+        analyticsEventHandler.send(
+            WalletSettingsAnalyticEvents.NoticeBackupFirst(
+                source = AnalyticsParam.ScreensSources.HardwareWallet.value,
+                action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
+                cloudBackupState = cloudBackupState,
+                isBackedUp = false.takeIf { hotWalletFeatureToggles.isGoogleDriveBackupEnabled },
+            ),
+        )
+        bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_backup_repeat_24) {
+                    type = MessageBottomSheetUM.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.hw_upgrade_save_seed_title)
+                body = resourceReference(R.string.hw_upgrade_save_seed_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.hw_upgrade_save_seed_action)
+                onClick {
+                    router.push(
+                        AppRoute.CreateWalletBackup(
+                            userWalletId = params.userWalletId,
+                            isUpgradeFlow = true,
+                            analyticsSource = AnalyticsParam.ScreensSources.HardwareWallet.value,
+                            analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Upgrade.value,
+                        ),
+                    )
+                    closeBs()
+                }
+            }
+        }
+    }
+
     private fun onCreateNewWalletClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet())
         router.push(AppRoute.CreateHardwareWallet(source = AnalyticsParam.ScreensSources.CreateWallet))
@@ -134,28 +140,36 @@ internal class WalletHardwareBackupModel @Inject constructor(
             .getOrElse { error("Cannot find user wallet with id: ${params.userWalletId.stringValue}") }
         if (userWallet is UserWallet.Hot) {
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
-            if (!userWallet.backedUp) {
-                messageSender.send(makeBackupAtFirstAlertBS)
-            } else {
-                val hotWalletId = userWallet.hotWalletId
-                when (hotWalletId.authType) {
-                    HotWalletId.AuthType.NoPassword -> {
-                        router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
-                    }
-                    HotWalletId.AuthType.Password,
-                    HotWalletId.AuthType.Biometry,
-                    -> modelScope.launch {
-                        unlockHotWalletContextualUseCase.invoke(hotWalletId)
-                            .onLeft {
-                                TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
-                            }
-                            .onRight {
-                                router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
-                            }
+            modelScope.launch {
+                if (!userWallet.backedUp) {
+                    messageSender.send(saveSeedPhraseBeforeUpgradeBS(resolveCloudBackupState()))
+                } else {
+                    val hotWalletId = userWallet.hotWalletId
+                    when (hotWalletId.authType) {
+                        HotWalletId.AuthType.NoPassword -> {
+                            router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+                        }
+                        HotWalletId.AuthType.Password,
+                        HotWalletId.AuthType.Biometry,
+                        -> {
+                            unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                                .onLeft {
+                                    TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
+                                }
+                                .onRight {
+                                    router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+                                }
+                        }
                     }
                 }
             }
         }
+    }
+
+    private suspend fun resolveCloudBackupState(): AnalyticsParam.CloudBackupState? {
+        if (!hotWalletFeatureToggles.isGoogleDriveBackupEnabled) return null
+
+        return getCloudBackupStatusUseCase(params.userWalletId.stringValue).toAnalyticsState()
     }
 
     private fun onBuyClick() {

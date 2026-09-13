@@ -1,0 +1,37 @@
+package com.tangem.grow.datasource.express.models.response
+
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
+
+@JsonClass(generateAdapter = true)
+data class ExchangeQuoteResponse(
+
+    @Json(name = "fromAmount")
+    val fromAmount: String,
+
+    @Json(name = "fromDecimals")
+    val fromDecimals: Int,
+
+    @Json(name = "toAmount")
+    val toAmount: String,
+
+    @Json(name = "toDecimals")
+    val toDecimals: Int,
+
+    @Json(name = "allowanceContract")
+    val allowanceContract: String?,
+
+    @Json(name = "minAmount")
+    val minAmount: BigDecimal,
+
+    @Json(name = "quoteId")
+    val quoteId: String? = null,
+
+    @Json(name = "txType")
+    val txType: TxType? = null,
+
+    @property:Json(name = "isRestricted")
+    val isRestricted: Boolean = false,
+
+)

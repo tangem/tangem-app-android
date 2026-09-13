@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -118,3 +120,23 @@ fun Modifier.selectedBorder(
         clip(RoundedCornerShape(radius))
     },
 )
+
+/**
+ * Lays the content out as `0x0` when the parent offers less than [minRoom] of height, instead of
+ * letting it overflow.
+ */
+@Composable
+fun Modifier.dropWhenNoRoom(minRoom: Dp): Modifier {
+    val minRoomPx = with(LocalDensity.current) { minRoom.roundToPx() }
+
+    return layout { measurable, constraints ->
+        if (constraints.maxHeight < minRoomPx) {
+            layout(width = 0, height = 0) {}
+        } else {
+            val placeable = measurable.measure(constraints)
+            layout(width = placeable.width, height = placeable.height) {
+                placeable.place(x = 0, y = 0)
+            }
+        }
+    }
+}

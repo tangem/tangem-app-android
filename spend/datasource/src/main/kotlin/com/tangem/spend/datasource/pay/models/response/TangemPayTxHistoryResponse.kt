@@ -17,12 +17,12 @@ data class TangemPayTxHistoryResponse(
     @JsonClass(generateAdapter = true)
     data class Transaction(
         @Json(name = "id") val id: String, // UUID (used as cursor for pagination)
-        @Json(name = "type") val type: String, // "SPEND", "COLLATERAL", "PAYMENT", "FEE"
+        @Json(name = "type") val type: String, // "spend", "refund", "collateral", "payment", "fee"
         @Json(name = "spend") val spend: Spend? = null,
+        @Json(name = "refund") val refund: Refund? = null,
         @Json(name = "collateral") val collateral: Collateral? = null,
         @Json(name = "payment") val payment: Payment? = null,
         @Json(name = "fee") val fee: Fee? = null,
-        @Json(name = "cashback") val cashback: TransactionCashbackResponse? = null,
     )
 
     @JsonClass(generateAdapter = true)
@@ -51,6 +51,35 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "declined_reason") val declinedReason: String? = null,
         @Json(name = "authorized_at") val authorizedAt: DateTime,
         @Json(name = "posted_at") val postedAt: DateTime?,
+        @Json(name = "cashback") val cashback: BigDecimal? = null,
+        @Json(name = "cashback_status") val cashbackStatus: String? = null,
+        @Json(name = "cashback_currency_code") val cashbackCurrencyCode: String? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Refund(
+        @Json(name = "amount") val amount: BigDecimal,
+        @Json(name = "currency") val currency: String,
+        @Json(name = "local_amount") val localAmount: BigDecimal? = null,
+        @Json(name = "local_currency") val localCurrency: String? = null,
+        @Json(name = "source_transaction_id") val sourceTransactionId: String? = null,
+        @Json(name = "merchant_name") val merchantName: String,
+        @Json(name = "merchant_category") val merchantCategory: String? = null,
+        @Json(name = "merchant_category_code") val merchantCategoryCode: String? = null,
+        @Json(name = "merchant_id") val merchantId: String? = null,
+        @Json(name = "enriched_merchant_icon") val enrichedMerchantIcon: String? = null,
+        @Json(name = "enriched_merchant_name") val enrichedMerchantName: String? = null,
+        @Json(name = "enriched_merchant_category") val enrichedMerchantCategory: String? = null,
+        @Json(name = "card_id") val cardId: String? = null,
+        @Json(name = "card_type") val cardType: String? = null,
+        @Json(name = "card_display_name") val cardDisplayName: String? = null,
+        @Json(name = "card_number_end") val cardNumberEnd: String? = null,
+        @Json(name = "status") val status: String,
+        @Json(name = "authorized_at") val authorizedAt: DateTime,
+        @Json(name = "posted_at") val postedAt: DateTime?,
+        @Json(name = "cashback") val cashback: BigDecimal? = null,
+        @Json(name = "cashback_status") val cashbackStatus: String? = null,
+        @Json(name = "cashback_currency_code") val cashbackCurrencyCode: String? = null,
     )
 
     @JsonClass(generateAdapter = true)

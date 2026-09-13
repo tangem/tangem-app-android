@@ -259,6 +259,8 @@ interface WalletManagersFacade {
         signer: TransactionSigner,
     ): List<String>?
 
+    suspend fun isTronAccountActivated(userWalletId: UserWalletId, network: Network): Boolean
+
     suspend fun isSwapSpenderAllowed(userWalletId: UserWalletId, network: Network, spenderAddress: String): Boolean
 
     /**
@@ -326,6 +328,8 @@ interface WalletManagersFacade {
     suspend fun getDynamicAddressesLastUsedReceiveAddress(userWalletId: UserWalletId, network: Network): String?
 
     suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean
+
+    suspend fun usedDynamicAddresses(userWalletId: UserWalletId, network: Network): List<String>?
 
     /**
      * Silently probes the xpub for balances on non-base derived addresses.

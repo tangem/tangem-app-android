@@ -36,7 +36,7 @@ class AmountFieldSetMaxAmountTransformer(
 
         if (decimalCryptoValue == null || decimalCryptoValue.isZero()) return prevState
 
-        val cryptoValue = decimalCryptoValue.parseBigDecimal(cryptoDecimals)
+        val cryptoValue = decimalCryptoValue.parseBigDecimal(cryptoDecimals, roundingMode = RoundingMode.DOWN)
         val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals, roundingMode = RoundingMode.HALF_UP).orEmpty()
         val isLessThanMinimumIfProvided = minAmount?.amount?.let { decimalCryptoValue < it } == true
         return prevState.copy(

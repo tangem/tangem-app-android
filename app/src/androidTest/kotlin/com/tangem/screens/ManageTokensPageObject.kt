@@ -2,7 +2,6 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseSearchBarTestTags
 import com.tangem.core.ui.test.ManageTokensScreenTestTags
@@ -91,7 +90,7 @@ class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
 
     val saveButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_save))
+        hasText(getResourceString(CoreResR.string.common_save))
         useUnmergedTree = true
     }
 }

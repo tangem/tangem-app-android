@@ -1,6 +1,8 @@
 package com.tangem.data.walletmanager.utils
 
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
@@ -10,13 +12,19 @@ internal class SdkTransactionHistoryItemConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
     yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
+    currency: CryptoCurrency,
+    networkTokens: Set<Token>,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
-    private val typeConverter by lazy { SdkTransactionTypeConverter(
-        smartContractMethods = smartContractMethods,
-        yieldSupplyAddresses = yieldSupplyAddresses,
-        gaslessFeeAddresses = gaslessFeeAddresses,
-    ) }
+    private val typeConverter by lazy {
+        SdkTransactionTypeConverter(
+            smartContractMethods = smartContractMethods,
+            yieldSupplyAddresses = yieldSupplyAddresses,
+            gaslessFeeAddresses = gaslessFeeAddresses,
+            currency = currency,
+            networkTokens = networkTokens,
+        )
+    }
 
     override fun convert(value: SdkTransactionHistoryItem): TxInfo = TxInfo(
         txHash = value.txHash,
