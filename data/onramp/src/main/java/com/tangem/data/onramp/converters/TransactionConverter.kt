@@ -1,7 +1,7 @@
 package com.tangem.data.onramp.converters
 
 import com.tangem.data.onramp.models.OnrampTransactionDTO
-import com.tangem.datasource.api.onramp.models.response.Status
+import com.tangem.grow.datasource.onramp.models.response.Status
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.utils.converter.TwoWayConverter

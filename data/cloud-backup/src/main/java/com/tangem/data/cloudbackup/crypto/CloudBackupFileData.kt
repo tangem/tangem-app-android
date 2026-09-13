@@ -8,9 +8,11 @@ import kotlinx.serialization.Serializable
  *
  * The payload is encrypted with [CloudBackupCipher] (AES-256-GCM + Argon2id). The [name], [walletId] and
 
- * render the backups list (wallet name + creation date) before decryption.
+ * render the backups list (wallet name + creation date) before decryption. Every field is required —
+ * a file missing any of them is rejected as invalid.
  *
  * @property version   backup file format version, independent of the Ethereum Keystore version
+ * @property id        random per-backup identifier; authenticates [crypto] as its AAD
  * @property walletId  id of the backed up wallet, used to identify and de-duplicate backups
 
  */
@@ -18,9 +20,9 @@ import kotlinx.serialization.Serializable
 internal data class CloudBackupFileData(
     @SerialName("version") val version: Int,
     @SerialName("id") val id: String,
-    @SerialName("name") val name: String? = null,
-    @SerialName("walletId") val walletId: String? = null,
-    @SerialName("createdAt") val createdAt: String? = null,
+    @SerialName("name") val name: String,
+    @SerialName("walletId") val walletId: String,
+    @SerialName("createdAt") val createdAt: String,
     @SerialName("crypto") val crypto: CryptoData,
 ) {
 

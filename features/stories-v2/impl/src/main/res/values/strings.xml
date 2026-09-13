@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Temporary home for the onboarding story copy.
+
+  These keys are intentionally NOT in core/res: that file is owned by Lokalise, and these strings move there
+  together with the onboarding screens that will use them, once the final copy is signed off. Keeping them here
+  means the engine and its storybook demo are complete without claiming Lokalise keys that may still change.
+-->
+<resources>
+
+    <string name="stories_onboarding_slide_1_title">One tap to control crypto</string>
+    <string name="stories_onboarding_slide_1_subtitle">Confirm every action with your Tangem</string>
+
+    <string name="stories_onboarding_slide_2_title">One wallet, multiple cards</string>
+    <string name="stories_onboarding_slide_2_subtitle">Use any of your cards to access your wallet</string>
+
+    <string name="stories_onboarding_slide_3_title">Your keys, your crypto</string>
+    <string name="stories_onboarding_slide_3_subtitle">Your private keys never leave the card.</string>
+
+    <string name="stories_onboarding_slide_4_title">Trusted by millions</string>
+    <string name="stories_onboarding_slide_4_subtitle">Join the self-custody wallet used worldwide</string>
+
+    <string name="stories_onboarding_action_learn_more">Learn more or buy</string>
+    <string name="stories_onboarding_action_scan">Scan your wallet</string>
+
+</resources>

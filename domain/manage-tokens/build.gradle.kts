@@ -1,11 +1,6 @@
 plugins {
-    alias(deps.plugins.android.library)
-    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.jvm)
     id("configuration")
-}
-
-android {
-    namespace = "com.tangem.domain.managetokens"
 }
 
 dependencies {
@@ -25,7 +20,10 @@ dependencies {
     // endregion
 
     // region Domain
+    api(projects.domain.account)
+    api(projects.domain.jointAccount)
     api(projects.domain.models)
+    implementation(projects.domain.core)
     // endregion
 
     // region Domain models

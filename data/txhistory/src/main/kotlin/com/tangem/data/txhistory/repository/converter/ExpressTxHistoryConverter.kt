@@ -5,7 +5,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEn
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.domain.express.models.*
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -56,7 +56,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                     currencySymbol = entity.fromCurrencyCode,
                     value = entity.fromAmount.toScaledBigDecimal(entity.fromPrecision),
                     decimals = entity.fromPrecision,
-                    type = AmountType.FiatType(code = value.country?.defaultCurrency?.unit ?: entity.fromCurrencyCode),
+                    type = AmountType.FiatType(code = value.fiatCurrency?.code ?: entity.fromCurrencyCode),
                 ),
                 toAsset = ExpressTransactionAsset(
                     id = ExpressAssetId(networkId = entity.to.network, contractAddress = entity.to.contractAddress),
@@ -64,8 +64,9 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
                     decimals = entity.to.decimals,
                     cryptoCurrency = value.toCurrency,
                 ),
-                country = value.country,
+                fiatCurrency = value.fiatCurrency,
                 externalTxUrl = entity.externalTxUrl,
+                externalTxId = entity.externalTxId,
                 toAmount = entity.to.amount?.toScaledBigDecimal(entity.to.decimals),
                 toActualAmount = entity.to.actualAmount?.toScaledBigDecimal(entity.to.decimals),
             ),
@@ -77,7 +78,7 @@ internal class ExpressOnrampConverter : Converter<ExpressOnrampConverter.Input, 
         val entity: ExpressOnrampEntity,
         val provider: ExpressProvider?,
         val toCurrency: CryptoCurrency? = null,
-        val country: OnrampCountry? = null,
+        val fiatCurrency: OnrampCurrency? = null,
     )
 }
 

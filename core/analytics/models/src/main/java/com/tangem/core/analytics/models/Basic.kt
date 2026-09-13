@@ -27,6 +27,7 @@ sealed class Basic(
         walletsCount: Int,
         isImported: Boolean,
         isBackedUp: Boolean,
+        completedBackups: Set<AnalyticsParam.BackupType> = emptySet(),
     ) : Basic(
         event = "Signed in",
         params = buildMap {
@@ -34,6 +35,9 @@ sealed class Basic(
             put(AnalyticsParam.WALLETS_COUNT, walletsCount.toString())
             put(AnalyticsParam.WALLET_TYPE, if (isImported) "Seed Phrase" else "Seedless")
             put(AnalyticsParam.BACKUPED, if (isBackedUp) "Yes" else "No")
+            if (completedBackups.isNotEmpty()) {
+                put(AnalyticsParam.COMPLETED_BACKUPS, getCompletedBackupsValue(completedBackups))
+            }
         },
     ), CriticalEvent, OneTimePerSessionEvent {
         override val oneTimeEventId: String = id

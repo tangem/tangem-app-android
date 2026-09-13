@@ -22,38 +22,36 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val userTokensResponseFactory: UserTokensResponseFactory,
-) : TwoWayConverter<WalletAccountDTO, Account.CryptoPortfolio> {
+) : TwoWayConverter<WalletAccountDTO, Account.Personal> {
 
-    override fun convert(value: WalletAccountDTO): Account.CryptoPortfolio {
+    override fun convert(value: WalletAccountDTO): Account.Personal {
         val tokens = value.tokens ?: error("Tokens should not be null")
+        val derivationIndex = value.derivationIndex.toDerivationIndex()
 
-        return Account.CryptoPortfolio(
+        return Account.Personal(
             accountId = value.id.toAccountId(userWallet.walletId),
             accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
-            derivationIndex = value.derivationIndex.toDerivationIndex(),
-            cryptoCurrencies = if (tokens.isNotEmpty()) {
-                responseCryptoCurrenciesFactory.createCurrencies(
-                    tokens = tokens,
-                    userWallet = userWallet,
-                    accountIndex = value.derivationIndex.toDerivationIndex(),
-                )
-            } else {
-                emptyList()
-            },
+            derivationIndex = derivationIndex,
+            cryptoCurrencies = responseCryptoCurrenciesFactory.createAccountCurrencies(
+                tokens = tokens,
+                userWallet = userWallet,
+                accountIndex = derivationIndex,
+            ),
         )
     }
 
-    override fun convertBack(value: Account.CryptoPortfolio): WalletAccountDTO {
+    override fun convertBack(value: Account.Personal): WalletAccountDTO {
         return WalletAccountDTO(
             id = value.accountId.value,
             name = AccountNameConverter.convert(value = value.accountName),
             derivationIndex = value.derivationIndex.value,
             icon = value.icon.value.name,
             iconColor = value.icon.color.name,
-            tokens = value.cryptoCurrencies.map {
-                userTokensResponseFactory.createResponseToken(currency = it, accountId = value.accountId)
-            },
+            tokens = userTokensResponseFactory.createAccountTokens(
+                currencies = value.cryptoCurrencies,
+                accountId = value.accountId,
+            ),
         )
     }
 

@@ -8,7 +8,7 @@ import com.tangem.spend.datasource.pay.TangemPayAuthApi
 import com.tangem.spend.datasource.pay.models.request.GenerateNonceByCustomerWalletRequest
 import com.tangem.spend.datasource.pay.models.request.GetTokenByCustomerWalletRequest
 import com.tangem.spend.datasource.pay.models.response.TangemPayErrorResponse
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError

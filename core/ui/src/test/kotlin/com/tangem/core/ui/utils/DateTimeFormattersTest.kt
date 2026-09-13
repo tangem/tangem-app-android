@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.Locale
 
 /**
  * Unit tests for [DateTimeFormatters], in particular for conversion of ICU date/time patterns
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DateTimeFormattersTest {
+
+    private val defaultLocale = Locale.getDefault()
 
     @BeforeEach
     fun setUp() {
@@ -26,6 +29,7 @@ class DateTimeFormattersTest {
     @AfterEach
     fun tearDown() {
         unmockkStatic(DateFormat::class)
+        Locale.setDefault(defaultLocale)
     }
 
     @Test
@@ -145,6 +149,34 @@ class DateTimeFormattersTest {
         // Act & Assert
         val formatted = formatter.print(date)
         Truth.assertThat(formatted).isNotEmpty()
+    }
+
+    @Test
+    fun `GIVEN russian locale WHEN formatStandaloneShortMonth THEN nominative month name`() {
+        // Arrange
+        Locale.setDefault(Locale("ru"))
+
+        // Act
+        val april = DateTimeFormatters.formatStandaloneShortMonth(org.joda.time.DateTime(2026, 4, 1, 0, 0))
+        val may = DateTimeFormatters.formatStandaloneShortMonth(org.joda.time.DateTime(2026, 5, 1, 0, 0))
+        val june = DateTimeFormatters.formatStandaloneShortMonth(org.joda.time.DateTime(2026, 6, 1, 0, 0))
+
+        // Assert
+        Truth.assertThat(april).isEqualTo("апр.")
+        Truth.assertThat(may).isEqualTo("май")
+        Truth.assertThat(june).isEqualTo("июнь")
+    }
+
+    @Test
+    fun `GIVEN english locale WHEN formatStandaloneShortMonth THEN short month name`() {
+        // Arrange
+        Locale.setDefault(Locale.US)
+
+        // Act
+        val actual = DateTimeFormatters.formatStandaloneShortMonth(org.joda.time.DateTime(2026, 6, 1, 0, 0))
+
+        // Assert
+        Truth.assertThat(actual).isEqualTo("Jun")
     }
 
     @Test

@@ -16,6 +16,7 @@ import coil.request.ImageRequest
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.utils.notifications.NotificationIdGenerator
 import com.tangem.wallet.R
 
 class PushNotificationDelegate(private val context: Context) {
@@ -30,6 +31,8 @@ class PushNotificationDelegate(private val context: Context) {
         imageUrl: Uri? = null,
         vibratePattern: LongArray?,
     ) {
+        val notificationId = NotificationIdGenerator.next()
+
         val intent = Intent(context, MainActivity::class.java).apply {
             dataMap.forEach { (key, value) ->
                 putExtra(key, value)
@@ -40,9 +43,9 @@ class PushNotificationDelegate(private val context: Context) {
 
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ context,
-            /* requestCode = */ PUSH_NOTIFICATION_REQUEST_CODE,
+            /* requestCode = */ notificationId,
             /* intent = */ intent,
-            /* flags = */ PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
+            /* flags = */ PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
@@ -78,11 +81,8 @@ class PushNotificationDelegate(private val context: Context) {
             notificationManager.createNotificationChannel(notificationChannel)
         }
 
-        // Generating unique notification id
-        val uniqueId = (System.currentTimeMillis() % Integer.MAX_VALUE).toInt()
-
         notificationManager.notify(
-            /* id = */ uniqueId,
+            /* id = */ notificationId,
             /* notification = */ notificationBuilder.build(),
         )
     }
@@ -99,7 +99,6 @@ class PushNotificationDelegate(private val context: Context) {
     }
 
     private companion object {
-        const val PUSH_NOTIFICATION_REQUEST_CODE = 123
         private const val OPENED_FROM_GCM_PUSH = "google.sent_time" // every bundle from FCM contains this key
     }
 }

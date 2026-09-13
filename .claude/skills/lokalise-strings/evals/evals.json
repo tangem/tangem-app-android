@@ -1,0 +1,61 @@
+{
+  "skill_name": "lokalise-strings",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "на экране статуса доставки пластиковой карты нужны две подписи: «Track delivery» на кнопке и «Estimated arrival» над датой. Заведи строки и подтяни в проект, чтобы собиралось.",
+      "expected_output": "Two new keys proposed in the screen's own tangempay_card_details_* cluster with en-only translations and the neighbours' platforms, held at the approval gate. The agent also reports that neither caption has anything to attach to — no tracking field exists in TangemPayCard, CustomerInfo.CardInfo or any pay DTO, and the only delivery timing in the app is the offer-level business-day ETA — and that the sibling key tangempay_card_details_delivery_description records the opposite product decision (\"delivery updates are email-only, there is no in-app tracking\"). It therefore cannot make the screen compile, and says so rather than inventing fields.",
+      "assertions": [
+        "Before proposing names, the agent searches the existing strings.xml by the English text of each string, not only by candidate key name",
+        "The agent shows the proposed key names to the user and waits for approval before calling create_lokalise_keys",
+        "Keys are created with platforms [\"ios\", \"android\"] and exactly one translation, language_iso en",
+        "No key or text is hand-written into any strings.xml",
+        "The pull command's output is piped or filtered rather than printed in full, so the API token is not echoed",
+        "Any pull the agent proposes is unfiltered `python3 lokalize.py` — not `--langs en`, which would leave the ten tracked locale files stale"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "в виджете кэшбэка заголовок «%1$s cashback in %2$s» слишком длинный — убери месяц, пусть будет просто «%1$s cashback»",
+      "expected_output": "The agent treats this as dangerous: it reports the release-branch hit, reconciles it with the still-closed TWI_1192_TANGEM_PAY_CASHBACK_ENABLED toggle, and refuses to edit the key in place. Dropping %2$s leaves all 10 locales formatting a 1-argument call against a 2-argument string; this does not crash — TextReference.Res resolves through getStringSafe, which falls back to the un-substituted template and files a Crashlytics non-fatal — so every non-English user would see the literal \"%1$s cashback in %2$s\". It therefore takes the new-key route, tags the old key Deprecated, and changes nothing until given an explicit go-ahead.",
+      "assertions": [
+        "The agent reports whether the key is present in the newest origin/releases/<x.y> branch",
+        "The agent reports the gating toggle TWI_1192_TANGEM_PAY_CASHBACK_ENABLED as \"undefined\" and reconciles it with the release hit rather than reporting only one of the two",
+        "No repository file is modified anywhere in the run: the agent stops for an explicit go-ahead before editing code",
+        "A replacement key is introduced instead of the existing key being modified in place",
+        "The old key is tagged Deprecated via update_lokalise_key with merge_tags true, and is not deleted",
+        "No raw Lokalise HTTP/REST call is proposed and the API token is never placed in a command or header — only MCP tools are used",
+        "The agent does not create a Lokalise translation task; it states that clearing and re-requesting translations is the loc team's process",
+        "Any pull the agent proposes is unfiltered `python3 lokalize.py` — not `--langs en`, which would leave the ten tracked locale files stale"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "на экране выбора сети «Fast options» звучит не очень, поменяй на «Fast way» — там ничего не форматируется, просто текст",
+      "expected_output": "The agent refuses to treat this as a trivial edit: it reports released status, toggle state and the filled translations, explains that changing the source text makes those translations stale and that clearing them is the loc team's action, and routes the edit to the Lokalise UI followed by a pull — it does not edit strings.xml.",
+      "assertions": [
+        "The agent reports both the key's released status and the gating toggle's version",
+        "The agent states that clearing and re-requesting the stale translations is the loc team's action, not its own, and does not create a translation task itself",
+        "The agent routes the text change to the Lokalise UI followed by a pull, rather than performing it",
+        "No raw Lokalise HTTP/REST call is proposed and the API token is never placed in a command or header — only MCP tools are used",
+        "The agent surfaces that the sibling key tangempay_choose_network_other_ways was changed as a pair, so editing one alone desynchronises the screen",
+        "Any pull the agent proposes is unfiltered `python3 lokalize.py` — not `--langs en`, which would leave the ten tracked locale files stale"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "на Android формулировка срока доставки «Up to N business days» не нравится, хотим «Arrives in N business days» — но только на Android, на iOS пусть остаётся как есть",
+      "expected_output": "The agent recognises tangempay_order_type_delivery_eta as shared (platforms [ios, android]) and, rather than editing it, splits off an Android-only plural key following the manage_tokens_number_of_wallets_android precedent: _android suffix, platforms [\"android\"], tag android-specific, a description pointing at the iOS twin, en-only {one, other} in universal [%d] form — and narrows the original key to platforms [\"ios\"] so each platform owns its text. It authors no few/many forms and stops at the approval gate.",
+      "assertions": [
+        "The agent reports that tangempay_order_type_delivery_eta is currently shared, platforms [\"ios\", \"android\"], and does not edit its text",
+        "A separate Android-only key is proposed with platforms [\"android\"], not a change to the shared key",
+        "The proposal follows the in-repo precedent: _android suffix, tag android-specific, and a description referencing the iOS twin",
+        "The new key is is_plural true with an en translation object of exactly one and other, in universal [%d] form",
+        "The agent notes that the original key must be narrowed to platforms [\"ios\"], or flags the consequence of leaving it shared",
+        "The agent shows the proposed key name and tags and waits for approval before calling create_lokalise_keys",
+        "The agent does not create a Lokalise translation task for the new key; it states that requesting translations is the loc team's process",
+        "The agent uses the _android split convention, not the _v2 replacement convention, and does not tag the original Deprecated"
+      ]
+    }
+  ]
+}

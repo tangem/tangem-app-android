@@ -1,8 +1,8 @@
 package com.tangem.data.onramp.converters
 
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
-import com.tangem.datasource.api.onramp.models.response.Status
+import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
+import com.tangem.grow.datasource.onramp.models.response.Status
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.utils.converter.Converter
 

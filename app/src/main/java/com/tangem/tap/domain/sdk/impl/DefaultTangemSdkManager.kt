@@ -13,9 +13,9 @@ import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.services.secure.AccessCodeRepository
 import com.tangem.common.services.secure.CardAccessTokensRepository
+import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -35,6 +35,8 @@ import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.hot.sdk.android.PassphraseValidator
+import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -49,10 +51,7 @@ import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
-import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
-import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
-import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
@@ -62,10 +61,7 @@ import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.Lazy
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
@@ -83,6 +79,7 @@ internal class DefaultTangemSdkManager(
     // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
     // TangemSdkManager. It's only needed when a scan actually runs.
     private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
+    private val authFeatureToggles: AuthFeatureToggles,
 ) : TangemSdkManager {
 
     private val tangemSdk: TangemSdk
@@ -165,7 +162,6 @@ internal class DefaultTangemSdkManager(
                     shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     cardRepository = cardRepository,
-                    walletRegistrationLauncher = walletRegistrationLauncher.get(),
                 ),
                 cardId = cardId,
                 initialMessage = message,
@@ -191,6 +187,7 @@ internal class DefaultTangemSdkManager(
                 shouldReset = shouldReset,
                 derivationsHelper = derivationsHelper,
             ),
+            preflightReadFilter = null,
             cardId = scanResponse.card.cardId,
             initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body_ring))
@@ -198,7 +195,6 @@ internal class DefaultTangemSdkManager(
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
             iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
-            preflightReadFilter = null,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -209,6 +205,15 @@ internal class DefaultTangemSdkManager(
         passphrase: String?,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
+        // The card itself has no passphrase length limit, but a wallet the mobile wallet cannot reproduce
+        // would break both the upgrade between them and importing the same seed phrase twice
+        val passphraseError = runCatching {
+            PassphraseValidator.validate(passphrase.orEmpty().toCharArray())
+        }.exceptionOrNull()
+        if (passphraseError != null) {
+            return CompletionResult.Failure(TangemSdkError.ExceptionError(passphraseError))
+        }
+
         val defaultMnemonic = try {
             DefaultMnemonic(mnemonic, tangemSdk.wordlist)
         } catch (e: TangemSdkError.MnemonicException) {
@@ -231,13 +236,13 @@ internal class DefaultTangemSdkManager(
                 passphrase = passphrase,
                 shouldReset = shouldReset,
             ),
+            preflightReadFilter = null,
             cardId = scanResponse.card.cardId,
             initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body_ring))
             } else {
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
-            preflightReadFilter = null,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -295,6 +300,7 @@ internal class DefaultTangemSdkManager(
             ),
             cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.card_settings_reset_card_to_factory)),
+            registerColdWallet = false, // reset wipes the card — nothing to register
         )
     }
 
@@ -307,6 +313,7 @@ internal class DefaultTangemSdkManager(
                     cardNumber.toString(),
                 ),
             ),
+            registerColdWallet = false, // reset wipes the card — nothing to register
         )
     }
 
@@ -374,17 +381,25 @@ internal class DefaultTangemSdkManager(
         initialMessage: Message?,
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
-    ): CompletionResult<T> = withContext(Dispatchers.Main) {
-        suspendCancellableCoroutine { continuation ->
-            tangemSdk.startSessionWithRunnable(
-                runnable = runnable,
-                cardId = cardId,
-                initialMessage = initialMessage,
-                accessCode = accessCode,
-                preflightReadFilter = preflightReadFilter,
-                iconScanRes = iconScanRes,
-            ) { result ->
-                if (continuation.isActive) continuation.resume(result)
+        registerColdWallet: Boolean,
+    ): CompletionResult<T> = coroutineScope {
+        val actualRunnable = if (registerColdWallet && authFeatureToggles.isBackendAuthenticationEnabled) {
+            withColdWalletRegistration(runnable)
+        } else {
+            runnable
+        }
+        withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
+                tangemSdk.startSessionWithRunnable(
+                    runnable = actualRunnable,
+                    cardId = cardId,
+                    initialMessage = initialMessage,
+                    accessCode = accessCode,
+                    preflightReadFilter = preflightReadFilter,
+                    iconScanRes = iconScanRes,
+                ) { result ->
+                    if (continuation.isActive) continuation.resume(result)
+                }
             }
         }
     }
@@ -394,15 +409,32 @@ internal class DefaultTangemSdkManager(
         cardId: String? = null,
         initialMessage: Message? = null,
         preflightReadFilter: PreflightReadFilter? = null,
+        registerColdWallet: Boolean = true,
     ): CompletionResult<T> {
         val result = runTaskAsync(
             runnable = runnable,
+            preflightReadFilter = preflightReadFilter,
             cardId = cardId,
             initialMessage = initialMessage,
-            preflightReadFilter = preflightReadFilter,
+            registerColdWallet = registerColdWallet,
         )
         return withContext(Dispatchers.Main) { result }
     }
+
+    /**
+     * Wraps [runnable] so that, on success, the card is bound to the device via cold wallet
+     * registration on the same NFC tap — applied to every card operation except reset and Visa
+     * (they pass `registerColdWallet = false`). Twin / Visa / walletless cards are skipped inside
+     * [WalletRegistrationLauncher]. Uses the enclosing session [CoroutineScope] receiver so the
+     * launched in-session registration is cancelled with the caller and can't outlive the tap.
+     */
+    private fun <T> CoroutineScope.withColdWalletRegistration(
+        runnable: CardSessionRunnable<T>,
+    ): CardSessionRunnable<T> = RegisterColdWalletRunnable(
+        inner = runnable,
+        launcher = walletRegistrationLauncher.get(),
+        sessionScope = this,
+    )
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
@@ -432,9 +464,9 @@ internal class DefaultTangemSdkManager(
     ): CompletionResult<CreateWalletResponse> {
         return runTaskAsync(
             runnable = CreateFirstTwinWalletTask(cardId),
+            preflightReadFilter = null,
             cardId = cardId,
             initialMessage = initialMessage,
-            preflightReadFilter = null,
         )
     }
 
@@ -453,7 +485,7 @@ internal class DefaultTangemSdkManager(
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
         )
-        return runTaskAsync(runnable = task, cardId = null, initialMessage = initialMessage, preflightReadFilter = null)
+        return runTaskAsync(runnable = task, preflightReadFilter = null, initialMessage = initialMessage)
     }
 
     override fun changeProductType(isRing: Boolean) {
@@ -478,9 +510,9 @@ internal class DefaultTangemSdkManager(
                 issuerKeys = issuerKeyPair,
                 cardRepository = cardRepository,
             ),
+            preflightReadFilter = null,
             cardId = cardId,
             initialMessage = initialMessage,
-            preflightReadFilter = null,
         )
     }
 
@@ -501,6 +533,7 @@ internal class DefaultTangemSdkManager(
                 ),
                 cardId = activationInput.cardId,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
         }
     }
@@ -519,6 +552,7 @@ internal class DefaultTangemSdkManager(
             ),
             cardId = visaDataForApprove.customerWalletCardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            registerColdWallet = false, // Visa — not a cold wallet registration target
         )
     }
 
@@ -531,6 +565,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {
@@ -549,6 +584,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {
@@ -568,6 +604,7 @@ internal class DefaultTangemSdkManager(
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
+                registerColdWallet = false, // Visa — not a cold wallet registration target
             )
 
             return@coroutineScope when (result) {
@@ -584,5 +621,6 @@ internal class DefaultTangemSdkManager(
             }
         }
     }
+
     // endregion
 }

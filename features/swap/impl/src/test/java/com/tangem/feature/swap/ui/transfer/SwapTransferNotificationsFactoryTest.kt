@@ -535,7 +535,7 @@ internal class SwapTransferNotificationsFactoryTest {
         return SwapCurrencyStatus(
             userWallet = coldWallet,
             status = CryptoCurrencyStatus(currency = coin, value = statusValue),
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
         )
     }
 
@@ -547,7 +547,7 @@ internal class SwapTransferNotificationsFactoryTest {
         return SwapCurrencyStatus(
             userWallet = coldWallet,
             status = CryptoCurrencyStatus(currency = coin, value = statusValue),
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
         )
     }
 
@@ -583,7 +583,7 @@ internal class SwapTransferNotificationsFactoryTest {
         return SwapCurrencyStatus(
             userWallet = coldWallet,
             status = CryptoCurrencyStatus(currency = token, value = statusValue),
-            account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            account = Account.Personal.createMainAccount(userWalletId),
         )
     }
 

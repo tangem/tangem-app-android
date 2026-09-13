@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
@@ -65,6 +66,7 @@ import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.send.model.SendModel
+import com.tangem.features.send.send.model.TronDefaultFeeLoader
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.testDispatcherProvider
 import io.mockk.*
@@ -93,6 +95,9 @@ internal abstract class SendModelTestBase {
     protected val listenToQrScanningUseCase: ListenToQrScanningUseCase = mockk(relaxed = true)
     protected val parseQrCodeUseCase: ParseQrCodeUseCase = mockk(relaxed = true)
     protected val sendConfirmAlertFactory: SendConfirmAlertFactory = mockk(relaxed = true)
+    protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
+        every { forAddress(any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
+    }
     protected val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk(relaxed = true)
     protected val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk(relaxed = true)
     protected val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
@@ -205,8 +210,11 @@ internal abstract class SendModelTestBase {
             sendAmountUpdateTrigger = sendAmountUpdateTrigger,
             analyticsEventHandler = analyticsEventHandler,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
-            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-            sendFeatureToggles = sendFeatureToggles,
+            tronDefaultFeeLoader = TronDefaultFeeLoader(
+                getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+                isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+                sendFeatureToggles = sendFeatureToggles,
+            ),
         )
     }
 
@@ -234,6 +242,7 @@ internal abstract class SendModelTestBase {
             notificationsUpdateTrigger = notificationsUpdateTrigger,
             notificationsUpdateListener = notificationsUpdateListener,
             alertFactory = sendConfirmAlertFactory,
+            backupErrorWarningSender = backupErrorWarningSender,
             sendAnalyticHelper = sendAnalyticHelper,
             urlOpener = urlOpener,
             shareManager = shareManager,

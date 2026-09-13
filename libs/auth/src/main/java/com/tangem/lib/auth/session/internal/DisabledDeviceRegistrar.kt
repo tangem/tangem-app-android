@@ -12,4 +12,8 @@ internal object DisabledDeviceRegistrar : DeviceRegistrar {
     override suspend fun register(): Either<DeviceRegistrationError, Unit> {
         return DeviceRegistrationError.Disabled.left()
     }
+
+    override suspend fun reregister(): Either<DeviceRegistrationError, Unit> {
+        return DeviceRegistrationError.Disabled.left()
+    }
 }

@@ -2,13 +2,13 @@ package com.tangem.data.transaction
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.datasource.api.gasless.TronGaslessApi
-import com.tangem.datasource.api.gasless.models.GaslessServiceResponse
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateBreakdown
-import com.tangem.datasource.api.gasless.models.tron.TronEstimateResponse
-import com.tangem.datasource.api.gasless.models.tron.TronSubmitResponse
-import com.tangem.datasource.api.gasless.models.tron.TronTokenDto
-import com.tangem.datasource.api.gasless.models.tron.TronTokensResponse
+import com.tangem.grow.datasource.gasless.TronGaslessApi
+import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateBreakdown
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronSubmitResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronTokenDto
+import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -29,7 +29,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         fromAddress = "TFrom",
         toAddress = "TTo",
         tokenContract = "TUSDT",
-        amount = "50000000",
+        amount = BigInteger("50000000"),
         feeTokenContract = "TUSDT",
     )
 
@@ -57,6 +57,7 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
 
         // Assert
         assertThat(quote.quoteId).isEqualTo("q_1")
+        assertThat(quote.quotedAmountRaw).isEqualTo(BigInteger("50000000"))
         assertThat(quote.feeRecipient).isEqualTo("TFee")
         assertThat(quote.compensationToken).isEqualTo("TUSDT")
         assertThat(quote.compensationAmountRaw).isEqualTo(BigInteger("2750000"))

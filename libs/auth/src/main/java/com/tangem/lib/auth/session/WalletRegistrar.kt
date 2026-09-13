@@ -43,4 +43,10 @@ interface WalletRegistrar {
      * registered. No card needed — safe to run after the session has closed.
      */
     suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit>
+
+    /**
+     * Unbinds a previously registered wallet from the authenticated device. Persists the fresh
+     * session tokens returned by the server and drops the local registration marker.
+     */
+    suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit>
 }

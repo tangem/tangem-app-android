@@ -33,6 +33,7 @@ dependencies {
 
     // region Core
     api(projects.core.datasource)
+    api(projects.grow.datasource)
     api(projects.core.utils)
     // endregion
 

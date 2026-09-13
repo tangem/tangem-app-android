@@ -4,7 +4,6 @@ import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.wallet.impl.R
 
@@ -54,10 +53,6 @@ internal object WalletAlertUM {
             title = resourceReference(R.string.action_buttons_something_wrong_alert_title),
             message = resourceReference(R.string.action_buttons_something_wrong_alert_message),
         )
-    }
-
-    fun addFundsDisabledForBackupError(onContactSupport: () -> Unit): DialogMessage {
-        return Dialogs.backupErrorAddFundsDisabled(onContactSupport = onContactSupport)
     }
 
     fun insufficientTokensCountForSwapping(): DialogMessage {

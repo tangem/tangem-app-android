@@ -1,5 +1,6 @@
 package com.tangem.common.ui.notifications
 
+import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -11,8 +12,10 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.utils.annotations.RemoveWithToggle
 import java.math.BigDecimal
 
+@Immutable
 sealed class NotificationUM(val config: NotificationConfig) {
 
     open class Error(
@@ -41,6 +44,7 @@ sealed class NotificationUM(val config: NotificationConfig) {
             subtitle = resourceReference(R.string.send_notification_invalid_amount_text),
         )
 
+        @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
         data class DestinationBackupError(val onContactSupport: () -> Unit) : Error(
             title = resourceReference(R.string.warning_backup_error_add_funds_title),
             subtitle = resourceReference(R.string.warning_backup_error_add_funds_message),

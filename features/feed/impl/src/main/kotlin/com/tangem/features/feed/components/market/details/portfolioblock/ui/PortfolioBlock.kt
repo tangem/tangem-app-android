@@ -49,21 +49,21 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
 
     Box(modifier = modifier) {
         AnimatedVisibility(
+            modifier = Modifier.matchParentSize(),
             visible = state !is PortfolioBlockUM.Hidden,
             enter = fadeIn(animationSpec = tween(durationMillis = 300)),
         ) {
             TangemFade(
                 variant = TangemFade.Variant.Hard,
                 position = TangemFade.Position.Bottom,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(174.dp)
-                    .align(Alignment.BottomCenter),
+                modifier = Modifier.fillMaxSize(),
             )
         }
 
         AnimatedVisibility(
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(top = 16.dp),
             visible = state !is PortfolioBlockUM.Hidden,
             enter = fadeIn(animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)),
             exit = fadeOut(animationSpec = tween(durationMillis = 300)),
