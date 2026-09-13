@@ -33,5 +33,6 @@ internal class TangemPayBankWithdrawPreviewComponent(
         val userWalletId: UserWalletId,
         val draft: StateFlow<BankWithdrawDraft>,
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
+        val onOrderSigned: () -> Unit,
     )
 }
