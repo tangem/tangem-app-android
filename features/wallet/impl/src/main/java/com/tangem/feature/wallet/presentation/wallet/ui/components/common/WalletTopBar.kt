@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
@@ -35,7 +34,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarCon
 import kotlinx.collections.immutable.persistentListOf
 
 private const val VISIBILITY_THRESHOLD = 0.5f
-private val BRAND_ICON_SLOT_SIZE = 44.dp
 
 /**
  * Wallet screen collapsing top bar
@@ -66,7 +64,7 @@ internal fun WalletTopBar(
         contentAlign = TangemTopNavigation.ContentAlign.Center,
         startButton = {
             // Non-clickable brand mark, sized to align with the trailing action buttons.
-            Box(modifier = Modifier.size(BRAND_ICON_SLOT_SIZE), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.size(TangemTopNavigation.ButtonSlotSize), contentAlignment = Alignment.Center) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_tangem_24),
                     contentDescription = null,

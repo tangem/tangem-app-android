@@ -14,7 +14,7 @@ interface TangemPayTxHistoryRepository {
         context: TangemPayTxHistoryListBatchingContext,
     ): TangemPayTxHistoryListBatchFlow
 
-    /** Loads a single transaction via `GET v1/customer/transactions/{transactionId}`. */
+    /** Loads a single transaction by its id. */
     suspend fun getTransaction(
         userWalletId: UserWalletId,
         transactionId: String,

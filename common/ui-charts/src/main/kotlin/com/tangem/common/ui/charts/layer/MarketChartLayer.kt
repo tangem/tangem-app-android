@@ -27,7 +27,6 @@ import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import com.tangem.common.ui.charts.preview.MarketChartPreviewDataProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -114,9 +113,10 @@ private fun rememberLayer(
     return rememberLineCartesianLayer(
         LineCartesianLayer.LineProvider.series(
             rememberSplitLine(
-                shader = DynamicShader.Companion.horizontalGradient(
-                    colors = intArrayOf(alineColor, alineColorRight),
-                    positions = floatArrayOf(fractionValue, fractionValue),
+                shader = SplitLineShader(
+                    leftColor = alineColor,
+                    rightColor = alineColorRight,
+                    splitFraction = fractionValue,
                 ),
                 backgroundShaderFirst = Brush.verticalGradient(
                     colors = backLineColor,

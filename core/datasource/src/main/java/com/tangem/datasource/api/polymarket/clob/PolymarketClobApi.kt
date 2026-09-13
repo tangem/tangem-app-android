@@ -2,6 +2,7 @@ package com.tangem.datasource.api.polymarket.clob
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.polymarket.clob.models.PolymarketApiKeyResponse
+import com.tangem.datasource.api.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
@@ -25,4 +26,16 @@ interface PolymarketClobApi {
         @Query("asset_type") assetType: String,
         @Query("signature_type") signatureType: Int,
     ): ApiResponse<Unit>
+
+    /**
+     * Reads the CLOB's cached collateral balance and allowance of the authenticated deposit wallet.
+     * L2-authenticated; the sibling of [updateBalanceAllowance] that returns the numbers instead of
+     * only refreshing them.
+     */
+    @GET("balance-allowance")
+    suspend fun getBalanceAllowance(
+        @HeaderMap headers: Map<String, String>,
+        @Query("asset_type") assetType: String,
+        @Query("signature_type") signatureType: Int,
+    ): ApiResponse<PolymarketBalanceAllowanceResponse>
 }

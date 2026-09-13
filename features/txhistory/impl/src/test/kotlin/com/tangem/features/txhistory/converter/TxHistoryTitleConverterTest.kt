@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
+import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.network.TxInfo.TransactionStatus
@@ -31,7 +32,7 @@ internal class TxHistoryTitleConverterTest {
     private fun provideTestModels() = listOf(
         // Pills resolve to the status-aware label text (no amount)
         TitleModel(
-            tx = txInfo(TransactionType.Approve),
+            tx = txInfo(TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = "0xspender")),
             expected = resRef(R.string.common_approved),
         ),
         TitleModel(
@@ -39,16 +40,52 @@ internal class TxHistoryTitleConverterTest {
             expected = resRef(R.string.common_staked),
         ),
         TitleModel(
+            tx = txInfo(TransactionType.Staking.Stake, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.common_staking),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.Stake, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_stake_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.Staking.Unstake),
             expected = resRef(R.string.staking_unstaked),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.Unstake, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.staking_unstaking),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.Unstake, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_unstake_failed),
         ),
         TitleModel(
             tx = txInfo(TransactionType.Staking.Restake),
             expected = resRef(R.string.transaction_history_rewards_restaked),
         ),
         TitleModel(
+            tx = txInfo(TransactionType.Staking.Restake, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.transaction_history_status_restaking_rewards),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.Restake, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_rewards_restake_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.Staking.Vote(validatorAddress = "0xv"), status = TransactionStatus.Failed),
             expected = resRef(R.string.common_action_failed, listOf(resRef(R.string.staking_vote))),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.ClaimRewards, status = TransactionStatus.Unconfirmed),
+            expected = resRef(R.string.transaction_history_status_claiming_rewards),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.ClaimRewards, status = TransactionStatus.Confirmed),
+            expected = resRef(R.string.transaction_history_status_rewards_claimed),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Staking.ClaimRewards, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_rewards_claim_failed),
         ),
         TitleModel(
             tx = txInfo(TransactionType.YieldSupply.Enter(address = "0xa")),
@@ -67,6 +104,10 @@ internal class TxHistoryTitleConverterTest {
             tx = txInfo(TransactionType.Swap, status = TransactionStatus.Unconfirmed),
             expected = resRef(R.string.common_swapping),
         ),
+        TitleModel(
+            tx = txInfo(TransactionType.Swap, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_swap_failed),
+        ),
         // Transfer: own vs external, direction-aware
         TitleModel(
             tx = txInfo(TransactionType.Transfer, isOutgoing = true),
@@ -74,12 +115,30 @@ internal class TxHistoryTitleConverterTest {
             expected = resRef(R.string.common_transferred),
         ),
         TitleModel(
+            tx = txInfo(TransactionType.Transfer, isOutgoing = true, status = TransactionStatus.Unconfirmed),
+            isOwnTransfer = true,
+            expected = resRef(R.string.transaction_history_status_transferring),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Transfer, isOutgoing = true, status = TransactionStatus.Failed),
+            isOwnTransfer = true,
+            expected = resRef(R.string.transaction_history_status_transfer_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.Transfer, isOutgoing = true),
             expected = resRef(R.string.common_sent),
         ),
         TitleModel(
+            tx = txInfo(TransactionType.Transfer, isOutgoing = true, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_send_failed),
+        ),
+        TitleModel(
             tx = txInfo(TransactionType.Transfer, isOutgoing = false),
             expected = resRef(R.string.common_received),
+        ),
+        TitleModel(
+            tx = txInfo(TransactionType.Transfer, isOutgoing = false, status = TransactionStatus.Failed),
+            expected = resRef(R.string.transaction_history_status_receive_failed),
         ),
         TitleModel(
             tx = txInfo(TransactionType.Operation(name = "Mint")),

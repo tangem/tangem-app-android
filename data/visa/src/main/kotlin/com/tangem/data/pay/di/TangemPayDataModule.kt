@@ -1,8 +1,6 @@
 package com.tangem.data.pay.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
@@ -17,9 +15,10 @@ import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
@@ -56,10 +55,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPaySwapRepository(repository: DefaultTangemPayWithdrawRepository): TangemPayWithdrawRepository
-
-    @Binds
-    @Singleton
-    fun bindCustomerOrderRepository(repository: DefaultCustomerOrderRepository): CustomerOrderRepository
 
     @Binds
     @Singleton
@@ -176,16 +171,16 @@ internal interface TangemPayDataModule {
             dispatchers: CoroutineDispatcherProvider,
             scope: AppCoroutineScope,
             converter: PaymentAccountStatusValueDMConverter,
+            dataStoreFactory: AppDataStoreFactory,
         ): PaymentAccountStatusesStore {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
-                persistenceDataStore = DataStoreFactory.create(
+                persistenceDataStore = dataStoreFactory.create(
                     serializer = MoshiDataStoreSerializer(
                         moshi = moshi,
                         types = mapWithStringKeyTypes<PaymentAccountStatusValueDM>(),
                         defaultValue = emptyMap(),
                     ),
-                    corruptionHandler = ReplaceFileCorruptionHandler { emptyMap() },
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
                     scope = scope,
                 ),
@@ -316,20 +311,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCheckOrderConflictUseCase(
-            customerOrderRepository: CustomerOrderRepository,
-        ): CheckOrderConflictUseCase {
-            return CheckOrderConflictUseCase(customerOrderRepository)
-        }
-
-        @Provides
-        fun provideRestoreActiveIssueOrdersUseCase(
+        fun provideRestoreActiveCardOrdersUseCase(
             customerOrderRepository: CustomerOrderRepository,
             issueCardRepository: TangemPayIssueCardRepository,
             startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
             appCoroutineScope: AppCoroutineScope,
-        ): RestoreActiveIssueOrdersUseCase {
-            return RestoreActiveIssueOrdersUseCase(
+        ): RestoreActiveCardOrdersUseCase {
+            return RestoreActiveCardOrdersUseCase(
                 customerOrderRepository = customerOrderRepository,
                 issueCardRepository = issueCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
@@ -358,6 +346,53 @@ internal interface TangemPayDataModule {
                 customerOrderRepository = customerOrderRepository,
                 issueCardRepository = issueCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideIssuePlasticCardUseCase(
+            customerOffersRepository: CustomerOffersRepository,
+            customerOrderRepository: CustomerOrderRepository,
+            issueCardRepository: TangemPayIssueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): IssuePlasticCardUseCase {
+            return IssuePlasticCardUseCase(
+                customerOffersRepository = customerOffersRepository,
+                customerOrderRepository = customerOrderRepository,
+                issueCardRepository = issueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideReissuePlasticCardUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            reissueCardRepository: TangemPayReissueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): ReissuePlasticCardUseCase {
+            return ReissuePlasticCardUseCase(
+                customerOrderRepository = customerOrderRepository,
+                reissueCardRepository = reissueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideActivatePlasticCardUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
+        ): ActivatePlasticCardUseCase {
+            return ActivatePlasticCardUseCase(
+                customerOrderRepository = customerOrderRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 appCoroutineScope = appCoroutineScope,
             )
         }
