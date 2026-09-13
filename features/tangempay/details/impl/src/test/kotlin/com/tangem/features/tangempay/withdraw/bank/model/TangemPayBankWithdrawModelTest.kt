@@ -10,6 +10,7 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
@@ -20,6 +21,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -187,7 +189,11 @@ internal class TangemPayBankWithdrawModelTest {
 
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
-            TangemPayBankWithdrawComponent.Params(userWalletId = userWalletId, entry = entry),
+            TangemPayBankWithdrawComponent.Params(
+                userWalletId = userWalletId,
+                entry = entry,
+                options = MutableStateFlow(bankWithdrawOptions()),
+            ),
         ),
         dispatchers = dispatchers,
         getBankAccountsUseCase = getBankAccountsUseCase,
