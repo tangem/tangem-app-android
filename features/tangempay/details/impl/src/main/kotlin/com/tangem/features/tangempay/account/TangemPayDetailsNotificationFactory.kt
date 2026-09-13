@@ -1,8 +1,13 @@
 package com.tangem.features.tangempay.account
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -20,13 +25,31 @@ internal class TangemPayDetailsNotificationFactory(
         else -> createAccountUnavailableConfig()
     }
 
-    fun createAccountDeactivatedConfig() = NotificationConfig(
+    fun createCardIssueFailedBannerState() = TangemMessageBanner.State(
+        title = resourceReference(R.string.tangempay_failed_to_issue_card),
+        variant = TangemMessageBanner.Variant.Error,
+        description = resourceReference(R.string.tangempay_failed_to_issue_card_support_description),
+        secondaryButton = TangemMessageBanner.Button(
+            text = resourceReference(R.string.common_contact_support),
+            onClick = intents::onCardIssueFailedSupportClick,
+        ),
+        iconStart = TangemIconUM.Icon(
+            imageVector = Icons.ic_error_20,
+            tintReference = { TangemTheme.colors3.icon.primary },
+        ),
+    )
+
+    fun createAccountDeactivatedBannerState() = TangemMessageBanner.State(
         title = resourceReference(R.string.tangempay_account_deactivated_message_title),
-        subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
-        iconResId = R.drawable.ic_alert_circle_24,
-        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+        variant = TangemMessageBanner.Variant.Error,
+        description = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
+        secondaryButton = TangemMessageBanner.Button(
             text = resourceReference(R.string.tangempay_remove_account),
             onClick = intents::onRemoveAccount,
+        ),
+        iconStart = TangemIconUM.Icon(
+            imageVector = Icons.ic_error_20,
+            tintReference = { TangemTheme.colors3.icon.primary },
         ),
     )
 

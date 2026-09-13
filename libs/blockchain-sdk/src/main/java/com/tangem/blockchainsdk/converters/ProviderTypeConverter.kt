@@ -2,7 +2,7 @@ package com.tangem.blockchainsdk.converters
 
 import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.blockchainsdk.providers.ProviderTypeIdMapping
-import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.utils.converter.TwoWayConverter
 
 /**

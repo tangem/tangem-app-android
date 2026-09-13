@@ -9,6 +9,7 @@ import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.core.ui.res.generated.icons.ic_snowflake_20
 import com.tangem.core.ui.res.generated.icons.ic_sun_20
 
@@ -131,25 +132,6 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createWithdrawWarning(onGotItClick: () -> Unit): BottomSheetMessage {
-        return bottomSheetMessage {
-            infoBlock {
-                icon(R.drawable.img_attention_20) {
-                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
-                }
-                title = TextReference.Res(R.string.tangempay_withdrawal_note_title)
-                body = TextReference.Res(R.string.tangempay_withdrawal_note_description)
-            }
-            primaryButton {
-                text = resourceReference(R.string.common_got_it)
-                onClick {
-                    onGotItClick()
-                    closeBs()
-                }
-            }
-        }
-    }
-
     fun createStayOnPlanMessage(
         planName: String,
         targetPlanName: String,
@@ -202,6 +184,27 @@ internal object TangemPayMessagesFactory {
                 text = resourceReference(R.string.common_got_it)
                 onClick { closeBs() }
             }
+        }
+    }
+
+    fun createOrderFailedMessage(onRetryClick: (() -> Unit)?): BottomSheetMessage {
+        return bottomSheetMessage {
+            errorInfoBlock {
+                title = resourceReference(R.string.common_something_went_wrong)
+                body = resourceReference(R.string.common_try_again_later)
+            }
+            closeOrRetryButtons(onRetryClick = onRetryClick)
+        }
+    }
+
+    fun createSubmitRejectedMessage(
+        title: TextReference,
+        onCloseClick: () -> Unit = {},
+        onRetryClick: (() -> Unit)? = null,
+    ): BottomSheetMessage {
+        return bottomSheetMessage {
+            errorInfoBlock { this.title = title }
+            closeOrRetryButtons(onCloseClick = onCloseClick, onRetryClick = onRetryClick)
         }
     }
 
@@ -266,6 +269,41 @@ internal object TangemPayMessagesFactory {
                     text = resourceReference(R.string.common_got_it)
                     onClick { closeBs() }
                 }
+            }
+        }
+    }
+}
+
+private fun MessageBottomSheetUM.errorInfoBlock(init: MessageBottomSheetUM.InfoBlock.() -> Unit) = infoBlock {
+    vector(Icons.ic_error_28) {
+        type = MessageBottomSheetUM.Vector.Type.Attention
+        backgroundType = MessageBottomSheetUM.Vector.BackgroundType.Attention
+    }
+    init()
+}
+
+private fun MessageBottomSheetUM.closeOrRetryButtons(onCloseClick: () -> Unit = {}, onRetryClick: (() -> Unit)?) {
+    if (onRetryClick != null) {
+        secondaryButton {
+            text = resourceReference(R.string.common_close)
+            onClick {
+                onCloseClick()
+                closeBs()
+            }
+        }
+        primaryButton {
+            text = resourceReference(R.string.common_retry)
+            onClick {
+                onRetryClick()
+                closeBs()
+            }
+        }
+    } else {
+        primaryButton {
+            text = resourceReference(R.string.common_close)
+            onClick {
+                onCloseClick()
+                closeBs()
             }
         }
     }

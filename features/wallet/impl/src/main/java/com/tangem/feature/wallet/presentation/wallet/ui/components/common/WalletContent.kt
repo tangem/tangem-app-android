@@ -25,9 +25,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollections2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
+import com.tangem.feature.wallet.presentation.wallet.ui.components.polymarketWalletBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
 import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
+import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
@@ -40,6 +43,8 @@ internal fun WalletListContent(
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
+    polymarketComponent: PolymarketWalletBlockComponent,
+    jointAccountComponent: JointAccountMainBlockComponent,
     contentPadding: PaddingValues,
     onOrganizeButtonBoundsChange: (Rect?) -> Unit,
     modifier: Modifier = Modifier,
@@ -91,8 +96,16 @@ internal fun WalletListContent(
 
         tokensListItems2(
             walletTokensListUM = currentWallet.tokensListUM,
+            jointAccountComponent = jointAccountComponent,
             modifier = movableItemModifier,
             isBalanceHidden = isBalanceHidden,
+        )
+
+        polymarketWalletBlock(
+            polymarketComponent = polymarketComponent,
+            polymarketUM = currentWallet.polymarketWalletBlockUM,
+            isBalanceHidden = isBalanceHidden,
+            modifier = itemModifier,
         )
 
         nftCollections2(state = currentWallet, itemModifier = itemModifier)

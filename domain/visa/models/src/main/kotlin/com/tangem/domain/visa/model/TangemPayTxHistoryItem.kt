@@ -93,7 +93,6 @@ sealed class TangemPayTxHistoryItem {
         val currency: SerializedCurrency?,
         val isCapTrimmed: Boolean,
         val exclusionReason: ExclusionReason?,
-        val promotionIds: List<String>,
     ) {
         enum class Status {
             ESTIMATED,
@@ -106,7 +105,6 @@ sealed class TangemPayTxHistoryItem {
         enum class ExclusionReason {
             MCC_EXCLUDED,
             MONTHLY_CAP_REACHED,
-            CUSTOMER_BLOCKLISTED,
             MERCHANT_COUNTRY_EXCLUDED,
             BELOW_MIN,
             UNKNOWN,

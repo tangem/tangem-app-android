@@ -30,7 +30,9 @@ import com.tangem.features.send.api.subcomponents.notifications.SendNotification
 import com.tangem.features.send.loadedStatus
 import com.tangem.features.send.testDispatcherProvider
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,8 +41,10 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 /**
@@ -49,6 +53,9 @@ import java.math.BigDecimal
  * amount-subtraction path owns the case — so the insufficiency has to surface here instead, either as a
  * reduced amount ([NotificationUM.Warning.FeeCoverageNotification]) or, when even the fee alone doesn't
  * fit, as [NotificationUM.Error.TotalExceedsBalance].
+ *
+ * Also covers when the informational Tron network-fee notice joins the list: never for a gasless fee, and
+ * at most [TRON_FEE_NOTICE_CAP] times overall.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -77,6 +84,20 @@ internal class NotificationsModelTest {
 
     @BeforeEach
     fun setUp() {
+        clearMocks(
+            appRouter,
+            isAmountSubtractAvailableUseCase,
+            getCurrencyCheckUseCase,
+            getBalanceNotEnoughForFeeWarningUseCase,
+            validateTransactionUseCase,
+            getTronFeeNotificationShowCountUseCase,
+            incrementNotificationsShowCountUseCase,
+            getAssetRequirementsUseCase,
+            getAccountCurrencyByAddressUseCase,
+            notificationsUpdateTrigger,
+            notificationsUpdateListener,
+            analyticsEventHandler,
+        )
         every { notificationsUpdateListener.updateTriggerFlow } returns emptyFlow()
         coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns emptyCheck()
         // What the real use case returns for a same-token Tron gasless fee — see
@@ -84,9 +105,9 @@ internal class NotificationsModelTest {
         coEvery {
             getBalanceNotEnoughForFeeWarningUseCase(any(), any(), any(), any())
         } returns null.right()
-        // The sent token is a Tron token, so the informational fee notice would join every list; push the
-        // counter past its cap to keep the assertions about the balance notifications only.
-        coEvery { getTronFeeNotificationShowCountUseCase() } returns TRON_FEE_NOTICE_CAP + 1
+        // The sent token is a Tron token, so the informational fee notice would join every list; exhaust the
+        // counter to keep the assertions about the balance notifications only.
+        coEvery { getTronFeeNotificationShowCountUseCase() } returns TRON_FEE_NOTICE_CAP
         // The pair handed to the use case is what decides this; IsAmountSubtractAvailableUseCaseTest covers
         // that a same-token gasless fee resolves to true.
         coEvery { isAmountSubtractAvailableUseCase(any(), any(), any()) } returns true.right()
@@ -163,7 +184,12 @@ internal class NotificationsModelTest {
         ),
     )
 
-    private fun createModel(testScope: TestScope, balance: BigDecimal, enteredAmount: BigDecimal): NotificationsModel {
+    private fun createModel(
+        testScope: TestScope,
+        balance: BigDecimal,
+        enteredAmount: BigDecimal,
+        fee: Fee = tronGaslessFee(),
+    ): NotificationsModel {
         // The fee token IS the sent token, so both statuses are the same snapshot.
         val status = loadedStatus(currency = tronUsdt, balance = balance)
         val params = SendNotificationsComponent.Params(
@@ -177,7 +203,7 @@ internal class NotificationsModelTest {
                 amountValue = enteredAmount,
                 reduceAmountBy = BigDecimal.ZERO,
                 isIgnoreReduce = false,
-                fee = tronGaslessFee(),
+                fee = fee,
                 feeError = null,
                 feeCryptoCurrencyStatus = status,
             ),
@@ -201,6 +227,86 @@ internal class NotificationsModelTest {
         )
     }
 
+    @Test
+    fun `GIVEN gasless fee WHEN notifications built THEN Tron fee notice is hidden`() = runTest {
+        // Arrange
+        coEvery { getTronFeeNotificationShowCountUseCase() } returns 0
+        val sut = createModel(
+            testScope = this,
+            balance = BigDecimal("100"),
+            enteredAmount = BigDecimal.ONE,
+            fee = tronGaslessFee(),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sut.uiState.value.filterIsInstance<NotificationUM.Info>()).isEmpty()
+        coVerify(exactly = 0) { incrementNotificationsShowCountUseCase(any()) }
+        sut.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN coin fee WHEN notifications built THEN Tron fee notice is shown and counted once`() = runTest {
+        // Arrange
+        coEvery { getTronFeeNotificationShowCountUseCase() } returns 0
+        val sut = createModel(
+            testScope = this,
+            balance = BigDecimal("100"),
+            enteredAmount = BigDecimal.ONE,
+            fee = trxFee(),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sut.uiState.value.filterIsInstance<NotificationUM.Info>()).hasSize(1)
+        coVerify(exactly = 1) { incrementNotificationsShowCountUseCase(tronUsdt) }
+        sut.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [TRON_FEE_NOTICE_CAP, TRON_FEE_NOTICE_CAP + 1])
+    fun `GIVEN show count at cap WHEN notifications built THEN Tron fee notice is hidden`(showCount: Int) = runTest {
+        // Arrange
+        coEvery { getTronFeeNotificationShowCountUseCase() } returns showCount
+        val sut = createModel(
+            testScope = this,
+            balance = BigDecimal("100"),
+            enteredAmount = BigDecimal.ONE,
+            fee = trxFee(),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sut.uiState.value.filterIsInstance<NotificationUM.Info>()).isEmpty()
+        coVerify(exactly = 0) { incrementNotificationsShowCountUseCase(any()) }
+        sut.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN last allowed show WHEN notifications built THEN Tron fee notice is shown`() = runTest {
+        // Arrange
+        coEvery { getTronFeeNotificationShowCountUseCase() } returns TRON_FEE_NOTICE_CAP - 1
+        val sut = createModel(
+            testScope = this,
+            balance = BigDecimal("100"),
+            enteredAmount = BigDecimal.ONE,
+            fee = trxFee(),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(sut.uiState.value.filterIsInstance<NotificationUM.Info>()).hasSize(1)
+        sut.onDestroy()
+    }
+
     /** Tron gasless denominates the compensation in a token but ships it as a plain [Fee.Common]. */
     private fun tronGaslessFee(): Fee = Fee.Common(
         Amount(
@@ -211,6 +317,10 @@ internal class NotificationsModelTest {
             ),
             value = TRON_GASLESS_FEE,
         ),
+    )
+
+    private fun trxFee(): Fee = Fee.Common(
+        Amount(value = BigDecimal("5"), blockchain = Blockchain.Tron),
     )
 
     private fun emptyCheck() = CryptoCurrencyCheck(

@@ -1,0 +1,13 @@
+package com.tangem.grow.datasource.onramp.models.response.model
+
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
+data class PaymentMethodDTO(
+    @Json(name = "id") val id: String,
+    @Json(name = "name") val name: String,
+    @Json(name = "image") val image: String,
+    @Json(name = "imageLight") val imageLight: String? = null,
+    @Json(name = "imageDark") val imageDark: String? = null,
+)

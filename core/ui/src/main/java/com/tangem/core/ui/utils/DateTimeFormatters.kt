@@ -2,15 +2,20 @@ package com.tangem.core.ui.utils
 
 import android.icu.text.DateIntervalFormat
 import android.icu.util.DateInterval
+import android.icu.util.TimeZone
 import android.text.format.DateFormat
 import com.tangem.core.ui.utils.DateTimeFormatters.dateDDMMYYYY
 import com.tangem.core.ui.utils.DateTimeFormatters.dateMMMdd
 import com.tangem.core.ui.utils.DateTimeFormatters.dateTimeFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters.dateYYYY
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormatterBuilder
+import java.time.Month
+import java.time.format.TextStyle
 import java.util.Locale
 
 @Suppress("MagicNumber")
@@ -118,20 +123,6 @@ object DateTimeFormatters {
     }
 
     /**
-     * Example: "June"
-     */
-    val dateMMMM: DateTimeFormatter by lazy {
-        getBestFormatterBySkeleton("MMMM")
-    }
-
-    /**
-     * Example: "Jun"
-     */
-    val dateMMM: DateTimeFormatter by lazy {
-        getBestFormatterBySkeleton("MMM")
-    }
-
-    /**
      * Example: "31.06.2020 12:00", "06/31/2020 12:00", "06/31/2020 12:00 PM"
      */
     val dateTimeFormatter: DateTimeFormatter by lazy {
@@ -158,10 +149,23 @@ object DateTimeFormatters {
     }
 
     
-    fun formatDateRange(start: DateTime, end: DateTime, skeleton: String): String {
-        return DateIntervalFormat.getInstance(skeleton, Locale.getDefault())
-            .format(DateInterval(start.millis, end.millis))
+    fun formatStandaloneShortMonth(date: DateTime): String {
+        return Month.of(date.monthOfYear).getDisplayName(TextStyle.SHORT_STANDALONE, Locale.getDefault())
     }
+
+    
+    fun formatStandaloneMonth(date: DateTime): String {
+        return Month.of(date.monthOfYear).getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+    }
+
+    
+    fun formatDateRange(start: LocalDate, end: LocalDate, skeleton: String): String {
+        return DateIntervalFormat.getInstance(skeleton, Locale.getDefault())
+            .apply { timeZone = TimeZone.GMT_ZONE }
+            .format(DateInterval(start.toUtcMillis(), end.toUtcMillis()))
+    }
+
+    private fun LocalDate.toUtcMillis(): Long = toDateTimeAtStartOfDay(DateTimeZone.UTC).millis
 
     /**
      * Returns the best date and time format pattern for the given skeleton and the current locale.

@@ -14,6 +14,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import com.tangem.domain.transaction.models.tron.TronGaslessSubmitResult
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -66,6 +67,7 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
 
     private val quote = TronGaslessQuote(
         quoteId = "q_1",
+        quotedAmountRaw = BigInteger("50000000"),
         feeRecipient = "TFee",
         compensationToken = usdtContract,
         compensationAmountRaw = BigInteger("2750000"),
@@ -182,6 +184,73 @@ internal class CreateAndSendTronGaslessTransactionUseCaseTest {
         assertThat(result.isLeft()).isTrue()
         coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
     }
+
+    @Test
+    fun `GIVEN amount matches the quote WHEN invoke THEN quote is not refreshed`() = runTest {
+        // Act
+        val result = useCase(userWallet, usdtCurrency.network, originalTx, fee)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo("hOrig")
+        coVerify(exactly = 0) { tronGaslessTransactionRepository.estimate(any()) }
+    }
+
+    @Test
+    fun `GIVEN amount reduced by the fee after quoting WHEN invoke THEN re-quotes and submits the fresh quote`() =
+        runTest {
+            // Arrange — sending the whole balance: the send step lowers the transfer by the compensation.
+            val reducedTx = originalTx.copy(
+                amount = Amount(token = sentToken, value = BigDecimal("47.25")),
+            )
+            val refreshedQuote = quote.copy(quoteId = "q_2", quotedAmountRaw = BigInteger("47250000"))
+            coEvery { tronGaslessTransactionRepository.estimate(any()) } returns refreshedQuote
+            coEvery {
+                tronGaslessTransactionRepository.submit("q_2", "signedComp", "signedOrig")
+            } returns TronGaslessSubmitResult(
+                compensationTxHash = "hComp",
+                originalTxHash = "hOrig2",
+                status = "BROADCAST",
+            )
+
+            // Act
+            val result = useCase(userWallet, usdtCurrency.network, reducedTx, fee)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo("hOrig2")
+            coVerify(exactly = 1) {
+                tronGaslessTransactionRepository.estimate(
+                    TronGaslessEstimateParams(
+                        fromAddress = "TFrom",
+                        toAddress = "TTo",
+                        tokenContract = usdtContract,
+                        amount = BigInteger("47250000"),
+                        feeTokenContract = usdtContract,
+                    ),
+                )
+            }
+            coVerify { tronGaslessTransactionRepository.submit("q_2", "signedComp", "signedOrig") }
+        }
+
+    @Test
+    fun `GIVEN refreshed compensation exceeds the confirmed one WHEN invoke THEN error and nothing is signed`() =
+        runTest {
+            // Arrange — a bigger compensation would leave the reduced transfer short of funds and revert it.
+            val reducedTx = originalTx.copy(
+                amount = Amount(token = sentToken, value = BigDecimal("47.25")),
+            )
+            coEvery { tronGaslessTransactionRepository.estimate(any()) } returns quote.copy(
+                quoteId = "q_2",
+                quotedAmountRaw = BigInteger("47250000"),
+                compensationAmountRaw = BigInteger("2750001"),
+            )
+
+            // Act
+            val result = useCase(userWallet, usdtCurrency.network, reducedTx, fee)
+
+            // Assert
+            assertThat(result.isLeft()).isTrue()
+            coVerify(exactly = 0) { walletManagersFacade.signTronGaslessTransactions(any(), any(), any(), any()) }
+        }
 
     @Test
     fun `GIVEN backend reports partial failure WHEN invoke THEN error`() = runTest {

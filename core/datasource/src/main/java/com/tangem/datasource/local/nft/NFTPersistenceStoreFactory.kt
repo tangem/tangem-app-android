@@ -2,13 +2,12 @@ package com.tangem.datasource.local.nft
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.nft.models.NFTCollection
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.nft.custom.NFTPriceId
+import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -24,6 +23,7 @@ class NFTPersistenceStoreFactory @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     @ApplicationContext private val context: Context,
     private val appScope: AppCoroutineScope,
+    private val dataStoreFactory: AppDataStoreFactory,
 ) {
 
     fun provide(userWalletId: UserWalletId, network: Network): NFTPersistenceStore {
@@ -53,13 +53,12 @@ class NFTPersistenceStoreFactory @Inject constructor(
     }
 
     private fun <T> createPersistenceStore(fileName: String, types: ParameterizedType, defaultValue: T): DataStore<T> =
-        DataStoreFactory.create(
+        dataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
                 moshi = moshi,
                 types = types,
                 defaultValue = defaultValue,
             ),
-            corruptionHandler = ReplaceFileCorruptionHandler { defaultValue },
             produceFile = { context.dataStoreFile(fileName = fileName) },
             scope = appScope,
         )

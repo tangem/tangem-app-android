@@ -92,12 +92,23 @@ sealed class DeepLinkRoute {
         override val host: String = "pay-app-main"
     }
 
+    data object PayAccount : DeepLinkRoute() {
+        override val host: String = "pay-account"
+    }
+
     data object Survey : DeepLinkRoute() {
         override val host: String = "survey"
     }
 
     data object Campaigns : DeepLinkRoute() {
         override val host: String = "campaigns"
+    }
+
+    data object JointAccount : DeepLinkRoute() {
+        override val host: String = "joint_account"
+
+        const val ENTRY_MEMBERS: String = "members"
+        const val ENTRY_OVERVIEW: String = "overview"
     }
 }
 
