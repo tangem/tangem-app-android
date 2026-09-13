@@ -20,7 +20,13 @@ typealias AccountCurrencyId = Pair<AccountId, CryptoCurrency.ID>
  *
  * @property userWalletId  the user wallet id associated with the account list
  * @property accounts      a list of accounts belonging to the user wallet
- * @property totalAccounts the total number of accounts (including archived ones)
+ * @property totalAccounts the backend's counter of the wallet's **crypto** accounts, archived ones included.
+ * Joint accounts have their own parallel counter ([totalJointAccounts]) and are not in this one, and the special
+ * accounts (payment, virtual, prediction) are injected by the app rather than counted by the backend at all — so
+ * this number must never be compared against the length of [accounts]
+ * @property totalJointAccounts the backend's counter of the wallet's joint accounts, archived ones included
+ * (`totalJointAccounts` of `GET /accounts`). Zero for a wallet that has none, and for a list assembled without
+ * joint rows at all
  * @property sortType      the sorting type applied to the accounts
  * @property groupType     the grouping type applied to the accounts
  *
@@ -32,17 +38,18 @@ data class AccountList private constructor(
     val accounts: List<Account>,
     val totalAccounts: Int,
     val totalArchivedAccounts: Int,
+    val totalJointAccounts: Int,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
 ) {
 
     /** Retrieves the main crypto portfolio account from the list of accounts */
-    val mainAccount: Account.CryptoPortfolio
-        get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
+    val mainAccount: Account.Personal
+        get() = accounts.first { it is Account.Personal && it.isMainAccount } as Account.Personal
 
     /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
     val canAddMoreCryptoAccounts: Boolean
-        get() = accounts.filterIsInstance<Account.CryptoPortfolio>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
+        get() = accounts.filterIsInstance<Account.Personal>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
 
     /** Returns the number of active accounts in the list */
     val activeAccounts: Int
@@ -59,12 +66,16 @@ data class AccountList private constructor(
     operator fun plus(other: Account): Either<Error, AccountList> {
         val isNewAccount = this.accounts.none { it.accountId == other.accountId }
         val accounts = this.accounts.addOrReplace(other) { it.accountId == other.accountId }
+        // Each counter follows the rows it counts: a joint account belongs to its own, and adding one must not
+        // inflate the crypto counter — nor leave the joint one behind the list it now describes
+        val isNewJointAccount = isNewAccount && other is Account.Joint
 
         return invoke(
             userWalletId = this.userWalletId,
             accounts = accounts,
-            totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+            totalAccounts = this.totalAccounts + if (isNewAccount && other !is Account.Joint) 1 else 0,
             totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts + if (isNewJointAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -83,11 +94,14 @@ data class AccountList private constructor(
             removeIf { it.accountId == other.accountId }
         }
 
+        val wasJointAccount = isExistingAccount && other is Account.Joint
+
         return invoke(
             userWalletId = this.userWalletId,
             accounts = accounts,
-            totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
+            totalAccounts = this.totalAccounts - if (isExistingAccount && other !is Account.Joint) 1 else 0,
             totalArchivedAccounts = this.totalArchivedAccounts,
+            totalJointAccounts = this.totalJointAccounts - if (wasJointAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -101,16 +115,20 @@ data class AccountList private constructor(
     fun flattenCurrencies(): List<CryptoCurrency> {
         return accounts.flatMap { account ->
             when (account) {
-                is Account.CryptoPortfolio -> account.cryptoCurrencies
+                is Account.Personal -> account.cryptoCurrencies
                 is Account.Payment -> emptyList()
                 is Account.Virtual -> emptyList()
+                is Account.Prediction -> emptyList()
+                // A joint account is a Safe contract, not an EOA: its currencies must never reach the regular
+                // send/swap/staking flows, which sign a plain transfer from the participant's own key
+                is Account.Joint -> emptyList()
             }
         }
     }
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
         accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Personal>()
             .forEach { account ->
                 account.cryptoCurrencies.forEach { currency ->
                     val key = account.accountId to currency.id
@@ -164,6 +182,12 @@ data class AccountList private constructor(
         }
 
         @Serializable
+        data object ExceedsMaxPredictionAccountsCount : Error {
+            override fun toString(): String =
+                "$tag: The number of prediction accounts must not exceed $MAX_PREDICTION_ACCOUNTS_COUNT"
+        }
+
+        @Serializable
         data object DuplicateAccountIds : Error {
             override fun toString(): String = "$tag: Account list contains duplicate account IDs"
         }
@@ -177,12 +201,18 @@ data class AccountList private constructor(
         data object TotalAccountsLessThanActive : Error {
             override fun toString(): String = "$tag: Total accounts cannot be less than active accounts"
         }
+
+        @Serializable
+        data object TotalJointAccountsLessThanActive : Error {
+            override fun toString(): String = "$tag: Total joint accounts cannot be less than active ones"
+        }
     }
 
     companion object {
 
         const val MAX_PAYMENT_ACCOUNTS_COUNT = 1
         const val MAX_VIRTUAL_ACCOUNTS_COUNT = 1
+        const val MAX_PREDICTION_ACCOUNTS_COUNT = 1
         const val MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT = 20
         const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
@@ -195,11 +225,13 @@ data class AccountList private constructor(
          * @param accounts      a set of accounts belonging to the user wallet
          * @param totalAccounts the total number of accounts
          */
+        @Suppress("LongParameterList")
         operator fun invoke(
             userWalletId: UserWalletId,
             accounts: List<Account>,
             totalAccounts: Int,
             totalArchivedAccounts: Int,
+            totalJointAccounts: Int = 0,
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): Either<Error, AccountList> = either {
@@ -211,8 +243,13 @@ data class AccountList private constructor(
             val virtualAccounts = accounts.filterIsInstance<Account.Virtual>()
             ensure(virtualAccounts.size <= MAX_VIRTUAL_ACCOUNTS_COUNT) { Error.ExceedsMaxVirtualAccountsCount }
 
-            val cryptoAccounts = accounts.filterIsInstance<Account.CryptoPortfolio>()
-            ensure(cryptoAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
+            val predictionAccounts = accounts.filterIsInstance<Account.Prediction>()
+            ensure(predictionAccounts.size <= MAX_PREDICTION_ACCOUNTS_COUNT) {
+                Error.ExceedsMaxPredictionAccountsCount
+            }
+
+            val personalAccounts = accounts.filterIsInstance<Account.Personal>()
+            ensure(personalAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
 
             val mainAccountsCount = accounts.mainAccountsCount()
             ensure(mainAccountsCount == MAX_MAIN_ACCOUNTS_COUNT) {
@@ -226,15 +263,28 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val customNames = accounts.map { (it.accountName as? AccountName.Custom)?.value }
+            // Joint account names come from the backend, which does not guarantee their uniqueness — two accounts
+            // named "Family" from different creators are a legal response and must not invalidate the whole list
+            val customNames = accounts
+                .filter { it !is Account.Joint }
+                .map { (it.accountName as? AccountName.Custom)?.value }
             val uniqueCustomNameCount = customNames.distinct().size
 
             ensure(customNames.size == uniqueCustomNameCount) {
                 Error.DuplicateAccountNames
             }
 
-            ensure(totalAccounts >= accounts.size) {
+            // Against the personal accounts only, because that is what the counter counts: it comes from
+            // `wallet.totalAccounts`, while joint rows are counted by `totalJointAccounts` and the special
+            // accounts are added client-side. Comparing it with the whole list rejected every wallet that has a
+            // joint account — the list refused to be built and the producer above retried the same failure forever
+            ensure(totalAccounts >= personalAccounts.size) {
                 Error.TotalAccountsLessThanActive
+            }
+
+            // The joint counter is policed the same way, against the joint rows alone
+            ensure(totalJointAccounts >= accounts.count { it is Account.Joint }) {
+                Error.TotalJointAccountsLessThanActive
             }
 
             AccountList(
@@ -242,6 +292,7 @@ data class AccountList private constructor(
                 accounts = accounts,
                 totalAccounts = totalAccounts,
                 totalArchivedAccounts = totalArchivedAccounts,
+                totalJointAccounts = totalJointAccounts,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -261,20 +312,21 @@ data class AccountList private constructor(
             return AccountList(
                 userWalletId = userWalletId,
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(
+                    Account.Personal.createMainAccount(
                         userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
                     ),
                 ),
                 totalAccounts = 1,
                 totalArchivedAccounts = 0,
+                totalJointAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )
         }
 
         private fun List<Account>.mainAccountsCount(): Int {
-            return count { (it as? Account.CryptoPortfolio)?.isMainAccount == true }
+            return count { (it as? Account.Personal)?.isMainAccount == true }
         }
     }
 }

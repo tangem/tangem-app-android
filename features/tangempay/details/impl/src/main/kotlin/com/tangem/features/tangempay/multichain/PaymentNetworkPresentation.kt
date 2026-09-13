@@ -21,26 +21,47 @@ internal data class PaymentNetworkRowData(
 )
 
 /**
- * The currencies carried by this network status, regardless of its issuance state.
+ * The currencies carried by this network status. A [PaymentNetworkStatus.NotIssued] network carries none:
+ * its contract does not exist yet, so there are no contract addresses to build currencies from.
  */
 internal fun PaymentNetworkStatus.currencies(): List<CryptoCurrency> = when (this) {
     is PaymentNetworkStatus.Available -> cryptoCurrencyStatuses.map { it.currency }
-    is PaymentNetworkStatus.NotIssued -> cryptoCurrencies
+    is PaymentNetworkStatus.NotIssued -> emptyList()
     is PaymentNetworkStatus.Disabled -> cryptoCurrencies
 }
 
 /**
+ * The subset of [currencies] the user is offered to receive: tokens Tangem has a catalogue entry (raw id) for.
+ *
+ * A payment account may also carry a token that is not in the catalogue — the backend's internal settlement
+ * stablecoin, for one. It has no name or icon to show (it would render as an anonymous placeholder), and the
+ * account is not meant to receive it, so it is hidden from the whole receive flow: the network row's token
+ * label and the Receive sheet alike.
+ */
+internal fun PaymentNetworkStatus.receivableCurrencies(): List<CryptoCurrency> = currencies()
+    .filter { it.id.rawCurrencyId != null }
+
+/**
  * Maps this status to row display data: network identity (id, name, icon) from [PaymentNetworkStatus.network],
- * token label from the contained currencies' symbols. `null` when the status carries no currencies —
- * a network with nothing to receive has no row.
+ * token label from the contained currencies' symbols. A [PaymentNetworkStatus.NotIssued] network carries no
+ * currencies, so its label is the fixed set of payment stablecoins the account will hold once issued.
+ *
+ * `null` only for a [PaymentNetworkStatus.Available] network without currencies — it is issued, yet there is
+ * nothing to receive on it. [PaymentNetworkStatus.NotIssued] and [PaymentNetworkStatus.Disabled] rows are kept
+ * regardless: the row itself is still actionable (issue on demand) or informational.
  */
 internal fun PaymentNetworkStatus.toRowData(): PaymentNetworkRowData? {
-    val currencies = currencies()
-    if (currencies.isEmpty()) return null
+    val currencies = receivableCurrencies()
+    if (currencies.isEmpty() && this is PaymentNetworkStatus.Available) return null
     return PaymentNetworkRowData(
         id = network.rawId,
         name = network.name,
-        tokensLabel = currencies.joinToString(separator = ", ") { it.symbol },
+        tokensLabel = when (this) {
+            is PaymentNetworkStatus.NotIssued -> NOT_ISSUED_TOKENS_LABEL
+            else -> currencies.joinToString(separator = ", ") { it.symbol }
+        },
         iconResId = network.iconResId,
     )
 }
+
+private const val NOT_ISSUED_TOKENS_LABEL = "USDC, USDT"

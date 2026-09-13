@@ -6,7 +6,7 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.visa.error.VisaApiError
 
 /**
- * Repository for `GET /v1/customer/offers`.
+ * Repository for `GET /v1/customer/offers` and `GET /v1/product-instances/{id}/offers`.
  *
  * Used by the issue-additional-card flow to:
  * - check whether the additional-card offer is available;
@@ -15,4 +15,9 @@ import com.tangem.domain.visa.error.VisaApiError
 interface CustomerOffersRepository {
 
     suspend fun getOffers(userWalletId: UserWalletId): Either<VisaApiError, List<Offer>>
+
+    suspend fun getProductInstanceOffers(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+    ): Either<VisaApiError, List<Offer>>
 }

@@ -1,6 +1,6 @@
 package com.tangem.data.markets.converters
 
-import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
+import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketExchange
 import com.tangem.utils.converter.Converter

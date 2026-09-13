@@ -21,8 +21,10 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -32,6 +34,7 @@ import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
+import com.tangem.features.onramp.alloffers.entity.OnrampRegionRestrictionNotification
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
@@ -42,13 +45,17 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethodUM>) {
+internal fun PaymentMethodsContent(methods: ImmutableList<AllOffersPaymentMethodUM>, notification: NotificationUM?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        if (notification != null) {
+            Notification(config = notification.config)
+            SpacerH(8.dp)
+        }
         methods.fastForEach { method ->
             key(method.methodConfig.method.id) {
                 PaymentMethod(methodUM = method)
@@ -311,6 +318,9 @@ private fun PaymentMethodsContentPreview() {
         paymentMethodStatus = PaymentMethodStatus.Available,
     )
     TangemThemePreview {
-        PaymentMethodsContent(persistentListOf(method))
+        PaymentMethodsContent(
+            methods = persistentListOf(method),
+            notification = OnrampRegionRestrictionNotification,
+        )
     }
 }

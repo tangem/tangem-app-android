@@ -2,12 +2,11 @@ package com.tangem.tests.accounts
 
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R
+import com.tangem.core.res.R
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickOnSystemButton
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.DerivationPathHelper
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
@@ -37,10 +36,7 @@ class AccountCreationTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, userAccountsGetErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
 
             step("Open 'Main Screen'") { openMainScreen() }
@@ -337,10 +333,7 @@ class AccountCreationTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, accountReadyState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
@@ -416,10 +409,7 @@ class AccountCreationTest : BaseTestCase() {
         setupHooks(
             additionalBeforeSection = {
                 setWireMockScenarioState(userTokensScenario, accountReadyState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenario)
-            },
+            }
         ).run {
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }

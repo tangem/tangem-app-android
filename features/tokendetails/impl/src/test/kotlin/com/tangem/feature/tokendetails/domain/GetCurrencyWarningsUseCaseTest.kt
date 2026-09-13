@@ -96,8 +96,8 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
         coEvery { currenciesRepository.isNetworkFeeZero(any(), any()) } returns false
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
         every { sendFeatureToggles.isTronGaslessEnabled } returns false
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
     }
 
     @AfterEach
@@ -291,12 +291,11 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN Tron token with balance AND zero TRX AND tron gasless WHEN invoke THEN fee warning is absent`() =
+    fun `GIVEN gasless supported token AND zero coin WHEN invoke THEN fee warning is absent`() =
         runTest {
             // Arrange
-            givenTokenWithEmptyCoin()
+            givenGaslessSupportedTokenWithEmptyCoin()
             every { sendFeatureToggles.isTronGaslessEnabled } returns true
-            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
@@ -306,12 +305,11 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN Tron token with balance AND zero TRX AND toggle disabled WHEN invoke THEN fee warning is present`() =
+    fun `GIVEN gasless supported token AND zero coin AND toggle disabled WHEN invoke THEN fee warning is present`() =
         runTest {
             // Arrange
-            givenTokenWithEmptyCoin()
+            givenGaslessSupportedTokenWithEmptyCoin()
             every { sendFeatureToggles.isTronGaslessEnabled } returns false
-            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
@@ -321,18 +319,19 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN Tron token unsupported by gasless AND zero TRX WHEN invoke THEN fee warning is present`() = runTest {
-        // Arrange
-        givenTokenWithEmptyCoin()
-        every { sendFeatureToggles.isTronGaslessEnabled } returns true
-        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
+    fun `GIVEN token unsupported by gasless AND zero coin WHEN invoke THEN fee warning is present`() =
+        runTest {
+            // Arrange
+            givenTokenWithEmptyCoin()
+            coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
+            every { sendFeatureToggles.isTronGaslessEnabled } returns true
 
-        // Act
-        val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
+            // Act
+            val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
 
-        // Assert
-        assertThat(result.filterIsInstance<CryptoCurrencyWarning.BalanceNotEnoughForFee>()).hasSize(1)
-    }
+            // Assert
+            assertThat(result.filterIsInstance<CryptoCurrencyWarning.BalanceNotEnoughForFee>()).hasSize(1)
+        }
 
     /** [REDACTED_TASK_KEY] setup: the token holds funds while its fee coin balance is empty. */
     private fun givenTokenWithEmptyCoin() {
@@ -340,6 +339,11 @@ class GetCurrencyWarningsUseCaseTest {
             coinStatus = statusFor(currency = coin(name = "Tron", symbol = "TRX"), amount = BigDecimal.ZERO),
             currencyStatus = tokenStatus,
         )
+    }
+
+    private fun givenGaslessSupportedTokenWithEmptyCoin() {
+        givenTokenWithEmptyCoin()
+        coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns true
     }
 
     private fun coin(name: String = "Polkadot", symbol: String = "DOT"): CryptoCurrency.Coin {

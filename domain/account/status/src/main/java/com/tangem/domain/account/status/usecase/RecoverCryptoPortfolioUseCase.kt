@@ -94,8 +94,8 @@ class RecoverCryptoPortfolioUseCase(
             }
     }
 
-    private fun ArchivedAccount.recover(): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+    private fun ArchivedAccount.recover(): Account.Personal {
+        return Account.Personal(
             accountId = this.accountId,
             accountName = this.name,
             icon = this.icon,
@@ -122,7 +122,7 @@ class RecoverCryptoPortfolioUseCase(
                 .let(AccountName::invoke).getOrNull()
                 ?: raise(Error.DataOperationFailed(message = "Failed to generate indexed account name"))
 
-            val renamedAccount = recoveredAccount.copy(accountName = indexedName)
+            val renamedAccount = recoveredAccount.copySealed(accountName = indexedName)
 
             // recursively try to add the account with the new name
             add(accountList = accountList, recoveredAccount = renamedAccount)

@@ -66,6 +66,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onCardSettingsClick = {},
             accountsUM = previewAccounts(),
             cardItem = previewCardBlock(),
+            isWalletBackedUp = false,
         ),
         hasRequestPushNotificationsPermission = false,
         onPushNotificationPermissionGranted = {},
