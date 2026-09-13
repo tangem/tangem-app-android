@@ -4,11 +4,11 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
-import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
-import com.tangem.datasource.crypto.DataSignatureVerifier
-import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.grow.datasource.express.TangemExpressApi
+import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
+import com.tangem.store.datasource.surveysparrow.SurveySparrowApi
+import com.tangem.grow.datasource.crypto.DataSignatureVerifier
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -22,6 +22,7 @@ import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -44,6 +45,7 @@ internal class SwapDataModule {
         appPreferencesStore: AppPreferencesStore,
         expressHistoryRepository: ExpressHistoryRepository,
         txHistoryFeatureToggles: TxHistoryFeatureToggles,
+        swapFeatureToggles: SwapFeatureToggles,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -54,6 +56,7 @@ internal class SwapDataModule {
             appPreferencesStore = appPreferencesStore,
             expressHistoryRepository = expressHistoryRepository,
             txHistoryFeatureToggles = txHistoryFeatureToggles,
+            swapFeatureToggles = swapFeatureToggles,
         )
     }
 

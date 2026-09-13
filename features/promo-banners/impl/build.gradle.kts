@@ -22,25 +22,27 @@ dependencies {
     api(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.appCurrency)
-    implementation(projects.domain.account.status)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.markets.models)
 
     /** Data */
     implementation(projects.data.common)
-    implementation(tangemDeps.blockchain)
 
     /** Core */
-    api(projects.core.configToggles)
     implementation(projects.core.local)
     api(projects.core.analytics)
     api(projects.core.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.utils)
+    api(projects.domain.wallets)
+    api(projects.domain.account)
     implementation(projects.core.analytics.models)
     implementation(projects.core.ui)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.markets.models)
+    implementation(projects.domain.wallets.models)
 
     /** Compose */
     api(deps.compose.foundation)
@@ -59,9 +61,15 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.arrow.core)
+    implementation(deps.compose.material3)
+    implementation(deps.haze)
+    implementation(deps.kotlin.serialization.core)
     kapt(deps.hilt.kapt)
 
     /** Tests */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
+    testImplementation(deps.arrow.core)
+    testImplementation(tangemDeps.blockchain)
 }

@@ -52,11 +52,12 @@ internal class PaymentNetworkStatusSerializationTest {
             PaymentNetworkStatus.Available(
                 network = network(),
                 depositAddress = "0xDEPOSIT",
+                chainId = 137L,
                 cryptoCurrencyStatuses = listOf(
                     CryptoCurrencyStatus(currency = token(), value = CryptoCurrencyStatus.Loading),
                 ),
             ),
-            PaymentNetworkStatus.NotIssued(network = network(), cryptoCurrencies = listOf(token())),
+            PaymentNetworkStatus.NotIssued(network = network()),
             PaymentNetworkStatus.Disabled(network = network(), cryptoCurrencies = listOf(token())),
         )
 

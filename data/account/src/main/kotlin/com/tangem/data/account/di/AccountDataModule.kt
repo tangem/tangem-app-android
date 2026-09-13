@@ -1,6 +1,7 @@
 package com.tangem.data.account.di
 
 import android.content.Context
+import com.tangem.data.account.api.WalletAccountsApi
 import com.tangem.data.account.cleaner.AccountsUserWalletDataCleaner
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher
@@ -12,7 +13,6 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -35,7 +35,7 @@ internal object AccountDataModule {
     @Provides
     @Singleton
     fun provideAccountsCRUDRepository(
-        tangemTechApi: TangemTechApi,
+        walletAccountsApi: WalletAccountsApi,
         walletAccountsSaver: WalletAccountsSaver,
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
         userTokensSaver: UserTokensSaver,
@@ -44,7 +44,7 @@ internal object AccountDataModule {
         dispatchers: CoroutineDispatcherProvider,
     ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
-            tangemTechApi = tangemTechApi,
+            walletAccountsApi = walletAccountsApi,
             walletAccountsSaver = walletAccountsSaver,
             accountsResponseStoreFactory = accountsResponseStoreFactory,
             archivedAccountsStoreFactory = ArchivedAccountsStoreFactory,

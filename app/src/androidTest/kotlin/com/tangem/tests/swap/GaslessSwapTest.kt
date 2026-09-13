@@ -1,13 +1,12 @@
 package com.tangem.tests.swap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R as CommonR
+import com.tangem.core.res.R as CommonR
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.extractText
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
 import com.tangem.scenarios.*
@@ -46,13 +45,7 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkBestRateUnchangedWithStablecoinFeeTest() {
         var capturedReceiveAmount: String? = null
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -94,13 +87,7 @@ class GaslessSwapTest : BaseTestCase() {
         val fastSpeed = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSpeed = getResourceString(R.string.common_fee_selector_option_slow)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -181,13 +168,7 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkNetworkFeeSelectionForSwapTest() {
         val receiveTokenName = "Polygon"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -237,14 +218,7 @@ class GaslessSwapTest : BaseTestCase() {
         val changellyStatusState = "Changelly"
         val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(exchangeStatusScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletTokensState)
             }
@@ -308,15 +282,7 @@ class GaslessSwapTest : BaseTestCase() {
         val changellyStatusState = "Changelly"
         val expressStatusItemTitle = getResourceString(CommonR.string.express_exchange_by, providerName)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(nativeBalanceScenario)
-                resetWireMockScenarioState(exchangeStatusScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$hotWalletTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletTokensState)
             }
@@ -378,14 +344,7 @@ class GaslessSwapTest : BaseTestCase() {
         val lowBalanceState = "LowBalance"
         val lowAmount = "0.0005"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-                resetWireMockScenarioState(usdcBalanceScenario)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$usdcBalanceScenario' to '$lowBalanceState'") {
                 setWireMockScenarioState(scenarioName = usdcBalanceScenario, state = lowBalanceState)
             }
@@ -429,13 +388,7 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkStablecoinFeeShownWithFiatTest() {
         val fiatSign = "$"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -468,13 +421,7 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkSwitchFeeTokenBetweenCoinAndStablecoinTest() {
         val nativeSymbol = "POL"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -514,13 +461,7 @@ class GaslessSwapTest : BaseTestCase() {
         val fastSpeed = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSpeed = getResourceString(R.string.common_fee_selector_option_slow)
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }
@@ -581,13 +522,7 @@ class GaslessSwapTest : BaseTestCase() {
     fun checkMaxAmountReservesFeeTest() {
         val maxInputAmount = "100"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
-                resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(assetsScenarioName)
-            }
-        ).run {
+        setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$userTokensState'") {
                 setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensState)
             }

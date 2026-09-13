@@ -192,7 +192,7 @@ internal class WcPairModel @Inject constructor(
                 isAccountMode = isAccountMode,
             )
             selectorController.isEnabled.value = { _, account ->
-                proposalAccountNetwork.contains(account.account.accountId)
+                account.account is Account.Personal && proposalAccountNetwork.contains(account.account.accountId)
             }
             proposalNetwork = foundNetwork
             additionallyEnabledNetworks = proposalNetwork.available
@@ -276,12 +276,13 @@ internal class WcPairModel @Inject constructor(
             .firstOrNull()
             ?: return
         val (wallet, account) = selectedPortfolio
+        val personal = account.account as? Account.Personal ?: return
 
         modelScope.launch {
             analytics.send(
                 WcAnalyticEvents.PairButtonConnect(
                     dAppName = sessionProposal.dAppMetaData.name,
-                    accountDerivation = account.account.derivationIndex.value,
+                    accountDerivation = personal.derivationIndex.value,
                 ),
             )
         }
@@ -289,7 +290,7 @@ internal class WcPairModel @Inject constructor(
             WcSessionApprove(
                 wallet = wallet,
                 network = enabledAvailableNetworks + proposalNetwork.required,
-                account = account.account,
+                account = personal,
             ),
         )
     }

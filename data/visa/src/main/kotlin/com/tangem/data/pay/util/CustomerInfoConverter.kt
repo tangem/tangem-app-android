@@ -11,6 +11,7 @@ import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
@@ -44,9 +45,9 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             tariffPlan = value.customerTariffPlan?.toDomain(),
             networks = value.balance?.networks.orEmpty().map { it.toDomain() },
-            country = value.kyc?.country,
-            phoneMask = value.kyc?.phoneMask,
-            email = value.kyc?.email,
+            country = value.profile?.country,
+            phoneMask = value.profile?.phoneMask,
+            email = value.profile?.email,
         )
     }
 
@@ -96,15 +97,9 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             cardStatus = TangemPayCard.Status.fromString(cardStatus),
             lastFourDigits = cardNumberEnd,
             isPinSet = isPinSet == true,
-            images = images.orEmpty().mapNotNull(::convertCardImage),
-        )
-    }
-
-    private fun convertCardImage(image: CustomerMeResponse.Image): TangemPayTariffPlan.Image? {
-        val url = image.url ?: return null
-        return TangemPayTariffPlan.Image(
-            type = TangemPayTariffPlan.Image.Type.fromString(image.type),
-            url = url,
+            images = images.orEmpty().mapNotNull { tangemPayImageOrNull(it.type, it.url) },
+            embossName = embossName?.trim()?.ifEmpty { null },
+            cardType = TangemPayCardType.fromString(cardType),
         )
     }
 

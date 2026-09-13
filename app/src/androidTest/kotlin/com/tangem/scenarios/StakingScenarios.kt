@@ -5,7 +5,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
-import com.tangem.common.R as CommonR
+import com.tangem.core.res.R as CommonR
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.extractText
@@ -382,17 +382,21 @@ fun BaseTestCase.checkClaimRewardsSuccessScreen() {
     }
 }
 
+/**
+ * The blocks land one by one as the staking balance loads, so each assertion waits on its own: a caller
+ * that only wraps the first one leaves the rest racing the data (green locally, red under CI load).
+ */
 fun BaseTestCase.checkStakingDetailsAfterInitialStake() {
     step("Assert 'Your Stakes' title is displayed") {
-        onStakingDetailsScreen { yourStakesTitle.assertIsDisplayed() }
+        awaitSuccess { onStakingDetailsScreen { yourStakesTitle.assertIsDisplayed() } }
     }
     step("Assert 'Active staking' block is displayed") {
-        onStakingDetailsScreen { activeStakingBlock.assertIsDisplayed() }
+        awaitSuccess { onStakingDetailsScreen { activeStakingBlock.assertIsDisplayed() } }
     }
     step("Assert 'Rewards' block is displayed") {
-        onStakingDetailsScreen { rewardsBlock.assertIsDisplayed() }
+        awaitSuccess { onStakingDetailsScreen { rewardsBlock.assertIsDisplayed() } }
     }
     step("Assert 'Rewards' block shows no accrued rewards yet") {
-        onStakingDetailsScreen { rewardsBlockText.assertIsDisplayed() }
+        awaitSuccess { onStakingDetailsScreen { rewardsBlockText.assertIsDisplayed() } }
     }
 }

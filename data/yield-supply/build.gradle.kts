@@ -36,6 +36,10 @@ dependencies {
     implementation(projects.core.analytics.models)
     // endregion
 
+    // region Grow
+    implementation(projects.grow.datasource)
+    // endregion
+
     // region Domain
     api(projects.domain.transaction)
     api(projects.domain.walletManager)

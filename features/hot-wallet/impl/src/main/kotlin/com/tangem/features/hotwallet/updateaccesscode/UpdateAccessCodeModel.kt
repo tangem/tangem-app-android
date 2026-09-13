@@ -3,19 +3,28 @@ package com.tangem.features.hotwallet.updateaccesscode
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.hotwallet.UpdateAccessCodeComponent
-import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRoute
-import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.features.hotwallet.UpdateAccessCodeComponent
+import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
+import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
@@ -24,9 +33,14 @@ internal class UpdateAccessCodeModel @Inject constructor(
     private val router: Router,
     paramsContainer: ParamsContainer,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
+    private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
 ) : Model(), AccessCodeComponent.ModelCallbacks {
 
     private val params = paramsContainer.require<UpdateAccessCodeComponent.Params>()
+
+    val isAccessCodeUpdateStarted: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     val stackNavigation = StackNavigation<UpdateAccessCodeRoute>()
     val startRoute: UpdateAccessCodeRoute = UpdateAccessCodeRoute.SetAccessCode(params.userWalletId)
@@ -51,17 +65,59 @@ internal class UpdateAccessCodeModel @Inject constructor(
         is UpdateAccessCodeRoute.SetupFinished -> false
     }
 
+    /**
+     * [isUpdateStarted] comes from the observable [isAccessCodeUpdateStarted] so the button disappears once the
+     * code is being written — otherwise it would stay on screen as a dead control, since skipping is refused then.
+     */
+    fun isSkipButtonVisible(route: UpdateAccessCodeRoute, isUpdateStarted: Boolean): Boolean = params.canSkip &&
+        !isUpdateStarted &&
+        when (route) {
+            is UpdateAccessCodeRoute.SetAccessCode,
+            is UpdateAccessCodeRoute.ConfirmAccessCode,
+            -> true
+            is UpdateAccessCodeRoute.SetupFinished -> false
+        }
+
+    fun onSkipClick() {
+        // guard the action itself, not just the button: skipping must stay impossible for non-skippable entry points
+        if (!params.canSkip || isAccessCodeUpdateStarted.value) return
+        showSkipAccessCodeWarningDialog()
+    }
+
     override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ReEnterAccessCodeScreen(source = params.source))
         stackNavigation.push(UpdateAccessCodeRoute.ConfirmAccessCode(userWalletId, accessCode))
     }
 
     override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
-        // No-op
+        isAccessCodeUpdateStarted.value = true
     }
 
     override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
         stackNavigation.push(UpdateAccessCodeRoute.SetupFinished)
+    }
+
+    private fun showSkipAccessCodeWarningDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                message = resourceReference(R.string.access_code_alert_skip_description),
+                title = resourceReference(R.string.access_code_alert_skip_title),
+                firstAction = EventMessageAction(
+                    title = resourceReference(R.string.common_cancel),
+                    onClick = {},
+                ),
+                secondAction = EventMessageAction(
+                    title = resourceReference(R.string.access_code_alert_skip_ok),
+                    onClick = {
+                        modelScope.launch(NonCancellable) {
+                            setAccessCodeSkippedUseCase(params.userWalletId, true)
+                        }
+                        stackNavigation.push(UpdateAccessCodeRoute.SetupFinished)
+                    },
+                ),
+                shouldDismissOnFirstAction = true,
+            ),
+        )
     }
 
     inner class MobileWalletSetupFinishedComponentModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {

@@ -3,23 +3,23 @@ package com.tangem.features.tangempay.cashback.impl.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.models.account.TangemPayTariffPlan
-import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.model.CashbackDocument
 import com.tangem.domain.pay.model.CashbackHistory
 import com.tangem.domain.pay.model.CashbackPromotions
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.repository.CashbackRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackAccrualsUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackDetailsUM
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
+import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.Job
@@ -31,6 +31,7 @@ import javax.inject.Inject
 
 private const val CASHBACK_HISTORY_MONTHS = 5
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayCashbackModel @Inject constructor(
@@ -39,7 +40,7 @@ internal class TangemPayCashbackModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val cashbackRepository: CashbackRepository,
-    private val onboardingRepository: OnboardingRepository,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: TangemPayCashbackComponent.Params = paramsContainer.require()
@@ -49,18 +50,18 @@ internal class TangemPayCashbackModel @Inject constructor(
 
     private val cashbackConverter = TangemPayCashbackUmConverter()
     private val histogramConverter = TangemPayCashbackHistogramConverter()
-    private val tiersConverter = TangemPayCashbackTiersConverter()
-    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter()
+    private val cardsConverter = TangemPayCashbackCardsConverter()
+    private val additionalCashbackConverter = TangemPayAdditionalCashbackConverter(onLinkClick = urlOpener::openUrl)
     private val infoTilesConverter = TangemPayCashbackInfoTilesConverter(
-        onRateClick = { bottomSheetNavigation.activate(TangemPayCashbackNavigation.Details) },
-        onAccrualsClick = { bottomSheetNavigation.activate(TangemPayCashbackNavigation.Accruals) },
+        onRateClick = ::onConditionsTileClick,
+        onAccrualsClick = ::onAccrualsTileClick,
     )
     private val detailsConverter = TangemPayCashbackDetailsConverter()
-    private val accrualsConverter = TangemPayCashbackAccrualsConverter(onDocClick = urlOpener::openUrl)
+    private val accrualsConverter = TangemPayCashbackAccrualsConverter(onDocClick = ::onDocClick)
 
     val detailsSheet: StateFlow<TangemPayCashbackDetailsUM>
         field = MutableStateFlow(
-            detailsConverter.convert(tiers = emptyList(), payoutCurrency = null, monthlyCap = null),
+            detailsConverter.convert(cards = emptyList(), payoutCurrency = null, accountMonthlyCap = null),
         )
 
     val accrualsSheet: StateFlow<TangemPayCashbackAccrualsUM>
@@ -74,6 +75,7 @@ internal class TangemPayCashbackModel @Inject constructor(
     private var loadJob: Job? = null
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.DetailsScreenOpened())
         loadCashback()
     }
 
@@ -84,43 +86,84 @@ internal class TangemPayCashbackModel @Inject constructor(
             val summaryDeferred = async { loadSummary() }
             val promotionsDeferred = async { loadPromotions() }
             val docsDeferred = async { loadDocs() }
-            val planDeferred = async { loadPlan() }
 
             val summary = summaryDeferred.await()
             val promotions = promotionsDeferred.await()
+            val docs = docsDeferred.await()
 
-            if (summary == null && promotions == null) {
-                uiState.value = TangemPayCashbackScreenUM.Error(
-                    onCloseClick = router::pop,
-                    onReloadClick = ::loadCashback,
-                )
+            if (summary == null || promotions == null || docs == null) {
+                showError()
                 return@launch
             }
 
-            val history = if (summary is CashbackSummary.Enabled) loadHistory() else null
-            val plan = planDeferred.await()
-            val tiers = promotions?.let(tiersConverter::convert).orEmpty()
-            val payoutCurrency = (summary as? CashbackSummary.Enabled)?.cashback?.payoutCurrency
-                ?: TangemPayCurrencyFactory.TOKEN_NAME
+            val cashbackHistory = if (summary is CashbackSummary.Enabled) {
+                loadHistory() ?: run {
+                    showError()
+                    return@launch
+                }
+            } else {
+                null
+            }
+            val cards = cardsConverter.convert(promotions)
+            val cashback = (summary as? CashbackSummary.Enabled)?.cashback
+            val cashbackUM = cashbackConverter.convert(cashback)
 
             uiState.value = TangemPayCashbackScreenUM.Content(
                 onCloseClick = router::pop,
-                cashback = cashbackConverter.convert((summary as? CashbackSummary.Enabled)?.cashback),
-                infoTiles = promotions?.let {
-                    infoTilesConverter.convert(tiers = tiers, currentPlan = plan)
-                },
-                histogram = history?.takeIf { it.months.isNotEmpty() }?.let(histogramConverter::convert),
-                additionalCashback = promotions
-                    ?.let { additionalCashbackConverter.convert(it.additionalCashback) }
-                    ?.takeIf { it.items.isNotEmpty() },
+                cashback = cashbackUM,
+                infoTiles = infoTilesConverter.convert(cards),
+                histogram = cashbackHistory
+                    ?.takeIf { it.months.isNotEmpty() }
+                    ?.let { history ->
+                        histogramConverter.convert(
+                            history = history,
+                            totalEarnedAmount = cashback?.totalEarnedAmount,
+                            totalCurrency = cashback?.currency,
+                        )
+                    },
+                additionalCashback = additionalCashbackConverter.convert(promotions.additionalCashback)
+                    .takeIf { it.items.isNotEmpty() },
             )
             detailsSheet.value = detailsConverter.convert(
-                tiers = tiers,
-                payoutCurrency = payoutCurrency,
-                monthlyCap = promotions?.monthlyCap,
+                cards = cards,
+                payoutCurrency = cashback?.payoutCurrency,
+                accountMonthlyCap = promotions.accountMonthlyCap,
             )
-            accrualsSheet.value = accrualsConverter.convert(docsDeferred.await())
+            accrualsSheet.value = accrualsConverter.convert(docs)
+
+            sendBannerAnalytics(cashbackUM.banner)
         }
+    }
+
+    private fun showError() {
+        uiState.value = TangemPayCashbackScreenUM.Error(
+            onCloseClick = router::pop,
+            onReloadClick = ::loadCashback,
+        )
+    }
+
+    private fun onConditionsTileClick() {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.ConditionsTileClicked())
+        bottomSheetNavigation.activate(TangemPayCashbackNavigation.Details)
+    }
+
+    private fun onAccrualsTileClick() {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.AccrualsTileClicked())
+        bottomSheetNavigation.activate(TangemPayCashbackNavigation.Accruals)
+    }
+
+    private fun onDocClick(doc: CashbackDocument) {
+        analytics.send(TangemPayAnalyticsEvents.Cashback.TermsDocClicked(title = doc.title))
+        urlOpener.openUrl(doc.url)
+    }
+
+    private fun sendBannerAnalytics(banner: TangemPayCashbackUM.Banner?) {
+        val event = when (banner?.type) {
+            TangemPayCashbackUM.Banner.Type.Info -> TangemPayAnalyticsEvents.Cashback.UpcomingAccrualBannerShowed()
+            TangemPayCashbackUM.Banner.Type.Error -> TangemPayAnalyticsEvents.Cashback.NegativeBannerShowed()
+            null -> null
+        }
+        event?.let { analytics.send(it) }
     }
 
     private suspend fun loadSummary(): CashbackSummary? =
@@ -133,13 +176,6 @@ internal class TangemPayCashbackModel @Inject constructor(
     private suspend fun loadPromotions(): CashbackPromotions? =
         runSuspendCatching { cashbackRepository.getCashbackPromotions(userWalletId).getOrNull() }.getOrNull()
 
-    private suspend fun loadDocs(): List<CashbackDocument> =
-        runSuspendCatching { cashbackRepository.getCashbackAccrualDocs(userWalletId).getOrNull() }
-            .getOrNull().orEmpty()
-
-    private suspend fun loadPlan(): TangemPayTariffPlan? {
-        return runSuspendCatching {
-            onboardingRepository.getCustomerInfo(userWalletId).getOrNull()
-        }.getOrNull()?.tariffPlan?.plan
-    }
+    private suspend fun loadDocs(): List<CashbackDocument>? =
+        runSuspendCatching { cashbackRepository.getCashbackAccrualDocs(userWalletId).getOrNull() }.getOrNull()
 }

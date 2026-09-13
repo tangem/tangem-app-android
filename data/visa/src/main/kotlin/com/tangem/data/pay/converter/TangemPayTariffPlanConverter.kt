@@ -1,5 +1,6 @@
 package com.tangem.data.pay.converter
 
+import com.tangem.data.pay.util.tangemPayImageOrNull
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import java.util.Locale
@@ -26,7 +27,7 @@ internal object TangemPayTariffPlanConverter {
             name = name,
             programName = programName,
             descriptionItems = value.descriptionItems.orEmpty().mapNotNull(::convertDescriptionItem),
-            images = value.images.orEmpty().mapNotNull(::convertImage),
+            images = value.images.orEmpty().mapNotNull { tangemPayImageOrNull(it.type, it.url) },
             fees = value.fees.orEmpty().mapNotNull(::convertFee),
         )
     }
@@ -49,14 +50,6 @@ internal object TangemPayTariffPlanConverter {
             order = item.order ?: 0,
             title = title,
             body = item.body.orEmpty(),
-        )
-    }
-
-    private fun convertImage(image: CustomerMeResponse.Image): TangemPayTariffPlan.Image? {
-        val url = image.url ?: return null
-        return TangemPayTariffPlan.Image(
-            type = TangemPayTariffPlan.Image.Type.fromString(image.type),
-            url = url,
         )
     }
 }
