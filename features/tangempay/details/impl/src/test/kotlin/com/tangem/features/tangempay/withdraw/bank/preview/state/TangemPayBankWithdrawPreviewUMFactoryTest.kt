@@ -17,6 +17,7 @@ import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.bank.personalFormValues
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewState
+import com.tangem.features.tangempay.withdraw.bank.preview.model.SendState
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Summary
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
@@ -182,7 +183,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     @Test
     fun `GIVEN sending WHEN create THEN summary is sending and send still enabled`() {
         // Act
-        val actual = factory.create(draft = savedDraft(), state = PreviewState(isSending = true)) as Summary
+        val actual = factory.create(draft = savedDraft(), state = PreviewState(send = SendState.CreatingOrder)) as Summary
 
         // Assert
         assertThat(actual.isSending).isTrue()
@@ -269,7 +270,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     @Test
     fun `GIVEN sending WHEN create THEN amount and every recipient card is read-only`() {
         // Act
-        val actual = factory.create(draft = newRecipientDraft(), state = PreviewState(isSending = true)) as Summary
+        val actual = factory.create(draft = newRecipientDraft(), state = PreviewState(send = SendState.CreatingOrder)) as Summary
 
         // Assert
         assertThat(actual.transfer?.amount?.onClick).isNull()
