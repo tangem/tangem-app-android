@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -19,11 +20,14 @@ import kotlinx.collections.immutable.ImmutableList
  * check mark and the selected tab.
  *
  * @property appliedSelection category filter the list is currently scoped to; empty means "All"
+ * @property regionRestriction banner warning that the current scope is blocked in the user's region;
+ * `null` hides it
  */
 @Immutable
 internal data class RwaFeedTabUM(
     val featured: RwaFeaturedUM,
     val categoriesFilter: TangemFilterItemUM,
+    val regionRestriction: TangemMessageBanner.State?,
     val interval: RwaIntervalUM,
     val sortTabs: ImmutableList<TangemTabItemUM>,
     val onVisibleItemsChange: (List<String>) -> Unit,

@@ -100,11 +100,7 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
 private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = Modifier) {
     val hapticManager = LocalHapticManager.current
     FloatingCard(modifier = modifier) {
-        val rowModifier = state.onRowClick
-            ?.let { onClick -> Modifier.clickableSingle(onClick = onClick) }
-            ?: Modifier
-
-        TangemRowContainer(modifier = rowModifier) {
+        TangemRowContainer(modifier = Modifier.clickableSingle(onClick = state.onRowClick)) {
             Text(
                 modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
                 text = state.totalBalance.orMaskWithStars(state.isBalanceHidden).resolveAnnotatedReference(),
@@ -123,51 +119,43 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                 overflow = TextOverflow.Ellipsis,
             )
 
-            val onAddFundsClick = state.onAddFundsClick
-
-            if (onAddFundsClick != null) {
-                TangemButton(
-                    modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
-                    buttonUM = TangemButtonUM(
-                        text = resourceReference(R.string.common_add_funds),
-                        type = TangemButtonType.Secondary,
-                        tangemIconUM = TangemIconUM.Icon(
-                            iconRes = R.drawable.ic_arrow_down_20,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                        ),
-                        iconPosition = TangemButtonIconPosition.Start,
-                        shape = TangemButtonShape.Rounded,
-                        size = TangemButtonSize.X9,
-                        onClick = {
-                            hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                            onAddFundsClick()
-                        },
+            TangemButton(
+                modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
+                buttonUM = TangemButtonUM(
+                    text = resourceReference(R.string.common_add_funds),
+                    type = TangemButtonType.Secondary,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_arrow_down_20,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
                     ),
-                )
-            }
+                    iconPosition = TangemButtonIconPosition.Start,
+                    shape = TangemButtonShape.Rounded,
+                    size = TangemButtonSize.X9,
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                        state.onAddFundsClick()
+                    },
+                ),
+            )
 
-            val onRowClick = state.onRowClick
-
-            if (onRowClick != null) {
-                TangemButton(
-                    modifier = Modifier
-                        .layoutId(TangemRowLayoutId.TAIL)
-                        .padding(start = TangemTheme.dimens2.x3),
-                    buttonUM = TangemButtonUM(
-                        type = TangemButtonType.Secondary,
-                        tangemIconUM = TangemIconUM.Icon(
-                            iconRes = R.drawable.ic_arrow_expand_24,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-                        ),
-                        shape = TangemButtonShape.Rounded,
-                        size = TangemButtonSize.X9,
-                        onClick = {
-                            hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                            onRowClick()
-                        },
+            TangemButton(
+                modifier = Modifier
+                    .layoutId(TangemRowLayoutId.TAIL)
+                    .padding(start = TangemTheme.dimens2.x3),
+                buttonUM = TangemButtonUM(
+                    type = TangemButtonType.Secondary,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_arrow_expand_24,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
                     ),
-                )
-            }
+                    shape = TangemButtonShape.Rounded,
+                    size = TangemButtonSize.X9,
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                        state.onRowClick()
+                    },
+                ),
+            )
         }
     }
 }
