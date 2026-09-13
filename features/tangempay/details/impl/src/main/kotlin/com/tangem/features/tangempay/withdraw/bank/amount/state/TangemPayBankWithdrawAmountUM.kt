@@ -30,31 +30,23 @@ internal data class TangemPayBankWithdrawAmountUM(
     )
 
     @Immutable
-    sealed interface SourceRowUM {
-        data object Loading : SourceRowUM
+    data class SourceRowUM(
+        val icon: CurrencyIconState,
+        val symbol: String,
+        val subtitle: TextReference,
+        val onMaxClick: () -> Unit,
+        val onClick: () -> Unit,
+    )
 
-        data class Content(
-            val icon: CurrencyIconState,
-            val symbol: String,
-            val subtitle: TextReference,
-            val onMaxClick: () -> Unit,
-            val onClick: () -> Unit,
-        ) : SourceRowUM
-    }
-
+    /** [onClick] is null when the backend offers a single rail: the row is then static and shows no chevron. */
     @Immutable
-    sealed interface RouteRowUM {
-        data object Loading : RouteRowUM
-
-        /** [onClick] is null when the backend offers a single rail: the row is then static and shows no chevron. */
-        data class Content(
-            val rail: BankRail,
-            val title: TextReference,
-            val eta: TextReference,
-            val fee: String,
-            val onClick: (() -> Unit)?,
-        ) : RouteRowUM
-    }
+    data class RouteRowUM(
+        val rail: BankRail,
+        val title: TextReference,
+        val eta: TextReference,
+        val fee: String,
+        val onClick: (() -> Unit)?,
+    )
 
     @Immutable
     sealed interface SheetUM {
@@ -75,7 +67,6 @@ internal data class TangemPayBankWithdrawAmountUM(
         val icon: CurrencyIconState,
         val symbol: String,
         val subtitle: TextReference,
-        val isAvailable: Boolean,
         val isSelected: Boolean,
         val onClick: () -> Unit,
     )
