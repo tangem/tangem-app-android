@@ -51,6 +51,10 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
@@ -248,12 +252,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
     val addFundsSheetNavigation = SlotNavigation<AddFundsSlotRoute>()
 
-    // A region-restricted asset must not become tradable. This screen offers two routes to that —
-    // adding it to the portfolio and topping it up — and both are closed below; the portfolio block
-    // additionally hides its controls so nothing inert is left on screen. Operations for an asset the
-    // user already holds live on the wallet's own token screen and are NOT covered here.
-    private val isAddToPortfolioAvailable: Boolean =
-        params.shouldShowPortfolio && !params.token.isRestrictedForCountry
+    private val isAddToPortfolioAvailable: Boolean = params.shouldShowPortfolio
     val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
         scope = modelScope,
         settings = AddToPortfolioManager.Settings(
@@ -437,9 +436,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
     }
 
+    /**
+     * Opens for a region-restricted asset too: the sheet carries the restriction and closes buying and
+     * swapping inside it, leaving receiving available. Operations for an asset the user already holds live
+     * on the wallet's own token screen and are NOT covered here.
+     */
     fun openAddFunds(rawCurrencyId: com.tangem.domain.models.currency.CryptoCurrency.RawID) {
-        if (params.token.isRestrictedForCountry) return
-
         analyticsEventHandler.send(analyticsEventBuilder.addFundsClicked())
         addFundsSheetNavigation.activate(AddFundsSlotRoute(rawCurrencyId = rawCurrencyId))
     }
@@ -473,6 +475,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         return TangemMessageBanner.State(
             title = resourceReference(R.string.buy_swap_region_restriction_title),
             variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
             description = if (regionName == null) {
                 resourceReference(R.string.buy_swap_region_restriction_description)
             } else {
