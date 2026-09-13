@@ -4,7 +4,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
@@ -28,13 +27,7 @@ class StakingWarningsTest : BaseTestCase() {
         val solanaBalanceScenario = "solana_get_account_info_recipient"
         val solanaBalanceState = "RentBalance"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(stakingScenario)
-                resetWireMockScenarioState(solanaBalanceScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -94,12 +87,7 @@ class StakingWarningsTest : BaseTestCase() {
         val stakingState = "Empty"
         val stakeAmount = "0.0375"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(stakingScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -171,13 +159,7 @@ class StakingWarningsTest : BaseTestCase() {
         val solanaBalanceScenario = "solana_get_account_info_recipient"
         val solanaBalanceState = "RentBalance"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(stakingScenario)
-                resetWireMockScenarioState(solanaBalanceScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)

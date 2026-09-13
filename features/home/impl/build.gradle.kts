@@ -34,7 +34,6 @@ dependencies {
     implementation(projects.domain.models)
 
     /** Referral */
-    api(projects.features.referral.domain)
 
     /** Compose libraries */
     api(deps.compose.animation)

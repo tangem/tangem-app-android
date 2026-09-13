@@ -1,0 +1,42 @@
+package com.tangem.store.datasource.blockaid.models.request
+
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.tangem.store.datasource.blockaid.models.response.TransactionMetadata
+
+@JsonClass(generateAdapter = true)
+data class EvmTransactionScanRequest(
+    @Json(name = "chain") val chain: String,
+    @Json(name = "account_address") val accountAddress: String,
+    @Json(name = "method") val method: String,
+    @Json(name = "data") val data: RpcData,
+    @Json(name = "options") val options: List<String> = listOf("simulation", "validation"),
+    @Json(name = "metadata") val metadata: TransactionMetadata,
+)
+
+@JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
+data class EvmTransactionBulkScanRequest(
+    @Json(name = "chain") val chain: String,
+    @Json(name = "options") val options: List<String>,
+    @Json(name = "metadata") val metadata: TransactionMetadata,
+    @Json(name = "data") val data: List<Data>,
+    @Json(name = "aggregated") val aggregated: Boolean = false,
+)
+
+@JsonClass(generateAdapter = true)
+data class RpcData(
+    @Json(name = "jsonrpc") val jsonrpc: String = "2.0",
+    @Json(name = "method") val method: String,
+    // Generic JSON-RPC params: for eth_sendTransaction this is a single tx object, but for
+    // eth_signTypedData_v4 / personal_sign / eth_sign it is a mixed array (e.g. [address, typedData]),
+    // so it must not be constrained to a list of string maps.
+    @Json(name = "params") val params: List<Any>,
+)
+
+@JsonClass(generateAdapter = true)
+data class Data(
+    @Json(name = "from") val from: String,
+    @Json(name = "to") val to: String,
+    @Json(name = "data") val data: String,
+)

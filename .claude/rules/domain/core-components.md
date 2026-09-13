@@ -18,7 +18,7 @@ Repository for managing user wallets list. Provides `StateFlow<List<UserWallet>?
 
 **Location:** `domain/account` — `com.tangem.domain.account.supplier.SingleAccountSupplier`
 
-Supplier that provides a single `Account` by `AccountId`. Has convenience methods `filterPaymentAccount` and `filterCryptoPortfolioAccount` to filter by account subtype.
+Supplier that provides a single `Account.Portfolio` (i.e. `CryptoPortfolio` or `Joint`) by `AccountId`. `Payment`, `Virtual` and `Prediction` accounts are excluded — they hold no portfolio.
 
 #### SingleAccountListSupplier
 

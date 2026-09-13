@@ -27,32 +27,40 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
+import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
+import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.choosetoken.model.ClickIntents
+import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.toPersistentList
+
+internal data class ConverterConfig(
+    val clickIntents: ClickIntents,
+    val searchQuery: SearchQuery,
+    val tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean,
+    val paymentAccountTokens: PaymentAccountTokens,
+    val balanceFilter: BalanceFilter,
+)
 
 internal class ChooseTokenListItemConverter(
     private val appCurrency: AppCurrency,
     private val params: TokenConverterParams,
-    private val clickIntents: ClickIntents,
-    private val searchQuery: SearchQuery,
-    private val tokenFilter: (AccountStatus, CryptoCurrencyStatus) -> Boolean,
-    private val isShowPaymentAccount: Boolean,
+    private val config: ConverterConfig,
 ) {
 
-    private val isSearchingState: Boolean get() = searchQuery.isSearchingState
+    private val isSearchingState: Boolean get() = config.searchQuery.isSearchingState
 
     private val onTokenClick: (account: AccountStatus, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { account, currencyStatus ->
-            clickIntents.onTokenItemClick(account, currencyStatus)
+            config.clickIntents.onTokenItemClick(account, currencyStatus)
         }
 
     private val onAccountItemClick: (Account, isExpanded: Boolean) -> Unit = { clickedAccount, isExpanded ->
         if (isExpanded) {
-            clickIntents.onAccountCollapseClick(clickedAccount)
+            config.clickIntents.onAccountCollapseClick(clickedAccount)
         } else {
-            clickIntents.onAccountExpandClick(clickedAccount)
+            config.clickIntents.onAccountExpandClick(clickedAccount)
         }
     }
 
@@ -85,7 +93,7 @@ internal class ChooseTokenListItemConverter(
     }
 
     fun convert(): TokenListUMData {
-        return when (params) {
+        val data = when (params) {
             is TokenConverterParams.Account -> convertAccountList(params)
             is TokenConverterParams.Wallet -> convertTokenList(
                 account = params.mainAccount,
@@ -93,6 +101,57 @@ internal class ChooseTokenListItemConverter(
                 tokenListParam = params.tokenList,
             )
         }
+        return if (data is TokenListUMData.EmptyList) {
+            TokenListUMData.EmptyList(
+                reason = resolveEmptyReason(
+                    balanceFilter = config.balanceFilter,
+                    isSearching = isSearchingState,
+                    hasAvailableTokens = hasAvailableTokens(),
+                ),
+            )
+        } else {
+            data
+        }
+    }
+
+    /** Whether any token passes search + tokenFilter, ignoring the balance filter (the "available" set). */
+    private fun hasAvailableTokens(): Boolean = availableCurrencies()
+        .any { (account, status) -> status.filterByQuery() && config.tokenFilter(account, status) }
+
+    private fun availableCurrencies(): List<Pair<AccountStatus, CryptoCurrencyStatus>> = when (params) {
+        is TokenConverterParams.Wallet ->
+            params.tokenList.flattenCurrencies().map { params.mainAccount to it }
+        is TokenConverterParams.Account ->
+            params.accountList.accountStatuses.flatMap { account ->
+                when (account) {
+                    is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().map { account to it }
+                    is AccountStatus.Payment ->
+                        account.paymentCryptoCurrencies().map { account to it }
+                    is AccountStatus.Virtual -> emptyList()
+                    is AccountStatus.Prediction -> emptyList()
+                    // Joint currencies belong to the Safe contract, never to a spendable EOA
+                    is AccountStatus.Joint -> emptyList()
+                }
+            }
+    }
+
+    private fun AccountStatus.Payment.paymentCryptoCurrencies(): List<CryptoCurrencyStatus> =
+        when (config.paymentAccountTokens) {
+            is PaymentAccountTokens.Hidden -> emptyList()
+            is PaymentAccountTokens.AccountCurrency -> listOfNotNull(accountCurrencyOrNull())
+            is PaymentAccountTokens.IssuedTokens -> issuedCurrencies()
+        }
+
+    private fun AccountStatus.Payment.accountCurrencyOrNull(): CryptoCurrencyStatus? = when (val status = value) {
+        is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
+        is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
+        else -> null
+    }
+
+    private fun AccountStatus.Payment.issuedCurrencies(): List<CryptoCurrencyStatus> = when (val status = value) {
+        is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatuses
+        is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatuses
+        else -> emptyList()
     }
 
     private fun convertAccountList(params: TokenConverterParams.Account): TokenListUMData {
@@ -103,11 +162,13 @@ internal class ChooseTokenListItemConverter(
                     is AccountStatus.CryptoPortfolio -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
                     is AccountStatus.Virtual -> null
+                    is AccountStatus.Prediction -> null
+                    is AccountStatus.Joint -> null
                 }
             }
             .filter { portfolio -> portfolio.tokens.isNotEmpty() }
         if (accountItems.isEmpty()) {
-            return TokenListUMData.EmptyList
+            return TokenListUMData.EmptyList()
         }
         return TokenListUMData.AccountList(
             tokensList = accountItems.toPersistentList(),
@@ -148,7 +209,9 @@ internal class ChooseTokenListItemConverter(
     private fun AccountStatus.CryptoPortfolio.filterForDisplay(): AccountStatus.CryptoPortfolio {
         val filteredTokenList = filterTokenList(tokenList, this)
         return copy(
-            account = account.copy(cryptoCurrencies = filteredTokenList.flattenCurrencies().map { it.currency }),
+            account = account.copySealed(
+                cryptoCurrencies = filteredTokenList.flattenCurrencies().map { it.currency },
+            ),
             tokenList = filteredTokenList,
         )
     }
@@ -170,7 +233,7 @@ internal class ChooseTokenListItemConverter(
     ): TokenListUMData = filterTokenList(tokenListParam, account).toUmData(tokenConverter)
 
     private fun TokenList.toUmData(tokenConverter: TokenItemStateConverter): TokenListUMData = when (this) {
-        TokenList.Empty -> TokenListUMData.EmptyList
+        TokenList.Empty -> TokenListUMData.EmptyList()
         is TokenList.GroupedByNetwork -> TokenListUMData.TokenList(
             tokensList = toGroupedItems(tokenConverter).toPersistentList(),
             totalTokensCount = flattenCurrencies().size,
@@ -182,7 +245,14 @@ internal class ChooseTokenListItemConverter(
     }
 
     private fun List<CryptoCurrencyStatus>.filterCurrencies(account: AccountStatus): List<CryptoCurrencyStatus> =
-        filter { currency -> currency.filterByQuery() && tokenFilter(account, currency) }
+        filter { currency ->
+            currency.filterByQuery() && config.tokenFilter(account, currency) && currency.passesBalanceFilter()
+        }
+
+    private fun CryptoCurrencyStatus.passesBalanceFilter(): Boolean = config.balanceFilter == BalanceFilter.All ||
+        // NoAccount is an availability state (account not created), not a real zero balance — keep it visible.
+        value is CryptoCurrencyStatus.NoAccount ||
+        value.amount?.isZero() != true
 
     private fun filterTokenList(tokenList: TokenList, account: AccountStatus.CryptoPortfolio): TokenList {
         val filtered = when (tokenList) {
@@ -207,30 +277,18 @@ internal class ChooseTokenListItemConverter(
 
     private fun CryptoCurrencyStatus.filterByQuery(): Boolean {
         if (!isSearchingState) return true
-        val isSearchFilter = currency.name.contains(searchQuery.value, ignoreCase = true) ||
-            currency.symbol.contains(searchQuery.value, ignoreCase = true)
+        val isSearchFilter = currency.name.contains(config.searchQuery.value, ignoreCase = true) ||
+            currency.symbol.contains(config.searchQuery.value, ignoreCase = true)
         return isSearchFilter
     }
 
     private fun AccountStatus.Payment.createPaymentAccountItem(
         expandedAccounts: Set<AccountId>,
     ): TokensListItemUM.Portfolio? {
-        if (!isShowPaymentAccount) return null
-        val paymentCurrency: CryptoCurrencyStatus = when (val status = this.value) {
-            is PaymentAccountStatusValue.Error,
-            is PaymentAccountStatusValue.IssuingCard,
-            is PaymentAccountStatusValue.AwaitingPlanSelection,
-            is PaymentAccountStatusValue.Inactive,
-            PaymentAccountStatusValue.NotCreated,
-            is PaymentAccountStatusValue.UnderReview,
-            PaymentAccountStatusValue.Loading,
-            PaymentAccountStatusValue.Empty,
-            -> return null
-            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus ?: return null
-            is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus ?: return null
-        }
+        val paymentCurrencies = paymentCryptoCurrencies().filterCurrencies(this)
+        if (paymentCurrencies.isEmpty()) return null
         val account = this.account
-        val tokensCount = 1
+        val tokensCount = paymentCurrencies.size
         val isExpanded = isSearchingState || expandedAccounts.contains(account.accountId)
         val onItemClick: (TokenItemState) -> Unit = {
             onAccountItemClick(account, isExpanded)
@@ -255,9 +313,7 @@ internal class ChooseTokenListItemConverter(
             onItemLongClick = null,
         )
         val tokenConverter = tokenStatusConverter(this)
-        val filtered = listOf(paymentCurrency)
-            .filterCurrencies(this)
-            .map { currency -> TokensListItemUM.Token(tokenConverter.convert(currency)) }
+        val filtered = paymentCurrencies.map { currency -> TokensListItemUM.Token(tokenConverter.convert(currency)) }
 
         return TokensListPortfolioItemConverter(
             tokenItemUM = paymentAccountItem,

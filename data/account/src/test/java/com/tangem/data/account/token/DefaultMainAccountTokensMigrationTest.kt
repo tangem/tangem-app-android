@@ -11,6 +11,7 @@ import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.domain.models.account.AccountId
@@ -426,6 +427,107 @@ class DefaultMainAccountTokensMigrationTest {
         coVerify(inverse = true) {
             userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
+    }
+
+    @Test
+    fun `GIVEN joint record with the same index WHEN migrate THEN it receives no tokens`() = runTest {
+        // Arrange
+        val unassignedToken = createBitcoin(accountIndex = 1)
+        val jointDerivationIndex = DerivationIndex(1).getOrNull()!!
+
+        val mainAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex.Main).value,
+            derivationIndex = DerivationIndex.Main.value,
+            tokens = listOf(createBitcoin(accountIndex = 0), unassignedToken),
+        )
+
+        val jointAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = "aa".repeat(n = 32),
+            derivationIndex = jointDerivationIndex.value,
+            tokens = emptyList(),
+            type = WalletAccountDTO.Type.JOINT.value,
+        )
+
+        val response = GetWalletAccountsResponse(
+            wallet = GetWalletAccountsResponse.Wallet(
+                group = UserTokensResponse.GroupType.NONE,
+                sort = UserTokensResponse.SortType.MANUAL,
+                totalAccounts = 1,
+                totalArchivedAccounts = 0,
+            ),
+            accounts = listOf(mainAccount, jointAccount),
+            unassignedTokens = emptyList(),
+        )
+
+        accountsResponseStoreFlow.value = response
+
+        // Act
+        val actual = migration.migrate(userWalletId)
+
+        // Assert
+        assertEither(actual, response.right())
+
+        coVerify(exactly = 0) { accountsResponseStore.updateData(any()) }
+    }
+
+    @Test
+    fun `GIVEN joint record with index 0 first WHEN migrate THEN the crypto account is the token source`() = runTest {
+        // Arrange
+        val unassignedToken = createBitcoin(accountIndex = 1)
+        val derivationIndex1 = DerivationIndex(1).getOrNull()!!
+
+        val jointAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = "aa".repeat(n = 32),
+            derivationIndex = DerivationIndex.Main.value,
+            tokens = emptyList(),
+            type = WalletAccountDTO.Type.JOINT.value,
+        )
+
+        val mainAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex.Main).value,
+            derivationIndex = DerivationIndex.Main.value,
+            tokens = listOf(createBitcoin(accountIndex = 0), unassignedToken),
+        )
+
+        val account1 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex1).value,
+            derivationIndex = derivationIndex1.value,
+            tokens = emptyList(),
+        )
+
+        val response = GetWalletAccountsResponse(
+            wallet = GetWalletAccountsResponse.Wallet(
+                group = UserTokensResponse.GroupType.NONE,
+                sort = UserTokensResponse.SortType.MANUAL,
+                totalAccounts = 2,
+                totalArchivedAccounts = 0,
+            ),
+            accounts = listOf(jointAccount, mainAccount, account1),
+            unassignedTokens = emptyList(),
+        )
+
+        accountsResponseStoreFlow.value = response
+
+        coEvery { accountsResponseStore.updateData(any()) } returns mockk()
+
+        // Act
+        val actual = migration.migrate(userWalletId)
+
+        // Assert
+        val migratedResponse = response.copy(
+            accounts = listOf(
+                jointAccount,
+                mainAccount.copy(tokens = mainAccount.tokens!! - unassignedToken),
+                account1.copy(tokens = listOf(unassignedToken)),
+            ),
+        )
+
+        assertEither(actual, migratedResponse.right())
     }
 
     private fun createBitcoin(accountIndex: Int): UserTokensResponse.Token {

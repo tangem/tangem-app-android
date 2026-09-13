@@ -133,6 +133,11 @@ interface P2PEthPoolRepository {
     suspend fun getVaultsSync(): List<P2PEthPoolVault>
 
     /**
+     * Get a flow of all persisted vaults from the local database.
+     */
+    fun getPersistedVaultsFlow(): Flow<List<P2PEthPoolVault>>
+
+    /**
      * Fetch and store vault limits from Tangem API /v1/coins/settings
      */
     suspend fun fetchVaultLimits()

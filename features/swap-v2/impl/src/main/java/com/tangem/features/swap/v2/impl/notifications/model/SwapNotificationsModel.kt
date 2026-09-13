@@ -1,5 +1,6 @@
 package com.tangem.features.swap.v2.impl.notifications.model
 
+import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -14,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
@@ -21,6 +23,7 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -44,6 +47,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private val isMemoRequiredUseCase: IsMemoRequiredUseCase,
     private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
+    private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -53,6 +57,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private var notificationData = params.swapNotificationData
     private var lastSentErrorKeys: Set<Pair<String, Map<String, String>>> = emptySet()
 
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
     private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     val uiState: StateFlow<ImmutableList<NotificationUM>>
@@ -80,6 +85,7 @@ internal class SwapNotificationsModel @Inject constructor(
         val notifications = buildList {
             addInsufficientFundsNotification()
             addExpressErrorNotification()
+            maybeAddRegionRestrictionError()
             addDestinationTagRequiredNotification()
             addDestinationBackupErrorNotification()
             maybeAddPriceImpactNotification()
@@ -96,7 +102,7 @@ internal class SwapNotificationsModel @Inject constructor(
 
         val fromCurrency = notificationData.fromCryptoCurrency
         val toCurrency = notificationData.toCryptoCurrencyStatus?.currency
-        val provider = notificationData.provider
+        val provider = notificationData.quote?.provider
         if (fromCurrency != null && toCurrency != null && provider != null) {
             if (notifications.any { it is SwapNotificationUM.Warning.HighPriceImpact }) {
                 analyticsEventHandler.send(
@@ -143,7 +149,10 @@ internal class SwapNotificationsModel @Inject constructor(
         }
     }
 
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
     private suspend fun MutableList<NotificationUM>.addDestinationBackupErrorNotification() {
+        if (backupErrorFeatureToggles.isTopUpWarningEnabled) return
+
         val destinationAddress = notificationData.destinationAddress
         if (destinationAddress.isEmpty()) return
 
@@ -155,6 +164,7 @@ internal class SwapNotificationsModel @Inject constructor(
         )
     }
 
+    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
     private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
         backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
 
@@ -175,8 +185,15 @@ internal class SwapNotificationsModel @Inject constructor(
         }
     }
 
-    fun MutableList<NotificationUM>.addExpressErrorNotification() {
-        val expressError = notificationData.expressError ?: return
+    private fun MutableList<NotificationUM>.maybeAddRegionRestrictionError() {
+        val quote = notificationData.quote as? SwapQuoteUM.Content
+        if (quote?.isRestricted == true) {
+            add(SwapNotificationUM.Error.RegionRestriction)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addExpressErrorNotification() {
+        val expressError = (notificationData.quote as? SwapQuoteUM.Error)?.expressError ?: return
         val fromCryptoCurrency = notificationData.fromCryptoCurrency ?: return
         val toCryptoCurrency = notificationData.toCryptoCurrencyStatus?.currency ?: return
 

@@ -14,6 +14,7 @@ dependencies {
 
     /* Kotlin */
     api(deps.kotlin.coroutines)
+    api(deps.kotlin.immutable.collections)
     api(deps.kotlin.serialization.core)
 
     /* Compose */
@@ -27,4 +28,5 @@ dependencies {
     api(projects.domain.appCurrency.models)
     api(projects.domain.markets.models)
     api(projects.domain.models)
+    api(projects.domain.news)
 }

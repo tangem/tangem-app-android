@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.filterIsInstance
 /**
  * Supplies instances of [SingleAccountProducer] that produce flows of [Account]
  * for individual accounts. Each producer is uniquely identified by its [SingleAccountProducer.Params].
+ * Use [filterCryptoPortfolioAccount], [filterJointAccount] or [filterPortfolioAccount] to narrow
+ * the flow to a specific [Account] subtype.
  *
  * @property factory A factory to create instances of [SingleAccountProducer].
  * @property keyCreator A function that generates a unique key for caching based on [SingleAccountProducer.Params].
@@ -23,11 +25,8 @@ abstract class SingleAccountSupplier(
         return invoke(params = SingleAccountProducer.Params(accountId))
     }
 
-    fun filterPaymentAccount(accountId: AccountId): Flow<Account.Payment> {
-        return invoke(params = SingleAccountProducer.Params(accountId)).filterIsInstance()
-    }
-
+    /** Convenience filter for callers that only ever handle [Account.CryptoPortfolio]. */
     fun filterCryptoPortfolioAccount(accountId: AccountId): Flow<Account.CryptoPortfolio> {
-        return invoke(params = SingleAccountProducer.Params(accountId)).filterIsInstance()
+        return invoke(accountId).filterIsInstance()
     }
 }

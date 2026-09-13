@@ -10,7 +10,8 @@ private const val DATE_LENGTH = 2
 
 internal class DetailsRevealedStateTransformer(
     private val details: TangemPayCardDetails,
-    private val onClickHide: (() -> Unit),
+    private val onCopy: (String, CardDataType) -> Unit,
+    private val onClickHide: () -> Unit,
 ) : Transformer<TangemPayCardDetailsUM> {
 
     override fun transform(prevState: TangemPayCardDetailsUM): TangemPayCardDetailsUM {
@@ -21,6 +22,7 @@ internal class DetailsRevealedStateTransformer(
             onClick = onClickHide,
             buttonText = resourceReference(R.string.tangempay_card_details_hide_text),
             isHidden = false,
+            onCopy = onCopy,
         )
     }
 

@@ -21,12 +21,22 @@ internal fun AddExistingWalletContent(
     stackState: ChildStack<AddExistingWalletRoute, ComposableContentComponent>,
     stepperComponent: HotWalletStepperComponent?,
 ) {
+    // The cloud-restore screens are built on the redesigned design system and draw edge to edge: they
+    // own their insets and paint their own background, so the container must not cut the system bars
+    // off with a differently-coloured strip.
+    val isRedesignedChild = stackState.active.configuration is AddExistingWalletRoute.RestoreCloudBackup
+
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.primary)
+            .background(
+                color = if (isRedesignedChild) {
+                    TangemTheme.colors3.bg.primary
+                } else {
+                    TangemTheme.colors.background.primary
+                },
+            )
             .fillMaxSize()
-            .imePadding()
-            .systemBarsPadding(),
+            .then(if (isRedesignedChild) Modifier else Modifier.imePadding().systemBarsPadding()),
     ) {
         stepperComponent?.Content(Modifier)
 

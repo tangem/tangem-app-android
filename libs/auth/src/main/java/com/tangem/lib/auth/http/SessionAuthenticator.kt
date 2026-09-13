@@ -1,7 +1,7 @@
 package com.tangem.lib.auth.http
 
 import arrow.core.getOrElse
-import com.tangem.datasource.api.auth.RequiresSessionRefresh
+import com.tangem.lib.auth.api.RequiresSessionRefresh
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.session.SessionTokenRefresher

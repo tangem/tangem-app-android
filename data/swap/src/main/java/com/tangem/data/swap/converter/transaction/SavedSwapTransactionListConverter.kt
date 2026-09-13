@@ -149,7 +149,7 @@ internal class SavedSwapTransactionListConverter(
         if (derivationIndex == null) return null
 
         return multiAccountList.asSequence().firstNotNullOfOrNull { accountList ->
-            accountList.accounts.asSequence().filterIsInstance<Account.CryptoPortfolio>()
+            accountList.accounts.asSequence().filterIsInstance<Account.Personal>()
                 .firstOrNull { it.derivationIndex == derivationIndex }
         }
     }

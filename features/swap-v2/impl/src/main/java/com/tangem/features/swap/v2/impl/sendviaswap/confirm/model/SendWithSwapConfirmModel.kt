@@ -9,6 +9,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -96,6 +97,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val swapAmountReduceTrigger: SwapAmountReduceTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
@@ -320,8 +322,16 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod")
     private fun onSendClick() {
+        backupErrorWarningSender.forAddress(
+            scope = modelScope,
+            address = { confirmData.enteredDestination },
+            onProceed = { sendTransaction(confirmData) },
+        )
+    }
+
+    @Suppress("LongMethod")
+    private fun sendTransaction(confirmData: ConfirmData) {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
             uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(true))
@@ -465,7 +475,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             )
             swapNotificationsUpdateTrigger.triggerUpdate(
                 data = SwapNotificationData(
-                    expressError = (confirmData.quote as? SwapQuoteUM.Error)?.expressError,
                     fromCryptoCurrency = confirmData.fromCryptoCurrencyStatus?.currency,
                     destinationAddress = confirmData.enteredDestination.orEmpty(),
                     memo = confirmData.enteredMemo,
@@ -474,7 +483,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     enteredFromAmount = confirmData.enteredFromAmount,
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
-                    provider = confirmData.quote?.provider,
+                    quote = confirmData.quote,
                     amountType = confirmData.amountType,
                     shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
                     feeValue = confirmData.fee?.amount?.value,

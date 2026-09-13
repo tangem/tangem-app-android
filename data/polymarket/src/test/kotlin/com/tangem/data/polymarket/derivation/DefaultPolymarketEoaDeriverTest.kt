@@ -10,6 +10,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.wallet.UserWallet
@@ -31,6 +32,7 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -66,11 +68,13 @@ internal class DefaultPolymarketEoaDeriverTest {
     fun setup() {
         clearMocks(userWalletsListRepository, derivationsRepository)
         mockkStatic(UserWalletsListRepository::getSyncStrict)
+        mockkStatic(UserWalletsListRepository::getSyncOrNull)
     }
 
     @AfterEach
     fun tearDownStaticMocks() {
         unmockkStatic(UserWalletsListRepository::getSyncStrict)
+        unmockkStatic(UserWalletsListRepository::getSyncOrNull)
     }
 
     private fun coldWallet(firmwareSupportsHd: Boolean = true, hasSecpWallet: Boolean = true): UserWallet.Cold {
@@ -224,6 +228,69 @@ internal class DefaultPolymarketEoaDeriverTest {
             // Assert
             assertThat(result).isEqualTo(model.expected.left())
         }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StoredOwnerEoa {
+
+        @Test
+        fun `GIVEN the key is stored WHEN storedOwnerEoa THEN returns the address without deriving`() = runTest {
+            // Arrange
+            every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns coldWallet()
+            coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+                ExtendedPublicKeysMap(mapOf(path to knownKey))
+
+            // Act
+            val result = deriver.storedOwnerEoa(userWalletId)
+
+            // Assert
+            assertThat(result).isEqualTo(knownAddress)
+            coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
+        }
+
+        @Test
+        fun `GIVEN the key is not stored WHEN storedOwnerEoa THEN returns null AND never opens a card session`() =
+            runTest {
+                // Arrange
+                every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns coldWallet()
+                coEvery { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) } returns
+                    ExtendedPublicKeysMap(emptyMap())
+
+                // Act
+                val result = deriver.storedOwnerEoa(userWalletId)
+
+                // Assert
+                assertThat(result).isNull()
+                coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
+            }
+
+        @Test
+        fun `GIVEN a locked hot wallet WHEN storedOwnerEoa THEN returns null without unlocking it`() = runTest {
+            // Arrange
+            every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns hotWallet(hasSecpWallet = false)
+
+            // Act
+            val result = deriver.storedOwnerEoa(userWalletId)
+
+            // Assert
+            assertThat(result).isNull()
+            coVerify(exactly = 0) { derivationsRepository.getExistingDerivedKeys(userWalletId, seedKeyBAK) }
+            coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
+        }
+
+        @Test
+        fun `GIVEN the wallet is missing WHEN storedOwnerEoa THEN returns null`() = runTest {
+            // Arrange
+            every { userWalletsListRepository.getSyncOrNull(userWalletId) } returns null
+
+            // Act
+            val result = deriver.storedOwnerEoa(userWalletId)
+
+            // Assert
+            assertThat(result).isNull()
+            coVerify(exactly = 0) { derivationsRepository.derivePublicKeys(userWalletId, derivations) }
+        }
+    }
 
     internal data class DerivationFailureModel(val throwable: Throwable, val expected: PolymarketDerivationError)
 

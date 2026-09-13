@@ -1,0 +1,57 @@
+package com.tangem.grow.datasource.config
+
+import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.ApiEnvironment
+import com.tangem.core.remote.config.ApiEnvironmentConfig
+
+import com.tangem.grow.datasource.BuildConfig
+
+/**
+ * MoonPay [ApiConfig]
+ */
+class MoonPay : ApiConfig() {
+
+    override val id: ApiConfig.ID get() = ID
+
+    // Requests carry the apiKey as a query param, so keep them out of network logs.
+    override val isLoggable: Boolean = false
+
+    override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
+
+    override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
+        createProdEnvironment(),
+        createMockEnvironment(),
+    )
+
+    private fun getInitialEnvironment(): ApiEnvironment {
+        return when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK
+            DEBUG_BUILD_TYPE,
+            INTERNAL_BUILD_TYPE,
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+    }
+
+    private fun createProdEnvironment(): ApiEnvironmentConfig {
+        return ApiEnvironmentConfig(
+            environment = ApiEnvironment.PROD,
+            baseUrl = "https://api.moonpay.com/",
+        )
+    }
+
+    private fun createMockEnvironment(): ApiEnvironmentConfig {
+        return ApiEnvironmentConfig(
+            environment = ApiEnvironment.MOCK,
+            baseUrl = "[REDACTED_ENV_URL]",
+        )
+    }
+
+    companion object {
+        const val KEY = "MoonPay"
+        val ID = ApiConfig.ID(KEY)
+    }
+}

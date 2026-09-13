@@ -194,7 +194,9 @@ private fun TangemPayDailyLimitBlockPreview() {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Content.stub())
+            TangemPayDailyLimitBlock(
+                state = TangemPayDailyLimitBlockState.Content(limit = "$5,000", onChangeClick = {}),
+            )
             TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error(onReloadClick = {}))
             TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Loading)
         }

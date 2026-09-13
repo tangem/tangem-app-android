@@ -8,8 +8,8 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.news.NewsApi
-import com.tangem.datasource.api.news.models.response.NewsTrendingResponse
+import com.tangem.store.datasource.news.NewsApi
+import com.tangem.store.datasource.news.models.response.NewsTrendingResponse
 import com.tangem.datasource.local.news.details.NewsDetailsStore
 import com.tangem.datasource.local.news.liked.NewsLikedStore
 import com.tangem.datasource.local.news.trending.TrendingNewsStore

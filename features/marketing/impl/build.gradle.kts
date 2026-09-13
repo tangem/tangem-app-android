@@ -39,6 +39,9 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.compose.material3)
+    implementation(deps.decompose)
     kapt(deps.hilt.kapt)
 
     /** Tests */
