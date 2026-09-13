@@ -16,6 +16,11 @@ interface WalletCardsBackupRepository {
     /**
      * Reports the cards known to the app for [userWalletId] and the state of their backup.
      *
+     * The report is queued first and then sent behind everything already waiting, so a report held up
+     * earlier is never overtaken by a newer one. A report that does not reach the backend stays queued and
+     * [sendPendingWalletCards] resends it later — the returned [Either.Left] says the report has not landed
+     * yet, not that it has been lost.
+     *
      * @param usedSeed `true` if a seed phrase was used to create or import the wallet
      */
     suspend fun saveWalletCards(
@@ -23,6 +28,20 @@ interface WalletCardsBackupRepository {
         cards: List<WalletCardBackup>,
         usedSeed: Boolean,
     ): Either<WalletCardsBackupError, Unit>
+
+    /**
+     * Resends the reports that [saveWalletCards] could not deliver, oldest first.
+     *
+     * Order is part of the contract: the backend keeps a change history of the reports it receives, so
+     * replaying them out of order would misrepresent how the backup progressed.
+     *
+     * A report that fails for a reason that may pass — the device is offline, the backend is down, rate
+     * limiting, a response that could not be read — stays queued together with everything after it, and the
+     * drain stops rather than retrying the rest against the same failure. Only a report the backend refuses
+     * outright is dropped: resending identical bytes can only be refused again, and keeping it would wedge
+     * every later report behind it.
+     */
+    suspend fun sendPendingWalletCards(): Either<WalletCardsBackupError, Unit>
 
     /**
      * Returns the cards the backend knows about for [userWalletId].

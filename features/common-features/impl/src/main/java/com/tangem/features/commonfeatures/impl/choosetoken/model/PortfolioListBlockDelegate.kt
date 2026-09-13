@@ -16,9 +16,11 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
 import com.tangem.features.commonfeatures.impl.choosetoken.SettingContextUseCase
 import com.tangem.features.commonfeatures.impl.choosetoken.converter.ChooseTokenListItemConverter
+import com.tangem.features.commonfeatures.impl.choosetoken.converter.ConverterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.mapNotNullValues
 import dagger.assisted.Assisted
@@ -49,11 +51,24 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean> =
         MutableStateFlow { _, _ -> true }
 
+    val balanceFilter: MutableStateFlow<BalanceFilter> = MutableStateFlow(defaultBalanceFilter())
+
     val portfolioList: SharedFlow<Map<UserWalletId, TokenListUMData>> = buildDataFlow()
         .distinctUntilChanged()
         .throttleLatest(windowMs = UM_UPDATES_THROTTLE_MS)
         .flowOn(dispatchers.default)
         .shareIn(modelScope, SharingStarted.Eagerly, replay = 1)
+
+    private fun defaultBalanceFilter(): BalanceFilter =
+        if (featureSettings.isHideZeroBalanceFilterEnabled) BalanceFilter.HideZero else BalanceFilter.All
+
+    fun onBalanceFilterSelected(filter: BalanceFilter) {
+        balanceFilter.value = filter
+    }
+
+    fun resetBalanceFilterToDefault() {
+        balanceFilter.value = defaultBalanceFilter()
+    }
 
     private fun buildDataFlow(): Flow<Map<UserWalletId, TokenListUMData>> = channelFlow {
         val allAccountsFlow: Flow<LinkedHashMap<UserWalletId, AccountStatusList>> =
@@ -78,13 +93,16 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
             .flatMapLatest { walletIds -> walletIds.toExpandedAccountsMap() }
             .distinctUntilChanged()
 
+        val filtersFlow = combine(tokenFilter, balanceFilter) { predicate, balance -> predicate to balance }
+
         val finalFlow = combine(
             flow = settingContext.invoke(),
             flow2 = allAccountsFlow,
             flow3 = expandedAccountsMapFlow,
             flow4 = searchQueryState,
-            flow5 = tokenFilter,
-            transform = { settings, allAccounts, expandedAccountsMap, searchQuery, tokenFilter ->
+            flow5 = filtersFlow,
+            transform = { settings, allAccounts, expandedAccountsMap, searchQuery, filters ->
+                val (tokenFilter, balanceFilter) = filters
                 allAccounts.mapNotNullValues { (walletId, statusList) ->
                     val expandedAccounts = expandedAccountsMap[walletId].orEmpty()
                     val converterParams = if (settings.isAccountsMode) {
@@ -96,10 +114,13 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                     val um = ChooseTokenListItemConverter(
                         appCurrency = settings.appCurrency,
                         params = converterParams,
-                        clickIntents = this@PortfolioListBlockDelegate,
-                        searchQuery = searchQuery,
-                        tokenFilter = tokenFilter,
-                        isShowPaymentAccount = featureSettings.isShowPaymentAccount,
+                        config = ConverterConfig(
+                            clickIntents = this@PortfolioListBlockDelegate,
+                            searchQuery = searchQuery,
+                            tokenFilter = tokenFilter,
+                            paymentAccountTokens = featureSettings.paymentAccountTokens,
+                            balanceFilter = balanceFilter,
+                        ),
                     ).convert()
 
                     um

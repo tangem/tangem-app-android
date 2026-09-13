@@ -11,6 +11,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -105,6 +106,7 @@ internal class SendConfirmModel @Inject constructor(
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val alertFactory: SendConfirmAlertFactory,
+    private val backupErrorWarningSender: BackupErrorWarningSender,
     private val sendAnalyticHelper: SendAnalyticHelper,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
@@ -243,6 +245,14 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     override fun onSendClick() {
+        backupErrorWarningSender.forAddress(
+            scope = modelScope,
+            address = { confirmData.enteredDestination },
+            onProceed = ::startSending,
+        )
+    }
+
+    private fun startSending() {
         _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
         if (SystemClock.elapsedRealtime() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
             verifyAndSendTransaction()
@@ -450,11 +460,6 @@ internal class SendConfirmModel @Inject constructor(
                 )
             },
             ifRight = { txHash ->
-                if (feeExtended?.tronGaslessQuote != null) {
-                    analyticsEventHandler.send(
-                        CommonSendAnalyticEvents.GaslessTransactionUsed(categoryName = analyticsCategoryName),
-                    )
-                }
                 updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()

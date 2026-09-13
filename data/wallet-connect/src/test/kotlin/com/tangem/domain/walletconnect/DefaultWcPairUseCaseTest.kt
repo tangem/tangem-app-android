@@ -76,7 +76,7 @@ internal class DefaultWcPairUseCaseTest {
         get() = WcSessionApprove(
             wallet = MockUserWalletFactory.create(),
             network = listOf(),
-            account = Account.CryptoPortfolio.createMainAccount(MockUserWalletFactory.create().walletId),
+            account = Account.Personal.createMainAccount(MockUserWalletFactory.create().walletId),
         )
 
     private val sdkApprove: Wallet.Params.SessionApprove
@@ -109,7 +109,7 @@ internal class DefaultWcPairUseCaseTest {
             networks = setOf(),
             connectingTime = null,
             showWalletInfo = false,
-            account = Account.CryptoPortfolio.createMainAccount(MockUserWalletFactory.create().walletId),
+            account = Account.Personal.createMainAccount(MockUserWalletFactory.create().walletId),
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(

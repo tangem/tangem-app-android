@@ -52,10 +52,7 @@ internal class PaymentChooseNetworkModelTest {
     fun setUp() {
         mockkStatic("com.tangem.common.ui.extensions.NetworkIconExtKt")
         polygon = network(networkName = "Polygon", networkRawId = "polygon")
-        notIssued = PaymentNetworkStatus.NotIssued(
-            network = polygon,
-            cryptoCurrencies = listOf(currency("USDC")),
-        )
+        notIssued = PaymentNetworkStatus.NotIssued(network = polygon)
         every { supplier.invoke(WALLET_ID) } returns statusFlow
     }
 
@@ -126,6 +123,7 @@ internal class PaymentChooseNetworkModelTest {
             val available = PaymentNetworkStatus.Available(
                 network = polygon,
                 depositAddress = "0xDEPOSIT",
+                chainId = 137L,
                 cryptoCurrencyStatuses = listOf(CryptoCurrencyStatus(currency = currency("USDC"), value = mockk())),
             )
             statusFlow.emit(paymentStatus(listOf(available)))
@@ -199,6 +197,7 @@ internal class PaymentChooseNetworkModelTest {
     private fun currency(symbol: String): CryptoCurrency.Token {
         val token: CryptoCurrency.Token = mockk()
         every { token.symbol } returns symbol
+        every { token.id } returns mockk { every { rawCurrencyId } returns CryptoCurrency.RawID(symbol) }
         return token
     }
 

@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted private val params: Unit,
+    @Assisted private val params: AddExistingWalletComponent.Params,
     private val stepperStateManager: AddExistingWalletStepperStateManager,
     addExistingWalletChildFactory: AddExistingWalletChildFactory,
     stepperComponentFactory: DefaultHotWalletStepperComponent.Factory,
@@ -83,6 +83,9 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : AddExistingWalletComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultAddExistingWalletComponent
+        override fun create(
+            context: AppComponentContext,
+            params: AddExistingWalletComponent.Params,
+        ): DefaultAddExistingWalletComponent
     }
 }

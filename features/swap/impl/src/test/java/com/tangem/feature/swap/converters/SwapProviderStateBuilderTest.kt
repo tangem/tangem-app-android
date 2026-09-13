@@ -216,6 +216,7 @@ internal class SwapProviderStateBuilderTest {
         val currency = mockk<CryptoCurrency.Coin> {
             every { this@mockk.symbol } returns symbol
             every { this@mockk.decimals } returns decimals
+            every { this@mockk.displayDecimals } returns decimals
         }
         val swapStatus = mockk<SwapCurrencyStatus> {
             every { this@mockk.currency } returns currency

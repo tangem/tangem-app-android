@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
 import androidx.compose.ui.text.SpanStyle
-import com.tangem.common.getTotalWithRewardsStakingBalance
+import com.tangem.common.getExtraBalanceOrNull
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -13,7 +13,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
@@ -66,10 +65,7 @@ internal class SetBalanceTransformer(
     }
 
     private fun buildLoadedContent(prev: TokenDetailsBalanceBlockUM): TokenDetailsBalanceBlockUM.Content {
-        val stakingCryptoAmount =
-            (status.value.stakingBalance as? StakingBalance.Data)?.getTotalWithRewardsStakingBalance(
-                status.currency.network.rawId,
-            )
+        val stakingCryptoAmount = status.getExtraBalanceOrNull()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
         val hasStaking = !stakingCryptoAmount.isNullOrZero()
 
