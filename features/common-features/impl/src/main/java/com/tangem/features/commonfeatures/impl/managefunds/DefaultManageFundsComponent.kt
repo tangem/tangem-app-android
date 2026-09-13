@@ -63,6 +63,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                     ManageFundsComponent.FlowType.AddFunds -> TokenActionsContext.AddFunds
                     ManageFundsComponent.FlowType.Transfer -> TokenActionsContext.Transfer
                 },
+                isRegionRestricted = params.isRegionRestricted,
             ),
         )
     }
