@@ -76,7 +76,7 @@ class AddCryptoPortfolioUseCase(
         icon: CryptoPortfolioIcon,
         derivationIndex: DerivationIndex,
     ): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+        return Account.Personal(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = accountName,
             icon = icon,

@@ -41,6 +41,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
@@ -55,6 +56,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.foryou.ForYouComponent
 import com.tangem.features.foryou.impl.R
+import com.tangem.features.foryou.impl.createLoadedValue
 import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
@@ -329,7 +331,7 @@ internal class ForYouModelTest {
         @Test
         fun `GIVEN multi-network asset clicked twice THEN isExpanded toggles back to false`() = runTest {
             // Arrange — a single-network row navigates instead of expanding, so use one asset spanning two
-            // networks (same rawCurrencyId, different networks) to exercise the expand/collapse toggle wiring
+            // networks (same symbol, different networks) to exercise the expand/collapse toggle wiring
             val onFirstNetwork = createCoin(
                 rawCurrencyId = "btc",
                 symbol = "BTC",
@@ -436,7 +438,12 @@ internal class ForYouModelTest {
                         createStatus(createCoin(rawCurrencyId = "eth", symbol = "eth"), loadedValue(BigDecimal("50"))),
                         createStatus(createCoin(rawCurrencyId = "btc", symbol = "BTC"), loadedValue(BigDecimal("100"))),
                         createStatus(
-                            createCoin(rawCurrencyId = "btc2", symbol = "BTC", networkRawId = "bitcoin-2"),
+                            createCoin(
+                                rawCurrencyId = "btc",
+                                symbol = "BTC",
+                                networkRawId = "bitcoin-2",
+                                idValue = "coin-btc-2",
+                            ),
                             loadedValue(BigDecimal("10")),
                         ),
                     ),
@@ -1138,19 +1145,19 @@ internal class ForYouModelTest {
     private fun loadedValue(
         fiatAmount: BigDecimal,
         source: StatusSource = StatusSource.ACTUAL,
-    ): CryptoCurrencyStatus.Loaded = mockk {
-        every { amount } returns BigDecimal.ONE
-        every { this@mockk.fiatAmount } returns fiatAmount
-        every { isError } returns false
-        every { sources } returns CryptoCurrencyStatus.Sources(
-            networkSource = source,
-            quoteSource = source,
-            stakingBalanceSource = source,
-        )
-        every { yieldSupplyStatus } returns null
-        every { stakingBalance } returns null
-    }
+        staking: StakingBalance? = null,
+    ): CryptoCurrencyStatus.Loaded = createLoadedValue(
+        amount = BigDecimal.ONE,
+        fiatAmount = fiatAmount,
+        staking = staking,
+        source = source,
+    )
 
+    /**
+     * A real [CryptoCurrency.Coin] rather than a mock: the portfolio-review converter rebuilds the asset
+     * row's head icon with `copy(iconUrl = ...)`, and a mock answers no generated member it was not
+     * stubbed with.
+     */
     private fun createCoin(
         rawCurrencyId: String,
         symbol: String,
@@ -1158,40 +1165,31 @@ internal class ForYouModelTest {
         networkRawId: String = rawCurrencyId,
         decimals: Int = 8,
         idValue: String = "coin-$rawCurrencyId",
-    ): CryptoCurrency.Coin {
-        val network = createNetwork(networkRawId)
-        val currencyId: CryptoCurrency.ID = mockk {
-            every { value } returns idValue
-            every { this@mockk.rawCurrencyId } returns CryptoCurrency.RawID(rawCurrencyId)
-        }
-        return mockk<CryptoCurrency.Coin> {
-            every { this@mockk.id } returns currencyId
-            every { this@mockk.symbol } returns symbol
-            every { this@mockk.name } returns name
-            every { this@mockk.network } returns network
-            every { this@mockk.decimals } returns decimals
-            every { isCustom } returns false
-            every { iconUrl } returns null
-        }
-    }
+    ): CryptoCurrency.Coin = CryptoCurrency.Coin(
+        id = createCurrencyId(idValue = idValue, rawCurrencyId = rawCurrencyId),
+        network = createNetwork(networkRawId),
+        name = name,
+        symbol = symbol,
+        decimals = decimals,
+        iconUrl = null,
+        isCustom = false,
+    )
 
     /** A token whose `yieldSupplyKey()` resolves to `"ethereum_0xabc"`. */
-    private fun createYieldToken(): CryptoCurrency.Token {
-        val network = createNetwork(networkRawId = "ethereum")
-        val currencyId: CryptoCurrency.ID = mockk {
-            every { value } returns "token-usdc"
-            every { rawCurrencyId } returns CryptoCurrency.RawID("usd-coin")
-        }
-        return mockk {
-            every { id } returns currencyId
-            every { symbol } returns "USDC"
-            every { name } returns "USD Coin"
-            every { this@mockk.network } returns network
-            every { decimals } returns 6
-            every { isCustom } returns false
-            every { iconUrl } returns null
-            every { contractAddress } returns "0xabc"
-        }
+    private fun createYieldToken(): CryptoCurrency.Token = CryptoCurrency.Token(
+        id = createCurrencyId(idValue = "token-usdc", rawCurrencyId = "usd-coin"),
+        network = createNetwork(networkRawId = "ethereum"),
+        name = "USD Coin",
+        symbol = "USDC",
+        decimals = 6,
+        iconUrl = null,
+        isCustom = false,
+        contractAddress = "0xabc",
+    )
+
+    private fun createCurrencyId(idValue: String, rawCurrencyId: String): CryptoCurrency.ID = mockk {
+        every { value } returns idValue
+        every { this@mockk.rawCurrencyId } returns CryptoCurrency.RawID(rawCurrencyId)
     }
 
     private fun createNetwork(networkRawId: String): Network {

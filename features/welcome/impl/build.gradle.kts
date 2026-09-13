@@ -17,9 +17,7 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
 
     /** Core */
-    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
-    implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
     implementation(projects.core.utils)
@@ -27,27 +25,21 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Domain models */
-    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.wallets.models)
 
     /** Domain */
-    implementation(projects.domain.appCurrency)
     implementation(projects.domain.wallets)
     implementation(projects.domain.card)
     implementation(projects.domain.settings)
+    implementation(projects.core.analytics.models)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     /** AndroidX */
-    implementation(deps.androidx.activity.compose)
 
     /** Compose */
-    implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.coil)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
@@ -58,7 +50,10 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.lifecycle.compose)
+    implementation(deps.lifecycle.runtime.ktx)
     implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain)
-    implementation(tangemDeps.hot.core)
+    api(projects.domain.common)
 }

@@ -4,10 +4,12 @@ import com.arkivanov.decompose.router.stack.*
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -18,8 +20,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.features.hotwallet.AddExistingWalletComponent
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
+import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
@@ -36,6 +40,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class AddExistingWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    paramsContainer: ParamsContainer,
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
@@ -44,15 +49,21 @@ internal class AddExistingWalletModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
+    private val params = paramsContainer.require<AddExistingWalletComponent.Params>()
+
     val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
+    val restoreCloudBackupModelCallbacks = RestoreCloudBackupModelCallbacks()
     val manualBackupCompletedModelCallbacks = ManualBackupCompletedModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
     val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
-    val startRoute = AddExistingWalletRoute.Import
+    val startRoute = when (params.mode) {
+        AppRoute.AddExistingWallet.Mode.RecoveryPhrase -> AddExistingWalletRoute.Import
+        AppRoute.AddExistingWallet.Mode.CloudRestore -> AddExistingWalletRoute.RestoreCloudBackup
+    }
     val currentRoute: MutableStateFlow<AddExistingWalletRoute> = MutableStateFlow(startRoute)
 
     private val analyticsSource = AnalyticsParam.ScreensSources.ImportWallet
@@ -69,6 +80,7 @@ internal class AddExistingWalletModel @Inject constructor(
     fun onChildBack() {
         when (currentRoute.value) {
             is AddExistingWalletRoute.Import -> router.pop()
+            is AddExistingWalletRoute.RestoreCloudBackup -> router.pop()
             is AddExistingWalletRoute.BackupCompleted -> Unit
             is AddExistingWalletRoute.SetAccessCode -> Unit
             is AddExistingWalletRoute.ConfirmAccessCode -> stackNavigation.pop()
@@ -139,8 +151,26 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class AddExistingWalletImportModelCallbacks : AddExistingWalletImportComponent.ModelCallbacks {
         override fun onWalletImported(userWalletId: UserWalletId) {
+            sendImportCompletedEvent(AnalyticsParam.BackupType.Manual)
             stackNavigation.replaceAll(AddExistingWalletRoute.BackupCompleted(userWalletId))
         }
+    }
+
+    inner class RestoreCloudBackupModelCallbacks : RestoreCloudBackupComponent.ModelCallbacks {
+        override fun onWalletImported(userWalletId: UserWalletId) {
+            sendImportCompletedEvent(AnalyticsParam.BackupType.Cloud)
+            stackNavigation.replaceAll(AddExistingWalletRoute.BackupCompleted(userWalletId))
+        }
+
+        override fun onBack() {
+            router.pop()
+        }
+    }
+
+    private fun sendImportCompletedEvent(backupType: AnalyticsParam.BackupType) {
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Backup.ImportCompletedScreenOpened(backupType = backupType),
+        )
     }
 
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {

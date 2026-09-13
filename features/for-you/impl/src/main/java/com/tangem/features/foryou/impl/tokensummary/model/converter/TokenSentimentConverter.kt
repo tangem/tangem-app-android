@@ -11,7 +11,9 @@ import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.formatAsDateTime
 import com.tangem.domain.markets.CoinIndicators
+import com.tangem.domain.markets.SentimentOutlook
 import com.tangem.domain.markets.findReading
+import com.tangem.domain.markets.sentimentOutlook
 import com.tangem.domain.markets.sentimentScaleMax
 import com.tangem.domain.markets.totalSentimentScore
 import com.tangem.features.foryou.impl.R
@@ -43,10 +45,9 @@ internal class TokenSentimentConverter(
         return if (readings.all { (_, reading) -> reading.value == null }) {
             TokenSentimentUM.Empty.NoOutlook(indicators = indicators.toImmutableList())
         } else {
-            val totalScore = value.totalSentimentScore(timeframe)
             TokenSentimentUM.Content(
-                sentiment = calculateSentiment(totalScore = totalScore),
-                totalScore = totalScore,
+                sentiment = calculateSentiment(outlook = value.sentimentOutlook(timeframe)),
+                totalScore = value.totalSentimentScore(timeframe),
                 scaleMax = value.sentimentScaleMax(timeframe),
                 lastUpdate = buildLastUpdate(readings),
                 indicators = indicators.toImmutableList(),
@@ -105,12 +106,12 @@ internal class TokenSentimentConverter(
         }
     }
 
-    private fun calculateSentiment(totalScore: Int): TextReference {
+    private fun calculateSentiment(outlook: SentimentOutlook): TextReference {
         return resourceReference(
-            when {
-                totalScore > 0 -> R.string.token_summary_positive_outlook_title
-                totalScore < 0 -> R.string.token_summary_negative_outlook_title
-                else -> R.string.token_summary_neutral_outlook_title
+            when (outlook) {
+                SentimentOutlook.POSITIVE -> R.string.token_summary_positive_outlook_title
+                SentimentOutlook.NEGATIVE -> R.string.token_summary_negative_outlook_title
+                SentimentOutlook.NEUTRAL -> R.string.token_summary_neutral_outlook_title
             },
         )
     }

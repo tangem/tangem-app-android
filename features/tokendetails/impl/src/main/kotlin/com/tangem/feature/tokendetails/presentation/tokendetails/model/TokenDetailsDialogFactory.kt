@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.tokendetails.impl.R
 import javax.inject.Inject
@@ -70,9 +69,5 @@ internal class TokenDetailsDialogFactory @Inject constructor(
 
     fun showError(text: TextReference) {
         uiMessageSender.send(DialogMessage(message = text))
-    }
-
-    fun showBackupError(onContactSupport: () -> Unit) {
-        uiMessageSender.send(Dialogs.backupErrorAddFundsDisabled(onContactSupport = onContactSupport))
     }
 }

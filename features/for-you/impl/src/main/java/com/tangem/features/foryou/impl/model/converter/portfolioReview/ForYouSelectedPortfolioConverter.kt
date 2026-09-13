@@ -1,5 +1,6 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.StatusSource
@@ -11,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
+import java.math.BigDecimal
 
 /**
  * Builds the [ForYouSelectedPortfolio] from every wallet's accounts, keeping only the accounts the user picked
@@ -32,26 +34,28 @@ internal class ForYouSelectedPortfolioConverter(
             .flatMap { it.accountStatuses }
             .filterCryptoPortfolio()
 
-        val accountCryptoCurrencyStatus = allAccounts
-            .filter { it.accountId in selectedAccounts }
-            .flatMap { accountStatus ->
-                accountStatus.flattenCurrencies().map { status ->
-                    AccountCryptoCurrencyStatus(account = accountStatus.account, status = status)
-                }
+        val pickedAccounts = allAccounts.filter { it.accountId in selectedAccounts }
+
+        val accountCryptoCurrencyStatus = pickedAccounts.flatMap { accountStatus ->
+            accountStatus.flattenCurrencies().map { status ->
+                AccountCryptoCurrencyStatus(account = accountStatus.account, status = status)
             }
+        }
 
         return ForYouSelectedPortfolio(
             accountCryptoCurrencyStatuses = accountCryptoCurrencyStatus,
+            selectedAccounts = pickedAccounts.map { it.account },
             totalAccountsCount = allAccounts.size,
-            totalFiatBalance = accountCryptoCurrencyStatus.toTotalFiatBalance(),
+            totalFiatBalance = accountCryptoCurrencyStatus.toTotalFiatBalance(hasSelection = pickedAccounts.any()),
         )
     }
 
-    private fun List<AccountCryptoCurrencyStatus>.toTotalFiatBalance(): TotalFiatBalance = when {
-        isEmpty() -> TotalFiatBalance.Failed
+    private fun List<AccountCryptoCurrencyStatus>.toTotalFiatBalance(hasSelection: Boolean): TotalFiatBalance = when {
+        !hasSelection -> TotalFiatBalance.Failed
+        isEmpty() -> TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL)
         all { it.status.value is CryptoCurrencyStatus.Loading } -> TotalFiatBalance.Loading
         else -> TotalFiatBalance.Loaded(
-            amount = sumOf { it.status.value.fiatAmount.orZero() },
+            amount = sumOf { it.status.getTotalFiatAmount().orZero() },
             source = map { it.status.value.sources.total }.worstSource(),
         )
     }

@@ -28,6 +28,7 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
@@ -249,7 +250,7 @@ class TokenItemStateConverter(
             val option = availability?.optionOrNull
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
-            val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
+            val stakingBalance = currencyStatus.value.stakingBalanceData
             val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
             val p2pEthPoolBalance = stakingBalance as? StakingBalance.Data.P2PEthPool
             val isActive = stakeKitBalance != null || p2pEthPoolBalance != null

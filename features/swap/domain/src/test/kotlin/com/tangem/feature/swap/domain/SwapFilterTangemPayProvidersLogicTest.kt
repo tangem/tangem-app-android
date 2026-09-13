@@ -93,7 +93,7 @@ internal class SwapFilterTangemPayProvidersLogicTest : SwapInteractorImplTestBas
         networkRawId = networkRawId,
         contractAddress = contractAddress,
         isCoin = isCoin,
-    ).copy(account = Account.CryptoPortfolio.createMainAccount(userWalletId))
+    ).copy(account = Account.Personal.createMainAccount(userWalletId))
 
     private fun mixedProviders() = listOf(
         buildSwapProvider(ExchangeProviderType.CEX, "cex-1"),

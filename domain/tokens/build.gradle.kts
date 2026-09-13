@@ -30,6 +30,7 @@ dependencies {
     api(projects.domain.express)
     api(projects.domain.legacy)
     api(projects.domain.networks)
+    api(projects.domain.polymarket)
     api(projects.domain.quotes)
     api(projects.domain.staking)
     api(projects.domain.stories)
@@ -49,6 +50,7 @@ dependencies {
 
     // region Features
     api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+    api(projects.features.polymarket.api) // POLYMARKET_ENABLED
     // endregion
 
     // region Libs
@@ -66,5 +68,6 @@ dependencies {
     // region Tests
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(deps.kotlin.datetime)
     // endregion
 }

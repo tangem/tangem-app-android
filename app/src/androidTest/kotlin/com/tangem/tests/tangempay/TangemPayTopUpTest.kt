@@ -8,8 +8,6 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.*
@@ -44,20 +42,12 @@ class TangemPayTopUpTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(bitcoinScenario, bitcoinBalanceState)
                 setWireMockScenarioState(expressAssetsScenario, expressAssetsState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyInitialState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(bitcoinScenario)
-                resetWireMockScenarioState(expressAssetsScenario)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             openTangemPay()
             step("Assert initial balance contains '10'") {
@@ -76,18 +66,15 @@ class TangemPayTopUpTest : BaseTestCase() {
             step("Click on 'Close' button on Swap stories") {
                 onSwapStoriesScreen { closeButton.performClick() }
             }
-            step("Assert 'Swap' screen is displayed (USDC pre-filled as destination)") {
-                onSwapTokenScreen { title.assertIsDisplayed() }
+            step("Assert 'Add funds' screen is displayed (USDC pre-filled as destination)") {
+                onSwapTokenScreen { addFundsTitle.assertIsDisplayed() }
             }
-            step("Click on 'Choose token' button (from)") {
-                onSwapTokenScreen { chooseTokenButton.clickWithAssertion() }
-            }
-            step("Click on 'Main account'") {
-                onSwapSelectTokenScreen { tokenWithName("Main account").clickWithAssertion() }
-            }
-            step("Click on token 'Bitcoin'") {
-                waitForIdle()
-                onSwapSelectTokenScreen { tokenWithName("Bitcoin").clickWithAssertion() }
+            // A multichain account auto-fills FROM with the wallet's most-funded token (Bitcoin here),
+            // so there is nothing to pick — assert the pre-selection instead.
+            step("Assert 'Bitcoin' is pre-selected as the source token") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { swapTokenSymbol("BTC").assertIsDisplayed() }
+                }
             }
             step("Enter swap amount '$swapFromAmount'") {
                 onSwapTokenScreen {

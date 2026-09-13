@@ -5,10 +5,10 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.addressbook.store.AddressBookBlobStore
 import com.tangem.data.common.cache.etag.ETagsStore
-import com.tangem.datasource.api.addressbook.AddressBookApi
-import com.tangem.datasource.api.addressbook.models.SyncAddressBooksRequest
-import com.tangem.datasource.api.addressbook.models.SyncAddressBooksResponse
-import com.tangem.datasource.api.addressbook.models.UpdateAddressBookResponse
+import com.tangem.store.datasource.addressbook.AddressBookApi
+import com.tangem.store.datasource.addressbook.models.SyncAddressBooksRequest
+import com.tangem.store.datasource.addressbook.models.SyncAddressBooksResponse
+import com.tangem.store.datasource.addressbook.models.UpdateAddressBookResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.addressbook.crypto.AddressBookCipher
@@ -448,7 +448,7 @@ internal class DefaultAddressBookRepositoryTest {
             every { cipher.decrypt(storedBlob, userWallet) } returns AddressBook(emptyList()).right()
             every { cipher.encrypt(any(), userWallet, any()) } returns createBlob().right()
             coEvery { blobStore.storeBlob(any()) } returns Unit
-            val bodySlot = slot<com.tangem.datasource.api.addressbook.models.UpdateAddressBookRequest>()
+            val bodySlot = slot<com.tangem.store.datasource.addressbook.models.UpdateAddressBookRequest>()
             coEvery {
                 addressBookApi.updateAddressBook(WALLET_A, any(), capture(bodySlot))
             } returns successPutResponse()

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.core.ui.components.SpacerH
@@ -23,12 +24,23 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 
-fun LazyListScope.tokenSelectorSectionItems(sections: ImmutableList<TokenSelectorSectionUM>) {
+/**
+ * @param walletHeaderHorizontalPadding inset of the wallet-name row. Defaults to the bottom sheet's own
+ * inset; a host that already pads its list to the row width passes `0.dp` so the name lines up with the
+ * cards below it.
+ */
+fun LazyListScope.tokenSelectorSectionItems(
+    sections: ImmutableList<TokenSelectorSectionUM>,
+    walletHeaderHorizontalPadding: Dp? = null,
+) {
     sections.forEachIndexed { index, section ->
         when (section) {
             is TokenSelectorSectionUM.WalletHeader -> {
                 item(key = "wallet_${section.walletName}_$index") {
-                    WalletHeaderSection(section)
+                    WalletHeaderSection(
+                        section = section,
+                        horizontalPadding = walletHeaderHorizontalPadding ?: TangemTheme.dimens2.x3,
+                    )
                 }
             }
             is TokenSelectorSectionUM.TokenGroup -> {
@@ -76,22 +88,32 @@ fun LazyListScope.tokenSelectorSectionItems(sections: ImmutableList<TokenSelecto
     }
 }
 
+/**
+ * Groups consecutive rows into one rounded card: the first row rounds its top, the last its bottom, and
+ * the rows between stay square, so a run of rows reads as a single block.
+ *
+ * Public so that lists outside the token selector — the crypto search screen's market block, for
+ * instance — can carry the same block treatment instead of re-declaring the radius and colour.
+ *
+ * @param currentIndex position of this row inside its group
+ * @param lastIndex index of the group's last row; equal to [currentIndex] for a single-row group, which
+ * rounds every corner
+ */
 @Composable
-private fun Modifier.tokenGroupRowDecoration(currentIndex: Int, lastIndex: Int): Modifier =
-    this.roundedShapeItemDecoration(
-        currentIndex = currentIndex,
-        lastIndex = lastIndex,
-        addDefaultPadding = false,
-        radius = TangemTheme.dimens2.x6,
-        backgroundColor = TangemTheme.colors2.surface.level3,
-    )
+fun Modifier.tokenGroupRowDecoration(currentIndex: Int, lastIndex: Int): Modifier = this.roundedShapeItemDecoration(
+    currentIndex = currentIndex,
+    lastIndex = lastIndex,
+    addDefaultPadding = false,
+    radius = TangemTheme.dimens2.x6,
+    backgroundColor = TangemTheme.colors2.surface.level3,
+)
 
 @Composable
-private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader) {
+private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader, horizontalPadding: Dp) {
     Row(
         modifier = Modifier
             .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2)
-            .padding(horizontal = TangemTheme.dimens2.x3),
+            .padding(horizontal = horizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
     ) {

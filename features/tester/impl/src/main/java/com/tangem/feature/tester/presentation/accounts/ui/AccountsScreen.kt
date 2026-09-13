@@ -1,6 +1,7 @@
 package com.tangem.feature.tester.presentation.accounts.ui
 
 import androidx.activity.compose.BackHandler
+import com.tangem.domain.models.account.derivationIndex
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -183,7 +184,7 @@ private fun AccountList(
             itemsIndexed(content.accounts) { index, account ->
                 val accountName = account.accountName.toUM().value.resolveReference()
                 Text(
-                    text = "$accountName [#${account.derivationIndex.value}]",
+                    text = "$accountName [#${account.derivationIndex?.value ?: "joint"}]",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 12.dp),

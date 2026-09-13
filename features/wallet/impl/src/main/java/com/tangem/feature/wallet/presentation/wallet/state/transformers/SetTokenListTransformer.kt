@@ -13,6 +13,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createWalletActionButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import com.tangem.utils.logging.TangemLogger
@@ -28,19 +29,23 @@ internal class SetTokenListTransformer(
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
-    private val isMultipleCardsEnabled: Boolean,
-    private val isPolymarketEnabled: Boolean,
+    private val isAccountMultichainEnabled: Boolean,
+    private val isHotBackedUp: Boolean? = null,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
         TangemPayMainBlockConverter(
             tangemPayClickIntents = clickIntents,
-            isMultipleCardsEnabled = isMultipleCardsEnabled,
+            isAccountMultichainEnabled = isAccountMultichainEnabled,
         )
     }
 
     private val virtualAccountConverter by lazy {
         VirtualAccountMainBlockConverter()
+    }
+
+    private val polymarketConverter by lazy {
+        PolymarketWalletBlockConverter(appCurrency = appCurrency, clickIntents = clickIntents)
     }
 
     override fun transform(prevState: WalletState): WalletState {
@@ -51,6 +56,7 @@ internal class SetTokenListTransformer(
                     tokensListState = prevState.tokensListState.toLoadedState(),
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
                     virtualAccountMainUM = prevState.virtualAccountMainUM.toLoadedVirtualState(),
+                    polymarketWalletBlockUM = predictionBlockState(),
                     buttons = prevState.enableButtons(),
                 )
             }
@@ -76,6 +82,7 @@ internal class SetTokenListTransformer(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
                     virtualAccountMainUM = walletUM.virtualAccountMainUM.toLoadedVirtualState(),
+                    polymarketWalletBlockUM = predictionBlockState(),
                     tokensListUM = tokensListUM,
                     areActionsAvailable = areActionsAvailable,
                     buttons = createWalletActionButtons(
@@ -111,6 +118,7 @@ internal class SetTokenListTransformer(
             fiatBalance = fiatBalance,
             selectedWallet = userWallet,
             appCurrency = appCurrency,
+            isHotBackedUp = isHotBackedUp,
         ).convert(value = this)
     }
 
@@ -159,6 +167,17 @@ internal class SetTokenListTransformer(
         return virtualAccountConverter.convert(virtualAccountStatus)
     }
 
+    private fun predictionBlockState(): PolymarketWalletBlockUM {
+        val predictionAccountStatus = when (params) {
+            is TokenConverterParams.Account -> params.accountList.accountStatuses
+                .filterIsInstance<AccountStatus.Prediction>()
+                .firstOrNull()
+            is TokenConverterParams.Wallet -> return PolymarketWalletBlockUM.Hidden
+        } ?: return PolymarketWalletBlockUM.Hidden
+
+        return polymarketConverter.convert(predictionAccountStatus)
+    }
+
     private fun toLoadedState(): WalletTokensListUM {
         if (params !is TokenConverterParams.Account) {
             return WalletTokensListUM.Empty(
@@ -177,7 +196,6 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
-            isPolymarketEnabled = isPolymarketEnabled,
         ).convert(value = params.accountList)
     }
 }

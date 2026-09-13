@@ -80,7 +80,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                 val button = PortfolioSelectorButtonUM(
                     text = resourceReference(R.string.common_apply),
                     onClick = { onApplyClick() },
-                    isEnabled = selectedAccount.isNotEmpty(),
+                    isEnabled = true,
                 )
                 state.value = PortfolioSelectorUM(
                     title = title,
@@ -260,12 +260,14 @@ internal class PortfolioSelectorModel @Inject constructor(
             innerSelectedAccounts.update { selected ->
                 val isAllSelected = if (isAccountMode) {
                     portfolio.accountsBalance.accountStatuses
+                        .filterCryptoPortfolio()
                         .all { accountStatus -> accountStatus.account.accountId in selected }
                 } else {
                     portfolio.accountsBalance.mainAccount.account.accountId in selected
                 }
                 val walletAccounts = if (isAccountMode) {
                     portfolio.accountsBalance.accountStatuses
+                        .filterCryptoPortfolio()
                         .mapTo(mutableSetOf()) { it.account.accountId }
                 } else {
                     mutableSetOf(portfolio.accountsBalance.mainAccount.account.accountId)

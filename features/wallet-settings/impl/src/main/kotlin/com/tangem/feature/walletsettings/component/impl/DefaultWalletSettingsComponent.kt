@@ -22,11 +22,12 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.requestPermission
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.feature.walletsettings.component.NetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
-import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
+import com.tangem.feature.walletsettings.entity.WalletSettingsBSConfig
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.model.WalletSettingsModel
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
@@ -47,6 +48,7 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
     @Assisted private val params: WalletSettingsComponent.Params,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val networksAvailableForNotificationsComponent: NetworksAvailableForNotificationsComponent.Factory,
+    private val addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
     private val accountTokenMigrationStore: AccountTokenMigrationStore,
 ) : WalletSettingsComponent, AppComponentContext by context {
 
@@ -120,16 +122,29 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
         }
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun bottomSheetChild(
-        config: NetworksAvailableForNotificationBSConfig,
+        config: WalletSettingsBSConfig,
         componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = networksAvailableForNotificationsComponent.create(
-        context = childByContext(componentContext),
-        params = NetworksAvailableForNotificationsComponent.Params(
-            onDismiss = model.bottomSheetNavigation::dismiss,
-        ),
-    )
+    ): ComposableBottomSheetComponent = when (config) {
+        is WalletSettingsBSConfig.NetworksAvailableForNotifications -> {
+            networksAvailableForNotificationsComponent.create(
+                context = childByContext(componentContext),
+                params = NetworksAvailableForNotificationsComponent.Params(
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                ),
+            )
+        }
+        is WalletSettingsBSConfig.AddAccountType -> {
+            addAccountTypeComponentFactory.create(
+                context = childByContext(componentContext),
+                params = AddAccountTypeComponent.Params(
+                    onCryptoAccountClick = model::onAddCryptoAccountClick,
+                    onJointAccountClick = model::onAddJointAccountClick,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                ),
+            )
+        }
+    }
 
     private fun showMigrationAlertIfNeeded() {
         accountTokenMigrationStore.get(params.userWalletId)

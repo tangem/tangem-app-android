@@ -12,6 +12,7 @@ import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
+import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.Provider
@@ -26,8 +27,7 @@ internal class RewardsValidatorStateConverter(
 ) : Converter<Unit, StakingStates.RewardsValidatorsState> {
 
     override fun convert(value: Unit): StakingStates.RewardsValidatorsState {
-        val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
-        return when (stakingBalance) {
+        return when (val stakingBalance = cryptoCurrencyStatus.value.stakingBalanceData) {
             is StakingBalance.Data.StakeKit -> {
                 val balances = stakingBalance.balance.items
                 StakingStates.RewardsValidatorsState.Data(

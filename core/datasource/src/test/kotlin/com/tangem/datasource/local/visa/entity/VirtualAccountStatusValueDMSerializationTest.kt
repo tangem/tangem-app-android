@@ -17,7 +17,9 @@ import java.math.BigDecimal
 class VirtualAccountStatusValueDMSerializationTest {
 
     @OptIn(ExperimentalStdlibApi::class)
-    private val adapter = MoshiModule().provideNetworkMoshi().adapter<VirtualAccountStatusValueDM>()
+    private val adapter = MoshiModule()
+        .provideNetworkMoshi(configurers = emptySet())
+        .adapter<VirtualAccountStatusValueDM>()
 
     @Test
     fun `round-trip NotCreated`() {

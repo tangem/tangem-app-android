@@ -1,6 +1,6 @@
 package com.tangem.data.transaction.convertes
 
-import com.tangem.datasource.api.gasless.models.GaslessSignedTransactionResultDTO
+import com.tangem.grow.datasource.gasless.models.GaslessSignedTransactionResultDTO
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.utils.converter.Converter
 
