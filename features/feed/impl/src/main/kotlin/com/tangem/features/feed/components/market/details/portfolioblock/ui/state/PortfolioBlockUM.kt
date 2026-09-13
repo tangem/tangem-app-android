@@ -21,9 +21,8 @@ internal sealed interface PortfolioBlockUM {
         val tokenName: String,
         val tokenSymbol: String,
         val isBalanceHidden: Boolean,
-        /** `null` leaves the row inert — a region-restricted asset must expose no route to trading it. */
-        val onRowClick: (() -> Unit)?,
-        val onAddFundsClick: (() -> Unit)?,
+        val onRowClick: () -> Unit,
+        val onAddFundsClick: () -> Unit,
     ) : PortfolioBlockUM
 
     data class Unsupported(
