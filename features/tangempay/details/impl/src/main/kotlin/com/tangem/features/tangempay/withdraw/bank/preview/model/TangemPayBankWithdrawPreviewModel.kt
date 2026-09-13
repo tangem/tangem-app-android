@@ -8,7 +8,11 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
+import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
+import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
+import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -18,6 +22,8 @@ import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdraw
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUMFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +35,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
@@ -37,6 +44,9 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val createBankOfframpOrderUseCase: CreateBankOfframpOrderUseCase,
+    private val awaitBankOfframpSignatureUseCase: AwaitBankOfframpSignatureUseCase,
+    private val signBankOfframpOrderUseCase: SignBankOfframpOrderUseCase,
+    private val cancelBankOfframpOrderUseCase: CancelBankOfframpOrderUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
@@ -46,12 +56,14 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             onBackClick = ::onBackClick,
             onCloseClick = ::onCloseClick,
             onSendClick = ::send,
-            onRetryClick = ::send,
+            onRetryClick = ::onRetryClick,
             onEditClick = ::onEditClick,
         ),
     )
 
     private val state = MutableStateFlow(PreviewState())
+
+    private val sendJobHolder = JobHolder()
 
     /**
      * Generated on the first Send and kept while Retry is offered, so a retry can never create a second order.
@@ -73,42 +85,91 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         if (state.value.isSending) return
         val request = params.draft.value.toOrderRequest() ?: return
         val key = idempotencyKey ?: UUID.randomUUID().toString().also { idempotencyKey = it }
-        state.update { it.copy(isSending = true, failure = null) }
+        state.update { it.copy(send = SendState.CreatingOrder, failure = null, resumableOrderId = null) }
         modelScope.launch {
             createBankOfframpOrderUseCase(userWalletId = params.userWalletId, request = request, idempotencyKey = key)
-                .fold(ifLeft = ::onSendFailed, ifRight = ::onOrderCreated)
-        }
+                .fold(ifLeft = ::onSendFailed, ifRight = { result -> onOrderCreated(result) })
+        }.saveIn(sendJobHolder)
     }
 
-    /** The screen keeps its sending state: the wizard takes over from here with the order processing. */
-    private fun onOrderCreated(result: BankOfframpOrderResult) {
+    private suspend fun onOrderCreated(result: BankOfframpOrderResult) {
         idempotencyKey = null
         params.onOrderCreated(result)
+        awaitSignature(orderId = result.orderId)
+    }
+
+    /** The backend prepares the transfer before it asks for a signature, so the order is polled until it does. */
+    private suspend fun awaitSignature(orderId: String) {
+        state.update { it.copy(send = SendState.AwaitingSignature(orderId), failure = null, resumableOrderId = null) }
+        awaitBankOfframpSignatureUseCase(userWalletId = params.userWalletId, orderId = orderId).fold(
+            ifLeft = { error -> onOrderFailed(error = error, orderId = orderId) },
+            ifRight = { payloadHash -> sign(orderId = orderId, payloadHash = payloadHash) },
+        )
+    }
+
+    private suspend fun sign(orderId: String, payloadHash: String) {
+        state.update { it.copy(send = SendState.Signing(orderId)) }
+        signBankOfframpOrderUseCase(
+            userWalletId = params.userWalletId,
+            orderId = orderId,
+            payloadHash = payloadHash,
+        ).fold(
+            ifLeft = { error -> onOrderFailed(error = error, orderId = orderId) },
+            ifRight = { result ->
+                when (result) {
+                    BankOfframpSignResult.Signed -> onOrderSigned()
+                    BankOfframpSignResult.Cancelled -> onSignatureCancelled(orderId = orderId)
+                }
+            },
+        )
+    }
+
+    private fun onOrderSigned() {
+        state.update { it.copy(send = SendState.Idle) }
+        params.onOrderSigned()
+    }
+
+    /** Aborting the card prompt abandons the transfer, so the order is cancelled and the summary becomes editable. */
+    private suspend fun onSignatureCancelled(orderId: String) {
+        cancelBankOfframpOrderUseCase(userWalletId = params.userWalletId, orderId = orderId).onLeft { error ->
+            TangemLogger.withTag(TAG).e("Failed to cancel bank withdraw order $orderId: $error")
+        }
+        state.update { it.copy(send = SendState.Idle, failure = null, resumableOrderId = null) }
     }
 
     private fun onSendFailed(error: BankOfframpError) {
         TangemLogger.withTag(TAG).e("Bank withdraw order creation failed: $error")
-        return when (error) {
-            BankOfframpError.WithdrawalInProgress -> {
-                idempotencyKey = null
-                state.update { it.copy(isSending = false) }
-                val message = TangemPayMessagesFactory.createErrorMessage(
-                    errorType = TangemPayDetailsErrorType.WithdrawInProgress,
-                )
-                uiMessageSender.send(message)
-            }
-            BankOfframpError.RecipientRegionUnsupported -> fail(PreviewFailure.RecipientRegion)
-            BankOfframpError.SenderRegionUnsupported -> fail(PreviewFailure.SenderRegion)
-            BankOfframpError.BusinessUnsupported -> fail(PreviewFailure.Business)
-            BankOfframpError.Validation,
-            BankOfframpError.PollingTimeout,
-            is BankOfframpError.Unknown,
-            -> fail(PreviewFailure.General)
+        if (error == BankOfframpError.WithdrawalInProgress) {
+            idempotencyKey = null
+            state.update { it.copy(send = SendState.Idle) }
+            uiMessageSender.send(
+                TangemPayMessagesFactory.createErrorMessage(errorType = TangemPayDetailsErrorType.WithdrawInProgress),
+            )
+            return
         }
+        fail(failure = error.toFailure(), resumableOrderId = null)
     }
 
-    private fun fail(failure: PreviewFailure) {
-        state.update { it.copy(isSending = false, failure = failure) }
+    /**
+     * The order already exists here: only a timeout leaves it alive, so only then may Retry resume it. Anything
+     * else means the backend gave up on this order and a retry has to create a new one.
+     */
+    private fun onOrderFailed(error: BankOfframpError, orderId: String) {
+        TangemLogger.withTag(TAG).e("Bank withdraw order $orderId failed: $error")
+        fail(
+            failure = error.toFailure(),
+            resumableOrderId = orderId.takeIf { error == BankOfframpError.PollingTimeout },
+        )
+    }
+
+    private fun fail(failure: PreviewFailure, resumableOrderId: String?) {
+        state.update { it.copy(send = SendState.Idle, failure = failure, resumableOrderId = resumableOrderId) }
+    }
+
+    private fun onRetryClick() {
+        if (state.value.isSending) return
+        val orderId = state.value.resumableOrderId ?: return send()
+        modelScope.launch { awaitSignature(orderId = orderId) }.saveIn(sendJobHolder)
     }
 
     private fun onBackClick() {
@@ -125,6 +186,17 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         if (state.value.isSending) return
         router.push(TangemPayBankWithdrawInnerRoute.Edit(target))
     }
+}
+
+private fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
+    BankOfframpError.RecipientRegionUnsupported -> PreviewFailure.RecipientRegion
+    BankOfframpError.SenderRegionUnsupported -> PreviewFailure.SenderRegion
+    BankOfframpError.BusinessUnsupported -> PreviewFailure.Business
+    BankOfframpError.Validation,
+    BankOfframpError.PollingTimeout,
+    BankOfframpError.WithdrawalInProgress,
+    is BankOfframpError.Unknown,
+    -> PreviewFailure.General
 }
 
 private const val TAG = "TangemPayBankWithdrawPreviewModel"
