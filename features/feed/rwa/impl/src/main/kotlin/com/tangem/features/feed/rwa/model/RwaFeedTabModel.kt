@@ -8,9 +8,14 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
@@ -24,7 +29,9 @@ import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.RwaCategoryNames
 import com.tangem.features.feed.rwa.categories.RwaDefaultCategory
+import com.tangem.features.feed.rwa.categories.RwaRegionRestriction
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent
+import com.tangem.features.feed.rwa.model.analytics.RwaAnalyticsEvent
 import com.tangem.features.feed.rwa.model.list.RwaBatchFlowManager
 import com.tangem.features.feed.rwa.model.list.RwaFeaturedAssetsManager
 import com.tangem.features.feed.rwa.model.list.RwaInterval
@@ -200,6 +207,7 @@ internal class RwaFeedTabModel @Inject constructor(
             onVisibleItemsChange = { ids -> visibleItemIds.value = ids.map(CryptoCurrency::RawID) },
             list = RwaListUM.Loading,
             appliedSelection = request.selection,
+            regionRestriction = null,
         )
     }
 
@@ -229,6 +237,9 @@ internal class RwaFeedTabModel @Inject constructor(
             categoriesState.update { it.copy(featuredCategoryId = featured.id) }
             reloadFeatured()
         }
+
+        categoriesState.update { it.copy(restrictedCategoryIds = RwaRegionRestriction.restrictedIds(categories)) }
+        applyRegionRestriction(selection = uiState.value.appliedSelection)
 
         val umbrella = categories.firstOrNull { it.code == ReservedCategoryCodes.REAL_WORLD_ASSETS }
 
@@ -388,10 +399,49 @@ internal class RwaFeedTabModel @Inject constructor(
                 categoryId = selection.category?.code ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
             ),
         )
-        uiState.update {
-            it.copy(appliedSelection = selection, categoriesFilter = categoriesFilterItem(selection = selection))
+        uiState.update { state ->
+            state.copy(
+                appliedSelection = selection,
+                categoriesFilter = categoriesFilterItem(selection = selection),
+            )
         }
+        applyRegionRestriction(selection = selection)
         reloadList()
+    }
+
+    /** The notice only ever accompanies a picked category, which the analytics event reports by name. */
+    private fun applyRegionRestriction(selection: CategorySelection) {
+        val banner = regionRestrictionBanner(selection)
+        uiState.update { it.copy(regionRestriction = banner) }
+
+        val category = selection.category ?: return
+
+        if (banner != null) {
+            analyticsEventHandler.send(RwaAnalyticsEvent.RegionNotSupportedNotification(category.displayName))
+        }
+    }
+
+    /**
+     * The copy is fixed: the backend returns a per-category `restricted` flag and never the countries
+     * behind it, so neither the blocked categories nor the regions can be named from data.
+     */
+    private fun regionRestrictionBanner(selection: CategorySelection): TangemMessageBanner.State? {
+        val isRestricted = RwaRegionRestriction.isRestricted(
+            restrictedIds = categoriesState.value.restrictedCategoryIds,
+            selection = selection,
+        )
+
+        if (!isRestricted) return null
+
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.markets_real_assets_region_restriction_title),
+            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+        )
     }
 
     private fun CoroutineScope.loadQuotesWithTimer(timeMillis: Long) {
@@ -415,5 +465,6 @@ internal class RwaFeedTabModel @Inject constructor(
         val isFailed: Boolean = false,
         val isDefaultApplied: Boolean = false,
         val country: String? = null,
+        val restrictedCategoryIds: Set<String> = emptySet(),
     )
 }
