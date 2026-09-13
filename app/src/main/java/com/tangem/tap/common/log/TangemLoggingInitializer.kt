@@ -18,6 +18,7 @@ import com.tangem.utils.JsonStringValuesExtractor
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import kotlinx.serialization.json.Json
+import okhttp3.Interceptor
 
 /**
  * Owns all app-startup wiring of the logging subsystem in a single place:
@@ -64,14 +65,11 @@ class TangemLoggingInitializer(
     fun initSdkLogging(application: Application) {
         Log.addLogger(logger = tangemSdkLogger)
 
-        if (!LogConfig.network.isBlockchainSdkNetworkLogEnabled) return
-
         BlockchainSdkRetrofitBuilder.interceptors = buildList {
             if (BuildConfig.MOCK_DATA_SOURCE) {
                 add(WireMockRedirectInterceptor())
             }
-            add(createNetworkLoggingInterceptor())
-            add(ChuckerInterceptor(application))
+            addAll(consoleLoggingInterceptors(application))
             add(
                 NetworkLogsSaveInterceptor(
                     appLogsStore = appLogsStore,
@@ -86,11 +84,21 @@ class TangemLoggingInitializer(
                 if (BuildConfig.MOCK_DATA_SOURCE) {
                     add(WireMockRedirectInterceptor())
                 }
-                add(createNetworkLoggingInterceptor())
-                add(ChuckerInterceptor(application))
+                addAll(consoleLoggingInterceptors(application))
                 add(NetworkLogsSaveInterceptor(appLogsStore))
             }.toTypedArray(),
         )
+    }
+
+    /**
+     * Logcat and Chucker output, unlike [NetworkLogsSaveInterceptor], never reaches the exported log
+     * file, so it stays limited to builds that can actually show it.
+     */
+    private fun consoleLoggingInterceptors(application: Application): List<Interceptor> = buildList {
+        if (LogConfig.network.isBlockchainSdkNetworkLogEnabled) {
+            add(createNetworkLoggingInterceptor())
+            add(ChuckerInterceptor(application))
+        }
     }
 
     private fun createBlockchainSensitiveUrlMasker(): SensitiveUrlMasker {

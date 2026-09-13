@@ -30,7 +30,9 @@ dependencies {
     // endregion
 
     // region Other libraries
+    implementation(deps.retrofit)
     implementation(deps.moshi)
+    implementation(deps.moshi.adapters)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
@@ -53,6 +55,10 @@ dependencies {
     api(projects.core.configToggles)
     api(projects.core.datasource)
     implementation(projects.core.utils)
+    // endregion
+
+    // region Store modules
+    implementation(projects.store.datasource.api)
     // endregion
 
     // region Domain models

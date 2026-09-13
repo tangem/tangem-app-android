@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.model
 
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -23,6 +24,11 @@ data class SwapProcessDataState(
     val selectedPairProviders: List<SwapProvider> = emptyList(),
     val selectedProvider: SwapProvider? = null,
     val lastLoadedSwapStates: Map<SwapProvider, SwapState> = emptyMap(),
+
+    /**
+     * Approval types the user picked, keyed by spender address e.i. per provider.
+     */
+    val selectedApproveTypes: Map<String, ApproveType> = emptyMap(),
     val currentTransferState: SwapState.Transfer? = null,
 
     // Amount from input

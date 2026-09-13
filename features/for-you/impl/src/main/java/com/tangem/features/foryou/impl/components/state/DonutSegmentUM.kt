@@ -6,6 +6,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.TangemColorPalette
 import java.math.BigDecimal
 
 /**
@@ -15,8 +16,13 @@ import java.math.BigDecimal
  *   contiguously; whatever is left after `sum(weight)` shows through as the track.
  *   For a portfolio where slices sum to 1f the ring fills completely and no track is visible.
  *   Also doubles as the slice's share for the selection tooltip (rendered as `weight * 100%`).
+ *   A producer that wants the remainder to be selectable closes the ring itself with a trailing [Grey]
+ *   slice weighted at the exact complement, instead of leaving the track to show through — the track is
+ *   not hit-testable, a slice is, and a slice reads at its true share rather than as bare background.
  * @param color Palette entry for the slice's solid fill. Assigned by the producer in segment order, so the
- *   slice's colour follows its rank; [DonutChart] resolves it to a themed [Color] in composition.
+ *   slice's colour follows its rank; [DonutChart] resolves it to a themed [Color] in composition. Every
+ *   entry, [Grey] included, is opaque: the chart re-draws the last slice's round cap over slice 0 to close
+ *   the wrap seam, and a translucent slice there would read as a darkened slice 0 rather than as itself.
  * @param title Human-readable name of the asset this slice represents (e.g. `"Ethereum"`). Shown in the
  *   selection tooltip. Empty by default for slices that don't need a label.
  * @param fiatValue Pre-formatted fiat value of the slice (e.g. `"$5,720.22"`). Shown in the selection
@@ -33,9 +39,17 @@ internal data class DonutSegmentUM(
 
 internal enum class DonutSegmentColor {
     Blue,
-    Violet,
-    Red,
     Green,
+    Yellow,
+    Red,
+    Violet,
+    Orange,
+    BlueLight,
+    GreenLight,
+    YellowLight,
+    RedLight,
+    VioletLight,
+    OrangeLight,
     Grey,
     ;
 
@@ -43,11 +57,19 @@ internal enum class DonutSegmentColor {
     @Composable
     fun getColor(): Color {
         return when (this) {
-            Blue -> TangemTheme.colors3.bg.accent.blue
-            Violet -> TangemTheme.colors3.bg.accent.violet
-            Red -> TangemTheme.colors3.bg.accent.red
-            Green -> TangemTheme.colors3.bg.accent.green
-            Grey -> TangemTheme.colors3.bg.accent.neutral
+            Blue -> TangemTheme.colors3.border.brand
+            Green -> TangemTheme.colors3.icon.accent.green
+            Yellow -> TangemTheme.colors3.icon.accent.yellow
+            Red -> TangemTheme.colors3.icon.accent.red
+            Violet -> TangemTheme.colors3.icon.accent.violet
+            Orange -> TangemTheme.colors3.icon.accent.orange
+            BlueLight -> TangemColorPalette.Blue.`30`
+            GreenLight -> TangemColorPalette.Green.`30`
+            YellowLight -> TangemColorPalette.Yellow.`30`
+            RedLight -> TangemColorPalette.Red.`30`
+            VioletLight -> TangemColorPalette.Violet.`30`
+            OrangeLight -> TangemColorPalette.Orange.`30`
+            Grey -> TangemTheme.colors3.border.accent.neutral
         }
     }
 }

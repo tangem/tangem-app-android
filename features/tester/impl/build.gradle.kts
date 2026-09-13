@@ -16,6 +16,7 @@ dependencies {
     implementation(deps.androidx.activity)
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.annotation)
+    implementation(deps.androidx.appCompat)
     implementation(deps.androidx.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.lifecycle.runtime.ktx)
@@ -26,7 +27,6 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.reorderable)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
@@ -60,18 +60,25 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     api(deps.kotlin.serialization)
     implementation(deps.arrow.core)
+    implementation(deps.decompose)
     implementation(deps.haze)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.datastore.core)
+    implementation(deps.kotlin.datetime)
 
     /** Core modules */
     api(projects.core.configToggles)
     api(projects.core.datasource)
+    implementation(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.pagination)
+    implementation(projects.grow.datasource)
 
     /** Feature Apis */
+    api(projects.features.storiesV2.api)
     api(projects.features.survey.api)
     api(projects.features.tester.api)
     implementation(projects.features.pushNotifications.api)
@@ -88,4 +95,5 @@ dependencies {
     implementation(projects.libs.auth)
     implementation(projects.libs.crypto)
     implementation(projects.libs.tangemSdkApi)
+    implementation(projects.domain.staking)
 }

@@ -1,5 +1,21 @@
 [
     {
+        "name": "TWI_1741_TOP_UP_WARNING_ENABLED",
+        "version": "6.3"
+    },
+    {
+        "name": "AND_16115_OTEL_METRICS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1636_SWAP_DEEPLINK_ENABLED",
+        "version": "6.3"
+    },
+    {
         "name": "AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES",
         "version": "undefined"
     },
@@ -28,6 +44,14 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1749_XRP_TX_HISTORY_ENABLED",
+        "version": "6.3"
+    },
+    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
@@ -40,7 +64,7 @@
         "version": "6.1"
     },
     {
-        "name": "AND_15632_GASLESS_YIELD_WITHDRAW_ENABLED",
+        "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
         "version": "6.2"
     },
     {
@@ -53,7 +77,7 @@
     },
     {
         "name": "TWI_1469_FOR_YOU_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_16080_TRON_DEX_SWAP_ENABLED",
@@ -69,19 +93,23 @@
     },
     {
         "name": "TWI_1157_PLASTIC_CARD_ORDER_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1684_ACCOUNT_MULTICHAIN_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
         "version": "undefined"
     },
     {
-        "name": "AND_16063_TRON_GASLESS_ENABLED",
-        "version": "undefined"
+        "name": "AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE",
+        "version": "6.3"
+    },
+    {
+        "name": "TWI_1259_TRON_GASLESS_ENABLED",
+        "version": "6.3"
     },
     {
         "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
@@ -89,7 +117,7 @@
     },
     {
         "name": "TWI_922_GOOGLE_DRIVE_BACKUP_ENABLED",
-        "version": "undefined"
+        "version": "6.3"
     },
     {
         "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
@@ -97,6 +125,34 @@
     },
     {
         "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1611_JOINT_ACCOUNT_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1608_NEW_SHTORKA_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1717_BALANCE_CONTRIBUTIONS",
+        "version": "6.3"
+    },
+    {
+        "name": "AND_16356_ACCOUNT_SWAP_FLOW",
+        "version": "6.3"
+    },
+    {
+        "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1477_RWA_AND_CATEGORIES_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1356_INTRODUCTION_REDESIGN_ENABLED",
         "version": "undefined"
     }
 ]

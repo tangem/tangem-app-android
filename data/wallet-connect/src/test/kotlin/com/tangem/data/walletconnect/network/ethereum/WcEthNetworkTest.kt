@@ -161,7 +161,7 @@ internal class WcEthNetworkTest {
         return WcSession(
             wallet = wallet,
             networks = setOf(),
-            account = Account.CryptoPortfolio.createMainAccount(wallet.walletId),
+            account = Account.Personal.createMainAccount(wallet.walletId),
             securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
             connectingTime = 0L,
             sdkModel = WcSdkSession(
