@@ -17,14 +17,14 @@ internal class DefaultTangemPayWithdrawUseCase @Inject constructor(
     override suspend fun invoke(
         userWallet: UserWallet,
         cryptoAmount: BigDecimal,
-        cryptoCurrencyId: CryptoCurrency.RawID,
+        sourceCurrency: CryptoCurrency,
         receiverCexAddress: String,
     ): Either<UniversalError, WithdrawalResult> {
         return repository.withdraw(
             userWallet = userWallet,
             cryptoAmount = cryptoAmount,
             receiverAddress = receiverCexAddress,
-            cryptoCurrencyId = cryptoCurrencyId,
+            sourceCurrency = sourceCurrency,
         )
     }
 }

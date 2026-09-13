@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
+import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus

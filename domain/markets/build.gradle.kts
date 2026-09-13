@@ -41,4 +41,8 @@ dependencies {
     // region Libs
     api(projects.libs.blockchainSdk)
     // endregion
+
+    // region Test
+    testImplementation(projects.test.core)
+    // endregion
 }

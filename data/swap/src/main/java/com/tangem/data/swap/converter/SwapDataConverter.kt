@@ -1,9 +1,9 @@
 package com.tangem.data.swap.converter
 
-import com.tangem.datasource.api.express.models.response.ExchangeDataResponse
-import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
-import com.tangem.datasource.api.express.models.response.TxDetails
-import com.tangem.datasource.api.express.models.response.TxType
+import com.tangem.grow.datasource.express.models.response.ExchangeDataResponse
+import com.tangem.grow.datasource.express.models.response.ExchangeDataResponseWithTxDetails
+import com.tangem.grow.datasource.express.models.response.TxDetails
+import com.tangem.grow.datasource.express.models.response.TxType
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapDataTransactionModel
 import com.tangem.utils.converter.Converter

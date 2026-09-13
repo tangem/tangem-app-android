@@ -1,11 +1,12 @@
 package com.tangem.data.pay.converter
 
+import com.tangem.data.pay.util.tangemPayImageOrNull
+import com.tangem.domain.models.pay.TangemPayImage
 import arrow.core.getOrElse
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -56,16 +57,20 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         lastDigits = card.lastDigits,
                         images = card.images.map { image ->
                             PaymentAccountStatusValueDM.ImageDM(
-                                type = image.type.name,
+                                type = image.type,
                                 url = image.url,
                             )
                         },
                         state = card.state.toString(),
+                        embossName = card.embossName,
+                        cardType = card.cardType.name,
                     )
                 },
             )
             is PaymentAccountStatusValue.Error.CardIssueFailed -> PaymentAccountStatusValueDM.CardIssueFailed(
                 customerId = value.customerId,
+                fiatRate = value.fiatRate,
+                balance = value.balance?.toDM(),
             )
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
@@ -91,9 +96,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
-            is PaymentAccountStatusValueDM.CardIssueFailed -> PaymentAccountStatusValue.Error.CardIssueFailed(
-                customerId = value.customerId,
-            )
+            is PaymentAccountStatusValueDM.CardIssueFailed -> value.toDomain()
             is PaymentAccountStatusValueDM.IssuingCard -> PaymentAccountStatusValue.IssuingCard(
                 source = StatusSource.CACHE,
             )
@@ -124,6 +127,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         lastDigits = card.lastDigits,
                         images = card.getImages(),
                         state = TangemPayCardState.fromString(card.state),
+                        embossName = card.embossName,
+                        cardType = TangemPayCardType.fromString(card.cardType),
                     )
                 },
                 error = null,
@@ -151,6 +156,18 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             null -> PaymentAccountStatusValue.Error.Unavailable
         }
     }
+
+    private fun PaymentAccountStatusValue.Balance.toDM() = PaymentAccountStatusValueDM.BalanceDM(
+        fiatBalance = fiatBalance.toDM(),
+        cryptoBalance = cryptoBalance.toDM(),
+        availableForWithdrawal = availableForWithdrawal,
+    )
+
+    private fun PaymentAccountStatusValueDM.BalanceDM.toDomain() = PaymentAccountStatusValue.Balance(
+        fiatBalance = fiatBalance.toDomain(),
+        cryptoBalance = cryptoBalance.toDomain(),
+        availableForWithdrawal = availableForWithdrawal,
+    )
 
     private fun PaymentAccountStatusValue.FiatBalance.toDM(): PaymentAccountStatusValueDM.FiatBalanceDM {
         return PaymentAccountStatusValueDM.FiatBalanceDM(
@@ -191,6 +208,14 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         )
     }
 
+    private fun PaymentAccountStatusValueDM.CardIssueFailed.toDomain() =
+        PaymentAccountStatusValue.Error.CardIssueFailed(
+            customerId = customerId,
+            source = StatusSource.CACHE,
+            balance = balance?.toDomain(),
+            fiatRate = fiatRate,
+        )
+
     private fun PaymentAccountStatusValueDM.FiatBalanceDM.toDomain(): PaymentAccountStatusValue.FiatBalance {
         return PaymentAccountStatusValue.FiatBalance(
             availableBalance = availableBalance,
@@ -208,12 +233,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
         )
     }
 
-    private fun PaymentAccountStatusValueDM.TangemPayCard.getImages(): List<TangemPayTariffPlan.Image> {
-        return images.map { image ->
-            TangemPayTariffPlan.Image(
-                type = TangemPayTariffPlan.Image.Type.fromString(image.type),
-                url = image.url,
-            )
-        }
+    private fun PaymentAccountStatusValueDM.TangemPayCard.getImages(): List<TangemPayImage> {
+        return images.mapNotNull { image -> tangemPayImageOrNull(image.type, image.url) }
     }
 }

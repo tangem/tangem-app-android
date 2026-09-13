@@ -152,10 +152,12 @@ internal class SwapRateFormatterTest {
     private fun coin(symbol: String, decimals: Int): CryptoCurrency = mockk<CryptoCurrency.Coin> {
         every { this@mockk.symbol } returns symbol
         every { this@mockk.decimals } returns decimals
+        every { this@mockk.displayDecimals } returns decimals
     }
 
     private fun stable(symbol: String, decimals: Int): CryptoCurrency = mockk<CryptoCurrency.Token> {
         every { this@mockk.symbol } returns symbol
         every { this@mockk.decimals } returns decimals
+        every { this@mockk.displayDecimals } returns decimals
     }
 }

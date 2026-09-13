@@ -3,7 +3,7 @@ package com.tangem.data.blockaid.di
 import com.tangem.data.blockaid.BlockAidMapper
 import com.tangem.data.blockaid.BlockAidRepository
 import com.tangem.data.blockaid.DefaultBlockAidRepository
-import com.tangem.datasource.api.common.blockaid.BlockAidApi
+import com.tangem.store.datasource.blockaid.BlockAidApi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides

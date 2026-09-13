@@ -174,6 +174,15 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.ContactDefault -> 20.dp
 }
 
+/** Art of the Prediction account, shared by the account icon and the wallet row, so both change together. */
+object PredictionAccountIcon {
+
+    // TODO([REDACTED_TASK_KEY]): replace the placeholder icon and color with the final prediction account asset
+    @DrawableRes
+    val resId: Int = R.drawable.ic_analytics_up_24
+    val color: Color = Color(color = 0xFF5A5AF0)
+}
+
 fun AccountIconSize.toBoxSize(): Dp = when (this) {
     AccountIconSize.Default -> 40.dp
     AccountIconSize.Large -> 88.dp

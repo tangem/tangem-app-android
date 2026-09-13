@@ -13,7 +13,6 @@ android {
 dependencies {
 
     /* Project - API */
-    api(projects.features.addressBook.api)
     api(projects.features.details.api)
     api(projects.features.onboardingV2.api)
     api(projects.features.wallet.api)
@@ -43,6 +42,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.virtualAccount.models)
+    implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.appCurrency)
     runtimeOnly(projects.domain.balanceHiding)
     runtimeOnly(projects.domain.tokens)
@@ -71,7 +71,6 @@ dependencies {
 
     /* Other */
     implementation(deps.arrow.core)
-    implementation(deps.arrow.fx)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.immutable.collections)

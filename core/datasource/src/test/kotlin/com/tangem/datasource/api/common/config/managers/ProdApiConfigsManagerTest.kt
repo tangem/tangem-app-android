@@ -5,6 +5,8 @@ import com.google.common.truth.Truth
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
+import com.tangem.datasource.utils.AuthenticationHeader
+import com.tangem.datasource.utils.TangemApiKeyHeader
 import com.tangem.core.remote.config.ApiConfig
 import com.tangem.core.remote.config.ApiConfigs
 import com.tangem.core.remote.config.ApiEnvironment
@@ -14,12 +16,6 @@ import com.tangem.core.remote.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.core.remote.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.config.environment.models.ExpressModel
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
-import com.tangem.datasource.api.auth.ExpressAuthProvider
-import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
-import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
@@ -40,33 +36,21 @@ import java.util.TimeZone
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ProdApiConfigsManagerTest {
 
-    private val environmentConfig = createMockEnvironmentConfig()
-    private val expressAuthProvider = mockk<ExpressAuthProvider>()
-    private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
-    private val p2pEthPoolAuthProvider = mockk<P2PEthPoolAuthProvider>()
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
     private val tangemApiKeyProvider = mockk<ProviderSuspend<String>>()
-    private val tangemGaslessApiKeyProvider = mockk<ProviderSuspend<String>>()
 
     private lateinit var manager: ProdApiConfigsManager
 
     @BeforeEach
     fun setup() {
         clearMocks(
-            expressAuthProvider,
-            stakeKitAuthProvider,
             appAuthProvider,
             appInfoProvider,
         )
 
         every { appInfoProvider.appVersion } returns VERSION_NAME
-        every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
-        every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
-        every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
         every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
-        every { appAuthProvider.getGaslessServiceApiKey(any()) } returns tangemGaslessApiKeyProvider
-        coEvery { tangemGaslessApiKeyProvider.invoke() } returns TANGEM_GASLESS_API_KEY
         coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
         coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
         coEvery { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
@@ -93,34 +77,11 @@ internal class ProdApiConfigsManagerTest {
 
     private fun createApiConfigs(): ApiConfigs {
         val configs = listOf(
-            Express(
-                environmentConfig = environmentConfig,
-                expressAuthProvider = expressAuthProvider,
-                appInfoProvider = appInfoProvider,
-            ),
-            YieldSupply(
-                environmentConfig = environmentConfig,
-                authProvider = appAuthProvider,
-                appInfoProvider = appInfoProvider,
-            ),
             TangemTech(
-                authProvider = appAuthProvider,
+                apiKeyHeader = { environment -> TangemApiKeyHeader(appAuthProvider, environment) },
+                cardAuthHeader = { AuthenticationHeader(appAuthProvider) },
                 appInfoProvider = appInfoProvider,
             ),
-            StakeKit(stakeKitAuthProvider = stakeKitAuthProvider),
-            BlockAid(environmentConfig = environmentConfig),
-            MoonPay(),
-            P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider),
-            News(
-                authProvider = appAuthProvider,
-                appInfoProvider = appInfoProvider,
-            ),
-            GaslessTxService(
-                authProvider = appAuthProvider,
-                appInfoProvider = appInfoProvider,
-            ),
-            SurveySparrow(environmentConfig = environmentConfig),
-            Auth(),
             PolymarketWeb(),
             PolymarketRelayer(),
             PolymarketClob(),
@@ -131,17 +92,7 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun provideTestModels() = listOf(
-        createExpressModel(),
-        createYieldSupplyModel(),
         createTangemTechModel(),
-        createStakeKitModel(),
-        createBlockAidSdkModel(),
-        createMoonPayModel(),
-        createP2PModel(),
-        createNewsModel(),
-        createGaslessTxServiceModel(),
-        createSurveySparrowModel(),
-        createAuthModel(),
         createPolymarketWebModel(),
         createPolymarketRelayerModel(),
         createPolymarketClobModel(),
@@ -177,81 +128,6 @@ internal class ProdApiConfigsManagerTest {
         )
     }
 
-    private fun createAuthModel(): TestModel {
-        val environment = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            DEBUG_BUILD_TYPE,
-            INTERNAL_BUILD_TYPE,
-            -> ApiEnvironment.DEV
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-
-        return TestModel(
-            id = Auth.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = when (environment) {
-                    ApiEnvironment.PROD -> "https://api.tangem.org/"
-                    else -> "[REDACTED_ENV_URL]"
-                },
-                headers = emptyMap(),
-            ),
-        )
-    }
-
-    private fun createExpressModel(): TestModel {
-        val environment = when (BuildConfig.BUILD_TYPE) {
-            DEBUG_BUILD_TYPE,
-            -> ApiEnvironment.DEV
-            INTERNAL_BUILD_TYPE,
-            MOCKED_BUILD_TYPE,
-            -> ApiEnvironment.STAGE
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-
-        return TestModel(
-            id = Express.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = when (BuildConfig.BUILD_TYPE) {
-                    DEBUG_BUILD_TYPE,
-                    -> "[REDACTED_ENV_URL]"
-                    INTERNAL_BUILD_TYPE,
-                    MOCKED_BUILD_TYPE,
-                    -> "[REDACTED_ENV_URL]"
-                    EXTERNAL_BUILD_TYPE,
-                    RELEASE_BUILD_TYPE,
-                    -> "https://express.tangem.com/v1/"
-                    else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-                },
-                headers = mapOf(
-                    "api-key" to ProviderSuspend {
-                        if (environment == ApiEnvironment.PROD) {
-                            EXPRESS_API_KEY
-                        } else {
-                            EXPRESS_DEV_API_KEY
-                        }
-                    },
-                    "session-id" to ProviderSuspend { EXPRESS_SESSION_ID },
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "system_version" to ProviderSuspend { "Android 16" },
-                    "platform" to ProviderSuspend { "android" },
-                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
-                    "timezone" to ProviderSuspend {
-                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
-                    },
-                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
-                ),
-            ),
-        )
-    }
-
     private fun createTangemTechModel(): TestModel {
         return TestModel(
             id = TangemTech.ID,
@@ -262,166 +138,6 @@ internal class ProdApiConfigsManagerTest {
                     "api-key" to ProviderSuspend { TANGEM_API_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "android" },
-                    "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
-                    "timezone" to ProviderSuspend {
-                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
-                    },
-                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
-                ),
-            ),
-        )
-    }
-
-    private fun createYieldSupplyModel(): TestModel {
-        return TestModel(
-            id = YieldSupply.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://yield.tangem.org/",
-                headers = mapOf(
-                    "api-key" to ProviderSuspend { YIELD_MODULE_KEY },
-                    "card_id" to ProviderSuspend { APP_CARD_ID },
-                    "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "android" },
-                    "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
-                    "timezone" to ProviderSuspend {
-                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
-                    },
-                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
-                ),
-            ),
-        )
-    }
-
-    private fun createStakeKitModel(): TestModel {
-        return TestModel(
-            id = StakeKit.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.stakek.it/v1/",
-                headers = mapOf(
-                    "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
-                    "accept" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createGaslessTxServiceModel(): TestModel {
-        val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
-            DEBUG_BUILD_TYPE,
-            -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
-            INTERNAL_BUILD_TYPE,
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD to "https://gasless.tangem.org/"
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-        return TestModel(
-            id = GaslessTxService.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = baseUrl,
-                headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer $TANGEM_GASLESS_API_KEY" },
-                    "version" to ProviderSuspend { VERSION_NAME },
-                    "platform" to ProviderSuspend { "android" },
-                    "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
-                    "timezone" to ProviderSuspend {
-                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
-                    },
-                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
-                ),
-            ),
-        )
-    }
-
-    private fun createSurveySparrowModel(): TestModel {
-        return TestModel(
-            id = SurveySparrow.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://eu-api.surveysparrow.com/",
-                headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer $SURVEY_SPARROW_API_KEY" },
-                ),
-            ),
-        )
-    }
-
-    private fun createBlockAidSdkModel(): TestModel {
-        return TestModel(
-            id = BlockAid.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.blockaid.io/v0/",
-                headers = mapOf(
-                    "X-API-KEY" to ProviderSuspend { BLOCK_AID_API_KEY },
-                    "accept" to ProviderSuspend { "application/json" },
-                    "content-type" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createMoonPayModel(): TestModel {
-        return TestModel(
-            id = MoonPay.ID,
-            expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.moonpay.com/",
-            ),
-        )
-    }
-
-    private fun createP2PModel(): TestModel {
-        val (environment, baseUrl) = if (P2PEthPoolStakingConfig.USE_TESTNET) {
-            ApiEnvironment.DEV to "https://api-test.p2p.org/"
-        } else {
-            ApiEnvironment.PROD to "https://api.p2p.org/"
-        }
-
-        return TestModel(
-            id = P2PEthPool.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = baseUrl,
-                headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer $P2P_API_KEY" },
-                    "accept" to ProviderSuspend { "application/json" },
-                    "Content-Type" to ProviderSuspend { "application/json" },
-                ),
-            ),
-        )
-    }
-
-    private fun createNewsModel(): TestModel {
-        val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE,
-            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
-            DEBUG_BUILD_TYPE,
-            -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
-            INTERNAL_BUILD_TYPE,
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD to "https://api.tangem.org/"
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
-        }
-        return TestModel(
-            id = News.ID,
-            expected = ApiEnvironmentConfig(
-                environment = environment,
-                baseUrl = baseUrl,
-                headers = mapOf(
-                    "api-key" to ProviderSuspend { TANGEM_API_KEY },
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "android" },
                     "system_version" to ProviderSuspend { "Android 16" },
@@ -452,55 +168,8 @@ internal class ProdApiConfigsManagerTest {
 
         const val VERSION_NAME = "debug"
         const val DEVICE_SCALE = 3f
-        const val EXPRESS_SESSION_ID = "express_session_id"
-        const val STAKE_KIT_API_KEY = "stake_kit_api_key"
-        const val P2P_API_KEY = "p2p_api_key"
         const val APP_CARD_ID = "app_card_id"
         const val APP_CARD_PUBLIC_KEY = "Bearer app_public_key"
-
-        // Mock config values
         const val TANGEM_API_KEY = "tangem_api_key"
-        const val TANGEM_GASLESS_API_KEY = "tangem_gasless_api_key"
-        const val TANGEM_PAY_BFF_KEY_DEV = "tangem_pay_bff_key_dev"
-        const val BLOCK_AID_API_KEY = "block_aid_api_key"
-        const val SURVEY_SPARROW_API_KEY = "survey_sparrow_api_key"
-        const val EXPRESS_API_KEY = "express_api_key"
-        const val EXPRESS_DEV_API_KEY = "express_dev_api_key"
-        const val YIELD_MODULE_KEY = "yield_module_key"
-
-        fun createMockEnvironmentConfig(): EnvironmentConfig {
-            return EnvironmentConfig(
-                moonPayApiKey = "moon_pay_api_key",
-                moonPayApiSecretKey = "moon_pay_secret_key",
-                mercuryoWidgetId = "mercuryo_widget_id",
-                mercuryoSecret = "mercuryo_secret",
-                blockchainSdkConfig = mockk(relaxed = true),
-                amplitudeApiKey = "amplitude_api_key",
-                appsFlyerApiKey = "appsflyer_api_key",
-                appsAppId = "apps_app_id",
-                walletConnectProjectId = "wallet_connect_project_id",
-                express = ExpressModel(
-                    apiKey = EXPRESS_API_KEY,
-                    signVerifierPublicKey = "express_public_key",
-                ),
-                devExpress = ExpressModel(
-                    apiKey = EXPRESS_DEV_API_KEY,
-                    signVerifierPublicKey = "express_dev_public_key",
-                ),
-                stakeKitApiKey = STAKE_KIT_API_KEY,
-                p2pApiKey = null,
-                blockAidApiKey = BLOCK_AID_API_KEY,
-                tangemApiKey = TANGEM_API_KEY,
-                tangemApiKeyDev = TANGEM_API_KEY,
-                tangemApiKeyStage = TANGEM_API_KEY,
-                yieldModuleApiKey = YIELD_MODULE_KEY,
-                yieldModuleApiKeyDev = YIELD_MODULE_KEY,
-                bffStaticToken = TANGEM_PAY_BFF_KEY_DEV,
-                bffStaticTokenDev = TANGEM_PAY_BFF_KEY_DEV,
-                gaslessTxApiKeyDev = TANGEM_GASLESS_API_KEY,
-                gaslessTxApiKey = TANGEM_GASLESS_API_KEY,
-                surveySparrowToken = SURVEY_SPARROW_API_KEY,
-            )
-        }
     }
 }

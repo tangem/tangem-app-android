@@ -49,7 +49,6 @@ import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
 import com.tangem.features.foryou.impl.entity.*
-import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.availableAccountIds
@@ -61,9 +60,11 @@ import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTran
 import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer.Section.EarnOpportunities
 import com.tangem.features.foryou.impl.model.transformer.ApplyExpandedAssetsTransformer.Section.PortfolioReview
 import com.tangem.features.foryou.impl.model.transformer.SetPortfolioReviewTransformer
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.combine7
 import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
@@ -182,7 +183,7 @@ internal class ForYouModel @Inject constructor(
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData(
                         title = resourceReference(R.string.market_chart_can_not_load_data),
-                        donutText = resourceReference(R.string.market_chart_bubble_no_data),
+                        donutText = resourceReference(R.string.markets_loading_no_data_title),
                     ),
                     tokenList = buildList<ForYouTokenListItemUM> {
                         repeat(4) { index ->
@@ -215,17 +216,11 @@ internal class ForYouModel @Inject constructor(
         expandedPortfolioReviewAssetIds.updateStateOnEach { ApplyExpandedAssetsTransformer(it, PortfolioReview) }
         expandedEarnOpportunitiesAssetIds.updateStateOnEach { ApplyExpandedAssetsTransformer(it, EarnOpportunities) }
 
-        combine(
-            flow = selectedPortfolio,
+        combine7(
+            flow1 = selectedPortfolio,
             flow2 = yieldSupplyApyFlowUseCase(),
             flow3 = createTopEarnTokensFlow(),
-            flow4 = combine(
-                getCoinIndicatorsUpdatesUseCase(),
-                selectedPeriod,
-                getBalanceHidingSettingsUseCase.isBalanceHidden(),
-            ) { indicators, period, isBalanceHidden ->
-                Triple(indicators, period, isBalanceHidden)
-            },
+            flow4 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
             flow5 = combine(
                 userWalletsListRepository.userWallets,
                 userWalletsListRepository.selectedUserWallet,
@@ -236,8 +231,9 @@ internal class ForYouModel @Inject constructor(
                 val walletHeaders = wallets.associate { it.walletId to walletHeaderConverter.convert(it) }
                 selectedUserWallet to walletHeaders
             },
-        ) { selectedPortfolio, yieldAvailability, topEarnTokens, indicatorsPeriodHidden, wallets ->
-            val (indicators, period, isBalanceHidden) = indicatorsPeriodHidden
+            flow6 = getCoinIndicatorsUpdatesUseCase(),
+            flow7 = selectedPeriod,
+        ) { selectedPortfolio, yieldAvailability, topEarnTokens, isBalanceHidden, wallets, indicators, selectedPeriod ->
             val (selectedUserWallet, walletHeaders) = wallets
 
             val stakingAvailability = selectedPortfolio.accountCryptoCurrencyStatuses
@@ -258,7 +254,7 @@ internal class ForYouModel @Inject constructor(
                 onDiagramTap = ::onDiagramTap,
                 selectedWalletId = selectedUserWallet?.walletId,
                 coinIndicators = indicators,
-                timeframe = period.timeframe,
+                timeframe = selectedPeriod.timeframe,
                 isBalanceHidden = isBalanceHidden,
             ).convert(selectedPortfolio)
 

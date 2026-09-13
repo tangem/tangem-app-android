@@ -1,8 +1,8 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.spend.datasource.pay.models.response.CashbackHistoryResponse
 import com.tangem.domain.pay.model.CashbackHistory
+import com.tangem.spend.datasource.pay.models.response.CashbackHistoryResponse
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -25,17 +25,15 @@ internal class CashbackHistoryConverterTest {
         ConvertModel(
             name = "full response -> mapped history ordered oldest to newest",
             response = createResponse(
-                currency = "USD",
                 items = listOf(
                     createItem(year = 2026, month = 2, confirmedAmount = BigDecimal("5.00")),
                     createItem(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
                 ),
             ),
             expected = CashbackHistory(
-                currency = "USD",
                 months = listOf(
-                    CashbackHistory.MonthlyCashback(year = 2026, month = 2, confirmedAmount = BigDecimal("5.00")),
-                    CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
+                    expectedMonth(month = 2, confirmedAmount = BigDecimal("5.00")),
+                    expectedMonth(month = 6, confirmedAmount = BigDecimal("22.54")),
                 ),
             ),
         ),
@@ -45,33 +43,13 @@ internal class CashbackHistoryConverterTest {
                 items = listOf(createItem(year = 2026, month = 6, confirmedAmount = BigDecimal("-2.15"))),
             ),
             expected = CashbackHistory(
-                currency = "USD",
-                months = listOf(
-                    CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal("-2.15")),
-                ),
+                months = listOf(expectedMonth(month = 6, confirmedAmount = BigDecimal("-2.15"))),
             ),
-        ),
-        ConvertModel(
-            name = "null confirmed_amount -> ZERO",
-            response = createResponse(
-                items = listOf(createItem(year = 2026, month = 6, confirmedAmount = null)),
-            ),
-            expected = CashbackHistory(
-                currency = "USD",
-                months = listOf(
-                    CashbackHistory.MonthlyCashback(year = 2026, month = 6, confirmedAmount = BigDecimal.ZERO),
-                ),
-            ),
-        ),
-        ConvertModel(
-            name = "null currency -> empty string",
-            response = createResponse(currency = null, items = emptyList()),
-            expected = CashbackHistory(currency = "", months = emptyList()),
         ),
         ConvertModel(
             name = "null items -> empty months",
             response = createResponse(items = null),
-            expected = CashbackHistory(currency = "USD", months = emptyList()),
+            expected = CashbackHistory(months = emptyList()),
         ),
     )
 
@@ -86,19 +64,24 @@ internal class CashbackHistoryConverterTest {
     private companion object {
 
         fun createResponse(
-            currency: String? = "USD",
             items: List<CashbackHistoryResponse.Item>? = listOf(
                 createItem(year = 2026, month = 6, confirmedAmount = BigDecimal("22.54")),
             ),
-        ) = CashbackHistoryResponse(
-            currency = currency,
-            items = items,
-        )
+        ) = CashbackHistoryResponse(result = CashbackHistoryResponse.Result(items = items))
 
-        fun createItem(year: Int, month: Int, confirmedAmount: BigDecimal?) = CashbackHistoryResponse.Item(
-            year = year,
+        fun createItem(year: Int, month: Int, confirmedAmount: BigDecimal, currency: String = "USD") =
+            CashbackHistoryResponse.Item(
+                year = year,
+                month = month,
+                confirmedAmount = confirmedAmount,
+                currency = currency,
+            )
+
+        fun expectedMonth(month: Int, confirmedAmount: BigDecimal) = CashbackHistory.MonthlyCashback(
+            year = 2026,
             month = month,
             confirmedAmount = confirmedAmount,
+            currency = "USD",
         )
     }
 }

@@ -223,14 +223,19 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
         type: TransactionType.YieldSupply.Send,
-    ): TransactionItemUM.Content = buildContent(
-        tx = tx,
-        uiStatus = uiStatus,
-        title = titleConverter.convert(tx),
-        icon = tx.directionalIcon(),
-        subtitle = tx.yieldSupplySubtitle(currency, type),
-        hideAmount = currency is CryptoCurrency.Token && !tx.isOutgoing,
-    )
+    ): TransactionItemUM.Content = if (type.isYieldSupplyWithdraw) {
+        buildContent(
+            tx = tx,
+            uiStatus = uiStatus,
+            title = titleConverter.convert(tx),
+            icon = tx.directionalIcon(),
+            subtitle = yieldSendSubtitle(),
+        )
+    } else {
+        // A non-withdraw Send is an ordinary transfer — resolve the counterparty against the user's own
+        // accounts/wallets and render it exactly like Transfer, so the list matches the details screen.
+        transferContent(tx, uiStatus)
+    }
 
     private fun unknownOperationContent(
         tx: TxInfo,
@@ -258,11 +263,10 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         title: TextReference,
         icon: TxIcon,
         subtitle: ContentSubtitle,
-        hideAmount: Boolean = false,
     ): TransactionItemUM.Content = TransactionItemUM.Content(
         txHash = tx.txHash,
-        amount = if (hideAmount) "" else tx.formatContentAmount(currency),
-        currencySymbol = if (hideAmount) "" else currency.symbol,
+        amount = tx.formatContentAmount(currency),
+        currencySymbol = currency.symbol,
         time = tx.timestampInMillis.toTimeFormat(),
         status = uiStatus,
         direction = tx.extractDirection(),
@@ -283,7 +287,7 @@ private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
     }
-    return prefix + amount.format { crypto(symbol = "", decimals = currency.decimals) }.trim()
+    return prefix + amount.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
 }
 
 // endregion
@@ -320,19 +324,15 @@ private fun resolveOwnSubtitle(
 
 private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: TransactionType.YieldSupply): ContentSubtitle {
     if (currency is CryptoCurrency.Coin) {
-        return if (type is TransactionType.YieldSupply.Send) {
-            extractAddressSubtitle()
+        val briefAddress = type.address?.toBriefAddressFormat()
+        val text = resourceReference(
+            R.string.transaction_history_transaction_for_address,
+            wrappedList(briefAddress.orEmpty()),
+        )
+        return if (briefAddress.isNullOrEmpty()) {
+            ContentSubtitle.Plain(text)
         } else {
-            val briefAddress = type.address?.toBriefAddressFormat()
-            val text = resourceReference(
-                R.string.transaction_history_transaction_for_address,
-                wrappedList(briefAddress.orEmpty()),
-            )
-            if (briefAddress.isNullOrEmpty()) {
-                ContentSubtitle.Plain(text)
-            } else {
-                ContentSubtitle.PlainAddress(text = text, highlight = briefAddress)
-            }
+            ContentSubtitle.PlainAddress(text = text, highlight = briefAddress)
         }
     }
     return when (type) {
@@ -342,17 +342,23 @@ private fun TxInfo.yieldSupplySubtitle(currency: CryptoCurrency, type: Transacti
             amountSubtitle(currency, R.string.yield_module_transaction_topup_subtitle)
         is TransactionType.YieldSupply.Exit ->
             amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
-        is TransactionType.YieldSupply.Send -> if (!isOutgoing && type.isYieldSupplyWithdraw) {
-            amountSubtitle(currency, R.string.yield_module_transaction_exit_subtitle)
-        } else {
-            extractAddressSubtitle()
-        }
         else -> extractAddressSubtitle()
     }
 }
 
+/**
+ * Subtitle for a yield withdraw [TransactionType.YieldSupply.Send] (funds leaving the Aave position): the provider as
+ * the counterparty — "from: <Aave avatar> Aave". A non-withdraw Send is an ordinary transfer, rendered by
+ * [transferContent] instead.
+ */
+private fun yieldSendSubtitle(): ContentSubtitle = ContentSubtitle.Provider(
+    direction = ContentSubtitle.Direction.FROM,
+    name = resourceReference(R.string.yield_module_provider),
+    iconResId = R.drawable.img_aave_22,
+)
+
 private fun TxInfo.amountSubtitle(currency: CryptoCurrency, @StringRes resId: Int): ContentSubtitle.Plain {
-    val formatted = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+    val formatted = amount.format { crypto(currency) }
     return ContentSubtitle.Plain(resourceReference(resId, wrappedList(formatted)))
 }
 

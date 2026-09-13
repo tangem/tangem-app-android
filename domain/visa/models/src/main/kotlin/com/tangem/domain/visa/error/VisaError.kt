@@ -56,11 +56,17 @@ sealed class VisaApiError(
     data object ProductInstanceIsNotActivated : VisaApiError(104110208)
     data object ProductInstanceIsAlreadyActivated : VisaApiError(104110207)
     data object CustomerIsBlocked : VisaApiError(104110210)
+    data object CardIssueActiveOrderExists : VisaApiError(104140114)
+    data object CardIssueOfferNotAvailable : VisaApiError(104140115)
     data object CardIssueInsufficientBalance : VisaApiError(104140116)
+    data object CardIssueInvalidShippingAddress : VisaApiError(104140126)
+    data object CardIssueInvalidEmbossName : VisaApiError(104140144)
     data object UnknownWithoutCode : VisaApiError(104110999)
     data class Unknown(override val errorCode: Int) : VisaApiError(errorCode)
 
     fun isUnknown() = this is UnknownWithoutCode || this is Unknown
+
+    fun isRetryable() = this == ServerUnavailable || this == UnknownWithoutCode
 
     data object RefreshTokenExpired : VisaApiError(104004001)
     data object NotFound : VisaApiError(104004002)
@@ -71,7 +77,22 @@ sealed class VisaApiError(
     data object CustomerIdUnavailable : VisaApiError(104004007)
     data object OrderNotFound : VisaApiError(104004008)
 
+    data object CardActivationInvalidCardData : VisaApiError(104140127)
+    data object CardActivationCardNotPhysical : VisaApiError(104140128)
+    data object CardActivationCardAlreadyActive : VisaApiError(104140129)
+    data object CardActivationCardNotReadyForActivation : VisaApiError(104140130)
+    data object CardActivationActiveOrderExists : VisaApiError(104140131)
+
+    data object CardReissuePlasticInvalidSourceCard : VisaApiError(104140132)
+    data object CardReissuePlasticActiveOrderExists : VisaApiError(104140133)
+    data object CardReissuePlasticInsufficientBalance : VisaApiError(104140134)
+    data object CardReissuePlasticNotAvailable : VisaApiError(104140135)
+    data object CardReissuePlasticInvalidShippingAddress : VisaApiError(104140136)
+    data object CardReissuePlasticInvalidEmbossName : VisaApiError(104140143)
+
     companion object {
+
+        @Suppress("CyclomaticComplexMethod")
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
             val universalErrorCode = 104_000_000 + backendErrorCode
             return when (universalErrorCode) {
@@ -81,7 +102,22 @@ sealed class VisaApiError(
                 ProductInstanceIsNotActivated.errorCode -> ProductInstanceIsNotActivated
                 ProductInstanceIsAlreadyActivated.errorCode -> ProductInstanceIsAlreadyActivated
                 CustomerIsBlocked.errorCode -> CustomerIsBlocked
+                CardIssueActiveOrderExists.errorCode -> CardIssueActiveOrderExists
+                CardIssueOfferNotAvailable.errorCode -> CardIssueOfferNotAvailable
                 CardIssueInsufficientBalance.errorCode -> CardIssueInsufficientBalance
+                CardIssueInvalidShippingAddress.errorCode -> CardIssueInvalidShippingAddress
+                CardIssueInvalidEmbossName.errorCode -> CardIssueInvalidEmbossName
+                CardActivationInvalidCardData.errorCode -> CardActivationInvalidCardData
+                CardActivationCardNotPhysical.errorCode -> CardActivationCardNotPhysical
+                CardActivationCardAlreadyActive.errorCode -> CardActivationCardAlreadyActive
+                CardActivationCardNotReadyForActivation.errorCode -> CardActivationCardNotReadyForActivation
+                CardActivationActiveOrderExists.errorCode -> CardActivationActiveOrderExists
+                CardReissuePlasticInvalidSourceCard.errorCode -> CardReissuePlasticInvalidSourceCard
+                CardReissuePlasticActiveOrderExists.errorCode -> CardReissuePlasticActiveOrderExists
+                CardReissuePlasticInsufficientBalance.errorCode -> CardReissuePlasticInsufficientBalance
+                CardReissuePlasticNotAvailable.errorCode -> CardReissuePlasticNotAvailable
+                CardReissuePlasticInvalidShippingAddress.errorCode -> CardReissuePlasticInvalidShippingAddress
+                CardReissuePlasticInvalidEmbossName.errorCode -> CardReissuePlasticInvalidEmbossName
                 else -> Unknown(universalErrorCode)
             }
         }
