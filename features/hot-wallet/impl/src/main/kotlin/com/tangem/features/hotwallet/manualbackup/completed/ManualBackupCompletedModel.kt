@@ -40,7 +40,11 @@ internal class ManualBackupCompletedModel @Inject constructor(
                 } else {
                     resourceReference(R.string.backup_complete_title)
                 },
-                description = resourceReference(R.string.backup_complete_description),
+                description = if (params.isImportFlow) {
+                    resourceReference(R.string.wallet_import_success_description)
+                } else {
+                    resourceReference(R.string.backup_complete_description)
+                },
                 isLoading = false,
             ),
         )

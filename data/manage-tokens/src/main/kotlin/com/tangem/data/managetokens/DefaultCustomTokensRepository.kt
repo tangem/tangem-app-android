@@ -9,6 +9,7 @@ import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.utils.HederaTokenAddressResolver
 import com.tangem.data.managetokens.utils.TokenAddressesConverter
+import com.tangem.data.managetokens.utils.isAllowedIn
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
@@ -259,13 +260,18 @@ internal class DefaultCustomTokensRepository(
         curve.supportsDerivationPath(path)
     }
 
-    override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {
+    override suspend fun getSupportedNetworks(
+        userWalletId: UserWalletId,
+        allowedNetworkIds: Set<Network.RawID>?,
+    ): List<Network> = withContext(dispatchers.io) {
         when (val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)) {
             is UserWallet.Hot -> {
                 Blockchain.entries.mapNotNull { blockchain ->
                     // TODO: refactor [REDACTED_JIRA]
                     val isExcluded = blockchain in excludedBlockchains || blockchain in hotWalletExcludedBlockchains
-                    if (blockchain.isTestnet() || isExcluded) return@mapNotNull null
+                    if (blockchain.isTestnet() || isExcluded || !blockchain.isAllowedIn(allowedNetworkIds)) {
+                        return@mapNotNull null
+                    }
 
                     networkFactory.create(
                         blockchain = blockchain,
@@ -278,7 +284,7 @@ internal class DefaultCustomTokensRepository(
                 val scanResponse = userWallet.scanResponse
 
                 Blockchain.entries
-                    .filter { it !in excludedBlockchainsForCustom }
+                    .filter { it !in excludedBlockchainsForCustom && it.isAllowedIn(allowedNetworkIds) }
                     .mapNotNull { blockchain ->
                         val canHandleBlockchain = scanResponse.card.canHandleBlockchain(
                             blockchain,

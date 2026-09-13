@@ -1,6 +1,8 @@
 package com.tangem.features.foryou.impl.model.converter.portfolioReview
 
 import androidx.compose.ui.text.SpanStyle
+import com.tangem.common.getTotalCryptoAmount
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
@@ -62,8 +64,8 @@ internal class ForYouPortfolioReviewTokenRowConverter(
         }
 
         val currency = representative.currency
-        val cryptoAmount = value.sumOf { it.value.amount.orZero() }
-        val fiatAmount = value.sumOf { it.value.fiatAmount.orZero() }
+        val cryptoAmount = value.sumOf { it.getTotalCryptoAmount().orZero() }
+        val fiatAmount = value.sumOf { it.getTotalFiatAmount().orZero() }
         val state = value.classify()
 
         return TangemTokenRowUM.Content(
@@ -161,7 +163,9 @@ internal class ForYouPortfolioReviewTokenRowConverter(
     /** Bottom-end: percentage share for resolved states, no-address / unreachable treatment otherwise. */
     private fun toRowBottomEnd(state: RowState, fiatAmount: BigDecimal): TangemTokenRowUM.EndContentUM = when (state) {
         is RowState.Normal -> TangemTokenRowUM.EndContentUM.Content(
-            text = stringReference(fiatAmount.toForYouPercent(totalFiatBalance).orZero().format { percent() }),
+            text = stringReference(
+                fiatAmount.toForYouPercent(totalFiatBalance).orZero().format { percent(canBeLower = true) },
+            ),
             isFlickering = state.isFlickering,
         )
         RowState.NoAddress -> attentionEndContent(R.string.common_no_address)

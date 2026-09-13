@@ -21,12 +21,15 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.upgradewallet.ui.state.MultiWalletUpgradeWalletUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step
+import com.tangem.hot.sdk.android.PassphraseValidator
+import com.tangem.hot.sdk.model.SeedPhrasePrivateInfo
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -87,6 +90,11 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
                 val privateInfo = exportSeedPhraseUseCase
                     .invoke(userWallet.hotWalletId)
                     .getOrElse { error("Unable to export seed phrase for wallet with id ${mode.userWalletId}") }
+
+                if (!cardDerivesSameKeys(privateInfo)) {
+                    showPassphraseNotSupportedDialog()
+                    return@launch
+                }
 
                 modelScope.launch {
                     val result = tangemSdkManager.importWallet(
@@ -160,6 +168,35 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
             value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
+    }
+
+    /**
+     * A legacy wallet derives keys from the passphrase bytes as typed, while the card consumes the whole
+     * passphrase in NFKD form. When the two disagree, the card generates a different set of addresses and
+     * the funds silently strand, so such a wallet must stay in the app.
+     */
+    private fun cardDerivesSameKeys(privateInfo: SeedPhrasePrivateInfo): Boolean {
+        val passphrase = privateInfo.passphrase ?: return true
+        if (privateInfo.shouldNormalizePassphrase) return true
+
+        return PassphraseValidator.isNfkdNormalized(passphrase) &&
+            runCatching { PassphraseValidator.validate(passphrase) }.isSuccess
+    }
+
+    private fun showPassphraseNotSupportedDialog() {
+        _uiState.update { state ->
+            state.copy(
+                dialog = OnboardingDialogUM(
+                    title = resourceReference(R.string.hw_upgrade_error_passphrase_title),
+                    message = resourceReference(R.string.hw_upgrade_error_passphrase_message),
+                    confirmButtonText = resourceReference(R.string.common_support),
+                    dismissButtonText = resourceReference(R.string.common_ok),
+                    onConfirmClick = ::navigateToSupportScreen,
+                    onDismissButtonClick = { _uiState.update { it.copy(dialog = null) } },
+                    onDismiss = { _uiState.update { it.copy(dialog = null) } },
+                ),
+            )
+        }
     }
 
     private fun handleActivationError() {

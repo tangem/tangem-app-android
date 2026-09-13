@@ -1,8 +1,10 @@
 package com.tangem.features.tangempay.di
 
 import com.tangem.features.tangempay.deeplink.DefaultOnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.DefaultTangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.DefaultTangemPayMainDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import dagger.Binds
 import dagger.Module
@@ -23,4 +25,10 @@ internal interface TangemPayDeeplinkModule {
     fun bindTangemPayMainDeepLinkHandlerFactory(
         impl: DefaultTangemPayMainDeepLinkHandler.Factory,
     ): TangemPayMainDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayAccountDeepLinkHandlerFactory(
+        impl: DefaultTangemPayAccountDeepLinkHandler.Factory,
+    ): TangemPayAccountDeepLinkHandler.Factory
 }

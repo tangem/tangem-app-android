@@ -8,8 +8,6 @@ import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.getWireMockRequestCountByQueryParam
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.scenarios.*
@@ -28,7 +26,8 @@ class TangemPayTransactionsTest : BaseTestCase() {
     private val eligibilityState = "PaeraCustomer"
     private val balanceInitialState = "InitialBalance"
 
-    private val transactionsPath = "/bff-v2/v1/customer/transactions"
+    // The cashback toggle picks the endpoint: on -> /v1/transactions, off -> /v1/customer/transactions.
+    private val transactionsPath = "/bff-v2/v1/transactions"
 
     // The app pages by the last item's id, so the next-page cursor is the id of the 50th first-page item.
     private val nextPageCursor = "page1-50"
@@ -42,16 +41,10 @@ class TangemPayTransactionsTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, spendCompletedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             val requestsBefore = getWireMockRequestCount("GET", transactionsPath)
             step("Open Tangem Pay") { openTangemPay() }
@@ -85,16 +78,10 @@ class TangemPayTransactionsTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, historyErrorState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert transaction history error state is displayed") {
@@ -144,16 +131,10 @@ class TangemPayTransactionsTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, firstPageState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert first-page '$firstPageMerchant' row is displayed") {
@@ -207,16 +188,10 @@ class TangemPayTransactionsTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, spendCompletedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert '$coffeeMerchant' row shows amount '$coffeeAmount' and category '$coffeeCategory'") {
@@ -260,16 +235,10 @@ class TangemPayTransactionsTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeSection = {
-                resetWireMockScenarios()
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
                 setWireMockScenarioState(balanceScenario, balanceInitialState)
                 setWireMockScenarioState(historyScenario, spendCompletedState)
-            },
-            additionalAfterSection = {
-                resetWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO)
-                resetWireMockScenarioState(balanceScenario)
-                resetWireMockScenarioState(historyScenario)
-            },
+            }
         ).run {
             step("Open Tangem Pay") { openTangemPay() }
             step("Open '$coffeeMerchant' transaction details") { openTangemPayTransactionDetails(coffeeMerchant) }

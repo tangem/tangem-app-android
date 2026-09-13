@@ -11,6 +11,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -88,6 +89,33 @@ internal class TangemPayOrderCardModelTest {
         // Assert
         verify(exactly = 1) { router.pop() }
     }
+
+    @Test
+    fun `GIVEN a successful order WHEN onShowOrderedCard THEN status refreshed and account screen shown`() = runTest {
+        // Act
+        val model = createModel(testScope = this)
+        model.onShowOrderedCard()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+        verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) }
+        verify(exactly = 0) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN a refresh already running WHEN onShowOrderedCard again THEN status fetched and popped once`() =
+        runTest {
+            // Act
+            val model = createModel(testScope = this)
+            model.onShowOrderedCard()
+            model.onShowOrderedCard()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(WALLET_ID) }
+            verify(exactly = 1) { router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails) }
+        }
 
     private fun createModel(testScope: TestScope) = TangemPayOrderCardModel(
         paramsContainer = MutableParamsContainer(TangemPayOrderCardComponent.Params(userWalletId = WALLET_ID)),

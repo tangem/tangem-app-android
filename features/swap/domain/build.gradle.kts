@@ -15,11 +15,16 @@ android {
     }
 }
 dependencies {
+    /** Compose */
+    implementation(deps.compose.runtime)
+
     /** Libs */
     implementation(projects.libs.crypto)
+    implementation(deps.okio)
 
     /** DI */
     implementation(deps.hilt.core)
+    implementation(deps.androidx.annotation)
     kapt(deps.hilt.kapt)
 
     /** Domain */
@@ -75,4 +80,5 @@ dependencies {
     testRuntimeOnly(projects.domain.wallets)
     testImplementation(deps.test.junit)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

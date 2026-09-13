@@ -2,23 +2,28 @@ package com.tangem.lib.auth.session.internal
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
-import com.tangem.datasource.api.auth.AuthApi
-import com.tangem.datasource.api.auth.models.request.AuthApiRequest
-import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
-import com.tangem.datasource.api.auth.models.request.NonceApiRequest
-import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
+import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.AuthApiRequest
+import com.tangem.lib.auth.api.models.request.AuthenticationPayload
+import com.tangem.lib.auth.api.models.request.NonceApiRequest
+import com.tangem.lib.auth.api.models.request.RefreshApiRequest
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.lib.auth.attestation.AttestationProvider
+import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionRefreshError
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import dagger.Lazy
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
@@ -33,7 +38,11 @@ internal class DefaultSessionTokenRefresher(
     private val deviceKeyManager: DeviceKeyManager,
     private val nonceDecryptor: AuthNonceDecryptor,
     private val signedRequestPayload: SignedRequestPayload,
+    private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
+    // Lazy to break the AuthApi ↔ SessionAuthenticator ↔ refresher DI cycle (DeviceRegistrar also
+    // depends on AuthApi); only used on the rare "device not found" recovery path.
+    private val deviceRegistrar: Lazy<DeviceRegistrar>,
     private val clock: Clock,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SessionTokenRefresher {
@@ -156,7 +165,7 @@ internal class DefaultSessionTokenRefresher(
         val payload = AuthenticationPayload(
             devicePublicKey = devicePublicKeyBase64,
             nonce = nonce,
-            attestationToken = null,
+            attestationToken = attestationProvider.getAttestationTokenOrNull(nonce),
             metadata = signedRequestPayload.deviceMetadata,
         )
         val signature = try {
@@ -174,20 +183,33 @@ internal class DefaultSessionTokenRefresher(
                 TangemLogger.i("/authenticate succeeded; session tokens persisted")
                 tokens
             }
-            is ApiResponse.Error -> {
-                val authError = errorConverter.convert(authResponse.cause)
-                when (authError) {
-                    is AuthError.Unauthorized, is AuthError.Forbidden -> {
-                        TangemLogger.i("Session revoked: ${authError.problem?.detail ?: authError}")
-                        store.clear()
-                        raise(SessionRefreshError.SessionRevoked)
-                    }
-                    else -> {
-                        TangemLogger.e("/authenticate request failed: $authError")
-                        raise(SessionRefreshError.Api(authError))
-                    }
+            is ApiResponse.Error -> handleAuthError(errorConverter.convert(authResponse.cause))
+        }
+    }
+
+    private suspend fun Raise<SessionRefreshError>.handleAuthError(authError: AuthError): SessionTokens = when {
+        // Backend lost the device record while the local flag is still set (data drift).
+        // A 404 here is only re-registrable when it's specifically "device not found" — a
+        // 404 for an expired/consumed nonce is transient and must NOT trigger re-register.
+        authError is AuthError.NotFound && authError.problem?.detail == DEVICE_NOT_FOUND_DETAIL -> {
+            TangemLogger.i("/authenticate: device not found server-side — re-registering device")
+            deviceRegistrar.get().reregister()
+                .mapLeft { error ->
+                    TangemLogger.e("Re-registration after 'device not found' failed: $error")
+                    SessionRefreshError.Api(authError)
                 }
-            }
+                .bind()
+            // Re-registration persisted a fresh session; satisfy the refresh with it.
+            store.get().getOrNull() ?: raise(SessionRefreshError.Api(authError))
+        }
+        authError is AuthError.Unauthorized || authError is AuthError.Forbidden -> {
+            TangemLogger.i("Session revoked: ${authError.problem?.detail ?: authError}")
+            store.clear()
+            raise(SessionRefreshError.SessionRevoked)
+        }
+        else -> {
+            TangemLogger.e("/authenticate request failed: $authError")
+            raise(SessionRefreshError.Api(authError))
         }
     }
 
@@ -196,5 +218,11 @@ internal class DefaultSessionTokenRefresher(
         data object RefreshTokenInvalid : RefreshOutcome
         data object DeviceBlocked : RefreshOutcome
         data class Transient(val cause: AuthError) : RefreshOutcome
+    }
+
+    private companion object {
+        // Backend's ProblemDetail message for a missing device record on /authenticate (404). Matched
+        // to distinguish it from other 404s (expired/unknown nonce) that must not re-register.
+        const val DEVICE_NOT_FOUND_DETAIL = "Device not found"
     }
 }

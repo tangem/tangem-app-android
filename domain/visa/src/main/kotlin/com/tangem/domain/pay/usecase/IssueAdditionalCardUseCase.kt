@@ -9,6 +9,7 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayOrderInfo
+import com.tangem.domain.pay.model.virtualOffer
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayIssueCardRepository
@@ -47,7 +48,7 @@ class IssueAdditionalCardUseCase(
             block = {
                 customerOffersRepository.getOffers(userWalletId)
                     .bind()
-                    .firstOrNull { it.type == Offer.Type.CARD_ISSUE_VIRTUAL_RAIN }
+                    .virtualOffer()
             },
             catch = { handleError(it) },
         ) ?: raise(VisaApiError.Unspecified)
@@ -69,7 +70,7 @@ class IssueAdditionalCardUseCase(
         val order = existing ?: customerOrderRepository.createOrder(
             userWalletId = userWalletId,
             type = offer.data.orderType,
-            specificationName = offer.data.specificationName,
+            specificationName = offer.data.specificationName ?: raise(VisaApiError.Unspecified),
             idempotencyKey = UUID.randomUUID().toString(),
         ).bind()
 

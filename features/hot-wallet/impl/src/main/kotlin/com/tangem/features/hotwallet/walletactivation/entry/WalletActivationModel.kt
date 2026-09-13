@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -17,10 +18,14 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
@@ -33,6 +38,7 @@ import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -46,9 +52,11 @@ internal class WalletActivationModel @Inject constructor(
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -63,11 +71,14 @@ internal class WalletActivationModel @Inject constructor(
     val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
     private val isStartingWithAccessCode = params.isBackupExists
+
+    val isAccessCodeStepRequired = !isAccessCodeAlreadySet()
+
     val stackNavigation = StackNavigation<WalletActivationRoute>()
-    val startRoute = if (isStartingWithAccessCode) {
-        WalletActivationRoute.SetAccessCode
-    } else {
-        WalletActivationRoute.ManualBackupStart
+    val startRoute = when {
+        !isStartingWithAccessCode -> WalletActivationRoute.ManualBackupStart
+        isAccessCodeStepRequired -> WalletActivationRoute.SetAccessCode
+        else -> WalletActivationRoute.SetupFinished
     }
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
 
@@ -99,6 +110,8 @@ internal class WalletActivationModel @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
         trackingContextProxy.removeContext()
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
+            .onLeft { TangemLogger.e("Failed to clear the contextual unlock for ${params.userWalletId}", it) }
     }
 
     fun onChildBack() {
@@ -114,6 +127,15 @@ internal class WalletActivationModel @Inject constructor(
             is WalletActivationRoute.PushNotifications -> Unit
             is WalletActivationRoute.SetupFinished -> Unit
         }
+    }
+
+    private fun isAccessCodeAlreadySet(): Boolean {
+        val hotWallet = runCatching { getUserWalletUseCase(params.userWalletId).getOrNull() }
+            .onFailure { TangemLogger.e("Failed to get the user wallet ${params.userWalletId}", it) }
+            .getOrNull() as? UserWallet.Hot
+            ?: return false
+
+        return hotWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
     }
 
     private fun navigateToPushNotificationsOrNext() {
@@ -201,13 +223,22 @@ internal class WalletActivationModel @Inject constructor(
                 event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
                     source = analyticsSource.value,
                     action = analyticsAction.value,
+                    backupType = AnalyticsParam.BackupType.Manual,
                 ),
+            )
+            analyticsEventHandler.send(
+                event = OnboardingAnalyticsEvent.Backup.Finished(backupType = AnalyticsParam.BackupType.Manual),
             )
         }
     }
 
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
+            if (!isAccessCodeStepRequired) {
+                navigateToPushNotificationsOrNext()
+                return
+            }
+
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(source = analyticsSource.value),
             )

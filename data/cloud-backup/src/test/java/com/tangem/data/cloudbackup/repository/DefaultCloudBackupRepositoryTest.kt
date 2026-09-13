@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.cloudbackup.CloudBackupJson
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.cloudbackup.crypto.CloudBackupCipher
 import com.tangem.data.cloudbackup.crypto.CloudBackupCryptoError
 import com.tangem.data.cloudbackup.crypto.CloudBackupFileData
@@ -16,6 +17,7 @@ import com.tangem.data.cloudbackup.datasource.GoogleDriveTokenProvider
 import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
+import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -23,6 +25,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,19 +51,25 @@ internal class DefaultCloudBackupRepositoryTest {
     // don't pay the Argon2 cost and stay focused on the Drive API orchestration + error mapping.
     private val cipher: CloudBackupCipher = mockk()
 
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
+
     private val repository = DefaultCloudBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
         store = store,
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        featureTogglesManager = featureTogglesManager,
     )
 
-    private val secret = CloudBackupSecretData(mnemonic = "m", passphrase = null)
+    private val secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false)
 
     private val fileData = CloudBackupFileData(
         version = 1,
         id = "id",
+        name = "Wallet 1",
+        walletId = "wallet-id-1",
+        createdAt = "2026-01-09T22:13:20Z",
         crypto = CloudBackupFileData.CryptoData(
             cipher = "aes-256-gcm",
             cipherparams = CloudBackupFileData.CipherParams(nonce = "00"),
@@ -80,9 +89,10 @@ internal class DefaultCloudBackupRepositoryTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(api, tokenProvider, cipher)
+        clearMocks(api, tokenProvider, cipher, featureTogglesManager)
         coEvery { tokenProvider.getAccessToken(any()) } returns "token".right()
         every { cipher.encrypt(any(), any(), any(), any()) } returns fileData
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
     }
 
     @Test
@@ -92,13 +102,17 @@ internal class DefaultCloudBackupRepositoryTest {
             errorResponse(HTTP_UNAUTHORIZED),
             successResponse(CloudBackupJson.encodeToString(fileData)),
         )
-        every { cipher.decrypt(any(), any()) } returns SECRET_JSON.toByteArray(Charsets.UTF_8).right()
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
 
         // Act
         val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
 
         // Assert
-        assertThat(actual).isEqualTo(CloudBackupSecretData(mnemonic = "m", passphrase = null).right())
+        val expected = RestoredCloudBackup(
+            walletName = fileData.name,
+            secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false),
+        )
+        assertThat(actual).isEqualTo(expected.right())
         coVerify(exactly = 1) { tokenProvider.invalidate() }
         coVerify(exactly = 2) { api.downloadFileContent(any(), any(), any()) }
     }
@@ -125,13 +139,28 @@ internal class DefaultCloudBackupRepositoryTest {
             errorResponse(HTTP_UNAUTHORIZED),
             successResponse(CloudBackupJson.encodeToString(fileData)),
         )
-        every { cipher.decrypt(any(), any()) } returns SECRET_JSON.toByteArray(Charsets.UTF_8).right()
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
 
         // Act
         repository.readBackup(fileId = "file-1", password = "p".toCharArray())
 
         // Assert
         assertThat(requestedInteractive).containsExactly(true, false).inOrder()
+    }
+
+    @Test
+    fun `GIVEN long name in the file WHEN readBackup THEN full name is taken from the file content`() = runTest {
+        // Arrange
+        val longName = "Кошелёк ".repeat(n = 40)
+        val content = CloudBackupJson.encodeToString(fileData.copy(name = longName))
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns successResponse(content)
+        every { cipher.decrypt(any(), any()) } returns SECRET_PAYLOAD.toByteArray(Charsets.UTF_8).right()
+
+        // Act
+        val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
+
+        // Assert
+        assertThat(actual.getOrNull()?.walletName).isEqualTo(longName)
     }
 
     @Test
@@ -157,6 +186,44 @@ internal class DefaultCloudBackupRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(CloudBackupError.InvalidBackupFile.left())
+    }
+
+    @Test
+    fun `GIVEN content without walletId WHEN readBackup THEN InvalidBackupFile AND decrypt is not called`() = runTest {
+        // Arrange
+        val contentWithoutWalletId = CloudBackupJson.encodeToString(fileData)
+            .replace("\"walletId\":\"${fileData.walletId}\",", "")
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns successResponse(contentWithoutWalletId)
+
+        // Act
+        val actual = repository.readBackup(fileId = "file-1", password = "p".toCharArray())
+
+        // Assert
+        assertThat(actual).isEqualTo(CloudBackupError.InvalidBackupFile.left())
+        verify(exactly = 0) { cipher.decrypt(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN feature disabled WHEN isBackedUp THEN returns false despite the stored flag`() = runTest {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
+        store.setBackedUp(WALLET_ID, backedUp = true)
+
+        // Act & Assert
+        assertThat(repository.isBackedUp(WALLET_ID)).isFalse()
+        assertThat(repository.isBackedUpFlow(WALLET_ID).first()).isFalse()
+    }
+
+    @Test
+    fun `GIVEN feature toggle WHEN isCloudBackupEnabled THEN mirrors the toggle`() {
+        // Arrange
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns false
+
+        // Act & Assert
+        assertThat(repository.isCloudBackupEnabled).isFalse()
+
+        every { featureTogglesManager.isFeatureEnabled(any()) } returns true
+        assertThat(repository.isCloudBackupEnabled).isTrue()
     }
 
     @Test
@@ -375,6 +442,72 @@ internal class DefaultCloudBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN name longer than the limit WHEN resolveUniqueBackupName THEN name fits into 255 bytes`() {
+        // Arrange
+        val walletName = "W".repeat(n = 300)
+
+        // Act
+        val actual = resolveUniqueBackupName(walletName, "backup.json", emptySet())
+
+        // Assert
+        assertThat(actual).isEqualTo("W".repeat(n = 243) + ".backup.json")
+        assertThat(actual.toByteArray(Charsets.UTF_8)).hasLength(255)
+    }
+
+    @Test
+    fun `GIVEN multibyte name longer than the limit WHEN resolveUniqueBackupName THEN cut between characters`() {
+        // Arrange
+        val walletName = "Ж".repeat(n = 300)
+
+        // Act
+        val actual = resolveUniqueBackupName(walletName, "backup.json", emptySet())
+
+        // Assert
+        assertThat(actual).isEqualTo("Ж".repeat(n = 121) + ".backup.json")
+        assertThat(actual.toByteArray(Charsets.UTF_8).size).isAtMost(255)
+    }
+
+    @Test
+    fun `GIVEN truncated name taken WHEN resolveUniqueBackupName THEN increment also fits into 255 bytes`() {
+        // Arrange
+        val walletName = "W".repeat(n = 300)
+        val existing = setOf(resolveUniqueBackupName(walletName, "backup.json", emptySet()))
+
+        // Act
+        val actual = resolveUniqueBackupName(walletName, "backup.json", existing)
+
+        // Assert
+        assertThat(actual).isEqualTo("W".repeat(n = 239) + " (1).backup.json")
+        assertThat(actual.toByteArray(Charsets.UTF_8)).hasLength(255)
+    }
+
+    @Test
+    fun `GIVEN long wallet name WHEN uploadBackup THEN name appProperty fits into the Drive limit`() = runTest {
+        // Arrange
+        val walletName = "Ж".repeat(n = 300)
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(DriveFileListResponse(files = emptyList()))
+        val created = mutableListOf<DriveFileMetadata>()
+        coEvery { api.createFile(any(), capture(created), any()) } returns Response.success(DriveFile(id = "id"))
+        coEvery {
+            api.uploadFileContent(any(), any(), any(), any(), any())
+        } returns Response.success(DriveFile(id = "id"))
+
+        // Act
+        repository.uploadBackup(
+            walletId = "w1",
+            walletName = walletName,
+            createdAtMillis = 0L,
+            secret = secret,
+            password = "p".toCharArray(),
+        )
+
+        // Assert
+        val storedName = created.single { it.mimeType != FOLDER_MIME_TYPE }.appProperties?.get("walletName")
+        assertThat(storedName).isEqualTo("Ж".repeat(n = 57))
+        assertThat(("walletName" + storedName).toByteArray(Charsets.UTF_8).size).isAtMost(124)
+    }
+
+    @Test
     fun `GIVEN backup without createdAt appProperty WHEN findBackups THEN createdAtMillis from createdTime`() = runTest {
         // Arrange
         val createdTime = "2024-01-15T10:30:00Z"
@@ -397,6 +530,105 @@ internal class DefaultCloudBackupRepositoryTest {
         // Assert
         assertThat(result.getOrNull()?.single()?.createdAtMillis)
             .isEqualTo(Instant.parse(createdTime).toEpochMilliseconds())
+    }
+
+    @Test
+    fun `GIVEN file with malformed content WHEN findBackups with validation THEN file is filtered out`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns successResponse("{}")
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN file with supported content WHEN findBackups with validation THEN file is kept`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns true
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.fileId).isEqualTo("f1")
+    }
+
+    @Test
+    fun `GIVEN file with unsupported format WHEN findBackups with validation THEN file is filtered out`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns false
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN content download fails WHEN findBackups with validation THEN file is kept`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns errorResponse(HTTP_INTERNAL_ERROR)
+
+        // Act
+        val result = repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.fileId).isEqualTo("f1")
+    }
+
+    @Test
+    fun `GIVEN validation disabled WHEN findBackups THEN content is not downloaded`() = runTest {
+        // Arrange
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+
+        // Act
+        val result = repository.findBackups(interactive = false)
+
+        // Assert
+        assertThat(result.getOrNull()?.single()?.fileId).isEqualTo("f1")
+        coVerify(exactly = 0) { api.downloadFileContent(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN non-interactive validation WHEN findBackups THEN token never requested interactively`() = runTest {
+        // Arrange
+        val requestedInteractive = mutableListOf<Boolean>()
+        coEvery { tokenProvider.getAccessToken(capture(requestedInteractive)) } returns "token".right()
+        coEvery { api.listFiles(any(), any(), any()) } returns Response.success(
+            DriveFileListResponse(files = listOf(driveFile(id = "f1"))),
+        )
+        coEvery { api.downloadFileContent(any(), any(), any()) } returns
+            successResponse(CloudBackupJson.encodeToString(fileData))
+        every { cipher.isSupportedFormat(any()) } returns true
+
+        // Act
+        repository.findBackups(interactive = false, validateContent = true)
+
+        // Assert
+        assertThat(requestedInteractive).isNotEmpty()
+        assertThat(requestedInteractive).doesNotContain(true)
     }
 
     @Test
@@ -425,6 +657,13 @@ internal class DefaultCloudBackupRepositoryTest {
         result.onLeft { assertThat(it).isInstanceOf(CloudBackupError.WriteError::class.java) }
     }
 
+    private fun driveFile(id: String): DriveFile = DriveFile(
+        id = id,
+        name = "Wallet.backup.json",
+        createdTime = "2024-01-15T10:30:00Z",
+        appProperties = mapOf("walletId" to "w1"),
+    )
+
     private fun errorResponse(code: Int): Response<ResponseBody> = Response.error(code, "".toResponseBody(null))
 
     private fun successResponse(content: String): Response<ResponseBody> =
@@ -432,9 +671,10 @@ internal class DefaultCloudBackupRepositoryTest {
 
     private companion object {
         const val HTTP_UNAUTHORIZED = 401
+        const val HTTP_INTERNAL_ERROR = 500
         const val WALLET_ID = "wallet-1"
         const val FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
-        const val SECRET_JSON = "{\"mnemonic\":\"m\"}"
+        const val SECRET_PAYLOAD = """{"mnemonic":"m","passphraseRequired":0}"""
         val JSON_MEDIA_TYPE = "application/json".toMediaType()
     }
 }
