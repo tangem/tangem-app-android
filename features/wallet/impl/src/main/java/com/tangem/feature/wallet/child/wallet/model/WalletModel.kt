@@ -40,6 +40,8 @@ import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
+import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.usecase.*
@@ -87,6 +89,7 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateActionResolver: WalletsUpdateActionResolver,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
@@ -126,6 +129,8 @@ internal class WalletModel @Inject constructor(
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     private val warmUpMarketingCampaignsUseCase: WarmUpMarketingCampaignsUseCase,
+    private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
+    private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -277,7 +282,8 @@ internal class WalletModel @Inject constructor(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
                             accountsCount = accountsCount,
-                            isBackedUp = selectedWallet.isBackedUpForAnalytics(),
+                            isBackedUp = isWalletBackedUpUseCase(selectedWallet),
+                            completedBackups = getCompletedBackupsUseCase(selectedWallet),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
                             referralId = appsFlyerStore.get()?.refcode,
@@ -368,6 +374,8 @@ internal class WalletModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     trackingContextProxy.setContext(selectedWallet)
+                    val historyFetch = TxHistoryFetchTrigger.WalletSelected(selectedWallet.walletId)
+                    appTxHistoryFetcher.invoke(historyFetch)
 
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)

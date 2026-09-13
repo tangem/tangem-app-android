@@ -21,10 +21,18 @@
     },
     {
         "name": "robinhood",
-        "version": "6.1.3"
+        "version": "6.2"
     },
     {
         "name": "igra",
-        "version": "6.1.3"
+        "version": "6.2"
+    },
+    {
+        "name": "electroneum",
+        "version": "6.3"
+    },
+    {
+        "name": "arc",
+        "version": "6.3"
     }
 ]

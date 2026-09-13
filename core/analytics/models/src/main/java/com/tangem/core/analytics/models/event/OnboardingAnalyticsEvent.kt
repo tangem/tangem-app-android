@@ -112,6 +112,68 @@ sealed class OnboardingAnalyticsEvent(
         class ButtonImport : SeedPhrase("Button - Import")
     }
 
+    sealed class Backup(
+        event: String,
+        params: Map<String, String> = emptyMap(),
+    ) : OnboardingAnalyticsEvent(category = "Onboarding / Backup", event = event, params = params) {
+
+        /** Any backup of a mobile wallet finished successfully — the recovery phrase one or a cloud one */
+        class Finished(
+            backupType: AnalyticsParam.BackupType,
+        ) : Backup(
+            event = "Backup Finished",
+            params = mapOf(AnalyticsParam.BACKUP_TYPE to backupType.value),
+        )
+
+        /** The "Import existing wallet" chooser was shown (recovery phrase / cloud backup) */
+        class ImportWalletRequest(
+            cloudBackup: AnalyticsParam.CloudBackupAvailability,
+        ) : Backup(
+            event = "Import Wallet Request",
+            params = mapOf(AnalyticsParam.CLOUD_BACKUP to cloudBackup.value),
+        )
+
+        class SelectCloudBackupScreen(
+            backupCount: Int,
+        ) : Backup(
+            event = "Select Cloud Backup Screen",
+            params = mapOf(AnalyticsParam.BACKUP_COUNT to backupCount.toString()),
+        )
+
+        /** @param userWalletId sha256 of the backed up wallet id, taken from the backup file */
+        class EnterCloudBackupPasswordScreen(
+            userWalletId: String?,
+        ) : Backup(
+            event = "Enter Cloud Backup Password Screen",
+            params = buildMap {
+                userWalletId?.let { put(AnalyticsParam.USER_WALLET_ID, it) }
+            },
+        )
+
+        class ImportCompletedScreenOpened(
+            backupType: AnalyticsParam.BackupType,
+        ) : Backup(
+            event = "Import Completed Screen Opened",
+            params = mapOf(AnalyticsParam.BACKUP_TYPE to backupType.value),
+        )
+
+        /** @param userWalletId sha256 of the backed up wallet id, taken from the backup file */
+        class ImportCloudBackupError(
+            userWalletId: String?,
+            errorMessage: String,
+        ) : Backup(
+            event = "Import Cloud Backup Error",
+            params = buildMap {
+                userWalletId?.let { put(AnalyticsParam.USER_WALLET_ID, it) }
+                put(AnalyticsParam.ERROR_MESSAGE, errorMessage)
+            },
+        )
+
+        class WrongCloudBackupPassword : Backup(
+            event = "Wrong Cloud Backup Password",
+        )
+    }
+
     sealed class Error(
         event: String,
         params: Map<String, String> = mapOf(),

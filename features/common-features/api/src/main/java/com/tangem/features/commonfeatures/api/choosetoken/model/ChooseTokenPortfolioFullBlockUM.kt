@@ -12,6 +12,7 @@ data class ChooseTokenPortfolioFullBlockUM(
     val isBalanceHidden: Boolean,
     val isSearching: Boolean,
     val tokensListData: TokenListUMData,
+    val balanceFilterUM: BalanceFilterUM? = null,
 )
 
 data class WalletListUM(
@@ -42,7 +43,9 @@ sealed interface TokenListUMData {
         override val totalTokensCount: Int,
     ) : TokenListUMData
 
-    data object EmptyList : TokenListUMData {
+    data class EmptyList(
+        val reason: EmptyReason = EmptyReason.NoTokens,
+    ) : TokenListUMData {
         override val tokensList: ImmutableList<TokensListItemUM> = persistentListOf()
         override val totalTokensCount: Int = EMPTY_TOKENS_COUNT
     }

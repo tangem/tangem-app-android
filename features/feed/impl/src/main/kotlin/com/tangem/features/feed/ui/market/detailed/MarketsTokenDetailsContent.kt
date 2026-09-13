@@ -35,6 +35,7 @@ import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -51,6 +52,8 @@ import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreBottomSheetContent
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
+
+private val FloatingBlockMinRoom = 8.dp
 
 @Suppress("LongParameterList")
 @Composable
@@ -158,17 +161,26 @@ private fun Content(
             }
         }
 
-        portfolioFloatingBlock?.invoke(
-            Modifier
-                .onSizeChanged { size ->
-                    bottomSpacing = if (size.height > 0) {
-                        with(density) { size.height.toDp() }
-                    } else {
-                        0.dp
-                    }
-                }
-                .align(Alignment.BottomCenter),
-        )
+        if (portfolioFloatingBlock != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = contentPadding.calculateTopPadding()),
+            ) {
+                portfolioFloatingBlock(
+                    Modifier
+                        .dropWhenNoRoom(minRoom = FloatingBlockMinRoom)
+                        .onSizeChanged { size ->
+                            bottomSpacing = if (size.height > 0) {
+                                with(density) { size.height.toDp() }
+                            } else {
+                                0.dp
+                            }
+                        }
+                        .align(Alignment.BottomCenter),
+                )
+            }
+        }
     }
 }
 

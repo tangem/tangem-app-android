@@ -7,13 +7,13 @@ import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.internal.http.promisesBody
 import okio.Buffer
 import okio.EOFException
 import okio.GzipSource
 import okio.IOException
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.HttpURLConnection
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
@@ -183,6 +183,26 @@ class NetworkLogsSaveInterceptor(
         )
     }
 
+    /**
+     * Whether the response claims to have a body per RFC 7230, section 3.3. Mirrors OkHttp's
+     * `okhttp3.internal.http.promisesBody` — internal APIs aren't stable across OkHttp upgrades,
+     * so the check is kept local instead of importing it.
+     */
+    private fun Response.promisesBody(): Boolean {
+        if (request.method == "HEAD") return false
+
+        val isInformational = code in HTTP_CONTINUE until HttpURLConnection.HTTP_OK
+        if (!isInformational &&
+            code != HttpURLConnection.HTTP_NO_CONTENT &&
+            code != HttpURLConnection.HTTP_NOT_MODIFIED
+        ) {
+            return true
+        }
+
+        val contentLength = header("Content-Length")?.toLongOrNull() ?: -1L
+        return contentLength != -1L || "chunked".equals(header("Transfer-Encoding"), ignoreCase = true)
+    }
+
     private fun HttpUrl.maskSensitiveInfo(): String {
         val url = toString()
         return sensitiveUrlMasker?.mask(url) ?: url
@@ -249,6 +269,7 @@ class NetworkLogsSaveInterceptor(
     private companion object {
 
         const val WRITE_LOG_THRESHOLD_BYTES_SIZE = 2_048_000L
+        const val HTTP_CONTINUE = 100
 
         /**
          * List of URLs (host + path) for which logging is restricted

@@ -30,6 +30,7 @@ internal fun PolymarketAuthError.toOnboardingError(): PolymarketOnboardingError 
 
 internal fun PolymarketOnboardingError.isRetryable(): Boolean = when (this) {
     is PolymarketOnboardingError.AddressMismatch -> false
+    PolymarketOnboardingError.RegionBlocked -> false
     is PolymarketOnboardingError.Wallet -> when (cause) {
         PolymarketWalletError.InvalidRequest,
         PolymarketWalletError.Unauthorized,

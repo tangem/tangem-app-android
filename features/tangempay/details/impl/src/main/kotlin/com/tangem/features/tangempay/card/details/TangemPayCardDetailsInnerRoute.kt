@@ -17,6 +17,9 @@ internal sealed class TangemPayCardDetailsInnerRoute : Route {
     data object ChangePINSuccess : TangemPayCardDetailsInnerRoute()
 
     @Serializable
+    data class ActivateCard(val card: TangemPayCard) : TangemPayCardDetailsInnerRoute()
+
+    @Serializable
     data class AddToWallet(val card: TangemPayCard) : TangemPayCardDetailsInnerRoute()
 
     @Serializable

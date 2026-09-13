@@ -37,13 +37,21 @@ internal object ForYouPortfolioReviewPreviewData {
                     ),
                     DonutSegmentUM(
                         color = DonutSegmentColor.Green,
-                        weight = BigDecimal("0.45"),
+                        weight = BigDecimal("0.25"),
                         title = stringReference("Solana"),
                         fiatValue = stringReference("\$728.30"),
+                    ),
+                    // Closes the ring at the complement of the two assets — the collapsed "Other" bucket.
+                    DonutSegmentUM(
+                        color = DonutSegmentColor.Grey,
+                        weight = BigDecimal("0.20"),
+                        title = stringReference("Other"),
+                        fiatValue = stringReference("\$2,000.00"),
                     ),
                 ),
                 onSegmentTap = {},
             ),
+            assetCount = 2,
             topHoldingPercent = stringReference("Top holding 42%"),
         ),
         tokenList = persistentListOf(
@@ -163,7 +171,7 @@ internal object ForYouPortfolioReviewPreviewData {
     val loadingState = PortfolioReviewUM.Loading(
         marketChartUM = MarketChartUM.NoData(
             title = resourceReference(R.string.market_chart_can_not_load_data),
-            donutText = resourceReference(R.string.market_chart_bubble_no_data),
+            donutText = resourceReference(R.string.markets_loading_no_data_title),
         ),
         tokenList = buildList {
             repeat(5) { index ->

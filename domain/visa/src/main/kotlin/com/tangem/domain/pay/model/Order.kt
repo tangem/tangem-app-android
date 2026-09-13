@@ -11,7 +11,8 @@ package com.tangem.domain.pay.model
  * @property status current order status.
  * @property step optional per-status step indicator (KYC / Rain / Issue / Fee / Activation / …).
  * @property stepChangeCode optional code accompanying step transitions.
- * @property productInstanceId set for card-scoped orders.
+ * @property productInstanceId set for card-scoped orders; for a reissue order this is the replacement card.
+ * @property sourceProductInstanceId set for reissue orders — the card being replaced.
  * @property paymentAccountId set for card-scoped and payment-account-level orders.
  * @property cardId set for card-scoped orders that are filtered by card.
  * @property toTariffPlanId target tariff plan id for [OrderType.TARIFF_PLAN_TRANSITION] orders.
@@ -32,6 +33,7 @@ data class Order(
     val withdrawTxHash: String?,
     val createdAt: String?,
     val updatedAt: String?,
+    val sourceProductInstanceId: String? = null,
 ) {
     /** True when the order belongs to a specific card/product instance (vs payment-account-level). */
     val isCardScoped: Boolean get() = productInstanceId != null

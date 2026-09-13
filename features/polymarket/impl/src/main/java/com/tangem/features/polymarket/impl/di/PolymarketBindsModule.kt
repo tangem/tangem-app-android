@@ -3,16 +3,28 @@ package com.tangem.features.polymarket.impl.di
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.domain.polymarket.usecase.GetPolymarketEligibleWalletsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
-import com.tangem.domain.polymarket.usecase.ResolvePolymarketEntryUseCase
+import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
+import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
+import com.tangem.domain.polymarket.interactor.ResolvePolymarketEntryInteractor
 import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.DefaultPolymarketComponent
+import com.tangem.features.polymarket.impl.details.model.PolymarketEventDetailsModel
+import com.tangem.features.polymarket.impl.entry.model.PolymarketEntryModel
 import com.tangem.features.polymarket.impl.featuretoggles.DefaultPolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.walletblock.DefaultPolymarketWalletBlockComponent
 import com.tangem.features.polymarket.impl.main.model.PolymarketMainModel
+import com.tangem.features.polymarket.impl.search.model.PolymarketSearchModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
 import com.tangem.features.polymarket.impl.onboarding.model.PolymarketOnboardingModel
 import dagger.Binds
 import dagger.Module
@@ -29,6 +41,12 @@ internal interface PolymarketBindsModule {
     @Binds
     @Singleton
     fun providePolymarketComponentFactory(impl: DefaultPolymarketComponent.Factory): PolymarketComponent.Factory
+
+    @Binds
+    @Singleton
+    fun providePolymarketWalletBlockComponentFactory(
+        impl: DefaultPolymarketWalletBlockComponent.Factory,
+    ): PolymarketWalletBlockComponent.Factory
 }
 
 @Module
@@ -47,8 +65,28 @@ internal interface PolymarketModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(PolymarketSearchModel::class)
+    fun bindPolymarketSearchModel(impl: PolymarketSearchModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(PolymarketOnboardingModel::class)
     fun bindPolymarketOnboardingModel(impl: PolymarketOnboardingModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketEntryModel::class)
+    fun bindPolymarketEntryModel(impl: PolymarketEntryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PolymarketEventDetailsModel::class)
+    fun bindPolymarketEventDetailsModel(impl: PolymarketEventDetailsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionModel::class)
+    fun bindPlacePredictionModel(impl: PlacePredictionModel): Model
 }
 
 @Module
@@ -68,13 +106,41 @@ internal object PolymarketDomainUseCasesModule {
 
     @Provides
     @Singleton
-    fun provideResolvePolymarketEntryUseCase(
-        checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    fun provideResolvePolymarketEntryInteractor(
         derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
-    ): ResolvePolymarketEntryUseCase = ResolvePolymarketEntryUseCase(
-        checkPolymarketGeoblockUseCase = checkPolymarketGeoblockUseCase,
+        getPolymarketApiCredentialsUseCase: GetPolymarketApiCredentialsUseCase,
+        polymarketOnboardedStore: PolymarketOnboardedStore,
+        recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
+    ): ResolvePolymarketEntryInteractor = ResolvePolymarketEntryInteractor(
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         getPolymarketWalletStatusUseCase = getPolymarketWalletStatusUseCase,
+        getPolymarketApiCredentialsUseCase = getPolymarketApiCredentialsUseCase,
+        polymarketOnboardedStore = polymarketOnboardedStore,
+        recordPolymarketConfirmation = recordPolymarketConfirmation,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRecordPolymarketConfirmationUseCase(
+        polymarketOnboardedStore: PolymarketOnboardedStore,
+    ): RecordPolymarketConfirmationUseCase = RecordPolymarketConfirmationUseCase(
+        onboardedStore = polymarketOnboardedStore,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionOrderQuoteUseCase(
+        polymarketRepository: PolymarketRepository,
+    ): GetPredictionOrderQuoteUseCase = GetPredictionOrderQuoteUseCase(
+        polymarketRepository = polymarketRepository,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPolymarketEligibleWalletsUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): GetPolymarketEligibleWalletsUseCase = GetPolymarketEligibleWalletsUseCase(
+        userWalletsListRepository = userWalletsListRepository,
     )
 }

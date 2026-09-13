@@ -75,7 +75,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         fun `invokeSync returns None when AccountList does not contain required currency id`() = runTest {
             // Arrange
             val accountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
@@ -104,13 +104,13 @@ class GetAccountCurrencyStatusUseCaseTest {
         fun `invokeSync returns Some if network is not null`() = runTest {
             // Arrange
             val mainAccountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
 
             val derivationIndex = DerivationIndex(1).getOrNull()!!
-            val account = Account.CryptoPortfolio(
+            val account = Account.Personal(
                 accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
                 accountName = AccountName("Test Account").getOrNull()!!,
                 icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
@@ -157,7 +157,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns Some if network is null`() = runTest {
             // Arrange
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )
@@ -217,7 +217,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         fun `invoke returns empty flow when AccountList does not contain required currency id`() = runTest {
             // Arrange
             val accountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
@@ -247,13 +247,13 @@ class GetAccountCurrencyStatusUseCaseTest {
         fun `invoke returns data if network is not null`() = runTest {
             // Arrange
             val mainAccountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+                account = Account.Personal.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
 
             val derivationIndex = DerivationIndex(1).getOrNull()!!
-            val account = Account.CryptoPortfolio(
+            val account = Account.Personal(
                 accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
                 accountName = AccountName("Test Account").getOrNull()!!,
                 icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
@@ -297,7 +297,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns data if network is null`() = runTest {
             // Arrange
-            val account = Account.CryptoPortfolio.createMainAccount(
+            val account = Account.Personal.createMainAccount(
                 userWalletId = userWalletId,
                 cryptoCurrencies = listOf(currency),
             )

@@ -31,6 +31,9 @@ internal class AllOffersStateFactory(
                 createPaymentMethodUM(group, currencyCode)
             }.toPersistentList(),
             currentMethod = replaceOffersForCurrentMethod(methodGroups, currencyCode),
+            restrictedNotification = OnrampRegionRestrictionNotification.takeIf {
+                methodGroups.any { group -> group.offers.any { offer -> offer.quote.isRestricted } }
+            },
             onBackClicked = { allOffersIntents.onBackClicked() },
         )
     }
@@ -142,7 +145,11 @@ internal class AllOffersStateFactory(
     private fun mapOffersToUM(offers: List<OnrampOffer>, currencyCode: String): List<OnrampOfferUM> {
         return offers.mapNotNull { offer ->
             when (val quote = offer.quote) {
-                is OnrampQuote.Data -> createDataOfferUM(quote, offer)
+                is OnrampQuote.Data -> if (quote.isRestricted) {
+                    createRestrictedOfferUM(quote)
+                } else {
+                    createDataOfferUM(quote, offer)
+                }
                 is OnrampQuote.AmountError -> createAmountErrorOfferUM(quote, offer, currencyCode)
                 is OnrampQuote.Error -> null
             }
@@ -190,6 +197,19 @@ internal class AllOffersStateFactory(
             providerName = quote.provider.info.name,
             rate = formatRequiredAmount(quote, currencyCode),
             diff = formatRateDiff(offer.rateDif),
+            onBuyClicked = {},
+        )
+    }
+
+    private fun createRestrictedOfferUM(quote: OnrampQuote.Data): OnrampOfferUM {
+        return OnrampOfferUM(
+            category = OnrampOfferCategoryUM.Recommended,
+            advantages = OnrampOfferAdvantagesUM.Restricted,
+            paymentMethod = quote.paymentMethod,
+            providerId = quote.provider.id,
+            providerName = quote.provider.info.name,
+            rate = formatCryptoAmount(quote.toAmount),
+            diff = null,
             onBuyClicked = {},
         )
     }

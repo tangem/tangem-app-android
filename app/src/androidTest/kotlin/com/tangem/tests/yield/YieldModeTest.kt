@@ -8,7 +8,6 @@ import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.pullToRefresh
-import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
 import com.tangem.screens.onMainScreen
@@ -46,13 +45,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldNotActiveState = "NotActive"
         val yieldActiveState = "Active"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(yieldScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -124,13 +117,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldNotActiveState = "NotActive"
         val yieldActiveState = "Active"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(yieldScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -217,13 +204,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldScenario = "yield_supply_status"
         val yieldTopUpState = "TopUp"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(yieldScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -285,13 +266,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldApproveNeededState = "Active"
         val yieldApproveGrantedState = "ApproveGranted"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(yieldScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -369,13 +344,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldNotActiveState = "NotActive"
         val yieldActiveState = "Active"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(yieldScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -472,13 +441,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldActiveState = "Active"
         val yieldExitedState = "Exited"
 
-        setupHooks(
-            additionalAfterSection = {
-                resetWireMockScenarioState(portfolioScenario)
-                resetWireMockScenarioState(balancesScenario)
-                resetWireMockScenarioState(yieldScenario)
-            }
-        ).run {
+        setupHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)

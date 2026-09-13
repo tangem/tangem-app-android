@@ -231,7 +231,7 @@ internal fun buildSwapCurrencyStatus(
         every { walletId } returns userWalletId
     }
 
-    val account = mockk<Account>(relaxed = true) {
+    val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
         every { accountId } returns mockk(relaxed = true)
     }
 
@@ -336,10 +336,12 @@ internal fun buildQuoteModel(
     decimals: Int = 18,
     allowanceContract: String? = null,
     txType: ExpressTxType? = null,
+    isRestricted: Boolean = false,
 ): QuoteModel = QuoteModel(
     toTokenAmount = SwapAmount(toAmount, decimals),
     allowanceContract = allowanceContract,
     txType = txType,
+    isRestricted = isRestricted,
 )
 
 /**

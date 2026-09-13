@@ -24,9 +24,13 @@ interface CashbackRepository {
     /**
      * Loads the confirmed cashback history for the customer of [userWalletId], grouped by month.
      *
-     * @param months number of calendar months to return, counting back from and including the current month.
+     * @param monthsNumber number of calendar months to return, counting back from and including the current
+     *                     month.
      */
-    suspend fun getCashbackHistory(userWalletId: UserWalletId, months: Int): Either<VisaApiError, CashbackHistory>
+    suspend fun getCashbackHistory(
+        userWalletId: UserWalletId,
+        monthsNumber: Int,
+    ): Either<VisaApiError, CashbackHistory>
 
     /**
      * Loads the rich per-transaction cashback for [transactionId] (customer of [userWalletId]),

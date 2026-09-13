@@ -38,6 +38,7 @@ internal sealed interface TangemPayOrderCardDataScreenUM {
         val postalCode: FieldUM,
         val phone: FieldUM,
         val isOrderEnabled: Boolean,
+        val isSubmitting: Boolean,
         val onOrderClick: () -> Unit,
     ) : TangemPayOrderCardDataScreenUM
 
@@ -46,9 +47,10 @@ internal sealed interface TangemPayOrderCardDataScreenUM {
         val value: String,
         val error: OrderFieldError?,
         val isRequired: Boolean,
+        val isEditable: Boolean = true,
         val onValueChange: (String) -> Unit,
         val onFocusChange: (Boolean) -> Unit,
     )
 }
 
-internal enum class OrderFieldError { Required, Invalid }
+internal enum class OrderFieldError { Required, Invalid, NonLatin }

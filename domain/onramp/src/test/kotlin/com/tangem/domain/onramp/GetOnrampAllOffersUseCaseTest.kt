@@ -3,13 +3,7 @@ package com.tangem.domain.onramp
 import com.google.common.truth.Truth
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.onramp.model.OnrampAmount
-import com.tangem.domain.onramp.model.OnrampOfferAdvantages
-import com.tangem.domain.onramp.model.OnrampPaymentMethod
-import com.tangem.domain.onramp.model.OnrampProvider
-import com.tangem.domain.onramp.model.OnrampQuote
-import com.tangem.domain.onramp.model.PaymentMethodStatus
-import com.tangem.domain.onramp.model.PaymentMethodType
+import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
@@ -461,6 +455,189 @@ class GetOnrampAllOffersUseCaseTest {
         }
     }
 
+    @Test
+    fun `GIVEN restricted and valid quotes WHEN invoke THEN restricted sorted last and excluded from best rate`() =
+        runTest {
+            // Arrange
+            val paymentMethod = createMockPaymentMethod("card", "Card", PaymentMethodType.CARD)
+            val restrictedProvider = createMockProvider("restricted", "Restricted Provider")
+            val validProvider = createMockProvider("valid", "Valid Provider")
+            val quotes = listOf(
+                createRestrictedQuote(paymentMethod, restrictedProvider),
+                createMockDataQuote(paymentMethod, validProvider, BigDecimal("100.0")),
+            )
+            coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+            coEvery { settingsRepository.isGooglePayAvailability() } returns false
+
+            // Act
+            val result = useCase(userWalletId, cryptoCurrencyId)
+
+            // Assert
+            result.collect { either ->
+                Truth.assertThat(either.isRight()).isTrue()
+                either.fold(
+                    ifLeft = { error -> Truth.assertThat(error).isNull() },
+                    ifRight = { offers ->
+                        val cardGroup = offers.find { it.paymentMethod.id == "card" }
+                        Truth.assertThat(cardGroup).isNotNull()
+                        Truth.assertThat(cardGroup?.offers).hasSize(2)
+                        val validOffer = cardGroup?.offers?.first()
+                        val restrictedOffer = cardGroup?.offers?.last()
+                        Truth.assertThat(validOffer?.quote?.provider?.id).isEqualTo("valid")
+                        Truth.assertThat(restrictedOffer?.quote?.provider?.id).isEqualTo("restricted")
+                        // The purchasable quote wins best rate even though the restricted rate is higher (120 > 100)
+                        Truth.assertThat(validOffer?.advantages).isEqualTo(OnrampOfferAdvantages.BestRate)
+                        Truth.assertThat(restrictedOffer?.advantages).isEqualTo(OnrampOfferAdvantages.Default)
+                        Truth.assertThat(restrictedOffer?.rateDif).isNull()
+                        Truth.assertThat(cardGroup?.bestRateOffer?.quote?.provider?.id).isEqualTo("valid")
+                        Truth.assertThat(cardGroup?.isBestPaymentMethod).isTrue()
+                        Truth.assertThat(cardGroup?.methodStatus).isEqualTo(PaymentMethodStatus.Available)
+                        Truth.assertThat(cardGroup?.providerCount).isEqualTo(2)
+                    },
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN only restricted quotes in method WHEN invoke THEN group available with restricted offer`() = runTest {
+        // Arrange
+        val paymentMethod = createMockPaymentMethod("card", "Card", PaymentMethodType.CARD)
+        val provider = createMockProvider("provider1", "Provider 1")
+        val quotes = listOf(createRestrictedQuote(paymentMethod, provider))
+        coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
+
+        // Act
+        val result = useCase(userWalletId, cryptoCurrencyId)
+
+        // Assert
+        result.collect { either ->
+            Truth.assertThat(either.isRight()).isTrue()
+            either.fold(
+                ifLeft = { error -> Truth.assertThat(error).isNull() },
+                ifRight = { offers ->
+                    Truth.assertThat(offers).hasSize(1)
+                    val cardGroup = offers.single()
+                    Truth.assertThat(cardGroup.offers).hasSize(1)
+                    Truth.assertThat(cardGroup.offers.single().quote.provider.id).isEqualTo("provider1")
+                    // With no purchasable quote in the group, bestRateOffer falls back to the restricted quote
+                    Truth.assertThat(cardGroup.bestRateOffer).isNotNull()
+                    Truth.assertThat(cardGroup.bestRateOffer?.quote?.provider?.id).isEqualTo("provider1")
+                    Truth.assertThat(cardGroup.methodStatus).isEqualTo(PaymentMethodStatus.Available)
+                    Truth.assertThat(cardGroup.providerCount).isEqualTo(1)
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN amount error and restricted quotes WHEN invoke THEN method available and amount error listed first`() =
+        runTest {
+            // Arrange
+            val paymentMethod = createMockPaymentMethod("card", "Card", PaymentMethodType.CARD)
+            val amountErrorProvider = createMockProvider("amountError", "Amount Error Provider")
+            val restrictedProvider = createMockProvider("restricted", "Restricted Provider")
+            val quotes = listOf(
+                createRestrictedQuote(paymentMethod, restrictedProvider),
+                createMockAmountErrorQuote(paymentMethod, amountErrorProvider, BigDecimal("50.0")),
+            )
+            coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+            coEvery { settingsRepository.isGooglePayAvailability() } returns false
+
+            // Act
+            val result = useCase(userWalletId, cryptoCurrencyId)
+
+            // Assert
+            result.collect { either ->
+                either.fold(
+                    ifLeft = { error -> Truth.assertThat(error).isNull() },
+                    ifRight = { offers ->
+                        val cardGroup = offers.single()
+                        // A restricted Data quote keeps the method Available (restricted offers stay displayable)
+                        Truth.assertThat(cardGroup.methodStatus).isEqualTo(PaymentMethodStatus.Available)
+                        Truth.assertThat(cardGroup.offers).hasSize(2)
+                        Truth.assertThat(cardGroup.offers.first().quote.provider.id).isEqualTo("amountError")
+                        Truth.assertThat(cardGroup.offers.last().quote.provider.id).isEqualTo("restricted")
+                    },
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN restricted best rate in one method WHEN invoke THEN purchasable method wins badge and baseline`() =
+        runTest {
+            // Arrange
+            val methodA = createMockPaymentMethod("cardA", "Card A", PaymentMethodType.CARD)
+            val methodB = createMockPaymentMethod("cardB", "Card B", PaymentMethodType.CARD)
+            val restrictedProvider = createMockProvider("restricted", "Restricted Provider")
+            val providerA = createMockProvider("providerA", "Provider A")
+            val providerB = createMockProvider("providerB", "Provider B")
+            val quotes = listOf(
+                createRestrictedQuote(methodA, restrictedProvider),
+                createMockDataQuote(methodA, providerA, BigDecimal("90.0")),
+                createMockDataQuote(methodB, providerB, BigDecimal("100.0")),
+            )
+            coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+            coEvery { settingsRepository.isGooglePayAvailability() } returns false
+
+            // Act
+            val result = useCase(userWalletId, cryptoCurrencyId)
+
+            // Assert
+            result.collect { either ->
+                either.fold(
+                    ifLeft = { error -> Truth.assertThat(error).isNull() },
+                    ifRight = { offers ->
+                        val groupA = offers.find { it.paymentMethod.id == "cardA" }
+                        val groupB = offers.find { it.paymentMethod.id == "cardB" }
+                        // The restricted 120 rate must not steal the badge from the best purchasable quote (100)
+                        Truth.assertThat(groupB?.isBestPaymentMethod).isTrue()
+                        Truth.assertThat(groupA?.isBestPaymentMethod).isFalse()
+                        Truth.assertThat(groupB?.offers?.single()?.advantages)
+                            .isEqualTo(OnrampOfferAdvantages.BestRate)
+                        Truth.assertThat(groupA?.bestRateOffer?.quote?.provider?.id).isEqualTo("providerA")
+
+                        // The rateDif baseline is the purchasable 100, not the restricted 120
+                        val purchasableOfferA = groupA?.offers?.first()
+                        val restrictedOfferA = groupA?.offers?.last()
+                        Truth.assertThat(purchasableOfferA?.quote?.provider?.id).isEqualTo("providerA")
+                        Truth.assertThat(purchasableOfferA?.rateDif?.compareTo(BigDecimal("0.1"))).isEqualTo(0)
+                        Truth.assertThat(restrictedOfferA?.rateDif).isNull()
+                    },
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN generic error quote WHEN invoke THEN error quote still dropped`() = runTest {
+        // Arrange
+        val paymentMethod = createMockPaymentMethod("card", "Card", PaymentMethodType.CARD)
+        val errorProvider = createMockProvider("error", "Error Provider")
+        val validProvider = createMockProvider("valid", "Valid Provider")
+        val quotes = listOf(
+            createMockErrorQuote(paymentMethod, errorProvider),
+            createMockDataQuote(paymentMethod, validProvider, BigDecimal("100.0")),
+        )
+        coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
+
+        // Act
+        val result = useCase(userWalletId, cryptoCurrencyId)
+
+        // Assert
+        result.collect { either ->
+            either.fold(
+                ifLeft = { error -> Truth.assertThat(error).isNull() },
+                ifRight = { offers ->
+                    val cardGroup = offers.single()
+                    Truth.assertThat(cardGroup.offers).hasSize(1)
+                    Truth.assertThat(cardGroup.offers.single().quote.provider.id).isEqualTo("valid")
+                    Truth.assertThat(cardGroup.providerCount).isEqualTo(1)
+                },
+            )
+        }
+    }
+
     private fun createMockPaymentMethod(id: String, name: String, type: PaymentMethodType): OnrampPaymentMethod {
         return mockk<OnrampPaymentMethod> {
             every { this@mockk.id } returns id
@@ -480,6 +657,7 @@ class GetOnrampAllOffersUseCaseTest {
         paymentMethod: OnrampPaymentMethod,
         provider: OnrampProvider,
         toAmount: BigDecimal,
+        isRestricted: Boolean = false,
     ): OnrampQuote.Data {
         return mockk<OnrampQuote.Data> {
             every { this@mockk.paymentMethod } returns paymentMethod
@@ -489,6 +667,7 @@ class GetOnrampAllOffersUseCaseTest {
             every { this@mockk.countryCode } returns "US"
             every { this@mockk.minFromAmount } returns null
             every { this@mockk.maxFromAmount } returns null
+            every { this@mockk.isRestricted } returns isRestricted
         }
     }
 
@@ -509,6 +688,18 @@ class GetOnrampAllOffersUseCaseTest {
                 OnrampError.AmountError.TooBigError(requiredAmount = requiredAmount)
             }
         }
+    }
+
+    private fun createRestrictedQuote(
+        paymentMethod: OnrampPaymentMethod,
+        provider: OnrampProvider,
+    ): OnrampQuote.Data {
+        return createMockDataQuote(
+            paymentMethod = paymentMethod,
+            provider = provider,
+            toAmount = BigDecimal("120.0"),
+            isRestricted = true,
+        )
     }
 
     private fun createMockErrorQuote(paymentMethod: OnrampPaymentMethod, provider: OnrampProvider): OnrampQuote.Error {

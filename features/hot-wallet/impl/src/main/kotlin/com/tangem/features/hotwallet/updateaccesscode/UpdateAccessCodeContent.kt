@@ -16,6 +16,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRoute
@@ -24,6 +25,8 @@ import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRo
 internal fun SetAccessCodeContent(
     onBackClick: () -> Unit,
     showBackButton: Boolean,
+    onSkipClick: () -> Unit,
+    showSkipButton: Boolean,
     stackState: ChildStack<UpdateAccessCodeRoute, ComposableContentComponent>,
 ) {
     Column(
@@ -33,17 +36,27 @@ internal fun SetAccessCodeContent(
             .imePadding()
             .systemBarsPadding(),
     ) {
+        val skipButton = if (showSkipButton) {
+            TopAppBarButtonUM.Text(
+                text = resourceReference(R.string.common_skip),
+                onClicked = onSkipClick,
+            )
+        } else {
+            null
+        }
         if (showBackButton) {
             TangemTopAppBar(
                 modifier = Modifier,
                 title = stringResourceSafe(R.string.access_code_navtitle),
                 startButton = TopAppBarButtonUM.Back(onBackClick),
+                endButton = skipButton,
             )
         } else {
             TangemTopAppBar(
                 modifier = Modifier,
                 title = stringResourceSafe(R.string.access_code_navtitle),
                 titleAlignment = Alignment.CenterHorizontally,
+                endButton = skipButton,
             )
         }
         Children(

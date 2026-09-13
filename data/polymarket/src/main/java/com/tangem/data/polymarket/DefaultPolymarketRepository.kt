@@ -1,34 +1,58 @@
 package com.tangem.data.polymarket
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.polymarket.converter.PolymarketApiKeyConverter
+import com.tangem.data.polymarket.converter.PolymarketBalanceAllowanceConverter
 import com.tangem.data.polymarket.converter.PolymarketEventConverter
 import com.tangem.data.polymarket.converter.PolymarketWalletConverter
+import com.tangem.data.polymarket.converter.PredictionOrderQuoteConverter
 import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
+import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
+import com.tangem.data.polymarket.pagination.PolymarketEventsBatchFetcher
+import com.tangem.data.polymarket.pagination.PolymarketEventsUpdateFetcher
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
+import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.polymarket.PolymarketApi
 import com.tangem.datasource.api.polymarket.clob.PolymarketClobApi
 import com.tangem.datasource.api.polymarket.geo.PolymarketGeoApi
 import com.tangem.datasource.api.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.datasource.api.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.domain.core.error.DataError
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
+import com.tangem.domain.polymarket.model.PolymarketEventsPage
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
+import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
+import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
+import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import javax.inject.Inject
@@ -40,10 +64,9 @@ internal class DefaultPolymarketRepository @Inject constructor(
     private val geoApi: PolymarketGeoApi,
     private val relayerApi: PolymarketRelayerApi,
     private val clobApi: PolymarketClobApi,
-    private val eventConverter: PolymarketEventConverter,
-    private val walletConverter: PolymarketWalletConverter,
     private val walletErrorResolver: PolymarketWalletErrorResolver,
     private val authErrorResolver: PolymarketAuthErrorResolver,
+    private val eventErrorResolver: PolymarketEventErrorResolver,
     private val l2HeaderBuilder: PolymarketL2HeaderBuilder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketRepository {
@@ -59,28 +82,132 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
-    override suspend fun getEvents(category: Int?): Either<DataError, List<PolymarketEvent>> =
+    override fun getEventsBatchFlow(
+        context: PolymarketEventsBatchingContext,
+        batchSize: Int,
+    ): PolymarketEventsBatchFlow {
+        return BatchListSource(
+            fetchDispatcher = dispatchers.io,
+            context = context,
+            generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+            batchFetcher = PolymarketEventsBatchFetcher(
+                batchSize = batchSize,
+                fetchPage = ::fetchEventsPage,
+            ),
+            updateFetcher = PolymarketEventsUpdateFetcher(
+                batchSize = batchSize,
+                fetchPage = ::fetchEventsPage,
+            ),
+        ).toBatchFlow()
+    }
+
+    override fun searchEventsBatchFlow(
+        context: PolymarketSearchBatchingContext,
+        batchSize: Int,
+    ): PolymarketSearchBatchFlow {
+        return BatchListSource(
+            fetchDispatcher = dispatchers.io,
+            context = context,
+            generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+            batchFetcher = LimitOffsetBatchFetcher(
+                prefetchDistance = batchSize,
+                batchSize = batchSize,
+                subFetcher = ::fetchSearchPage,
+            ),
+        ).toBatchFlow()
+    }
+
+    /** The BFF pages search with a 1-based page number; the fetcher speaks offsets, so translate. */
+    private suspend fun fetchSearchPage(
+        request: LimitOffsetBatchFetcher.Request<PolymarketSearchConfig>,
+        @Suppress("UnusedParameter") lastResult: BatchFetchResult<List<PolymarketEvent>>?,
+        @Suppress("UnusedParameter") isFirstBatchFetching: Boolean,
+    ): BatchFetchResult<List<PolymarketEvent>> {
+        val response = polymarketApi.searchEvents(
+            query = request.params.query,
+            limit = request.limit,
+            page = request.offset / request.limit + 1,
+        )
+        return when (response) {
+            is ApiResponse.Success -> BatchFetchResult.Success(
+                data = response.data.events.map(PolymarketEventConverter::convert),
+                empty = response.data.events.isEmpty(),
+                last = !response.data.hasNext,
+            )
+            is ApiResponse.Error -> throw response.cause
+        }
+    }
+
+    /** Throws on failure: the pagination turns the throwable into a fetch error of the batch. */
+    private suspend fun fetchEventsPage(
+        config: PolymarketEventsListConfig,
+        cursor: String?,
+        limit: Int,
+    ): PolymarketEventsPage {
+        val response = polymarketApi.getEvents(category = config.category, limit = limit, cursor = cursor)
+        return when (response) {
+            is ApiResponse.Success -> PolymarketEventsPage(
+                events = response.data.events.map(PolymarketEventConverter::convert),
+                cursor = response.data.cursor,
+                hasNext = response.data.hasNext,
+            )
+            is ApiResponse.Error -> throw response.cause
+        }
+    }
+
+    override suspend fun getEvent(eventId: String): Either<PolymarketEventError, PolymarketEvent> =
         withContext(dispatchers.io) {
             safeApiCall(
                 call = {
-                    polymarketApi.getEvents(category = category, limit = DEFAULT_LIMIT, cursor = null)
-                        .bind().events.map(eventConverter::convert).right()
+                    PolymarketEventConverter.convert(polymarketApi.getEvent(eventId = eventId).bind().event).right()
                 },
-                onError = { DataError.NetworkError.NoInternetConnection.left() },
+                onError = { eventErrorResolver.resolve(it).left() },
             )
         }
+
+    override suspend fun getOrderQuote(
+        request: PredictionOrderQuoteRequest,
+    ): Either<PredictionOrderQuoteError, PredictionOrderQuote> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val response = polymarketApi.getOrderQuote(
+                    request = PredictionOrderQuoteConverter.toRequestBody(request = request),
+                ).bind()
+
+                Either.catch { PredictionOrderQuoteConverter.convert(value = response) }
+                    .mapLeft { error ->
+                        TangemLogger.e("Unreadable order quote", error)
+                        PredictionOrderQuoteError.Unknown(httpCode = null, detail = error.message)
+                    }
+            },
+            onError = { it.toQuoteError().left() },
+        )
+    }
 
     override suspend fun getWalletStatus(ownerAddress: String): Either<PolymarketWalletError, PolymarketWalletState> =
         withContext(dispatchers.io) {
             safeApiCall(
-                call = { walletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right() },
+                call = {
+                    PolymarketWalletConverter.toState(polymarketApi.getWalletStatus(ownerAddress).bind()).right()
+                },
                 onError = { walletErrorResolver.resolve(it).left() },
             )
         }
 
+    override suspend fun getWalletStatusByWalletId(
+        walletId: String,
+    ): Either<PolymarketWalletError, PolymarketWalletState> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                PolymarketWalletConverter.toState(polymarketApi.getWalletStatusByWalletId(walletId).bind()).right()
+            },
+            onError = { walletErrorResolver.resolve(it).left() },
+        )
+    }
+
     override suspend fun deployWallet(
         ownerAddress: String,
-        userWalletId: UserWalletId,
+        walletId: String,
         depositWalletAddress: String,
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
@@ -88,7 +215,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                 val response = polymarketApi.deployWallet(
                     PolymarketWalletDeployRequest(
                         ownerAddress = ownerAddress,
-                        walletId = userWalletId.stringValue,
+                        walletId = walletId,
                         depositWalletAddress = depositWalletAddress,
                     ),
                 ).bind()
@@ -103,7 +230,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketWalletError, PolymarketWalletStatus> = withContext(dispatchers.io) {
         safeApiCall(
             call = {
-                val response = polymarketApi.submitApprovals(walletConverter.toRequest(batch)).bind()
+                val response = polymarketApi.submitApprovals(PolymarketWalletConverter.toRequest(batch)).bind()
                 PolymarketWalletStatus.fromRaw(response.status).right()
             },
             onError = { walletErrorResolver.resolve(it).left() },
@@ -151,13 +278,11 @@ internal class DefaultPolymarketRepository @Inject constructor(
         ownerAddress: String,
         credentials: PolymarketApiCredentials,
     ): Either<PolymarketAuthError, Unit> = withContext(dispatchers.io) {
-        val headers = runCatching {
-            l2HeaderBuilder.build(
-                ownerAddress = ownerAddress,
-                credentials = credentials,
-                requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
-            )
-        }.getOrElse { return@withContext PolymarketAuthError.Unknown(httpCode = null, detail = it.message).left() }
+        val headers = buildL2Headers(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            requestPath = BALANCE_ALLOWANCE_SIGNED_PATH,
+        ).getOrElse { return@withContext it.left() }
 
         safeApiCallWithTimeout(
             timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
@@ -172,6 +297,64 @@ internal class DefaultPolymarketRepository @Inject constructor(
         )
     }
 
+    override suspend fun getBalanceAllowance(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+    ): Either<PolymarketAuthError, PolymarketBalanceAllowance> = withContext(dispatchers.io) {
+        val headers = buildL2Headers(
+            ownerAddress = ownerAddress,
+            credentials = credentials,
+            requestPath = BALANCE_ALLOWANCE_READ_SIGNED_PATH,
+        ).getOrElse { return@withContext it.left() }
+
+        safeApiCallWithTimeout(
+            timeoutMillis = SYNC_BALANCE_ALLOWANCE_TIMEOUT,
+            call = {
+                val response = clobApi.getBalanceAllowance(
+                    headers = headers,
+                    assetType = ASSET_TYPE_COLLATERAL,
+                    signatureType = SIGNATURE_TYPE_DEPOSIT_WALLET,
+                ).bind()
+                Either.catch { PolymarketBalanceAllowanceConverter.convert(response) }
+                    .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+            },
+            onError = { authErrorResolver.resolve(it).left() },
+        )
+    }
+
+    /**
+     * A malformed stored secret makes the HMAC throw, which must not escape past the call's error boundary
+     * into the caller.
+     */
+    private fun buildL2Headers(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        requestPath: String,
+    ): Either<PolymarketAuthError, Map<String, String>> = Either
+        .catch {
+            l2HeaderBuilder.build(
+                ownerAddress = ownerAddress,
+                credentials = credentials,
+                requestPath = requestPath,
+            )
+        }
+        .mapLeft { PolymarketAuthError.Unknown(httpCode = null, detail = it.message) }
+
+    /**
+     * A quote is re-requested on a timer, so the caller mostly needs to know whether waiting for the next tick
+     * can help. Only the transport failures promise that; an HTTP refusal carries its status so a deterministic
+     * one — a rejected request body, say — can be told apart from a server that is merely unwell.
+     */
+    private fun ApiResponseError.toQuoteError(): PredictionOrderQuoteError = when (this) {
+        is ApiResponseError.NetworkException,
+        is ApiResponseError.TimeoutException,
+        -> PredictionOrderQuoteError.Network
+        is ApiResponseError.HttpException ->
+            PredictionOrderQuoteError.Unknown(httpCode = code.numericCode, detail = errorBody)
+        is ApiResponseError.UnknownException ->
+            PredictionOrderQuoteError.Unknown(httpCode = null, detail = cause.message ?: message)
+    }
+
     private companion object {
 
         const val DEFAULT_LIMIT = 20
@@ -183,7 +366,8 @@ internal class DefaultPolymarketRepository @Inject constructor(
 
         val SYNC_BALANCE_ALLOWANCE_TIMEOUT = 5.seconds
 
-        /** Signed by the HMAC without the query string, unlike the relative path Retrofit resolves. */
+        /** Both are signed by the HMAC without the query string, unlike the relative paths Retrofit resolves. */
         const val BALANCE_ALLOWANCE_SIGNED_PATH = "/balance-allowance/update"
+        const val BALANCE_ALLOWANCE_READ_SIGNED_PATH = "/balance-allowance"
     }
 }

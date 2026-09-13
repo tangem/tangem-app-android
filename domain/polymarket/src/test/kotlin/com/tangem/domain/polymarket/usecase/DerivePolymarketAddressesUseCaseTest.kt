@@ -12,11 +12,13 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -94,6 +96,58 @@ internal class DerivePolymarketAddressesUseCaseTest {
         PolymarketDerivationError.CardError,
         PolymarketDerivationError.Unknown,
     )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Stored {
+
+        @Test
+        fun `GIVEN a stored owner key WHEN stored THEN returns the addresses without deriving`() = runTest {
+            // Arrange
+            coEvery { eoaDeriver.storedOwnerEoa(userWalletId) } returns OWNER
+            every { depositWalletDeriver.deriveDepositWallet(OWNER) } returns DEPOSIT_WALLET
+
+            // Act
+            val actual = useCase.stored(userWalletId = userWalletId)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketAddresses(
+                    ownerAddress = OWNER,
+                    depositWalletAddress = DEPOSIT_WALLET,
+                    userWalletId = userWalletId,
+                ),
+            )
+            coVerify(exactly = 0) { eoaDeriver.deriveOwnerEoa(userWalletId) }
+        }
+
+        @Test
+        fun `GIVEN no stored owner key WHEN stored THEN returns null without deriving anything`() = runTest {
+            // Arrange
+            coEvery { eoaDeriver.storedOwnerEoa(userWalletId) } returns null
+
+            // Act
+            val actual = useCase.stored(userWalletId = userWalletId)
+
+            // Assert
+            assertThat(actual).isNull()
+            coVerify(exactly = 0) { eoaDeriver.deriveOwnerEoa(userWalletId) }
+            verify(exactly = 0) { depositWalletDeriver.deriveDepositWallet(any()) }
+        }
+
+        @Test
+        fun `GIVEN the deposit wallet cannot be computed WHEN stored THEN returns null`() = runTest {
+            // Arrange
+            coEvery { eoaDeriver.storedOwnerEoa(userWalletId) } returns OWNER
+            every { depositWalletDeriver.deriveDepositWallet(OWNER) } throws IllegalStateException("boom")
+
+            // Act
+            val actual = useCase.stored(userWalletId = userWalletId)
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+    }
 
     private companion object {
         const val OWNER = "0x1111111111111111111111111111111111111111"

@@ -4,10 +4,10 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CreatePaymentNetworkContractUseCase
+import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
@@ -53,14 +53,14 @@ internal class PaymentChooseNetworkModel @Inject constructor(
 
         accountStatuses
             .onEach { status ->
-                val loaded = status.value as? PaymentAccountStatusValue.Loaded ?: return@onEach
-                onNetworksBecameAvailable(loaded.networks)
+                val networks = status.networksOrNull() ?: return@onEach
+                onNetworksBecameAvailable(networks)
             }
             .launchIn(modelScope)
 
         combine(accountStatuses, rowOverrides) { status, overrides ->
-            val loaded = status.value as? PaymentAccountStatusValue.Loaded ?: return@combine null
-            applyOverrides(converter.convert(loaded.networks), overrides)
+            val networks = status.networksOrNull() ?: return@combine null
+            applyOverrides(converter.convert(networks), overrides)
         }
             .onEach { converted -> converted?.let { uiState.value = it } }
             .launchIn(modelScope)

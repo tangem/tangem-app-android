@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 /**
  * Auto-generated from design tokens. Do not edit manually.
  */
-internal object TangemColorPalette {
+object TangemColorPalette {
     object Base {
         val black = Color(0xFF000000)
         val white = Color(0xFFFFFFFF)
