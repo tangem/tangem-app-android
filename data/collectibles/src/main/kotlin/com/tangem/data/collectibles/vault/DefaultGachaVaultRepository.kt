@@ -143,7 +143,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         val result = tangemSdkManager.runTaskAsync(
             runnable = task,
             preflightReadFilter = if (cardId == null) {
-                UserWalletIdPreflightReadFilter(expectedUserWalletId = userWallet.walletId)
+                UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet)
             } else {
                 null
             },

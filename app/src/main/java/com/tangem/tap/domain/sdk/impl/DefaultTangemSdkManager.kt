@@ -30,7 +30,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
@@ -304,9 +304,9 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWallet: UserWallet.Cold): CompletionResult<Boolean> {
         return runTaskAsyncReturnOnMain(
-            runnable = ResetBackupCardTask(userWalletId),
+            runnable = ResetBackupCardTask(userWallet),
             initialMessage = Message(
                 resources.getStringSafe(
                     R.string.initial_message_reset_backup_card_header,

@@ -10,6 +10,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.data.wallets.cold.UserWalletIdPreflightReadFilter
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.jointaccount.derivation.jointAccountOwnerDerivationPath
@@ -28,7 +29,6 @@ import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
 import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
 import com.tangem.tap.domain.tasks.jointaccount.JointAccountSigning
 import kotlinx.coroutines.coroutineScope
@@ -61,7 +61,7 @@ internal class DefaultJointAccountSigner @Inject constructor(
         input: JointAccountSignInput,
     ): Either<Throwable, JointAccountSignResult> = either {
         val result = when (val userWallet = userWalletsListRepository.getSyncStrict(id = userWalletId)) {
-            is UserWallet.Cold -> signWithCard(userWalletId = userWalletId, input = input)
+            is UserWallet.Cold -> signWithCard(userWallet = userWallet, input = input)
             is UserWallet.Hot -> signWithHotWallet(userWallet = userWallet, input = input)
         }.bind()
         Either
@@ -74,12 +74,12 @@ internal class DefaultJointAccountSigner @Inject constructor(
     }
 
     private suspend fun signWithCard(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet.Cold,
         input: JointAccountSignInput,
     ): Either<Throwable, JointAccountSignResult> = coroutineScope {
         val result = tangemSdkManager.runTaskAsync(
             runnable = signTaskFactory.create(coroutineScope = this, input = input),
-            preflightReadFilter = UserWalletIdPreflightReadFilter(expectedUserWalletId = userWalletId),
+            preflightReadFilter = UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet),
         )
 
         when (result) {
