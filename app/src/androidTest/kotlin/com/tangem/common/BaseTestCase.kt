@@ -225,6 +225,10 @@ abstract class BaseTestCase : TestCase(
             // Picks the transaction endpoints the Tangem Pay history tests assert on:
             // on -> /bff-v2/v1/transactions, off -> the legacy /bff-v2/v1/customer/transactions.
             "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED" to true,
+            // On from 6.4 ("undefined" on develop until the release branch merges back), and it swaps the stories
+            // start screen for the Welcome one. Forced on so the entry scenarios take the same path on both
+            // branches; they are written against the Welcome screen, which is the one that stays.
+            "TWI_1356_INTRODUCTION_REDESIGN_ENABLED" to true,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty

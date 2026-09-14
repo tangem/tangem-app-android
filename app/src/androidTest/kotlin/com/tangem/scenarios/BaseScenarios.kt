@@ -28,11 +28,11 @@ fun BaseTestCase.scanCard(
         productType != null -> MockProvider.setMocks(productType)
         else -> MockProvider.setMocks(ProductType.Wallet)
     }
-    step("Click on 'Get started' button") {
-        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    step("Click on 'I have a wallet' button") {
+        onIntroductionScreen { iHaveWalletButton.clickWithAssertion() }
     }
-    step("Click on 'Scan card or ring' button") {
-        onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
+    step("Click on 'Tangem Card or Ring' option") {
+        onIntroductionScreen { cardOrRingOption.clickWithAssertion() }
     }
     if (isTwinsCard) {
         step("Click on 'Continue' button") {
@@ -77,16 +77,14 @@ fun BaseTestCase.openTokenDetails(tokenName: String) {
     }
 }
 
-/** Creates a brand-new mobile (hot) wallet from the intro stories and lands on Main. */
+/** Creates a brand-new mobile (hot) wallet from the Welcome screen and lands on Main. */
 fun BaseTestCase.openMainScreenWithNewHotWallet() {
-    step("Click on 'Get started' button") {
-        onStoriesScreen { getStartedButton.clickWithAssertion() }
-    }
-    step("Click on 'Start with Mobile Wallet' button") {
-        onCreateWalletStartScreen { startWithMobileWalletButton.performClick() }
-    }
     step("Click on 'Create wallet' button") {
-        onCreateMobileWalletScreen { createWalletButton.clickWithAssertion() }
+        onIntroductionScreen { createWalletButton.clickWithAssertion() }
+    }
+    // The sheet row creates the wallet on the spot ([REDACTED_TASK_KEY]), so there is no separate create step any more.
+    step("Click on 'Create seed phrase wallet' option") {
+        onIntroductionScreen { createSeedPhraseWalletOption.clickWithAssertion() }
     }
     step("Assert 'Main' screen is displayed") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_WALLET_CREATION) {
@@ -100,18 +98,16 @@ fun BaseTestCase.openMainScreenWithNewHotWallet() {
 
 @OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
-    step("Click on 'Get started' button") {
-        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    step("Click on 'I have a wallet' button") {
+        onIntroductionScreen { iHaveWalletButton.clickWithAssertion() }
     }
-    step("Click on 'Start with Mobile Wallet' button") {
-        onCreateWalletStartScreen { startWithMobileWalletButton.performClick() }
+    step("Click on 'Import existing wallet' option") {
+        onIntroductionScreen { importWalletOption.clickWithAssertion() }
     }
-    step("Click on 'Import existing wallet' button") {
-        onCreateMobileWalletScreen { importExistingWalletButton.performClick() }
-    }
-    step("Choose 'Import recovery phrase' when the import-options sheet is shown") {
+    // The cloud-backup row is behind its own toggle, so the sheet may go straight to the recovery phrase screen.
+    step("Choose 'Use recovery phrase' when the import step offers a cloud backup") {
         waitForIdle()
-        onCreateMobileWalletScreen {
+        onIntroductionScreen {
             if (useRecoveryPhraseButton.isDisplayedSafely()) {
                 useRecoveryPhraseButton.performClick()
             }

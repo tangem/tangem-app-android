@@ -14,7 +14,7 @@ import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.scenarios.exitTangemPayKycScreen
 import com.tangem.scenarios.openMainScreenWithNewHotWallet
 import com.tangem.screens.onMainScreen
-import com.tangem.screens.onStoriesScreen
+import com.tangem.screens.onIntroductionScreen
 import com.tangem.screens.tangempay.onTangemPayHotWalletOnboardingScreen
 import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
@@ -107,8 +107,8 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
             step("Store the AppsFlyer deep link '$mobileOnboardingDeepLink'") {
                 runBlocking { appsFlyerRepository.storeNavigationDeeplink(mobileOnboardingDeepLink) }
             }
-            step("Click on 'Get started' button") {
-                onStoriesScreen { getStartedButton.clickWithAssertion() }
+            step("Click on 'Create wallet' button") {
+                onIntroductionScreen { createWalletButton.clickWithAssertion() }
             }
             step("Assert Tangem Pay mobile onboarding screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
