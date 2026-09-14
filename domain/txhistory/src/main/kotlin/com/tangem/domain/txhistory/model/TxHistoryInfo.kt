@@ -64,12 +64,6 @@ sealed interface OnChainTx : TxHistoryInfo {
 fun TxInfo.identityKey(): String = "$txHash|$type"
 
 /**
- * The `txHash` half of an [identityKey], for callers that hold a row id and need the hash the row is keyed by —
- * a joint operation surfaced as an unconfirmed transaction is keyed by its operation id, which lands here.
- */
-fun String.txHashOfIdentityKey(): String = substringBefore(delimiter = '|')
-
-/**
  * Hash of the matched on-chain leg, used to open the row in a block explorer; `null` when there is no
  * blockchain tx to link to — an [ExpressTx] whose on-chain leg has not matched yet. The express `txId`
  * must never stand in here: it is not an on-chain hash and would build a broken explorer URL.

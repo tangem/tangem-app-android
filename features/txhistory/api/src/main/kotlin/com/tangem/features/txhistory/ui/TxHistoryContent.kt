@@ -61,7 +61,6 @@ private fun LazyListScope.contentItems(listState: LazyListState, state: TxHistor
         key = { item ->
             when (item) {
                 is TxHistoryItemUM.GroupTitle -> "group_title:${item.itemKey}"
-                is TxHistoryItemUM.PendingGroupTitle -> "group_title:pending"
                 is TxHistoryItemUM.Transaction -> "tx:${item.state.txHash}:${item.state.hashCode()}"
             }
         },
@@ -69,9 +68,6 @@ private fun LazyListScope.contentItems(listState: LazyListState, state: TxHistor
     ) { item ->
         when (item) {
             is TxHistoryItemUM.GroupTitle -> TxHistoryDateHeader(title = item.title)
-            is TxHistoryItemUM.PendingGroupTitle -> TxHistoryDateHeader(
-                title = stringResourceSafe(R.string.transaction_history_pending),
-            )
             is TxHistoryItemUM.Transaction -> TransactionItem(
                 state = item.state,
                 isBalanceHidden = state.isBalanceHidden,
