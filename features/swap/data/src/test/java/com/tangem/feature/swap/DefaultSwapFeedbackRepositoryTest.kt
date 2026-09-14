@@ -30,19 +30,15 @@ internal class DefaultSwapFeedbackRepositoryTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val dataStore = MockStateDataStore(default = SwapRatingsDTO())
 
-    private var nowMillis = 1_000L
-
     private val repository = DefaultSwapFeedbackRepository(
         remoteSource = remoteSource,
         store = dataStore,
         dispatchers = dispatchers,
-        currentTimeMillis = { nowMillis },
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(remoteSource)
-        nowMillis = 1_000L
     }
 
     @Test
@@ -61,7 +57,7 @@ internal class DefaultSwapFeedbackRepositoryTest {
     @Test
     fun `GIVEN rating already stored WHEN fetchRatingIfNeeded THEN remote is not called`() = runTest {
         // Arrange
-        storeRatings(TX_ID to StoredSwapRating(rating = 5, savedAt = 1L))
+        storeRatings(TX_ID to StoredSwapRating(rating = 5))
 
         // Act
         repository.fetchRatingIfNeeded(TX_ID)
@@ -102,11 +98,8 @@ internal class DefaultSwapFeedbackRepositoryTest {
     @Test
     fun `GIVEN store is full WHEN a rating is stored THEN the oldest entry is evicted`() = runTest {
         // Arrange
-        val existing = (1..MAX_STORED_RATINGS).associate { index ->
-            "tx-$index" to StoredSwapRating(rating = null, savedAt = index.toLong())
-        }
+        val existing = (1..MAX_STORED_RATINGS).associate { index -> "tx-$index" to StoredSwapRating(rating = null) }
         storeRatings(*existing.toList().toTypedArray())
-        nowMillis = Long.MAX_VALUE
         coEvery { remoteSource.getRating(TX_ID) } returns 3.right()
 
         // Act
@@ -118,6 +111,26 @@ internal class DefaultSwapFeedbackRepositoryTest {
         assertThat(stored.keys).contains(TX_ID)
         assertThat(stored.keys).doesNotContain("tx-1")
     }
+
+    @Test
+    fun `GIVEN a stored swap is rated again WHEN the store is full THEN it survives and the oldest is evicted`() =
+        runTest {
+            // Arrange
+            val existing = (1..MAX_STORED_RATINGS).associate { index -> "tx-$index" to StoredSwapRating(rating = null) }
+            storeRatings(*existing.toList().toTypedArray())
+            coEvery { remoteSource.submitFeedback(any()) } returns Unit.right()
+
+            // Act — re-writing an existing entry moves it to the back of the eviction order
+            repository.submitFeedback(submitParams(rating = 5, txExternalId = "tx-1"))
+            coEvery { remoteSource.getRating(TX_ID) } returns 3.right()
+            repository.fetchRatingIfNeeded(TX_ID)
+
+            // Assert
+            val stored = readRatings()
+            assertThat(stored).hasSize(MAX_STORED_RATINGS)
+            assertThat(stored["tx-1"]).isEqualTo(StoredSwapRating(rating = 5))
+            assertThat(stored.keys).doesNotContain("tx-2")
+        }
 
     @Test
     fun `GIVEN submit succeeds WHEN submitFeedback THEN rating is stored and params are delegated`() = runTest {
@@ -183,8 +196,7 @@ internal class DefaultSwapFeedbackRepositoryTest {
             remoteSource = NoOpSwapFeedbackRemoteSource(),
             store = MockStateDataStore(default = SwapRatingsDTO()),
             dispatchers = dispatchers,
-            currentTimeMillis = { nowMillis },
-        )
+            )
 
         // Act
         val emitted = getEmittedValues(repository.observeRating(TX_ID))
@@ -254,7 +266,6 @@ internal class DefaultSwapFeedbackRepositoryTest {
         remoteSource = remoteSource,
         store = store,
         dispatchers = dispatchers,
-        currentTimeMillis = { nowMillis },
     )
 
     /** Store whose reads and writes can be made to fail on demand */
@@ -283,11 +294,11 @@ internal class DefaultSwapFeedbackRepositoryTest {
 
     private suspend fun readRatings(): Map<String, StoredSwapRating> = dataStore.data.first().ratings
 
-    private fun submitParams(rating: Int) = SwapFeedbackParams(
+    private fun submitParams(rating: Int, txExternalId: String = TX_ID) = SwapFeedbackParams(
         userWalletIdHash = USER_WALLET_ID_HASH,
         providerName = PROVIDER_NAME,
         txUrl = TX_EXTERNAL_URL,
-        txExternalId = TX_ID,
+        txExternalId = txExternalId,
         rating = rating,
         feedback = "feedback",
     )
