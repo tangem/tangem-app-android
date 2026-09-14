@@ -9,8 +9,12 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
@@ -23,15 +27,18 @@ import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Model of the screen's own chrome — balance, actions, the collection widget and the menu. The packs catalogue
- * itself lives in the embedded discovery component. The balance and the collection are stand-ins (see
- * [CollectiblesMainStubData]) until their services exist.
+ * itself lives in the embedded discovery component, and the collection is a stand-in until its service exists.
  */
+@Suppress("LongParameterList")
 @ModelScoped
 internal class CollectiblesMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -39,6 +46,8 @@ internal class CollectiblesMainModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -58,10 +67,30 @@ internal class CollectiblesMainModel @Inject constructor(
     val uiState: StateFlow<CollectiblesMainUM>
         field = MutableStateFlow(buildInitialState())
 
+    init {
+        observeBalance()
+    }
+
+    private fun observeBalance() {
+        combine(
+            flow = collectiblesAccountStatusSupplier(params.userWalletId),
+            flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+        ) { status, appCurrency ->
+            balanceConverter.convert(CollectiblesBalanceConverter.Input(status = status, appCurrency = appCurrency))
+        }
+            .onEach { balance -> uiState.update { state -> state.copy(balance = balance) } }
+            .launchIn(modelScope)
+    }
+
     private fun buildInitialState(): CollectiblesMainUM {
         return CollectiblesMainUM(
             title = stringReference("Packs account"),
-            balance = balanceConverter.convert(CollectiblesMainStubData.BALANCE),
+            balance = balanceConverter.convert(
+                CollectiblesBalanceConverter.Input(
+                    status = CollectiblesAccountStatusValue.Loading,
+                    appCurrency = AppCurrency.Default,
+                ),
+            ),
             actions = actionsConverter.convert(Unit),
             collection = CollectiblesMainUM.CollectionUM(
                 subtitle = stringReference("My collection"),

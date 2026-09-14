@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.collectibles.models)
+    implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
 
     /** Kotlin */
