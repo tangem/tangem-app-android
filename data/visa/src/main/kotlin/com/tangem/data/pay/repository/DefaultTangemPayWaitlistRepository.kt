@@ -16,7 +16,7 @@ internal class DefaultTangemPayWaitlistRepository @Inject constructor(
 ) : TangemPayWaitlistRepository {
 
     override suspend fun join(
-        userWalletId: UserWalletId,
+        userWalletId: UserWalletId?,
         entry: TangemPayWaitlistEntry,
         idempotencyKey: String,
     ): Either<VisaApiError, Unit> {
