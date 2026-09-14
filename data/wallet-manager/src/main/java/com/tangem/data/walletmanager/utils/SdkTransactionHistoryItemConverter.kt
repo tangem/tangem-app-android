@@ -1,6 +1,5 @@
 package com.tangem.data.walletmanager.utils
 
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
@@ -13,7 +12,7 @@ internal class SdkTransactionHistoryItemConverter(
     yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
     currency: CryptoCurrency,
-    networkTokens: Set<Token>,
+    networkTokens: Set<CryptoCurrency.Token>,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
     private val typeConverter by lazy {

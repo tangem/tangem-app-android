@@ -32,6 +32,7 @@ internal class DefaultWalletManagersFacadeTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         gaslessTransactionRepository = mockk(),
         jointAccountSafeAddressResolver = { mockk() },
+        getCachedTokenInfoUseCase = mockk(),
         blockchainSDKFactory = mockk(),
     )
 

@@ -23,6 +23,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     private val provider: ExternalAddressBalanceProvider = mockk(relaxUnitFun = true)
     private val assetLoader: AssetLoader = mockk()
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
+    private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase = mockk()
     private val providersStore = ExternalAddressBalanceProvidersStore()
 
     private val facade = DefaultWalletManagersFacade(
@@ -59,6 +61,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         gaslessTransactionRepository = gaslessTransactionRepository,
         jointAccountSafeAddressResolver = { safeAddressResolver },
+        getCachedTokenInfoUseCase = getCachedTokenInfoUseCase,
         blockchainSDKFactory = blockchainSDKFactory,
     )
 
@@ -87,6 +90,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         coEvery { assetLoader.loadMap<SmartContractMethod>(fileName = any(), type = any()) } returns emptyMap()
         coEvery { gaslessTransactionRepository.getGaslessFeeAddresses() } returns emptySet()
         coEvery { safeAddressResolver.resolve(userWalletId, setOf(jointNetwork)) } returns mapOf(jointNetwork to SAFE_ADDRESS)
+        coEvery { getCachedTokenInfoUseCase.invoke(any<UserWalletId>(), any<String>()) } returns emptySet()
     }
 
     @Test
