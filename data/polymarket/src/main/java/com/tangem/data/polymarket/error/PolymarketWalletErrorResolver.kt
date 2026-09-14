@@ -1,10 +1,7 @@
 package com.tangem.data.polymarket.error
 
-import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
-import com.tangem.grow.datasource.polymarket.models.ProblemDetailResponse
-import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletError.RelayerRejected
 import javax.inject.Inject
@@ -17,10 +14,8 @@ import javax.inject.Inject
  * fallback for unrecognised messages.
  */
 internal class PolymarketWalletErrorResolver @Inject constructor(
-    @NetworkMoshi moshi: Moshi,
+    private val problemDetailParser: ProblemDetailParser,
 ) {
-
-    private val problemDetailAdapter = moshi.adapter(ProblemDetailResponse::class.java)
 
     fun resolve(error: ApiResponseError): PolymarketWalletError = when (error) {
         is ApiResponseError.HttpException -> resolveHttp(error)
@@ -32,7 +27,7 @@ internal class PolymarketWalletErrorResolver @Inject constructor(
     }
 
     private fun resolveHttp(error: ApiResponseError.HttpException): PolymarketWalletError {
-        val detail = parseDetail(error.errorBody)
+        val detail = problemDetailParser.parseDetail(error.errorBody)
         return when (error.code) {
             Code.BAD_REQUEST -> PolymarketWalletError.InvalidRequest
             Code.UNAUTHORIZED -> PolymarketWalletError.Unauthorized
@@ -53,9 +48,6 @@ internal class PolymarketWalletErrorResolver @Inject constructor(
             else -> RelayerRejected.Other(detail = detail)
         }
     }
-
-    private fun parseDetail(errorBody: String?): String? =
-        errorBody?.let { body -> runCatching { problemDetailAdapter.fromJson(body)?.detail }.getOrNull() }
 
     private companion object {
         // Relayer rejection messages from the BFF retry table (matched case-insensitively, as substrings).

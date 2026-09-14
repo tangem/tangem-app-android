@@ -12,7 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PredictionWithdrawErrorResolverTest {
 
-    private val resolver = PredictionWithdrawErrorResolver(moshi = Moshi.Builder().build())
+    private val resolver = PredictionWithdrawErrorResolver(ProblemDetailParser(moshi = Moshi.Builder().build()))
 
     @ParameterizedTest
     @ProvideTestModels
