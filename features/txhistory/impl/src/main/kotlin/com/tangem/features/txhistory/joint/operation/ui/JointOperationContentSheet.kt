@@ -2,9 +2,12 @@ package com.tangem.features.txhistory.joint.operation.ui
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
@@ -55,6 +58,8 @@ internal fun JointOperationContentSheet(
                         )
                     },
                     contentAlign = TangemTopNavigation.ContentAlign.Center,
+                    windowInsets = WindowInsets(0),
+                    contentPadding = PaddingValues(16.dp),
                     blurBackground = false,
                     onBack = onBackClick,
                     onClose = onCloseClick,
