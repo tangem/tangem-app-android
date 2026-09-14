@@ -49,7 +49,6 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -78,6 +77,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
@@ -126,7 +126,6 @@ import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
-import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.marketing.api.MarketingBannerRequest
@@ -224,7 +223,7 @@ internal class SwapModel @Inject constructor(
 
     private var isAccountsMode: Boolean = false
 
-    private var predictionWithdrawDestinations: Set<CryptoCurrency.ID>? = null
+    private var predictionWithdrawDestinations: Map<CryptoCurrency.ID, PredictionWithdrawDestination>? = null
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -261,10 +260,7 @@ internal class SwapModel @Inject constructor(
             isAccountTopUp ->
                 ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.IssuedTokens)
             isPredictionWithdrawFlow ->
-                ChooseTokenBridge.Settings.SwapTo.copy(
-                    chooserBlock = ChooserBlock.None,
-                    paymentAccountTokens = PaymentAccountTokens.Hidden,
-                )
+                ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.Hidden)
             else -> ChooseTokenBridge.Settings.SwapTo
         },
         analyticsPayload = setOf(
@@ -463,7 +459,7 @@ internal class SwapModel @Inject constructor(
         userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
 
         initTokens()
-        loadPredictionWithdrawDestinations()
+        observePredictionWithdrawDestinations()
 
         getBalanceHidingSettingsUseCase().onEach { settings ->
             isBalanceHidden = settings.isBalanceHidden
@@ -2518,7 +2514,7 @@ internal class SwapModel @Inject constructor(
                 accountStatus is AccountStatus.Personal &&
                     accountStatus.account.userWalletId == params.userWalletId &&
                     baseFilter(accountStatus, currencyStatus) &&
-                    predictionWithdrawDestinations?.contains(currencyStatus.currency.id) == true
+                    predictionWithdrawDestinations?.containsKey(currencyStatus.currency.id) == true
             }
         } else {
             baseFilter
@@ -2528,26 +2524,29 @@ internal class SwapModel @Inject constructor(
         chooseToTokenBridge.tokenFilter.value = toFilter
     }
 
-    private fun loadPredictionWithdrawDestinations() {
+    private fun observePredictionWithdrawDestinations() {
         if (!isPredictionWithdrawFlow) return
-        modelScope.launch {
-            val portfolio = singleAccountStatusListSupplier
-                .getSyncOrNull(SingleAccountStatusListProducer.Params(params.userWalletId))
-                ?.accountStatuses.orEmpty()
-                .filterIsInstance<AccountStatus.Personal>()
-                .flatMap { it.flattenCurrencies() }
-                .map { it.currency }
-            getPredictionWithdrawDestinationsUseCase(portfolio).fold(
-                ifLeft = { error ->
-                    TangemLogger.e("Unable to load the prediction withdraw destinations: $error")
-                    showAlert()
-                },
-                ifRight = { destinations ->
-                    predictionWithdrawDestinations = destinations
-                    filterTokensFromSelector()
-                },
-            )
-        }
+        singleAccountStatusListSupplier(params.userWalletId)
+            .map { statusList ->
+                statusList.accountStatuses
+                    .filterIsInstance<AccountStatus.Personal>()
+                    .flatMap { it.flattenCurrencies() }
+                    .map { it.currency }
+            }
+            .distinctUntilChanged()
+            .onEach { portfolio ->
+                getPredictionWithdrawDestinationsUseCase(portfolio).fold(
+                    ifLeft = { error ->
+                        TangemLogger.e("Unable to load the prediction withdraw destinations: $error")
+                        showAlert()
+                    },
+                    ifRight = { destinations ->
+                        predictionWithdrawDestinations = destinations
+                        filterTokensFromSelector()
+                    },
+                )
+            }
+            .launchIn(modelScope)
     }
 
     private fun sendSuccessSwapEvent(
