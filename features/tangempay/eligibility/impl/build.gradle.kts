@@ -20,7 +20,6 @@ dependencies {
 
     /** Common */
     implementation(projects.common.routing)
-    implementation(projects.common.ui)
 
     /** Features api */
     api(projects.features.tangempay.eligibility.api)
