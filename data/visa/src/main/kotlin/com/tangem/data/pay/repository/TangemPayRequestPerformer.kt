@@ -73,10 +73,10 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     suspend fun <T : Any> performWithOptionalToken(
-        userWalletId: UserWalletId,
+        userWalletId: UserWalletId?,
         requestBlock: suspend (header: String?) -> ApiResponse<T>,
     ): Either<VisaApiError, T> {
-        return if (hasAuthTokens(userWalletId)) {
+        return if (userWalletId != null && hasAuthTokens(userWalletId)) {
             performRequest(userWalletId, requestBlock)
         } else {
             performWithStaticToken { requestBlock(null) }
