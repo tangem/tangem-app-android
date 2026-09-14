@@ -179,6 +179,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 fiatRate = null,
                 error = null,
                 virtualAccount = null,
+                isBankOfframpAvailable = null,
                 tariffPlan = null,
             )
 
@@ -422,6 +423,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         fiatRate = null,
         error = null,
         virtualAccount = null,
+        isBankOfframpAvailable = null,
         tariffPlan = null,
         networks = emptyList(),
     )
