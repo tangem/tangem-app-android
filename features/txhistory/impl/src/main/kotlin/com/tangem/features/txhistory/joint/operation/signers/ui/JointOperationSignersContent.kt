@@ -2,14 +2,18 @@ package com.tangem.features.txhistory.joint.operation.signers.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
@@ -28,7 +32,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_checkmark_20
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
+import com.tangem.core.ui.res.generated.icons.ic_cross_16
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
@@ -37,14 +42,7 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointOperationSignersContent(state: JointOperationSignersUM, modifier: Modifier = Modifier) {
-    // The sheet scrolls its content itself; a second vertical scroll here would be a nested scrollable
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         state.signers.forEach { signer ->
             SignerRow(signer = signer)
         }
@@ -54,9 +52,7 @@ internal fun JointOperationSignersContent(state: JointOperationSignersUM, modifi
 @Composable
 private fun SignerRow(signer: JointOperationSignersUM.SignerUM, modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.secondary),
+        modifier = modifier,
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
@@ -69,19 +65,47 @@ private fun SignerRow(signer: JointOperationSignersUM.SignerUM, modifier: Modifi
                 size = AccountIconSize.ContactDefault,
             )
         },
-        titleSlot = { TangemRowText(text = stringReference(signer.name), role = TangemRowTextRole.Title) },
-        subtitleSlot = { TangemRowText(text = signer.statusText, role = TangemRowTextRole.Subtitle) },
-        endSlot = {
-            if (signer.isAnswered) {
-                TangemIcon(
-                    tangemIconUM = TangemIconUM.Icon(
-                        imageVector = Icons.ic_checkmark_20,
-                        tintReference = { TangemTheme.colors3.icon.status.success },
-                    ),
-                )
-            }
+        titleSlot = {
+            Text(
+                text = signer.name,
+                color = when (signer.mark) {
+                    null -> TangemTheme.colors3.text.secondary
+                    else -> TangemTheme.colors3.text.primary
+                },
+                style = TangemTheme.typography3.body.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         },
+        subtitleSlot = { TangemRowText(text = signer.statusText, role = TangemRowTextRole.Subtitle) },
+        endSlot = { signer.mark?.let { mark -> AnswerMark(mark = mark) } },
     )
+}
+
+@Composable
+private fun AnswerMark(mark: JointOperationSignersUM.Mark, modifier: Modifier = Modifier) {
+    val (icon, background, tint) = when (mark) {
+        JointOperationSignersUM.Mark.Signed -> Triple(
+            Icons.ic_checkmark_16,
+            TangemTheme.colors3.bg.status.successSubtle,
+            TangemTheme.colors3.icon.status.success,
+        )
+        JointOperationSignersUM.Mark.Declined -> Triple(
+            Icons.ic_cross_16,
+            TangemTheme.colors3.bg.status.errorSubtle,
+            TangemTheme.colors3.icon.status.error,
+        )
+    }
+
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .clip(CircleShape)
+            .background(background),
+        contentAlignment = Alignment.Center,
+    ) {
+        TangemIcon(tangemIconUM = TangemIconUM.Icon(imageVector = icon, tintReference = { tint }))
+    }
 }
 
 // region Preview
@@ -90,16 +114,16 @@ private fun SignerRow(signer: JointOperationSignersUM.SignerUM, modifier: Modifi
 @Composable
 private fun JointOperationSignersContentPreview() {
     TangemThemePreviewRedesign {
-        Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
+        Column(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
             JointOperationSignersContent(
                 state = JointOperationSignersUM(
                     membersCount = 5,
                     signers = persistentListOf(
                         signerPreview(name = "Isaac", status = CoreUiR.string.joint_operation_created_at),
                         signerPreview(name = "Kingston", status = CoreUiR.string.joint_operation_signed_at),
-                        signerPreview(name = "Daniel", status = CoreUiR.string.joint_operation_waiting_to_sign),
+                        signerPreview(name = "Daniel", status = CoreUiR.string.joint_operation_declined_at),
                         signerPreview(name = "Olivia", status = CoreUiR.string.joint_operation_waiting_to_sign),
-                        signerPreview(name = "Yasmin", status = CoreUiR.string.joint_operation_declined),
+                        signerPreview(name = "Yasmin", status = CoreUiR.string.joint_operation_waiting_to_sign),
                     ),
                 ),
             )
@@ -108,8 +132,12 @@ private fun JointOperationSignersContentPreview() {
 }
 
 private fun signerPreview(name: String, status: Int): JointOperationSignersUM.SignerUM {
-    val isAnswered = status == CoreUiR.string.joint_operation_created_at ||
-        status == CoreUiR.string.joint_operation_signed_at
+    val mark = when (status) {
+        CoreUiR.string.joint_operation_created_at, CoreUiR.string.joint_operation_signed_at ->
+            JointOperationSignersUM.Mark.Signed
+        CoreUiR.string.joint_operation_declined_at -> JointOperationSignersUM.Mark.Declined
+        else -> null
+    }
     val colors = CryptoPortfolioIcon.Color.entries
 
     return JointOperationSignersUM.SignerUM(
@@ -118,12 +146,12 @@ private fun signerPreview(name: String, status: Int): JointOperationSignersUM.Si
             monogram = name.take(n = 1),
             color = colors[name.length % colors.size],
         ),
-        statusText = if (isAnswered) {
+        statusText = if (mark != null) {
             resourceReference(id = status, formatArgs = wrappedList("15:34, Today"))
         } else {
             resourceReference(status)
         },
-        isAnswered = isAnswered,
+        mark = mark,
     )
 }
 // endregion
