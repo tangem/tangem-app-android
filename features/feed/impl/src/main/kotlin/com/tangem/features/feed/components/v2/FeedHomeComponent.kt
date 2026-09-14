@@ -48,6 +48,8 @@ internal class FeedHomeComponent(
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : FeedScreenComponent, AppComponentContext by context {
 
+    override val isPartialExpansionSupported: Boolean = true
+
     private val topBlocksComponent = FeedTopBlocksComponent(
         context = child("feedTopBlocks"),
         isPredictionsEntryVisible = isPredictionsEntryVisible,
