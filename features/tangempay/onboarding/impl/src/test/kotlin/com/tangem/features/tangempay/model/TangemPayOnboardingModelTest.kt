@@ -243,7 +243,6 @@ internal class TangemPayOnboardingModelTest {
                 getCustomerOffersUseCase = mockk(relaxed = true),
                 createHotWalletUseCase = mockk(relaxed = true),
                 isHotWalletCreationSupported = mockk(relaxed = true),
-                clearAppsFlyerDeeplinkUseCase = mockk(relaxed = true),
                 tangemPayFeatureToggles = tangemPayFeatureToggles,
             ),
         )
