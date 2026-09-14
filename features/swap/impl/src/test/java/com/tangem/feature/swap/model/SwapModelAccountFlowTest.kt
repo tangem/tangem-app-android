@@ -24,6 +24,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -47,6 +48,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -967,7 +969,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN to selector settings THEN Markets is hidden and payment tokens are hidden`() =
+    fun `GIVEN a prediction withdraw WHEN to selector settings THEN Markets is shown and payment tokens are hidden`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -978,7 +980,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             val settings = model.chooseToTokenBridge.settings
 
             // Assert
-            assertThat(settings.chooserBlock).isEqualTo(ChooserBlock.None)
+            assertThat(settings.chooserBlock).isEqualTo(ChooserBlock.Market)
             assertThat(settings.paymentAccountTokens).isEqualTo(PaymentAccountTokens.Hidden)
             model.onDestroy()
         }
@@ -991,10 +993,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val otherStatus: CryptoCurrencyStatus = mockk(relaxed = true)
         val portfolioStatus = personalAccountStatus(listOf(destinationStatus, otherStatus))
         val portfolio = listOf(destinationStatus.currency, otherStatus.currency)
-        val destinations = setOf(destinationStatus.currency.id)
-        coEvery {
-            singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
-        } returns accountStatusList(listOf(portfolioStatus))
+        val destinations = mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id))
+        every { singleAccountStatusListSupplier(userWalletId) } returns
+            flowOf(accountStatusList(listOf(portfolioStatus)))
         coEvery { getPredictionWithdrawDestinationsUseCase(portfolio) } returns destinations.right()
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
         advanceUntilIdle()
@@ -1020,11 +1021,10 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 currencies = listOf(destinationStatus),
                 userWalletId = UserWalletId(stringValue = "FEDCBA9876543210"),
             )
-            coEvery {
-                singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
-            } returns accountStatusList(listOf(ownPortfolio))
+            every { singleAccountStatusListSupplier(userWalletId) } returns
+                flowOf(accountStatusList(listOf(ownPortfolio)))
             coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
-                setOf(destinationStatus.currency.id).right()
+                mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id)).right()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
             advanceUntilIdle()
 
@@ -1045,11 +1045,10 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
             val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
             val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
-            coEvery {
-                singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
-            } returns accountStatusList(listOf(ownPortfolio))
+            every { singleAccountStatusListSupplier(userWalletId) } returns
+                flowOf(accountStatusList(listOf(ownPortfolio)))
             coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
-                setOf(destinationStatus.currency.id).right()
+                mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id)).right()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
             advanceUntilIdle()
 
@@ -1069,9 +1068,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
             val portfolioStatus = personalAccountStatus(listOf(currencyStatus))
-            coEvery {
-                singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
-            } returns accountStatusList(listOf(portfolioStatus))
+            every { singleAccountStatusListSupplier(userWalletId) } returns
+                flowOf(accountStatusList(listOf(portfolioStatus)))
             coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns PolymarketBridgeError.Network.left()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
             advanceUntilIdle()
@@ -1084,6 +1082,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(predicate(portfolioStatus, currencyStatus)).isFalse()
             model.onDestroy()
         }
+
+    private fun destination(id: CryptoCurrency.ID) = PredictionWithdrawDestination(
+        currencyId = id,
+        chainId = "137",
+        tokenAddress = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+    )
 
     private fun accountStatusList(accountStatuses: List<AccountStatus>) = AccountStatusList(
         userWalletId = userWalletId,
