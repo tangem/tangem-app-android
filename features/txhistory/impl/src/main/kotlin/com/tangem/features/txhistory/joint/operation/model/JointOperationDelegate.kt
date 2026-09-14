@@ -1,4 +1,4 @@
-package com.tangem.features.txhistory.joint
+package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.Either
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -14,22 +14,18 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.txhistory.joint.ownJointAccount
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
- * What the transaction details screen needs from the joint account domain. A transaction of a joint account that is
- * still collecting signatures has no hash — it is shown from the operation itself, keyed by the operation id.
- *
- * Only an operation in [JointOperation.Status.AWAITING_SIGNATURES] is exposed: the store also keeps the ones that
- * already collected the threshold and are executing, and those are ordinary unconfirmed transactions with nothing
- * left to sign.
+ * Only an operation in [JointOperation.Status.AWAITING_SIGNATURES] is exposed: one past the threshold is already an
+ * ordinary unconfirmed transaction with nothing left to sign.
  */
-internal class JointCosignDelegate @Inject constructor(
+internal class JointOperationDelegate @Inject constructor(
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val transferResolver: JointOperationTransferResolver,
@@ -38,12 +34,11 @@ internal class JointCosignDelegate @Inject constructor(
     private val signJointOperationUseCase: SignJointOperationUseCase,
 ) {
 
-    /** The operation behind [operationId], or `null` while the viewed row is an ordinary on-chain transaction */
-    fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointCosignState?> {
+    fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointOperationState?> {
         if (currency.network.derivationPath !is Network.DerivationPath.Joint) return flowOf(null)
 
         return combine(
-            flow = ownAccountFlow(userWalletId = userWalletId, currency = currency),
+            flow = accountListSupplier.ownJointAccount(userWalletId = userWalletId, currency = currency),
             flow2 = jointAccountListSupplier(userWalletId = userWalletId),
         ) { account, accounts ->
             resolve(
@@ -56,36 +51,8 @@ internal class JointCosignDelegate @Inject constructor(
             .distinctUntilChanged()
     }
 
-    /**
-     * Ids of the operations still collecting signatures in the account this currency belongs to — the rows to badge
-     * as awaiting the other members. Another account's operations are left out: a change in this set reloads the
-     * viewed history, and they can neither appear in it nor be signed from it.
-     */
-    fun observePendingOperationIds(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<Set<String>> {
-        if (currency.network.derivationPath !is Network.DerivationPath.Joint) return flowOf(emptySet())
-
-        return combine(
-            flow = ownAccountFlow(userWalletId = userWalletId, currency = currency),
-            flow2 = jointAccountListSupplier(userWalletId = userWalletId),
-        ) { account, accounts -> pendingOperationIds(account = account, accounts = accounts) }
-            .distinctUntilChanged()
-    }
-
-    private fun pendingOperationIds(account: Account.Joint?, accounts: List<JointAccount>): Set<String> {
-        if (account == null) return emptySet()
-        val jointAccount = accounts
-            .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
-            ?: return emptySet()
-
-        return jointAccount.inFlightOperations.values
-            .asSequence()
-            .filter { it.status == JointOperation.Status.AWAITING_SIGNATURES }
-            .map(JointOperation::operationId)
-            .toSet()
-    }
-
     suspend fun sign(
-        state: JointCosignState,
+        state: JointOperationState,
         network: Network,
         operationId: String,
     ): Either<JointOperationSignError, Unit> {
@@ -102,7 +69,7 @@ internal class JointCosignDelegate @Inject constructor(
         currency: CryptoCurrency,
         operationId: String,
         accounts: List<JointAccount>,
-    ): JointCosignState? {
+    ): JointOperationState? {
         if (account == null) return null
         val jointAccount = accounts
             .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
@@ -126,9 +93,13 @@ internal class JointCosignDelegate @Inject constructor(
             .getOrNull()
         val signers = signersResolver.signers(jointAccount = jointAccount, operation = operation)
 
-        return JointCosignState(
+        return JointOperationState(
             account = account,
             displayed = transfer.intent,
+            feeWei = operation.safeTx.gasPrice * (operation.safeTx.safeTxGas + operation.safeTx.baseGas),
+            feeCoin = account.cryptoCurrencies
+                .filterIsInstance<CryptoCurrency.Coin>()
+                .firstOrNull { it.network == currency.network },
             threshold = jointAccount.threshold,
             membersCount = jointAccount.membersCount,
             signers = signers,
@@ -141,19 +112,5 @@ internal class JointCosignDelegate @Inject constructor(
                 signers.firstOrNull { it.member.address.equals(own, ignoreCase = true) }?.answer
             },
         )
-    }
-
-    /**
-     * The joint account this currency belongs to, as a flow: collecting the account list inside the joint-list
-     * collector would re-subscribe to it on every joint emission.
-     */
-    private fun ownAccountFlow(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<Account.Joint?> {
-        return accountListSupplier(userWalletId = userWalletId)
-            .map { accountList ->
-                accountList.accounts
-                    .filterIsInstance<Account.Joint>()
-                    .firstOrNull { account -> account.cryptoCurrencies.any { it.network == currency.network } }
-            }
-            .distinctUntilChanged()
     }
 }

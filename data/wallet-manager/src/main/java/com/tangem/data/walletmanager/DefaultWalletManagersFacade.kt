@@ -46,7 +46,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -56,7 +55,6 @@ import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
@@ -78,8 +76,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
-    private val jointPendingTransactionFactory: Lazy<JointPendingTransactionFactory>,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -928,20 +924,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         if (currency.network.derivationPath is Network.DerivationPath.Joint) {
             val provider = getJointAddressProvider(userWalletId, currency.network) ?: return emptyList()
 
-            // The legacy history opens a row in the explorer, and a collecting operation has no transaction to open
-            @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
-            val pending = if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-                jointPendingTransactionFactory.get().create(
-                    userWalletId = userWalletId,
-                    currency = currency,
-                    safeAddress = provider.address,
-                    blockchain = provider.blockchain,
-                )
-            } else {
-                null
-            }
-
-            return (listOfNotNull(pending) + provider.recentTransactions).toTxInfos(
+            return provider.recentTransactions.toTxInfos(
                 currency = currency,
                 ownAddresses = setOf(
                     UpdateWalletManagerResult.Address(
