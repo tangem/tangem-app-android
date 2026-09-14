@@ -66,7 +66,7 @@ internal fun TangemPayCampaignIssueCardScreen(state: TangemPayCampaignIssueCardU
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                TangemPayCampaignCardArt(cardArtUrl = state.cardArtUrl)
+                TangemPayCampaignCardArt(cardArtUrl = state.cardArtUrl, showVirtualChip = true)
             }
             IssueCardDetails(state = state)
         }
@@ -78,10 +78,10 @@ private fun ColumnScope.IssueCardDetails(state: TangemPayCampaignIssueCardUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .navigationBarsPadding(),
     ) {
         TangemTabItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
             state = TangemTabItemUM.Content(
                 id = VIRTUAL_TAB_ID,
                 label = resourceReference(R.string.tangempay_order_type_segment_virtual),
@@ -90,18 +90,22 @@ private fun ColumnScope.IssueCardDetails(state: TangemPayCampaignIssueCardUM) {
             ),
         )
         SpacerH(16.dp)
-        InfoRow(
-            title = resourceReference(R.string.tangempay_order_type_issue_fee),
-            value = stringReference(state.issueFee),
-            divider = true,
-        )
-        InfoRow(
-            title = resourceReference(R.string.tangempay_campaign_issue_time),
-            value = resourceReference(R.string.tangempay_order_type_delivery_time_instant),
-        )
+        Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+            InfoRow(
+                title = resourceReference(R.string.tangempay_order_type_issue_fee),
+                value = stringReference(state.issueFee),
+                divider = true,
+            )
+            InfoRow(
+                title = resourceReference(R.string.tangempay_campaign_issue_time),
+                value = resourceReference(R.string.tangempay_order_type_delivery_time_instant),
+            )
+        }
         SpacerH(64.dp)
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.tangempay_campaign_issue_button),
@@ -116,9 +120,13 @@ private fun ColumnScope.IssueCardDetails(state: TangemPayCampaignIssueCardUM) {
 private fun InfoRow(title: TextReference, value: TextReference, divider: Boolean = false) {
     TangemRow(
         divider = divider,
-        contentLead = TangemRowContentLead.End,
-        titleSlot = { TangemRowText(text = title.resolveReference(), role = TangemRowTextRole.Title) },
-        valueSlot = { TangemRowText(text = value.resolveReference(), role = TangemRowTextRole.Value) },
+        contentLead = TangemRowContentLead.Equal,
+        titleSlot = {
+            TangemRowText(text = title.resolveReference(), role = TangemRowTextRole.Title, maxLines = Int.MAX_VALUE)
+        },
+        valueSlot = {
+            TangemRowText(text = value.resolveReference(), role = TangemRowTextRole.Value, maxLines = Int.MAX_VALUE)
+        },
     )
 }
 

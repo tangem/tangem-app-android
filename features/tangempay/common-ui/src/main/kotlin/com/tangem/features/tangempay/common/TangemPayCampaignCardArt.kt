@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -28,12 +29,16 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.extensions.ColorReference2
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_cloud_20_filled
 
 private val CardArtWidth: Dp = 264.dp
 private val CardArtHeight: Dp = 172.dp
@@ -42,12 +47,30 @@ private val CardArtBorderWidth: Dp = 1.dp
 private const val RETRY_PARAMETER = "campaign_card_art_retry"
 
 @Composable
-fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier) {
-    if (cardArtUrl == null) {
-        CardArtSurface(modifier = modifier) { CardArtPlaceholder() }
-        return
+fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier, showVirtualChip: Boolean = false) {
+    CardArtSurface(modifier = modifier) {
+        if (cardArtUrl == null) {
+            CardArtPlaceholder()
+        } else {
+            CardArtImage(cardArtUrl = cardArtUrl)
+        }
+        if (showVirtualChip) {
+            TangemIcon(
+                tangemIconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_cloud_20_filled,
+                    tintReference = ColorReference2 { TangemTheme.colors3.icon.staticDark },
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(12.dp)
+                    .size(20.dp),
+            )
+        }
     }
+}
 
+@Composable
+private fun CardArtImage(cardArtUrl: String) {
     var retryCount by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
     val request = remember(cardArtUrl, retryCount) {
@@ -58,16 +81,14 @@ fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier)
             .build()
     }
 
-    CardArtSurface(modifier = modifier) {
-        SubcomposeAsyncImage(
-            modifier = Modifier.fillMaxSize(),
-            model = request,
-            loading = { CardArtLoading() },
-            error = { CardArtError(onRetryClick = { retryCount++ }) },
-            contentScale = ContentScale.Crop,
-            contentDescription = null,
-        )
-    }
+    SubcomposeAsyncImage(
+        modifier = Modifier.fillMaxSize(),
+        model = request,
+        loading = { CardArtLoading() },
+        error = { CardArtError(onRetryClick = { retryCount++ }) },
+        contentScale = ContentScale.Crop,
+        contentDescription = null,
+    )
 }
 
 @Composable
@@ -132,6 +153,10 @@ private fun TangemPayCampaignCardArtPreview() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TangemPayCampaignCardArt(cardArtUrl = "https://app.tangem.com/cards/card_default.png")
+            TangemPayCampaignCardArt(
+                cardArtUrl = "https://app.tangem.com/cards/card_default.png",
+                showVirtualChip = true,
+            )
             TangemPayCampaignCardArt(cardArtUrl = null)
             TangemPayCampaignCardArtPlaceholder()
             CardArtSurface { CardArtError(onRetryClick = {}) }
