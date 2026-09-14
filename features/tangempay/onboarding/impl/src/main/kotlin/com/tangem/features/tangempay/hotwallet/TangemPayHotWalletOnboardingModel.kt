@@ -38,10 +38,7 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
         setLoading(isLoading = true)
 
         modelScope.launch {
-            val userWallet = onboardingStarter.createHotWallet(
-                campaignKey = null,
-                onLoadingChange = ::setLoading,
-            ) ?: return@launch
+            val userWallet = onboardingStarter.createHotWallet(onLoadingChange = ::setLoading) ?: return@launch
 
             router.replaceAll(
                 AppRoute.TangemPayOnboarding(
