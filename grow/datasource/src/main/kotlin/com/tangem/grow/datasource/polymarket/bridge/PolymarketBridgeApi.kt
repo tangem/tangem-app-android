@@ -23,10 +23,10 @@ interface PolymarketBridgeApi {
         @Body body: PolymarketDepositRequest,
     ): ApiResponse<PolymarketDepositResponse>
 
-    /** @param builderCode required: without it the call succeeds, only warns, and loses attribution. */
+    /** @param builderCode optional: the bridge accepts the call without it, only attribution is lost. */
     @POST("withdraw")
     suspend fun createWithdrawAddress(
-        @Header("X-Builder-Code") builderCode: String,
+        @Header("X-Builder-Code") builderCode: String?,
         @Body body: PolymarketWithdrawAddressRequest,
     ): ApiResponse<PolymarketWithdrawAddressResponse>
 }
