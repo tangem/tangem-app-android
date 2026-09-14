@@ -51,8 +51,9 @@ internal class JointOperationModel @Inject constructor(
         .flowOn(dispatchers.io)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
-    private val state: StateFlow<JointOperationState?> = observed
-        .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
+    /** What the sheet shows right now; the actions act on it, not on a cache of their own */
+    private val shown: JointOperationState?
+        get() = observed.replayCache.firstOrNull()
 
     private val isBalanceHidden = getBalanceHidingSettingsUseCase()
         .map { it.isBalanceHidden }
@@ -103,7 +104,7 @@ internal class JointOperationModel @Inject constructor(
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = JointOperationUM.Loading)
 
     fun onSignClick() {
-        val operation = state.value ?: return
+        val operation = shown ?: return
         if (!operation.canSign || isSigning.value) return
 
         modelScope.launch {
@@ -131,7 +132,7 @@ internal class JointOperationModel @Inject constructor(
     }
 
     fun onCopyRecipientClick() {
-        val recipient = state.value?.displayed?.recipient ?: return
+        val recipient = shown?.displayed?.recipient ?: return
 
         clipboardManager.setText(text = recipient, isSensitive = false)
     }
