@@ -79,7 +79,13 @@ internal class PolymarketPositionsLoader @Inject constructor(
             if (pageError != null) {
                 TangemLogger.e("Failed to load Polymarket positions page: ${pageError.throwable}")
             }
-            if (value.positions.isEmpty()) return Content.Empty
+            if (value.positions.isEmpty()) {
+                return when {
+                    pageError != null -> Content.Error(session::retry)
+                    value.status is PaginationStatus.NextBatchLoading -> Content.Loading
+                    else -> Content.Empty
+                }
+            }
             return Content.Data(
                 positions = withContext(dispatchers.default) {
                     value.positions.map(converter::convert).toImmutableList()
