@@ -74,9 +74,24 @@ internal class SignJointOperationUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the slot holds another operation WHEN invoke THEN nothing is signed`() = runTest {
+        // Act
+        val actual = useCase(
+            account = account,
+            network = network,
+            operationId = "another-operation",
+            displayed = displayed,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationSignError.OperationNotFound.left())
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN awaiting operation WHEN invoke THEN verify gate sign send fetch in order`() = runTest {
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -120,7 +135,7 @@ internal class SignJointOperationUseCaseTest {
         coEvery { verifier.verify(any(), any(), any(), any()) } returns reason.left()
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(reason.left())
@@ -135,7 +150,7 @@ internal class SignJointOperationUseCaseTest {
             JointOperationBlockaidGate.Verdict.MALICIOUS
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationSignError.Malicious.left())
@@ -149,7 +164,7 @@ internal class SignJointOperationUseCaseTest {
             JointOperationBlockaidGate.Verdict.UNKNOWN
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
@@ -162,7 +177,7 @@ internal class SignJointOperationUseCaseTest {
             flowOf(listOf(jointAccount(safeAddress = null)))
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         val expected = JointOperationSignError.VerificationFailed(
@@ -178,7 +193,7 @@ internal class SignJointOperationUseCaseTest {
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns null.right()
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         val expected = JointOperationSignError.VerificationFailed(
@@ -197,7 +212,7 @@ internal class SignJointOperationUseCaseTest {
             coEvery { ownerAddressResolver.resolve(any(), any()) } returns cause.left()
 
             // Act
-            val actual = useCase(account = account, network = network, displayed = displayed)
+            val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
             // Assert
             assertThat(actual).isEqualTo(JointOperationSignError.Failed(cause = cause).left())
@@ -211,7 +226,7 @@ internal class SignJointOperationUseCaseTest {
             flowOf(listOf(jointAccount(inFlightOperations = emptyMap())))
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationSignError.OperationNotFound.left())
@@ -233,7 +248,7 @@ internal class SignJointOperationUseCaseTest {
             )
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
@@ -255,7 +270,7 @@ internal class SignJointOperationUseCaseTest {
             )
 
         // Act
-        val actual = useCase(account = account, network = network, displayed = displayed)
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationSignError.ThresholdReached.left())
