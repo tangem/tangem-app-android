@@ -9,6 +9,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.account.status.utils.MainExpandedAccountsHolder
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
@@ -27,6 +28,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -39,6 +41,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
     private val resolveAndSelectUserWalletUseCase: ResolveAndSelectUserWalletUseCase,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val singleAccountListFetcher: SingleAccountListFetcher,
+    private val jointAccountListFetcher: SingleJointAccountListFetcher,
     private val expandedAccountsHolder: MainExpandedAccountsHolder,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
@@ -109,8 +112,17 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
             ?: return null
 
         if (isFromOnNewIntent) {
-            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId = userWallet.walletId))
-                .onLeft { TangemLogger.e("Error on refreshing wallet accounts", it) }
+            supervisorScope {
+                launch {
+                    singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId = userWallet.walletId))
+                        .onLeft { TangemLogger.e("Error on refreshing wallet accounts", it) }
+                }
+                launch {
+                    jointAccountListFetcher(
+                        params = SingleJointAccountListFetcher.Params(userWalletId = userWallet.walletId),
+                    ).onLeft { TangemLogger.e("Error on refreshing joint accounts", it) }
+                }
+            }
         }
 
         val accountFlow = singleAccountSupplier.filterJointAccount(id)
