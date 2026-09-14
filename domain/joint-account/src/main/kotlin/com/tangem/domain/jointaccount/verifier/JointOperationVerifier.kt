@@ -77,9 +77,11 @@ class JointOperationVerifier(
     private fun Raise<JointOperationSignError>.checkRefund(safeTx: SafeTx, bounds: RefundBounds) {
         val refundMismatch = VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH)
 
-        ensure(safeTx.gasToken.equals(SafeTxGasBuilder.NATIVE_GAS_TOKEN, ignoreCase = true)) { refundMismatch }
-        ensure(!safeTx.refundReceiver.equals(ZERO_ADDRESS, ignoreCase = true)) { refundMismatch }
-        ensure(safeTx.refundReceiver.equals(bounds.refundReceiver, ignoreCase = true)) { refundMismatch }
+        // Spelled the same way the digest normalizes them: a receiver without the 0x prefix is still an address
+        val refundReceiver = normalized(safeTx.refundReceiver)
+        ensure(normalized(safeTx.gasToken) == SafeTxGasBuilder.NATIVE_GAS_TOKEN) { refundMismatch }
+        ensure(refundReceiver != ZERO_ADDRESS) { refundMismatch }
+        ensure(refundReceiver == normalized(bounds.refundReceiver)) { refundMismatch }
         ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
         ensure(safeTx.gasPrice.signum() >= 0) { refundMismatch }
         ensure(safeTx.gasPrice <= bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER) { refundMismatch }
