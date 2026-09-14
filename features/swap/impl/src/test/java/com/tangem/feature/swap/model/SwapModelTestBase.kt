@@ -33,6 +33,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
@@ -173,7 +174,8 @@ internal abstract class SwapModelTestBase {
         coEvery {
             singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
         } returns null
-        coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns emptySet<CryptoCurrency.ID>().right()
+        coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
+            emptyMap<CryptoCurrency.ID, PredictionWithdrawDestination>().right()
         // Unstubbed, a relaxed mock would fabricate a nested SwapCurrencyStatus/Account chain instead of
         // echoing the real fromSwapCurrencyStatus, which can trip Account-type checks (e.g. isTangemPayWithdrawal).
         every {
