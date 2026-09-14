@@ -6,14 +6,10 @@ import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal sealed interface JointOperationSignersUM {
-
-    data object Loading : JointOperationSignersUM
-
-    data class Content(
-        val membersCount: Int,
-        val signers: ImmutableList<SignerUM>,
-    ) : JointOperationSignersUM
+internal data class JointOperationSignersUM(
+    val membersCount: Int,
+    val signers: ImmutableList<SignerUM>,
+) {
 
     /**
 

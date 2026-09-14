@@ -11,13 +11,17 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
+import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.signers.converter.JointOperationSignersUMConverter
+import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -36,9 +40,7 @@ internal class JointOperationModel @Inject constructor(
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
-    val params: JointOperationComponent.Params = paramsContainer.require()
-
-    val stackNavigation = StackNavigation<JointOperationRoutes>()
+    private val params: JointOperationComponent.Params = paramsContainer.require()
 
     private val observed: SharedFlow<JointOperationState?> = delegate
         .observe(
@@ -49,25 +51,56 @@ internal class JointOperationModel @Inject constructor(
         .flowOn(dispatchers.io)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
-    val state: StateFlow<JointOperationState?> = observed
+    private val state: StateFlow<JointOperationState?> = observed
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
 
-    /** Told apart from [state] being `null` before the first emission: an operation gone before the sheet opened */
-    val isGone: StateFlow<Boolean> = observed
-        .map { operation -> operation == null }
-        .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = false)
-
-    val isBalanceHidden: StateFlow<Boolean> = getBalanceHidingSettingsUseCase()
+    private val isBalanceHidden = getBalanceHidingSettingsUseCase()
         .map { it.isBalanceHidden }
         .distinctUntilChanged()
-        .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = false)
 
-    val isSigning: StateFlow<Boolean>
-        field = MutableStateFlow(false)
+    private val isSigning = MutableStateFlow(false)
 
     /** The sign use case tolerates a failed refresh, so the cached operation may still miss this member's answer */
-    val hasAnswered: StateFlow<Boolean>
-        field = MutableStateFlow(false)
+    private val hasAnswered = MutableStateFlow(false)
+
+    private val operationConverter = JointOperationUMConverter(
+        currency = params.currency,
+        onSignClick = ::onSignClick,
+        onSignersClick = ::onSignersClick,
+        onCopyRecipientClick = ::onCopyRecipientClick,
+    )
+
+    private val signersConverter = JointOperationSignersUMConverter()
+
+    val stackNavigation = StackNavigation<JointOperationRoutes>()
+
+    /** [JointOperationUM.Gone] is told apart from nothing having arrived yet: an operation gone before the sheet opened */
+    val uiState: StateFlow<JointOperationUM> = combine(
+        flow = observed,
+        flow2 = isSigning,
+        flow3 = hasAnswered,
+        flow4 = isBalanceHidden,
+    ) { state, isSigning, hasAnswered, isBalanceHidden ->
+        state ?: return@combine JointOperationUM.Gone
+
+        JointOperationUM.Content(
+            operation = operationConverter.convert(
+                value = JointOperationUMConverter.Input(
+                    state = state,
+                    isSigning = isSigning,
+                    hasAnswered = hasAnswered,
+                    isBalanceHidden = isBalanceHidden,
+                ),
+            ),
+            signers = signersConverter.convert(
+                value = JointOperationSignersUMConverter.Input(
+                    membersCount = state.membersCount,
+                    signers = state.signers,
+                ),
+            ),
+        )
+    }
+        .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = JointOperationUM.Loading)
 
     fun onSignClick() {
         val operation = state.value ?: return

@@ -21,16 +21,15 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
 import com.tangem.features.txhistory.ui.TxHistoryDetailsTopNavigation
 import com.tangem.core.ui.R as CoreUiR
 
 /** One sheet for both screens: stepping into the signers and back keeps it on screen */
 @Composable
 internal fun JointOperationContentSheet(
-    header: TxHistoryDetailsUM.HeaderUM?,
-    membersCount: Int?,
+    state: JointOperationUM.Content?,
     contentStack: ChildStack<JointOperationRoutes, ComposableContentComponent>,
     onBackClick: () -> Unit,
     onCloseClick: () -> Unit,
@@ -38,19 +37,19 @@ internal fun JointOperationContentSheet(
     TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
         containerColor = TangemTheme.colors3.bg.secondary,
         config = TangemBottomSheetConfig(
-            isShown = header != null,
+            isShown = state != null,
             onDismissRequest = onCloseClick,
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBackClick,
         title = {
             when (contentStack.active.configuration) {
-                JointOperationRoutes.Operation -> header?.let { operationHeader ->
-                    TxHistoryDetailsTopNavigation(header = operationHeader, onCloseClick = onCloseClick)
+                JointOperationRoutes.Operation -> state?.let { content ->
+                    TxHistoryDetailsTopNavigation(header = content.operation.header, onCloseClick = onCloseClick)
                 }
                 JointOperationRoutes.Signers -> TangemTopNavigation(
                     title = resourceReference(CoreUiR.string.joint_operation_signers_title),
-                    subtitle = membersCount?.let { count ->
+                    subtitle = state?.signers?.membersCount?.let { count ->
                         pluralReference(
                             id = CoreUiR.plurals.joint_account_members_count,
                             count = count,

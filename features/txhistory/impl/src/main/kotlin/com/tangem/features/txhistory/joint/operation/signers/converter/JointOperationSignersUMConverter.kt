@@ -15,10 +15,10 @@ import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
 internal class JointOperationSignersUMConverter :
-    Converter<JointOperationSignersUMConverter.Input, JointOperationSignersUM.Content> {
+    Converter<JointOperationSignersUMConverter.Input, JointOperationSignersUM> {
 
-    override fun convert(value: Input): JointOperationSignersUM.Content {
-        return JointOperationSignersUM.Content(
+    override fun convert(value: Input): JointOperationSignersUM {
+        return JointOperationSignersUM(
             membersCount = value.membersCount,
             signers = value.signers.mapIndexed(::toSignerUM).toImmutableList(),
         )
