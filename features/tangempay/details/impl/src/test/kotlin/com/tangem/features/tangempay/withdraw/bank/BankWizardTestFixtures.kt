@@ -12,11 +12,14 @@ import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.domain.pay.model.bankofframp.OfframpToken
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
+import java.util.Currency
 
 internal const val POLYGON_CHAIN_ID = 137L
 internal const val BASE_CHAIN_ID = 8453L
@@ -108,12 +111,25 @@ internal fun offrampOptions(
 internal fun bankWithdrawSource(
     token: CryptoCurrency.Token = paymentToken(),
     chainId: Long = POLYGON_CHAIN_ID,
-    fiatBalance: BigDecimal? = BigDecimal("2325.55"),
-    isAvailable: Boolean = true,
+    fiatBalance: BigDecimal = BigDecimal("2325.55"),
 ): BankWithdrawSource = BankWithdrawSource(
     network = token.network,
     chainId = chainId,
     token = token,
     fiatBalance = fiatBalance,
-    isAvailable = isAvailable,
+)
+
+internal fun bankWithdrawOptions(
+    sources: List<BankWithdrawSource> = listOf(bankWithdrawSource()),
+    destinations: List<OfframpDestination> = listOf(
+        offrampDestination(),
+        offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
+    ),
+    limits: AmountLimits = AmountLimits(min = BigDecimal("1.00"), max = BigDecimal("10000.00")),
+    currency: Currency = Currency.getInstance("USD"),
+): BankWithdrawOptions = BankWithdrawOptions(
+    sources = sources.toImmutableList(),
+    destinations = destinations.toImmutableList(),
+    limits = limits,
+    currency = currency,
 )

@@ -64,7 +64,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val fee = destination.fee.toText()
         return TransferUM(
             amount = AmountCardUM(
-                balance = source.fiatBalance?.formatFiat(currency),
+                balance = source.fiatBalance.formatFiat(currency),
                 amount = amount.formatFiat(currency),
                 icon = iconConverter.convert(source.token),
                 symbol = source.token.symbol,

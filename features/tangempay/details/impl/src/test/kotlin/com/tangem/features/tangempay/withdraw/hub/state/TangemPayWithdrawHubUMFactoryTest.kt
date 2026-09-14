@@ -2,9 +2,15 @@ package com.tangem.features.tangempay.withdraw.hub.state
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
+import com.tangem.features.tangempay.withdraw.hub.model.OptionsState
+import com.tangem.features.tangempay.withdraw.hub.model.RecentsState
+import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentRecipientUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 import com.tangem.test.core.ProvideTestModels
@@ -26,6 +32,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     private val onRecentRecipientClick: (String) -> Unit = mockk(relaxed = true)
     private val onSeeAllClick: () -> Unit = mockk(relaxed = true)
     private val onRetryRecentsClick: () -> Unit = mockk(relaxed = true)
+    private val onRetryBankSectionClick: () -> Unit = mockk(relaxed = true)
 
     private val factory = TangemPayWithdrawHubUMFactory(
         callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
@@ -36,6 +43,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onRecentRecipientClick = onRecentRecipientClick,
             onSeeAllClick = onSeeAllClick,
             onRetryRecentsClick = onRetryRecentsClick,
+            onRetryBankSectionClick = onRetryBankSectionClick,
         ),
     )
 
@@ -49,13 +57,14 @@ internal class TangemPayWithdrawHubUMFactoryTest {
             onRecentRecipientClick,
             onSeeAllClick,
             onRetryRecentsClick,
+            onRetryBankSectionClick,
         )
     }
 
     @Test
     fun `GIVEN factory WHEN create THEN within portfolio card has its title`() {
         // Act
-        val actual = factory.create()
+        val actual = create()
 
         // Assert
         assertThat(actual.swapSection.withinPortfolio.title)
@@ -65,20 +74,20 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN factory WHEN create THEN bank cards titled and recents loading`() {
         // Act
-        val actual = factory.create()
+        val actual = create()
 
         // Assert
-        assertThat(actual.bankSection.toPersonalAccount.title)
+        assertThat((actual.bankSection as BankSectionUM.Content).toPersonalAccount.title)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_hub_to_personal_account))
-        assertThat(actual.bankSection.toBusinessAccount.title)
+        assertThat((actual.bankSection as BankSectionUM.Content).toBusinessAccount.title)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_hub_to_business_account))
-        assertThat(actual.bankSection.recents).isEqualTo(RecentsUM.Loading)
+        assertThat((actual.bankSection as BankSectionUM.Content).recents).isEqualTo(RecentsUM.Loading)
     }
 
     @Test
     fun `GIVEN created state WHEN within portfolio clicked THEN callback invoked`() {
         // Arrange
-        val state = factory.create()
+        val state = create()
 
         // Act
         state.swapSection.withinPortfolio.onClick()
@@ -90,7 +99,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN created state WHEN back clicked THEN callback invoked`() {
         // Arrange
-        val state = factory.create()
+        val state = create()
 
         // Act
         state.onBackClick()
@@ -102,10 +111,10 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN created state WHEN to personal account clicked THEN callback invoked`() {
         // Arrange
-        val state = factory.create()
+        val state = create()
 
         // Act
-        state.bankSection.toPersonalAccount.onClick()
+        (state.bankSection as BankSectionUM.Content).toPersonalAccount.onClick()
 
         // Assert
         verify(exactly = 1) { onToPersonalAccountClick() }
@@ -114,10 +123,10 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN created state WHEN to business account clicked THEN callback invoked`() {
         // Arrange
-        val state = factory.create()
+        val state = create()
 
         // Act
-        state.bankSection.toBusinessAccount.onClick()
+        (state.bankSection as BankSectionUM.Content).toBusinessAccount.onClick()
 
         // Assert
         verify(exactly = 1) { onToBusinessAccountClick() }
@@ -130,7 +139,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val account = bankAccount(id = "acc-1", beneficiary = model.beneficiary, accountNumber = "1234567890")
 
         // Act
-        val actual = factory.createRecents(recents = listOf(account), hasSavedAccounts = true) as RecentsUM.Content
+        val actual = createRecents(accounts = listOf(account)) as RecentsUM.Content
 
         // Assert
         val recipient = actual.recipients.single()
@@ -148,7 +157,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN no recents and no saved accounts WHEN createRecents THEN empty without see all`() {
         // Act
-        val actual = factory.createRecents(recents = emptyList(), hasSavedAccounts = false)
+        val actual = createRecents(accounts = emptyList(), hasSavedAccounts = false)
 
         // Assert
         assertThat(actual).isEqualTo(RecentsUM.Empty(onSeeAllClick = null))
@@ -157,7 +166,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN no recents but saved accounts WHEN createRecents THEN empty with see all callback`() {
         // Act
-        val actual = factory.createRecents(recents = emptyList(), hasSavedAccounts = true) as RecentsUM.Empty
+        val actual = createRecents(accounts = emptyList()) as RecentsUM.Empty
         requireNotNull(actual.onSeeAllClick).invoke()
 
         // Assert
@@ -173,7 +182,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         )
 
         // Act
-        val actual = factory.createRecents(recents = accounts, hasSavedAccounts = true) as RecentsUM.Content
+        val actual = createRecents(accounts = accounts) as RecentsUM.Content
 
         // Assert
         assertThat(actual.recipients.map { it.id }).containsExactly("acc-2", "acc-1").inOrder()
@@ -185,8 +194,8 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         val account = bankAccount(id = "acc-42")
 
         // Act
-        val first = factory.createRecents(recents = listOf(account), hasSavedAccounts = true) as RecentsUM.Content
-        val second = factory.createRecents(recents = listOf(account), hasSavedAccounts = true) as RecentsUM.Content
+        val first = createRecents(accounts = listOf(account)) as RecentsUM.Content
+        val second = createRecents(accounts = listOf(account)) as RecentsUM.Content
 
         // Assert
         assertThat(first.recipients.single().accent).isEqualTo(second.recipients.single().accent)
@@ -195,7 +204,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN content WHEN recipient clicked THEN callback receives account id`() {
         // Arrange
-        val content = factory.createRecents(recents = listOf(bankAccount(id = "acc-7")), hasSavedAccounts = true) as RecentsUM.Content
+        val content = createRecents(accounts = listOf(bankAccount(id = "acc-7"))) as RecentsUM.Content
 
         // Act
         content.onRecipientClick("acc-7")
@@ -207,7 +216,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN content WHEN see all clicked THEN callback invoked`() {
         // Arrange
-        val content = factory.createRecents(recents = listOf(bankAccount()), hasSavedAccounts = true) as RecentsUM.Content
+        val content = createRecents(accounts = listOf(bankAccount())) as RecentsUM.Content
 
         // Act
         content.onSeeAllClick()
@@ -219,7 +228,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     @Test
     fun `GIVEN error state WHEN retry clicked THEN callback invoked`() {
         // Arrange
-        val error = factory.createRecentsError() as RecentsUM.Error
+        val error = createRecents(recents = RecentsState.Failed) as RecentsUM.Error
 
         // Act
         error.onRetryClick()
@@ -227,6 +236,38 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         // Assert
         verify(exactly = 1) { onRetryRecentsClick() }
     }
+
+    @Test
+    fun `GIVEN options loading WHEN create THEN bank section loading`() {
+        // Act
+        val actual = create(options = OptionsState.Loading)
+
+        // Assert
+        assertThat(actual.bankSection).isEqualTo(BankSectionUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN options unavailable WHEN create THEN bank section error retries the whole section`() {
+        // Arrange
+        val actual = create(options = OptionsState.Unavailable).bankSection as BankSectionUM.Error
+
+        // Act
+        actual.onRetryClick()
+
+        // Assert
+        verify(exactly = 1) { onRetryBankSectionClick() }
+    }
+
+    private fun create(
+        options: OptionsState = OptionsState.Ready(bankWithdrawOptions()),
+        recents: RecentsState = RecentsState.Loading,
+    ): TangemPayWithdrawHubUM = factory.create(WithdrawHubState(options = options, recents = recents))
+
+    private fun createRecents(
+        accounts: List<BankAccount> = emptyList(),
+        hasSavedAccounts: Boolean = true,
+        recents: RecentsState = RecentsState.Loaded(accounts = accounts, hasSavedAccounts = hasSavedAccounts),
+    ): RecentsUM = (create(recents = recents).bankSection as BankSectionUM.Content).recents
 
     data class NameModel(
         val beneficiary: Beneficiary,
