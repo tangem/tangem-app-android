@@ -231,7 +231,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickWithdraw() {
         analytics.send(TangemPayAnalyticsEvents.WithdrawClicked())
-        if (tangemPayFeatureToggles.isBankOfframpEnabled) {
+        if (tangemPayFeatureToggles.isBankOfframpEnabled && isBankOfframpAvailable()) {
             openWithdrawHub()
             return
         }
@@ -244,6 +244,14 @@ internal class TangemPayDetailsModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * The hub only makes sense while a bank transfer is on offer: without the channel it would hold a single
+     * option. An unknown channel — a status served from the cache, or a failed lookup — keeps the hub rather than
+     * quietly taking the feature away from a customer who is entitled to it.
+     */
+    private fun isBankOfframpAvailable(): Boolean =
+        currentStatus.value.ifLoadedOrNull { it.isBankOfframpAvailable } != false
 
     private fun openAddFunds() {
         val status = currentStatus.value
