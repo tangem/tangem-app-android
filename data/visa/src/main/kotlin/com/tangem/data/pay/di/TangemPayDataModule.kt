@@ -563,10 +563,15 @@ internal interface TangemPayDataModule {
             )
         }
 
-        // Mock until the bank off-ramp BFF endpoints ship; replaced by the real repository in the integration task
         @Provides
         @Singleton
-        fun provideBankOfframpRepository(): BankOfframpRepository = MockBankOfframpRepository()
+        fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
+
+        // Mock until the order, polling and signature endpoints of the bank off-ramp BFF are agreed; the
+        // recipients and routes a withdrawal is built from already come from the backend.
+        @Provides
+        @Singleton
+        fun provideBankOfframpOrderRepository(): BankOfframpOrderRepository = MockBankOfframpOrderRepository()
 
         // Geo endpoints are mocked while their country list is filled in; bind the default repository directly to
         // go live. Eligibility checks still reach the backend through the delegate.
@@ -609,20 +614,22 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCreateBankOfframpOrderUseCase(repository: BankOfframpRepository): CreateBankOfframpOrderUseCase {
+        fun provideCreateBankOfframpOrderUseCase(
+            repository: BankOfframpOrderRepository,
+        ): CreateBankOfframpOrderUseCase {
             return CreateBankOfframpOrderUseCase(repository = repository)
         }
 
         @Provides
         fun provideAwaitBankOfframpSignatureUseCase(
-            repository: BankOfframpRepository,
+            repository: BankOfframpOrderRepository,
         ): AwaitBankOfframpSignatureUseCase {
             return AwaitBankOfframpSignatureUseCase(repository = repository)
         }
 
         @Provides
         fun provideSignBankOfframpOrderUseCase(
-            repository: BankOfframpRepository,
+            repository: BankOfframpOrderRepository,
             authDataSource: TangemPayAuthDataSource,
             userWalletsListRepository: UserWalletsListRepository,
         ): SignBankOfframpOrderUseCase {
@@ -634,7 +641,9 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideCancelBankOfframpOrderUseCase(repository: BankOfframpRepository): CancelBankOfframpOrderUseCase {
+        fun provideCancelBankOfframpOrderUseCase(
+            repository: BankOfframpOrderRepository,
+        ): CancelBankOfframpOrderUseCase {
             return CancelBankOfframpOrderUseCase(repository = repository)
         }
     }

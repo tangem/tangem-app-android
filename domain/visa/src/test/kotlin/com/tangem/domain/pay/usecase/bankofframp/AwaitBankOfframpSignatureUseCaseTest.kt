@@ -6,7 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
-import com.tangem.domain.pay.repository.BankOfframpRepository
+import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class AwaitBankOfframpSignatureUseCaseTest {
 
-    private val repository: BankOfframpRepository = mockk()
+    private val repository: BankOfframpOrderRepository = mockk()
     private val useCase = AwaitBankOfframpSignatureUseCase(repository)
 
     @BeforeEach
