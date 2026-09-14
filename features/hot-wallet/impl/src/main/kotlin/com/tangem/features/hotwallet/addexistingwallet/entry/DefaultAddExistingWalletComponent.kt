@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.hotwallet.AddExistingWalletComponent
@@ -47,7 +48,7 @@ internal class DefaultAddExistingWalletComponent @AssistedInject constructor(
     )
 
     private val stepperComponent = stepperComponentFactory.create(
-        context = this,
+        context = child(key = "addExistingWalletStepper"),
         params = HotWalletStepperComponent.Params(
             initState = HotWalletStepperComponent.StepperUM.initialState(),
             callback = model.hotWalletStepperComponentModelCallback,
