@@ -10,7 +10,7 @@ class JoinTangemPayWaitlistUseCase(
     private val waitlistRepository: TangemPayWaitlistRepository,
 ) {
     suspend operator fun invoke(
-        userWalletId: UserWalletId,
+        userWalletId: UserWalletId?,
         entry: TangemPayWaitlistEntry,
         idempotencyKey: String,
     ): Either<VisaApiError, Unit> = waitlistRepository.join(
