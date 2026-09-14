@@ -6,9 +6,11 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
+import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.FilteredContent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Tab
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -33,8 +35,8 @@ internal class PolymarketPositionsModelTest {
     private val active: PolymarketPositionsLoader.Feed = mockk(relaxed = true)
     private val finished: PolymarketPositionsLoader.Feed = mockk(relaxed = true)
     private val activeContent = Content.Data(persistentListOf(PolymarketPositionUMConverter().convert(createPolymarketPosition())))
-    private val activeState = MutableStateFlow<Content>(activeContent)
-    private val finishedState = MutableStateFlow<Content>(Content.Empty)
+    private val activeState = MutableStateFlow(FilteredContent(content = activeContent))
+    private val finishedState = MutableStateFlow(FilteredContent(content = Content.Empty))
     private val wallet = UserWalletId("022")
     private var model: PolymarketPositionsModel? = null
     private val positionClick = slot<(PolymarketPositionId) -> Unit>()
@@ -68,19 +70,25 @@ internal class PolymarketPositionsModelTest {
         model.onResume()
         runCurrent()
         val newActive: PolymarketPositionsLoader.Feed = mockk(relaxed = true)
-        every { newActive.state } returns MutableStateFlow<Content>(Content.Loading)
+        every { newActive.state } returns MutableStateFlow(FilteredContent())
         every { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) } returns newActive
 
         // Act
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.WON)
         model.uiState.value.onTabSelect(Tab.Finished)
         runCurrent()
         val history = model.uiState.value.content
+        val finishedFilter = model.uiState.value.selectedFilter
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.LOST)
         model.uiState.value.onTabSelect(Tab.Active)
         runCurrent()
 
         // Assert
         assertThat(history).isEqualTo(Content.Empty)
         assertThat(model.uiState.value.content).isEqualTo(Content.Loading)
+        assertThat(finishedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
+        assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
+        verify(exactly = 0) { finished.selectFilter(any()) }
         verify(exactly = 1) { active.dispose() }
         verify(exactly = 1) { finished.dispose() }
         verify(exactly = 1) { active.resume(any()) }
@@ -94,6 +102,9 @@ internal class PolymarketPositionsModelTest {
         val model = createModel()
         model.onResume()
         runCurrent()
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.WON)
+        activeState.value = FilteredContent(PolymarketPositionsFilter.WON, activeContent)
+        runCurrent()
         val initial = model.uiState.value.content
 
         // Act
@@ -103,8 +114,53 @@ internal class PolymarketPositionsModelTest {
 
         // Assert
         assertThat(model.uiState.value.content).isSameInstanceAs(initial)
+        assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.WON)
         verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) }
         verify(exactly = 0) { active.dispose() }
+    }
+
+    @Test
+    fun `GIVEN Active list WHEN filter is selected and cleared THEN reuses the feed and ignores duplicate selections`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        every { active.selectFilter(any()) } answers { activeState.value = FilteredContent(firstArg(), Content.Loading) }
+
+        // Act
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.WON)
+        val selected = model.uiState.value
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.WON)
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.ALL)
+        runCurrent()
+
+        // Assert
+        assertThat(selected.selectedFilter).isEqualTo(PolymarketPositionsFilter.WON)
+        assertThat(selected.content).isEqualTo(Content.Loading)
+        assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
+        verify(exactly = 1) { active.selectFilter(PolymarketPositionsFilter.WON) }
+        verify(exactly = 1) { active.selectFilter(PolymarketPositionsFilter.ALL) }
+        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, any()) }
+        verify(exactly = 0) { active.dispose() }
+    }
+
+    @Test
+    fun `GIVEN cached All content WHEN selection resets before feed emits THEN restores the same cards`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.WON)
+        val pending = model.uiState.value.content
+        model.uiState.value.onFilterSelect(PolymarketPositionsFilter.ALL)
+        runCurrent()
+
+        // Assert
+        assertThat(pending).isEqualTo(Content.Loading)
+        assertThat(model.uiState.value.content).isSameInstanceAs(activeContent)
+        assertThat(model.uiState.value.selectedFilter).isEqualTo(PolymarketPositionsFilter.ALL)
     }
 
     @Test
@@ -117,7 +173,7 @@ internal class PolymarketPositionsModelTest {
         runCurrent()
 
         // Act
-        activeState.value = Content.Error(onRetry = {})
+        activeState.value = FilteredContent(content = Content.Error(onRetry = {}))
         runCurrent()
 
         // Assert
