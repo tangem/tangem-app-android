@@ -43,6 +43,12 @@ internal class PredictionWithdrawErrorResolverTest {
             error = http(code = Code.IM_A_TEAPOT, detail = "teapot"),
             expected = PredictionWithdrawError.Unexpected(httpCode = Code.IM_A_TEAPOT.numericCode, detail = "teapot"),
         ),
+        TestModel(ApiResponseError.NetworkException(), PredictionWithdrawError.Network),
+        TestModel(ApiResponseError.TimeoutException(), PredictionWithdrawError.Network),
+        TestModel(
+            error = ApiResponseError.UnknownException(cause = IllegalStateException("moshi blew up")),
+            expected = PredictionWithdrawError.Unexpected(httpCode = null, detail = "moshi blew up"),
+        ),
     )
 
     private fun http(code: Code, detail: String? = null): ApiResponseError.HttpException =
