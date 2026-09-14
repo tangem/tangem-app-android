@@ -3,7 +3,6 @@ package com.tangem.features.tangempay.withdraw.bank
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.pay.model.bankofframp.AmountLimits
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
@@ -105,8 +104,7 @@ internal fun offrampOptions(
         offrampDestination(),
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
     ),
-    limits: AmountLimits = AmountLimits(min = BigDecimal("1.00"), max = BigDecimal("10000.00")),
-): BankOfframpOptions = BankOfframpOptions(sources = sources, destinations = destinations, amountLimits = limits)
+): BankOfframpOptions = BankOfframpOptions(sources = sources, destinations = destinations)
 
 internal fun bankWithdrawSource(
     token: CryptoCurrency.Token = paymentToken(),
@@ -125,11 +123,11 @@ internal fun bankWithdrawOptions(
         offrampDestination(),
         offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
     ),
-    limits: AmountLimits = AmountLimits(min = BigDecimal("1.00"), max = BigDecimal("10000.00")),
+    minAmount: BigDecimal = BigDecimal("1.00"),
     currency: Currency = Currency.getInstance("USD"),
 ): BankWithdrawOptions = BankWithdrawOptions(
     sources = sources.toImmutableList(),
     destinations = destinations.toImmutableList(),
-    limits = limits,
+    minAmount = minAmount,
     currency = currency,
 )
