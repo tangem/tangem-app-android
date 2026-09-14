@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -32,17 +33,19 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val statusStore: PredictionAccountStatusStore = mockk(relaxUnitFun = true)
     private val onboardedStore: PolymarketOnboardedStore = mockk(relaxUnitFun = true)
     private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
+    private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
         predictionAccountStatusStore = statusStore,
         onboardedStore = onboardedStore,
         requisitesStore = requisitesStore,
+        withdrawalStore = withdrawalStore,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(credentialsStore, statusStore, onboardedStore, requisitesStore)
+        clearMocks(credentialsStore, statusStore, onboardedStore, requisitesStore, withdrawalStore)
     }
 
     @Test
@@ -128,6 +131,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             predictionAccountStatusStore = statusStore,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
+            withdrawalStore = withdrawalStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -146,6 +150,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             predictionAccountStatusStore = store,
             onboardedStore = onboardedStore,
             requisitesStore = requisitesStore,
+            withdrawalStore = withdrawalStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -162,6 +167,16 @@ internal class PolymarketUserWalletDataCleanerTest {
 
         // Assert
         coVerify(exactly = 1) { requisitesStore.clear(WALLET_A) }
+    }
+
+    @Test
+    fun `GIVEN wallets deleted WHEN cleared THEN the withdrawal record is cleared too`() = runTest {
+        // Act
+        cleaner.clear(listOf(WALLET_A, WALLET_B))
+
+        // Assert
+        coVerify(exactly = 1) { withdrawalStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { withdrawalStore.clear(WALLET_B) }
     }
 
     private fun createStatusStore(testScope: TestScope) = PredictionAccountStatusStore(
