@@ -102,6 +102,19 @@ internal class JointOperationConverterTest {
     }
 
     @Test
+    fun `GIVEN one in-flight operation out of contract WHEN convert THEN only that one is dropped`() {
+        // Arrange
+        val broken = operationDto(chainId = 1, operationId = "broken", safeTx = safeTxDto(nonce = UINT256_MAX))
+        val sound = operationDto(chainId = 137, operationId = "sound")
+
+        // Act
+        val actual = converter.convertInFlight(listOf(broken, sound))
+
+        // Assert
+        assertThat(actual.mapValues { it.value.operationId }).containsExactly(137L, "sound")
+    }
+
+    @Test
     fun `GIVEN a safe tx round trip WHEN convert back THEN the dto matches the source`() {
         // Arrange
         val dto = safeTxDto(to = "0x1111111111111111111111111111111111111111", value = UINT256_MAX)
@@ -113,28 +126,29 @@ internal class JointOperationConverterTest {
         assertThat(actual).isEqualTo(dto)
     }
 
+    /**
+     * The contract validates the field as `^(0|[1-9]\d{0,17})$`, and the persisted copy keeps a `Long`. A wider
+     * value is refused while reading, so the fetch drops that one operation instead of failing at the store.
+     */
     @Test
-    fun `GIVEN a nonce at the long boundary WHEN convert back THEN it survives exactly`() {
+    fun `GIVEN a nonce wider than the contract allows WHEN convert THEN it is refused while reading`() {
+        // Act
+        val actual = runCatching { safeTxConverter.convert(safeTxDto(nonce = UINT256_MAX)) }.exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun `GIVEN the largest nonce the contract allows WHEN convert back THEN it survives as a decimal string`() {
         // Arrange
-        val safeTx = safeTxConverter.convert(safeTxDto()).copy(nonce = BigInteger.valueOf(Long.MAX_VALUE))
+        val safeTx = safeTxConverter.convert(safeTxDto(nonce = MAX_CONTRACT_NONCE))
 
         // Act
         val actual = safeTxConverter.convertBack(safeTx)
 
         // Assert
-        assertThat(actual.nonce).isEqualTo(Long.MAX_VALUE)
-    }
-
-    @Test
-    fun `GIVEN a nonce beyond the integer contract WHEN convert back THEN it fails fast instead of truncating`() {
-        // Arrange
-        val safeTx = safeTxConverter.convert(safeTxDto()).copy(nonce = BigInteger(UINT256_MAX))
-
-        // Act
-        val actual = runCatching { safeTxConverter.convertBack(safeTx) }.exceptionOrNull()
-
-        // Assert
-        assertThat(actual).isInstanceOf(ArithmeticException::class.java)
+        assertThat(actual.nonce).isEqualTo(MAX_CONTRACT_NONCE)
     }
 
     private fun operationDto(
@@ -157,6 +171,7 @@ internal class JointOperationConverterTest {
     private fun safeTxDto(
         to: String = "0x1111111111111111111111111111111111111111",
         value: String = "1000000000000000000",
+        nonce: String = "4",
     ) = JointOperationDto.SafeTxDto(
         to = to,
         value = value,
@@ -167,11 +182,12 @@ internal class JointOperationConverterTest {
         gasPrice = "60000000000",
         gasToken = "0x0000000000000000000000000000000000000000",
         refundReceiver = "0x2222222222222222222222222222222222222222",
-        nonce = 4,
+        nonce = nonce,
     )
 
     private companion object {
         const val OPERATION_ID = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708"
+        const val MAX_CONTRACT_NONCE = "999999999999999999"
         const val UINT256_MAX =
             "115792089237316195423570985008687907853269984665640564039457584007913129639935"
     }
