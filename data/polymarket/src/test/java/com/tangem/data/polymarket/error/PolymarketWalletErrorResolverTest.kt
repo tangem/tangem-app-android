@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 internal class PolymarketWalletErrorResolverTest {
 
-    private val resolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
+    private val resolver = PolymarketWalletErrorResolver(ProblemDetailParser(Moshi.Builder().build()))
 
     @Test
     fun `GIVEN 400 WHEN resolve THEN InvalidRequest`() {
