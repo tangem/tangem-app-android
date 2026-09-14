@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
@@ -18,6 +19,7 @@ import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
+import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -34,6 +36,7 @@ import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,6 +47,18 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
 internal object PolymarketDomainModule {
+
+    @Provides
+    @Singleton
+    fun provideCreatePolymarketPositionsSessionUseCase(
+        repository: PolymarketPositionsRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CreatePolymarketPositionsSessionUseCase = CreatePolymarketPositionsSessionUseCase(
+        repository = repository,
+        deriveAddresses = deriveAddresses,
+        dispatchers = dispatchers,
+    )
 
     @Provides
     @Singleton

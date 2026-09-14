@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
@@ -286,10 +287,10 @@ internal class PolymarketPositionsLoaderTest {
                 ),
             ).toBatchFlow()
         }
+        val dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher)
         return PolymarketPositionsLoader(
-            repository,
-            deriveAddresses,
-            TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
+            createSession = CreatePolymarketPositionsSessionUseCase(repository, deriveAddresses, dispatchers),
+            dispatchers = dispatchers,
         )
     }
 
