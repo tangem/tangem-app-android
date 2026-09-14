@@ -66,6 +66,25 @@ internal class FeedTopBlocksModelTest {
         coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = any()) } returns null
     }
 
+    /** An old single-currency card cannot derive the vault owner key, so the account does not exist for it. */
+    @Test
+    fun `GIVEN only a single-currency wallet WHEN the block is tapped THEN nothing opens`() = runTest {
+        // Arrange
+        val singleCurrencyWallet = mockWallet(id = walletAId, isLocked = false, isMultiCurrency = false)
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(singleCurrencyWallet)
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // Act
+        model.onCollectiblesClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(inverse = true) { router.push(route = any(), onComplete = any()) }
+        assertThat(openedSheets).isEmpty()
+        model.onDestroy()
+    }
+
     @Test
     fun `GIVEN one unlocked wallet with a collectibles account WHEN the block is tapped THEN main opens`() = runTest {
         // Arrange
@@ -274,9 +293,14 @@ internal class FeedTopBlocksModelTest {
         every { this@mockk.accounts } returns accounts.toList()
     }
 
-    private fun mockWallet(id: UserWalletId, isLocked: Boolean): UserWallet = mockk<UserWallet.Cold> {
+    private fun mockWallet(
+        id: UserWalletId,
+        isLocked: Boolean,
+        isMultiCurrency: Boolean = true,
+    ): UserWallet = mockk<UserWallet.Cold> {
         every { walletId } returns id
         every { this@mockk.isLocked } returns isLocked
+        every { this@mockk.isMultiCurrency } returns isMultiCurrency
     }
 
     private fun SlotNavigation<FeedTopBlocksBottomSheetConfig>.trackSlot():
