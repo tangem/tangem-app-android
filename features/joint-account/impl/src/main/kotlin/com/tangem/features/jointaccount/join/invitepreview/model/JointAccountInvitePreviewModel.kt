@@ -17,6 +17,7 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
@@ -39,6 +40,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -113,27 +115,28 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private var loadJob: Job? = null
 
     init {
-        load()
+        loadForSelectedWallet()
         observeWallets()
         dismissSelectorOnPick()
     }
 
-    /**
-     * The path is wallet-scoped, but which wallet is passed does not change the outcome for this build — see
-     * [GetJointAccountInvitePreviewUseCase]. Any unlocked wallet is good enough to preview the invite with.
-     */
-    private fun load() {
+    private fun loadForSelectedWallet() {
+        combine(
+            userWalletsListRepository.userWallets.filterNotNull(),
+            selectedWallet,
+        ) { _, selected -> selected?.walletId }
+            .distinctUntilChanged()
+            .onEach(::load)
+            .launchIn(modelScope)
+    }
+
+    private fun load(walletId: UserWalletId?) {
         loadJob?.cancel()
         loadJob = modelScope.launch {
             stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
 
-            val walletId = userWalletsListRepository.userWalletsSync()
-                .filterNot(UserWallet::isLocked)
-                .firstOrNull()
-                ?.walletId
-
             if (walletId == null) {
-                stateController.update(SetFailedTransformer(onRetryClick = ::load, onCloseClick = ::onCloseClick))
+                stateController.update(SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick))
                 return@launch
             }
 
@@ -144,7 +147,7 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                             stateController.update(SetInvalidLinkTransformer(onGotItClick = ::onCloseClick))
                         is JointAccountInvitePreviewError.LoadFailed ->
                             stateController.update(
-                                SetFailedTransformer(onRetryClick = ::load, onCloseClick = ::onCloseClick),
+                                SetFailedTransformer(onRetryClick = ::retry, onCloseClick = ::onCloseClick),
                             )
                     }
                 },
@@ -164,6 +167,10 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun retry() {
+        load(walletId = selectedWallet.value?.walletId)
     }
 
     private fun observeWallets() {

@@ -59,7 +59,7 @@ internal class JointAccountJoinModelTest {
         val message = slot<SnackbarMessage>()
         verify(exactly = 1) { uiMessageSender.send(capture(message)) }
         assertThat(message.captured.message)
-            .isEqualTo(resourceReference(CoreUiR.string.account_create_success_message))
+            .isEqualTo(resourceReference(CoreUiR.string.joint_account_join_success_message))
         assertThat(message.captured.startIconId).isEqualTo(CoreUiR.drawable.ic_success_20)
     }
 
