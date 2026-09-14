@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM
@@ -42,6 +43,7 @@ internal class PolymarketPositionsModel @Inject constructor(
                 content = PolymarketPositionsUM.Content.Loading,
                 onTabSelect = ::selectTab,
                 onBackClick = { router.pop() },
+                onFilterSelect = ::selectFilter,
             ),
         )
 
@@ -66,9 +68,22 @@ internal class PolymarketPositionsModel @Inject constructor(
         if (tab == uiState.value.selectedTab) return
         feed.dispose()
         feed = createFeed(tab)
-        uiState.update { it.copy(selectedTab = tab, content = feed.state.value) }
+        uiState.update { state ->
+            state.copy(
+                selectedTab = tab,
+                selectedFilter = PolymarketPositionsFilter.ALL,
+                content = feed.state.value.content,
+            )
+        }
         observeTab()
         if (isResumed) feed.resume(modelScope)
+    }
+
+    private fun selectFilter(filter: PolymarketPositionsFilter) {
+        if (uiState.value.selectedTab != Tab.Active || filter == uiState.value.selectedFilter) return
+        feed.selectFilter(filter)
+        val content = feed.state.value.takeIf { it.filter == filter }?.content ?: PolymarketPositionsUM.Content.Loading
+        uiState.update { it.copy(selectedFilter = filter, content = content) }
     }
 
     private fun createFeed(tab: Tab): PolymarketPositionsLoader.Feed = loader.createFeed(
@@ -84,7 +99,17 @@ internal class PolymarketPositionsModel @Inject constructor(
         observation.cancel()
         val tab = uiState.value.selectedTab
         feed.state
-            .onEach { content -> uiState.update { if (it.selectedTab == tab) it.copy(content = content) else it } }
+            .onEach { value ->
+                uiState.update { state ->
+                    if (state.selectedTab == tab && state.selectedFilter == value.filter) {
+                        state.copy(
+                            content = value.content,
+                        )
+                    } else {
+                        state
+                    }
+                }
+            }
             .launchIn(modelScope)
             .saveIn(observation)
     }
