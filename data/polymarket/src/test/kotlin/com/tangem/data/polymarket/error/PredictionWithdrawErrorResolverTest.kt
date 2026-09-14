@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.error
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.polymarket.model.PredictionWithdrawError
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
@@ -26,18 +27,28 @@ internal class PredictionWithdrawErrorResolverTest {
     internal data class TestModel(val error: ApiResponseError, val expected: PredictionWithdrawError)
 
     private fun provideTestModels() = listOf(
-        TestModel(http(code = 400, detail = "data is not a transfer"), PredictionWithdrawError.InvalidRequest("data is not a transfer")),
-        TestModel(http(code = 401), PredictionWithdrawError.Unauthorized),
-        TestModel(http(code = 404), PredictionWithdrawError.NotFound),
-        TestModel(http(code = 409, detail = "nonce taken"), PredictionWithdrawError.NonceTaken("nonce taken")),
-        TestModel(http(code = 422, detail = "invalid signature"), PredictionWithdrawError.RelayerRejected("invalid signature")),
-        TestModel(http(code = 502), PredictionWithdrawError.RelayerUnavailable),
-        TestModel(http(code = 418, detail = "teapot"), PredictionWithdrawError.Unexpected(httpCode = 418, detail = "teapot")),
+        TestModel(
+            error = http(code = Code.BAD_REQUEST, detail = "data is not a transfer"),
+            expected = PredictionWithdrawError.InvalidRequest("data is not a transfer"),
+        ),
+        TestModel(http(code = Code.UNAUTHORIZED), PredictionWithdrawError.Unauthorized),
+        TestModel(http(code = Code.NOT_FOUND), PredictionWithdrawError.NotFound),
+        TestModel(http(code = Code.CONFLICT, detail = "nonce taken"), PredictionWithdrawError.NonceTaken("nonce taken")),
+        TestModel(
+            error = http(code = Code.UNPROCESSABLE_ENTITY, detail = "invalid signature"),
+            expected = PredictionWithdrawError.RelayerRejected("invalid signature"),
+        ),
+        TestModel(http(code = Code.BAD_GATEWAY), PredictionWithdrawError.RelayerUnavailable),
+        TestModel(
+            error = http(code = Code.IM_A_TEAPOT, detail = "teapot"),
+            expected = PredictionWithdrawError.Unexpected(httpCode = Code.IM_A_TEAPOT.numericCode, detail = "teapot"),
+        ),
     )
 
-    private fun http(code: Int, detail: String? = null): ApiResponseError.HttpException = ApiResponseError.HttpException(
-        code = ApiResponseError.HttpException.Code.entries.first { it.numericCode == code },
-        message = "",
-        errorBody = detail?.let { """{"detail":"$it"}""" },
-    )
+    private fun http(code: Code, detail: String? = null): ApiResponseError.HttpException =
+        ApiResponseError.HttpException(
+            code = code,
+            message = "",
+            errorBody = detail?.let { """{"detail":"$it"}""" },
+        )
 }
