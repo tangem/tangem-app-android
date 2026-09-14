@@ -102,6 +102,19 @@ internal class JointOperationConverterTest {
     }
 
     @Test
+    fun `GIVEN one in-flight operation out of contract WHEN convert THEN only that one is dropped`() {
+        // Arrange
+        val broken = operationDto(chainId = 1, operationId = "broken", safeTx = safeTxDto(nonce = UINT256_MAX))
+        val sound = operationDto(chainId = 137, operationId = "sound")
+
+        // Act
+        val actual = converter.convertInFlight(listOf(broken, sound))
+
+        // Assert
+        assertThat(actual.mapValues { it.value.operationId }).containsExactly(137L, "sound")
+    }
+
+    @Test
     fun `GIVEN a safe tx round trip WHEN convert back THEN the dto matches the source`() {
         // Arrange
         val dto = safeTxDto(to = "0x1111111111111111111111111111111111111111", value = UINT256_MAX)
