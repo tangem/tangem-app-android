@@ -329,6 +329,11 @@ internal class WalletComponent @AssistedInject constructor(
         val dialog by dialog.subscribeAsState()
         val uiState by model.uiState.collectAsStateWithLifecycle()
         val isShtorkaBlurEnabled by feedV2Component.isSheetBlurEnabled.collectAsStateWithLifecycle()
+        val isShtorkaPartialExpansionSupported = if (feedFeatureToggles.isNewShtorkaEnabled) {
+            feedV2Component.isPartialExpansionSupported.subscribeAsState().value
+        } else {
+            false
+        }
         WalletScreen(
             state = uiState,
             promoBannersBlockComponent = promoBannersBlockComponent,
@@ -340,6 +345,7 @@ internal class WalletComponent @AssistedInject constructor(
             modifier = modifier,
             isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
+            isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
             shtorkaHeaderContent = { sheetExpansion, onExpandSheet ->
                 feedV2Component.Header(
                     sheetExpansion = sheetExpansion,

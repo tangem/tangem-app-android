@@ -29,6 +29,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.decompose.value.operator.map
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -86,6 +87,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         handleBackButton = false,
         childFactory = ::createChild,
     )
+
+    override val isPartialExpansionSupported: Value<Boolean> =
+        stack.map { it.active.instance.isPartialExpansionSupported }
 
     init {
         componentScope.launch {
