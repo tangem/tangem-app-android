@@ -19,6 +19,7 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
 import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
 import com.tangem.domain.polymarket.model.PreparedPredictionWithdrawal
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
+import com.tangem.domain.polymarket.signing.PolymarketRelayerDeadline
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -89,7 +90,7 @@ class SubmitPredictionWithdrawalInteractor(
             ownerAddress = params.ownerAddress,
             depositWalletAddress = params.depositWalletAddress,
             nonce = nonce.toString(),
-            deadline = (System.currentTimeMillis() / MILLIS_IN_SECOND + DEADLINE_WINDOW_SECONDS).toString(),
+            deadline = PolymarketRelayerDeadline.fromNow(),
             call = call,
             decoded = decoded,
         )
@@ -178,9 +179,4 @@ class SubmitPredictionWithdrawalInteractor(
         val toTokenAddress: String,
         val recipientAddress: String,
     )
-
-    private companion object {
-        const val MILLIS_IN_SECOND = 1_000L
-        const val DEADLINE_WINDOW_SECONDS = 600L
-    }
 }
