@@ -44,6 +44,7 @@ dependencies {
     api(projects.domain.news)
     api(projects.domain.search)
     api(projects.domain.settings)
+    api(projects.domain.staking)
     api(projects.domain.tokens)
     api(projects.domain.wallets)
     api(projects.domain.yieldSupply)
