@@ -30,6 +30,7 @@ import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
+import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.features.feed.rwa.components.RwaFeedSearchTabComponent
 import com.tangem.features.feed.rwa.model.analytics.RwaSearchAnalyticsEvent
 import com.tangem.features.feed.rwa.model.list.RwaBatchFlowManager
@@ -86,6 +87,7 @@ internal class RwaFeedSearchTabModel @Inject constructor(
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     userWalletsListRepository: UserWalletsListRepository,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
+    private val userCountryResolver: UserCountryResolver,
     private val getSearchResultsUseCase: GetSearchResultsUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
@@ -207,7 +209,8 @@ internal class RwaFeedSearchTabModel @Inject constructor(
 
         modelScope.launch {
             try {
-                getCoinCategoriesUseCase().fold(
+                // the same country as the tab, so both share one cache entry instead of fetching twice
+                getCoinCategoriesUseCase(country = userCountryResolver.resolve()).fold(
                     ifLeft = { isCategoriesFailed.value = true },
                     ifRight = ::onCategoriesLoaded,
                 )
