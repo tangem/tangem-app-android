@@ -133,6 +133,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 },
                 error = null,
                 virtualAccount = null,
+                isBankOfframpAvailable = null,
                 tariffPlan = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
