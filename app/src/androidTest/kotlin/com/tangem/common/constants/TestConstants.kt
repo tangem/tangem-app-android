@@ -56,6 +56,7 @@ object TestConstants {
     const val CREATE_USER_WALLET_API_SCENARIO = "create_user_wallet_api"
     const val WALLET_TOKENS_API_SCENARIO = "wallet_tokens_api"
     const val MORALIS_EVM_TOKEN_BALANCES_API_SCENARIO = "moralis_evm_token_balances_api"
+    const val MORALIS_EVM_NFT_API_SCENARIO = "moralis_evm_nft_api"
     const val PROVIDERS_API_SCENARIO = "networks_providers"
 
     const val SEED_PHRASE_12 = "they cram join fantasy unfair observe true theory buffalo bus exchange walk"
