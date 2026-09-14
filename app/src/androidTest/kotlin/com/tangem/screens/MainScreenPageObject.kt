@@ -538,6 +538,22 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    /**
+     * The 'NFT collections' row on Main, shown once NFT is enabled in wallet settings. Gated on the click
+     * action: the row is also composed while the collections are still loading, and taps are dropped there.
+     */
+    val nftBlock: KNode = lazyList.child {
+        hasTestTag(MainScreenTestTags.NFT_BLOCK)
+        hasClickAction()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToNFTBlock() {
+        collapseHeader()
+        semanticsProvider.onNode(withTestTag(MainScreenTestTags.SCREEN_CONTAINER))
+            .performScrollToNode(withTestTag(MainScreenTestTags.NFT_BLOCK))
+    }
+
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
         collapseHeader()
         return lazyList.child {
