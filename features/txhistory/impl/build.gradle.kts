@@ -35,6 +35,7 @@ dependencies {
     /** Features api */
     api(projects.features.txhistory.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.jointAccount.api)
     implementation(projects.features.rating.api)
 
     /** Domain */
