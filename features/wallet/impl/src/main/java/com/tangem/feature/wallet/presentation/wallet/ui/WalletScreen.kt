@@ -99,11 +99,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-private const val MARKET_HINT_THRESHOLD = 0.5f
-
-// collapsedFraction below this is treated as "fully expanded" (user is at the very top of the list)
-private const val FULLY_EXPANDED_THRESHOLD = 0.01f
-
 @OptIn(ExperimentalDecomposeApi::class)
 @Suppress("LongParameterList")
 @Composable
@@ -332,10 +327,12 @@ private fun WalletContent(
                         }
                     }
 
+                    // A collapsedFraction this small means the user is at the very top of the list
+                    @Suppress("MagicNumber")
                     LaunchedEffect(listState) {
                         snapshotFlow { listState.layoutInfo.totalItemsCount }
                             .collectLatest {
-                                if (behavior.state.collapsedFraction < FULLY_EXPANDED_THRESHOLD &&
+                                if (behavior.state.collapsedFraction < 0.01f &&
                                     listState.firstVisibleItemIndex != 0
                                 ) {
                                     listState.scrollToItem(index = 0)
@@ -343,9 +340,10 @@ private fun WalletContent(
                             }
                     }
 
+                    @Suppress("MagicNumber")
                     val isShowMarketsHint by remember {
                         derivedStateOf {
-                            behavior.state.collapsedFraction > MARKET_HINT_THRESHOLD &&
+                            behavior.state.collapsedFraction > 0.5f &&
                                 listState.layoutInfo.totalItemsCount > 0 &&
                                 !listState.canScrollBackward && !listState.canScrollForward ||
                                 listState.canScrollBackward && !listState.canScrollForward
