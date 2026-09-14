@@ -139,6 +139,10 @@ internal class WalletClickIntents @Inject constructor(
         router.openPolymarket(userWalletId)
     }
 
+    fun onCollectiblesAccountClick(userWalletId: UserWalletId) {
+        router.openCollectibles(userWalletId)
+    }
+
     private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
