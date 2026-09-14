@@ -2,18 +2,15 @@ package com.tangem.features.polymarket.impl.onboarding.ui
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
@@ -58,27 +55,14 @@ internal fun PolymarketReconnectContent(
                 end = contentPadding.calculateEndPadding(layoutDirection),
             ),
     ) {
-        Box {
-            OnboardingHero(
-                imageResId = UiR.drawable.img_prediction_welcome_hero,
-                frameWidth = HERO_FRAME_WIDTH,
-                imageHeight = HERO_IMAGE_HEIGHT,
-                tintStart = TINT_START,
-                tintEnd = TINT_END,
+        // No top padding: the hero is full-bleed and scrolls under the status bar and the top navigation.
+        OnboardingHero(imageResId = UiR.drawable.img_prediction_welcome_hero) {
+            OnboardingHeadline(
+                title = resourceReference(R.string.prediction_onboarding_reconnect_title),
+                subtitle = resourceReference(R.string.prediction_onboarding_reconnect_subtitle),
             )
-            Column {
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(HERO_FRAME_WIDTH / HERO_CONTENT_TOP),
-                )
-                OnboardingHeadline(
-                    title = resourceReference(R.string.prediction_onboarding_reconnect_title),
-                    subtitle = resourceReference(R.string.prediction_onboarding_reconnect_subtitle),
-                )
-                ReconnectReassurance()
-                ReconnectFaq()
-            }
+            ReconnectReassurance()
+            ReconnectFaq()
         }
         Spacer(modifier = Modifier.height(trailingSpace))
     }
