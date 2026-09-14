@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
+import com.tangem.features.feed.components.v2.blocks.FeedBlockCallbacks
 import com.tangem.features.feed.nav.FeedTabContributor
 import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.nav.FeedTabSet
@@ -35,6 +36,15 @@ internal class FeedHomeModel @Inject constructor(
         .toImmutableList()
 
     val pagesNavigation = PagesNavigation<FeedTabId>()
+
+    val topBlocksCallbacks = object : FeedBlockCallbacks {
+
+        /** No-op for a tab this feed doesn't contribute — the block's entry point simply leads nowhere. */
+        override fun onOpenTab(tab: FeedTabId) {
+            val index = contributors.indexOfFirst { it.id == tab }
+            if (index >= 0) selectTab(index = index)
+        }
+    }
 
     fun selectTab(index: Int) {
         pagesNavigation.select(
