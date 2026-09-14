@@ -22,7 +22,6 @@ import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.list.HistoryTxListManager
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
-import com.tangem.domain.txhistory.model.txHashOfIdentityKey
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -35,7 +34,6 @@ import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMC
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
-import com.tangem.features.txhistory.joint.JointCosignDelegate
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
 import com.tangem.features.txhistory.utils.TxHistoryListManager
@@ -68,7 +66,6 @@ internal class TxHistoryModel @Inject constructor(
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val router: Router,
     private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
-    jointCosignDelegate: JointCosignDelegate,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
@@ -76,11 +73,6 @@ internal class TxHistoryModel @Inject constructor(
 
     private val params: TxHistoryComponent.Params = paramsContainer.require()
     val txDetailsNavigation = SlotNavigation<TxHistoryDetailsSlotConfig>()
-
-    private val pendingSignatureTxIds: StateFlow<Set<String>> = jointCosignDelegate
-        .observePendingOperationIds(userWalletId = params.userWalletId, currency = params.currency)
-        .flowOn(dispatchers.io)
-        .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = emptySet())
 
     private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer(params.userWalletId)
         .flowOn(dispatchers.default)
@@ -117,7 +109,6 @@ internal class TxHistoryModel @Inject constructor(
         stateController.setLoading(isBalanceHidden = true, onExploreClick = ::openExplorer)
         handleBalanceHiding()
         subscribeToUiItemChanges()
-        reloadOnPendingOperationChanges()
         initListManager()
         loadTxInfo()
         subscribeToUpdateListener()
@@ -152,20 +143,15 @@ internal class TxHistoryModel @Inject constructor(
             combine(
                 flow = historyTxListManager.state,
                 flow2 = lookupDataFlow,
-                flow3 = pendingSignatureTxIds,
-                transform = { state, lookup, pendingIds -> Triple(state, lookup, pendingIds) },
+                transform = { state, lookup -> state to lookup },
             )
-                .onEach { (state, lookup, pendingIds) -> applyHistoryState(state, lookup, pendingIds) }
+                .onEach { (state, lookup) -> applyHistoryState(state, lookup) }
                 .flowOn(dispatchers.default)
                 .launchIn(modelScope)
         }
     }
 
-    private fun applyHistoryState(
-        state: HistoryTxListManager.HistoryState,
-        lookup: TxHistoryLookupContext,
-        pendingSignatureTxIds: Set<String>,
-    ) {
+    private fun applyHistoryState(state: HistoryTxListManager.HistoryState, lookup: TxHistoryLookupContext) {
         when (state) {
             HistoryTxListManager.HistoryState.Loading ->
                 stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
@@ -177,7 +163,7 @@ internal class TxHistoryModel @Inject constructor(
                 stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
             is HistoryTxListManager.HistoryState.Content -> {
                 stateController.setContent(
-                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup, pendingSignatureTxIds)),
+                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup)),
                     loadMore = ::loadMoreItems,
                     onExploreClick = ::openExplorer,
                 )
@@ -189,14 +175,12 @@ internal class TxHistoryModel @Inject constructor(
     private fun buildUiItems(
         merged: List<TxHistoryInfo>,
         lookup: TxHistoryLookupContext,
-        pendingSignatureTxIds: Set<String>,
     ): ImmutableList<TxHistoryItemsUM.TxHistoryItemUM> {
         val converter = TxHistoryInfoToTransactionItemUMConverter(
             txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
                 currency = params.currency,
                 txHistoryUiActions = this,
                 lookupContext = lookup,
-                pendingSignatureTxIds = pendingSignatureTxIds,
             ),
             expressConverter = ExpressTxToTransactionItemUMConverter(
                 currency = params.currency,
@@ -206,16 +190,9 @@ internal class TxHistoryModel @Inject constructor(
             txHistoryUiActions = this,
         )
 
-        val (pending, dated) = merged.partition { it.txId.txHashOfIdentityKey() in pendingSignatureTxIds }
-
         val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
-        if (pending.isNotEmpty()) {
-            items += TxHistoryItemsUM.TxHistoryItemUM.PendingGroupTitle
-            pending.forEach { tx -> items += TxHistoryItemsUM.TxHistoryItemUM.Transaction(converter.convert(tx)) }
-        }
-
         var lastDate: String? = null
-        dated.forEach { tx ->
+        merged.forEach { tx ->
             val date = tx.timestampMillis.toDateFormatWithTodayYesterday()
             if (date != lastDate) {
                 items += TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(title = date, itemKey = "group-$date")
@@ -224,13 +201,6 @@ internal class TxHistoryModel @Inject constructor(
             items += TxHistoryItemsUM.TxHistoryItemUM.Transaction(converter.convert(tx))
         }
         return items.toImmutableList()
-    }
-
-    private fun reloadOnPendingOperationChanges() {
-        pendingSignatureTxIds
-            .drop(count = 1)
-            .onEach { reload() }
-            .launchIn(modelScope)
     }
 
     private fun subscribeToUpdateListener() {
@@ -344,10 +314,11 @@ internal class TxHistoryModel @Inject constructor(
             .map { it.getCryptoCurrencyStatus(currency = params.currency) }
             .distinctUntilChanged()
 
-        combine(statusFlow, lookupDataFlow, pendingSignatureTxIds) { status, lookup, pendingIds ->
-            Triple(status, lookup, pendingIds)
-        }
-            .onEach { (status, lookup, pendingIds) -> handlePendingTxsChanges(status, lookup, pendingIds) }
+        val combined: Flow<Pair<Option<CryptoCurrencyStatus>, TxHistoryLookupContext?>> =
+            combine(statusFlow, lookupDataFlow) { status, lookup -> status to lookup }
+
+        combined
+            .onEach { (status, lookup) -> handlePendingTxsChanges(status, lookup) }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
@@ -355,7 +326,6 @@ internal class TxHistoryModel @Inject constructor(
     private fun handlePendingTxsChanges(
         maybeCurrencyStatus: Option<CryptoCurrencyStatus>,
         lookupContext: TxHistoryLookupContext?,
-        pendingSignatureTxIds: Set<String>,
     ) {
         maybeCurrencyStatus.onSome { status ->
             val pending = status.value.pendingTransactions
@@ -365,7 +335,6 @@ internal class TxHistoryModel @Inject constructor(
                         currency = params.currency,
                         txHistoryUiActions = this,
                         lookupContext = lookupContext,
-                        pendingSignatureTxIds = pendingSignatureTxIds,
                     )
                     pending.map(converter::convert).toPersistentList()
                 },
