@@ -31,6 +31,7 @@ import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.txhistory.component.JointCosignRequestsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -45,6 +46,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    jointCosignRequestsComponentFactory: JointCosignRequestsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
@@ -70,6 +72,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             currency = params.currency,
             onRatingRequested = model::activateRatingForExpressTx,
             onRatingDismiss = { model.ratingSlotNavigation.dismiss() },
+        ),
+    )
+
+    private val jointCosignRequestsComponent = jointCosignRequestsComponentFactory.create(
+        context = child("jointCosignRequestsComponent"),
+        params = JointCosignRequestsComponent.Params(
+            userWalletId = params.userWalletId,
+            currency = params.currency,
         ),
     )
 
@@ -130,6 +140,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             yieldSupplyComponent = yieldSupplyComponent,
             txHistoryComponent = txHistoryComponent,
             expressTransactionsComponent = expressTransactionsComponent,
+            jointCosignRequestsComponent = jointCosignRequestsComponent,
             ratingComponent = ratingSlotState.child?.instance,
             marketingBannerComponent = marketingBannerComponent,
             modifier = modifier,
@@ -137,6 +148,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
         bottomSheet.child?.instance?.BottomSheet()
         txHistoryComponent.Content(modifier)
+        jointCosignRequestsComponent.Content(modifier)
     }
 
     private fun CryptoCurrency.toTokenMarketParam(): TokenMarketBlockComponent.Params? {

@@ -17,12 +17,10 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.walletmanager.store.WalletManagersStore
-import com.tangem.data.walletmanager.utils.JointPendingTransactionFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -53,15 +51,6 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val providersStore = ExternalAddressBalanceProvidersStore()
 
-    private val jointPendingTransactionFactory: JointPendingTransactionFactory = mockk {
-        coEvery { create(any(), any(), any(), any()) } returns null
-    }
-
-    private var isNewHistoryEnabled = true
-    private val txHistoryFeatureToggles = object : TxHistoryFeatureToggles {
-        override val isNewTxHistoryEnabled: Boolean get() = isNewHistoryEnabled
-    }
-
     private val facade = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
         externalAddressBalanceProvidersStore = providersStore,
@@ -70,8 +59,6 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         gaslessTransactionRepository = gaslessTransactionRepository,
         jointAccountSafeAddressResolver = { safeAddressResolver },
-        jointPendingTransactionFactory = { jointPendingTransactionFactory },
-        txHistoryFeatureToggles = txHistoryFeatureToggles,
         blockchainSDKFactory = blockchainSDKFactory,
     )
 
@@ -91,7 +78,6 @@ internal class DefaultWalletManagersFacadeJointReadTest {
     fun resetMocks() = runTest {
         clearMocks(sdkFactory, provider, safeAddressResolver)
         providersStore.remove(userWalletId, setOf(jointNetwork))
-        isNewHistoryEnabled = true
 
         every { sdkFactory.createExternalAddressBalanceProvider(Blockchain.Ethereum, SAFE_ADDRESS) } returns provider
         every { provider.blockchain } returns Blockchain.Ethereum
@@ -331,21 +317,6 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         // Assert
         assertThat(actual.map { it.txHash to it.isOutgoing }).containsExactly("hash" to true)
     }
-
-    @Test
-    fun `GIVEN the legacy history WHEN getRecentTransactions THEN the collecting operation is not synthesized`() =
-        runTest {
-            // Arrange
-            isNewHistoryEnabled = false
-            providersStore.store(userWalletId, jointNetwork, provider)
-
-            // Act
-            val actual = facade.getRecentTransactions(userWalletId, jointEthereum)
-
-            // Assert
-            assertThat(actual).isEmpty()
-            coVerify(exactly = 0) { jointPendingTransactionFactory.create(any(), any(), any(), any()) }
-        }
 
     private companion object {
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
