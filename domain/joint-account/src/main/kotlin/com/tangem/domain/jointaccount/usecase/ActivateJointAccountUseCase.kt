@@ -26,6 +26,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.firstOrNull
 
 class ActivateJointAccountUseCase(
@@ -41,10 +42,16 @@ class ActivateJointAccountUseCase(
 
         val jointAccount = findJointAccount(userWalletId = userWalletId, accountId = account.accountId).bind()
         ensure(jointAccount.status == JointAccount.Status.CONFIRMING) {
-            JointAccountActivationError.NotReadyForActivation
+            refused(
+                error = JointAccountActivationError.NotReadyForActivation,
+                reason = "the account is ${jointAccount.status}, not ${JointAccount.Status.CONFIRMING}",
+            )
         }
         ensure(jointAccount.members.size == jointAccount.membersCount) {
-            JointAccountActivationError.NotReadyForActivation
+            refused(
+                error = JointAccountActivationError.NotReadyForActivation,
+                reason = "${jointAccount.members.size} of ${jointAccount.membersCount} members have joined",
+            )
         }
 
         val payload = createPayload(
@@ -54,7 +61,12 @@ class ActivateJointAccountUseCase(
         )
 
         val derivationIndex = DerivationIndex(value = account.ownerKeyIndex.value)
-            .mapLeft { JointAccountFlowError.Failed(cause = IllegalStateException(it.toString())) }
+            .mapLeft { indexError ->
+                refused(
+                    error = JointAccountFlowError.Failed(cause = IllegalStateException(indexError.toString())),
+                    reason = "the owner key index ${account.ownerKeyIndex.value} is not derivable: $indexError",
+                )
+            }
             .bind()
 
         val signResult = signer
@@ -71,12 +83,21 @@ class ActivateJointAccountUseCase(
             .firstOrNull { it.role == JointAccount.Role.CREATOR }
             ?.address
         ensure(signResult.ownerAddress.equals(creatorAddress, ignoreCase = true)) {
-            JointAccountActivationError.NotCreator
+            refused(
+                error = JointAccountActivationError.NotCreator,
+                reason = "the tapped wallet's owner key is not the creator's",
+            )
         }
 
         repository
             .activate(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
-            .mapLeft(JointAccountFlowError::Failed)
+            .mapLeft { cause ->
+                refused(
+                    error = JointAccountFlowError.Failed(cause = cause),
+                    reason = "the activation call failed",
+                    cause = cause,
+                )
+            }
             .bind()
 
         // The account is active on the backend, so a failed refresh must not fail the activation: the list
@@ -91,7 +112,10 @@ class ActivateJointAccountUseCase(
         val accounts = supplier(userWalletId = userWalletId).firstOrNull().orEmpty()
         val own = accounts.firstOrNull { it.cryptoAccountId.equals(accountId.value, ignoreCase = true) }
 
-        return own?.right() ?: JointAccountActivationError.AccountNotFound.left()
+        return own?.right() ?: refused(
+            error = JointAccountActivationError.AccountNotFound,
+            reason = "the wallet holds ${accounts.size} joint accounts and none of them is the tapped one",
+        ).left()
     }
 
     /**
@@ -102,10 +126,15 @@ class ActivateJointAccountUseCase(
      */
     private fun Raise<JointAccountActivationError>.confirmedSafeAddress(jointAccount: JointAccount): String {
         val backendAddress = jointAccount.safeAddress
-        ensureNotNull(backendAddress) { JointAccountActivationError.NotReadyForActivation }
+        ensureNotNull(backendAddress) {
+            refused(
+                error = JointAccountActivationError.NotReadyForActivation,
+                reason = "the backend has not returned the Safe address yet",
+            )
+        }
 
         val owners = jointAccount.members.map(JointAccount.Member::address)
-        val match = SafeSingleton.entries
+        val computed = SafeSingleton.entries
             .map { singleton ->
                 // A composition no Safe can be deployed from is a distinct failure, not a mismatch
                 safeAddressCalculator.compute(
@@ -113,12 +142,29 @@ class ActivateJointAccountUseCase(
                     threshold = jointAccount.threshold,
                     singleton = singleton,
                 )
-                    .mapLeft { JointAccountFlowError.Failed(cause = IllegalStateException(it.toString())) }
+                    .mapLeft { addressError ->
+                        refused(
+                            error = JointAccountFlowError.Failed(
+                                cause = IllegalStateException(addressError.toString()),
+                            ),
+                            reason = "the Safe address does not compute under $singleton: $addressError",
+                        )
+                    }
                     .bind()
             }
-            .firstOrNull { computed -> computed.equals(backendAddress, ignoreCase = true) }
 
-        return ensureNotNull(match) { JointAccountActivationError.AddressMismatch }
+        val match = computed.firstOrNull { it.equals(backendAddress, ignoreCase = true) }
+
+        return ensureNotNull(match) {
+            refused(
+                error = JointAccountActivationError.AddressMismatch,
+                reason = "the announced Safe address $backendAddress is none of ${computed.joinToString()}, " +
+                    "computed from ${owners.size} owners and threshold ${jointAccount.threshold}",
+                // Both addresses are the whole diagnostic, and the sanitizer replaces any hex run of 8 or more
+                // characters in the exported log file — the only build a user can send us logs from
+                shouldSanitize = false,
+            )
+        }
     }
 
     private fun Raise<JointAccountActivationError>.createPayload(
@@ -129,8 +175,11 @@ class ActivateJointAccountUseCase(
         val name = when (val accountName = account.accountName) {
             is AccountName.Custom -> accountName.value
             is AccountName.DefaultMain -> raise(
-                JointAccountFlowError.Failed(
-                    cause = IllegalStateException("A joint account cannot carry the default main account name"),
+                refused(
+                    error = JointAccountFlowError.Failed(
+                        cause = IllegalStateException("A joint account cannot carry the default main account name"),
+                    ),
+                    reason = "the account carries the default main account name",
                 ),
             )
         }
@@ -152,7 +201,31 @@ class ActivateJointAccountUseCase(
     }
 
     private fun toActivationError(cause: Throwable): JointAccountActivationError = when (cause) {
+        // Dismissing the card session is not a failure and has nothing to diagnose later
         is TangemSdkError.UserCancelled -> JointAccountFlowError.UserCancelled
-        else -> JointAccountFlowError.Failed(cause = cause)
+        else -> refused(
+            error = JointAccountFlowError.Failed(cause = cause),
+            reason = "signing the activation payload failed",
+            cause = cause,
+        )
+    }
+
+    /**
+     * Every refusal reaches the user as the same generic dialog, so the true reason survives only here. The
+     * level is `e` deliberately: only `e` and `i` reach the exported log file, and a refused activation is
+     * exactly what a support request arrives with.
+     */
+    private fun <E : JointAccountActivationError> refused(
+        error: E,
+        reason: String,
+        cause: Throwable? = null,
+        shouldSanitize: Boolean = true,
+    ): E {
+        TangemLogger.e(
+            messageString = "Joint account activation refused: $reason",
+            throwable = cause,
+            shouldSanitize = shouldSanitize,
+        )
+        return error
     }
 }
