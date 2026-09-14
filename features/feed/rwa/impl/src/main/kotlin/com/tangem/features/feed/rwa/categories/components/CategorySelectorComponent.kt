@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.expandingSheetClick
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.model.CategorySelectorModel
@@ -43,7 +44,7 @@ internal class CategorySelectorComponent @AssistedInject constructor(
             contentPadding = PaddingValues(horizontal = 16.dp),
             fadeEnabled = false,
             blurBackground = false,
-            onClose = router::pop,
+            onClose = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() },
             modifier = modifier,
         )
     }
