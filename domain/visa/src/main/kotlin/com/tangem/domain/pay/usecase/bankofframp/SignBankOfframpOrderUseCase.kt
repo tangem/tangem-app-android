@@ -9,11 +9,11 @@ import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
-import com.tangem.domain.pay.repository.BankOfframpRepository
+import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 
 /** Signs the order payload with the card (or hot wallet) and submits the signature to the backend. */
 class SignBankOfframpOrderUseCase(
-    private val repository: BankOfframpRepository,
+    private val repository: BankOfframpOrderRepository,
     private val authDataSource: TangemPayAuthDataSource,
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
