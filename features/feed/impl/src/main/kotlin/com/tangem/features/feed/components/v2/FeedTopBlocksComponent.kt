@@ -3,72 +3,61 @@ package com.tangem.features.feed.components.v2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.childSlot
-import com.tangem.common.routing.AppRoute
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.childByContext
-import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.feed.model.v2.FeedTopBlocksModel
-import com.tangem.features.feed.nav.FeedRoute
+import com.tangem.features.feed.components.v2.blocks.*
 import com.tangem.features.feed.ui.v2.FeedTopBlocksContent
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 /**
- * "Part 1" of the Shtorka 2.0 feed: the horizontally scrollable row of top blocks (For you,
- * All services, promo cards, …). Owns its content end to end so blocks can later become
- * contributed plug-ins without touching [DefaultFeedV2Component].
+ * "Part 1" of the Shtorka 2.0 feed: the horizontally scrollable row of top blocks.
+ *
+ * The row is a host for contributed blocks and knows nothing about any of them — each block is a
+ * component of its own that decides when it is shown and what it draws (see [FeedBlock]), so a new
+ * card touches only its own files and the list below.
+ *
+ * Order is the declaration order of [blocks] — a host decision, like `FeedTabsOrder` for the tabs.
  */
 @Stable
 internal class FeedTopBlocksComponent(
     context: AppComponentContext,
-    private val isPredictionsEntryVisible: Boolean,
-    private val isCollectiblesVisible: Boolean,
-    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
 
-    private val model: FeedTopBlocksModel = getOrCreateModel()
-
-    private val bottomSheetSlot = childSlot(
-        source = model.bottomSheetNavigation,
-        serializer = null,
-        handleBackButton = false,
-        childFactory = ::bottomSheetChild,
+    private val blocks: List<FeedBlock> = listOf(
+        ForYouBlockComponent(context = child(key = ForYouBlockComponent.KEY)),
+        PredictionsBlockComponent(context = child(key = PredictionsBlockComponent.KEY)),
+        CollectiblesBlockComponent(
+            context = child(key = CollectiblesBlockComponent.KEY),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        ),
     )
+
+    private val visibleBlocks: StateFlow<ImmutableList<FeedBlock>> = combine(
+        flows = blocks.map { it.isVisible },
+    ) { visibility ->
+        blocks.filterIndexed { index, _ -> visibility[index] }.toImmutableList()
+    }.stateIn(scope = componentScope, started = SharingStarted.Eagerly, initialValue = persistentListOf())
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val visible by visibleBlocks.collectAsStateWithLifecycle()
 
-        // TODO: [TWI-1608] real blocks; static placeholders until then
-        FeedTopBlocksContent(
-            onForYouClick = { router.push(FeedRoute.ForYou) },
-            isPredictionsVisible = isPredictionsEntryVisible,
-            isCollectiblesVisible = isCollectiblesVisible,
-            onPredictionsClick = { router.push(AppRoute.Polymarket()) },
-            onCollectiblesClick = model::onCollectiblesClick,
-            modifier = modifier,
-        )
-
-        bottomSheet.child?.instance?.BottomSheet()
-    }
-
-    private fun bottomSheetChild(
-        config: FeedTopBlocksBottomSheetConfig,
-        componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = when (config) {
-        FeedTopBlocksBottomSheetConfig.WalletSelector -> portfolioSelectorComponentFactory.create(
-            context = childByContext(componentContext),
-            params = PortfolioSelectorComponent.Params(
-                portfolioFetcher = model.portfolioFetcher,
-                controller = model.portfolioSelectorController,
-                bsCallback = model.portfolioSelectorCallback,
-                settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
-            ),
-        )
+        FeedTopBlocksContent(blocks = visible, modifier = modifier)
+        // Outside the row: it is lazy, so a card scrolled out of sight would take its sheet with it.
+        // Drawn for every block, not only the visible ones — a block that hides itself while its
+        // sheet is up should not yank the sheet away from under the user.
+        blocks.forEach { block -> key(block.key) { block.Overlay() } }
     }
 }

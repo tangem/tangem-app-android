@@ -1,4 +1,4 @@
-package com.tangem.features.feed.model.v2
+package com.tangem.features.feed.components.v2.blocks.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
@@ -12,9 +12,10 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
-import com.tangem.features.feed.components.v2.FeedTopBlocksBottomSheetConfig
+import com.tangem.features.feed.components.v2.blocks.CollectiblesBlockComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class FeedTopBlocksModelTest {
+internal class CollectiblesBlockModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
@@ -39,6 +40,7 @@ internal class FeedTopBlocksModelTest {
     private val portfolioSelectorController: PortfolioSelectorController = mockk(relaxed = true)
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
+    private val featureToggles: CollectiblesFeatureToggles = mockk()
 
     private lateinit var selection: MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>
 
@@ -57,7 +59,9 @@ internal class FeedTopBlocksModelTest {
             singleAccountListSupplier,
             portfolioSelectorController,
             portfolioFetcherFactory,
+            featureToggles,
         )
+        every { featureToggles.isCollectiblesEnabled } returns true
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         selection = MutableStateFlow(null)
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns selection
@@ -76,12 +80,25 @@ internal class FeedTopBlocksModelTest {
         val openedSheets = model.bottomSheetNavigation.trackSlot()
 
         // Act
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
 
         // Assert
         verify(inverse = true) { router.push(route = any(), onComplete = any()) }
         assertThat(openedSheets).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the feature is off WHEN the model is created THEN the block is hidden`() = runTest {
+        // Arrange
+        every { featureToggles.isCollectiblesEnabled } returns false
+
+        // Act
+        val model = createModel(testScope = this)
+
+        // Assert
+        assertThat(model.isVisible.value).isFalse()
         model.onDestroy()
     }
 
@@ -95,7 +112,7 @@ internal class FeedTopBlocksModelTest {
         val openedSheets = model.bottomSheetNavigation.trackSlot()
 
         // Act
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
 
         // Assert
@@ -123,7 +140,7 @@ internal class FeedTopBlocksModelTest {
             val openedSheets = model.bottomSheetNavigation.trackSlot()
 
             // Act
-            model.onCollectiblesClick()
+            model.onClick()
             advanceUntilIdle()
 
             // Assert
@@ -148,7 +165,7 @@ internal class FeedTopBlocksModelTest {
         val model = createModel(testScope = this)
 
         // Act
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
 
         // Assert
@@ -172,7 +189,7 @@ internal class FeedTopBlocksModelTest {
         val openedSheets = model.bottomSheetNavigation.trackSlot()
 
         // Act
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
 
         // Assert
@@ -190,12 +207,12 @@ internal class FeedTopBlocksModelTest {
             val openedSheets = model.bottomSheetNavigation.trackSlot()
 
             // Act
-            model.onCollectiblesClick()
+            model.onClick()
             advanceUntilIdle()
 
             // Assert
             verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
-            assertThat(openedSheets).containsExactly(FeedTopBlocksBottomSheetConfig.WalletSelector)
+            assertThat(openedSheets).containsExactly(CollectiblesBlockComponent.WalletSelectorConfig)
             model.onDestroy()
         }
 
@@ -207,7 +224,7 @@ internal class FeedTopBlocksModelTest {
             accountList(walletBId, Account.Collectibles(walletBId))
         val model = createModel(testScope = this)
         val openedSheets = model.bottomSheetNavigation.trackSlot()
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
 
         // Act
@@ -225,7 +242,7 @@ internal class FeedTopBlocksModelTest {
             )
         }
         assertThat(openedSheets)
-            .containsExactly(FeedTopBlocksBottomSheetConfig.WalletSelector, null)
+            .containsExactly(CollectiblesBlockComponent.WalletSelectorConfig, null)
             .inOrder()
         model.onDestroy()
     }
@@ -235,13 +252,13 @@ internal class FeedTopBlocksModelTest {
         // Arrange
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
         val model = createModel(testScope = this)
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
         selection.value = walletB to accountStatus
         advanceUntilIdle()
 
         // Act
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
         selection.value = walletB to accountStatus
         advanceUntilIdle()
@@ -265,7 +282,7 @@ internal class FeedTopBlocksModelTest {
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
         val model = createModel(testScope = this)
         val openedSheets = model.bottomSheetNavigation.trackSlot()
-        model.onCollectiblesClick()
+        model.onClick()
         advanceUntilIdle()
 
         // Act
@@ -274,18 +291,19 @@ internal class FeedTopBlocksModelTest {
         // Assert
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
         assertThat(openedSheets)
-            .containsExactly(FeedTopBlocksBottomSheetConfig.WalletSelector, null)
+            .containsExactly(CollectiblesBlockComponent.WalletSelectorConfig, null)
             .inOrder()
         model.onDestroy()
     }
 
-    private fun createModel(testScope: TestScope): FeedTopBlocksModel = FeedTopBlocksModel(
+    private fun createModel(testScope: TestScope): CollectiblesBlockModel = CollectiblesBlockModel(
+        dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         userWalletsListRepository = userWalletsListRepository,
         singleAccountListSupplier = singleAccountListSupplier,
         portfolioSelectorController = portfolioSelectorController,
         portfolioFetcherFactory = portfolioFetcherFactory,
-        dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        featureToggles = featureToggles,
     )
 
     private fun accountList(userWalletId: UserWalletId, vararg accounts: Account): AccountList = mockk {
@@ -303,9 +321,9 @@ internal class FeedTopBlocksModelTest {
         every { this@mockk.isMultiCurrency } returns isMultiCurrency
     }
 
-    private fun SlotNavigation<FeedTopBlocksBottomSheetConfig>.trackSlot():
-        List<FeedTopBlocksBottomSheetConfig?> {
-        val tracked = mutableListOf<FeedTopBlocksBottomSheetConfig?>()
+    private fun SlotNavigation<CollectiblesBlockComponent.WalletSelectorConfig>.trackSlot():
+        List<CollectiblesBlockComponent.WalletSelectorConfig?> {
+        val tracked = mutableListOf<CollectiblesBlockComponent.WalletSelectorConfig?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
         return tracked
     }
