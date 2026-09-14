@@ -11,15 +11,14 @@ internal data class JointOperationSignersUM(
     val signers: ImmutableList<SignerUM>,
 ) {
 
-    /**
-
-     * @property isAnswered drives the confirmation mark; a member who declined carries none
-     */
+    /** @property mark how the member answered; `null` while they are still to */
     @Immutable
     data class SignerUM(
         val name: String,
         val avatar: JointAccountMembersUM.MemberAvatarUM,
         val statusText: TextReference,
-        val isAnswered: Boolean,
+        val mark: Mark?,
     )
+
+    enum class Mark { Signed, Declined }
 }
