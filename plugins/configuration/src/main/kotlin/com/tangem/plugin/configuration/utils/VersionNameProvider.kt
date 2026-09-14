@@ -99,11 +99,7 @@ internal class VersionNameProvider(
                 // HEAD always resolves to the current commit, even in CI's detached checkout, so the
                 // script can compute which release branch this build descends from without relying on
                 // a local branch ref existing.
-                //
-                // bash, not sh: the script needs `set -o pipefail`, which dash (/bin/sh on the CI
-                // Docker image) rejects with exit 2 — that silently fell back to 1.0.0-SNAPSHOT and
-                // disabled every version-gated feature toggle in CI builds.
-                commandLine("bash", scriptPath.absolutePath, "HEAD")
+                commandLine(shell(), scriptPath.absolutePath, "HEAD")
             }.standardOutput.asText.get()
 
             if (!outputFile.exists()) {
@@ -120,6 +116,18 @@ internal class VersionNameProvider(
             outputFile.delete()
             null
         }
+    }
+
+    /**
+     * The script needs `set -o pipefail`, which dash (`/bin/sh` on the CI Docker image) rejects with
+     * exit 2. On Windows the reverse holds: `bash` is the WSL launcher, which cannot read a Windows
+     * path, while `sh` is Git Bash. Either mistake silently falls back to 1.0.0-SNAPSHOT and disables
+     * every version-gated feature toggle. Trying the shells in turn is not an option: a probe that
+     * exits non-zero is reported as a configuration-cache problem.
+     */
+    private fun shell(): String {
+        val osName = project.providers.systemProperty("os.name").orNull.orEmpty()
+        return if (osName.startsWith(prefix = "Windows", ignoreCase = true)) "sh" else "bash"
     }
 
     private fun extractVersionFromBranch(branch: String): String? {
