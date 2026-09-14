@@ -7,43 +7,33 @@ import arrow.core.raise.ensure
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStep
-import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.repository.BankOfframpRepository
-import kotlinx.coroutines.delay
+import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * In-memory stand-in for the bank off-ramp BFF while the backend is in development.
- * Orders move `Processing → AwaitingSignature` by wall-clock age and `→ Completed` once signed;
- * a few request values trigger each backend error or outcome so every path is testable from the UI.
+ * In-memory stand-in for placing a withdrawal while the order endpoints of the bank off-ramp BFF are still
+ * being agreed. Recipients and routes already come from the backend.
+ *
+ * Orders move `Processing → AwaitingSignature` by wall-clock age and `→ Completed` once signed; a few request
+ * values trigger each backend error or outcome so every path is testable from the UI. Only the details the
+ * wizard has typed in are checked — for a recipient the customer picked from the saved list, the backend is
+ * the one that validates.
  */
-internal class MockBankOfframpRepository(
+internal class MockBankOfframpOrderRepository(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
-) : BankOfframpRepository {
+) : BankOfframpOrderRepository {
 
     private val mutex = Mutex()
-    private val accounts = MockBankOfframpSeed.accounts.toMutableList()
     private val orders = mutableMapOf<String, MockOrder>()
-    private var nextAccountIndex = accounts.size + 1
     private var nextOrderIndex = 1
-
-    override suspend fun getBankAccounts(userWalletId: UserWalletId): Either<BankOfframpError, List<BankAccount>> {
-        delay(ACCOUNTS_FETCH_DELAY_MILLIS)
-        return mutex.withLock { accounts.toList().right() }
-    }
-
-    override suspend fun getOptions(userWalletId: UserWalletId): Either<BankOfframpError, BankOfframpOptions> {
-        return MockBankOfframpSeed.options.right()
-    }
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
@@ -51,19 +41,13 @@ internal class MockBankOfframpRepository(
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpOrderResult> = mutex.withLock {
         either {
-            val details = when (val recipient = request.recipient) {
-                is BankOfframpRecipient.Saved -> accounts.firstOrNull { it.id == recipient.bankAccountId }?.details
-                    ?: raise(BankOfframpError.Validation)
-                is BankOfframpRecipient.New -> recipient.details
-            }
-            triggeredError(request, details)?.let { raise(it) }
-            val bankAccountId = when (val recipient = request.recipient) {
-                is BankOfframpRecipient.Saved -> recipient.bankAccountId
-                is BankOfframpRecipient.New -> saveRecipient(recipient.details).id
-            }
+            triggeredError(request)?.let { raise(it) }
             val orderId = "$ORDER_ID_PREFIX${nextOrderIndex++}"
             orders[orderId] = MockOrder(createdAtMillis = currentTimeMillis(), outcome = triggeredOutcome(request))
-            BankOfframpOrderResult(orderId = orderId, bankAccountId = bankAccountId)
+            BankOfframpOrderResult(
+                orderId = orderId,
+                bankAccountId = (request.recipient as? BankOfframpRecipient.Saved)?.bankAccountId,
+            )
         }
     }
 
@@ -115,14 +99,20 @@ internal class MockBankOfframpRepository(
         }
     }
 
-    private fun triggeredError(request: BankOfframpOrderRequest, details: BankAccountDetails): BankOfframpError? {
-        val beneficiary = details.beneficiary
+    private fun triggeredError(request: BankOfframpOrderRequest): BankOfframpError? {
+        val details = (request.recipient as? BankOfframpRecipient.New)?.details
+        return details?.triggeredError() ?: when (request.amountInCents) {
+            SENDER_REGION_TRIGGER_CENTS -> BankOfframpError.SenderRegionUnsupported
+            WITHDRAWAL_IN_PROGRESS_TRIGGER_CENTS -> BankOfframpError.WithdrawalInProgress
+            else -> null
+        }
+    }
+
+    private fun BankAccountDetails.triggeredError(): BankOfframpError? {
+        val beneficiary = beneficiary
         return when {
-            details.routingNumber == INVALID_ROUTING_NUMBER -> BankOfframpError.Validation
-            details.beneficiaryAddress.countryCode != SUPPORTED_COUNTRY_CODE ->
-                BankOfframpError.RecipientRegionUnsupported
-            request.amountInCents == SENDER_REGION_TRIGGER_CENTS -> BankOfframpError.SenderRegionUnsupported
-            request.amountInCents == WITHDRAWAL_IN_PROGRESS_TRIGGER_CENTS -> BankOfframpError.WithdrawalInProgress
+            routingNumber == INVALID_ROUTING_NUMBER -> BankOfframpError.Validation
+            beneficiaryAddress.countryCode != SUPPORTED_COUNTRY_CODE -> BankOfframpError.RecipientRegionUnsupported
             beneficiary is Beneficiary.Business && beneficiary.name.equals(BLOCKED_BUSINESS_NAME, ignoreCase = true) ->
                 BankOfframpError.BusinessUnsupported
             else -> null
@@ -133,16 +123,6 @@ internal class MockBankOfframpRepository(
         FAILED_TRIGGER_CENTS -> MockOutcome.FAILS
         STUCK_TRIGGER_CENTS -> MockOutcome.STAYS_PROCESSING
         else -> MockOutcome.AWAITS_SIGNATURE
-    }
-
-    private fun saveRecipient(details: BankAccountDetails): BankAccount {
-        val account = BankAccount(
-            id = "${MockBankOfframpSeed.ACCOUNT_ID_PREFIX}${nextAccountIndex++}",
-            displayName = MockBankOfframpSeed.displayName(details.beneficiary),
-            details = details,
-        )
-        accounts += account
-        return account
     }
 
     private fun unknownOrder(orderId: String) = BankOfframpError.Unknown(
@@ -162,8 +142,6 @@ internal class MockBankOfframpRepository(
         const val ORDER_ID_PREFIX = "mock-bank-offramp-order-"
         const val FAKE_PAYLOAD_HASH = "0x5f3c4d3e2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e"
         const val AWAITING_SIGNATURE_DELAY_MILLIS = 6_000L
-        // Long enough for the hub's recents shimmer to be visible against the in-memory mock.
-        const val ACCOUNTS_FETCH_DELAY_MILLIS = 600L
         const val INVALID_ROUTING_NUMBER = "000000001"
         const val SUPPORTED_COUNTRY_CODE = "US"
         const val SENDER_REGION_TRIGGER_CENTS = 66_600L
