@@ -1,8 +1,10 @@
 package com.tangem.data.polymarket
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.domain.core.error.DataError
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.grow.datasource.polymarket.bridge.PolymarketBridgeApi
@@ -109,6 +111,30 @@ internal class DefaultPolymarketBridgeRepositoryWithdrawTest {
         )
         coVerify(exactly = 1) { polymarketRepository.getBuilderCode(WALLET_ID) }
     }
+
+    @Test
+    fun `GIVEN no builder code WHEN creating an address THEN the bridge is still asked, without the header`() =
+        runTest {
+            // Arrange
+            val header = slot<String?>()
+            coEvery { polymarketRepository.getBuilderCode(WALLET_ID) } returns DataError.NetworkError.NoInternetConnection.left()
+            coEvery { bridgeApi.createWithdrawAddress(captureNullable(header), any()) } returns ApiResponse.Success(
+                PolymarketWithdrawAddressResponse(evm = EVM_ADDRESS),
+            )
+
+            // Act
+            val actual = repository.createWithdrawAddress(
+                walletId = WALLET_ID,
+                depositWalletAddress = DEPOSIT_WALLET,
+                toChainId = BASE_CHAIN_ID,
+                toTokenAddress = BASE_USDC,
+                recipientAddress = RECIPIENT,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(EVM_ADDRESS.right())
+            assertThat(header.captured).isNull()
+        }
 
     private companion object {
         const val WALLET_ID = "a1b2"

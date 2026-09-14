@@ -17,6 +17,7 @@ import com.tangem.grow.datasource.polymarket.bridge.models.PolymarketWithdrawAdd
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultPolymarketBridgeRepository @Inject constructor(
     private val bridgeApi: PolymarketBridgeApi,
@@ -84,7 +85,9 @@ internal class DefaultPolymarketBridgeRepository @Inject constructor(
         recipientAddress: String,
     ): Either<PolymarketBridgeError, String> = withContext(dispatchers.io) {
         val builderCode = polymarketRepository.getBuilderCode(walletId = walletId).getOrNull()
-            ?: return@withContext PolymarketBridgeError.Unavailable.left()
+        if (builderCode == null) {
+            TangemLogger.i("No builder code for the withdrawal, asking the bridge without attribution")
+        }
 
         safeApiCall(
             call = {
