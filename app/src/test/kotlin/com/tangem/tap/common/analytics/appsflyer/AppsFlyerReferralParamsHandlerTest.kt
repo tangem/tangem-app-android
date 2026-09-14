@@ -130,18 +130,6 @@ class AppsFlyerReferralParamsHandlerTest {
                 ),
             )
         }
-
-        private fun createDeepLink(
-            deepLinkValue: String?,
-            refcode: String? = null,
-            campaign: String? = null,
-        ): DeepLink {
-            return mockk<DeepLink> {
-                every { this@mockk.deepLinkValue } returns deepLinkValue
-                every { this@mockk.getStringValue("deep_link_sub1") } returns refcode
-                every { this@mockk.getStringValue("deep_link_sub2") } returns campaign
-            }
-        }
     }
 
     data class HandleDeepLinkModel(val deepLink: DeepLink, val shouldStore: Boolean)
@@ -275,12 +263,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN tpay_mobileonboard deeplink WHEN handleDeeplink THEN navigation deeplink stored`() = runTest {
-            val deepLink = mockk<DeepLink> {
-                every { deepLinkValue } returns "tpay_mobileonboard"
-                every { getStringValue(any()) } returns null
-            }
-
-            handler.handleDeeplink(deepLink)
+            handler.handleDeeplink(createDeepLink(deepLinkValue = "tpay_mobileonboard"))
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
         }
@@ -294,12 +277,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN referral deeplink WHEN handleDeeplink THEN navigation deeplink stored`() = runTest {
-            val deepLink = mockk<DeepLink> {
-                every { deepLinkValue } returns "referral"
-                every { getStringValue(any()) } returns null
-            }
-
-            handler.handleDeeplink(deepLink)
+            handler.handleDeeplink(createDeepLink(deepLinkValue = "referral"))
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
@@ -367,13 +345,9 @@ class AppsFlyerReferralParamsHandlerTest {
         fun `GIVEN campaign deeplink AND toggle enabled WHEN handleDeeplink THEN value stored`() = runTest {
             // Arrange
             every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
-            val deepLink = mockk<DeepLink> {
-                every { deepLinkValue } returns CAMPAIGN_VALUE
-                every { getStringValue(any()) } returns null
-            }
 
             // Act
-            handler.handleDeeplink(deepLink)
+            handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
@@ -448,19 +422,56 @@ class AppsFlyerReferralParamsHandlerTest {
         }
 
         @Test
-        fun `GIVEN deeplink handled by UDL WHEN handle THEN navigation deeplink stored once`() = runTest {
+        fun `GIVEN deferred deeplink handled by UDL WHEN handle THEN navigation deeplink stored once`() = runTest {
             // Arrange
-            val deepLink = mockk<DeepLink> {
-                every { deepLinkValue } returns CAMPAIGN_VALUE
-                every { getStringValue(any()) } returns null
-            }
-            handler.handleDeeplink(deepLink)
+            handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = true))
 
             // Act
             handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
+        }
+
+        @Test
+        fun `GIVEN direct deeplink handled by UDL WHEN handle THEN first launch data still handled`() = runTest {
+            // Arrange
+            handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = false))
+
+            // Act
+            handler.handle(params = conversionData(deepLinkValue = "referral", refcode = SUCCESS_REFCODE))
+
+            // Assert
+            coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink("referral") }
+            coVerify(exactly = 1) {
+                appsFlyerRepository.storeIfAbsent(AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = null))
+            }
+        }
+
+        @Test
+        fun `GIVEN deeplink without deferred flag handled by UDL WHEN handle THEN treated as direct`() = runTest {
+            // Arrange
+            handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = null))
+
+            // Act
+            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
+
+            // Assert
+            coVerify(exactly = 2) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
+        }
+    }
+
+    private fun createDeepLink(
+        deepLinkValue: String?,
+        refcode: String? = null,
+        campaign: String? = null,
+        isDeferred: Boolean? = false,
+    ): DeepLink {
+        return mockk<DeepLink> {
+            every { this@mockk.deepLinkValue } returns deepLinkValue
+            every { this@mockk.getStringValue("deep_link_sub1") } returns refcode
+            every { this@mockk.getStringValue("deep_link_sub2") } returns campaign
+            every { this@mockk.isDeferred } returns isDeferred
         }
     }
 
