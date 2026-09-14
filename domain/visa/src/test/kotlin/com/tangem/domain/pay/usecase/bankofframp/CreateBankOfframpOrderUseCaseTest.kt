@@ -3,7 +3,7 @@ package com.tangem.domain.pay.usecase.bankofframp
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
-import com.tangem.domain.pay.repository.BankOfframpRepository
+import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 internal class CreateBankOfframpOrderUseCaseTest {
 
-    private val repository: BankOfframpRepository = mockk()
+    private val repository: BankOfframpOrderRepository = mockk()
     private val useCase = CreateBankOfframpOrderUseCase(repository)
 
     @BeforeEach
