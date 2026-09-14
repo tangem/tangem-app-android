@@ -13,6 +13,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
@@ -58,10 +59,11 @@ internal class FeedTopBlocksModel @Inject constructor(
 
     fun onCollectiblesClick() {
         modelScope.launch {
-            val eligibleWallets = userWalletsListRepository.userWalletsSync().filterNot { it.isLocked }
+            val eligibleWallets = userWalletsListRepository.userWalletsSync()
+                .filter { !it.isLocked && it.isMultiCurrency }
 
             when {
-                eligibleWallets.isEmpty() -> TangemLogger.i("Collectibles: no unlocked wallets; staying on the feed")
+                eligibleWallets.isEmpty() -> TangemLogger.i("Collectibles: no eligible wallets; staying on the feed")
                 eligibleWallets.size == 1 -> openCollectibles(eligibleWallets.single().walletId)
                 else -> showWalletSelector()
             }
@@ -69,6 +71,7 @@ internal class FeedTopBlocksModel @Inject constructor(
     }
 
     private fun showWalletSelector() {
+        portfolioSelectorController.isEnabled.value = { wallet, _ -> wallet.isMultiCurrency }
         portfolioSelectorController.selectAccount(accountId = null)
         observeWalletSelection()
         bottomSheetNavigation.activate(FeedTopBlocksBottomSheetConfig.WalletSelector)
