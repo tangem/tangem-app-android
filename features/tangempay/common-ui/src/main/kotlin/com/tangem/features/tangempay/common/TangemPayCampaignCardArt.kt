@@ -2,18 +2,16 @@ package com.tangem.features.tangempay.common
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,14 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -40,18 +38,13 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 private val CardArtWidth: Dp = 264.dp
 private val CardArtHeight: Dp = 172.dp
 private val CardArtCornerRadius: Dp = 16.dp
+private val CardArtBorderWidth: Dp = 1.dp
 private const val RETRY_PARAMETER = "campaign_card_art_retry"
 
 @Composable
 fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier) {
     if (cardArtUrl == null) {
-        Box(
-            modifier = modifier
-                .cardArtSize()
-                .clip(RoundedCornerShape(CardArtCornerRadius)),
-        ) {
-            CardArtPlaceholder()
-        }
+        CardArtSurface(modifier = modifier) { CardArtPlaceholder() }
         return
     }
 
@@ -65,11 +58,7 @@ fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier)
             .build()
     }
 
-    Box(
-        modifier = modifier
-            .cardArtSize()
-            .clip(RoundedCornerShape(CardArtCornerRadius)),
-    ) {
+    CardArtSurface(modifier = modifier) {
         SubcomposeAsyncImage(
             modifier = Modifier.fillMaxSize(),
             model = request,
@@ -83,10 +72,23 @@ fun TangemPayCampaignCardArt(cardArtUrl: String?, modifier: Modifier = Modifier)
 
 @Composable
 fun TangemPayCampaignCardArtPlaceholder(modifier: Modifier = Modifier) {
-    TangemShimmer(modifier = modifier.cardArtSize(), radius = CardArtCornerRadius)
+    CardArtSurface(modifier = modifier) { CardArtLoading() }
 }
 
-private fun Modifier.cardArtSize(): Modifier = width(CardArtWidth).aspectRatio(CardArtWidth / CardArtHeight)
+@Composable
+private fun CardArtSurface(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+    val shape = RoundedCornerShape(CardArtCornerRadius)
+
+    Box(
+        modifier = modifier
+            .width(CardArtWidth)
+            .aspectRatio(CardArtWidth / CardArtHeight)
+            .background(color = TangemTheme.colors3.bg.secondary, shape = shape)
+            .border(width = CardArtBorderWidth, color = TangemTheme.colors3.border.secondary, shape = shape)
+            .clip(shape),
+        content = content,
+    )
+}
 
 @Composable
 private fun CardArtLoading(modifier: Modifier = Modifier) {
@@ -105,27 +107,16 @@ private fun CardArtPlaceholder(modifier: Modifier = Modifier) {
 @Composable
 private fun CardArtError(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors3.bg.opaque.secondary),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.inverse)
-                .clickable(role = Role.Button, onClick = onRetryClick)
-                .padding(10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_refresh_24),
-                contentDescription = stringResourceSafe(R.string.common_reload),
-                tint = TangemTheme.colors3.icon.inverse,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        TangemButton(
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X10,
+            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_refresh_24),
+            contentDescription = stringResourceSafe(R.string.common_reload),
+            onClick = onRetryClick,
+        )
     }
 }
 
@@ -135,14 +126,15 @@ private fun CardArtError(onRetryClick: () -> Unit, modifier: Modifier = Modifier
 private fun TangemPayCampaignCardArtPreview() {
     TangemThemePreviewRedesign {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .background(TangemTheme.colors3.bg.primary)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TangemPayCampaignCardArt(cardArtUrl = "https://app.tangem.com/cards/card_default.png")
+            TangemPayCampaignCardArt(cardArtUrl = null)
             TangemPayCampaignCardArtPlaceholder()
-            Box(modifier = Modifier.cardArtSize().clip(RoundedCornerShape(CardArtCornerRadius))) {
-                CardArtError(onRetryClick = {})
-            }
+            CardArtSurface { CardArtError(onRetryClick = {}) }
         }
     }
 }
