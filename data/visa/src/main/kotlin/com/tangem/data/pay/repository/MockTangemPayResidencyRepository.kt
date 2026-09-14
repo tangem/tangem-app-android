@@ -12,11 +12,6 @@ import com.tangem.domain.pay.repository.TangemPayResidencyRepository
 import com.tangem.domain.visa.error.VisaApiError
 import kotlinx.coroutines.delay
 
-/**
- * In-memory stand-in for the geo endpoints while their country list is still being filled in.
- * Only [getCountries] and [getRegions] answer from [MockTangemPayResidencySeed]; both eligibility checks stay on the
- * real backend through [origin], so the onboarding gate keeps behaving as it does in production.
- */
 internal class MockTangemPayResidencyRepository(
     private val origin: TangemPayResidencyRepository,
 ) : TangemPayResidencyRepository {
@@ -36,8 +31,10 @@ internal class MockTangemPayResidencyRepository(
         product: TangemPayProduct,
         countryCode: String,
         regionCode: String?,
-    ): Either<VisaApiError, TangemPayEligibility> =
-        origin.checkEligibilityForCountry(product = product, countryCode = countryCode, regionCode = regionCode)
+    ): Either<VisaApiError, TangemPayEligibility> {
+        delay(FETCH_DELAY_MILLIS)
+        return TangemPayEligibility(isAvailable = true, countryCode, regionCode).right()
+    }
 
     override suspend fun checkEligibilityForCustomer(
         userWalletId: UserWalletId,

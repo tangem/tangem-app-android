@@ -2732,6 +2732,7 @@
   <string name="tangempay_visa_benefits">Visa Benefits</string>
   <string name="tangempay_waitlist_description">We\'ll email you the moment it\'s available in your region</string>
   <string name="tangempay_waitlist_email_placeholder">satoshi.nakamoto@tangem.com</string>
+  <string name="tangempay_waitlist_joined_message">Joined waitlist</string>
   <string name="tangempay_waitlist_marketing_consent">I\'d also like to receive marketing communications from Tangem. You can withdraw this consent at any time — see our %s</string>
   <string name="tangempay_waitlist_title"> Join the waitlist</string>
   <string name="tangempay_withdraw_bank_account_type_checking">Checking</string>
