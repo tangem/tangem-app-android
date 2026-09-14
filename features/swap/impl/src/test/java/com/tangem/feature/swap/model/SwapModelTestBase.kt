@@ -14,8 +14,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -113,7 +112,7 @@ internal abstract class SwapModelTestBase {
     protected val messageSender: UiMessageSender = mockk(relaxed = true)
     protected val initialCurrenciesResolver: InitialCurrenciesResolver = mockk(relaxed = true)
     protected val accountUnderlyingCurrencies: AccountUnderlyingCurrencies = mockk(relaxed = true)
-    protected val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
+    protected val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk(relaxed = true)
     protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
         mockk(relaxed = true)
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
@@ -171,9 +170,6 @@ internal abstract class SwapModelTestBase {
             )
         } returns (null to null)
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
-        coEvery {
-            singleAccountStatusListSupplier.getSyncOrNull(any<SingleAccountStatusListProducer.Params>(), any())
-        } returns null
         coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
             emptyMap<CryptoCurrency.ID, PredictionWithdrawDestination>().right()
         // Unstubbed, a relaxed mock would fabricate a nested SwapCurrencyStatus/Account chain instead of
@@ -247,7 +243,7 @@ internal abstract class SwapModelTestBase {
         messageSender = messageSender,
         initialCurrenciesResolver = initialCurrenciesResolver,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
-        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,
