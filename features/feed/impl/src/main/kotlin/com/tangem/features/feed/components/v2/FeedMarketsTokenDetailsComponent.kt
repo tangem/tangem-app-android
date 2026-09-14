@@ -34,6 +34,7 @@ import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDet
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.expandingSheetClick
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import com.tangem.features.foryou.ForYouFeatureToggles
 import com.tangem.features.foryou.TokenSummaryBlockComponent
@@ -103,15 +104,20 @@ internal class FeedMarketsTokenDetailsComponent @AssistedInject constructor(
             fadeEnabled = false,
             blurBackground = false,
             isEndButtonsGroupBackgroundShown = false,
-            startButton = { TangemButton.Back(onClick = { router.pop() }) },
+            startButton = {
+                TangemButton.Back(onClick = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() })
+            },
             endButtonsGroup = {
-                FeedNavActionButton(icon = Icons.ic_share_android_20, onClick = state.onShareClick)
+                FeedNavActionButton(
+                    icon = Icons.ic_share_android_20,
+                    onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onShareClick),
+                )
             },
             endButton = if (state.isAddToPortfolioButtonVisible) {
                 {
                     FeedNavActionButton(
                         icon = Icons.ic_sign_plus_20,
-                        onClick = state.onAddToPortfolioClick,
+                        onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onAddToPortfolioClick),
                         // added to every account: the tap explains that instead of doing nothing
                         isDimmed = !state.isAddToPortfolioButtonEnabled,
                     )
