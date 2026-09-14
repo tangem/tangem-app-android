@@ -1084,6 +1084,7 @@
   <string name="joint_account_join_load_failed">Failed to load invite page. Tap to reload</string>
   <string name="joint_account_join_subtitle">This is a joint account. Every transaction from this account will require %1$s to sign</string>
   <string name="joint_account_join_subtitle_value">%1$s members of %2$s</string>
+  <string name="joint_account_join_success_message">Account added</string>
   <string name="joint_account_join_title">You’ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join to account</string>
   <plurals name="joint_account_members_count">
