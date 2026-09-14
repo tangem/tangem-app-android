@@ -73,7 +73,9 @@ internal fun FeedV2Content(
     val topBlocksHeightPx = with(LocalDensity.current) { FeedV2Component.TopBlocksHeight.toPx() }
     val topBlocksOffsetState = rememberSaveable { mutableStateOf(0f) }
     val topBlocksOffset by topBlocksOffsetState
-    val topBlocksOffsetPx by remember { derivedStateOf { topBlocksOffset.roundToInt() } }
+
+    val chromeOffsetState = rememberChromeOffset(topBlocksOffsetState, topBlocksHeightPx)
+    val chromeOffset by chromeOffsetState
 
     val topBlocksCollapseConnection = remember(topBlocksHeightPx) {
         TopBlocksCollapseConnection(topBlocksHeightPx = topBlocksHeightPx, offsetState = topBlocksOffsetState)
@@ -92,7 +94,7 @@ internal fun FeedV2Content(
     val feedHazeState = rememberFeedHazeState()
     val tabContentPadding = rememberTabContentPadding(
         contentPadding = contentPadding,
-        collapseOffsetPx = topBlocksOffsetState,
+        collapseOffsetPx = chromeOffsetState,
     )
 
     Box(
@@ -111,25 +113,12 @@ internal fun FeedV2Content(
             CompositionLocalProvider(LocalOverscrollFactory provides null) {
                 tabContent(Modifier.fillMaxSize(), tabContentPadding)
             }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = contentPadding.calculateTopPadding())
-                    .fillMaxWidth()
-                    .graphicsLayer {
-                        val fraction = -topBlocksOffset / topBlocksHeightPx
-                        alpha = ((1f - fraction) / BLOCKS_EXIT_FADE_FRACTION).coerceIn(0f, 1f)
-                    }
-                    .layout { measurable, constraints ->
-                        val placeable = measurable.measure(constraints)
-                        val height = (placeable.height + topBlocksOffsetPx).coerceAtLeast(0)
-                        layout(width = placeable.width, height = height) {
-                            placeable.placeRelative(x = 0, y = topBlocksOffsetPx)
-                        }
-                    },
-            ) {
-                topBlocks(Modifier.fillMaxWidth())
-            }
+            CollapsingTopBlocks(
+                offsetState = topBlocksOffsetState,
+                heightPx = topBlocksHeightPx,
+                contentPadding = contentPadding,
+                content = topBlocks,
+            )
         }
         FeedChromeOverlay(
             tabs = tabs,
@@ -141,8 +130,46 @@ internal fun FeedV2Content(
             contentPadding = contentPadding,
             hazeState = feedHazeState,
             fadeAlpha = { -topBlocksOffset / topBlocksHeightPx },
-            tabRowOffsetPx = { topBlocksOffsetPx },
+            tabRowOffsetPx = { chromeOffset.roundToInt() },
         )
+    }
+}
+
+/**
+ * The top blocks as the collapse moves them: they slide up by the offset, the space they leave is
+ * taken off their measured height so the tab content follows, and they fade out at the end of the
+ * travel. The offset is read inside the draw and layout lambdas, so a scroll frame never recomposes.
+ */
+@Composable
+private fun BoxScope.CollapsingTopBlocks(
+    offsetState: State<Float>,
+    heightPx: Float,
+    contentPadding: PaddingValues,
+    content: @Composable (Modifier) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .padding(top = contentPadding.calculateTopPadding())
+            .fillMaxWidth()
+            .graphicsLayer {
+                val fraction = -offsetState.value / heightPx
+                // The blocks fade out over the trailing quarter of the collapse
+
+                @Suppress("MagicNumber")
+                val exitAlpha = ((1f - fraction) / 0.25f).coerceIn(0f, 1f)
+                alpha = exitAlpha
+            }
+            .layout { measurable, constraints ->
+                val offsetPx = offsetState.value.roundToInt()
+                val placeable = measurable.measure(constraints)
+                val height = (placeable.height + offsetPx).coerceAtLeast(0)
+                layout(width = placeable.width, height = height) {
+                    placeable.placeRelative(x = 0, y = offsetPx)
+                }
+            },
+    ) {
+        content(Modifier.fillMaxWidth())
     }
 }
 
@@ -174,14 +201,27 @@ private fun BoxScope.FeedChromeOverlay(
             onTabSelect = onTabSelect,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = contentPadding.calculateTopPadding() + FeedV2Component.TopBlocksHeight)
+                .padding(
+                    top = contentPadding.calculateTopPadding() +
+                        FeedV2Component.TopBlocksHeight +
+                        FeedV2Component.TabRowTopGap,
+                )
                 .offset { IntOffset(x = 0, y = tabRowOffsetPx()) },
         )
     }
 }
 
-/** Trailing part of the collapse over which the top blocks fade out. */
-private const val BLOCKS_EXIT_FADE_FRACTION = 0.25f
+/**
+ * Collapse offset of the chrome below the top blocks: the gap above the tab row closes together with
+ * the blocks, so the chrome travels the block height plus the gap while the blocks travel only their own.
+ */
+@Composable
+private fun rememberChromeOffset(topBlocksOffset: State<Float>, topBlocksHeightPx: Float): State<Float> {
+    val tabRowGapPx = with(LocalDensity.current) { FeedV2Component.TabRowTopGap.toPx() }
+    return remember(topBlocksOffset, topBlocksHeightPx, tabRowGapPx) {
+        derivedStateOf { topBlocksOffset.value * (topBlocksHeightPx + tabRowGapPx) / topBlocksHeightPx }
+    }
+}
 
 @Composable
 private fun rememberTabContentPadding(contentPadding: PaddingValues, collapseOffsetPx: State<Float>): PaddingValues {
@@ -190,6 +230,7 @@ private fun rememberTabContentPadding(contentPadding: PaddingValues, collapseOff
         CollapsingContentPadding(
             restTop = contentPadding.calculateTopPadding() +
                 FeedV2Component.TopBlocksHeight +
+                FeedV2Component.TabRowTopGap +
                 FeedV2Component.TabRowHeight,
             density = density,
             collapseOffsetPx = collapseOffsetPx,
