@@ -54,8 +54,16 @@ interface MarketsTokenRepository {
      */
     suspend fun getTokenExchanges(tokenId: CryptoCurrency.RawID): List<TokenMarketExchange>
 
-    /** Get coin categories with their sectors */
-    suspend fun getCoinCategories(): List<CoinCategory>
+    /**
+     * Get coin categories with their sectors
+     *
+     * Not cached: the answer carries the region restrictions, so a kept copy would outlive the country it
+     * was taken for. Every call goes to the network.
+     *
+     * @param country ISO 3166-1 alpha-2 code the [CoinCategory.isRestricted] flag is evaluated for. Pass
+     *                `null` when it is unknown — the categories then arrive unrestricted
+     */
+    suspend fun getCoinCategories(country: String?): List<CoinCategory>
 
     /**
      * Get one page of market categories with their aggregated market data
