@@ -38,15 +38,20 @@ internal fun TangemPayCampaignLandingContent(state: TangemPayCampaignUM.Landing,
                 showCtaIcon = !isNoWallet,
             )
         },
-        texts = {
-            Text(
-                text = stringResourceSafe(R.string.tangempay_campaign_landing_title),
-                style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
-            TangemPayCampaignBlocks(modifier = Modifier.padding(top = 24.dp))
-        },
+        texts = { TangemPayCampaignTexts() },
     )
+}
+
+@Composable
+internal fun TangemPayCampaignTexts(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = stringResourceSafe(R.string.tangempay_campaign_landing_title),
+            style = TangemTheme.typography3.heading.medium,
+            color = TangemTheme.colors3.text.primary,
+        )
+        TangemPayCampaignBlocks(modifier = Modifier.padding(top = 24.dp))
+    }
 }
 
 @Composable
