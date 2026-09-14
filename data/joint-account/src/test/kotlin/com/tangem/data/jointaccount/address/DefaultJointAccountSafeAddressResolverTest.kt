@@ -158,6 +158,50 @@ internal class DefaultJointAccountSafeAddressResolverTest {
         assertThat(actual).isEmpty()
     }
 
+    /** The path form of the same invariant: the token being saved is the one whose address has to be waited for */
+    @Test
+    fun `GIVEN only another joint account has an address WHEN resolveByOwnerPath THEN it waits for the asked path`() =
+        runTest {
+            // Arrange
+            val jointAccounts = MutableStateFlow<List<JointAccount>?>(
+                value = listOf(
+                    jointAccount(cryptoAccountId = "A1", safeAddress = "0x5afe1", status = JointAccount.Status.ACTIVE),
+                ),
+            )
+            every { jointAccountsStore.get(userWalletId) } returns jointAccounts
+            every { walletAccountsFetcher.get(userWalletId) } returns MutableStateFlow(
+                accountsResponse(
+                    jointAccount(id = "A0", ownerKeyIndex = 0),
+                    jointAccount(id = "A1", ownerKeyIndex = 1),
+                ),
+            )
+            launch {
+                jointAccounts.value = listOf(
+                    jointAccount(cryptoAccountId = "A1", safeAddress = "0x5afe1", status = JointAccount.Status.ACTIVE),
+                    jointAccount(cryptoAccountId = "A0", safeAddress = "0x5afe0", status = JointAccount.Status.ACTIVE),
+                )
+            }
+
+            // Act
+            val actual = resolver.resolveByOwnerPath(userWalletId, setOf(jointNetwork0.derivationPath.value!!))
+
+            // Assert
+            assertThat(actual).containsEntry(jointNetwork0.derivationPath.value, "0x5afe0")
+        }
+
+    @Test
+    fun `GIVEN no joint path WHEN resolveByOwnerPath THEN nothing is read and nothing is waited for`() = runTest {
+        // Act
+        val actual = resolver.resolveByOwnerPath(userWalletId, ownerPaths = emptySet())
+
+        // Assert
+        assertThat(actual).isEmpty()
+        verify {
+            jointAccountsStore wasNot Called
+            walletAccountsFetcher wasNot Called
+        }
+    }
+
     private fun everyJointAccounts(vararg accounts: JointAccount) {
         every { jointAccountsStore.get(userWalletId) } returns MutableStateFlow(accounts.toList())
     }
