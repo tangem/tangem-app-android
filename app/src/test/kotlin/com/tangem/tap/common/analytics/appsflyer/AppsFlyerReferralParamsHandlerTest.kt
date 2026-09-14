@@ -11,7 +11,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -21,18 +21,19 @@ import org.junit.jupiter.params.ParameterizedTest
 class AppsFlyerReferralParamsHandlerTest {
 
     private val appsFlyerRepository: AppsFlyerRepository = mockk(relaxUnitFun = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk {
-        every { isCustomCardsCobrandEnabled } returns true
-    }
-    private val handler = AppsFlyerReferralParamsHandler(
-        appsFlyerRepository = appsFlyerRepository,
-        coroutineScope = TestAppCoroutineScope(),
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
-    )
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
-    @AfterEach
-    fun tearDown() {
+    private lateinit var handler: AppsFlyerReferralParamsHandler
+
+    @BeforeEach
+    fun setUp() {
         clearMocks(appsFlyerRepository)
+        every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
+        handler = AppsFlyerReferralParamsHandler(
+            appsFlyerRepository = appsFlyerRepository,
+            coroutineScope = TestAppCoroutineScope(),
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
+        )
     }
 
     @Nested
@@ -165,73 +166,63 @@ class AppsFlyerReferralParamsHandlerTest {
         private fun provideTestModels(): List<HandleParamsModel> {
             return listOf(
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "referral",
-                        "deep_link_sub1" to SUCCESS_REFCODE,
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    params = conversionData(
+                        deepLinkValue = "referral",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
                     ),
                     shouldStore = true,
                 ),
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "tpay_mobileonboard",
-                        "deep_link_sub1" to SUCCESS_REFCODE,
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    params = conversionData(
+                        deepLinkValue = "tpay_mobileonboard",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
                     ),
                     shouldStore = true,
                 ),
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "some_other_deep_link_value",
-                        "deep_link_sub1" to SUCCESS_REFCODE,
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    params = conversionData(
+                        deepLinkValue = "some_other_deep_link_value",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
                     ),
                     shouldStore = true,
                 ),
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_sub1" to SUCCESS_REFCODE,
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    params = conversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
+                    params = conversionData(
+                        deepLinkValue = "",
+                        refcode = SUCCESS_REFCODE,
+                        campaign = SUCCESS_CAMPAIGN,
                     ),
                     shouldStore = true,
                 ),
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "",
-                        "deep_link_sub1" to SUCCESS_REFCODE,
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
-                    ),
-                    shouldStore = true,
-                ),
-                HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "some_other_deep_link_value",
-                        "deep_link_sub1" to "null",
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                    params = conversionData(
+                        deepLinkValue = "some_other_deep_link_value",
+                        refcode = "null",
+                        campaign = SUCCESS_CAMPAIGN,
                     ),
                     shouldStore = false,
                 ),
                 HandleParamsModel(
-                    params = mapOf("deep_link_value" to "some_other_deep_link_value"),
+                    params = conversionData(deepLinkValue = "some_other_deep_link_value"),
                     shouldStore = false,
                 ),
                 HandleParamsModel(
-                    params = mapOf("deep_link_value" to ""),
+                    params = conversionData(deepLinkValue = ""),
                     shouldStore = false,
                 ),
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "referral",
-                        "deep_link_sub1" to "",
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
-                    ),
+                    params = conversionData(deepLinkValue = "referral", refcode = "", campaign = SUCCESS_CAMPAIGN),
                     shouldStore = false,
                 ),
                 HandleParamsModel(
-                    params = mapOf(
-                        "deep_link_value" to "referral",
-                        "deep_link_sub2" to SUCCESS_CAMPAIGN,
-                    ),
+                    params = conversionData(deepLinkValue = "referral", campaign = SUCCESS_CAMPAIGN),
                     shouldStore = false,
                 ),
             )
@@ -247,11 +238,11 @@ class AppsFlyerReferralParamsHandlerTest {
         @ParameterizedTest
         @ProvideTestModels
         fun handle(model: CampaignModel) = runTest {
-            val params = buildMap<String?, Any?> {
-                put("deep_link_value", "referral")
-                put("deep_link_sub1", SUCCESS_REFCODE)
-                model.rawCampaign?.let { put("deep_link_sub2", it) }
-            }
+            val params = conversionData(
+                deepLinkValue = "referral",
+                refcode = SUCCESS_REFCODE,
+                campaign = model.rawCampaign,
+            )
 
             handler.handle(params = params)
 
@@ -277,7 +268,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN tpay_mobileonboard params WHEN handle THEN navigation deeplink stored`() = runTest {
-            handler.handle(params = mapOf("deep_link_value" to "tpay_mobileonboard"))
+            handler.handle(params = conversionData(deepLinkValue = "tpay_mobileonboard"))
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
         }
@@ -296,7 +287,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN referral params WHEN handle THEN navigation deeplink stored`() = runTest {
-            handler.handle(params = mapOf("deep_link_value" to "referral"))
+            handler.handle(params = conversionData(deepLinkValue = "referral"))
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
@@ -316,10 +307,10 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN referral with valid refcode WHEN handle THEN navigation and conversion stored`() = runTest {
             handler.handle(
-                params = mapOf(
-                    "deep_link_value" to "referral",
-                    "deep_link_sub1" to SUCCESS_REFCODE,
-                    "deep_link_sub2" to SUCCESS_CAMPAIGN,
+                params = conversionData(
+                    deepLinkValue = "referral",
+                    refcode = SUCCESS_REFCODE,
+                    campaign = SUCCESS_CAMPAIGN,
                 ),
             )
 
@@ -333,12 +324,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN empty value with valid refcode WHEN handle THEN navigation deeplink not stored`() = runTest {
-            handler.handle(
-                params = mapOf(
-                    "deep_link_value" to "",
-                    "deep_link_sub1" to SUCCESS_REFCODE,
-                ),
-            )
+            handler.handle(params = conversionData(deepLinkValue = "", refcode = SUCCESS_REFCODE))
 
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
         }
@@ -346,10 +332,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN tpay_mobileonboard with valid refcode WHEN handle THEN navigation deeplink stored`() = runTest {
             handler.handle(
-                params = mapOf(
-                    "deep_link_value" to "tpay_mobileonboard",
-                    "deep_link_sub1" to SUCCESS_REFCODE,
-                ),
+                params = conversionData(deepLinkValue = "tpay_mobileonboard", refcode = SUCCESS_REFCODE),
             )
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
@@ -358,10 +341,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN unknown value with valid refcode WHEN handle THEN navigation deeplink not stored`() = runTest {
             handler.handle(
-                params = mapOf(
-                    "deep_link_value" to "some_other_deep_link_value",
-                    "deep_link_sub1" to SUCCESS_REFCODE,
-                ),
+                params = conversionData(deepLinkValue = "some_other_deep_link_value", refcode = SUCCESS_REFCODE),
             )
 
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -377,7 +357,7 @@ class AppsFlyerReferralParamsHandlerTest {
             every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
 
             // Act
-            handler.handle(params = mapOf("deep_link_value" to CAMPAIGN_VALUE))
+            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
@@ -405,7 +385,7 @@ class AppsFlyerReferralParamsHandlerTest {
             every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
 
             // Act
-            handler.handle(params = mapOf("deep_link_value" to CAMPAIGN_VALUE))
+            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -417,7 +397,7 @@ class AppsFlyerReferralParamsHandlerTest {
             every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
 
             // Act
-            handler.handle(params = mapOf("deep_link_value" to "tpay_for_"))
+            handler.handle(params = conversionData(deepLinkValue = "tpay_for_"))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -429,11 +409,71 @@ class AppsFlyerReferralParamsHandlerTest {
             every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
 
             // Act
-            handler.handle(params = mapOf("deep_link_value" to "referral"))
+            handler.handle(params = conversionData(deepLinkValue = "referral"))
 
             // Assert
             coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
+    }
+
+    @Nested
+    inner class ConversionDataReplay {
+
+        @Test
+        fun `GIVEN not a first launch WHEN handle THEN nothing stored`() = runTest {
+            // Act
+            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE, isFirstLaunch = false))
+
+            // Assert
+            coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
+            coVerify(inverse = true) { appsFlyerRepository.storeIfAbsent(value = any()) }
+        }
+
+        @Test
+        fun `GIVEN no first launch flag WHEN handle THEN nothing stored`() = runTest {
+            // Act
+            handler.handle(params = mapOf("deep_link_value" to CAMPAIGN_VALUE))
+
+            // Assert
+            coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
+        }
+
+        @Test
+        fun `GIVEN first launch flag as string WHEN handle THEN navigation deeplink stored`() = runTest {
+            // Act
+            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE, isFirstLaunch = "true"))
+
+            // Assert
+            coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
+        }
+
+        @Test
+        fun `GIVEN deeplink handled by UDL WHEN handle THEN navigation deeplink stored once`() = runTest {
+            // Arrange
+            val deepLink = mockk<DeepLink> {
+                every { deepLinkValue } returns CAMPAIGN_VALUE
+                every { getStringValue(any()) } returns null
+            }
+            handler.handleDeeplink(deepLink)
+
+            // Act
+            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
+
+            // Assert
+            coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
+        }
+    }
+
+    private fun conversionData(
+        deepLinkValue: String? = null,
+        refcode: String? = null,
+        campaign: String? = null,
+        isFirstLaunch: Any = true,
+    ): Map<String?, Any?> = buildMap {
+        put("is_first_launch", isFirstLaunch)
+        deepLinkValue?.let { put("deep_link_value", it) }
+        refcode?.let { put("deep_link_sub1", it) }
+        campaign?.let { put("deep_link_sub2", it) }
     }
 
     private companion object Companion {

@@ -14,12 +14,7 @@ interface TangemPayCampaignIssueCardComponent : ComposableContentComponent {
         val cardArtUrl: String?,
         val feeAmount: BigDecimal,
         val feeCurrency: Currency,
-        val listener: Listener,
     )
-
-    interface Listener {
-        suspend fun onCampaignIssueCardFinished()
-    }
 
     interface Factory : ComponentFactory<Params, TangemPayCampaignIssueCardComponent>
 }

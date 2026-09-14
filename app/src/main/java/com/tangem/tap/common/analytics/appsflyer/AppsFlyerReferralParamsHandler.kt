@@ -8,6 +8,7 @@ import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.contracts.ExperimentalContracts
@@ -20,7 +21,19 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
+    private val isHandledByUnifiedDeepLinking = AtomicBoolean(false)
+
     fun handle(params: Map<String?, Any?>) {
+        if (isHandledByUnifiedDeepLinking.get()) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: the deep link is already handled by UDL")
+            return
+        }
+
+        if (!isFirstLaunch(params)) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: cached install payload replayed on app open")
+            return
+        }
+
         handle(
             deepLinkValue = params[DEEP_LINK_VALUE] as? String,
             deepLinkSub1 = params[DEEP_LINK_SUB_1] as? String,
@@ -29,6 +42,8 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     fun handleDeeplink(deepLink: DeepLink) {
+        isHandledByUnifiedDeepLinking.set(true)
+
         handle(
             deepLinkValue = deepLink.deepLinkValue,
             deepLinkSub1 = deepLink.getStringValue(DEEP_LINK_SUB_1),
@@ -50,6 +65,8 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
             null -> TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
         }
     }
+
+    private fun isFirstLaunch(params: Map<String?, Any?>): Boolean = params[IS_FIRST_LAUNCH]?.toString() == "true"
 
     private fun storeReferralParams(refcode: String?, campaign: String?) {
         if (!isValidParam(refcode)) return
@@ -97,6 +114,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
 
     private companion object {
 
+        const val IS_FIRST_LAUNCH = "is_first_launch"
         const val DEEP_LINK_VALUE = "deep_link_value"
         const val DEEP_LINK_SUB_1 = "deep_link_sub1"
         const val DEEP_LINK_SUB_2 = "deep_link_sub2"
