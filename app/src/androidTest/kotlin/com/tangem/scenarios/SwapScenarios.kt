@@ -481,9 +481,15 @@ fun BaseTestCase.openSwapFromTokenSelector() {
     }
 }
 
-/** Opens the balance-filter dropdown on the FROM token selector and picks [filterLabel]. */
+/**
+ * Opens the balance-filter dropdown on the FROM token selector and picks [filterLabel].
+ *
+ * The chip only renders once the portfolio block loads, so wait for it before clicking — callers may
+ * reach this right after opening the selector.
+ */
 fun BaseTestCase.selectBalanceFilter(filterLabel: String) {
     step("Click on balance filter chip") {
+        awaitSuccess { onSwapSelectTokenScreen { balanceFilterChip.assertIsDisplayed() } }
         onSwapSelectTokenScreen { balanceFilterChip.performClick() }
     }
     step("Click on '$filterLabel' filter option") {
