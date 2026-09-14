@@ -29,36 +29,41 @@ internal class DefaultJointAccountSafeAddressResolver @Inject constructor(
         val jointNetworks = networks.filter { it.derivationPath is Network.DerivationPath.Joint }
         if (jointNetworks.isEmpty()) return emptyMap()
 
-        val wantedPaths = jointNetworks.map(Network::derivationPath).toSet()
-        val safeAddressByPath = withTimeoutOrNull(AWAIT_TIMEOUT) {
-            awaitSafeAddressByPath(userWalletId = userWalletId, wantedPaths = wantedPaths)
-        }.orEmpty()
+        val wantedPaths = jointNetworks.mapNotNull { it.derivationPath.value }.toSet()
+        val safeAddressByPath = awaitSafeAddresses(userWalletId) { byPath -> wantedPaths.any(byPath::containsKey) }
 
         return jointNetworks
-            .mapNotNull { network -> safeAddressByPath[network.derivationPath]?.let { network to it } }
+            .mapNotNull { network ->
+                network.derivationPath.value?.let { path -> safeAddressByPath[path] }?.let { network to it }
+            }
             .toMap()
     }
 
+    override suspend fun resolveByOwnerPath(userWalletId: UserWalletId, ownerPaths: Set<String>): Map<String, String> {
+        if (ownerPaths.isEmpty()) return emptyMap()
+
+        return awaitSafeAddresses(userWalletId) { byPath -> ownerPaths.any(byPath::containsKey) }
+    }
+
     /**
-     * Waits for an address of one of [wantedPaths] rather than for any address at all: another joint account
-     * already having one says nothing about the account being asked about, and stopping there would answer
-     * "no address" for an account whose address is still on its way.
+     * Waits until [isEnough] accepts what is known so far: one of the addresses actually asked about, because
+     * another joint account already having one says nothing about the account being asked about.
      *
      * The two sources are combined rather than read one after the other, so an address arriving after the first
      * snapshot is still seen — reading them in sequence would pin a stale half.
      */
-    private suspend fun awaitSafeAddressByPath(
+    private suspend fun awaitSafeAddresses(
         userWalletId: UserWalletId,
-        wantedPaths: Set<Network.DerivationPath>,
-    ): Map<Network.DerivationPath, String> {
-        return combine(
+        isEnough: (Map<String, String>) -> Boolean,
+    ): Map<String, String> = withTimeoutOrNull(AWAIT_TIMEOUT) {
+        combine(
             flow = jointAccountsStore.get(userWalletId).map { it.orEmpty().safeAddressByAccountId() },
             flow2 = walletAccountsFetcher.get(userWalletId),
         ) { safeAddressByAccountId, response ->
             response.accounts.safeAddressByPath(safeAddressByAccountId)
         }
-            .first { byPath -> wantedPaths.any(byPath::containsKey) }
-    }
+            .first(isEnough)
+    }.orEmpty()
 
     private fun List<JointAccount>.safeAddressByAccountId(): Map<String, String> = mapNotNull { account ->
         account.safeAddress?.let { account.cryptoAccountId to it }
@@ -66,9 +71,9 @@ internal class DefaultJointAccountSafeAddressResolver @Inject constructor(
 
     private fun List<WalletAccountDTO>.safeAddressByPath(
         safeAddressByAccountId: Map<String, String>,
-    ): Map<Network.DerivationPath, String> = filter { it.type == WalletAccountDTO.Type.JOINT }
+    ): Map<String, String> = filter { it.type == WalletAccountDTO.Type.JOINT }
         .mapNotNull { account ->
-            val path = OwnerKeyIndex(account.derivationIndex).getOrNull()?.toNetworkDerivationPath()
+            val path = OwnerKeyIndex(account.derivationIndex).getOrNull()?.toNetworkDerivationPath()?.value
             val safeAddress = safeAddressByAccountId[account.id]
 
             if (path != null && safeAddress != null) path to safeAddress else null
