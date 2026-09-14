@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
+import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -50,26 +51,75 @@ class WalletRegistrationLauncher @Inject internal constructor(
     }
 
     /**
+     * COLD prefetch from a [Card] already read off the session (preflight): requests and deciphers
+     * the wallet nonce so its round-trip can overlap the wrapped card command.
+     *
+     * When [checkRegistered] is true, skips the request entirely — returning `null` — for a card we
+     * can identify as already registered (e.g. every subsequent scan of a known card). It must be
+     * false for wallet-creating/importing taps: those replace the first wallet, so the preflight id
+     * is stale and a registered *old* wallet would wrongly skip the *new* one. Twin and Visa cards are
+     * never a cold-registration target. All failures are log-only; the caller simply skips
+     * registration on this tap.
+     */
+    suspend fun requestColdNonce(card: Card, checkRegistered: Boolean): WalletNonce? {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return null
+
+        // Total by contract: this runs in a session-scope child, so an unexpected throw (card mapping,
+        // wallet-id build, a Retrofit failure that escapes the ApiResponse wrapper) must not surface as
+        // a failed child and cancel the tap. runSuspendCatching still rethrows CancellationException.
+        return runSuspendCatching {
+            val cardDto = CardDTO(card)
+            if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return@runSuspendCatching null
+
+            if (checkRegistered) {
+                // A stable-wallet tap on a walletless card has nothing to register, so don't waste a
+                // one-time nonce on it; create/import (checkRegistered = false) still fetch, as they add one.
+                val walletId = UserWalletIdBuilder.card(cardDto).build()?.toBase64()
+                    ?: return@runSuspendCatching null
+                if (walletRegistrar.isRegistered(walletId)) return@runSuspendCatching null
+            }
+
+            walletRegistrar.requestNonce().getOrElse { error ->
+                TangemLogger.e("Cold wallet nonce prefetch deferred: $error")
+                null
+            }
+        }.getOrElse { e ->
+            TangemLogger.e("Cold wallet nonce prefetch failed", e)
+            null
+        }
+    }
+
+    /**
      * COLD registration from a [Card] read off an open [session] — applied to any card operation
      * (scan, wallet creation/import, key derivation) so the card is bound to the device on the same
-     * NFC tap. Phase 1 ([WalletRegistrar.prepare]) runs inside the still-open [session] (the card is
-     * tapped here); phase 2 (the network POST) is dispatched on [appCoroutineScope] afterwards, so
-     * the user doesn't hold the card during the request.
+     * NFC tap. Phase 1 ([WalletRegistrar.prepare]) signs the prefetched [nonce] inside the still-open
+     * [session] (the card is tapped here); phase 2 (the network POST) is dispatched on
+     * [appCoroutineScope] afterwards, so the user doesn't hold the card during the request.
      *
      * Twin and Visa cards are skipped: a twin's id is derived from both cards (can't be built here)
      * and Visa cards are not a cold-registration target.
      */
-    suspend fun registerColdInSession(session: CardSession, card: Card) {
+    suspend fun registerColdInSession(session: CardSession, card: Card, nonce: WalletNonce) {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return
         val cardDto = CardDTO(card)
         if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return
-        registerCold(session, cardDto, UserWalletIdBuilder.card(cardDto))
+        registerCold(
+            session = session,
+            card = cardDto,
+            walletIdBuilder = UserWalletIdBuilder.card(cardDto),
+            nonce = nonce,
+        )
     }
 
-    private suspend fun registerCold(session: CardSession, card: CardDTO, walletIdBuilder: UserWalletIdBuilder) {
+    private suspend fun registerCold(
+        session: CardSession,
+        card: CardDTO,
+        walletIdBuilder: UserWalletIdBuilder,
+        nonce: WalletNonce,
+    ) {
         val walletId = walletIdBuilder.build()?.toBase64() ?: return
 
-        val prepared = walletRegistrar.prepare(walletId, coldSigner.signerFor(session, card))
+        val prepared = walletRegistrar.prepare(walletId, nonce, coldSigner.signerFor(session, card))
             .getOrElse { error ->
                 TangemLogger.e("Cold wallet registration prepare deferred: $error")
                 return
