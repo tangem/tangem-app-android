@@ -22,7 +22,6 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
-import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
@@ -48,7 +47,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
-) : Model(), TangemPayWalletSelectorComponent.Listener, TangemPayCampaignIssueCardComponent.Listener {
+) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayCampaignComponent.Params>()
 
@@ -69,12 +68,12 @@ internal class TangemPayCampaignModel @Inject constructor(
 
     init {
         TangemLogger.i("[TangemPay][Campaign] Opened campaign container: ${params.campaignKey}")
+        modelScope.launch { clearAppsFlyerDeeplinkUseCase() }
         resolveCampaign()
     }
 
     fun onClose() {
         modelScope.launch {
-            clearAppsFlyerDeeplinkUseCase()
             if (userWalletsListRepository.userWalletsSync().isEmpty()) {
                 router.replaceAll(AppRoute.Home())
             } else {
@@ -97,10 +96,6 @@ internal class TangemPayCampaignModel @Inject constructor(
 
     override fun onWalletSelectorDismiss() {
         bottomSheetNavigation.dismiss()
-    }
-
-    override suspend fun onCampaignIssueCardFinished() {
-        clearAppsFlyerDeeplinkUseCase()
     }
 
     private fun resolveCampaign() {
@@ -170,10 +165,8 @@ internal class TangemPayCampaignModel @Inject constructor(
             when (landing.mode) {
                 TangemPayCampaignUM.Landing.Mode.NoWallet -> {
                     setCtaLoading(true)
-                    val userWallet = onboardingStarter.createHotWallet(
-                        campaignKey = params.campaignKey,
-                        onLoadingChange = ::setCtaLoading,
-                    ) ?: return@launch
+                    val userWallet = onboardingStarter.createHotWallet(onLoadingChange = ::setCtaLoading)
+                        ?: return@launch
                     onboardingStarter.startOnboarding(
                         userWalletId = userWallet.walletId,
                         campaignKey = params.campaignKey,
