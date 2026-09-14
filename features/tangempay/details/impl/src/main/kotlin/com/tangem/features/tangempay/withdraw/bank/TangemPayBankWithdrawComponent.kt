@@ -18,6 +18,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
@@ -33,6 +34,7 @@ import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTa
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
+import com.tangem.features.tangempay.withdraw.bank.success.TangemPayBankWithdrawSuccessComponent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
@@ -119,6 +121,14 @@ internal class TangemPayBankWithdrawComponent(
                 userWalletId = params.userWalletId,
                 draft = model.draft,
                 onOrderCreated = model::onOrderCreated,
+                onOrderSigned = ::onOrderSigned,
+            ),
+        )
+        TangemPayBankWithdrawInnerRoute.Success -> TangemPayBankWithdrawSuccessComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayBankWithdrawSuccessComponent.Params(
+                draft = model.draft,
+                onDoneClick = ::onFlowFinished,
             ),
         )
         is TangemPayBankWithdrawInnerRoute.Edit -> editChild(step = config, componentContext = componentContext)
@@ -205,6 +215,15 @@ internal class TangemPayBankWithdrawComponent(
     private fun recipientFields(): ImmutableList<BankWithdrawFormField> = BankWithdrawFormFields.recipientDetails(
         isBusiness = params.entry == BankWithdrawEntry.NewBusiness,
     )
+
+    private fun onOrderSigned() {
+        model.onOrderSigned()
+        stackNavigation.pushNew(TangemPayBankWithdrawInnerRoute.Success)
+    }
+
+    private fun onFlowFinished() {
+        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
+    }
 
     private fun onStepConfirmed(step: TangemPayBankWithdrawInnerRoute, returnToPreview: Boolean) {
         if (returnToPreview) {
