@@ -5,6 +5,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Tab
@@ -75,6 +77,7 @@ internal class PolymarketPositionsModel @Inject constructor(
             Tab.Active -> PolymarketPositionsTab.ACTIVE
             Tab.Finished -> PolymarketPositionsTab.FINISHED
         },
+        onPositionClick = if (tab == Tab.Active) ::openPosition else null,
     )
 
     private fun observeTab() {
@@ -84,5 +87,9 @@ internal class PolymarketPositionsModel @Inject constructor(
             .onEach { content -> uiState.update { if (it.selectedTab == tab) it.copy(content = content) else it } }
             .launchIn(modelScope)
             .saveIn(observation)
+    }
+
+    private fun openPosition(id: PolymarketPositionId) {
+        router.push(PolymarketRoute.PositionDetails(params.userWalletId, id))
     }
 }
