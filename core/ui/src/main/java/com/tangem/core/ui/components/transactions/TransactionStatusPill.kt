@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -189,6 +190,7 @@ private fun LeadingIcon(kind: PillKind, status: Status) {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun Status.backgroundColor(): Color = when (this) {
     is Status.Confirmed -> TangemTheme.colors3.bg.opaque.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
@@ -196,6 +198,7 @@ private fun Status.backgroundColor(): Color = when (this) {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun Status.labelColor(): Color = when (this) {
     is Status.Confirmed -> TangemTheme.colors3.text.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
@@ -203,6 +206,7 @@ private fun Status.labelColor(): Color = when (this) {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun Status.valueColor(): Color = when (this) {
     is Status.Confirmed -> TangemTheme.colors3.text.primary
     is Status.Unconfirmed -> TangemTheme.colors3.text.status.info
@@ -211,6 +215,7 @@ private fun Status.valueColor(): Color = when (this) {
 
 /** The leading icon always carries the label color of its state, so the pill reads as one piece. */
 @Composable
+@ReadOnlyComposable
 private fun Status.iconTint(): Color = when (this) {
     is Status.Confirmed -> TangemTheme.colors3.icon.secondary
     is Status.Unconfirmed -> TangemTheme.colors3.icon.status.info
