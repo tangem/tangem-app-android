@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -117,8 +118,8 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val refundCurrency = MutableStateFlow<CryptoCurrency?>(null)
 
     /**
-     * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap — the card is
-     * shown for any swap status, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
+     * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap that reached a
+     * terminal state, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
      */
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
 
@@ -183,17 +184,22 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * Activates the rating slot for an express swap. The rating key is the provider-side deal id when present, the
      * express id otherwise — same as the legacy surface, so ratings stay shared between the old and new UI.
 
+     *
+     * Only a completed deal gets the widget: the survey vendor caps API calls per day and a swap in flight
+     * is re-opened many times while the user watches its status. The flow keeps collecting, so the slot
+     * still appears by itself once a deal watched from this screen completes.
      */
     fun activateRatingForSwap() {
         if (isRatingActivationStarted) return
         isRatingActivationStarted = true
         txHistoryInfo
-            .mapNotNull { (it as? ExpressTx.Swap)?.tx }
-            .map { tx ->
+            .mapNotNull { it as? ExpressTx.Swap }
+            .filter { swap -> swap.tx.status.isRateable }
+            .map { swap ->
                 RatingKey(
-                    txExternalId = tx.externalTxId ?: tx.txId,
-                    providerName = tx.provider?.name.orEmpty(),
-                    txExternalUrl = tx.externalTxUrl.orEmpty(),
+                    txExternalId = swap.externalTxId ?: swap.txId,
+                    providerName = swap.provider?.name.orEmpty(),
+                    txExternalUrl = swap.externalTxUrl.orEmpty(),
                 )
             }
             .distinctUntilChanged()
