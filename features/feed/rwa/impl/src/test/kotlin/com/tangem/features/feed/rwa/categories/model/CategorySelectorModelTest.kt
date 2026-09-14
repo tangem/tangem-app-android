@@ -14,6 +14,7 @@ import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent.ModelCallback
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorSectionUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
+import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -33,10 +34,12 @@ internal class CategorySelectorModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase = mockk()
+    private val userCountryResolver: UserCountryResolver = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, getCoinCategoriesUseCase)
+        clearMocks(router, getCoinCategoriesUseCase, userCountryResolver)
+        coEvery { userCountryResolver.resolve() } returns "DE"
     }
 
     @Test
@@ -195,7 +198,7 @@ internal class CategorySelectorModelTest {
     @Test
     fun `GIVEN failing categories request WHEN model created THEN error state offers a retry`() = runTest {
         // Arrange
-        coEvery { getCoinCategoriesUseCase() } returns Either.Left(IllegalStateException("no categories"))
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Left(IllegalStateException("no categories"))
 
         // Act
         val model = createModel(testScope = this)
@@ -217,7 +220,7 @@ internal class CategorySelectorModelTest {
     }
 
     private fun stubCategories(vararg categories: CoinCategory) {
-        coEvery { getCoinCategoriesUseCase() } returns Either.Right(categories.toList())
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(categories.toList())
     }
 
     @Test
@@ -323,6 +326,7 @@ internal class CategorySelectorModelTest {
             ),
             router = router,
             getCoinCategoriesUseCase = getCoinCategoriesUseCase,
+            userCountryResolver = userCountryResolver,
         )
     }
 
@@ -358,7 +362,12 @@ internal class CategorySelectorModelTest {
 
     private companion object {
 
-        val umbrella = createCategory(id = "1", code = "real-world-assets", displayName = "Real world assets")
+        val umbrella = createCategory(
+            id = "1",
+            code = "real-world-assets",
+            displayName = "Real world assets",
+            isVisible = false,
+        )
 
         val stocks = createCategory(
             id = "2",

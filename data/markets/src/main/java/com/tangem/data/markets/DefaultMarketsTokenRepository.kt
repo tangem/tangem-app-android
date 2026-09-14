@@ -27,7 +27,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
-import com.tangem.store.datasource.markets.models.response.CoinCategoriesResponse
 import com.tangem.store.datasource.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -43,7 +42,6 @@ internal class DefaultMarketsTokenRepository(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
-    private val coinCategoriesStore: RuntimeStateStore<List<CoinCategoriesResponse.Category>>,
     private val networkFactory: NetworkFactory,
     excludedBlockchains: ExcludedBlockchains,
 ) : MarketsTokenRepository {
@@ -299,15 +297,11 @@ internal class DefaultMarketsTokenRepository(
         }
     }
 
-    override suspend fun getCoinCategories(): List<CoinCategory> {
+    override suspend fun getCoinCategories(country: String?): List<CoinCategory> {
         return withContext(dispatcherProvider.io) {
-            cacheRegistry.invokeOnExpire(key = "coins/categories", skipCache = false) {
-                val response = marketsApi.getCoinCategories().getOrThrow()
+            val response = marketsApi.getCoinCategories(country = country).getOrThrow()
 
-                coinCategoriesStore.store(value = response.categories)
-            }
-
-            CoinCategoryConverter.convertList(input = coinCategoriesStore.get().value)
+            CoinCategoryConverter.convertList(input = response.categories)
         }
     }
 

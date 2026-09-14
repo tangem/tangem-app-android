@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.search)
+    implementation(projects.domain.settings)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
 
