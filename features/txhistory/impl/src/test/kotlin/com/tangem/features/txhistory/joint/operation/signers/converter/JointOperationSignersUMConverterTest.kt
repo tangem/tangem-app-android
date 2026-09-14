@@ -20,7 +20,7 @@ internal class JointOperationSignersUMConverterTest {
 
         // Assert
         assertThat(actual.statusResId()).isEqualTo(CoreUiR.string.joint_operation_created_at)
-        assertThat(actual.isAnswered).isTrue()
+        assertThat(actual.mark).isEqualTo(JointOperationSignersUM.Mark.Signed)
     }
 
     @Test
@@ -30,17 +30,27 @@ internal class JointOperationSignersUMConverterTest {
 
         // Assert
         assertThat(actual.statusResId()).isEqualTo(CoreUiR.string.joint_operation_signed_at)
-        assertThat(actual.isAnswered).isTrue()
+        assertThat(actual.mark).isEqualTo(JointOperationSignersUM.Mark.Signed)
     }
 
     @Test
-    fun `GIVEN a member who declined WHEN converted THEN the declined status carries no mark`() {
+    fun `GIVEN a member who declined WHEN converted THEN the declined status is dated and marked declined`() {
         // Act
         val actual = convert(signer(answer = Answer.DECLINED, at = AT))
 
         // Assert
+        assertThat(actual.statusResId()).isEqualTo(CoreUiR.string.joint_operation_declined_at)
+        assertThat(actual.mark).isEqualTo(JointOperationSignersUM.Mark.Declined)
+    }
+
+    @Test
+    fun `GIVEN a member who declined without a time WHEN converted THEN the status is undated`() {
+        // Act
+        val actual = convert(signer(answer = Answer.DECLINED, at = null))
+
+        // Assert
         assertThat(actual.statusResId()).isEqualTo(CoreUiR.string.joint_operation_declined)
-        assertThat(actual.isAnswered).isFalse()
+        assertThat(actual.mark).isEqualTo(JointOperationSignersUM.Mark.Declined)
     }
 
     @Test
@@ -50,7 +60,7 @@ internal class JointOperationSignersUMConverterTest {
 
         // Assert
         assertThat(actual.statusResId()).isEqualTo(CoreUiR.string.joint_operation_waiting_to_sign)
-        assertThat(actual.isAnswered).isFalse()
+        assertThat(actual.mark).isNull()
     }
 
     @Test
@@ -60,7 +70,7 @@ internal class JointOperationSignersUMConverterTest {
 
         // Assert
         assertThat(actual.statusText).isEqualTo(TextReference.EMPTY)
-        assertThat(actual.isAnswered).isTrue()
+        assertThat(actual.mark).isEqualTo(JointOperationSignersUM.Mark.Signed)
     }
 
     @Test
