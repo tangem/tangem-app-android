@@ -20,6 +20,7 @@ import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.categories.model.MarketCategorySelectorModel
 import com.tangem.features.feed.crypto.categories.ui.MarketCategorySelectorContent
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.expandingSheetClick
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -55,7 +56,7 @@ internal class MarketCategorySelectorComponent @AssistedInject constructor(
                 modifier = Modifier.weight(1f),
             )
             TangemButton.Close(
-                onClick = router::pop,
+                onClick = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() },
             )
         }
     }
