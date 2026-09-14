@@ -15,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
 import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -60,6 +61,7 @@ internal abstract class DetailsModelTestBase {
     protected val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk()
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
+    protected val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     protected val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase = mockk()
     protected val virtualAccountFeatureToggles: VirtualAccountFeatureToggles = mockk()
 
@@ -82,6 +84,8 @@ internal abstract class DetailsModelTestBase {
         every { appInfoProvider.appVersion } returns "1.2.3"
         every { appInfoProvider.appVersionCode } returns 456
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
+        coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
+        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { getVirtualAccountEligibilityUseCase(any()) } returns VirtualAccountEligibility.NotAvailable
         every { virtualAccountFeatureToggles.isVirtualAccountsEnabled } returns true
 
@@ -120,6 +124,7 @@ internal abstract class DetailsModelTestBase {
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
         getVirtualAccountEligibilityUseCase = getVirtualAccountEligibilityUseCase,
         virtualAccountFeatureToggles = virtualAccountFeatureToggles,
     )
