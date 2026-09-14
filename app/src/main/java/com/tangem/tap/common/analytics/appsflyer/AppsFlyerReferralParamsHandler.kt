@@ -21,11 +21,11 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
-    private val isHandledByUnifiedDeepLinking = AtomicBoolean(false)
+    private val isDeferredDeepLinkHandled = AtomicBoolean(false)
 
     fun handle(params: Map<String?, Any?>) {
-        if (isHandledByUnifiedDeepLinking.get()) {
-            TangemLogger.i("Skipping AppsFlyer conversion data: the deep link is already handled by UDL")
+        if (isDeferredDeepLinkHandled.get()) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: the deferred deep link is already handled by UDL")
             return
         }
 
@@ -42,7 +42,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     fun handleDeeplink(deepLink: DeepLink) {
-        isHandledByUnifiedDeepLinking.set(true)
+        if (deepLink.isDeferred == true) isDeferredDeepLinkHandled.set(true)
 
         handle(
             deepLinkValue = deepLink.deepLinkValue,
