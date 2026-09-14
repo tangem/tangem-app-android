@@ -207,6 +207,14 @@ abstract class BaseTestCase : TestCase(
         composeTestRule.waitUntil(timeoutMillis = timeoutMillis) { runCatching(block).isSuccess }
     }
 
+    /**
+     * Like [awaitSuccess], but on timeout runs [block] once more so the failure carries its own assertion
+     * message ("expected X, was Y") instead of a bare `ComposeTimeoutException`.
+     */
+    fun awaitAssert(timeoutMillis: Long = WAIT_UNTIL_TIMEOUT, block: () -> Unit) {
+        runCatching { awaitSuccess(timeoutMillis, block) }.onFailure { block() }
+    }
+
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         // Toggle states can be set from code here — base defaults for the UI-test build. Launch-time
         // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
@@ -214,6 +222,9 @@ abstract class BaseTestCase : TestCase(
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
             "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
+            // Picks the transaction endpoints the Tangem Pay history tests assert on:
+            // on -> /bff-v2/v1/transactions, off -> the legacy /bff-v2/v1/customer/transactions.
+            "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED" to true,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty
