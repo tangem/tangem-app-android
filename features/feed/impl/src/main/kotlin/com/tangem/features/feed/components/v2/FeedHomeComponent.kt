@@ -24,6 +24,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.onEach
 internal class FeedHomeComponent(
     context: AppComponentContext,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
     analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedScreenComponent, AppComponentContext by context {
 
@@ -53,6 +55,7 @@ internal class FeedHomeComponent(
     private val topBlocksComponent = FeedTopBlocksComponent(
         context = child("feedTopBlocks"),
         portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        addAccountTypeComponentFactory = addAccountTypeComponentFactory,
     )
 
     private val pages: Value<ChildPages<FeedTabId, FeedTabComponent>> = childPages(
