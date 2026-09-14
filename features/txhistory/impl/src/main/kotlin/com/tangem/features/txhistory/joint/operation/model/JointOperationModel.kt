@@ -1,5 +1,8 @@
 package com.tangem.features.txhistory.joint.operation.model
 
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,6 +11,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
+import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +37,8 @@ internal class JointOperationModel @Inject constructor(
 ) : Model() {
 
     val params: JointOperationComponent.Params = paramsContainer.require()
+
+    val stackNavigation = StackNavigation<JointOperationRoutes>()
 
     private val observed: SharedFlow<JointOperationState?> = delegate
         .observe(
@@ -81,6 +87,14 @@ internal class JointOperationModel @Inject constructor(
                 isSigning.value = false
             }
         }
+    }
+
+    fun onSignersClick() {
+        stackNavigation.pushNew(JointOperationRoutes.Signers)
+    }
+
+    fun onBackClick() {
+        stackNavigation.pop()
     }
 
     fun onCopyRecipientClick() {
