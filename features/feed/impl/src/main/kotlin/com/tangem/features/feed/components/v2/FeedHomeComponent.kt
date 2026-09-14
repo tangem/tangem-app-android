@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.children.ChildNavState
@@ -96,7 +95,7 @@ internal class FeedHomeComponent(
             onExpandSheet = onExpandSheet,
             modifier = modifier,
             topBlocks = { blockModifier -> topBlocksComponent.Content(modifier = blockModifier) },
-            tabContent = { tabModifier ->
+            tabContent = { tabModifier, tabContentPadding ->
                 AnimatedContent(
                     targetState = pagesState.selectedIndex,
                     transitionSpec = {
@@ -115,8 +114,7 @@ internal class FeedHomeComponent(
                 ) { pageIndex ->
                     pagesState.items.getOrNull(pageIndex)?.instance?.Content(
                         bottomSheetState = bottomSheetState,
-                        // the feed chrome (top blocks + tab row) is laid out above, not overlaid
-                        contentPadding = PaddingValues(0.dp),
+                        contentPadding = tabContentPadding,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

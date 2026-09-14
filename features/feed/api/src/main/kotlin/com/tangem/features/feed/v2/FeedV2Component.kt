@@ -10,12 +10,20 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Feed content of the Shtorka 2.0
  */
 @Stable
 interface FeedV2Component {
+
+    /**
+     * Whether the active feed screen keeps the hosting shtorka's blurred glass material at
+     * partial detents. Only the feed home and the search keep the glass; a screen pushed over
+     * them (news details, token details, …) renders the card as a flat opaque surface instead.
+     */
+    val isSheetBlurEnabled: StateFlow<Boolean>
 
     /**
      * Content of the host's pinned sheet header: the feed's search bar, or the active feed
