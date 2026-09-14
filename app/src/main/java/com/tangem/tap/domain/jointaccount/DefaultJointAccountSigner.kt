@@ -80,6 +80,7 @@ internal class DefaultJointAccountSigner @Inject constructor(
         val result = tangemSdkManager.runTaskAsync(
             runnable = signTaskFactory.create(coroutineScope = this, input = input),
             preflightReadFilter = UserWalletIdPreflightReadFilter(expectedUserWallet = userWallet),
+            registerColdWallet = false,
         )
 
         when (result) {
