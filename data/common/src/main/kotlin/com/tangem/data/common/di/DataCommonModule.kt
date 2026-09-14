@@ -17,11 +17,13 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.retryer.RetryerPool
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,11 +57,13 @@ internal object DataCommonModule {
         walletsRepository: WalletsRepository,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
+        jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
     ): UserTokensResponseAddressesEnricher {
         return UserTokensResponseAddressesEnricher(
             walletsRepository = walletsRepository,
             walletManagersFacade = walletManagersFacade,
             dispatchers = dispatchers,
+            jointAccountSafeAddressResolver = jointAccountSafeAddressResolver,
         )
     }
 
