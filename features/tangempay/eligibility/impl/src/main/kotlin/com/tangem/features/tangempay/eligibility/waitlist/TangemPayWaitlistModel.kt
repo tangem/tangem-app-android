@@ -1,12 +1,16 @@
 package com.tangem.features.tangempay.eligibility.waitlist
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.pay.model.TangemPayWaitlistEntry
 import com.tangem.domain.pay.usecase.JoinTangemPayWaitlistUseCase
 import com.tangem.domain.visa.error.VisaApiError
@@ -23,6 +27,8 @@ import javax.inject.Inject
 @ModelScoped
 internal class TangemPayWaitlistModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val router: Router,
+    private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val joinWaitlistUseCase: JoinTangemPayWaitlistUseCase,
     paramsContainer: ParamsContainer,
@@ -45,7 +51,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
             state.copy(
                 email = email,
                 emailError = null,
-                isSaveEnabled = isEmailValid(email),
+                isSaveEnabled = email.isNotBlank(),
             )
         }
     }
@@ -72,13 +78,19 @@ internal class TangemPayWaitlistModel @Inject constructor(
         val state = uiState.value
         if (state.isSaveInProgress) return
 
+        val email = state.email.trim()
+        if (!isEmailValid(email)) {
+            uiState.update { it.copy(emailError = resourceReference(R.string.common_error_email_incorrect_format)) }
+            return
+        }
+
         uiState.update { it.copy(isSaveInProgress = true, isSaveEnabled = false, emailError = null) }
 
         modelScope.launch {
             joinWaitlistUseCase(
                 userWalletId = params.userWalletId,
                 entry = TangemPayWaitlistEntry(
-                    email = state.email.trim(),
+                    email = email,
                     product = params.product,
                     countryCode = params.countryCode,
                     regionCode = params.regionCode,
@@ -86,16 +98,24 @@ internal class TangemPayWaitlistModel @Inject constructor(
                 ),
                 idempotencyKey = idempotencyKey,
             )
-                .onRight { dismiss() }
+                .onRight { onJoined() }
                 .onLeft(::onJoinFailed)
         }
+    }
+
+    private fun onJoined() {
+        dismiss()
+        uiMessageSender.send(
+            SnackbarMessage(message = resourceReference(R.string.tangempay_waitlist_joined_message)),
+        )
+        router.replaceAll(AppRoute.Wallet)
     }
 
     private fun onJoinFailed(error: VisaApiError) {
         uiState.update { state ->
             state.copy(
                 isSaveInProgress = false,
-                isSaveEnabled = isEmailValid(state.email),
+                isSaveEnabled = state.email.isNotBlank(),
                 emailError = when (error) {
                     is VisaApiError.WaitlistInvalidEmail -> {
                         resourceReference(R.string.common_error_email_incorrect_format)
