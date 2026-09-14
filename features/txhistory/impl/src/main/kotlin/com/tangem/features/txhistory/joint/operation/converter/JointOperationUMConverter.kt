@@ -29,6 +29,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointOperationUMConverter(
     private val currency: CryptoCurrency,
     private val onSignClick: () -> Unit,
+    private val onSignersClick: () -> Unit,
     private val onCopyRecipientClick: () -> Unit,
 ) : Converter<JointOperationUMConverter.Input, TxHistoryDetailsUM.SingleAsset?> {
 
@@ -58,7 +59,7 @@ internal class JointOperationUMConverter(
                     formatArgs = wrappedList(state.collected, state.membersCount),
                 ),
                 progress = SignatureProgressUM(collected = state.collected, total = state.membersCount),
-                onInfoClick = null,
+                onInfoClick = onSignersClick,
             ),
             cosignAction = action(state = state, isSigning = value.isSigning, hasAnswered = value.hasAnswered),
         )
