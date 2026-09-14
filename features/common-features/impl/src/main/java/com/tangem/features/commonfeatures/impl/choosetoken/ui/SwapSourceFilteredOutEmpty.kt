@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +22,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.SwapSelectTokenScreenTestTags
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.features.commonfeatures.impl.R
 
@@ -57,7 +59,9 @@ internal fun SwapSourceFilteredOutEmpty(onSeeAllClick: () -> Unit, modifier: Mod
                 )
             }
             Text(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(SwapSelectTokenScreenTestTags.FILTERED_OUT_EMPTY_MESSAGE),
                 text = resourceReference(R.string.swap_token_selector_empty_filtered_message).resolveReference(),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.primary,
@@ -68,6 +72,7 @@ internal fun SwapSourceFilteredOutEmpty(onSeeAllClick: () -> Unit, modifier: Mod
             onClick = onSeeAllClick,
             text = resourceReference(R.string.common_see_all),
             size = TangemButtonSize.X9,
+            modifier = Modifier.testTag(SwapSelectTokenScreenTestTags.FILTERED_OUT_SEE_ALL_BUTTON),
         )
     }
 }

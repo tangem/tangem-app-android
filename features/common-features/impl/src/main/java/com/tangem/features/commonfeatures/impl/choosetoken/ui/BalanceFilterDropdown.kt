@@ -11,6 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,7 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.SwapSelectTokenScreenTestTags
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter
 import com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilterUM
 
@@ -36,6 +38,7 @@ internal fun BalanceFilterDropdown(um: BalanceFilterUM, modifier: Modifier = Mod
                 label = um.selected.label,
                 onClick = { isExpanded = true },
             ),
+            modifier = Modifier.testTag(SwapSelectTokenScreenTestTags.BALANCE_FILTER_CHIP),
             variant = TangemFilterItem.Variant.Transparent,
         )
         TangemContextMenu(expanded = isExpanded, onDismissRequest = { isExpanded = false }) {
@@ -47,6 +50,7 @@ internal fun BalanceFilterDropdown(um: BalanceFilterUM, modifier: Modifier = Mod
                         modifier = Modifier
                             .fillMaxWidth()
                             .widthIn(238.dp)
+                            .testTag(SwapSelectTokenScreenTestTags.BALANCE_FILTER_OPTION)
                             .clickableSingle(
                                 onClick = {
                                     um.onOptionSelected(filter)
