@@ -21,12 +21,6 @@ import com.tangem.features.feed.v2.FeedV2Component
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * Slack below which the row is dropped instead of squeezed. A fully collapsed shtorka leaves the feed no
- * room at all, while the semi-open detent leaves a full [FeedV2Component.TabRowHeight].
- */
-private val MinRoom = 8.dp
-
 /** One entry of the feed's tab row. */
 @Immutable
 data class FeedTabUM(val id: String, val title: TextReference, val icon: ImageVector)
@@ -59,7 +53,7 @@ fun FeedTabRow(
         variant = TangemTabItem.Variant.Material,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         modifier = modifier
-            .dropWhenNoRoom(minRoom = MinRoom)
+            .dropWhenNoRoom(minRoom = 8.dp)
             .fillMaxWidth()
             .height(FeedV2Component.TabRowHeight),
     )
