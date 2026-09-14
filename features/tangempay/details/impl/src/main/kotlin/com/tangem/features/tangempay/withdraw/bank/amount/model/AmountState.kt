@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.withdraw.bank.amount.model
 
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.pay.model.bankofframp.AmountLimits
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
@@ -32,7 +31,11 @@ internal data class AmountState(
         val amount = displayValue.parseBigDecimalOrNull()
         return AmountSelection(
             currency = options.currency,
-            limits = options.limits,
+            minAmount = options.minAmount,
+            maxAmount = BankWithdrawAmountValidator.maxAmount(
+                balance = source.fiatBalance,
+                fee = destination.fee.amount,
+            ),
             sources = options.sources,
             destinations = options.destinations,
             source = source,
@@ -41,7 +44,7 @@ internal data class AmountState(
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
                 amount = amount,
-                limits = options.limits,
+                minAmount = options.minAmount,
                 balance = source.fiatBalance,
                 fee = destination.fee.amount,
             ),
@@ -59,7 +62,8 @@ internal data class AmountState(
 /** The prepared options narrowed down to what this screen shows and what Continue would submit. */
 internal data class AmountSelection(
     val currency: Currency,
-    val limits: AmountLimits,
+    val minAmount: BigDecimal,
+    val maxAmount: BigDecimal,
     val sources: ImmutableList<BankWithdrawSource>,
     val destinations: ImmutableList<OfframpDestination>,
     val source: BankWithdrawSource,

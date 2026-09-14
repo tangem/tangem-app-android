@@ -6,7 +6,6 @@ import java.math.BigDecimal
 data class BankOfframpOptions(
     val sources: List<OfframpSource>,
     val destinations: List<OfframpDestination>,
-    val amountLimits: AmountLimits,
 )
 
 data class OfframpSource(
@@ -36,10 +35,4 @@ data class OfframpFee(
 data class OfframpEta(
     val minDays: Int,
     val maxDays: Int,
-)
-
-/** USD limits for a single withdrawal; the backend contract does not carry them yet, so the mock seeds them. */
-data class AmountLimits(
-    val min: BigDecimal,
-    val max: BigDecimal,
 )

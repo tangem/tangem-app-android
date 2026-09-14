@@ -7,7 +7,7 @@ import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
-import com.tangem.domain.pay.repository.BankOfframpRepository
+import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /** Polls the order until the backend asks for a card signature and returns the payload hash to sign. */
 class AwaitBankOfframpSignatureUseCase(
-    private val repository: BankOfframpRepository,
+    private val repository: BankOfframpOrderRepository,
 ) {
 
     suspend operator fun invoke(

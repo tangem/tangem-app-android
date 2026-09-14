@@ -79,11 +79,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
 
     private fun onMaxClick() {
         val selection = currentSelection()
-        val max = BankWithdrawAmountValidator.maxAmount(
-            limits = selection.limits,
-            balance = selection.source.fiatBalance,
-            fee = selection.destination.fee.amount,
-        )
+        val max = selection.maxAmount
         val value = if (max.isZero()) {
             ""
         } else {

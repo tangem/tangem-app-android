@@ -22,37 +22,15 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class MockBankOfframpRepositoryTest {
+internal class MockBankOfframpOrderRepositoryTest {
 
     private var nowMillis = 1_000_000L
-    private lateinit var repository: MockBankOfframpRepository
+    private lateinit var repository: MockBankOfframpOrderRepository
 
     @BeforeEach
     fun createRepository() {
         nowMillis = 1_000_000L
-        repository = MockBankOfframpRepository(currentTimeMillis = { nowMillis })
-    }
-
-    @Test
-    fun `GIVEN fresh repository WHEN getBankAccounts THEN five seeded recipients`() = runTest {
-        // Act
-        val actual = repository.getBankAccounts(WALLET_ID)
-
-        // Assert
-        val accounts = actual.getOrNull()
-        assertThat(accounts).hasSize(5)
-        assertThat(accounts?.map { it.displayName }).contains("Saburo Arasaka")
-    }
-
-    @Test
-    fun `GIVEN fresh repository WHEN getOptions THEN four USDC sources and two rails`() = runTest {
-        // Act
-        val actual = repository.getOptions(WALLET_ID)
-
-        // Assert
-        val options = actual.getOrNull()
-        assertThat(options?.sources?.map { it.chainId }).containsExactly(137L, 84532L, 84532L, 42161L).inOrder()
-        assertThat(options?.destinations?.map { it.rail }).containsExactly(BankRail.ACH, BankRail.WIRE).inOrder()
+        repository = MockBankOfframpOrderRepository(currentTimeMillis = { nowMillis })
     }
 
     @Test
@@ -67,29 +45,28 @@ internal class MockBankOfframpRepositoryTest {
     }
 
     @Test
-    fun `GIVEN new recipient WHEN createOrder THEN recipient saved with derived display name`() = runTest {
+    fun `GIVEN new recipient WHEN createOrder THEN no bank account id`() = runTest {
         // Arrange
         val details = details(beneficiary = Beneficiary.Individual(firstName = "Ada", lastName = "Lovelace"))
 
         // Act
-        val created = repository.createOrder(WALLET_ID, request(recipient = BankOfframpRecipient.New(details)), KEY)
-        val accounts = repository.getBankAccounts(WALLET_ID)
+        val actual = repository.createOrder(WALLET_ID, request(recipient = BankOfframpRecipient.New(details)), KEY)
 
         // Assert
-        val result = requireNotNull(created.getOrNull())
-        val saved = accounts.getOrNull()?.single { it.id == result.bankAccountId }
-        assertThat(saved?.displayName).isEqualTo("Ada Lovelace")
-        assertThat(saved?.details).isEqualTo(details)
+        val result = requireNotNull(actual.getOrNull())
+        assertThat(result.orderId).isNotEmpty()
+        assertThat(result.bankAccountId).isNull()
     }
 
     @Test
-    fun `GIVEN unknown saved recipient WHEN createOrder THEN validation error`() = runTest {
-        // Act
-        val actual = repository.createOrder(WALLET_ID, request(recipient = BankOfframpRecipient.Saved("nope")), KEY)
+    fun `GIVEN saved recipient the backend knows nothing about WHEN createOrder THEN order is still created`() =
+        runTest {
+            // Act
+            val actual = repository.createOrder(WALLET_ID, request(recipient = BankOfframpRecipient.Saved("nope")), KEY)
 
-        // Assert
-        assertThat(actual).isEqualTo(BankOfframpError.Validation.left())
-    }
+            // Assert
+            assertThat(actual.getOrNull()?.orderId).isNotEmpty()
+        }
 
     @ParameterizedTest
     @ProvideTestModels
