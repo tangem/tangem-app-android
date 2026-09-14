@@ -10,6 +10,7 @@ import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.model.transformer.CategorySelectorTransformer
+import com.tangem.features.feed.rwa.model.UserCountryResolver
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -32,6 +33,7 @@ internal class CategorySelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
+    private val userCountryResolver: UserCountryResolver,
 ) : Model() {
 
     private val params = paramsContainer.require<CategorySelectorRoute>()
@@ -50,14 +52,16 @@ internal class CategorySelectorModel @Inject constructor(
         uiState.update { CategorySelectorUM.Loading }
 
         modelScope.launch {
-            getCoinCategoriesUseCase().fold(
+            getCoinCategoriesUseCase(country = userCountryResolver.resolve()).fold(
                 ifLeft = {
                     uiState.update { CategorySelectorUM.Error(onRetry = ::loadCategories) }
                 },
                 ifRight = { loaded ->
                     categories = loaded
-                        .filter { it.isVisible }
                         .filterNot { it.code == ReservedCategoryCodes.FEATURED_ASSETS }
+                        // the umbrella arrives invisible, yet it is the row that clears the filter —
+                        // dropping it would leave the user no way back to "All"
+                        .filter { it.isVisible || it.code == ReservedCategoryCodes.REAL_WORLD_ASSETS }
                         .sortedBy { it.displayOrder }
 
                     updateState(selection = params.categorySelection, isEdited = false)
