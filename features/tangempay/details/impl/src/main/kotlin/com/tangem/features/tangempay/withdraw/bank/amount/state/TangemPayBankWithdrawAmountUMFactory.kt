@@ -59,11 +59,11 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         Result.Empty,
         Result.Valid,
         -> null
-        Result.OutOfRange -> resourceReference(
+        Result.BelowMinimum -> resourceReference(
             R.string.tangempay_withdraw_bank_amount_error_range,
             wrappedList(
-                selection.limits.min.formatFiat(selection.currency),
-                selection.limits.max.formatFiat(selection.currency),
+                selection.minAmount.formatFiat(selection.currency),
+                selection.maxAmount.formatFiat(selection.currency),
             ),
         )
         Result.NotEnoughFunds -> resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds)

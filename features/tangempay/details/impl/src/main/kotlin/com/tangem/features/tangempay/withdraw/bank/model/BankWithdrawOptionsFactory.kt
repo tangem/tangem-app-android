@@ -6,10 +6,14 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 import java.util.Currency
 
 /** Turns the backend's off-ramp options and the payment account's networks into the wizard's [BankWithdrawOptions]. */
 internal object BankWithdrawOptionsFactory {
+
+    /** The off-ramp options carry no lower bound, so the withdrawal minimum agreed with the backend lives here. */
+    private val MIN_AMOUNT = BigDecimal("1.00")
 
     /**
      * Null when a bank withdrawal cannot start: the off-ramp offers no rail, the account holds none of the tokens it
@@ -28,7 +32,7 @@ internal object BankWithdrawOptionsFactory {
         return BankWithdrawOptions(
             sources = sources.toImmutableList(),
             destinations = destinations.toImmutableList(),
-            limits = options.amountLimits,
+            minAmount = MIN_AMOUNT,
             currency = currency,
         )
     }
