@@ -5,6 +5,13 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.logging.TangemLogger
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkObject
+import io.mockk.slot
+import io.mockk.unmockkObject
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -65,6 +72,25 @@ internal class JointOperationCreateErrorConverterTest {
                 expected = JointOperationCreateError.Failed(cause = notFound),
             ),
         )
+    }
+
+    /**
+     * A moved nonce and a risen gas price share one error and one text by decision, so which of them the
+     * backend reported is knowable afterwards only from the log.
+     */
+    @Test
+    fun `GIVEN a moved network state WHEN convert THEN the reported marker is logged`() {
+        // Arrange
+        mockkObject(TangemLogger)
+        val message = slot<String>()
+        every { TangemLogger.e(capture(message), any()) } just Runs
+
+        // Act
+        converter.convert(httpException(code = Code.BAD_REQUEST, errorBody = "GAS_PRICE_TOO_LOW"))
+
+        // Assert
+        assertThat(message.captured).contains("GAS_PRICE_TOO_LOW")
+        unmockkObject(TangemLogger)
     }
 
     @Test
