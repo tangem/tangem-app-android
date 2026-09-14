@@ -4,18 +4,21 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
@@ -41,6 +44,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingStarter: TangemPayOnboardingStarter,
+    private val featureToggles: TangemPayFeatureToggles,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -125,6 +129,10 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
+        if (featureToggles.isResidencyStepEnabled) {
+            router.push(AppRoute.TangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT))
+            return
+        }
         if (params is TangemPayOnboardingComponent.Params.Deeplink ||
             params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
         ) {

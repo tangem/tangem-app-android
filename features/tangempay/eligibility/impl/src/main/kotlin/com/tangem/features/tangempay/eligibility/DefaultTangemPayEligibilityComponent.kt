@@ -25,6 +25,7 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: TangemPayEligibilityComponent.Params,
     private val waitlistComponentFactory: TangemPayWaitlistComponent.Factory,
+    private val walletSelectorComponentFactory: TangemPayWalletSelectorComponent.Factory,
 ) : TangemPayEligibilityComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<EligibilityInnerRoute>()
@@ -59,11 +60,12 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
         is EligibilityInnerRoute.Residency -> ResidencyListComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
+            walletSelectorComponentFactory = walletSelectorComponentFactory,
         )
         is EligibilityInnerRoute.RegionUnavailable -> RegionUnavailableComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = RegionUnavailableComponent.Params(
-                userWalletId = params.userWalletId,
+                userWalletId = null,
                 product = params.product,
                 countryCode = route.countryCode,
                 regionCode = route.regionCode,

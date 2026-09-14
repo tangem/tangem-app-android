@@ -56,7 +56,7 @@ internal class RegionUnavailableComponent(
     }
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId?,
         val product: TangemPayProduct,
         val countryCode: String,
         val regionCode: String?,
