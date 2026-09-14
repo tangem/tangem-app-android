@@ -57,7 +57,7 @@ fun FeedTabRow(
     TangemTabNavigation(
         tabs = rememberTabItems(tabs = tabs, selectedTabIndex = selectedTabIndex, onTabClick = onTabSelect),
         variant = TangemTabItem.Variant.Material,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         modifier = modifier
             .dropWhenNoRoom(minRoom = MinRoom)
             .fillMaxWidth()

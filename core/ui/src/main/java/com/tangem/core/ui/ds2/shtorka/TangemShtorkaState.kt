@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -69,6 +70,18 @@ class TangemShtorkaState internal constructor(
 
     /** 1 at the collapsed detent, 0 at the next one up; drives the capsule corners. */
     internal var collapseProgress: Float = 0f
+
+    /** Width ratio of the card to its [TangemShtorka.Detent.Full] width, written during layout. */
+    internal var chromeScale: Float = 1f
+
+    /** Scale of the content slot — equals [chromeScale] except on the collapse leg, where it freezes. */
+    internal var contentScale: Float = 1f
+
+    /** Size of the content slot in card coordinates, written during layout; freezes on the collapse leg. */
+    internal var contentCardSize: IntSize = IntSize.Zero
+
+    /** 1 at the detent above the collapsed one, 0 at the collapsed detent; fades the content slot. */
+    internal var contentAlpha: Float = 1f
 
     /** Whether a settle animation is running — used to grab the shtorka mid-flight. */
     internal var isSettling: Boolean by mutableStateOf(false)
