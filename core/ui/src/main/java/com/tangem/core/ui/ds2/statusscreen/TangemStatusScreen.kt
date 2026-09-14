@@ -25,10 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
@@ -36,10 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
+import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -48,7 +42,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.TangemColorPalette
 import com.tangem.core.ui.test.StatusScreenTestTags
 import com.tangem.core.ui.utils.rememberScreenCornerRadius
 
@@ -94,9 +87,10 @@ fun TangemStatusScreen(
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary),
     ) {
-        AmbientBackground(
-            variant = variant,
-            entrance = entrance,
+        TangemAmbientBackground(
+            variant = variant.ambientVariant,
+            placement = TangemAmbientBackground.Placement.Screen,
+            progress = { entrance.segment(startMs = 1000, endMs = 1400, easing = SymmetricEase) },
             modifier = Modifier.matchParentSize(),
         )
         TangemGlowRing(
@@ -232,102 +226,32 @@ private fun Header(
     }
 }
 
-@Composable
-private fun AmbientBackground(
-    variant: TangemStatusScreen.Variant,
-    entrance: EntranceProgress,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        AmbientCircle(
-            color = variant.ambientFarColor,
-            maxAlpha = 0.1f,
-            blurRadius = 256.dp,
-            alignEnd = false,
-            center = DpOffset(x = 116.dp, y = 116.dp),
-            entrance = entrance,
-            modifier = Modifier.matchParentSize(),
-        )
-        AmbientCircle(
-            color = variant.ambientNearColor,
-            maxAlpha = 0.4f,
-            blurRadius = 192.dp,
-            alignEnd = true,
-            center = DpOffset(x = 32.dp, y = 32.dp),
-            entrance = entrance,
-            modifier = Modifier.matchParentSize(),
-        )
-    }
-}
-
-@Suppress("LongParameterList")
-@Composable
-private fun AmbientCircle(
-    color: Color,
-    maxAlpha: Float,
-    blurRadius: Dp,
-    alignEnd: Boolean,
-    center: DpOffset,
-    entrance: EntranceProgress,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.drawBehind {
-            val settled = entrance.segment(startMs = 1000, endMs = 1400, easing = SymmetricEase)
-            val scale = lerp(start = 0.4f, stop = 1f, fraction = settled)
-            val radius = (360.dp.toPx() / 2f + blurRadius.toPx()) * scale
-            val origin = Offset(
-                x = if (alignEnd) size.width + center.x.toPx() else center.x.toPx(),
-                y = center.y.toPx(),
-            )
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(color.copy(alpha = maxAlpha * settled), Color.Transparent),
-                    center = origin,
-                    radius = radius,
-                ),
-                radius = radius,
-                center = origin,
-            )
-        },
-    )
-}
-
 object TangemStatusScreen {
 
-    /**
-     * Color mood of the screen. The ambient colors are palette primitives rather than semantic tokens:
-     * the DS figma pins them to `palette/<hue>/70` and `/40` identically in both themes.
-     */
+    /** Color mood of the screen — picks the ambient light's hue and the glow ring's variant. */
     enum class Variant(
         internal val glowVariant: TangemGlowRing.Variant,
-        internal val ambientFarColor: Color,
-        internal val ambientNearColor: Color,
+        internal val ambientVariant: TangemAmbientBackground.Variant,
     ) {
         Neutral(
             glowVariant = TangemGlowRing.Variant.Magic,
-            ambientFarColor = TangemColorPalette.Neutral.`70`,
-            ambientNearColor = TangemColorPalette.Neutral.`40`,
+            ambientVariant = TangemAmbientBackground.Variant.Neutral,
         ),
         Success(
             glowVariant = TangemGlowRing.Variant.Success,
-            ambientFarColor = TangemColorPalette.Green.`70`,
-            ambientNearColor = TangemColorPalette.Green.`40`,
+            ambientVariant = TangemAmbientBackground.Variant.Green,
         ),
         Error(
             glowVariant = TangemGlowRing.Variant.Error,
-            ambientFarColor = TangemColorPalette.Red.`70`,
-            ambientNearColor = TangemColorPalette.Red.`40`,
+            ambientVariant = TangemAmbientBackground.Variant.Red,
         ),
         Warning(
             glowVariant = TangemGlowRing.Variant.Warning,
-            ambientFarColor = TangemColorPalette.Yellow.`70`,
-            ambientNearColor = TangemColorPalette.Yellow.`40`,
+            ambientVariant = TangemAmbientBackground.Variant.Yellow,
         ),
         Info(
             glowVariant = TangemGlowRing.Variant.Info,
-            ambientFarColor = TangemColorPalette.Blue.`70`,
-            ambientNearColor = TangemColorPalette.Blue.`40`,
+            ambientVariant = TangemAmbientBackground.Variant.Blue,
         ),
     }
 }
