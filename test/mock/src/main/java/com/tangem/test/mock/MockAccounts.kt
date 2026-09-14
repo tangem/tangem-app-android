@@ -115,6 +115,7 @@ object MockAccounts {
                 fiatRate = fiatRate,
                 error = null,
                 virtualAccount = null,
+                isBankOfframpAvailable = null,
                 tariffPlan = null,
             ),
         )
