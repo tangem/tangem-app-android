@@ -210,7 +210,7 @@ internal class ResetCardModel @Inject constructor(
             resetCardUseCase(
                 cardNumber = resetBackupCardCount + 1,
                 params = currentUserCodeParams,
-                userWalletId = currentUserWalletId,
+                userWallet = userWallet,
             )
                 .onRight { isResetCompleted ->
                     if (isResetCompleted) {
