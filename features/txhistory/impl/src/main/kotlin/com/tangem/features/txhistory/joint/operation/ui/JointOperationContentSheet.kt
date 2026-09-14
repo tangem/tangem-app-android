@@ -35,7 +35,7 @@ internal fun JointOperationContentSheet(
     TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
         containerColor = TangemTheme.colors3.bg.secondary,
         config = TangemBottomSheetConfig(
-            isShown = true,
+            isShown = header != null,
             onDismissRequest = onCloseClick,
             content = TangemBottomSheetConfigContent.Empty,
         ),
