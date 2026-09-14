@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,7 +39,6 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -113,10 +110,7 @@ private fun AmountCard(amount: TangemPayBankWithdrawAmountUM.AmountFieldUM, sour
             thickness = 1.dp,
             color = TangemTheme.colors3.border.secondary,
         )
-        when (source) {
-            SourceRowUM.Loading -> SourceRowShimmer()
-            is SourceRowUM.Content -> SourceRow(source = source)
-        }
+        SourceRow(source = source)
     }
 }
 
@@ -186,7 +180,7 @@ private fun AmountPlaceholder(currencySymbol: String) {
 }
 
 @Composable
-private fun SourceRow(source: SourceRowUM.Content) {
+private fun SourceRow(source: SourceRowUM) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
@@ -212,50 +206,14 @@ private fun SourceRow(source: SourceRowUM.Content) {
 }
 
 @Composable
-private fun SourceRowShimmer() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TangemShimmer(modifier = Modifier.size(40.dp), radius = 20.dp)
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            TangemShimmer(modifier = Modifier.size(width = 120.dp, height = 16.dp), radius = 8.dp)
-            TangemShimmer(modifier = Modifier.size(width = 72.dp, height = 12.dp), radius = 6.dp)
-        }
-    }
-}
-
-@Composable
 private fun RouteRow(route: RouteRowUM) {
-    when (route) {
-        RouteRowUM.Loading -> RouteRowShimmer()
-        is RouteRowUM.Content -> BankRouteRow(
-            rail = route.rail,
-            title = route.title,
-            eta = route.eta,
-            fee = route.fee,
-            onClick = route.onClick,
-        )
-    }
-}
-
-@Composable
-private fun RouteRowShimmer() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.secondary)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TangemShimmer(modifier = Modifier.size(20.dp), radius = 10.dp)
-        TangemShimmer(modifier = Modifier.size(width = 96.dp, height = 16.dp), radius = 8.dp)
-    }
+    BankRouteRow(
+        rail = route.rail,
+        title = route.title,
+        eta = route.eta,
+        fee = route.fee,
+        onClick = route.onClick,
+    )
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
@@ -271,7 +229,7 @@ private fun TangemPayBankWithdrawAmountScreenPreview(
 
 private class AmountPreviewProvider : PreviewParameterProvider<TangemPayBankWithdrawAmountUM> {
     override val values: Sequence<TangemPayBankWithdrawAmountUM> = sequenceOf(
-        TangemPayBankWithdrawAmountPreviewData.loading,
+        TangemPayBankWithdrawAmountPreviewData.empty,
         TangemPayBankWithdrawAmountPreviewData.content,
         TangemPayBankWithdrawAmountPreviewData.contentWithError,
     )
