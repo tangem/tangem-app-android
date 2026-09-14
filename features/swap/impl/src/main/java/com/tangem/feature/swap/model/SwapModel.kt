@@ -1326,6 +1326,7 @@ internal class SwapModel @Inject constructor(
                 SwapEvents.NoticeNotEnoughFee(
                     token = fromToken.currency.symbol,
                     blockchain = fromToken.currency.network.name,
+                    balance = AnalyticsParam.TokenBalanceState.fromAmount(fromToken.value.amount),
                 ),
             )
         }
