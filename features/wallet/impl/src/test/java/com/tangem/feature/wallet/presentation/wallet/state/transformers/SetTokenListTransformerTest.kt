@@ -25,6 +25,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
@@ -150,6 +151,7 @@ class SetTokenListTransformerTest {
         tangemPayMainUM = TangemPayMainUM.Empty,
         virtualAccountMainUM = VirtualAccountMainUM.Empty,
         polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+        collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
     )
 
     private fun createToken(): CryptoCurrency.Token {

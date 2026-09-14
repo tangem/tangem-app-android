@@ -125,4 +125,6 @@ internal interface InnerWalletRouter {
 
     /** Open Polymarket (prediction account) entry screen */
     fun openPolymarket(userWalletId: UserWalletId)
+
+    fun openCollectibles(userWalletId: UserWalletId)
 }
