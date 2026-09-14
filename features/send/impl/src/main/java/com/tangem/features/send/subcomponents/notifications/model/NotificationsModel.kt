@@ -23,6 +23,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLim
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ResettableOneTimeEventSender
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -275,6 +276,7 @@ internal class NotificationsModel @Inject constructor(
                     categoryName = analyticsCategoryName,
                     token = cryptoCurrencyStatus.currency.symbol,
                     blockchain = cryptoCurrencyStatus.currency.network.name,
+                    balance = AnalyticsParam.TokenBalanceState.fromAmount(cryptoCurrencyStatus.value.amount),
                 )
                 resettableOneTimeEventSender.sendEventOnce(
                     key = EXCEEDS_BALANCE_EVENT,
