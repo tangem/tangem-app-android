@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
@@ -62,12 +63,14 @@ internal object JointAccountDomainModule {
         signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
         supplier: SingleJointAccountListSupplier,
+        accountListFetcher: SingleAccountListFetcher,
     ): CreateJointAccountUseCase {
         return CreateJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,
             supplier = supplier,
+            accountListFetcher = accountListFetcher,
         )
     }
 
@@ -204,12 +207,14 @@ internal object JointAccountDomainModule {
         signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
         supplier: SingleJointAccountListSupplier,
+        accountListFetcher: SingleAccountListFetcher,
     ): JoinJointAccountUseCase {
         return JoinJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,
             supplier = supplier,
+            accountListFetcher = accountListFetcher,
         )
     }
 }
