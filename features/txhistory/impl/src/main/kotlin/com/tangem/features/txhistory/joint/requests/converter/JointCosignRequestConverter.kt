@@ -36,7 +36,7 @@ internal class JointCosignRequestConverter(
                 .format { crypto(symbol = "", decimals = currency.displayDecimals) }
                 .trim(),
             currencySymbol = currency.symbol,
-            time = startedAt.toTimeFormat(),
+            time = startedAt?.toTimeFormat().orEmpty(),
             status = TransactionItemUM.Content.Status.Unconfirmed,
             direction = TransactionItemUM.Content.Direction.OUTGOING,
             icon = TxIcon.Vector(Icons.ic_arrow_up_20),
@@ -46,18 +46,20 @@ internal class JointCosignRequestConverter(
                 rawAddress = recipient,
                 briefAddress = recipient.toBriefAddressFormat(),
             ),
-            timestamp = startedAt,
+            timestamp = startedAt ?: 0L,
             isPendingSignature = true,
             onClick = { onClick(operationId) },
         )
     }
 
-    /** The initiator signs on creation, so their signature is when the operation started */
-    private fun JointOperation.startedAtMillis(): Long {
+    /**
+     * The initiator signs on creation, so their signature is when the operation started; without it the row shows
+     * no time rather than a clock that would move on every refresh
+     */
+    private fun JointOperation.startedAtMillis(): Long? {
         return signatures
             .firstOrNull { it.address.equals(initiator, ignoreCase = true) }
             ?.at
             ?.let { at -> runCatching { Instant.parse(at).toEpochMilli() }.getOrNull() }
-            ?: System.currentTimeMillis()
     }
 }
