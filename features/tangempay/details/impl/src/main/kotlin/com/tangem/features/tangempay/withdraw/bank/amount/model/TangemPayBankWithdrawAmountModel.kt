@@ -5,30 +5,22 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
-import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
-import com.tangem.features.tangempay.common.TangemPayMessagesFactory
-import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUMFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
-import com.tangem.utils.extensions.orZero
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -38,9 +30,6 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val uiMessageSender: UiMessageSender,
-    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-    private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
@@ -63,48 +52,25 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private val state = MutableStateFlow(AmountState())
 
     val uiState: StateFlow<TangemPayBankWithdrawAmountUM>
-        field = MutableStateFlow(umFactory.create(draft = params.draft.value, state = state.value))
+        field = MutableStateFlow(createUM(draft = params.draft.value, options = params.options.value, state.value))
 
     init {
-        combine(params.draft, state) { draft, amountState -> umFactory.create(draft = draft, state = amountState) }
+        combine(params.draft, params.options, state) { draft, options, amountState ->
+            createUM(draft = draft, options = options, state = amountState)
+        }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
-        loadOptions()
-        observePaymentAccount()
     }
 
-    private fun loadOptions() {
-        modelScope.launch {
-            getBankOfframpOptionsUseCase(params.userWalletId).fold(
-                ifLeft = { error -> closeOnUnavailableOptions(reason = "failed to load offramp options: $error") },
-                ifRight = { options ->
-                    if (options.destinations.isEmpty()) {
-                        closeOnUnavailableOptions(reason = "offramp options have no destinations")
-                    } else {
-                        state.update { it.copy(options = options) }
-                    }
-                },
-            )
-        }
-    }
-
-    private fun closeOnUnavailableOptions(reason: String) {
-        TangemLogger.withTag(TAG).e("Bank withdraw amount step closed, $reason")
-        uiMessageSender.send(
-            TangemPayMessagesFactory.createErrorMessage(errorType = TangemPayDetailsErrorType.Withdraw),
-        )
-        router.pop()
-    }
-
-    private fun observePaymentAccount() {
-        paymentAccountStatusSupplier(params.userWalletId)
-            .onEach { status ->
-                val networks = status.networksOrNull() ?: return@onEach
-                val currencyCode = status.balanceOrNull()?.fiatBalance?.currency
-                state.update { it.copy(networks = networks, currencyCode = currencyCode ?: it.currencyCode) }
-            }
-            .launchIn(modelScope)
-    }
+    private fun createUM(
+        draft: BankWithdrawDraft,
+        options: BankWithdrawOptions,
+        state: AmountState,
+    ): TangemPayBankWithdrawAmountUM = umFactory.create(
+        draft = draft,
+        selection = state.resolve(draft = draft, options = options),
+        sheet = state.sheet,
+    )
 
     private fun onValueChange(value: String) {
         if (value.isNotEmpty() && value.parseBigDecimalOrNull() == null) return
@@ -112,10 +78,10 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     }
 
     private fun onMaxClick() {
-        val selection = state.value.resolve(params.draft.value) ?: return
+        val selection = currentSelection()
         val max = BankWithdrawAmountValidator.maxAmount(
             limits = selection.limits,
-            balance = selection.source?.fiatBalance.orZero(),
+            balance = selection.source.fiatBalance,
             fee = selection.destination.fee.amount,
         )
         val value = if (max.isZero()) {
@@ -146,10 +112,11 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     }
 
     private fun onContinueClick() {
-        val result = state.value.resolve(params.draft.value)?.toResult() ?: return
+        val result = currentSelection().toResult() ?: return
         params.onContinue(result)
         state.update { it.copy(value = null) }
     }
-}
 
-private const val TAG = "TangemPayBankWithdrawAmountModel"
+    private fun currentSelection(): AmountSelection =
+        state.value.resolve(draft = params.draft.value, options = params.options.value)
+}
