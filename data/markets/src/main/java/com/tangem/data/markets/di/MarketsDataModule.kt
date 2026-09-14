@@ -43,7 +43,6 @@ internal object MarketsDataModule {
             analyticsEventHandler = analyticsEventHandler,
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
-            coinCategoriesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
             networkFactory = networkFactory,
         )
