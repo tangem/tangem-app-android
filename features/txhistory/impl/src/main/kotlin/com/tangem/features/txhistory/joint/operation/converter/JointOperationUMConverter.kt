@@ -31,12 +31,12 @@ internal class JointOperationUMConverter(
     private val onSignClick: () -> Unit,
     private val onSignersClick: () -> Unit,
     private val onCopyRecipientClick: () -> Unit,
-) : Converter<JointOperationUMConverter.Input, TxHistoryDetailsUM.SingleAsset?> {
+) : Converter<JointOperationUMConverter.Input, TxHistoryDetailsUM.SingleAsset> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
-    override fun convert(value: Input): TxHistoryDetailsUM.SingleAsset? {
-        val state = value.state ?: return null
+    override fun convert(value: Input): TxHistoryDetailsUM.SingleAsset {
+        val state = value.state
 
         return TxHistoryDetailsUM.SingleAsset(
             header = header(),
@@ -123,7 +123,7 @@ internal class JointOperationUMConverter(
     }
 
     data class Input(
-        val state: JointOperationState?,
+        val state: JointOperationState,
         val isSigning: Boolean,
         val hasAnswered: Boolean,
         val isBalanceHidden: Boolean,
