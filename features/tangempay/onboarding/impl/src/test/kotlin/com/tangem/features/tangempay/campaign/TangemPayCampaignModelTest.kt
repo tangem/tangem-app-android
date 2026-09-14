@@ -166,23 +166,6 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
-        fun `GIVEN issue card child WHEN child finished THEN campaign key cleared AND container stays`() = runTest {
-            // Arrange
-            givenWallets(WALLET_ID)
-            givenResolution(issueCardResolution(offer = campaignOffer()))
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            model.onCampaignIssueCardFinished()
-
-            // Assert
-            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
-            verify { router wasNot Called }
-            model.onDestroy()
-        }
-
-        @Test
         fun `GIVEN unavailable resolution WHEN model created THEN terminal dialog shown AND dismiss closes`() =
             runTest {
                 // Arrange
@@ -198,7 +181,6 @@ internal class TangemPayCampaignModelTest {
 
                 // Assert
                 assertThat(model.uiState.value).isEqualTo(TangemPayCampaignUM.Loading)
-                coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
                 verify(exactly = 1) { router.replaceAll(AppRoute.Home()) }
                 model.onDestroy()
             }
@@ -240,10 +222,39 @@ internal class TangemPayCampaignModelTest {
     }
 
     @Nested
+    inner class Deeplink {
+
+        @Test
+        fun `GIVEN campaign deeplink WHEN model created THEN deeplink cleared`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN resolution fails WHEN model created THEN deeplink still cleared`() = runTest {
+            // Arrange
+            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returns UNIVERSAL_ERROR.left()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
     inner class Exit {
 
         @Test
-        fun `GIVEN no wallets WHEN onClose THEN key cleared AND replaces all with Home`() = runTest {
+        fun `GIVEN no wallets WHEN onClose THEN replaces all with Home`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
 
@@ -252,13 +263,12 @@ internal class TangemPayCampaignModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
             verify { router.replaceAll(AppRoute.Home()) }
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN wallets present WHEN onClose THEN key cleared AND replaces all with Wallet`() = runTest {
+        fun `GIVEN wallets present WHEN onClose THEN replaces all with Wallet`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
             val model = createModel(testScope = this)
@@ -268,13 +278,12 @@ internal class TangemPayCampaignModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
             verify { router.replaceAll(AppRoute.Wallet) }
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN error state WHEN close clicked THEN key cleared AND container closed`() = runTest {
+        fun `GIVEN error state WHEN close clicked THEN container closed`() = runTest {
             // Arrange
             coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returns UNIVERSAL_ERROR.left()
             val model = createModel(testScope = this)
@@ -285,13 +294,12 @@ internal class TangemPayCampaignModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
             verify { router.replaceAll(AppRoute.Home()) }
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN landing in NoPay mode WHEN close clicked THEN key cleared AND replaces all with Wallet`() = runTest {
+        fun `GIVEN landing in NoPay mode WHEN close clicked THEN replaces all with Wallet`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
             val model = createModel(testScope = this)
@@ -302,7 +310,6 @@ internal class TangemPayCampaignModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
             verify { router.replaceAll(AppRoute.Wallet) }
             model.onDestroy()
         }
@@ -316,7 +323,7 @@ internal class TangemPayCampaignModelTest {
             runTest {
                 // Arrange
                 val userWallet: UserWallet.Hot = mockk { every { walletId } returns WALLET_ID }
-                coEvery { onboardingStarter.createHotWallet(CAMPAIGN_KEY, any()) } returns userWallet
+                coEvery { onboardingStarter.createHotWallet(any()) } returns userWallet
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
 
@@ -325,7 +332,7 @@ internal class TangemPayCampaignModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                coVerify(exactly = 1) { onboardingStarter.createHotWallet(CAMPAIGN_KEY, any()) }
+                coVerify(exactly = 1) { onboardingStarter.createHotWallet(any()) }
                 coVerify(exactly = 1) { onboardingStarter.startOnboarding(WALLET_ID, CAMPAIGN_KEY, any()) }
                 model.onDestroy()
             }
@@ -333,7 +340,7 @@ internal class TangemPayCampaignModelTest {
         @Test
         fun `GIVEN NoWallet landing WHEN hot wallet not created THEN onboarding not started`() = runTest {
             // Arrange
-            coEvery { onboardingStarter.createHotWallet(CAMPAIGN_KEY, any()) } returns null
+            coEvery { onboardingStarter.createHotWallet(any()) } returns null
             val model = createModel(testScope = this)
             advanceUntilIdle()
 

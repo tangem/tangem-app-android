@@ -69,7 +69,6 @@ internal class TangemPayCampaignIssueCardModelTest {
     private val issueAdditionalCardUseCase: IssueAdditionalCardUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val listener: TangemPayCampaignIssueCardComponent.Listener = mockk(relaxed = true)
 
     private var model: TangemPayCampaignIssueCardModel? = null
 
@@ -81,7 +80,6 @@ internal class TangemPayCampaignIssueCardModelTest {
             issueAdditionalCardUseCase,
             paymentAccountStatusFetcher,
             paymentAccountStatusSupplier,
-            listener,
         )
         coEvery { paymentAccountStatusFetcher.invoke(WALLET_ID) } returns Unit.right()
         every { paymentAccountStatusSupplier.invoke(WALLET_ID) } returns flowOf(paymentStatus())
@@ -109,7 +107,7 @@ internal class TangemPayCampaignIssueCardModelTest {
     inner class Issue {
 
         @Test
-        fun `GIVEN order created WHEN issue clicked THEN key cleared AND Payment account opened`() = runTest {
+        fun `GIVEN order created WHEN issue clicked THEN Payment account opened`() = runTest {
             // Arrange
             coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
                 IssueAdditionalCardResult.Created(order()).right()
@@ -122,7 +120,6 @@ internal class TangemPayCampaignIssueCardModelTest {
             // Assert
             assertThat(model.uiState.value.isIssuing).isTrue()
             coVerifyOrder {
-                listener.onCampaignIssueCardFinished()
                 paymentAccountStatusFetcher.invoke(WALLET_ID)
                 router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayDetails(status = paymentStatus()))
             }
@@ -140,14 +137,13 @@ internal class TangemPayCampaignIssueCardModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { listener.onCampaignIssueCardFinished() }
             verify(exactly = 1) {
                 router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayDetails(status = paymentStatus()))
             }
         }
 
         @Test
-        fun `GIVEN issue in progress WHEN issue clicked THEN button loading AND key not cleared`() = runTest {
+        fun `GIVEN issue in progress WHEN issue clicked THEN button loading AND request not repeated`() = runTest {
             // Arrange
             coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } coAnswers { awaitCancellation() }
             val model = createModel(testScope = this)
@@ -160,7 +156,6 @@ internal class TangemPayCampaignIssueCardModelTest {
             // Assert
             assertThat(model.uiState.value.isIssuing).isTrue()
             coVerify(exactly = 1) { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) }
-            coVerify(exactly = 0) { listener.onCampaignIssueCardFinished() }
             verify { router wasNot Called }
         }
 
@@ -183,7 +178,6 @@ internal class TangemPayCampaignIssueCardModelTest {
                 assertThat(model.uiState.value.isIssuing).isFalse()
                 assertThat(message.captured.sheetTitle())
                     .isEqualTo(resourceReference(R.string.tangempay_maximum_cards_issued_for_plan_title))
-                coVerify(exactly = 0) { listener.onCampaignIssueCardFinished() }
                 verify { router wasNot Called }
             }
 
@@ -207,7 +201,7 @@ internal class TangemPayCampaignIssueCardModelTest {
         }
 
         @Test
-        fun `GIVEN cards limit sheet WHEN upgrade plan clicked THEN key cleared AND current plan opened`() = runTest {
+        fun `GIVEN cards limit sheet WHEN upgrade plan clicked THEN current plan opened`() = runTest {
             // Arrange
             coEvery { issueAdditionalCardUseCase(WALLET_ID, CAMPAIGN_KEY) } returns
                 IssueAdditionalCardError.OfferNotAvailable.left()
@@ -227,10 +221,7 @@ internal class TangemPayCampaignIssueCardModelTest {
                 status = status,
                 initialRoute = TangemPayDetailsInitialRoute.CURRENT_PLAN,
             )
-            coVerifyOrder {
-                listener.onCampaignIssueCardFinished()
-                router.replaceAll(AppRoute.Wallet, currentPlanRoute)
-            }
+            verify(exactly = 1) { router.replaceAll(AppRoute.Wallet, currentPlanRoute) }
         }
 
         @Test
@@ -256,8 +247,7 @@ internal class TangemPayCampaignIssueCardModelTest {
                 advanceUntilIdle()
 
                 // Assert
-                coVerifyOrder {
-                    listener.onCampaignIssueCardFinished()
+                verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayDetails(status = paymentStatus()))
                 }
             }
@@ -282,7 +272,6 @@ internal class TangemPayCampaignIssueCardModelTest {
                     startIconId = R.drawable.ic_alert_circle_24,
                 ),
             )
-            coVerify(exactly = 0) { listener.onCampaignIssueCardFinished() }
             verify { router wasNot Called }
         }
     }
@@ -291,7 +280,7 @@ internal class TangemPayCampaignIssueCardModelTest {
     inner class Close {
 
         @Test
-        fun `WHEN close THEN key cleared before status refetched AND Payment account opened`() = runTest {
+        fun `WHEN close THEN status refetched AND Payment account opened`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
 
@@ -301,7 +290,6 @@ internal class TangemPayCampaignIssueCardModelTest {
 
             // Assert
             coVerifyOrder {
-                listener.onCampaignIssueCardFinished()
                 paymentAccountStatusFetcher.invoke(WALLET_ID)
                 router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayDetails(status = paymentStatus()))
             }
@@ -319,7 +307,6 @@ internal class TangemPayCampaignIssueCardModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { listener.onCampaignIssueCardFinished() }
             verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
         }
     }
@@ -374,7 +361,6 @@ internal class TangemPayCampaignIssueCardModelTest {
                     cardArtUrl = CARD_ART_URL,
                     feeAmount = BigDecimal.ZERO,
                     feeCurrency = Currency.getInstance("USD"),
-                    listener = listener,
                 ),
             ),
             dispatchers = TestingCoroutineDispatcherProvider(

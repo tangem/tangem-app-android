@@ -71,7 +71,6 @@ internal class DefaultTangemPayCampaignComponent @AssistedInject constructor(
                     cardArtUrl = child.cardArtUrl,
                     feeAmount = child.feeAmount,
                     feeCurrency = child.feeCurrency,
-                    listener = model,
                 ),
             )
         }

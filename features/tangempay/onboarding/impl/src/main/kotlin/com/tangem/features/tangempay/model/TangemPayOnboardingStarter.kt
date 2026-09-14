@@ -9,7 +9,6 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -36,7 +35,6 @@ internal class TangemPayOnboardingStarter @Inject constructor(
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase,
     private val createHotWalletUseCase: CreateHotWalletUseCase,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
@@ -118,14 +116,13 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         )
     }
 
-    suspend fun createHotWallet(campaignKey: String?, onLoadingChange: (Boolean) -> Unit): UserWallet.Hot? {
+    suspend fun createHotWallet(onLoadingChange: (Boolean) -> Unit): UserWallet.Hot? {
         val isSupported = isHotWalletCreationSupported()
         TangemLogger.i("[TangemPay][HWO]Hot wallet creation supported=$isSupported")
         if (!isSupported) {
             uiMessageSender.send(
                 Dialogs.hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
             )
-            if (campaignKey != null) clearAppsFlyerDeeplinkUseCase()
             router.replaceCurrent(AppRoute.Home())
             return null
         }
@@ -164,7 +161,6 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         } else {
             val isOrderCreated = createCampaignOrder(userWalletId, campaignKey, callbacks)
             if (!isOrderCreated) return
-            clearAppsFlyerDeeplinkUseCase()
         }
         openKyc(userWalletId)
     }
