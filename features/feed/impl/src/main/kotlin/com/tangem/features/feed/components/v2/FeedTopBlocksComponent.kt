@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.*
 import com.tangem.features.feed.ui.v2.FeedTopBlocksContent
@@ -33,10 +34,16 @@ import kotlinx.coroutines.flow.stateIn
 internal class FeedTopBlocksComponent(
     context: AppComponentContext,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     private val blocks: List<FeedBlock> = listOf(
         ForYouBlockComponent(context = child(key = ForYouBlockComponent.KEY)),
+        AddAccountBlockComponent(
+            context = child(key = AddAccountBlockComponent.KEY),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+            addAccountTypeComponentFactory = addAccountTypeComponentFactory,
+        ),
         PredictionsBlockComponent(context = child(key = PredictionsBlockComponent.KEY)),
         CollectiblesBlockComponent(
             context = child(key = CollectiblesBlockComponent.KEY),
