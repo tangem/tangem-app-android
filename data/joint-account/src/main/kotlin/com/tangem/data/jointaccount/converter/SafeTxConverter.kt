@@ -26,9 +26,8 @@ internal class SafeTxConverter @Inject constructor() :
 
     /**
      * The backend validates the field as `^(0|[1-9]\d{0,17})$` — at most 18 digits, so it always fits the `Long`
-     * the persisted copy keeps. Refusing a wider value here fails the operation while it is being read, where the
-     * fetch drops just that operation, rather than later at the store, where the narrowing would take the whole
-     * fetch down.
+     * the persisted copy keeps. A wider value is refused here, where only that operation is dropped, rather than at
+     * the store, where the narrowing would take the whole fetch down.
      */
     private fun String.toContractNonce(): BigInteger {
         val nonce = BigInteger(this)

@@ -27,10 +27,14 @@ internal class JointOperationConverter @Inject constructor(
         },
     )
 
+    /** One operation the backend spells out of contract is dropped alone; the account and its other slots stay */
     fun convertInFlight(dtos: List<JointOperationDto>): Map<Long, JointOperation> {
         return buildMap {
             dtos.forEach { dto ->
-                val operation = convert(dto)
+                val operation = runCatching { convert(dto) }
+                    .onFailure { TangemLogger.e("Dropped the joint operation ${dto.operationId}", it) }
+                    .getOrNull()
+                    ?: return@forEach
 
                 if (putIfAbsent(operation.chainId, operation) != null) {
                     TangemLogger.e(
