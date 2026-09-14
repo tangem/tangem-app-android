@@ -5,7 +5,7 @@
     },
     {
         "name": "TWI_1627_OTEL_METRICS_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED",
@@ -17,11 +17,11 @@
     },
     {
         "name": "AND_16359_ONRAMP_THEMED_PAYMENT_METHOD_IMAGES",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_15901_STORIES_CONTAINER_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "NEW_CARD_SCANNING_ENABLED",
@@ -57,7 +57,7 @@
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
-        "version": "6.4"
+        "version": "undefined"
     },
     {
         "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
@@ -85,7 +85,7 @@
     },
     {
         "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
-        "version": "undefined"
+        "version": "6.3.1"
     },
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
@@ -101,7 +101,7 @@
     },
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_16358_HIDE_ZERO_BALANCE_SWAP_SOURCE",
@@ -145,7 +145,7 @@
     },
     {
         "name": "TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1477_RWA_AND_CATEGORIES_ENABLED",
@@ -153,7 +153,7 @@
     },
     {
         "name": "TWI_1356_INTRODUCTION_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "TWI_1555_SOCIAL_LOGIN_ENABLED",
@@ -161,15 +161,15 @@
     },
     {
         "name": "AND_16842_TANGEM_PAY_BANK_OFFRAMP_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_17352_CUSTOM_CARDS_COBRAND_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_17136_GEO_COUNTRY_CACHE_FALLBACK_ENABLED",
-        "version": "undefined"
+        "version": "6.4"
     },
     {
         "name": "AND_17401_PAY_RESIDENCY_STEP_ENABLED",
