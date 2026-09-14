@@ -823,6 +823,47 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN bank offramp channel missing WHEN withdraw clicked THEN swap pushed instead of the hub`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+        val model = createModel(
+            testScope = this,
+            availableForWithdrawal = BigDecimal.TEN,
+            isBankOfframpAvailable = false,
+        )
+        advanceUntilIdle()
+
+        // Act
+        model.onClickWithdraw()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+        verify(exactly = 1) { router.push(ofType<AppRoute.Swap>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN hub screen pushed`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+        val model = createModel(
+            testScope = this,
+            availableForWithdrawal = BigDecimal.TEN,
+            isBankOfframpAvailable = null,
+        )
+        advanceUntilIdle()
+
+        // Act
+        model.onClickWithdraw()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN active withdrawal and bank offramp enabled WHEN withdraw clicked THEN hub pushed without in progress error`() =
         runTest {
             // Arrange
@@ -991,6 +1032,7 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         statusValue: PaymentAccountStatusValue? = null,
         virtualAccount: VirtualAccountOnramp? = null,
+        isBankOfframpAvailable: Boolean? = true,
         planState: TangemPayTariffPlanState? = null,
         initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
         statusEmissions: Int = 1,
@@ -1002,6 +1044,7 @@ internal class TangemPayDetailsModelTest {
                 accountError = accountError,
                 availableForWithdrawal = availableForWithdrawal,
                 virtualAccount = virtualAccount,
+                isBankOfframpAvailable = isBankOfframpAvailable,
                 planState = planState,
             ),
         )
@@ -1061,6 +1104,7 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         virtualAccount: VirtualAccountOnramp? = null,
+        isBankOfframpAvailable: Boolean? = true,
         cardState: TangemPayCardState = TangemPayCardState.Active,
         planState: TangemPayTariffPlanState? = null,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
@@ -1070,6 +1114,7 @@ internal class TangemPayDetailsModelTest {
         every { customerId } returns "customer-id"
         every { depositAddress } returns "address"
         every { this@mockk.virtualAccount } returns virtualAccount
+        every { this@mockk.isBankOfframpAvailable } returns isBankOfframpAvailable
         every { cards } returns listOf(tangemPayCard(state = cardState))
         every { balance } returns PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(
