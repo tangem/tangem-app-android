@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -13,6 +14,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.collections.immutable.toPersistentList
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 internal class TokenDetailsNotificationsAnalyticsSenderTest {
 
@@ -24,6 +26,10 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
     private val cryptoCurrency: CryptoCurrency = mockk(relaxed = true) {
         every { symbol } returns "ETH"
         every { this@mockk.network } returns this@TokenDetailsNotificationsAnalyticsSenderTest.network
+    }
+
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus = mockk(relaxed = true) {
+        every { value.amount } returns BigDecimal.ONE
     }
 
     private val sender = TokenDetailsNotificationsAnalyticsSender(
@@ -40,7 +46,11 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         every { analyticsEventHandler.send(capture(eventSlot)) } returns Unit
 
         // WHEN
-        sender.send(displayedUiState = displayedState, newNotifications = listOf(notification))
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = listOf(notification),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        )
 
         // THEN
         val event = eventSlot.captured as TokenDetailsAnalyticsEvent.Notice.NotEnoughFee
@@ -49,6 +59,30 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         assertThat(event.params).containsEntry("Token", "ETH")
         assertThat(event.params).containsEntry("Blockchain", "Ethereum")
         assertThat(event.params).containsEntry("Source", "Detailed Screen")
+        assertThat(event.params).containsEntry("Balance", "Full")
+    }
+
+    @Test
+    fun `GIVEN NetworkFee notification AND zero balance WHEN send THEN NotEnoughFee event has Empty balance`() {
+        // GIVEN
+        val notification = mockk<TokenDetailsNotification.NetworkFee>()
+        val displayedState = createState(notifications = emptyList(), isRefreshing = false)
+        val zeroBalanceStatus: CryptoCurrencyStatus = mockk(relaxed = true) {
+            every { value.amount } returns BigDecimal.ZERO
+        }
+        val eventSlot = slot<AnalyticsEvent>()
+        every { analyticsEventHandler.send(capture(eventSlot)) } returns Unit
+
+        // WHEN
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = listOf(notification),
+            cryptoCurrencyStatus = zeroBalanceStatus,
+        )
+
+        // THEN
+        val event = eventSlot.captured as TokenDetailsAnalyticsEvent.Notice.NotEnoughFee
+        assertThat(event.params).containsEntry("Balance", "Empty")
     }
 
     @Test
@@ -60,7 +94,11 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         every { analyticsEventHandler.send(capture(eventSlot)) } returns Unit
 
         // WHEN
-        sender.send(displayedUiState = displayedState, newNotifications = listOf(notification))
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = listOf(notification),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        )
 
         // THEN
         val event = eventSlot.captured as TokenDetailsAnalyticsEvent.Notice.NotEnoughFee
@@ -76,7 +114,11 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         every { analyticsEventHandler.send(capture(eventSlot)) } returns Unit
 
         // WHEN
-        sender.send(displayedUiState = displayedState, newNotifications = listOf(notification))
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = listOf(notification),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        )
 
         // THEN
         verify(exactly = 1) { analyticsEventHandler.send(any()) }
@@ -93,7 +135,11 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         val displayedState = createState(notifications = emptyList(), isRefreshing = false)
 
         // WHEN
-        sender.send(displayedUiState = displayedState, newNotifications = emptyList())
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = emptyList(),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        )
 
         // THEN
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
@@ -106,7 +152,11 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         val displayedState = createState(notifications = emptyList(), isRefreshing = true)
 
         // WHEN
-        sender.send(displayedUiState = displayedState, newNotifications = listOf(notification))
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = listOf(notification),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        )
 
         // THEN
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
@@ -119,7 +169,11 @@ internal class TokenDetailsNotificationsAnalyticsSenderTest {
         val displayedState = createState(notifications = emptyList(), isRefreshing = false)
 
         // WHEN
-        sender.send(displayedUiState = displayedState, newNotifications = listOf(notification))
+        sender.send(
+            displayedUiState = displayedState,
+            newNotifications = listOf(notification),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        )
 
         // THEN
         verify(exactly = 0) { analyticsEventHandler.send(any()) }
