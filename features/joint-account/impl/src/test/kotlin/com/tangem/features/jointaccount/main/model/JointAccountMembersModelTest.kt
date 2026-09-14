@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -70,6 +71,7 @@ internal class JointAccountMembersModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val supplier: SingleJointAccountListSupplier = mockk()
+    private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
@@ -84,6 +86,7 @@ internal class JointAccountMembersModelTest {
             uiMessageSender,
             shareManager,
             supplier,
+            jointAccountListFetcher,
             getInvitesUseCase,
             singleAccountSupplier,
             activateUseCase,
@@ -108,6 +111,34 @@ internal class JointAccountMembersModelTest {
         assertThat(state.header).isNotNull()
         assertThat(state.joined).isNotEmpty()
     }
+
+    /**
+     * The supplier only reads the store, so the composition on screen is as old as the last fetch. The screen
+     * asks for one on open and renders what arrives — a member who joined meanwhile shows up without a restart.
+     */
+    @Test
+    fun `GIVEN the store fills after the refresh WHEN model created THEN it ran for this wallet and the account shows`() =
+        runTest {
+            // Arrange
+            val stored = MutableStateFlow(emptyList<JointAccount>())
+            every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns stored
+            coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+            coEvery { jointAccountListFetcher.invoke(params = any()) } coAnswers {
+                stored.value = listOf(pendingAccount(members = listOf(creator)))
+                Unit.right()
+            }
+
+            // Act
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                jointAccountListFetcher.invoke(params = SingleJointAccountListFetcher.Params(USER_WALLET_ID))
+            }
+            assertThat(model.uiState.value.header).isNotNull()
+            assertThat(model.uiState.value.joined).isNotEmpty()
+        }
 
     @Test
     fun `GIVEN another wallet's account in the list WHEN model created THEN it is ignored`() = runTest {
@@ -446,6 +477,7 @@ internal class JointAccountMembersModelTest {
             uiMessageSender = uiMessageSender,
             shareManager = shareManager,
             jointAccountListSupplier = supplier,
+            jointAccountListFetcher = jointAccountListFetcher,
             getJointAccountInvitesUseCase = getInvitesUseCase,
             singleAccountSupplier = singleAccountSupplier,
             activateJointAccountUseCase = activateUseCase,
