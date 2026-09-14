@@ -8,7 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 interface TangemPayWaitlistComponent : ComposableBottomSheetComponent {
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val userWalletId: UserWalletId?,
         val product: TangemPayProduct,
         val countryCode: String,
         val regionCode: String?,
