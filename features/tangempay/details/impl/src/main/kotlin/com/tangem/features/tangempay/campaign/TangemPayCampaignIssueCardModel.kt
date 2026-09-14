@@ -107,7 +107,6 @@ internal class TangemPayCampaignIssueCardModel @Inject constructor(
     }
 
     private suspend fun finish(initialRoute: TangemPayDetailsInitialRoute) {
-        params.listener.onCampaignIssueCardFinished()
         paymentAccountStatusFetcher.invoke(params.userWalletId)
         val status = currentStatus()
         if (status == null) {
