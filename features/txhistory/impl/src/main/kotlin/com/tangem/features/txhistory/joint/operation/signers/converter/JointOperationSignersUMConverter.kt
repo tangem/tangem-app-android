@@ -29,7 +29,11 @@ internal class JointOperationSignersUMConverter :
             name = state.member.name,
             avatar = avatar(member = state.member, index = index),
             statusText = statusText(state),
-            isAnswered = state.answer == Answer.CREATED || state.answer == Answer.SIGNED,
+            mark = when (state.answer) {
+                Answer.CREATED, Answer.SIGNED -> JointOperationSignersUM.Mark.Signed
+                Answer.DECLINED -> JointOperationSignersUM.Mark.Declined
+                Answer.WAITING -> null
+            },
         )
     }
 
@@ -48,15 +52,15 @@ internal class JointOperationSignersUMConverter :
         val at = state.at
 
         return when {
-            state.answer == Answer.DECLINED -> resourceReference(CoreUiR.string.joint_operation_declined)
             state.answer == Answer.WAITING -> resourceReference(CoreUiR.string.joint_operation_waiting_to_sign)
+            state.answer == Answer.DECLINED && at == null -> resourceReference(CoreUiR.string.joint_operation_declined)
             at == null -> TextReference.EMPTY
-            state.answer == Answer.CREATED -> resourceReference(
-                id = CoreUiR.string.joint_operation_created_at,
-                formatArgs = wrappedList(mapFormattedDate(createdAt = at)),
-            )
             else -> resourceReference(
-                id = CoreUiR.string.joint_operation_signed_at,
+                id = when (state.answer) {
+                    Answer.CREATED -> CoreUiR.string.joint_operation_created_at
+                    Answer.DECLINED -> CoreUiR.string.joint_operation_declined_at
+                    else -> CoreUiR.string.joint_operation_signed_at
+                },
                 formatArgs = wrappedList(mapFormattedDate(createdAt = at)),
             )
         }
