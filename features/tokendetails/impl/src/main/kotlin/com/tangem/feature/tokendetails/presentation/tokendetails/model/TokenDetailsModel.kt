@@ -424,7 +424,11 @@ internal class TokenDetailsModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { warnings ->
                     val updatedState = stateFactory.getStateWithNotifications(warnings)
-                    notificationsAnalyticsSender.send(uiState.value, updatedState.notifications)
+                    notificationsAnalyticsSender.send(
+                        displayedUiState = uiState.value,
+                        newNotifications = updatedState.notifications,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    )
                     uiState.value = updatedState
 
                     redesignStateController.update(
