@@ -340,6 +340,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             fiatRate = null,
             error = null,
             virtualAccount = virtualAccount,
+            isBankOfframpAvailable = null,
             tariffPlan = null,
             networks = emptyList(),
         )
@@ -472,6 +473,63 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.virtualAccount).isNull()
             }
+
+        @Test
+        fun `GIVEN BANK_OFFRAMP channel WHEN invoke THEN status says the bank off-ramp is available`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
+            coEvery {
+                onboardingRepository.fetchCustomerEligibility(userWalletId)
+            } returns Either.Right(listOf(TangemPayEligibilityType.BANK_OFFRAMP))
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val loaded = storedStatuses.lastLoaded()
+            assertThat(loaded.isBankOfframpAvailable).isTrue()
+            assertThat(loaded.virtualAccount).isNull()
+        }
+
+        @Test
+        fun `GIVEN channels without BANK_OFFRAMP WHEN invoke THEN status says the bank off-ramp is unavailable`() =
+            runTest {
+                // Arrange
+                val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+                stubHappyPath(customerInfo)
+                coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
+                coEvery {
+                    onboardingRepository.fetchCustomerEligibility(userWalletId)
+                } returns Either.Right(listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT))
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.lastLoaded().isBankOfframpAvailable).isFalse()
+            }
+
+        @Test
+        fun `GIVEN eligibility fetch fails WHEN invoke THEN bank off-ramp availability stays unknown`() = runTest {
+            // Arrange
+            val customerInfo = buildCustomerInfo(productInstances = listOf(cardProductInstance))
+            stubHappyPath(customerInfo)
+            coEvery { onboardingRepository.getVirtualAccountOrderId(userWalletId) } returns null
+            coEvery {
+                onboardingRepository.fetchCustomerEligibility(userWalletId)
+            } returns VisaApiError.UnknownWithoutCode.left()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.lastLoaded().isBankOfframpAvailable).isNull()
+        }
 
         @Test
         fun `GIVEN no instance and va order PROCESSING WHEN invoke THEN virtualAccount is Processing`() = runTest {
