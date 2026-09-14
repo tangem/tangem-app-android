@@ -329,13 +329,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             emptySet()
         }
 
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = currency.network,
-        )
-
-        if (walletManager == null) requireJointNetwork(currency.network)
-
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
@@ -345,7 +338,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
                     currency = currency,
-                    networkTokens = walletManager?.cardTokens?.toSet().orEmpty(),
+                    networkTokens = source.tokens,
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
@@ -356,7 +349,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         userWalletsListRepository.getSyncOrNull(userWalletId)
 
     /** What a wallet manager knows about its wallet, the provider of a joint network knows about the Safe address */
-    private class TransactionHistorySource(val provider: TransactionHistoryProvider, val address: String)
+    private class TransactionHistorySource(
+        val provider: TransactionHistoryProvider,
+        val address: String,
+        val tokens: Set<Token>,
+    )
 
     /**
      * Only a joint network may legitimately lack a history source or a wallet manager: it reads by the Safe
@@ -375,11 +372,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     ): TransactionHistorySource? {
         if (network.derivationPath is Network.DerivationPath.Joint) {
             return getJointAddressProvider(userWalletId, network)
-                ?.let { TransactionHistorySource(provider = it, address = it.address) }
+                ?.let { TransactionHistorySource(provider = it, address = it.address, tokens = it.tokens) }
         }
 
         return getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-            ?.let { TransactionHistorySource(provider = it, address = it.wallet.address) }
+            ?.let { walletManager ->
+                TransactionHistorySource(
+                    provider = walletManager,
+                    address = walletManager.wallet.address,
+                    tokens = walletManager.cardTokens.toSet(),
+                )
+            }
     }
 
     /**
