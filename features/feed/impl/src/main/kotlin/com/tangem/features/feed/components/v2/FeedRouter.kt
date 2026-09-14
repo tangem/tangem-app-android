@@ -19,6 +19,9 @@ import com.tangem.utils.logging.TangemLogger
  * router: nothing above the feed can resolve it either, forwarding would only relocate the crash;
  * - [FeedRoute.isSingleInstance] → brings an already-present route to front instead of stacking
  * a duplicate (markets list ↔ search cycles);
+ * - a route whose [FeedRoute.screenIdentity] is already on the stack → pops back to that screen, so
+ * a chain looping onto itself (article → its related token → the same article) walks the user back
+ * instead of stacking a second copy;
  * - otherwise → a new entry on the feed stack.
  *
  * Pop policy stays with the host: [InnerRouter] invokes [popCallback] on every `pop()` regardless
@@ -45,8 +48,17 @@ internal fun AppComponentContext.FeedRouter(
                     onComplete(false)
                 }
                 route.isSingleInstance -> stackNavigation.bringToFront(route) { onComplete(true) }
-                else -> innerRouter.push(route, onComplete)
+                else -> stackNavigation.navigate(
+                    transformer = { stack -> stack.pushOrPopTo(route) },
+                    onComplete = { newStack, oldStack -> onComplete(newStack != oldStack) },
+                )
             }
         }
     }
+}
+
+internal fun List<FeedRoute>.pushOrPopTo(route: FeedRoute): List<FeedRoute> {
+    val index = indexOfLast { it::class == route::class && it.screenIdentity == route.screenIdentity }
+
+    return if (index < 0) this + route else take(index + 1)
 }
