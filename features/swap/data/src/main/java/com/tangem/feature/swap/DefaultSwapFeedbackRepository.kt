@@ -30,7 +30,6 @@ internal class DefaultSwapFeedbackRepository(
     private val remoteSource: SwapFeedbackRemoteSource,
     private val store: DataStore<SwapRatingsDTO>,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) : SwapFeedbackRepository {
 
     /**
@@ -96,25 +95,20 @@ internal class DefaultSwapFeedbackRepository(
     }
 
     private suspend fun save(txExternalId: String, rating: Int?) {
-        val entry = StoredSwapRating(rating = rating, savedAt = currentTimeMillis())
-
         runSuspendCatching {
             store.updateData { current ->
-                current.copy(ratings = (current.ratings + (txExternalId to entry)).keepNewest())
+                // Re-inserting moves the entry to the back, so the front stays the least recently written
+                val updated = current.ratings - txExternalId + (txExternalId to StoredSwapRating(rating = rating))
+
+                current.copy(ratings = updated.dropOldest())
             }
         }.onFailure { error ->
             TangemLogger.e("SwapFeedbackRepository: failed to store rating", error)
         }
     }
 
-    private fun Map<String, StoredSwapRating>.keepNewest(): Map<String, StoredSwapRating> {
-        if (size <= MAX_STORED_RATINGS) return this
-
-        return entries
-            .sortedByDescending { it.value.savedAt }
-            .take(MAX_STORED_RATINGS)
-            .associate { (txExternalId, entry) -> txExternalId to entry }
-    }
+    private fun Map<String, StoredSwapRating>.dropOldest(): Map<String, StoredSwapRating> =
+        if (size <= MAX_STORED_RATINGS) this else entries.drop(size - MAX_STORED_RATINGS).associate { it.toPair() }
 
     companion object {
         /** Unrated swaps are stored too, so the store grows with every swap seen and needs a ceiling */
