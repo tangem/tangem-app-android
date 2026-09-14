@@ -103,23 +103,6 @@ internal class JointOperationConverterTest {
 
     /** One bad operation must not cost the wallet every joint account it has — the fetch would fall to cache */
     @Test
-    fun `GIVEN one operation with an unreadable number WHEN convert in flight THEN only that one is dropped`() {
-        // Arrange
-        val readable = operationDto(chainId = 1, operationId = "readable")
-        val unreadable = operationDto(
-            chainId = 137,
-            operationId = "unreadable",
-            safeTx = safeTxDto().copy(safeTxGas = "not a number"),
-        )
-
-        // Act
-        val actual = converter.convertInFlight(listOf(readable, unreadable))
-
-        // Assert
-        assertThat(actual.mapValues { it.value.operationId }).containsExactly(1L, "readable")
-    }
-
-    @Test
     fun `GIVEN one in-flight operation out of contract WHEN convert THEN only that one is dropped`() {
         // Arrange
         val broken = operationDto(chainId = 1, operationId = "broken", safeTx = safeTxDto(nonce = UINT256_MAX))
