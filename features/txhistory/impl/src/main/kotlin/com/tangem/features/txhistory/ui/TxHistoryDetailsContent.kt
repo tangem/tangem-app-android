@@ -98,7 +98,7 @@ private fun TwoAssetsContent(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         )
-        // Provider-rating (CSAT) card — express swaps only, any status.
+        // Provider-rating (CSAT) card — final express swaps only.
         ratingContent?.let { rating ->
             Box(
                 modifier = Modifier
