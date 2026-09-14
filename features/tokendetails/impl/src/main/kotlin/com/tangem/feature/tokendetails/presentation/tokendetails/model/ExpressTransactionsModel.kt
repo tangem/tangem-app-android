@@ -68,6 +68,9 @@ internal class ExpressTransactionsModel @Inject constructor(
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
+
+    /** Swap the rating slot is already showing, so a status refresh does not re-activate it */
+    private var ratingRequestedTxId: String? = null
     private val expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 
     private val waitForFirstExpressStatusEmit = MutableStateFlow(false)
@@ -98,6 +101,7 @@ internal class ExpressTransactionsModel @Inject constructor(
         subscribeOnExternalEvents()
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExpressTransactionsUpdates()
+        subscribeOnRatingActivation()
     }
 
     fun onResume() {
@@ -112,15 +116,6 @@ internal class ExpressTransactionsModel @Inject constructor(
         val expressTxState = internalUiState.value.transactionsToDisplay.firstOrNull { it.info.txId == txId }
             ?: return
         internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
-        if (expressTxState is ExchangeUM) {
-            val ratingTxId = expressTxState.info.txExternalId ?: expressTxState.info.txId
-            params.onRatingRequested?.invoke(
-                ratingTxId,
-                expressTxState.provider.name,
-                expressTxState.info.txExternalUrl.orEmpty(),
-                expressTxState.fromUserWalletId.stringValue,
-            )
-        }
     }
 
     override fun onGoToProviderClick(url: String) {
@@ -169,6 +164,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                 )
             }
         }
+        ratingRequestedTxId = null
         params.onRatingDismiss?.invoke()
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
@@ -181,6 +177,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                 }
             }
         }
+        ratingRequestedTxId = null
         params.onRatingDismiss?.invoke()
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
@@ -207,6 +204,34 @@ internal class ExpressTransactionsModel @Inject constructor(
             waitForFirstExpressStatusEmit.first { it }
             onExpressTransactionClick(txId)
         }
+    }
+
+    /**
+     * The rating widget asks the survey vendor whether the swap is already rated, and the vendor caps API
+     * calls per day. A deal in flight is re-opened many times while the user watches its status, so the
+     * widget is requested only once that deal is final — but it is watched rather than sampled on open, so
+     * a deal that finishes while its sheet is up still offers the stars right away.
+     */
+    private fun subscribeOnRatingActivation() {
+        internalUiState
+            .map { (it.bottomSheetSlot?.config?.content as? ExpressStatusBottomSheetConfig)?.value }
+            .onEach(::requestRatingIfFinal)
+            .launchIn(modelScope)
+    }
+
+    private fun requestRatingIfFinal(expressTxState: ExpressTransactionStateUM?) {
+        if (expressTxState !is ExchangeUM || expressTxState.activeStatus?.isRateable != true) return
+
+        val ratingTxId = expressTxState.info.txExternalId ?: expressTxState.info.txId
+        if (ratingTxId == ratingRequestedTxId) return
+        ratingRequestedTxId = ratingTxId
+
+        params.onRatingRequested?.invoke(
+            ratingTxId,
+            expressTxState.provider.name,
+            expressTxState.info.txExternalUrl.orEmpty(),
+            expressTxState.fromUserWalletId.stringValue,
+        )
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
