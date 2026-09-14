@@ -11,26 +11,18 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
-import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.model.JointOperationModel
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.features.txhistory.joint.operation.signers.component.JointOperationSignersScreenComponent
-import com.tangem.features.txhistory.joint.operation.signers.converter.JointOperationSignersUMConverter
-import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.tangem.features.txhistory.joint.operation.ui.JointOperationContentSheet
+import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 
 internal class DefaultJointOperationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -44,43 +36,6 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
         popCallback = { onChildBack() },
     )
 
-    private val converter = JointOperationUMConverter(
-        currency = params.currency,
-        onSignClick = model::onSignClick,
-        onSignersClick = model::onSignersClick,
-        onCopyRecipientClick = model::onCopyRecipientClick,
-    )
-
-    private val operationState: StateFlow<TxHistoryDetailsUM.SingleAsset?> = combine(
-        flow = model.state,
-        flow2 = model.isSigning,
-        flow3 = model.hasAnswered,
-        flow4 = model.isBalanceHidden,
-    ) { state, isSigning, hasAnswered, isBalanceHidden ->
-        converter.convert(
-            value = JointOperationUMConverter.Input(
-                state = state,
-                isSigning = isSigning,
-                hasAnswered = hasAnswered,
-                isBalanceHidden = isBalanceHidden,
-            ),
-        )
-    }
-        .stateIn(componentScope, SharingStarted.WhileSubscribed(), initialValue = null)
-
-    private val signersState: StateFlow<JointOperationSignersUM> = model.state
-        .map { state ->
-            state ?: return@map JointOperationSignersUM.Loading
-
-            JointOperationSignersUMConverter().convert(
-                value = JointOperationSignersUMConverter.Input(
-                    membersCount = state.membersCount,
-                    signers = state.signers,
-                ),
-            )
-        }
-        .stateIn(componentScope, SharingStarted.WhileSubscribed(), initialValue = JointOperationSignersUM.Loading)
-
     private val contentStack = childStack(
         key = "JointOperationStack",
         source = model.stackNavigation,
@@ -91,9 +46,8 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
     )
 
     init {
-        // Executed or cancelled by someone else: nothing left to show or sign on either screen
-        model.isGone
-            .filter { it }
+        model.uiState
+            .filterIsInstance<JointOperationUM.Gone>()
             .onEach { dismiss() }
             .launchIn(componentScope)
     }
@@ -101,12 +55,10 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val stack by contentStack.subscribeAsState()
-        val operation by operationState.collectAsStateWithLifecycle()
-        val signers by signersState.collectAsStateWithLifecycle()
+        val uiState by model.uiState.collectAsStateWithLifecycle()
 
         JointOperationContentSheet(
-            header = operation?.header,
-            membersCount = (signers as? JointOperationSignersUM.Content)?.membersCount,
+            state = uiState as? JointOperationUM.Content,
             contentStack = stack,
             onBackClick = ::onChildBack,
             onCloseClick = ::dismiss,
@@ -131,11 +83,11 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
         return when (config) {
             JointOperationRoutes.Operation -> JointOperationDetailComponent(
                 appComponentContext = childContext,
-                state = operationState,
+                state = model.uiState,
             )
             JointOperationRoutes.Signers -> JointOperationSignersScreenComponent(
                 appComponentContext = childContext,
-                state = signersState,
+                state = model.uiState,
             )
         }
     }
