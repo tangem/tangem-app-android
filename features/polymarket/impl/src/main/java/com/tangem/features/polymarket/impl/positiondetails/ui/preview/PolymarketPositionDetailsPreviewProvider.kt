@@ -7,14 +7,16 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
+import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Content
+import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Notice
 
 internal class PolymarketPositionDetailsPreviewProvider :
-    CollectionPreviewParameterProvider<PolymarketPositionDetailsUM>(detailsCases().values) {
+    CollectionPreviewParameterProvider<Content>(detailsCases().values) {
 
     override fun getDisplayName(index: Int): String = detailsCases().keys.elementAt(index)
 }
 
-private fun detailsCases(): Map<String, PolymarketPositionDetailsUM> {
+private fun detailsCases(): Map<String, Content> {
     val positive = positionDetails()
     return linkedMapOf(
         "Positive P&L" to positive,
@@ -66,10 +68,29 @@ private fun detailsCases(): Map<String, PolymarketPositionDetailsUM> {
             event = null,
             information = positive.information.copy(endDate = null),
         ),
-    )
+    ) + detailsStateCases(positive)
 }
 
-private fun positionDetails() = PolymarketPositionDetailsUM(
+private fun detailsStateCases(positive: Content.Data): Map<String, Content> = linkedMapOf(
+    "Event without volume" to positive.copy(event = positive.event?.copy(volume = null)),
+    "No payout estimate" to positive.copy(summary = positive.summary.copy(payout = null)),
+    "Pending" to positive.copy(
+        notice = Notice.Pending,
+        information = positive.information.copy(status = resourceReference(R.string.prediction_positions_pending)),
+    ),
+    "Disputed" to positive.copy(
+        notice = Notice.Disputed,
+        information = positive.information.copy(status = resourceReference(R.string.prediction_positions_disputed)),
+    ),
+    "Unknown status" to positive.copy(
+        information = positive.information.copy(status = resourceReference(R.string.prediction_positions_unknown)),
+    ),
+    "Initial loading" to Content.Loading,
+    "Initial error" to Content.Error(onRetry = {}),
+    "Position unavailable" to Content.Unavailable,
+)
+
+private fun positionDetails() = Content.Data(
     summary = PolymarketPositionDetailsUM.Summary(
         title = stringReference("Will Uzbekistan win the 2026 FIFA World Cup?"),
         iconUrl = null,
@@ -95,7 +116,6 @@ private fun positionDetails() = PolymarketPositionDetailsUM(
         status = resourceReference(R.string.prediction_positions_open),
         endDate = stringReference("Dec 31, 2026"),
     ),
-    onCloseClick = {},
 )
 
 private fun pnl(value: String, direction: TangemPriceChange.Direction) = TangemPriceChange.State(
