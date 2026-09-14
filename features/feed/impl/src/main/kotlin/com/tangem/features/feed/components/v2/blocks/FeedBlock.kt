@@ -2,6 +2,7 @@ package com.tangem.features.feed.components.v2.blocks
 
 import androidx.compose.runtime.Composable
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.feed.nav.FeedTabId
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -44,4 +45,11 @@ internal interface FeedBlock : ComposableContentComponent {
         /** Full-height promo card, alone in its column. */
         Large,
     }
+}
+
+/** What a block can ask of the feed host — anything it can't reach through the router. */
+internal interface FeedBlockCallbacks {
+
+    /** Brings one of the feed's own tabs to front; tabs are pages of the host's pager, not routes. */
+    fun onOpenTab(tab: FeedTabId)
 }
