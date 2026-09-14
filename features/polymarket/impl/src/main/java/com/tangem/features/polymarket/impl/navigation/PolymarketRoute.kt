@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.navigation
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 
@@ -32,6 +33,8 @@ internal sealed interface PolymarketRoute : Route {
     data class Main(val userWalletId: UserWalletId) : PolymarketRoute
 
     data class Positions(val userWalletId: UserWalletId, val initialTab: PolymarketPositionsTab) : PolymarketRoute
+
+    data class PositionDetails(val userWalletId: UserWalletId, val positionId: PolymarketPositionId) : PolymarketRoute
 
     /**
      * Details of a single prediction event.
