@@ -10,7 +10,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -47,7 +46,6 @@ internal class TangemPayOnboardingStarterTest {
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase = mockk()
     private val createHotWalletUseCase: CreateHotWalletUseCase = mockk()
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
-    private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val loadingChanges = mutableListOf<Boolean>()
@@ -68,7 +66,6 @@ internal class TangemPayOnboardingStarterTest {
         getCustomerOffersUseCase = getCustomerOffersUseCase,
         createHotWalletUseCase = createHotWalletUseCase,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
-        clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
@@ -82,7 +79,6 @@ internal class TangemPayOnboardingStarterTest {
             getCustomerOffersUseCase,
             createHotWalletUseCase,
             isHotWalletCreationSupported,
-            clearAppsFlyerDeeplinkUseCase,
             tangemPayFeatureToggles,
         )
         loadingChanges.clear()
@@ -97,7 +93,7 @@ internal class TangemPayOnboardingStarterTest {
     inner class CampaignOrder {
 
         @Test
-        fun `GIVEN campaign offer WHEN startOnboarding THEN campaign order created AND key cleared AND KYC opened`() =
+        fun `GIVEN campaign offer WHEN startOnboarding THEN campaign order created AND KYC opened`() =
             runTest {
                 // Arrange
                 coEvery {
@@ -114,7 +110,6 @@ internal class TangemPayOnboardingStarterTest {
                 coVerify(exactly = 1) {
                     repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
                 }
-                coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }
@@ -132,7 +127,6 @@ internal class TangemPayOnboardingStarterTest {
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
                 coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
-                coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
@@ -166,13 +160,12 @@ internal class TangemPayOnboardingStarterTest {
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
                 coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
-                coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
 
         @Test
-        fun `GIVEN order creation fails WHEN startOnboarding THEN snackbar shown AND key kept AND KYC not opened`() =
+        fun `GIVEN order creation fails WHEN startOnboarding THEN snackbar shown AND KYC not opened`() =
             runTest {
                 // Arrange
                 coEvery {
@@ -187,7 +180,6 @@ internal class TangemPayOnboardingStarterTest {
 
                 // Assert
                 verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
-                coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
                 verify(exactly = 0) { router.replaceAll(*anyVararg()) }
                 assertThat(loadingChanges).containsExactly(true, false).inOrder()
             }
@@ -247,7 +239,6 @@ internal class TangemPayOnboardingStarterTest {
                 // Assert
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
                 coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
-                coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }
@@ -325,34 +316,18 @@ internal class TangemPayOnboardingStarterTest {
     inner class CreateHotWallet {
 
         @Test
-        fun `GIVEN creation not supported AND campaign WHEN createHotWallet THEN key cleared AND home opened`() =
-            runTest {
-                // Arrange
-                every { isHotWalletCreationSupported() } returns false
-                every { isHotWalletCreationSupported.getLeastVersionName() } returns "Android 10"
-
-                // Act
-                val actual = starter.createHotWallet(campaignKey = CAMPAIGN_KEY, onLoadingChange = {})
-
-                // Assert
-                assertThat(actual).isNull()
-                coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
-                verify(exactly = 1) { router.replaceCurrent(AppRoute.Home()) }
-                coVerify(exactly = 0) { createHotWalletUseCase(any(), any()) }
-            }
-
-        @Test
-        fun `GIVEN creation not supported AND no campaign WHEN createHotWallet THEN key untouched`() = runTest {
+        fun `GIVEN creation not supported WHEN createHotWallet THEN home opened AND wallet not created`() = runTest {
             // Arrange
             every { isHotWalletCreationSupported() } returns false
             every { isHotWalletCreationSupported.getLeastVersionName() } returns "Android 10"
 
             // Act
-            starter.createHotWallet(campaignKey = null, onLoadingChange = {})
+            val actual = starter.createHotWallet(onLoadingChange = {})
 
             // Assert
-            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+            assertThat(actual).isNull()
             verify(exactly = 1) { router.replaceCurrent(AppRoute.Home()) }
+            coVerify(exactly = 0) { createHotWalletUseCase(any(), any()) }
         }
 
         @Test
@@ -363,7 +338,7 @@ internal class TangemPayOnboardingStarterTest {
             coEvery { createHotWalletUseCase(any(), any()) } returns userWallet.right()
 
             // Act
-            val actual = starter.createHotWallet(campaignKey = CAMPAIGN_KEY, onLoadingChange = {})
+            val actual = starter.createHotWallet(onLoadingChange = {})
 
             // Assert
             assertThat(actual).isSameInstanceAs(userWallet)
@@ -378,10 +353,7 @@ internal class TangemPayOnboardingStarterTest {
                 coEvery { createHotWalletUseCase(any(), any()) } returns RuntimeException("boom").left()
 
                 // Act
-                val actual = starter.createHotWallet(
-                    campaignKey = CAMPAIGN_KEY,
-                    onLoadingChange = callbacks.onLoadingChange,
-                )
+                val actual = starter.createHotWallet(onLoadingChange = callbacks.onLoadingChange)
 
                 // Assert
                 assertThat(actual).isNull()
