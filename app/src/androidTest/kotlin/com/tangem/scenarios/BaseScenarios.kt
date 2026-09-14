@@ -3,6 +3,7 @@ package com.tangem.scenarios
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_WALLET_CREATION
 import com.tangem.common.extensions.clickWithAssertion
@@ -208,15 +209,28 @@ fun BaseTestCase.synchronizeAddresses(
         }
         balance != null -> {
             step("Assert wallet balance != '$DASH_SIGN'") {
-                onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
+                awaitBalanceLoaded()
             }
             step("Assert wallet balance = '$balance'") {
-                onMainScreen { totalBalanceText.assertTextContains(balance) }
+                awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
+                    onMainScreen { totalBalanceText.assertTextContains(balance) }
+                }
             }
         }
         else -> step("Assert wallet balance != '$DASH_SIGN'") {
-            onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
+            awaitBalanceLoaded()
         }
+    }
+}
+
+/**
+ * The total balance starts as a dash and only settles once every network status has landed. On CI that
+ * takes 7–10+ s for the multi-provider networks (part of the RPC traffic still goes to public nodes), so
+ * the default 10 s of `flakySafely` is right on the edge — wait explicitly instead.
+ */
+private fun BaseTestCase.awaitBalanceLoaded() {
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
+        onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
     }
 }
 

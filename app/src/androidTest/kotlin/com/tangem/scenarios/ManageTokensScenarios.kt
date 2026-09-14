@@ -1,7 +1,9 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.screens.accounts.onAccountDetailsScreen
 import com.tangem.screens.onAddCustomTokenScreen
@@ -41,10 +43,17 @@ fun BaseTestCase.addCustomTokenWithCustomDerivation(network: String, contract: S
     }
     step("Click on 'Derivation path' field") {
         awaitSuccess { onAddCustomTokenScreen { derivationSelectorField.assertExists() } }
-        onAddCustomTokenScreen { derivationSelectorField.performClick() }
+        // The contract is typed in chunks and the form rebuilds as it validates, which can swallow the
+        // click that opens the derivation selector — retry it until the selector is actually up. Clicking
+        // again while it is already open would dismiss it, so only click when it is not.
+        awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onAddCustomTokenScreen {
+                if (!customDerivationButton.isDisplayedSafely()) derivationSelectorField.performClick()
+                customDerivationButton.assertIsDisplayed()
+            }
+        }
     }
     step("Click on 'Custom derivation' button") {
-        awaitSuccess { onAddCustomTokenScreen { customDerivationButton.assertIsDisplayed() } }
         onAddCustomTokenScreen { customDerivationButton.performClick() }
     }
     step("Enter custom derivation path: '$derivationPath'") {
