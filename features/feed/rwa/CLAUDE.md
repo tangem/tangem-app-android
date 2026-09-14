@@ -227,3 +227,23 @@ The code travels in `CategorySelection.Entry` so the applied-filter chip resolve
 the selector. **Don't confuse it with `id`:** `id` is the identity the selector matches on and the value
 `RwaBatchFlowManager` sends as `sectorId`; `code` is only ever the localization key. DS3 component rules
 are in `.claude/rules/codestyle/design-system.md`.
+
+**The umbrella arrives with `visible = false`.** The categories spec says only visible categories are
+returned; the backend returns the umbrella anyway, flagged invisible. `CategorySelectorModel` therefore
+filters on `isVisible || code == REAL_WORLD_ASSETS` — dropping it would remove the row that clears the
+category filter, leaving no way back to "All". `RwaFeedTabModel` reads the umbrella from the unfiltered
+list, so the list scope was never affected.
+
+**Geo: the country only decides `restricted`, it narrows nothing.** `getCoinCategories(country)` sends
+ISO 3166-1 alpha-2 as a query param; omitting it returns the same categories with every `restricted`
+false. That is why the tab's default category cannot be derived from the flag — the umbrella is
+restricted nowhere. `US`/`GB` open on `commodities` instead (`RwaDefaultCategory`), applied once per
+model so a later reload cannot overwrite the user's pick. `UserCountryResolver` waits up to 3s for the start-up geo fetch — the synchronous read is an
+in-memory flow rebuilt every process, so every launch races it — and falls back to the device region
+rather than asking without a country.
+
+**The categories endpoint is deliberately uncached.** Every `getCoinCategories` call goes to the
+network — no `CacheRegistry` entry, no in-memory store, no persisted snapshot. The response carries the
+region restrictions, and a cached copy would keep showing the restrictions of whatever country the app
+last asked about. The cost is one request per caller: the tab, the Category selector and the search tab
+each fetch their own.
