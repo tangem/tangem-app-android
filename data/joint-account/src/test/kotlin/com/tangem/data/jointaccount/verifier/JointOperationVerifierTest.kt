@@ -63,6 +63,26 @@ internal class JointOperationVerifierTest {
         assertThat(actual).isEqualTo(Unit.right())
     }
 
+    @Test
+    fun `GIVEN the zero receiver spelled without the prefix WHEN verify THEN the refund is still refused`() = runTest {
+        // Arrange
+        val rawZero = ZERO_ADDRESS.removePrefix(prefix = "0x")
+
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(refundReceiver = rawZero)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(refundReceiver = rawZero),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left(),
+        )
+    }
+
     /** The fee recipient is only checked for being an address by creation, and the zero address is one */
     @Test
     fun `GIVEN the configured fee recipient is itself zero WHEN verify THEN the refund is still refused`() = runTest {
