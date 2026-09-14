@@ -117,6 +117,7 @@ internal fun WalletScreen(
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
+    isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -172,6 +173,7 @@ internal fun WalletScreen(
         behavior = behavior,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
+        isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
         shtorkaContent = shtorkaContent,
         legacyBottomSheetContent = legacyBottomSheetContent,
@@ -209,6 +211,7 @@ private fun WalletContent(
     modifier: Modifier = Modifier,
     isNewShtorkaEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
+    isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -229,6 +232,7 @@ private fun WalletContent(
         state = state,
         isNewShtorkaEnabled = isNewShtorkaEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
+        isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
@@ -461,6 +465,7 @@ private fun WalletContent(
 private fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
     isNewShtorkaEnabled: Boolean,
+    isShtorkaPartialExpansionSupported: Boolean,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
@@ -475,6 +480,7 @@ private fun BaseScaffoldWithMarkets(
         ShtorkaScaffoldWithMarkets(
             state = state,
             isBlurEnabled = isShtorkaBlurEnabled,
+            isPartialExpansionSupported = isShtorkaPartialExpansionSupported,
             shtorkaHeaderContent = shtorkaHeaderContent,
             onBottomSheetStateChange = onBottomSheetStateChange,
             appBarContent = appBarContent,
@@ -613,10 +619,13 @@ private val ShtorkaSemiOpenDetent = TangemShtorka.Detent.Height(
 
 private val ShtorkaDetents = listOf(ShtorkaCollapsedDetent, ShtorkaSemiOpenDetent, TangemShtorka.Detent.Full)
 
+private val SkippedWithoutPartialExpansion = setOf(ShtorkaSemiOpenDetent)
+
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun ShtorkaScaffoldWithMarkets(
     state: WalletScreenState,
+    isPartialExpansionSupported: Boolean,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     modifier: Modifier = Modifier,
     isBlurEnabled: () -> Boolean = { true },
@@ -631,6 +640,7 @@ private fun ShtorkaScaffoldWithMarkets(
     val shtorkaState = rememberTangemShtorkaState(
         detents = ShtorkaDetents,
         initialDetent = ShtorkaCollapsedDetent,
+        skippedDetents = if (isPartialExpansionSupported) emptySet() else SkippedWithoutPartialExpansion,
     )
     val sheetHandle = remember(shtorkaState) { ShtorkaWalletSheetHandle(shtorkaState) }
     val isExpanded = sheetHandle.isExpanded

@@ -13,6 +13,8 @@ import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
  */
 interface FeedScreenComponent {
 
+    val isPartialExpansionSupported: Boolean get() = false
+
     /**
      * Navbar of the screen, rendered in the host's pinned sheet header in place of the feed's
      * search bar (typically a DS3 `TangemTopNavigation` with `WindowInsets(0)`). The default is
