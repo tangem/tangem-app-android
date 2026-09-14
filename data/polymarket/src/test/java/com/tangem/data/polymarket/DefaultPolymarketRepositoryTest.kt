@@ -16,6 +16,7 @@ import com.tangem.data.polymarket.error.PolymarketAuthErrorResolver
 import com.tangem.data.polymarket.error.PolymarketEventErrorResolver
 import com.tangem.data.polymarket.error.PredictionPlaceOrderErrorResolver
 import com.tangem.data.polymarket.error.PolymarketWalletErrorResolver
+import com.tangem.data.polymarket.error.ProblemDetailParser
 import com.tangem.data.polymarket.signer.Base64UrlCodec
 import com.tangem.data.polymarket.signer.PolymarketHmacSigner
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
@@ -97,7 +98,7 @@ internal class DefaultPolymarketRepositoryTest {
     private val geoApi: PolymarketGeoApi = mockk()
     private val relayerApi: PolymarketRelayerApi = mockk()
     private val clobApi: PolymarketClobApi = mockk()
-    private val walletErrorResolver = PolymarketWalletErrorResolver(Moshi.Builder().build())
+    private val walletErrorResolver = PolymarketWalletErrorResolver(ProblemDetailParser(Moshi.Builder().build()))
     private val authErrorResolver = PolymarketAuthErrorResolver()
     private val eventErrorResolver = PolymarketEventErrorResolver()
     private val placeOrderErrorResolver = PredictionPlaceOrderErrorResolver()
