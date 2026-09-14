@@ -45,6 +45,7 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.api.NetworkSelectionComponent
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
@@ -68,6 +69,7 @@ internal class WalletComponent @AssistedInject constructor(
     virtualAccountMainBlockComponentFactory: VirtualAccountMainBlockComponent.Factory,
     jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
     polymarketWalletBlockComponentFactory: PolymarketWalletBlockComponent.Factory,
+    collectiblesWalletBlockComponentFactory: CollectiblesWalletBlockComponent.Factory,
     private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
@@ -110,6 +112,12 @@ internal class WalletComponent @AssistedInject constructor(
     private val polymarketWalletBlockComponent by lazy {
         polymarketWalletBlockComponentFactory.create(
             context = child("polymarketWalletBlockComponent"),
+            params = Unit,
+        )
+    }
+    private val collectiblesWalletBlockComponent by lazy {
+        collectiblesWalletBlockComponentFactory.create(
+            context = child("collectiblesWalletBlockComponent"),
             params = Unit,
         )
     }
@@ -327,6 +335,7 @@ internal class WalletComponent @AssistedInject constructor(
             virtualAccountComponent = virtualAccountMainBlockComponent,
             jointAccountComponent = jointAccountMainBlockComponent,
             polymarketComponent = polymarketWalletBlockComponent,
+            collectiblesComponent = collectiblesWalletBlockComponent,
             modifier = modifier,
             isNewShtorkaEnabled = feedFeatureToggles.isNewShtorkaEnabled,
             shtorkaHeaderContent = { sheetExpansion, onExpandSheet ->
