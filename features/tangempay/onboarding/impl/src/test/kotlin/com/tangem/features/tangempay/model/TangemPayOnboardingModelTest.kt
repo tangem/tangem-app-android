@@ -12,6 +12,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.CustomerInfo
@@ -54,6 +55,7 @@ internal class TangemPayOnboardingModelTest {
     fun resetMocks() {
         clearMocks(router, repository, eligibilityManager, analytics, produceInitialDataUseCase, urlOpener)
         every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
+        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
     }
 
     @Test
@@ -164,6 +166,30 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
+    fun `GIVEN residency step enabled WHEN get card clicked THEN residency step opened AND wallets not requested`() =
+        runTest {
+            // GIVEN
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+            val model = createModel(TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink)
+            advanceUntilIdle()
+            val content = model.uiState.value as TangemPayOnboardingScreenState.Content
+
+            // WHEN
+            content.buttonConfig.onClick.invoke()
+            advanceUntilIdle()
+
+            // THEN
+            verify(exactly = 1) {
+                router.push(
+                    route = AppRoute.TangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT),
+                    onComplete = any(),
+                )
+            }
+            coVerify(exactly = 0) { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = any()) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN tiers off and KYC not approved WHEN onboarding starts THEN order created before KYC`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("011")
@@ -235,6 +261,7 @@ internal class TangemPayOnboardingModelTest {
             repository = repository,
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
+            featureToggles = tangemPayFeatureToggles,
             onboardingStarter = TangemPayOnboardingStarter(
                 router = router,
                 uiMessageSender = mockk(relaxed = true),
