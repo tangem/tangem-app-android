@@ -7,7 +7,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.StatusSource
@@ -994,8 +993,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val portfolioStatus = personalAccountStatus(listOf(destinationStatus, otherStatus))
         val portfolio = listOf(destinationStatus.currency, otherStatus.currency)
         val destinations = mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id))
-        every { singleAccountStatusListSupplier(userWalletId) } returns
-            flowOf(accountStatusList(listOf(portfolioStatus)))
+        every { multiAccountStatusListSupplier() } returns
+            flowOf(listOf(accountStatusList(listOf(portfolioStatus))))
         coEvery { getPredictionWithdrawDestinationsUseCase(portfolio) } returns destinations.right()
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
         advanceUntilIdle()
@@ -1011,18 +1010,18 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN to tokenFilter sees a bridge destination held by another wallet THEN it is rejected`() =
+    fun `GIVEN a prediction withdraw WHEN to tokenFilter sees a bridge destination held by another wallet THEN it passes`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
             val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
-            val foreignPortfolio = personalAccountStatus(
+            val otherWalletPortfolio = personalAccountStatus(
                 currencies = listOf(destinationStatus),
                 userWalletId = UserWalletId(stringValue = "FEDCBA9876543210"),
             )
-            every { singleAccountStatusListSupplier(userWalletId) } returns
-                flowOf(accountStatusList(listOf(ownPortfolio)))
+            every { multiAccountStatusListSupplier() } returns
+                flowOf(listOf(accountStatusList(listOf(ownPortfolio)), accountStatusList(listOf(otherWalletPortfolio))))
             coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
                 mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id)).right()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
@@ -1033,7 +1032,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
             // Assert
             assertThat(predicate(ownPortfolio, destinationStatus)).isTrue()
-            assertThat(predicate(foreignPortfolio, destinationStatus)).isFalse()
+            assertThat(predicate(otherWalletPortfolio, destinationStatus)).isTrue()
             model.onDestroy()
         }
 
@@ -1045,8 +1044,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
             val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
             val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
-            every { singleAccountStatusListSupplier(userWalletId) } returns
-                flowOf(accountStatusList(listOf(ownPortfolio)))
+            every { multiAccountStatusListSupplier() } returns
+                flowOf(listOf(accountStatusList(listOf(ownPortfolio))))
             coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
                 mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id)).right()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
@@ -1068,8 +1067,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
             val portfolioStatus = personalAccountStatus(listOf(currencyStatus))
-            every { singleAccountStatusListSupplier(userWalletId) } returns
-                flowOf(accountStatusList(listOf(portfolioStatus)))
+            every { multiAccountStatusListSupplier() } returns
+                flowOf(listOf(accountStatusList(listOf(portfolioStatus))))
             coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns PolymarketBridgeError.Network.left()
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
             advanceUntilIdle()

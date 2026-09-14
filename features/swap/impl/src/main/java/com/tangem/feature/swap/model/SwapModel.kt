@@ -49,7 +49,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -191,7 +191,7 @@ internal class SwapModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
@@ -2511,8 +2511,7 @@ internal class SwapModel @Inject constructor(
 
         val toFilter = if (isPredictionWithdrawFlow) {
             { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
-                accountStatus is AccountStatus.Personal &&
-                    accountStatus.account.userWalletId == params.userWalletId &&
+                accountStatus is AccountStatus.CryptoPortfolio &&
                     baseFilter(accountStatus, currencyStatus) &&
                     predictionWithdrawDestinations?.containsKey(currencyStatus.currency.id) == true
             }
@@ -2526,12 +2525,14 @@ internal class SwapModel @Inject constructor(
 
     private fun observePredictionWithdrawDestinations() {
         if (!isPredictionWithdrawFlow) return
-        singleAccountStatusListSupplier(params.userWalletId)
-            .map { statusList ->
-                statusList.accountStatuses
-                    .filterIsInstance<AccountStatus.Personal>()
-                    .flatMap { it.flattenCurrencies() }
-                    .map { it.currency }
+        multiAccountStatusListSupplier()
+            .map { statusLists ->
+                statusLists.flatMap { statusList ->
+                    statusList.accountStatuses
+                        .filterIsInstance<AccountStatus.CryptoPortfolio>()
+                        .flatMap { it.flattenCurrencies() }
+                        .map { it.currency }
+                }
             }
             .distinctUntilChanged()
             .onEach { portfolio ->
