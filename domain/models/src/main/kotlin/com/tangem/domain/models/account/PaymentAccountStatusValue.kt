@@ -203,6 +203,9 @@ sealed class PaymentAccountStatusValue {
      * @property virtualAccount Virtual Account (Visa on-ramp) availability — VA MVP0 (TWI-1638), or `null`
      *                          when not applicable (feature toggle off / wallet not eligible).
      *                          Transient: not persisted in the local cache.
+     * @property isBankOfframpAvailable Whether the customer has the `BANK_OFFRAMP` eligibility channel, or `null`
+     *                                   while it is unknown — the status came from the cache, or the channel
+     *                                   lookup failed. Transient: not persisted in the local cache.
      * @property tariffPlan Current tariff plan with subscription data (Tiers).
      *                      Transient: not persisted in the local cache.
      */
@@ -219,6 +222,7 @@ sealed class PaymentAccountStatusValue {
         val fiatRate: SerializedBigDecimal?,
         val error: Error?,
         val virtualAccount: VirtualAccountOnramp?,
+        val isBankOfframpAvailable: Boolean?,
         val tariffPlan: TangemPayTariffPlanState?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus? = balance?.let { accountBalance ->

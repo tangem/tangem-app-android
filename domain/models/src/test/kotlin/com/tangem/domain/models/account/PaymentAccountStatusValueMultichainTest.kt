@@ -39,6 +39,7 @@ internal class PaymentAccountStatusValueMultichainTest {
         fiatRate = BigDecimal("1.0"),
         error = null,
         virtualAccount = null,
+        isBankOfframpAvailable = null,
         tariffPlan = null,
     )
 
