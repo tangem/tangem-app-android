@@ -8,14 +8,22 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
+import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -29,6 +37,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import java.math.BigDecimal
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -41,6 +50,8 @@ internal class CollectiblesMainModelTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase = mockk()
+    private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
 
     private val coldWallet = MockUserWalletFactory.create()
 
@@ -48,12 +59,23 @@ internal class CollectiblesMainModelTest {
     private val selectedWallet = coldWallet.copy(walletId = UserWalletId("bb"))
 
     private lateinit var walletsFlow: MutableStateFlow<List<UserWallet>?>
+    private lateinit var statusFlow: MutableStateFlow<CollectiblesAccountStatusValue>
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, messageSender, userWalletsListRepository, closeCollectiblesVaultUseCase)
+        clearMocks(
+            router,
+            messageSender,
+            userWalletsListRepository,
+            closeCollectiblesVaultUseCase,
+            accountStatusSupplier,
+            getSelectedAppCurrencyUseCase,
+        )
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
+        statusFlow = MutableStateFlow(CollectiblesAccountStatusValue.Loading)
         every { userWalletsListRepository.userWallets } returns walletsFlow
+        every { accountStatusSupplier(coldWallet.walletId) } returns statusFlow
+        every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
     }
 
     @Nested
@@ -61,13 +83,32 @@ internal class CollectiblesMainModelTest {
     inner class Chrome {
 
         @Test
-        fun `GIVEN model created WHEN state read THEN balance comes from the stub data`() = runTest {
+        fun `GIVEN an unread vault WHEN state read THEN the balance is a dash`() = runTest {
             // Act
             val model = createModel(testScope = this)
+            advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value.balance.crypto)
-                .isEqualTo(stringReference(CollectiblesMainStubData.BALANCE.crypto))
+            assertThat(model.uiState.value.balance.crypto).isEqualTo(stringReference(DASH_SIGN))
+            assertThat(model.uiState.value.balance.fiatPlain).isEqualTo(stringReference(DASH_SIGN))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced vault WHEN state read THEN the balance is the account's own`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+
+            // Act
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Assert
+            val expected = CollectiblesBalanceConverter().convert(
+                CollectiblesBalanceConverter.Input(status = PRICED_VAULT, appCurrency = AppCurrency.Default),
+            )
+            assertThat(model.uiState.value.balance).isEqualTo(expected)
+            assertThat(model.uiState.value.balance.crypto).isNotEqualTo(stringReference(DASH_SIGN))
             model.onDestroy()
         }
 
@@ -216,7 +257,17 @@ internal class CollectiblesMainModelTest {
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,
             closeCollectiblesVaultUseCase = closeCollectiblesVaultUseCase,
+            collectiblesAccountStatusSupplier = accountStatusSupplier,
+            getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+        )
+    }
+
+    private companion object {
+
+        val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
+            source = StatusSource.ACTUAL,
+            vaultBalance = CollectiblesVaultBalance(usdcAmount = BigDecimal("25.5"), usdcFiatRate = BigDecimal.ONE),
         )
     }
 
