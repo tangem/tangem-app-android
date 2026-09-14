@@ -2,6 +2,7 @@ package com.tangem.features.feed.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.feed.components.v2.blocks.model.AddAccountBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.CollectiblesBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
@@ -85,6 +86,11 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(FeedHomeModel::class)
     fun provideFeedHomeModel(model: FeedHomeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(AddAccountBlockModel::class)
+    fun provideAddAccountBlockModel(model: AddAccountBlockModel): Model
 
     @Binds
     @IntoMap
