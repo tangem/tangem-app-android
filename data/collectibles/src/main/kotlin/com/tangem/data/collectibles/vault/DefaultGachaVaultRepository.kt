@@ -148,6 +148,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 null
             },
             cardId = cardId,
+            registerColdWallet = false,
         )
 
         return when (result) {
