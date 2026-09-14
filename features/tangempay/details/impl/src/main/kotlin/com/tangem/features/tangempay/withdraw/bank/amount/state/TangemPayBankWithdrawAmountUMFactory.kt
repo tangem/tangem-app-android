@@ -8,7 +8,6 @@ import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountSelection
 import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountSheet
-import com.tangem.features.tangempay.withdraw.bank.amount.model.AmountState
 import com.tangem.features.tangempay.withdraw.bank.amount.model.BankWithdrawAmountValidator.Result
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.AmountFieldUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteItemUM
@@ -20,7 +19,6 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
-import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Currency
 
@@ -31,31 +29,31 @@ internal class TangemPayBankWithdrawAmountUMFactory(
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
 
-    fun create(draft: BankWithdrawDraft, state: AmountState): TangemPayBankWithdrawAmountUM {
-        val selection = state.resolve(draft)
+    fun create(
+        draft: BankWithdrawDraft,
+        selection: AmountSelection,
+        sheet: AmountSheet?,
+    ): TangemPayBankWithdrawAmountUM {
         return TangemPayBankWithdrawAmountUM(
             header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
-            amount = createAmountField(value = selection?.displayValue ?: state.value.orEmpty(), selection = selection),
-            source = selection?.source?.let { createSourceRow(it, selection.currency) } ?: SourceRowUM.Loading,
-            route = selection?.let(::createRouteRow) ?: RouteRowUM.Loading,
-            isContinueEnabled = selection?.isContinueEnabled == true,
-            sheet = selection?.let { createSheet(sheet = state.sheet, selection = it) } ?: SheetUM.Hidden,
+            amount = createAmountField(selection = selection),
+            source = createSourceRow(source = selection.source, currency = selection.currency),
+            route = createRouteRow(selection = selection),
+            isContinueEnabled = selection.isContinueEnabled,
+            sheet = createSheet(sheet = sheet, selection = selection),
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )
     }
 
-    private fun createAmountField(value: String, selection: AmountSelection?): AmountFieldUM {
-        val currency = selection?.currency
-        return AmountFieldUM(
-            value = value,
-            decimals = currency?.defaultFractionDigits ?: DEFAULT_DECIMALS,
-            currencyCode = currency?.currencyCode.orEmpty(),
-            currencySymbol = currency?.symbol.orEmpty(),
-            error = selection?.let(::createError),
-            onValueChange = callbacks.onValueChange,
-        )
-    }
+    private fun createAmountField(selection: AmountSelection): AmountFieldUM = AmountFieldUM(
+        value = selection.displayValue,
+        decimals = selection.currency.defaultFractionDigits,
+        currencyCode = selection.currency.currencyCode,
+        currencySymbol = selection.currency.symbol,
+        error = createError(selection),
+        onValueChange = callbacks.onValueChange,
+    )
 
     private fun createError(selection: AmountSelection): TextReference? = when (selection.validation) {
         Result.Empty,
@@ -71,28 +69,20 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         Result.NotEnoughFunds -> resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds)
     }
 
-    private fun createSourceRow(source: BankWithdrawSource, currency: Currency): SourceRowUM.Content =
-        SourceRowUM.Content(
-            icon = iconConverter.convert(source.token),
-            symbol = source.token.symbol,
-            subtitle = createSourceSubtitle(source = source, currency = currency),
-            onMaxClick = callbacks.onMaxClick,
-            onClick = callbacks.onSourceClick,
-        )
+    private fun createSourceRow(source: BankWithdrawSource, currency: Currency): SourceRowUM = SourceRowUM(
+        icon = iconConverter.convert(source.token),
+        symbol = source.token.symbol,
+        subtitle = createSourceSubtitle(source = source, currency = currency),
+        onMaxClick = callbacks.onMaxClick,
+        onClick = callbacks.onSourceClick,
+    )
 
-    private fun createSourceSubtitle(source: BankWithdrawSource, currency: Currency): TextReference {
-        val balance: Any = if (source.isAvailable) {
-            source.fiatBalance.orZero().formatFiat(currency)
-        } else {
-            resourceReference(R.string.tangempay_withdraw_bank_offramp_unavailable)
-        }
-        return resourceReference(
-            R.string.tangempay_withdraw_bank_source_subtitle,
-            wrappedList(source.network.name, balance),
-        )
-    }
+    private fun createSourceSubtitle(source: BankWithdrawSource, currency: Currency): TextReference = resourceReference(
+        R.string.tangempay_withdraw_bank_source_subtitle,
+        wrappedList(source.network.name, source.fiatBalance.formatFiat(currency)),
+    )
 
-    private fun createRouteRow(selection: AmountSelection): RouteRowUM.Content = RouteRowUM.Content(
+    private fun createRouteRow(selection: AmountSelection): RouteRowUM = RouteRowUM(
         rail = selection.destination.rail,
         title = selection.destination.rail.toTitleReference(),
         eta = selection.destination.eta.toTextReference(),
@@ -109,8 +99,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                     icon = iconConverter.convert(source.token),
                     symbol = source.token.symbol,
                     subtitle = createSourceSubtitle(source = source, currency = selection.currency),
-                    isAvailable = source.isAvailable,
-                    isSelected = source.id == selection.source?.id,
+                    isSelected = source.id == selection.source.id,
                     onClick = { callbacks.onSourceSelected(source.id) },
                 )
             }.toImmutableList(),
@@ -142,8 +131,4 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         val onSheetDismiss: () -> Unit,
         val onContinueClick: () -> Unit,
     )
-
-    private companion object {
-        const val DEFAULT_DECIMALS = 2
-    }
 }

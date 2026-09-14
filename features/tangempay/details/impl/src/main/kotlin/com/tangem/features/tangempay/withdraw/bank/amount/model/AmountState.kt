@@ -2,15 +2,14 @@ package com.tangem.features.tangempay.withdraw.bank.amount.model
 
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.model.bankofframp.AmountLimits
-import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
-import com.tangem.utils.extensions.orZero
+import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -18,43 +17,32 @@ internal enum class AmountSheet { TOKENS, ROUTES }
 
 /** Raw inputs of the Amount step; [resolve] turns them into the selection the UI and the Continue action work with. */
 internal data class AmountState(
-    val options: BankOfframpOptions? = null,
-    val networks: List<PaymentNetworkStatus>? = null,
-    val currencyCode: String? = null,
     val value: String? = null,
     val selectedSourceId: String? = null,
     val selectedRail: BankRail? = null,
     val sheet: AmountSheet? = null,
 ) {
 
-    fun resolve(draft: BankWithdrawDraft): AmountSelection? {
-        val options = options ?: return null
-        val networks = networks ?: return null
-        val destinations = options.destinations
+    fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
         val preferredRail = selectedRail ?: draft.destination?.rail
-        val destination = destinations.firstOrNull { it.rail == preferredRail }
-            ?: destinations.firstOrNull()
-            ?: return null
-        val sources = BankWithdrawSourceResolver.resolve(networks = networks, sources = options.sources)
+        val destination = options.destinations.firstOrNull { it.rail == preferredRail } ?: options.destinations.first()
         val preferredSourceId = selectedSourceId ?: draft.source?.id
-        val source = sources.firstOrNull { it.id == preferredSourceId }
-            ?: BankWithdrawSourceResolver.default(sources)
-        val currency = Currency.getInstance(currencyCode ?: destination.fee.currency)
-        val displayValue = displayValue(draft = draft, currency = currency)
+        val source = options.sources.firstOrNull { it.id == preferredSourceId } ?: options.sources.first()
+        val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
         return AmountSelection(
-            currency = currency,
-            limits = options.amountLimits,
-            sources = sources,
+            currency = options.currency,
+            limits = options.limits,
+            sources = options.sources,
+            destinations = options.destinations,
             source = source,
-            destinations = destinations,
             destination = destination,
             displayValue = displayValue,
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
                 amount = amount,
-                limits = options.amountLimits,
-                balance = source?.fiatBalance.orZero(),
+                limits = options.limits,
+                balance = source.fiatBalance,
                 fee = destination.fee.amount,
             ),
         )
@@ -68,12 +56,13 @@ internal data class AmountState(
         value ?: draft.amount?.parseBigDecimal(decimals = currency.defaultFractionDigits).orEmpty()
 }
 
+/** The prepared options narrowed down to what this screen shows and what Continue would submit. */
 internal data class AmountSelection(
     val currency: Currency,
     val limits: AmountLimits,
-    val sources: List<BankWithdrawSource>,
-    val source: BankWithdrawSource?,
-    val destinations: List<OfframpDestination>,
+    val sources: ImmutableList<BankWithdrawSource>,
+    val destinations: ImmutableList<OfframpDestination>,
+    val source: BankWithdrawSource,
     val destination: OfframpDestination,
     val displayValue: String,
     val amount: BigDecimal?,
@@ -81,11 +70,10 @@ internal data class AmountSelection(
 ) {
 
     val isContinueEnabled: Boolean
-        get() = validation == BankWithdrawAmountValidator.Result.Valid && source?.isAvailable == true
+        get() = validation == BankWithdrawAmountValidator.Result.Valid
 
     fun toResult(): BankWithdrawAmountResult? {
         val amount = amount ?: return null
-        val source = source ?: return null
         return if (isContinueEnabled) BankWithdrawAmountResult(amount, source, destination) else null
     }
 }
