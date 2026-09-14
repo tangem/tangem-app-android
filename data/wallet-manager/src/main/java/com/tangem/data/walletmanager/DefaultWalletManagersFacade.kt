@@ -49,6 +49,7 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
@@ -76,6 +77,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
+    private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -338,7 +340,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
                     gaslessFeeAddresses = gaslessFeeAddresses,
                     currency = currency,
-                    networkTokens = source.tokens,
+                    networkTokens = getCachedTokenInfoUseCase(
+                        userWalletId = userWalletId,
+                        networkId = currency.network.rawId,
+                    ),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> throw TxHistoryLoadException(currency, itemsResult.error)
@@ -352,7 +357,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private class TransactionHistorySource(
         val provider: TransactionHistoryProvider,
         val address: String,
-        val tokens: Set<Token>,
     )
 
     /**
@@ -372,7 +376,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     ): TransactionHistorySource? {
         if (network.derivationPath is Network.DerivationPath.Joint) {
             return getJointAddressProvider(userWalletId, network)
-                ?.let { TransactionHistorySource(provider = it, address = it.address, tokens = it.tokens) }
+                ?.let { TransactionHistorySource(provider = it, address = it.address) }
         }
 
         return getOrCreateWalletManager(userWalletId = userWalletId, network = network)
@@ -380,7 +384,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 TransactionHistorySource(
                     provider = walletManager,
                     address = walletManager.wallet.address,
-                    tokens = walletManager.cardTokens.toSet(),
                 )
             }
     }
