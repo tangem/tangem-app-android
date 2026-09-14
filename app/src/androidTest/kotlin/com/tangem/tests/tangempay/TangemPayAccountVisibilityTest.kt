@@ -2,17 +2,25 @@ package com.tangem.tests.tangempay
 
 import android.Manifest
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.MORALIS_EVM_NFT_API_SCENARIO
 import com.tangem.common.constants.TestConstants.REFERRAL_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.getWcUri
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.core.res.R as CoreResR
 import com.tangem.scenarios.createConnectionViaPasteFromClipboardButton
+import com.tangem.scenarios.enableNFTAndReturnToMain
 import com.tangem.scenarios.openAddFundsChooseTokenSheet
 import com.tangem.scenarios.openAddTokensPortfolioSelector
 import com.tangem.scenarios.openMainScreenWithPayAndTwoAccounts
 import com.tangem.scenarios.openMarketsAddToPortfolioSelector
+import com.tangem.scenarios.openNFTAssetDetails
+import com.tangem.scenarios.openNFTCollectionsScreen
+import com.tangem.scenarios.openNFTReceivePortfolioSelector
+import com.tangem.scenarios.openNFTSendAddressScreen
 import com.tangem.scenarios.openReferralPortfolioSelector
 import com.tangem.scenarios.openTransferChooseTokenSheet
 import com.tangem.scenarios.openWalletConnectScreen
@@ -22,6 +30,7 @@ import com.tangem.scenarios.setTangemPayWithTwoAccountsScenarios
 import com.tangem.screens.onAddToPortfolioScreen
 import com.tangem.screens.onChooseTokenBottomSheet
 import com.tangem.screens.onPortfolioSelectorSheet
+import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onWalletSettingsScreen
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -36,6 +45,11 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
     private val firstAccountName = "Account 1"
     private val secondAccountName = "Account 2"
     private val payAccountName = getResourceString(CoreResR.string.tangempay_payment_account)
+
+    // Account pickers and the send suggestions label a row with Account.accountName, so a leaked Pay row
+    // reads as the domain name below — never as the 'Payment account' UI string.
+    private val payAccountRowName: String
+        get() = Account.Payment(UserWalletId(stringValue = PAY_WALLET_ID_STUB)).accountName.value
 
     @AllureId("11470")
     @DisplayName("Tangem Pay: the Pay account is not listed among the wallet settings accounts")
@@ -245,5 +259,88 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
                 onPortfolioSelectorSheet { portfolioOption(payAccountName).assertDoesNotExist() }
             }
         }
+    }
+
+    @AllureId("11473")
+    @DisplayName("Tangem Pay: the Pay account is not offered when receiving an NFT")
+    @Test
+    fun payAccountNotOfferedWhenReceivingNFTTest() {
+        val nftEmptyState = "Started"
+
+        setupHooks().run {
+            step("Set WireMock scenarios for a Pay wallet with two accounts") {
+                setTangemPayWithTwoAccountsScenarios()
+            }
+            step("Set WireMock scenario '$MORALIS_EVM_NFT_API_SCENARIO' to '$nftEmptyState'") {
+                setWireMockScenarioState(MORALIS_EVM_NFT_API_SCENARIO, nftEmptyState)
+            }
+            step("Open 'Main' screen with the Pay wallet holding two accounts") {
+                openMainScreenWithPayAndTwoAccounts()
+            }
+            step("Enable NFT in wallet settings") {
+                enableNFTAndReturnToMain()
+            }
+            step("Open 'NFT collections' screen") {
+                openNFTCollectionsScreen()
+            }
+            step("Open the account picker behind 'Receive NFT'") {
+                openNFTReceivePortfolioSelector()
+            }
+            step("Assert '$firstAccountName' and '$secondAccountName' are displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onPortfolioSelectorSheet { portfolioOption(firstAccountName).assertIsDisplayed() }
+                }
+                onPortfolioSelectorSheet { portfolioOption(secondAccountName).assertIsDisplayed() }
+            }
+            step("Assert '$payAccountRowName' account is not displayed") {
+                onPortfolioSelectorSheet { portfolioOption(payAccountRowName).assertDoesNotExist() }
+            }
+        }
+    }
+
+    @AllureId("11474")
+    @DisplayName("Tangem Pay: the Pay account is not listed among the NFT send accounts")
+    @Test
+    fun payAccountNotListedInNFTSendAccountsTest() {
+        val nftSingleCollectionState = "SingleCollection"
+        val nftCollectionName = "Tangem Test Collection"
+        val nftAssetName = "Tangem Test NFT #1"
+
+        setupHooks().run {
+            step("Set WireMock scenarios for a Pay wallet with two accounts") {
+                setTangemPayWithTwoAccountsScenarios()
+            }
+            step("Set WireMock scenario '$MORALIS_EVM_NFT_API_SCENARIO' to '$nftSingleCollectionState'") {
+                setWireMockScenarioState(MORALIS_EVM_NFT_API_SCENARIO, nftSingleCollectionState)
+            }
+            step("Open 'Main' screen with the Pay wallet holding two accounts") {
+                openMainScreenWithPayAndTwoAccounts()
+            }
+            step("Enable NFT in wallet settings") {
+                enableNFTAndReturnToMain()
+            }
+            step("Open 'NFT collections' screen") {
+                openNFTCollectionsScreen()
+            }
+            step("Open '$nftAssetName' asset details") {
+                openNFTAssetDetails(collectionName = nftCollectionName, assetName = nftAssetName)
+            }
+            step("Open the send 'Address' screen") {
+                openNFTSendAddressScreen()
+            }
+            // The sending account's own address is filtered out of the suggestions, leaving the second account.
+            step("Assert '$secondAccountName' is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendAddressScreen { suggestedAccountItem(secondAccountName).assertIsDisplayed() }
+                }
+            }
+            step("Assert '$payAccountRowName' account is not displayed") {
+                onSendAddressScreen { suggestedAccountItem(payAccountRowName).assertDoesNotExist() }
+            }
+        }
+    }
+
+    private companion object {
+        const val PAY_WALLET_ID_STUB = "00"
     }
 }
