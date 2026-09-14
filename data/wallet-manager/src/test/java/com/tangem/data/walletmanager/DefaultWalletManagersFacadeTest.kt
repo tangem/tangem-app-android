@@ -4,14 +4,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.walletmanager.store.WalletManagersStore
-import com.tangem.data.walletmanager.utils.JointPendingTransactionFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
-import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -27,14 +24,6 @@ internal class DefaultWalletManagersFacadeTest {
     private val walletManagersStore: WalletManagersStore = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
 
-    private val jointPendingTransactionFactory: JointPendingTransactionFactory = mockk {
-        coEvery { create(any(), any(), any(), any()) } returns null
-    }
-
-    private val txHistoryFeatureToggles = object : TxHistoryFeatureToggles {
-        override val isNewTxHistoryEnabled: Boolean = true
-    }
-
     private val facade = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
         externalAddressBalanceProvidersStore = ExternalAddressBalanceProvidersStore(),
@@ -43,8 +32,6 @@ internal class DefaultWalletManagersFacadeTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         gaslessTransactionRepository = mockk(),
         jointAccountSafeAddressResolver = { mockk() },
-        jointPendingTransactionFactory = { jointPendingTransactionFactory },
-        txHistoryFeatureToggles = txHistoryFeatureToggles,
         blockchainSDKFactory = mockk(),
     )
 
