@@ -98,7 +98,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.amount.error).isEqualTo(
-            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
+            resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$2,324.55")),
         )
         assertThat(state.isContinueEnabled).isFalse()
         model.onDestroy()

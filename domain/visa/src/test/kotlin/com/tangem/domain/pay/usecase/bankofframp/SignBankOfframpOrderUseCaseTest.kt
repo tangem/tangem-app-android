@@ -9,7 +9,7 @@ import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpSignResult
-import com.tangem.domain.pay.repository.BankOfframpRepository
+import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 
 internal class SignBankOfframpOrderUseCaseTest {
 
-    private val repository: BankOfframpRepository = mockk()
+    private val repository: BankOfframpOrderRepository = mockk()
     private val authDataSource: TangemPayAuthDataSource = mockk()
     private val userWallet: UserWallet = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
