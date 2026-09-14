@@ -7,6 +7,7 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
  */
 @Stable
 interface FeedV2Component {
+
+    val isPartialExpansionSupported: Value<Boolean>
 
     /**
      * Whether the active feed screen keeps the hosting shtorka's blurred glass material at
