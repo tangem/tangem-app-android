@@ -4,10 +4,12 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
+import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
@@ -25,6 +27,8 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
+    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawComponent.Params>()
@@ -60,6 +64,20 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     fun onOrderCreated(result: BankOfframpOrderResult) {
         draft.update { it.copy(order = result) }
+    }
+
+    /** The transfer is on its way: the recipient moves to the top of the recents and the balance is refetched. */
+    fun onOrderSigned() {
+        val draft = draft.value
+        val bankAccountId = draft.order?.bankAccountId ?: draft.recipient?.id
+        modelScope.launch {
+            bankAccountId?.let {
+                markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = it)
+            }
+            paymentAccountStatusFetcher(params.userWalletId).onLeft { error ->
+                TangemLogger.withTag(TAG).e("Failed to refresh the payment account after a bank withdraw: $error")
+            }
+        }
     }
 
     private fun loadSavedRecipient() {

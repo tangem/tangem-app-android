@@ -8,7 +8,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
+import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
@@ -30,11 +32,51 @@ internal class TangemPayBankWithdrawModelTest {
 
     private val userWalletId = UserWalletId("011")
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
+    private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getBankAccountsUseCase)
+        clearMocks(getBankAccountsUseCase, markBankAccountUsedUseCase, paymentAccountStatusFetcher)
+        coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
+    }
+
+    @Test
+    fun `GIVEN signed order WHEN reported THEN recipient marked used and payment account refreshed`() {
+        // Arrange
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = bankWithdrawSource(),
+                destination = offrampDestination(),
+            ),
+        )
+        model.onOrderCreated(BankOfframpOrderResult(orderId = "order-1", bankAccountId = "acc-7"))
+
+        // Act
+        model.onOrderSigned()
+
+        // Assert
+        coVerify(exactly = 1) { markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-7") }
+        coVerify(exactly = 1) { paymentAccountStatusFetcher(userWalletId) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN order without a recipient id WHEN signed THEN only the payment account is refreshed`() {
+        // Arrange
+        val model = createModel(entry = BankWithdrawEntry.NewPersonal)
+        model.onOrderCreated(BankOfframpOrderResult(orderId = "order-1", bankAccountId = null))
+
+        // Act
+        model.onOrderSigned()
+
+        // Assert
+        coVerify(exactly = 0) { markBankAccountUsedUseCase(any(), any()) }
+        coVerify(exactly = 1) { paymentAccountStatusFetcher(userWalletId) }
+        model.onDestroy()
     }
 
     @Test
@@ -197,5 +239,7 @@ internal class TangemPayBankWithdrawModelTest {
         ),
         dispatchers = dispatchers,
         getBankAccountsUseCase = getBankAccountsUseCase,
+        markBankAccountUsedUseCase = markBankAccountUsedUseCase,
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
     )
 }

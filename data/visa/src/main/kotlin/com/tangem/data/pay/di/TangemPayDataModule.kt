@@ -25,6 +25,7 @@ import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -623,8 +624,13 @@ internal interface TangemPayDataModule {
         fun provideSignBankOfframpOrderUseCase(
             repository: BankOfframpRepository,
             authDataSource: TangemPayAuthDataSource,
+            userWalletsListRepository: UserWalletsListRepository,
         ): SignBankOfframpOrderUseCase {
-            return SignBankOfframpOrderUseCase(repository = repository, authDataSource = authDataSource)
+            return SignBankOfframpOrderUseCase(
+                repository = repository,
+                authDataSource = authDataSource,
+                userWalletsListRepository = userWalletsListRepository,
+            )
         }
 
         @Provides
