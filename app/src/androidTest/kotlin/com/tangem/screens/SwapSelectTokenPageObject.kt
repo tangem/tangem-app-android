@@ -1,8 +1,6 @@
 package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.*
@@ -62,6 +60,11 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
+    val searchClearButton: KNode = child {
+        hasTestTag(SearchBarTestTags.CLEAR_BUTTON)
+        useUnmergedTree = true
+    }
+
     val tryAgainButton: KNode = child {
         hasText(getResourceString(R.string.alert_button_try_again))
         useUnmergedTree = true
@@ -69,6 +72,28 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
 
     val unableToLoadData: KNode = child {
         hasText(getResourceString(R.string.markets_loading_error_title))
+        useUnmergedTree = true
+    }
+
+    // Merged tree: the label is a grandchild Text node, only reachable via the chip's own merged semantics.
+    val balanceFilterChip: KNode = child {
+        hasTestTag(SwapSelectTokenScreenTestTags.BALANCE_FILTER_CHIP)
+    }
+
+    /** Dropdown row for a [com.tangem.features.commonfeatures.api.choosetoken.model.BalanceFilter] option. */
+    fun balanceFilterOption(title: String): KNode = child {
+        hasTestTag(SwapSelectTokenScreenTestTags.BALANCE_FILTER_OPTION)
+        hasAnyDescendant(withText(title))
+        useUnmergedTree = true
+    }
+
+    val filteredOutEmptyMessage: KNode = child {
+        hasTestTag(SwapSelectTokenScreenTestTags.FILTERED_OUT_EMPTY_MESSAGE)
+        useUnmergedTree = true
+    }
+
+    val seeAllButton: KNode = child {
+        hasTestTag(SwapSelectTokenScreenTestTags.FILTERED_OUT_SEE_ALL_BUTTON)
         useUnmergedTree = true
     }
 
