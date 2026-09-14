@@ -83,6 +83,7 @@ internal class DefaultWalletManagersFacadeJointReadTest {
         every { provider.blockchain } returns Blockchain.Ethereum
         every { provider.address } returns SAFE_ADDRESS
         every { provider.recentTransactions } returns emptyList()
+        every { provider.tokens } returns emptySet()
         coEvery { assetLoader.loadMap<SmartContractMethod>(fileName = any(), type = any()) } returns emptyMap()
         coEvery { gaslessTransactionRepository.getGaslessFeeAddresses() } returns emptySet()
         coEvery { safeAddressResolver.resolve(userWalletId, setOf(jointNetwork)) } returns mapOf(jointNetwork to SAFE_ADDRESS)
