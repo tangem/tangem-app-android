@@ -2,6 +2,9 @@ package com.tangem.features.feed.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.feed.components.v2.blocks.model.CollectiblesBlockModel
+import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
+import com.tangem.features.feed.components.v2.model.FeedHomeModel
 import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.model.earn.filters.EarnNetworkFilterModel
@@ -12,7 +15,6 @@ import com.tangem.features.feed.model.market.list.MarketsListModel
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.model.news.list.NewsListModel
 import com.tangem.features.feed.model.search.SearchModel
-import com.tangem.features.feed.model.v2.FeedTopBlocksModel
 import com.tangem.features.feed.model.search.SearchTokenSelectorModel
 import dagger.Binds
 import dagger.Module
@@ -81,6 +83,16 @@ internal interface ModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(FeedTopBlocksModel::class)
-    fun provideFeedTopBlocksModel(model: FeedTopBlocksModel): Model
+    @ClassKey(FeedHomeModel::class)
+    fun provideFeedHomeModel(model: FeedHomeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PredictionsBlockModel::class)
+    fun providePredictionsBlockModel(model: PredictionsBlockModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(CollectiblesBlockModel::class)
+    fun provideCollectiblesBlockModel(model: CollectiblesBlockModel): Model
 }
