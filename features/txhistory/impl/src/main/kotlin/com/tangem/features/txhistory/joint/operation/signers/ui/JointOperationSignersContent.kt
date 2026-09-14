@@ -7,14 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,8 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.bottomsheets.LocalBottomSheetContentScrollable
-import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.row.TangemRow
@@ -47,24 +40,12 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointOperationSignersContent(state: JointOperationSignersUM, modifier: Modifier = Modifier) {
-    val bottomInset = LocalTangemBottomSheetContentBottomInset.current
-    val contentScrollable = LocalBottomSheetContentScrollable.current
-    val scrollState = rememberScrollState()
-
-    if (contentScrollable != null) {
-        LaunchedEffect(scrollState) {
-            snapshotFlow { scrollState.canScrollForward || scrollState.canScrollBackward }
-                .distinctUntilChanged()
-                .collect { isScrollable -> contentScrollable.value = isScrollable }
-        }
-    }
-
+    // The sheet scrolls its content itself; a second vertical scroll here would be a nested scrollable
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(scrollState)
             .padding(horizontal = 16.dp)
-            .padding(bottom = bottomInset.coerceAtLeast(16.dp)),
+            .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         when (state) {
