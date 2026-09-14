@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchListState
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
@@ -35,14 +36,22 @@ internal class PolymarketPositionsLoader @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    fun createFeed(userWalletId: UserWalletId, tab: PolymarketPositionsTab): Feed = Feed(userWalletId, tab)
+    fun createFeed(
+        userWalletId: UserWalletId,
+        tab: PolymarketPositionsTab,
+        onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+    ): Feed = Feed(userWalletId, tab, onPositionClick)
 
-    internal inner class Feed(private val userWalletId: UserWalletId, private val tab: PolymarketPositionsTab) {
+    internal inner class Feed(
+        private val userWalletId: UserWalletId,
+        private val tab: PolymarketPositionsTab,
+        onPositionClick: ((PolymarketPositionId) -> Unit)?,
+    ) {
 
         val state: StateFlow<Content>
             field = MutableStateFlow<Content>(Content.Loading)
 
-        private val converter = PolymarketPositionUMConverter()
+        private val converter = PolymarketPositionUMConverter(onPositionClick)
         private var job: Job? = null
         private var isResumed = false
 
