@@ -1,46 +1,30 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.model
 
-import arrow.core.left
-import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.BottomSheetMessage
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
-import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteRowUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
-import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SourceRowUM
-import com.tangem.features.tangempay.withdraw.bank.availableNetwork
+import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResult
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
-import com.tangem.features.tangempay.withdraw.bank.offrampOptions
-import com.tangem.features.tangempay.withdraw.bank.offrampSource
 import com.tangem.features.tangempay.withdraw.bank.paymentToken
-import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -49,39 +33,44 @@ import java.util.Locale
 
 internal class TangemPayBankWithdrawAmountModelTest {
 
-    private val userWalletId = UserWalletId("011")
     private val router: Router = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
-    private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val usdcPolygon = paymentToken()
     private val usdcBase = paymentToken(networkId = "base", networkName = "Base", contractAddress = USDC_BASE)
+    private val baseSource = bankWithdrawSource(
+        token = usdcBase,
+        chainId = BASE_CHAIN_ID,
+        fiatBalance = BigDecimal("12325.55"),
+    )
+    private val twoSourceOptions = bankWithdrawOptions(sources = listOf(bankWithdrawSource(), baseSource))
+
     private val confirmed = mutableListOf<BankWithdrawAmountResult>()
     private lateinit var draftFlow: MutableStateFlow<BankWithdrawDraft>
+    private lateinit var optionsFlow: MutableStateFlow<BankWithdrawOptions>
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, uiMessageSender, paymentAccountStatusSupplier, getBankOfframpOptionsUseCase)
-        statusFlow.resetReplayCache()
+        clearMocks(router)
         confirmed.clear()
-        every { paymentAccountStatusSupplier(userWalletId) } returns statusFlow
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions(
-            sources = listOf(offrampSource(), offrampSource("Base", BASE_CHAIN_ID, USDC_BASE)),
-        ).right()
     }
 
     @Test
-    fun `GIVEN status not loaded WHEN model created THEN rows loading and continue disabled`() {
+    fun `GIVEN prepared options WHEN model created THEN first source and first rail preselected`() {
         // Act
         val model = createModel()
 
         // Assert
         val state = model.uiState.value
-        assertThat(state.source).isEqualTo(SourceRowUM.Loading)
-        assertThat(state.route).isEqualTo(RouteRowUM.Loading)
+        assertThat(state.source.symbol).isEqualTo("USDC")
+        assertThat(state.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+        )
+        assertThat(state.route.rail).isEqualTo(BankRail.ACH)
+        assertThat(state.route.fee).isEqualTo("$1")
+        assertThat(state.route.onClick).isNotNull()
+        assertThat(state.amount.currencySymbol).isEqualTo("$")
+        assertThat(state.amount.decimals).isEqualTo(2)
         assertThat(state.isContinueEnabled).isFalse()
         assertThat(state.header.subtitle)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(1, 5)))
@@ -89,43 +78,12 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
-    fun `GIVEN options and status WHEN loaded THEN first available source and first rail preselected`() {
-        // Arrange
-        val model = createModel()
-
+    fun `GIVEN single destination WHEN model created THEN route row not clickable`() {
         // Act
-        emitStatus()
+        val model = createModel(options = bankWithdrawOptions(destinations = listOf(offrampDestination())))
 
         // Assert
-        val state = model.uiState.value
-        val source = state.source as SourceRowUM.Content
-        assertThat(source.symbol).isEqualTo("USDC")
-        assertThat(source.subtitle).isEqualTo(
-            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
-        )
-        val route = state.route as RouteRowUM.Content
-        assertThat(route.rail).isEqualTo(BankRail.ACH)
-        assertThat(route.fee).isEqualTo("$1")
-        assertThat(route.onClick).isNotNull()
-        assertThat(state.amount.currencySymbol).isEqualTo("$")
-        assertThat(state.amount.decimals).isEqualTo(2)
-        assertThat(state.isContinueEnabled).isFalse()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN single destination WHEN loaded THEN route row not clickable`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions(
-            destinations = listOf(offrampDestination()),
-        ).right()
-        val model = createModel()
-
-        // Act
-        emitStatus()
-
-        // Assert
-        assertThat((model.uiState.value.route as RouteRowUM.Content).onClick).isNull()
+        assertThat(model.uiState.value.route.onClick).isNull()
         model.onDestroy()
     }
 
@@ -133,7 +91,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN amount below minimum WHEN value changed THEN range error and continue disabled`() {
         // Arrange
         val model = createModel()
-        emitStatus()
 
         // Act
         model.uiState.value.amount.onValueChange("0.5")
@@ -151,7 +108,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN amount plus fee above balance WHEN value changed THEN not enough funds`() {
         // Arrange
         val model = createModel()
-        emitStatus()
 
         // Act
         model.uiState.value.amount.onValueChange("2325")
@@ -168,7 +124,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN non numeric input WHEN value changed THEN ignored`() {
         // Arrange
         val model = createModel()
-        emitStatus()
 
         // Act
         model.uiState.value.amount.onValueChange("abc")
@@ -185,7 +140,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
             // Arrange
             Locale.setDefault(Locale.GERMANY)
             val model = createModel()
-            emitStatus()
 
             // Act
             model.uiState.value.amount.onValueChange("1,5")
@@ -202,13 +156,12 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
-    fun `GIVEN loaded WHEN max clicked THEN balance minus fee`() {
+    fun `GIVEN prepared options WHEN max clicked THEN balance minus fee`() {
         // Arrange
         val model = createModel()
-        emitStatus()
 
         // Act
-        (model.uiState.value.source as SourceRowUM.Content).onMaxClick()
+        model.uiState.value.source.onMaxClick()
 
         // Assert
         val state = model.uiState.value
@@ -222,7 +175,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN valid amount WHEN continue clicked THEN result passed to container`() {
         // Arrange
         val model = createModel()
-        emitStatus()
         model.uiState.value.amount.onValueChange("500")
 
         // Act
@@ -240,7 +192,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN invalid amount WHEN continue clicked THEN nothing passed`() {
         // Arrange
         val model = createModel()
-        emitStatus()
 
         // Act
         model.uiState.value.onContinueClick()
@@ -254,8 +205,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source row clicked WHEN token selected THEN source changes and sheet closes`() {
         // Arrange
         val model = createModel()
-        emitStatus()
-        (model.uiState.value.source as SourceRowUM.Content).onClick()
+        model.uiState.value.source.onClick()
         val sheet = model.uiState.value.sheet as SheetUM.Tokens
         assertThat(sheet.items.map { it.symbol to it.isSelected }).containsExactly(
             "USDC" to true,
@@ -268,33 +218,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.sheet).isEqualTo(SheetUM.Hidden)
-        assertThat((state.source as SourceRowUM.Content).subtitle).isEqualTo(
+        assertThat(state.source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Base", "$12,325.55")),
-        )
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN token not accepted by offramp WHEN sheet opened THEN marked unavailable`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions(
-            sources = listOf(offrampSource()),
-        ).right()
-        val model = createModel()
-        emitStatus()
-
-        // Act
-        (model.uiState.value.source as SourceRowUM.Content).onClick()
-
-        // Assert
-        val sheet = model.uiState.value.sheet as SheetUM.Tokens
-        val unavailable = sheet.items.last()
-        assertThat(unavailable.isAvailable).isFalse()
-        assertThat(unavailable.subtitle).isEqualTo(
-            resourceReference(
-                R.string.tangempay_withdraw_bank_source_subtitle,
-                wrappedList("Base", resourceReference(R.string.tangempay_withdraw_bank_offramp_unavailable)),
-            ),
         )
         model.onDestroy()
     }
@@ -303,8 +228,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN route row clicked WHEN wire selected THEN route row updates and sheet closes`() {
         // Arrange
         val model = createModel()
-        emitStatus()
-        (model.uiState.value.route as RouteRowUM.Content).onClick?.invoke()
+        model.uiState.value.route.onClick?.invoke()
         val sheet = model.uiState.value.sheet as SheetUM.Routes
         assertThat(sheet.items.map { it.rail to it.isSelected }).containsExactly(
             BankRail.ACH to true,
@@ -317,10 +241,9 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.sheet).isEqualTo(SheetUM.Hidden)
-        val route = state.route as RouteRowUM.Content
-        assertThat(route.rail).isEqualTo(BankRail.WIRE)
-        assertThat(route.fee).isEqualTo("$11")
-        assertThat(route.eta).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_eta_same_business_day))
+        assertThat(state.route.rail).isEqualTo(BankRail.WIRE)
+        assertThat(state.route.fee).isEqualTo("$11")
+        assertThat(state.route.eta).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_eta_same_business_day))
         model.onDestroy()
     }
 
@@ -328,8 +251,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN sheet opened WHEN dismissed THEN sheet closes`() {
         // Arrange
         val model = createModel()
-        emitStatus()
-        (model.uiState.value.source as SourceRowUM.Content).onClick()
+        model.uiState.value.source.onClick()
 
         // Act
         model.uiState.value.sheet.onDismiss()
@@ -340,27 +262,38 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
-    fun `GIVEN draft with source and rail WHEN loaded THEN preselected from draft`() {
+    fun `GIVEN draft with source and rail WHEN model created THEN preselected from draft`() {
         // Arrange
         val draft = BankWithdrawDraft(
             entry = BankWithdrawEntry.NewPersonal,
-            source = bankWithdrawSource(
-                token = usdcBase,
-                chainId = BASE_CHAIN_ID,
-            ),
+            source = baseSource,
             destination = offrampDestination(rail = BankRail.WIRE, fee = BigDecimal("11.00"), minDays = 0, maxDays = 0),
         )
-        val model = createModel(draft = draft)
 
         // Act
-        emitStatus()
+        val model = createModel(draft = draft)
 
         // Assert
         val state = model.uiState.value
-        assertThat((state.source as SourceRowUM.Content).subtitle).isEqualTo(
+        assertThat(state.source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Base", "$12,325.55")),
         )
-        assertThat((state.route as RouteRowUM.Content).rail).isEqualTo(BankRail.WIRE)
+        assertThat(state.route.rail).isEqualTo(BankRail.WIRE)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft source no longer withdrawable WHEN model created THEN falls back to the first source`() {
+        // Arrange
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, source = baseSource)
+
+        // Act
+        val model = createModel(draft = draft, options = bankWithdrawOptions())
+
+        // Assert
+        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+            resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
+        )
         model.onDestroy()
     }
 
@@ -373,13 +306,12 @@ internal class TangemPayBankWithdrawAmountModelTest {
             source = bankWithdrawSource(),
             destination = offrampDestination(),
         )
+
+        // Act
         val model = createModel(
             draft = draft,
             step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
         )
-
-        // Act
-        emitStatus()
 
         // Assert
         val state = model.uiState.value
@@ -401,68 +333,12 @@ internal class TangemPayBankWithdrawAmountModelTest {
             draft = draft,
             step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount),
         )
-        emitStatus()
 
         // Act
         model.uiState.value.amount.onValueChange("")
 
         // Assert
         assertThat(model.uiState.value.amount.value).isEmpty()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN options fail WHEN model created THEN error message shown and wizard closed`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        verify(exactly = 1) { router.pop() }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN options without destinations WHEN model created THEN error message shown and wizard closed`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions(
-            destinations = emptyList(),
-        ).right()
-
-        // Act
-        val model = createModel()
-
-        // Assert
-        verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
-        verify(exactly = 1) { router.pop() }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN draft source not accepted by offramp WHEN valid amount entered THEN continue stays disabled`() {
-        // Arrange
-        coEvery { getBankOfframpOptionsUseCase(userWalletId) } returns offrampOptions(
-            sources = listOf(offrampSource()),
-        ).right()
-        val draft = BankWithdrawDraft(
-            entry = BankWithdrawEntry.NewPersonal,
-            source = bankWithdrawSource(token = usdcBase, chainId = BASE_CHAIN_ID),
-        )
-        val model = createModel(draft = draft)
-        emitStatus()
-
-        // Act
-        model.uiState.value.amount.onValueChange("500")
-        model.uiState.value.onContinueClick()
-
-        // Assert
-        val state = model.uiState.value
-        assertThat(state.amount.error).isNull()
-        assertThat(state.isContinueEnabled).isFalse()
-        assertThat(confirmed).isEmpty()
         model.onDestroy()
     }
 
@@ -493,7 +369,6 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN continue committed WHEN draft amount changes afterwards THEN new amount shown and reported`() {
         // Arrange
         val model = createModel()
-        emitStatus()
         model.uiState.value.amount.onValueChange("500")
         model.uiState.value.onContinueClick()
 
@@ -507,36 +382,44 @@ internal class TangemPayBankWithdrawAmountModelTest {
         model.onDestroy()
     }
 
-    private fun emitStatus() {
-        val status = MockAccounts.createPaymentAccountStatus(
-            userWalletId = userWalletId,
-            networks = listOf(
-                availableNetwork(token = usdcPolygon, fiatBalance = BigDecimal("2325.55")),
-                availableNetwork(token = usdcBase, chainId = BASE_CHAIN_ID, fiatBalance = BigDecimal("12325.55")),
-            ),
+    @Test
+    fun `GIVEN balance drops while the step is open WHEN options update THEN the amount is revalidated`() {
+        // Arrange
+        val model = createModel()
+        model.uiState.value.amount.onValueChange("2000")
+        assertThat(model.uiState.value.isContinueEnabled).isTrue()
+
+        // Act
+        optionsFlow.value = bankWithdrawOptions(
+            sources = listOf(bankWithdrawSource(fiatBalance = BigDecimal("10")), baseSource),
         )
-        assertThat(statusFlow.tryEmit(status)).isTrue()
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.amount.error)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
     }
 
     private fun createModel(
         draft: BankWithdrawDraft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal),
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.Amount,
+        options: BankWithdrawOptions = twoSourceOptions,
     ): TangemPayBankWithdrawAmountModel {
         draftFlow = MutableStateFlow(draft)
+        optionsFlow = MutableStateFlow(options)
         return TangemPayBankWithdrawAmountModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawAmountComponent.Params(
-                    userWalletId = userWalletId,
                     draft = draftFlow,
+                    options = optionsFlow,
                     step = step,
                     onContinue = confirmed::add,
                 ),
             ),
             dispatchers = dispatchers,
             router = router,
-            uiMessageSender = uiMessageSender,
-            paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-            getBankOfframpOptionsUseCase = getBankOfframpOptionsUseCase,
         )
     }
 }
