@@ -14,11 +14,18 @@ internal data class TangemPayWithdrawHubUM(
         val withinPortfolio: ActionCardUM,
     )
 
-    data class BankSectionUM(
-        val toPersonalAccount: ActionCardUM,
-        val toBusinessAccount: ActionCardUM,
-        val recents: RecentsUM,
-    )
+    sealed interface BankSectionUM {
+
+        data object Loading : BankSectionUM
+
+        data class Error(val onRetryClick: () -> Unit) : BankSectionUM
+
+        data class Content(
+            val toPersonalAccount: ActionCardUM,
+            val toBusinessAccount: ActionCardUM,
+            val recents: RecentsUM,
+        ) : BankSectionUM
+    }
 
     data class ActionCardUM(
         val icon: TangemIconUM,

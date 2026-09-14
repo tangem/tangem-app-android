@@ -2,8 +2,6 @@ package com.tangem.features.tangempay.withdraw.bank.amount.ui
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -68,7 +66,6 @@ private fun SheetHeader(title: Int, onClose: () -> Unit) {
 @Composable
 private fun TokenRow(item: TokenItemUM) {
     TangemRow(
-        modifier = Modifier.alpha(if (item.isAvailable) 1f else UNAVAILABLE_ALPHA),
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { CurrencyIcon(state = item.icon, iconSize = 40.dp, networkBadgeSize = 12.dp) },
         titleSlot = { TangemRowText(text = item.symbol, role = TangemRowTextRole.Title) },
@@ -78,7 +75,7 @@ private fun TokenRow(item: TokenItemUM) {
         } else {
             null
         },
-        onClick = item.onClick.takeIf { item.isAvailable },
+        onClick = item.onClick,
     )
 }
 
@@ -94,5 +91,3 @@ private fun RouteRow(item: RouteItemUM) {
         onClick = item.onClick,
     )
 }
-
-private const val UNAVAILABLE_ALPHA = 0.4f
