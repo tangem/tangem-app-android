@@ -409,6 +409,11 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Type '$zeroBalanceTokenName' in search field") {
                 onSwapSelectTokenScreen { searchBarBlock.performTextInput(zeroBalanceTokenName) }
             }
+            step("Assert search field contains '$zeroBalanceTokenName'") {
+                // '$zeroBalanceTokenName' is hidden by the default filter regardless of search — proving the
+                // query itself landed is what makes the next assertion about search, not just the filter.
+                onSwapSelectTokenScreen { searchBarBlock.assertTextContains(zeroBalanceTokenName) }
+            }
             step("Assert token with 0 balance: '$zeroBalanceTokenName' is hidden") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     onSwapSelectTokenScreen { tokenWithName(zeroBalanceTokenName).assertDoesNotExist() }
@@ -423,6 +428,7 @@ class SearchAndSwapTest : BaseTestCase() {
     fun enableAllTokensFilterTest() {
         val zeroBalanceScenario = "polygon_coin_balance"
         val zeroBalanceState = "ZeroBalance"
+        val fundedTokenName = "POL (ex-MATIC)"
         val zeroBalanceTokenName = "Polygon"
 
         setupHooks().run {
@@ -441,6 +447,11 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Open 'From' token selector") {
                 openSwapFromTokenSelector()
             }
+            step("Assert token with balance: '$fundedTokenName' is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onSwapSelectTokenScreen { tokenWithName(fundedTokenName).assertIsDisplayed() }
+                }
+            }
             step("Assert token with 0 balance: '$zeroBalanceTokenName' is not displayed") {
                 onSwapSelectTokenScreen { tokenWithName(zeroBalanceTokenName).assertDoesNotExist() }
             }
@@ -448,7 +459,9 @@ class SearchAndSwapTest : BaseTestCase() {
                 selectBalanceFilter(allFilterLabel)
             }
             step("Assert token with 0 balance: '$zeroBalanceTokenName' is displayed") {
-                onSwapSelectTokenScreen { tokenWithName(zeroBalanceTokenName).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onSwapSelectTokenScreen { tokenWithName(zeroBalanceTokenName).assertIsDisplayed() }
+                }
             }
         }
     }
