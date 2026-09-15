@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -92,6 +91,14 @@ import dev.chrisbanes.haze.rememberHazeState
  * @param scrollableContent whether [content] is wrapped in a vertical scroll container
  * @param presentation where the modal lives — same-window overlay or dialog window. See
  *   [TangemModal.Presentation].
+ * @param isMaterialEnabled when `false`, the overlay card renders flat and opaque instead of glass —
+ *   for screens whose background the material would sample into a washed-out sheen (e.g. video)
+ * @param prewarm when `true`, the sheet is composed and measured while hidden — invisibly, off to
+ *   the side of the host — so that its first appearance starts moving as fast as its second. Only
+ *   worth it where the first tap is the one that matters (an onboarding screen) and where the call
+ *   site is composed well before that tap; see [TangemModalHostState.prewarm] for the price it
+ *   pays and when. Ignored in the dialog presentation (nothing is registered in a host there,
+ *   and a warm-up dialog would be a real window) and in previews.
  * @param title pinned slot above the content, typically a navigation-style header
  * @param content content of the sheet below [title]
  */
@@ -103,6 +110,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
     dismissOnClickOutside: Boolean = true,
     scrollableContent: Boolean = true,
     presentation: TangemModal.Presentation = TangemModal.Presentation.Auto,
+    isMaterialEnabled: Boolean = true,
+    prewarm: Boolean = false,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -123,11 +132,13 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
         )
         overlayHost != null -> OverlayTangemModal<T>(
             host = overlayHost,
+            isMaterialEnabled = isMaterialEnabled,
             config = config,
             onBack = onBack,
             isExpanded = isExpanded,
             dismissOnClickOutside = dismissOnClickOutside,
             scrollableContent = scrollableContent,
+            prewarm = prewarm,
             title = title,
             content = content,
         )
@@ -171,15 +182,23 @@ object TangemModal {
 @Suppress("LongParameterList")
 internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemModal(
     host: TangemModalHostState,
+    isMaterialEnabled: Boolean,
     config: TangemBottomSheetConfig,
     noinline onBack: (() -> Unit)?,
     isExpanded: Boolean,
     dismissOnClickOutside: Boolean,
     scrollableContent: Boolean,
+    prewarm: Boolean,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
-    val transition = rememberModalTransition(config = config, dismissOnClickOutside = dismissOnClickOutside)
+    val transition = rememberModalTransition(
+        config = config,
+        dismissOnClickOutside = dismissOnClickOutside,
+    )
+    // One key for both registries: the shown entry and the warm-up entry of a call site are the
+    // same modal in two states, and switching between them must not leave the other one behind.
+    val key = remember { Any() }
 
     if (transition.isVisible && config.content is T) {
         val modalContent by rememberUpdatedState(
@@ -195,7 +214,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
                     TangemModalContainer<T>(
                         config = config,
                         isExpanded = isExpanded,
-                        isMaterial = !isExpanded,
+                        isMaterial = isMaterialEnabled && !isExpanded,
                         scrollableContent = scrollableContent,
                         openProgress = transition::openProgress,
                         anchorProgress = { transition.sheetState.openProgress() },
@@ -205,7 +224,6 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
                 }
             },
         )
-        val key = remember { Any() }
         DisposableEffect(host, key) {
             host.show(key) { modalContent() }
             onDispose {
@@ -219,7 +237,93 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> OverlayTangemMo
                 }
             }
         }
+    } else if (prewarm && !config.isShown) {
+        // Read off the config, not the (lagging) transition: on the frame between the tap and the
+        // transition catching up, the card must not be composed for the warm-up layer just to be
+        // thrown away and composed again for real.
+        PrewarmTangemModal<T>(
+            host = host,
+            key = key,
+            config = config,
+            isExpanded = isExpanded,
+            isMaterial = isMaterialEnabled && !isExpanded,
+            scrollableContent = scrollableContent,
+            title = title,
+            content = content,
+        )
     }
+}
+
+/**
+ * Registers the card of a hidden modal in [host] as a warm-up entry (see
+ * [TangemModalHostState.prewarm]) for as long as the modal stays hidden.
+ *
+ * Only the card is warmed, not the scaffold around it: a scrim would darken the screen and a
+ * predictive-back handler would swallow the back gesture of the screen underneath, and neither
+ * belongs to a modal nobody is looking at.
+ *
+ * The card is composed at its settled progress, which is the state the appearance animates *to* —
+ * so the measurement being warmed is the one the sheet will need, and no morph frame is wasted on
+ * a card that is not moving.
+ */
+@Composable
+@PublishedApi
+@Suppress("LongParameterList")
+internal inline fun <reified T : TangemBottomSheetConfigContent> PrewarmTangemModal(
+    host: TangemModalHostState,
+    key: Any,
+    config: TangemBottomSheetConfig,
+    isExpanded: Boolean,
+    isMaterial: Boolean,
+    scrollableContent: Boolean,
+    crossinline title: @Composable BoxScope.(T) -> Unit,
+    crossinline content: @Composable ColumnScope.(T) -> Unit,
+) {
+    val prewarmContent by rememberUpdatedState(
+        @Composable {
+            // Until the call site has a model of its own — a screen whose sheet content is only
+            // built by the tap that shows it — the shared chrome is warmed on its own. That is
+            // where the bulk of a first appearance goes anyway: the same warm-up serves any modal.
+            if (config.content is T) {
+                TangemModalContainer<T>(
+                    config = config,
+                    isExpanded = isExpanded,
+                    isMaterial = isMaterial,
+                    scrollableContent = scrollableContent,
+                    openProgress = { OPEN_PROGRESS_SETTLED },
+                    anchorProgress = { OPEN_PROGRESS_SETTLED },
+                    title = title,
+                    content = content,
+                )
+            } else {
+                ModalPrewarmChrome(
+                    isExpanded = isExpanded,
+                    isMaterial = isMaterial,
+                    scrollableContent = scrollableContent,
+                )
+            }
+        },
+    )
+    DisposableEffect(host, key) {
+        host.prewarm(key) { prewarmContent() }
+        onDispose { host.stopPrewarm(key) }
+    }
+}
+
+/** The card of a contentless modal: everything of a modal appearance except the caller's content. */
+@Composable
+@PublishedApi
+internal fun ModalPrewarmChrome(isExpanded: Boolean, isMaterial: Boolean, scrollableContent: Boolean) {
+    TangemModalContainer<TangemBottomSheetConfigContent.Empty>(
+        config = TangemBottomSheetConfig.Empty,
+        isExpanded = isExpanded,
+        isMaterial = isMaterial,
+        scrollableContent = scrollableContent,
+        openProgress = { OPEN_PROGRESS_SETTLED },
+        anchorProgress = { OPEN_PROGRESS_SETTLED },
+        title = {},
+        content = {},
+    )
 }
 
 /**
@@ -239,7 +343,10 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> DefaultTangemMo
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
-    val transition = rememberModalTransition(config = config, dismissOnClickOutside = dismissOnClickOutside)
+    val transition = rememberModalTransition(
+        config = config,
+        dismissOnClickOutside = dismissOnClickOutside,
+    )
 
     if (transition.isVisible && config.content is T) {
         Dialog(
@@ -298,9 +405,13 @@ internal class ModalTransition(
 
 @Composable
 @PublishedApi
-internal fun rememberModalTransition(config: TangemBottomSheetConfig, dismissOnClickOutside: Boolean): ModalTransition {
+internal fun rememberModalTransition(
+    config: TangemBottomSheetConfig,
+    dismissOnClickOutside: Boolean,
+): ModalTransition {
     val sheetState = rememberSheetState(
         skipPartiallyExpanded = true,
+        initialValue = TangemSheetValue.Hidden,
         confirmValueChange = { sheetValue ->
             // Ignoring transitions to hidden prevents dismiss on drag down / outside click.
             dismissOnClickOutside || sheetValue != TangemSheetValue.Hidden
@@ -397,6 +508,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
 
     val maxHeight = LocalWindowSize.current.height * MODAL_SHEET_MAX_HEIGHT
     val morphGeometry = remember { ModalMorphGeometry() }
+    val contentHeight = remember { ModalContentHeightCache() }
     val shape = remember(morphGeometry) { ModalMorphShape(geometry = morphGeometry) }
     val opaqueColor = TangemTheme.colors3.bg.primary
 
@@ -409,6 +521,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
         TangemSurface(
             modifier = Modifier.modalMorphLayout(
                 geometry = morphGeometry,
+                contentHeight = contentHeight,
                 isExpanded = isExpanded,
                 windowInsets = WindowInsets.systemBars,
                 progress = openProgress,
@@ -428,10 +541,10 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
                     .conditionalCompose(isMaterial) {
                         drawBehind { drawRect(color = opaqueColor.copy(alpha = morphGeometry.flatten)) }
                     }
+                    .modalRestingSize(geometry = morphGeometry)
                     .conditionalCompose(isExpanded) { navigationBarsPadding() },
             ) {
                 CompositionLocalProvider(LocalHazeState provides contentHazeState) {

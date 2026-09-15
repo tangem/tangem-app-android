@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_error_20
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
@@ -54,6 +55,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             imageUrl = null,
+                            cardType = TangemPayCardType.VIRTUAL,
                             onClick = {},
                             isEnabled = false,
                             isFrozen = false,
@@ -62,6 +64,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
                             imageUrl = null,
+                            cardType = TangemPayCardType.PHYSICAL,
                             onClick = {},
                             isEnabled = true,
                             isFrozen = false,
@@ -106,6 +109,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             imageUrl = null,
+                            cardType = TangemPayCardType.VIRTUAL,
                             onClick = {},
                             isFrozen = false,
                             isEnabled = true,

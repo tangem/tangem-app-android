@@ -27,6 +27,21 @@ internal object WelcomeTextTimeline {
 
     fun activeScene(positionMs: Long): Int = scenes.indexOfLast { positionMs >= it.enterAtMs }.coerceAtLeast(0)
 
+    /**
+     * The position to freeze the scenes at when playback stops. Between two scenes every line is transparent, so a
+     * stop landing in one of those gaps would leave the screen with no text at all for the whole transition that
+     * follows; such a position is rewound to the scene that faded out last, taken just before its exit. Any other
+     * position is held exactly as it looked.
+     */
+    fun holdPosition(positionMs: Long): Long {
+        if (scenes.indices.any { sceneAlpha(positionMs, scene = it) > 0f }) return positionMs
+        val lastSettled = scenes.indexOfLast { positionMs >= it.settledAtMs }
+        return scenes.getOrNull(lastSettled)?.exitAtMs?.toLong() ?: scenes.first().settledAtMs.toLong()
+    }
+
+    private fun sceneAlpha(positionMs: Long, scene: Int): Float =
+        maxOf(frame(positionMs, scene, line = 0).alpha, frame(positionMs, scene, line = 1).alpha)
+
     fun frame(positionMs: Long, scene: Int, line: Int): Frame {
         val timing = scenes.getOrNull(scene) ?: return hidden
         val stagger = line * LINE_STAGGER_MS
@@ -54,5 +69,9 @@ internal object WelcomeTextTimeline {
 
     data class Frame(val alpha: Float, val offsetDp: Float)
 
-    private data class Scene(val enterAtMs: Int, val exitAtMs: Int)
+    private data class Scene(val enterAtMs: Int, val exitAtMs: Int) {
+
+        /** The first moment the scene stands still, both of its lines fully in. */
+        val settledAtMs: Int = enterAtMs + LINE_STAGGER_MS + FADE_IN_DELAY_MS + FADE_MS
+    }
 }
