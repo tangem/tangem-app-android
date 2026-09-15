@@ -914,7 +914,7 @@ internal class PolymarketOnboardingModelTest {
     private companion object {
         const val RESOLUTION_DELAY_MILLIS = 1_000L
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
-        const val STORY_SOURCE = "Predictions"
+        const val STORY_SOURCE = "Onboarding"
         val STORY_CONTENT = StoryContent(
             imageHost = "https://host/",
             story = StoryContent.Story(id = STORY_ID, title = null, slides = emptyList()),
