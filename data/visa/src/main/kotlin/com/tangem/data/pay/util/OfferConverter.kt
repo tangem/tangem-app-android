@@ -6,20 +6,30 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.utils.converter.Converter
 
-internal object OfferConverter : Converter<CustomerOffersResponse.Offer, Offer> {
+internal object OfferConverter : Converter<CustomerOffersResponse.Offer, Offer?> {
 
     private const val MAIN_IMAGE_TYPE = "MAIN"
 
-    override fun convert(value: CustomerOffersResponse.Offer): Offer {
+    override fun convert(value: CustomerOffersResponse.Offer): Offer? {
+        val fee = value.fee ?: return null
+        val data = value.data?.toData() ?: return null
         return Offer(
             type = Offer.Type.fromString(value.type),
-            fee = Offer.Fee(amount = value.fee.amount, currency = getJavaCurrencyByCode(value.fee.currency)),
-            data = Offer.Data(
-                specificationName = value.data.specificationName,
-                orderType = OrderType.fromString(value.data.orderType),
-                deliveryEta = value.data.toDeliveryEta(),
-            ),
-            mainImageUrl = value.images.firstOrNull { it.type.equals(MAIN_IMAGE_TYPE, ignoreCase = true) }?.url,
+            fee = Offer.Fee(amount = fee.amount, currency = getJavaCurrencyByCode(fee.currency)),
+            data = data,
+            mainImageUrl = value.images
+                .orEmpty()
+                .firstOrNull { it.type.equals(MAIN_IMAGE_TYPE, ignoreCase = true) }
+                ?.url,
+        )
+    }
+
+    private fun CustomerOffersResponse.Data.toData(): Offer.Data? {
+        val orderType = orderType ?: return null
+        return Offer.Data(
+            specificationName = specificationName,
+            orderType = OrderType.fromString(orderType),
+            deliveryEta = toDeliveryEta(),
         )
     }
 
