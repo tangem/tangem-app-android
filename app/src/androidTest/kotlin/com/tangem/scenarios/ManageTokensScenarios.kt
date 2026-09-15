@@ -43,9 +43,7 @@ fun BaseTestCase.addCustomTokenWithCustomDerivation(network: String, contract: S
     }
     step("Click on 'Derivation path' field") {
         awaitSuccess { onAddCustomTokenScreen { derivationSelectorField.assertExists() } }
-        // The contract is typed in chunks and the form rebuilds as it validates, which can swallow the
-        // click that opens the derivation selector — retry it until the selector is actually up. Clicking
-        // again while it is already open would dismiss it, so only click when it is not.
+        // Validation rebuilds the form and can swallow the click; clicking an open selector closes it.
         awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
             onAddCustomTokenScreen {
                 if (!customDerivationButton.isDisplayedSafely()) derivationSelectorField.performClick()
