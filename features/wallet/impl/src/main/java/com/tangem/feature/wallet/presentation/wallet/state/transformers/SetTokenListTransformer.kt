@@ -16,7 +16,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
@@ -42,8 +42,8 @@ internal class SetTokenListTransformer(
         )
     }
 
-    private val virtualAccountConverter by lazy {
-        VirtualAccountMainBlockConverter()
+    private val moneyAccountConverter by lazy {
+        MoneyAccountMainBlockConverter()
     }
 
     private val polymarketConverter by lazy {
@@ -61,7 +61,7 @@ internal class SetTokenListTransformer(
                     walletCardState = prevState.walletCardState.toLoadedState(),
                     tokensListState = prevState.tokensListState.toLoadedState(),
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
-                    virtualAccountMainUM = prevState.virtualAccountMainUM.toLoadedVirtualState(),
+                    moneyAccountMainUM = prevState.moneyAccountMainUM.toLoadedVirtualState(),
                     polymarketWalletBlockUM = predictionBlockState(),
                     collectiblesWalletBlockUM = collectiblesBlockState(),
                     buttons = prevState.enableButtons(),
@@ -88,7 +88,7 @@ internal class SetTokenListTransformer(
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
-                    virtualAccountMainUM = walletUM.virtualAccountMainUM.toLoadedVirtualState(),
+                    moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedVirtualState(),
                     polymarketWalletBlockUM = predictionBlockState(),
                     collectiblesWalletBlockUM = collectiblesBlockState(),
                     tokensListUM = tokensListUM,
@@ -169,15 +169,15 @@ internal class SetTokenListTransformer(
         return tangemPayConverter.convert(paymentAccountStatus)
     }
 
-    private fun VirtualAccountMainUM.toLoadedVirtualState(): VirtualAccountMainUM {
+    private fun MoneyAccountMainUM.toLoadedVirtualState(): MoneyAccountMainUM {
         val virtualAccountStatus = when (params) {
             is TokenConverterParams.Account -> params.accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Virtual>()
                 .firstOrNull()
-            is TokenConverterParams.Wallet -> return VirtualAccountMainUM.Empty
+            is TokenConverterParams.Wallet -> return MoneyAccountMainUM.Empty
         } ?: return this
 
-        return virtualAccountConverter.convert(virtualAccountStatus)
+        return moneyAccountConverter.convert(virtualAccountStatus)
     }
 
     private fun collectiblesBlockState(): CollectiblesWalletBlockUM {
