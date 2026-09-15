@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.onboarding.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -253,6 +254,6 @@ internal class PolymarketOnboardingModel @Inject constructor(
 
     private companion object {
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
-        const val STORY_SOURCE = "Predictions"
+        val STORY_SOURCE = AnalyticsParam.ScreensSources.Onboarding.value
     }
 }
