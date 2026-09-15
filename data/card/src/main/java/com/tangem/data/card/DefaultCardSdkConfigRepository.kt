@@ -28,29 +28,25 @@ internal class DefaultCardSdkConfigRepository(
     override val sdk: TangemSdk
         get() = cardSdkProvider.sdk
 
-    /**
-     * Read and written through [CardSdkProvider.sdkOrNull]: screens restore the previous policy when they are torn
-     * down, which also happens while the activity is being destroyed — there the SDK is already unsubscribed, and
-     * reaching for it would re-register against a dead activity and throw. A config of an SDK that no longer exists
-     * has nothing to restore anyway: the next registration builds a fresh one with the default policy.
-     */
     override var isBiometricsRequestPolicy: Boolean
-        get() = cardSdkProvider.sdkOrNull?.config?.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
+        get() = sdk.config.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
         set(value) {
-            val config = cardSdkProvider.sdkOrNull?.config ?: return
-            config.userCodeRequestPolicy = if (value) {
-                UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-            } else {
-                UserCodeRequestPolicy.Default
-            }
+            sdk.config.userCodeRequestPolicy = value.toUserCodeRequestPolicy()
         }
 
+    override fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
+        val config = cardSdkProvider.sdkOrNull?.config ?: return
+        config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+    }
+
     override fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
-        sdk.config.userCodeRequestPolicy = if (isBiometricsRequestPolicy) {
-            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-        } else {
-            UserCodeRequestPolicy.Default
-        }
+        sdk.config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+    }
+
+    private fun Boolean.toUserCodeRequestPolicy(): UserCodeRequestPolicy = if (this) {
+        UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
+    } else {
+        UserCodeRequestPolicy.Default
     }
 
     override fun resetCardIdDisplayFormat() {
