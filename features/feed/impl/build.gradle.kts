@@ -117,5 +117,6 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
     testImplementation(projects.domain.wallets.models)
 }
