@@ -174,5 +174,9 @@
     {
         "name": "AND_17401_PAY_RESIDENCY_STEP_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
+        "version": "undefined"
     }
 ]
