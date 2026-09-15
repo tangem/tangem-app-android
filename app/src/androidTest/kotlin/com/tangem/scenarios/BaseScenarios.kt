@@ -216,9 +216,7 @@ fun BaseTestCase.synchronizeAddresses(
 }
 
 /**
- * The total balance starts as a dash and only settles once every network status has landed. On CI that
- * takes 7–10+ s for the multi-provider networks (part of the RPC traffic still goes to public nodes), so
- * the default 10 s of `flakySafely` is right on the edge — wait explicitly instead.
+ * The balance settles only once every network status lands — 7–10+ s on CI, past the flakySafely default.
  */
 private fun BaseTestCase.awaitBalanceLoaded() {
     awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) {

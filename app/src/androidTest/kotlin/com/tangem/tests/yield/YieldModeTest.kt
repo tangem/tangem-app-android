@@ -81,9 +81,7 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyPromoScreen { continueButton.clickWithAssertion() }
             }
             step("Hold 'Start earning' button to confirm activation") {
-                // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
-                // pointerInput restarts), so repeat it until the sheet closes — and only while the
-                // button is still there, otherwise the retry dies on a node that is already gone.
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
                 // assertIsNotDisplayed also passes for a node that has not rendered yet.
                 awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -160,9 +158,7 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyPromoScreen { continueButton.clickWithAssertion() }
             }
             step("Hold 'Start earning' button to confirm activation") {
-                // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
-                // pointerInput restarts), so repeat it until the sheet closes — and only while the
-                // button is still there, otherwise the retry dies on a node that is already gone.
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
                 // assertIsNotDisplayed also passes for a node that has not rendered yet.
                 awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -321,9 +317,7 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyActiveScreen { approveButton.clickWithAssertion() }
             }
             step("Hold 'Confirm' button to confirm approval") {
-                // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
-                // pointerInput restarts), so repeat it until the sheet closes — and only while the
-                // button is still there, otherwise the retry dies on a node that is already gone.
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
                 // assertIsNotDisplayed also passes for a node that has not rendered yet.
                 awaitSuccess { onYieldSupplyApproveScreen { confirmButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -401,9 +395,7 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyPromoScreen { continueButton.clickWithAssertion() }
             }
             step("Hold 'Start earning' button to confirm activation") {
-                // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
-                // pointerInput restarts), so repeat it until the sheet closes — and only while the
-                // button is still there, otherwise the retry dies on a node that is already gone.
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
                 // assertIsNotDisplayed also passes for a node that has not rendered yet.
                 awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -505,9 +497,7 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyActiveScreen { stopEarningButton.clickWithAssertion() }
             }
             step("Hold 'Confirm' button to confirm exit") {
-                // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
-                // pointerInput restarts), so repeat it until the sheet closes — and only while the
-                // button is still there, otherwise the retry dies on a node that is already gone.
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
                 // assertIsNotDisplayed also passes for a node that has not rendered yet.
                 awaitSuccess { onYieldSupplyStopEarningScreen { confirmButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -546,10 +536,8 @@ class YieldModeTest : BaseTestCase() {
     }
 
     /**
-     * The SDK only trusts the yield module address when at least two providers return the same value
-     * (EthereumYieldModuleAddressResolver.MIN_CONFIRMATIONS), and falls back to the zero address otherwise —
-     * activation then silently does nothing. The default mock leaves Ethereum with a single provider, so
-     * point it at the pair of mocked hosts. networks_providers is read at launch, hence before the activity starts.
+     * Activation silently no-ops on the zero address, and the SDK only trusts the resolved one when two providers
+     * agree (MIN_CONFIRMATIONS) — hence the provider pair, set before launch since networks_providers is read there.
      */
     private fun setupYieldHooks() = setupHooks(
         additionalBeforeAppLaunchSection = {

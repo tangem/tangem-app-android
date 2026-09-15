@@ -287,9 +287,7 @@ class SendFeeScreenTest : BaseTestCase() {
 
         setupHooks(
             additionalBeforeAppLaunchSection = {
-                // By default Bitcoin also carries the live nownodes/getblock/blockchair/blockcypher providers,
-                // and their fee estimate wins over the mocked one — the amounts below then follow the real
-                // network. networks_providers is read at launch, so it must be set before the activity starts.
+                // The live Bitcoin providers outvote the mocked fee, and networks_providers is read at launch.
                 check(setWireMockScenarioState(networksProvidersScenario, bitcoinMockOnlyState)) {
                     "Failed to set '$networksProvidersScenario' to '$bitcoinMockOnlyState' — the fee below " +
                         "would then follow the live network instead of the mock."
