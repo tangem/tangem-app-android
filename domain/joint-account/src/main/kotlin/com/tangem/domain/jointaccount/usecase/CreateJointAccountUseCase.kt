@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
@@ -19,7 +20,10 @@ import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 
 /**
  * Creates a joint account: picks the owner derivation index, signs the payload with the card in one tap,
@@ -33,6 +37,7 @@ class CreateJointAccountUseCase(
     private val signer: JointAccountSigner,
     private val fetcher: SingleJointAccountListFetcher,
     private val supplier: SingleJointAccountListSupplier,
+    private val accountListFetcher: SingleAccountListFetcher,
 ) {
 
     suspend operator fun invoke(
@@ -116,8 +121,21 @@ class CreateJointAccountUseCase(
         )
     }
 
-    private suspend fun refreshAccounts(userWalletId: UserWalletId): Either<Throwable, Unit> {
-        return fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
+    private suspend fun refreshAccounts(userWalletId: UserWalletId): Either<Throwable, Unit> = coroutineScope {
+        launch { refreshAccountList(userWalletId = userWalletId) }
+
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
+    }
+
+    /**
+     * The wallet screen takes `Account.Joint` from the accounts document, not from the joint accounts store, so
+     * without this refetch the new row shows up only after a pull-to-refresh. Best-effort: the account is already
+     * registered, and the document catches up on the next fetch.
+     */
+    private suspend fun refreshAccountList(userWalletId: UserWalletId) {
+        accountListFetcher(params = SingleAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
+            TangemLogger.e("Failed to refetch the account list of $userWalletId after joint account creation", it)
+        }
     }
 
     /** The own account is found by the owner address derived from the card, never by trusting an index. */
