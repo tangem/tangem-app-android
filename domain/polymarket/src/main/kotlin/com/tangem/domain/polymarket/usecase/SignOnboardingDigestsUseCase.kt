@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketClobAuthData
+import com.tangem.domain.polymarket.signing.PolymarketRelayerDeadline
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import java.math.BigInteger
 
@@ -22,11 +23,12 @@ class SignOnboardingDigestsUseCase(
         addresses: PolymarketAddresses,
         relayerNonce: BigInteger,
     ): Either<PolymarketOnboardingError, PolymarketSignedOnboarding> {
-        val timestamp = System.currentTimeMillis() / MILLIS_IN_SECOND
+        val nowMillis = System.currentTimeMillis()
+        val timestamp = nowMillis / MILLIS_IN_SECOND
         val approvals = PolymarketApprovalsPayload(
             depositWalletAddress = addresses.depositWalletAddress,
             nonce = relayerNonce.toString(),
-            deadline = (timestamp + DEADLINE_OFFSET_SECONDS).toString(),
+            deadline = PolymarketRelayerDeadline.fromNow(nowMillis),
             calls = PolymarketApprovalCalls.build(),
         )
 
@@ -49,6 +51,5 @@ class SignOnboardingDigestsUseCase(
 
     private companion object {
         const val MILLIS_IN_SECOND = 1000L
-        const val DEADLINE_OFFSET_SECONDS = 600L
     }
 }
