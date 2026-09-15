@@ -693,13 +693,6 @@
   <string name="fee_selector_choose_token_description">Choisissez le token à utiliser pour payer les frais de réseau. %s</string>
   <string name="fee_selector_choose_token_title">Choisissez un token</string>
   <string name="feed_market_and_news">Marché et actualités</string>
-  <string name="feed_promo_earn_active_description">Gagnez jusqu\'à %1$s APY sur vos %2$s</string>
-  <string name="feed_promo_earn_description">Faites travailler vos cryptos et gagnez jusqu\'à %1$s APY</string>
-  <string name="feed_promo_earn_title">Commencer à gagner</string>
-  <string name="feed_promo_referral_description">Gagnez %1$s par ami</string>
-  <string name="feed_promo_referral_title">Invitez des amis sur Tangem</string>
-  <string name="feed_promo_tangem_pay_description">Obtenez du cashback sur vos dépenses quotidiennes</string>
-  <string name="feed_promo_tangem_pay_title">Payez en crypto</string>
   <string name="feed_trending_now">Tendances actuelles</string>
   <string name="feedback_data_collection_message">Les informations suivantes sont facultatives. Vous pouvez les effacer si vous ne souhaitez pas les partager.</string>
   <string name="feedback_preface_rate_negative">Dites-nous quelles fonctions vous manquent, et nous essaierons de vous aider.</string>
@@ -971,8 +964,8 @@
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
   <string name="market_chart_bubble_no_amount">Aucun token \n/ aucune valeur</string>
   <string name="market_chart_bubble_total_value">Valeur totale</string>
-  <string name="market_chart_can_not_load_data">Impossible de charger les données</string>
-  <string name="market_chart_no_amount">Aucun token, ou leur valeur ne peut pas être déterminée</string>
+  <string name="market_chart_can_not_load_data">Chargement impossible</string>
+  <string name="market_chart_no_amount">Aucun token ou valeur inconnue</string>
   <string name="market_chart_top_holding">%s de votre portefeuille</string>
   <string name="markets_about_coin_header">À propos de la crypto</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
