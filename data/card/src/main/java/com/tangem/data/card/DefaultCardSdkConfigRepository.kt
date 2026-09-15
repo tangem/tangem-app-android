@@ -28,10 +28,17 @@ internal class DefaultCardSdkConfigRepository(
     override val sdk: TangemSdk
         get() = cardSdkProvider.sdk
 
+    /**
+     * Read and written through [CardSdkProvider.sdkOrNull]: screens restore the previous policy when they are torn
+     * down, which also happens while the activity is being destroyed — there the SDK is already unsubscribed, and
+     * reaching for it would re-register against a dead activity and throw. A config of an SDK that no longer exists
+     * has nothing to restore anyway: the next registration builds a fresh one with the default policy.
+     */
     override var isBiometricsRequestPolicy: Boolean
-        get() = sdk.config.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
+        get() = cardSdkProvider.sdkOrNull?.config?.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
         set(value) {
-            sdk.config.userCodeRequestPolicy = if (value) {
+            val config = cardSdkProvider.sdkOrNull?.config ?: return
+            config.userCodeRequestPolicy = if (value) {
                 UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
             } else {
                 UserCodeRequestPolicy.Default
