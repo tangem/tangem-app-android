@@ -56,6 +56,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     analyticsSendSource = params.analyticsSendSource,
                     userWalletId = params.userWalletId,
                     shouldShowOnlySpeedOption = model.shouldShowOnlySpeedOption,
+                    isTronGaslessSupported = params.isTronGaslessSupported,
                 ),
                 onDismiss = {
                     model.feeSelectorBottomSheet.dismiss()
