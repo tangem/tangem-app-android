@@ -45,6 +45,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
+import com.tangem.features.polymarket.impl.positiondetails.ui.PolymarketFinishedPositionSheet
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionsPreviewCase
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionsPreviewProvider
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM
@@ -78,6 +79,7 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
                 }
             }
         }
+        PolymarketFinishedPositionSheet(state = state.finishedPosition, onDismiss = state.onFinishedPositionDismiss)
     }
 }
 
