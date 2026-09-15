@@ -1045,6 +1045,34 @@ internal class SwapTransferStateBuilderTest {
         )
     }
 
+    @Test
+    fun `GIVEN transfer dataState WHEN createPredictionWithdrawalSentState THEN an in-progress transfer holder without fee or explorer is built`() {
+        // Arrange
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("5"),
+            toAmount = BigDecimal("5"),
+            isAccountsMode = true,
+        )
+        val dataState = SwapProcessDataState(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus,
+            amount = "5",
+            currentTransferState = transferState,
+        )
+
+        // Act
+        val result = sut.createPredictionWithdrawalSentState(uiState = baseStateHolder(), dataState = dataState)
+
+        // Assert
+        val success = requireNotNull(result.successState)
+        assertThat(success.isTransferMode).isTrue()
+        assertThat(success.fee).isNull()
+        assertThat(success.txUrl).isEmpty()
+        assertThat(success.fromTokenAmount).isEqualTo(stringReference("5"))
+        assertThat(success.toTokenAmount).isEqualTo(stringReference("5"))
+        assertThat((success.navigationUM as NavigationUM.Content).secondaryPairButtonsUM).isNull()
+    }
+
     private fun assertSharedCardShape(
         result: SwapStateHolder,
         transferState: SwapState.Transfer,
