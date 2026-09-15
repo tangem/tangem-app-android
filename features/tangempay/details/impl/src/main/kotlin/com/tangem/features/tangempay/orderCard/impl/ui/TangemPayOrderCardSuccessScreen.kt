@@ -8,6 +8,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -33,8 +34,8 @@ internal fun TangemPayOrderCardSuccessScreen(state: TangemPayOrderCardSuccessScr
             id = R.string.tangempay_order_success_email_note,
             formatArgs = wrappedList(AnnotatedString(text = state.email, spanStyle = emailStyle)),
         ),
-        buttonText = resourceReference(R.string.tangempay_order_success_show_card),
-        onButtonClick = state.onShowCardClick,
+        buttonText = state.buttonText,
+        onButtonClick = state.onFinishClick,
     )
 }
 
@@ -60,20 +61,20 @@ private const val PREVIEW_EMAIL = "panampalmer@gmail.com"
 
 private class OrderSuccessPreviewProvider : CollectionPreviewParameterProvider<TangemPayOrderCardSuccessScreenUM>(
     collection = listOf(
-        TangemPayOrderCardSuccessScreenUM(
-            deliveryEtaMaxBusinessDays = PREVIEW_ETA_DAYS,
-            email = PREVIEW_EMAIL,
-            onShowCardClick = {},
-        ),
-        TangemPayOrderCardSuccessScreenUM(
-            deliveryEtaMaxBusinessDays = 1,
-            email = PREVIEW_EMAIL,
-            onShowCardClick = {},
-        ),
-        TangemPayOrderCardSuccessScreenUM(
-            deliveryEtaMaxBusinessDays = PREVIEW_ETA_DAYS,
-            email = "johnny.silverhand.samurai@protonmail.com",
-            onShowCardClick = {},
-        ),
+        previewOrderSuccess(),
+        previewOrderSuccess(deliveryEtaMaxBusinessDays = 1),
+        previewOrderSuccess(email = "johnny.silverhand.samurai@protonmail.com"),
+        previewOrderSuccess(buttonText = resourceReference(R.string.common_close)),
     ),
+)
+
+private fun previewOrderSuccess(
+    deliveryEtaMaxBusinessDays: Int = PREVIEW_ETA_DAYS,
+    email: String = PREVIEW_EMAIL,
+    buttonText: TextReference = resourceReference(R.string.tangempay_order_success_show_card),
+) = TangemPayOrderCardSuccessScreenUM(
+    deliveryEtaMaxBusinessDays = deliveryEtaMaxBusinessDays,
+    email = email,
+    buttonText = buttonText,
+    onFinishClick = {},
 )

@@ -109,6 +109,27 @@ internal class DefaultCustomerOffersRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a plastic offer without fee and data WHEN getOffers THEN only the virtual offer is returned`() =
+        runTest {
+            // Arrange
+            val response = CustomerOffersResponse(
+                result = offersResponse.result + CustomerOffersResponse.Offer(
+                    type = "CARD_ISSUE_PLASTIC_RAIN",
+                    fee = null,
+                    data = null,
+                ),
+            )
+            coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returns ApiResponse.Success(response)
+            val repository = createRepository()
+
+            // Act
+            val actual = repository.getOffers(userWalletId)
+
+            // Assert
+            assertThat(actual.getOrNull()?.single()?.type).isEqualTo(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
+        }
+
+    @Test
     fun `GIVEN a product instance WHEN getProductInstanceOffers THEN the instance offers are returned`() = runTest {
         // Arrange
         val repository = createRepository()
