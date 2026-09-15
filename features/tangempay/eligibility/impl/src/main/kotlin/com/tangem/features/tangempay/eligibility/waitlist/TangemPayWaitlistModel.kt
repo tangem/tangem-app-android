@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.eligibility.waitlist
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,6 +14,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.pay.model.TangemPayWaitlistEntry
 import com.tangem.domain.pay.usecase.JoinTangemPayWaitlistUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.eligibility.TangemPayWaitlistComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -23,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayWaitlistModel @Inject constructor(
@@ -31,6 +34,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val joinWaitlistUseCase: JoinTangemPayWaitlistUseCase,
+    private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -40,6 +44,10 @@ internal class TangemPayWaitlistModel @Inject constructor(
 
     val uiState: StateFlow<TangemPayWaitlistUM>
         field = MutableStateFlow(getInitialState())
+
+    init {
+        analytics.send(TangemPayAnalyticsEvents.Eligibility.WaitlistScreenOpened())
+    }
 
     fun dismiss() {
         params.onDismiss()
@@ -104,6 +112,7 @@ internal class TangemPayWaitlistModel @Inject constructor(
     }
 
     private fun onJoined() {
+        analytics.send(TangemPayAnalyticsEvents.Eligibility.WaitlistSaved())
         dismiss()
         uiMessageSender.send(
             SnackbarMessage(message = resourceReference(R.string.tangempay_waitlist_joined_message)),
