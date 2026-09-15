@@ -189,6 +189,7 @@ internal class RwaBatchFlowManager(
                         order = currentRequest.sort.toRequestOrder(),
                         categoryId = currentRequest.selection.category?.id,
                         sectorId = currentRequest.selection.sector?.id,
+                        country = currentRequest.country,
                     ),
                 ),
             )
