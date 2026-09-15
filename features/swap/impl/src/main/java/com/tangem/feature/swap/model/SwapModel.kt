@@ -2770,14 +2770,11 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun SwapButton.asWithdrawButton(): SwapButton = copy(
-        mode = when (mode) {
-            SwapButton.Mode.SWAP -> SwapButton.Mode.TRANSFER
-            SwapButton.Mode.SWAP_PROGRESSING -> SwapButton.Mode.TRANSFER_PROGRESSING
-            SwapButton.Mode.TRANSFER, SwapButton.Mode.TRANSFER_PROGRESSING -> mode
-        },
-        title = resourceReference(R.string.prediction_main_withdraw),
-    )
+    private fun SwapButton.asWithdrawButton(): SwapButton = if (isInProgress) {
+        copy(mode = SwapButton.Mode.TRANSFER_PROGRESSING, title = resourceReference(R.string.common_withdrawing))
+    } else {
+        copy(mode = SwapButton.Mode.TRANSFER, title = resourceReference(R.string.prediction_main_withdraw))
+    }
 
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
         return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
