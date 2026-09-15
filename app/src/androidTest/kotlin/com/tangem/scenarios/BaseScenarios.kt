@@ -104,14 +104,11 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
     step("Click on 'Import existing wallet' option") {
         onIntroductionScreen { importWalletOption.clickWithAssertion() }
     }
-    // The cloud-backup row is behind its own toggle, so the sheet may go straight to the recovery phrase screen.
-    step("Choose 'Use recovery phrase' when the import step offers a cloud backup") {
-        waitForIdle()
-        onIntroductionScreen {
-            if (useRecoveryPhraseButton.isDisplayedSafely()) {
-                useRecoveryPhraseButton.performClick()
-            }
-        }
+    // The import step always offers this button (only the cloud backup one is toggle-gated), so wait for the step
+    // to render rather than skipping the click when it is not up yet.
+    step("Click on 'Use recovery phrase' button") {
+        awaitSuccess { onIntroductionScreen { useRecoveryPhraseButton.assertIsDisplayed() } }
+        onIntroductionScreen { useRecoveryPhraseButton.performClick() }
     }
     step("Click on 'Phrase text field'") {
         waitForIdle()
