@@ -16,6 +16,14 @@ object NorthernLightsCrashGuard {
     var isDisabled: Boolean = false
         private set
 
+    @Volatile
+    var hasDetectedCrash: Boolean = false
+        private set
+
+    @Volatile
+    var crashCount: Int = 0
+        private set
+
     interface Store {
         fun load(): State
         fun save(state: State)
@@ -41,6 +49,8 @@ object NorthernLightsCrashGuard {
         this.state = next
         this.isArmed = false
         this.isDisabled = crashCount >= CRASH_THRESHOLD
+        this.hasDetectedCrash = hasDiedWhileLive
+        this.crashCount = crashCount
     }
 
     fun arm() {

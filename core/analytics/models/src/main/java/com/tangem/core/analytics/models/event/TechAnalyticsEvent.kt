@@ -51,6 +51,23 @@ sealed class TechAnalyticsEvent(
         ),
     )
 
+    class ShaderCrashDetected(
+        model: String,
+        manufacturer: String,
+        hardware: String,
+        androidVersion: String,
+        crashCount: String,
+    ) : TechAnalyticsEvent(
+        event = "Shader Crash Detected",
+        params = mapOf(
+            "Model" to model,
+            "Manufacturer" to manufacturer,
+            "Hardware" to hardware,
+            "Android Version" to androidVersion,
+            "Crash Count" to crashCount,
+        ),
+    )
+
     class UnexpectedWalletCurve(userWalletId: String, cardId: String) : TechAnalyticsEvent(
         event = "Unexpected Wallet Curve",
         params = mapOf(
