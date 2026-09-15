@@ -594,6 +594,7 @@ internal class RwaFeedSearchTabModelTest {
         yieldRate = null,
         updateTimestamp = null,
         networks = null,
+        isRestrictedForCountry = false,
         imageHost = "",
     )
 
