@@ -27,6 +27,7 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.expandingSheetClick
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import dagger.assisted.Assisted
@@ -64,11 +65,13 @@ internal class FeedNewsDetailsComponent @AssistedInject constructor(
             fadeEnabled = false,
             blurBackground = false,
             isEndButtonsGroupBackgroundShown = false,
-            startButton = { TangemButton.Back(onClick = { router.pop() }) },
+            startButton = {
+                TangemButton.Back(onClick = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() })
+            },
             endButtonsGroup = {
                 FeedNavActionButton(
                     icon = Icons.ic_share_android_20,
-                    onClick = state.onShareClick,
+                    onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onShareClick),
                     isEnabled = state.articlesStateUM is ArticlesStateUM.Content,
                 )
             },
