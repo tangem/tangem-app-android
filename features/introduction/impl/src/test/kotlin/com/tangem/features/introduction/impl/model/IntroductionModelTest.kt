@@ -296,8 +296,8 @@ internal class IntroductionModelTest {
         model.uiState.value.onPrivacyPolicyClick()
 
         // Assert
-        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/terms-of-service/") }
-        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/privacy-policy/") }
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/tangem_tos.html") }
+        verify(exactly = 1) { urlOpener.openUrl("https://tangem.com/privacy-policy.html") }
         assertThat(sentEvents).containsExactly(
             SCREEN_OPENED,
             LegalOpened(LegalOpened.Document.TermsOfService),
@@ -712,23 +712,74 @@ internal class IntroductionModelTest {
 
             // Act
             sheet.cardOrRing.onClick()
+            model.uiState.value.onCreateWalletSheetCollapsed()
 
             // Assert
             verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
         }
 
         @Test
-        fun `GIVEN an open sheet WHEN the card option is picked THEN the story replaces it`() {
+        fun `GIVEN an open sheet WHEN the card option is picked THEN the story waits for the collapse`() {
             // Arrange
             val model = createModel()
+            model.setVideoRunning(isRunning = true)
+            clearMocks(videoPlayer, answers = false)
 
             // Act
             model.openSheet().cardOrRing.onClick()
 
             // Assert
             assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.isVideoRunning).isTrue()
+            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+        }
+
+        @Test
+        fun `GIVEN the card option picked WHEN the sheet has collapsed THEN the story replaces the screen`() {
+            // Arrange
+            val model = createModel()
+            model.setVideoRunning(isRunning = true)
+            model.openSheet().cardOrRing.onClick()
+
+            // Act
+            model.uiState.value.onCreateWalletSheetCollapsed()
+
+            // Assert
+            assertThat(model.uiState.value.isVideoRunning).isFalse()
             verify(exactly = 1) { videoPlayer.setRunning(isRunning = false) }
             verify { router wasNot Called }
+        }
+
+        @Test
+        fun `GIVEN no story asked for WHEN a dismissed sheet has collapsed THEN the screen keeps playing`() {
+            // Arrange
+            val model = createModel()
+            model.setVideoRunning(isRunning = true)
+            model.openSheet()
+            model.closeCreateWalletSheet()
+            clearMocks(videoPlayer, answers = false)
+
+            // Act
+            model.uiState.value.onCreateWalletSheetCollapsed()
+
+            // Assert
+            assertThat(model.uiState.value.isVideoRunning).isTrue()
+            verify(exactly = 0) { videoPlayer.setRunning(isRunning = false) }
+        }
+
+        @Test
+        fun `GIVEN the card option picked WHEN the buttons are tapped before the collapse THEN no sheet returns`() {
+            // Arrange
+            val model = createModel()
+            model.openSheet().cardOrRing.onClick()
+
+            // Act
+            model.uiState.value.onCreateWalletClick()
+            model.uiState.value.onIHaveWalletClick()
+
+            // Assert
+            assertThat(model.uiState.value.bottomSheetConfig?.isShown).isFalse()
+            assertThat(model.uiState.value.haveWalletBottomSheetConfig).isNull()
         }
 
         @Test
@@ -1531,6 +1582,8 @@ internal class IntroductionModelTest {
         private fun IntroductionModel.openStory() {
             setVideoRunning(isRunning = true)
             openSheet().cardOrRing.onClick()
+            // What the screen reports once the dismissed sheet has finished folding away.
+            uiState.value.onCreateWalletSheetCollapsed()
         }
 
         private fun IntroductionModel.openSheet(): CreateWalletUM {
