@@ -105,6 +105,7 @@ internal class SendConfirmComponent(
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
+            isTronGaslessSupported = true,
         ),
         onResult = model::onFeeResult,
     )
