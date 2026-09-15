@@ -45,6 +45,30 @@ internal class WelcomeTextTimelineTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideHoldModels")
+    fun `GIVEN a stopped video WHEN the position is held THEN the last visible scene is kept`(model: HoldModel) {
+        // Act
+        val heldMs = WelcomeTextTimeline.holdPosition(model.positionMs)
+
+        // Assert
+        assertThat(heldMs).isEqualTo(model.expectedMs)
+    }
+
+    @Test
+    fun `GIVEN any stopping position WHEN it is held THEN exactly one scene stays on screen`() {
+        // Act
+        val visibleScenesPerHold = (0L..WelcomeTextTimeline.LOOP_LENGTH_MS step 10L).map { positionMs ->
+            val heldMs = WelcomeTextTimeline.holdPosition(positionMs)
+            (0 until WelcomeTextTimeline.sceneCount).count { scene ->
+                (0..1).any { line -> WelcomeTextTimeline.frame(heldMs, scene, line).alpha > 0f }
+            }
+        }
+
+        // Assert
+        assertThat(visibleScenesPerHold.toSet()).containsExactly(1)
+    }
+
+    @ParameterizedTest
     @MethodSource("provideActiveSceneModels")
     fun `GIVEN a loop position WHEN the active scene is asked THEN it is the last one that started`(
         model: ActiveSceneModel,
@@ -72,6 +96,18 @@ internal class WelcomeTextTimelineTest {
         FrameModel(positionMs = 12_900, scene = 2, line = 1, expected = Frame(alpha = 0f, offsetDp = 7.776f)),
     )
 
+    private fun provideHoldModels() = listOf(
+        // Text on screen, even barely: the frame is kept exactly as it looked.
+        HoldModel(positionMs = 1_000, expectedMs = 1_000),
+        HoldModel(positionMs = 3_450, expectedMs = 3_450),
+        // The gaps between the scenes, where every line is transparent and the timeline has to rewind.
+        HoldModel(positionMs = 0, expectedMs = 500),
+        HoldModel(positionMs = 149, expectedMs = 500),
+        HoldModel(positionMs = 3_520, expectedMs = 3_100),
+        HoldModel(positionMs = 7_240, expectedMs = 6_800),
+        HoldModel(positionMs = WelcomeTextTimeline.LOOP_LENGTH_MS, expectedMs = 12_400),
+    )
+
     private fun provideActiveSceneModels() = listOf(
         ActiveSceneModel(positionMs = 0, expected = 0),
         ActiveSceneModel(positionMs = 3_399, expected = 0),
@@ -83,6 +119,8 @@ internal class WelcomeTextTimelineTest {
     internal data class FrameModel(val positionMs: Long, val scene: Int, val line: Int, val expected: Frame)
 
     internal data class ActiveSceneModel(val positionMs: Long, val expected: Int)
+
+    internal data class HoldModel(val positionMs: Long, val expectedMs: Long)
 
     private companion object {
         const val TOLERANCE = 0.001f
