@@ -38,18 +38,21 @@ internal data class JointOperationState(
 
     /**
      * The sign use case tolerates a failed refresh, so [signers] can still carry this member as waiting after they
-     * signed. [answeredLocally] holds that answer until a refresh lands, so the list agrees with the operation header.
+     * signed. [answeredLocally] holds that answer until a refresh lands, so every reader of this state — the signers
+     * list and [collected] alike — sees the same answer.
      */
-    fun signersWithOwnAnswer(answeredLocally: Boolean): List<JointOperationSignerState> {
+    fun withOwnAnswer(answeredLocally: Boolean): JointOperationState {
         val isWaiting = ownSigner?.answer == JointOperationSignerState.Answer.WAITING
-        if (!answeredLocally || !isWaiting) return signers
+        if (!answeredLocally || !isWaiting) return this
 
-        return signers.map { signer ->
-            if (signer == ownSigner) {
-                signer.copy(answer = JointOperationSignerState.Answer.SIGNED)
-            } else {
-                signer
-            }
-        }
+        return copy(
+            signers = signers.map { signer ->
+                if (signer == ownSigner) {
+                    signer.copy(answer = JointOperationSignerState.Answer.SIGNED)
+                } else {
+                    signer
+                }
+            },
+        )
     }
 }
