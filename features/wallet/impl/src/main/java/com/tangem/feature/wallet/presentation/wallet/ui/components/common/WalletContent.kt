@@ -73,6 +73,11 @@ internal fun WalletListContent(
             notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
         )
 
+        jointOperationBanners(
+            banners = currentWallet.jointOperationBanners,
+            modifier = movableItemModifier,
+        )
+
         promoBannersBlockComponent?.let { component ->
             item(key = "PromoBannersBlock") {
                 component.ContentWithPadding(
