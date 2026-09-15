@@ -1071,6 +1071,7 @@ internal class SwapTransferStateBuilderTest {
         // Assert
         val success = requireNotNull(result.successState)
         assertThat(success.isTransferMode).isTrue()
+        assertThat(success.title).isEqualTo(resourceReference(R.string.prediction_withdraw_status_sent_title))
         assertThat(success.fee).isNull()
         assertThat(success.txUrl).isEmpty()
         assertThat(success.fromTokenAmount)
