@@ -8,14 +8,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
@@ -411,7 +406,10 @@ internal class RwaFeedTabModel @Inject constructor(
 
     /** The notice only ever accompanies a picked category, which the analytics event reports by name. */
     private fun applyRegionRestriction(selection: CategorySelection) {
-        val banner = regionRestrictionBanner(selection)
+        val banner = RwaRegionRestriction.banner(
+            restrictedIds = categoriesState.value.restrictedCategoryIds,
+            selection = selection,
+        )
         uiState.update { it.copy(regionRestriction = banner) }
 
         val category = selection.category ?: return
@@ -419,29 +417,6 @@ internal class RwaFeedTabModel @Inject constructor(
         if (banner != null) {
             analyticsEventHandler.send(RwaAnalyticsEvent.RegionNotSupportedNotification(category.displayName))
         }
-    }
-
-    /**
-     * The copy is fixed: the backend returns a per-category `restricted` flag and never the countries
-     * behind it, so neither the blocked categories nor the regions can be named from data.
-     */
-    private fun regionRestrictionBanner(selection: CategorySelection): TangemMessageBanner.State? {
-        val isRestricted = RwaRegionRestriction.isRestricted(
-            restrictedIds = categoriesState.value.restrictedCategoryIds,
-            selection = selection,
-        )
-
-        if (!isRestricted) return null
-
-        return TangemMessageBanner.State(
-            title = resourceReference(R.string.markets_real_assets_region_restriction_title),
-            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
-            variant = TangemMessageBanner.Variant.Warning,
-            iconEnd = TangemIconUM.Icon(
-                imageVector = Icons.ic_info_20,
-                tintReference = { TangemTheme.colors3.icon.primary },
-            ),
-        )
     }
 
     private fun CoroutineScope.loadQuotesWithTimer(timeMillis: Long) {
