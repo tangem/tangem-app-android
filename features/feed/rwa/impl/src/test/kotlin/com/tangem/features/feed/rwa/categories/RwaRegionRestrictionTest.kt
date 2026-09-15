@@ -1,6 +1,7 @@
 package com.tangem.features.feed.rwa.categories
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.domain.markets.CoinCategory
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -35,6 +36,30 @@ internal class RwaRegionRestrictionTest {
 
         // Assert
         assertThat(actual).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a restricted pick WHEN banner THEN the notice is built`() {
+        // Act
+        val actual = RwaRegionRestriction.banner(
+            restrictedIds = setOf("1"),
+            selection = CategorySelection(CategorySelection.Entry(id = "1", displayName = "xStocks", code = "xstocks")),
+        )
+
+        // Assert
+        assertThat(actual?.variant).isEqualTo(TangemMessageBanner.Variant.Warning)
+    }
+
+    @Test
+    fun `GIVEN an allowed pick WHEN banner THEN there is no notice`() {
+        // Act
+        val actual = RwaRegionRestriction.banner(
+            restrictedIds = setOf("1"),
+            selection = CategorySelection(CategorySelection.Entry(id = "2", displayName = "Bonds", code = "bonds")),
+        )
+
+        // Assert
+        assertThat(actual).isNull()
     }
 
     @ParameterizedTest
