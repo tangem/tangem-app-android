@@ -37,10 +37,68 @@ internal class JointOperationVerifierTest {
             ownerAddress = ALICE,
             operation = operation(safeTx = nativeSafeTx()),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
         )
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
+    }
+
+    /**
+     * `execTransaction` guards the refund with `if (gasPrice > 0)`, so a signed zero pays nothing at all — the
+     * safest value there is, and refusing it would refuse an operation that costs the Safe no refund.
+     */
+    @Test
+    fun `GIVEN a zero gas price WHEN verify THEN the signature is allowed because no refund is paid`() = runTest {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(gasPrice = BigInteger.ZERO)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+    }
+
+    @Test
+    fun `GIVEN the zero receiver spelled without the prefix WHEN verify THEN the refund is still refused`() = runTest {
+        // Arrange
+        val rawZero = ZERO_ADDRESS.removePrefix(prefix = "0x")
+
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(refundReceiver = rawZero)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(refundReceiver = rawZero),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left(),
+        )
+    }
+
+    /** The fee recipient is only checked for being an address by creation, and the zero address is one */
+    @Test
+    fun `GIVEN the configured fee recipient is itself zero WHEN verify THEN the refund is still refused`() = runTest {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = jointAccount(),
+            ownerAddress = ALICE,
+            operation = operation(safeTx = nativeSafeTx().copy(refundReceiver = ZERO_ADDRESS)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(refundReceiver = ZERO_ADDRESS),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            VerificationFailed(reason = VerificationFailed.Reason.REFUND_MISMATCH).left(),
+        )
     }
 
     @Test
@@ -51,6 +109,7 @@ internal class JointOperationVerifierTest {
             ownerAddress = ALICE,
             operation = operation(safeTx = erc20SafeTx()),
             displayed = JointTransferIntent.Erc20(tokenContract = TOKEN, recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
         )
 
         // Assert
@@ -65,6 +124,7 @@ internal class JointOperationVerifierTest {
             ownerAddress = ALICE,
             operation = operation(safeTx = nativeSafeTx(data = "0X")),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
         )
 
         // Assert
@@ -79,6 +139,7 @@ internal class JointOperationVerifierTest {
             jointAccount = model.jointAccount,
             operation = operation(safeTx = model.safeTx),
             displayed = model.displayed,
+            refundBounds = model.refundBounds,
             ownerAddress = model.ownerAddress,
         )
 
@@ -91,6 +152,7 @@ internal class JointOperationVerifierTest {
         val jointAccount: JointAccount,
         val safeTx: SafeTx,
         val displayed: JointTransferIntent,
+        val refundBounds: JointOperationVerifier.RefundBounds = refundBounds(),
         val ownerAddress: String = ALICE,
         val expectedReason: VerificationFailed.Reason,
     ) {
@@ -103,6 +165,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(safeAddress = null),
             safeTx = erc20SafeTx().let { it.copy(data = it.data + "00") },
             displayed = JointTransferIntent.Erc20(tokenContract = TOKEN, recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.FORBIDDEN_FORM,
         ),
         NegativeModel(
@@ -110,6 +173,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(safeAddress = FOREIGN_SAFE),
             safeTx = nativeSafeTx(),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH,
         ),
         NegativeModel(
@@ -117,6 +181,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(safeAddress = null),
             safeTx = nativeSafeTx(),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH,
         ),
         NegativeModel(
@@ -124,6 +189,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx(),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             ownerAddress = MALLORY,
             expectedReason = VerificationFailed.Reason.NOT_A_MEMBER,
         ),
@@ -132,6 +198,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx(),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT + BigInteger.ONE),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.PAYLOAD_MISMATCH,
         ),
         NegativeModel(
@@ -139,6 +206,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx(),
             displayed = JointTransferIntent.Native(recipient = MALLORY, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.PAYLOAD_MISMATCH,
         ),
         NegativeModel(
@@ -146,6 +214,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(),
             safeTx = erc20SafeTx(calldataRecipient = MALLORY),
             displayed = JointTransferIntent.Erc20(tokenContract = TOKEN, recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.PAYLOAD_MISMATCH,
         ),
         NegativeModel(
@@ -160,10 +229,53 @@ internal class JointOperationVerifierTest {
             expectedReason = VerificationFailed.Reason.PAYLOAD_MISMATCH,
         ),
         NegativeModel(
+            name = "the refund would go to someone other than the fee recipient",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(refundReceiver = MALLORY),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
+            name = "the refund would be paid to whoever executes the operation",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(refundReceiver = ZERO_ADDRESS),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
+            name = "a gas price that is no uint256 at all",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(gasPrice = BigInteger.ONE.negate()),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
+            name = "the refund would be paid in a token instead of the native coin",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(gasToken = TOKEN),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
+            name = "baseGas is not one of the two values creation can put there",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(baseGas = BigInteger("9000000")),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
+            name = "gasPrice is absurd next to the network price",
+            jointAccount = jointAccount(),
+            safeTx = nativeSafeTx().copy(gasPrice = NETWORK_GAS_PRICE * BigInteger.valueOf(21)),
+            displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            expectedReason = VerificationFailed.Reason.REFUND_MISMATCH,
+        ),
+        NegativeModel(
             name = "operation targets the safe itself",
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx(to = COMPUTED_SAFE),
             displayed = JointTransferIntent.Native(recipient = COMPUTED_SAFE, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.FORBIDDEN_FORM,
         ),
         NegativeModel(
@@ -171,6 +283,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx(data = "0xdeadbeef", value = BigInteger.ZERO),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.PAYLOAD_MISMATCH,
         ),
         NegativeModel(
@@ -178,6 +291,7 @@ internal class JointOperationVerifierTest {
             jointAccount = jointAccount(),
             safeTx = nativeSafeTx(operation = 1),
             displayed = JointTransferIntent.Native(recipient = RECIPIENT, amountWei = AMOUNT),
+            refundBounds = refundBounds(),
             expectedReason = VerificationFailed.Reason.FORBIDDEN_FORM,
         ),
     )
@@ -189,7 +303,14 @@ internal class JointOperationVerifierTest {
         const val RECIPIENT = "0x1111111111111111111111111111111111111111"
         const val TOKEN = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         const val FOREIGN_SAFE = "0x5afe000000000000000000000000000000000001"
+        const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+        /** What creation puts into an operation: the zero address would be an instruction to pay `tx.origin` */
+        const val FEE_RECIPIENT = "0xfee0000000000000000000000000000000000001"
         val AMOUNT: BigInteger = BigInteger("1000000000000000000")
+
+        /** The fixtures carry ×2 of this, the cap creation applies */
+        val NETWORK_GAS_PRICE: BigInteger = BigInteger("30000000000")
 
         val COMPUTED_SAFE: String = DefaultSafeAddressCalculator()
             .compute(owners = listOf(ALICE, BOB), threshold = 2, singleton = SafeSingleton.SAFE_L2)
@@ -206,6 +327,15 @@ internal class JointOperationVerifierTest {
                 JointAccount.Member(name = "Bob", address = BOB.lowercase(), role = JointAccount.Role.MEMBER),
             ),
             source = StatusSource.ACTUAL,
+        )
+
+        /** Matches what the fixtures carry, so a test that is not about the refund passes it unchanged */
+        fun refundBounds(
+            refundReceiver: String = FEE_RECIPIENT,
+            networkGasPrice: BigInteger = NETWORK_GAS_PRICE,
+        ) = JointOperationVerifier.RefundBounds(
+            refundReceiver = refundReceiver,
+            networkGasPrice = networkGasPrice,
         )
 
         fun operation(safeTx: SafeTx): JointOperation = JointOperation(
@@ -230,8 +360,8 @@ internal class JointOperationVerifierTest {
             safeTxGas = BigInteger("150000"),
             baseGas = BigInteger("110000"),
             gasPrice = BigInteger("60000000000"),
-            gasToken = "0x0000000000000000000000000000000000000000",
-            refundReceiver = "0x0000000000000000000000000000000000000000",
+            gasToken = ZERO_ADDRESS,
+            refundReceiver = FEE_RECIPIENT,
             nonce = BigInteger.ZERO,
         )
 
