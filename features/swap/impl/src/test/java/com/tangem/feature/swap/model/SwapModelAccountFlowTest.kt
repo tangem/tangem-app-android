@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
@@ -1336,7 +1337,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Assert
             verify(exactly = 1) { predictionWithdrawalTracker.track(userWalletId) }
             coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
-            verify(exactly = 1) { messageSender.send(any()) }
+            val alert = slot<DialogMessage>()
+            verify(exactly = 1) { messageSender.send(capture(alert)) }
+            assertThat(alert.captured.message).isEqualTo(resourceReference(R.string.prediction_withdraw_in_progress_message))
             verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
             model.onDestroy()
         }
@@ -1391,6 +1394,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
 
         // Assert
         verify(exactly = 1) { messageSender.send(any()) }
+        verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
+        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
         model.onDestroy()
     }
 
