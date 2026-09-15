@@ -34,6 +34,7 @@ internal sealed interface WalletUM {
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
 
     val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
+    val jointOperationBanners: ImmutableList<JointOperationBannerUM>
 
     data class Content(
         override val pullToRefreshConfig: PullToRefreshConfig,
@@ -48,6 +49,7 @@ internal sealed interface WalletUM {
         override val virtualAccountMainUM: VirtualAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
         override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM,
+        override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
         val areActionsAvailable: Boolean = false,
     ) : WalletUM
 
@@ -65,5 +67,6 @@ internal sealed interface WalletUM {
         override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
         override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
+        override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
     }
 }
