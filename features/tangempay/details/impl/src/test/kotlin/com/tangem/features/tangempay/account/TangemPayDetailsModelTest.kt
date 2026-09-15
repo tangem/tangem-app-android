@@ -887,6 +887,25 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN only a virtual offer WHEN add card clicked THEN the order screen is opened`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
+        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
+            CardIssueOffers(virtual = virtualOffer(), plastic = null).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAddCardClick(tariffState = null)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
+        verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN only a plastic offer WHEN add card clicked THEN the order screen is opened`() = runTest {
         // Arrange
         every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
@@ -916,6 +935,12 @@ internal class TangemPayDetailsModelTest {
         type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
         data = Offer.Data(specificationName = "spec", orderType = OrderType.UNKNOWN),
+    )
+
+    private fun virtualOffer() = Offer(
+        type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
+        fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
+        data = Offer.Data(specificationName = "spec", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN),
     )
 
     private fun createModel(
