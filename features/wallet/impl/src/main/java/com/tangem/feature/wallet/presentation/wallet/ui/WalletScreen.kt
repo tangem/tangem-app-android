@@ -89,8 +89,8 @@ import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockCompo
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
@@ -105,7 +105,7 @@ import kotlin.math.abs
 internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
     collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
@@ -161,7 +161,7 @@ internal fun WalletScreen(
         walletsPagerState = walletsPagerState,
         tangemPayComponent = tangemPayComponent,
         promoBannersBlockComponent = promoBannersBlockComponent,
-        virtualAccountComponent = virtualAccountComponent,
+        moneyAccountComponent = moneyAccountComponent,
         polymarketComponent = polymarketComponent,
         collectiblesComponent = collectiblesComponent,
         jointAccountComponent = jointAccountComponent,
@@ -197,7 +197,7 @@ private fun WalletContent(
     state: WalletScreenState,
     walletsPagerState: PagerState,
     tangemPayComponent: TangemPayMainBlockComponent,
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
     collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
@@ -401,7 +401,7 @@ private fun WalletContent(
                                         tangemPayComponent = tangemPayComponent,
                                         promoBannersBlockComponent = promoBannersBlockComponent,
                                         walletId = currentWalletId,
-                                        virtualAccountComponent = virtualAccountComponent,
+                                        moneyAccountComponent = moneyAccountComponent,
                                         polymarketComponent = polymarketComponent,
                                         collectiblesComponent = collectiblesComponent,
                                         jointAccountComponent = jointAccountComponent,
@@ -949,9 +949,9 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
                 ) {
                 }
             },
-            virtualAccountComponent = object : VirtualAccountMainBlockComponent {
-                override fun LazyListScope.virtualAccountMainContent(
-                    state: VirtualAccountMainUM,
+            moneyAccountComponent = object : MoneyAccountMainBlockComponent {
+                override fun LazyListScope.moneyAccountMainContent(
+                    state: MoneyAccountMainUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
