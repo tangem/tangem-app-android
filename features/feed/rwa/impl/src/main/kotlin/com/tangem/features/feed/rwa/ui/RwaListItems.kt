@@ -5,19 +5,21 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.common.ui.markets.tokenselector.tokenGroupRowDecoration
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.tokenrow.Shimmer
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.features.feed.rwa.ui.state.RwaListItemUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal const val TOKEN_KEY_PREFIX = "token:"
-internal const val SKELETON_ROW_COUNT = 8
+internal const val SKELETON_ROW_COUNT = 20
+
+/** Inset of the row content inside whatever the caller pads and decorates. Applied by the row and its skeleton alike. */
+private val ROW_INNER_PADDING = 4.dp
 
 /**
  * Real-asset rows, shared by the feed tab's list and the search tab's results section.
@@ -48,10 +50,11 @@ internal fun LazyListScope.rwaTokenShimmers(
     hasGroupedBackground: Boolean = false,
 ) {
     items(count = count, key = { "skeleton_$it" }) { index ->
-        RwaListRowShimmer(
+        TangemTokenRowMarket.Shimmer(
             modifier = Modifier
                 .padding(horizontal = horizontalPadding)
-                .groupedBackground(enabled = hasGroupedBackground, index = index, lastIndex = count - 1),
+                .groupedBackground(enabled = hasGroupedBackground, index = index, lastIndex = count - 1)
+                .padding(horizontal = ROW_INNER_PADDING),
         )
     }
 }
@@ -91,7 +94,7 @@ internal fun VisibleTokensTracker(
 private fun RwaListRow(item: RwaListItemUM, modifier: Modifier = Modifier) {
     TangemTokenRowMarket(
         state = item.row,
-        modifier = modifier.padding(horizontal = 4.dp),
+        modifier = modifier.padding(horizontal = ROW_INNER_PADDING),
         chart = {
             item.chartData?.let { chartData ->
                 MarketChartMini(
@@ -102,17 +105,4 @@ private fun RwaListRow(item: RwaListItemUM, modifier: Modifier = Modifier) {
             }
         },
     )
-}
-
-@Composable
-private fun RwaListRowShimmer(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        TangemShimmer(modifier = Modifier.size(width = 184.dp, height = 12.dp))
-    }
 }
