@@ -11,6 +11,8 @@ import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
@@ -18,6 +20,7 @@ import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
@@ -40,6 +43,8 @@ class SignJointOperationUseCase(
     private val blockaidGate: JointOperationBlockaidGate,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val networkReader: JointNetworkReader,
+    private val compositionChecker: SafeCompositionChecker,
+    private val refundReceiverProvider: JointRefundReceiverProvider,
 ) {
 
     suspend operator fun invoke(
@@ -61,30 +66,12 @@ class SignJointOperationUseCase(
             .mapLeft(JointOperationSignError::Failed)
             .bind()
 
-        // The slot holds one operation at a time, and the signature is bound to the one the screen showed: a
-        // replacement with the same payload must not be signed instead of it
-        val operation = ensureNotNull(
-            value = jointAccount.inFlightOperations[chainId]?.takeIf { it.operationId == operationId },
-        ) { JointOperationSignError.OperationNotFound }
-        when (operation.status) {
-            JointOperation.Status.AWAITING_SIGNATURES -> Unit
-            JointOperation.Status.PENDING -> raise(JointOperationSignError.ThresholdReached)
-            JointOperation.Status.UNKNOWN -> raise(
-                JointOperationSignError.Failed(
-                    cause = IllegalStateException("The operation status is unknown to this build — not signing"),
-                ),
-            )
-        }
-
-        val ownerAddress = ownerAddressResolver
-            .resolve(userWalletId = userWalletId, ownerKeyIndex = account.ownerKeyIndex)
-            .mapLeft(JointOperationSignError::Failed)
-            .bind()
-            ?: raise(
-                JointOperationSignError.VerificationFailed(
-                    reason = JointOperationSignError.VerificationFailed.Reason.OWNER_KEY_NOT_DERIVED,
-                ),
-            )
+        val operation = signableOperation(
+            jointAccount = jointAccount,
+            chainId = chainId,
+            operationId = operationId,
+        )
+        val ownerAddress = ownOwnerAddress(userWalletId = userWalletId, account = account)
 
         verifier
             .verify(
@@ -92,8 +79,16 @@ class SignJointOperationUseCase(
                 operation = operation,
                 displayed = displayed,
                 ownerAddress = ownerAddress,
+                refundBounds = refundBounds(userWalletId = userWalletId, network = network),
             )
             .bind()
+
+        checkComposition(
+            userWalletId = userWalletId,
+            network = network,
+            safeAddress = safeAddress,
+            jointAccount = jointAccount,
+        )
 
         checkBlockaid(
             network = network,
@@ -128,6 +123,69 @@ class SignJointOperationUseCase(
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
     }
 
+    /**
+     * The slot holds one operation at a time, and the signature is bound to the one the screen showed: a
+     * replacement carrying the same payload must not be signed instead of it. An unknown status blocks too —
+     * this build cannot tell whether such an operation still needs a signature.
+     */
+    private fun Raise<JointOperationSignError>.signableOperation(
+        jointAccount: JointAccount,
+        chainId: Long,
+        operationId: String,
+    ): JointOperation {
+        val operation = ensureNotNull(
+            value = jointAccount.inFlightOperations[chainId]?.takeIf { it.operationId == operationId },
+        ) { JointOperationSignError.OperationNotFound }
+
+        return when (operation.status) {
+            JointOperation.Status.AWAITING_SIGNATURES -> operation
+            JointOperation.Status.PENDING -> raise(JointOperationSignError.ThresholdReached)
+            JointOperation.Status.UNKNOWN -> raise(
+                JointOperationSignError.Failed(
+                    cause = IllegalStateException("The operation status is unknown to this build — not signing"),
+                ),
+            )
+        }
+    }
+
+    private suspend fun Raise<JointOperationSignError>.ownOwnerAddress(
+        userWalletId: UserWalletId,
+        account: Account.Joint,
+    ): String {
+        val address = ownerAddressResolver
+            .resolve(userWalletId = userWalletId, ownerKeyIndex = account.ownerKeyIndex)
+            .mapLeft(JointOperationSignError::Failed)
+            .bind()
+
+        return ensureNotNull(address) {
+            JointOperationSignError.VerificationFailed(
+                reason = JointOperationSignError.VerificationFailed.Reason.OWNER_KEY_NOT_DERIVED,
+            )
+        }
+    }
+
+    /**
+     * The composition the app knows is checked against the deployed Safe, the same way creation does it: a backend
+     * reporting different owners or a different threshold must not get a signature for that composition.
+     */
+    private suspend fun Raise<JointOperationSignError>.checkComposition(
+        userWalletId: UserWalletId,
+        network: Network,
+        safeAddress: String,
+        jointAccount: JointAccount,
+    ) {
+        compositionChecker
+            .ensureMatches(
+                userWalletId = userWalletId,
+                network = network,
+                safeAddress = safeAddress,
+                owners = jointAccount.members.map(JointAccount.Member::address),
+                threshold = jointAccount.threshold,
+            )
+            .mapLeft(::toSignError)
+            .bind()
+    }
+
     private suspend fun Raise<JointOperationSignError>.checkBlockaid(
         network: Network,
         operation: JointOperation,
@@ -154,6 +212,34 @@ class SignJointOperationUseCase(
         val own = accounts.firstOrNull { it.cryptoAccountId.equals(cryptoAccountId, ignoreCase = true) }
 
         return ensureNotNull(own) { JointOperationSignError.OperationNotFound }
+    }
+
+    private suspend fun Raise<JointOperationSignError>.refundBounds(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): JointOperationVerifier.RefundBounds {
+        val refundReceiver = Either
+            .catch { refundReceiverProvider.refundReceiver() }
+            .mapLeft(JointOperationSignError::Failed)
+            .bind()
+
+        val gasPrice = networkReader
+            .getGasPrice(userWalletId = userWalletId, network = network)
+            .mapLeft(JointOperationSignError::Failed)
+            .bind()
+
+        return JointOperationVerifier.RefundBounds(refundReceiver = refundReceiver, networkGasPrice = gasPrice)
+    }
+
+    private fun toSignError(error: JointOperationCreateError): JointOperationSignError = when (error) {
+        is JointOperationCreateError.CompositionMismatch -> JointOperationSignError.VerificationFailed(
+            reason = JointOperationSignError.VerificationFailed.Reason.COMPOSITION_MISMATCH,
+        )
+        is JointOperationCreateError.UserCancelled -> JointOperationSignError.UserCancelled
+        is JointOperationCreateError.Failed -> JointOperationSignError.Failed(cause = error.cause)
+        else -> JointOperationSignError.Failed(
+            cause = IllegalStateException("Unexpected composition check outcome: $error"),
+        )
     }
 
     private fun toSignError(error: JointOperationSigningError): JointOperationSignError = when (error) {
