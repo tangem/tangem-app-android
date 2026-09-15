@@ -1,5 +1,12 @@
 package com.tangem.features.feed.rwa.categories
 
+import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.domain.markets.CoinCategory
 
 /**
@@ -28,5 +35,24 @@ internal object RwaRegionRestriction {
         val picked = selection.category ?: return false
 
         return picked.id in restrictedIds
+    }
+
+    /**
+     * The notice for a blocked scope, or `null` when nothing is blocked. The copy is fixed: the backend
+     * returns a per-category `restricted` flag and never the countries behind it, so neither the blocked
+     * categories nor the regions can be named from data.
+     */
+    fun banner(restrictedIds: Set<String>, selection: CategorySelection): TangemMessageBanner.State? {
+        if (!isRestricted(restrictedIds = restrictedIds, selection = selection)) return null
+
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.markets_real_assets_region_restriction_title),
+            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+        )
     }
 }
