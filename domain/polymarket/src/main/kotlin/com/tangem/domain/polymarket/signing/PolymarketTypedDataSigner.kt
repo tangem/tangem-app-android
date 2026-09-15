@@ -27,6 +27,17 @@ interface PolymarketTypedDataSigner {
         userWalletId: UserWalletId,
         clobAuth: PolymarketClobAuthData,
     ): Either<PolymarketSigningError, String>
+
+    /**
+     * Signs a single `Batch` envelope — the same structure `POST /wallet/approvals` uses, with one call
+     * instead of thirteen.
+     *
+     * @return the formatted `r+s+v` signature
+     */
+    suspend fun signWithdrawal(
+        userWalletId: UserWalletId,
+        payload: PolymarketApprovalsPayload,
+    ): Either<PolymarketSigningError, String>
 }
 
 data class PolymarketClobAuthData(
