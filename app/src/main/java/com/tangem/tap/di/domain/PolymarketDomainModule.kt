@@ -253,7 +253,9 @@ internal object PolymarketDomainModule {
     @Singleton
     fun provideGetPredictionWithdrawDestinationsUseCase(
         bridgeRepository: PolymarketBridgeRepository,
+        collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     ): GetPredictionWithdrawDestinationsUseCase = GetPredictionWithdrawDestinationsUseCase(
         bridgeRepository = bridgeRepository,
+        collateralCurrencyFactory = collateralCurrencyFactory,
     )
 }
