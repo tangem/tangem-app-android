@@ -10,7 +10,7 @@ import java.math.BigDecimal
  */
 @JsonClass(generateAdapter = true)
 data class CustomerOffersResponse(
-    @Json(name = "result") val result: List<Offer>,
+    @Json(name = "result") val result: List<Offer>? = null,
 ) {
 
     @JsonClass(generateAdapter = true)
@@ -37,7 +37,7 @@ data class CustomerOffersResponse(
 
     @JsonClass(generateAdapter = true)
     data class Fee(
-        @Json(name = "amount") val amount: BigDecimal,
-        @Json(name = "currency") val currency: String,
+        @Json(name = "amount") val amount: BigDecimal? = null,
+        @Json(name = "currency") val currency: String? = null,
     )
 }
