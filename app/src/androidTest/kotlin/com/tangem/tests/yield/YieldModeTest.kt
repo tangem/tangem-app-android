@@ -84,6 +84,9 @@ class YieldModeTest : BaseTestCase() {
                 // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
                 // pointerInput restarts), so repeat it until the sheet closes — and only while the
                 // button is still there, otherwise the retry dies on a node that is already gone.
+                // assertIsNotDisplayed also passes for a node that is not there yet, so wait for the button
+                // before the retry loop — otherwise a screen that has not rendered reports the hold as done.
+                awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStartEarningScreen {
                         if (startEarningButton.isDisplayedSafely()) {
@@ -161,6 +164,9 @@ class YieldModeTest : BaseTestCase() {
                 // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
                 // pointerInput restarts), so repeat it until the sheet closes — and only while the
                 // button is still there, otherwise the retry dies on a node that is already gone.
+                // assertIsNotDisplayed also passes for a node that is not there yet, so wait for the button
+                // before the retry loop — otherwise a screen that has not rendered reports the hold as done.
+                awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStartEarningScreen {
                         if (startEarningButton.isDisplayedSafely()) {
@@ -320,6 +326,9 @@ class YieldModeTest : BaseTestCase() {
                 // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
                 // pointerInput restarts), so repeat it until the sheet closes — and only while the
                 // button is still there, otherwise the retry dies on a node that is already gone.
+                // assertIsNotDisplayed also passes for a node that is not there yet, so wait for the button
+                // before the retry loop — otherwise a screen that has not rendered reports the hold as done.
+                awaitSuccess { onYieldSupplyApproveScreen { confirmButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyApproveScreen {
                         if (confirmButton.isDisplayedSafely()) {
@@ -398,6 +407,9 @@ class YieldModeTest : BaseTestCase() {
                 // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
                 // pointerInput restarts), so repeat it until the sheet closes — and only while the
                 // button is still there, otherwise the retry dies on a node that is already gone.
+                // assertIsNotDisplayed also passes for a node that is not there yet, so wait for the button
+                // before the retry loop — otherwise a screen that has not rendered reports the hold as done.
+                awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStartEarningScreen {
                         if (startEarningButton.isDisplayedSafely()) {
@@ -500,6 +512,9 @@ class YieldModeTest : BaseTestCase() {
                 // The hold is swallowed whenever the button's enabled state flips mid-gesture (its
                 // pointerInput restarts), so repeat it until the sheet closes — and only while the
                 // button is still there, otherwise the retry dies on a node that is already gone.
+                // assertIsNotDisplayed also passes for a node that is not there yet, so wait for the button
+                // before the retry loop — otherwise a screen that has not rendered reports the hold as done.
+                awaitSuccess { onYieldSupplyStopEarningScreen { confirmButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStopEarningScreen {
                         if (confirmButton.isDisplayedSafely()) {
