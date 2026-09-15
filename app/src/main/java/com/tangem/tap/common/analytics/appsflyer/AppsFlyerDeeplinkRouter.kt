@@ -58,8 +58,8 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun routeTangemPayOnboarding(currentRoute: AppRoute) {
-        // Not on an idle entry screen yet: keep the deep link pending, re-evaluate on next route change.
-        if (!isIdleEntryPoint(currentRoute)) return
+        // A flow is in progress: keep the deep link pending, re-evaluate on next route change.
+        if (isNavigationBlocked(currentRoute)) return
 
         // No wallet yet: the user is on the intro stories, which this deep link must not skip. It stays pending
         // and Home consumes it on "Get started", right after the stories (see HomeModel.onGetStartedClick).
@@ -77,22 +77,23 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
 
     private suspend fun routeTangemPayCampaign(campaignKey: String, currentRoute: AppRoute) {
         if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) return
-        if (!isIdleEntryPoint(currentRoute)) return
 
         if (userWalletsListRepository.userWalletsSync().isNotEmpty()) {
+            if (isNavigationBlocked(currentRoute)) return
             TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link over the current screen")
             appRouter.push(AppRoute.TangemPayCampaign(campaignKey))
         } else {
+            if (!isFreshInstallEntry(currentRoute)) return
             TangemLogger.i("[TangemPay][Campaign] Routing campaign deep link as the root")
             appRouter.replaceAll(AppRoute.TangemPayCampaign(campaignKey))
         }
     }
 
     private suspend fun routeReferral(currentRoute: AppRoute) {
-        // Referral targets fresh installs: from an idle entry screen, go straight to hot wallet creation
-        // (skips stories). The deep link is NOT cleared here — it stays as referral attribution (read by
-        // GetAppsFlyerDeeplinkUseCase, cleared on wallet creation); replaceAll keeps it off the back stack.
-        if (!isIdleEntryPoint(currentRoute)) return
+        // Referral targets fresh installs: go straight to hot wallet creation (skips stories). The deep link
+        // is NOT cleared here — it stays as referral attribution (read by GetAppsFlyerDeeplinkUseCase, cleared
+        // on wallet creation); replaceAll keeps it off the back stack.
+        if (!isFreshInstallEntry(currentRoute)) return
         if (userWalletsListRepository.userWalletsSync().isNotEmpty()) return
 
         TangemLogger.i("[Referral] Routing AppsFlyer referral deep link to hot wallet creation")
@@ -100,6 +101,22 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 }
 
-// Route only from idle entry screens so an in-progress flow (scan, KYC, onboarding…) isn't interrupted.
-internal fun isIdleEntryPoint(currentRoute: AppRoute?): Boolean =
-    currentRoute is AppRoute.Home || currentRoute is AppRoute.Stories || currentRoute is AppRoute.Wallet
+internal fun isFreshInstallEntry(currentRoute: AppRoute?): Boolean =
+    currentRoute is AppRoute.Home || currentRoute is AppRoute.Stories
+
+// Mirrors DeepLinkFactory.checkRoutingReadiness (minus Home and Stories, which fresh-install links need) plus
+// the Tangem Pay flows these links open, so a pending link never stacks a second one on top of them.
+internal fun isNavigationBlocked(currentRoute: AppRoute?): Boolean = when (currentRoute) {
+    null,
+    is AppRoute.Initial,
+    is AppRoute.Welcome,
+    is AppRoute.PushNotification,
+    is AppRoute.Disclaimer,
+    is AppRoute.Onboarding,
+    is AppRoute.TangemPayCampaign,
+    is AppRoute.TangemPayOnboarding,
+    is AppRoute.TangemPayHotWalletOnboarding,
+    is AppRoute.Kyc,
+    -> true
+    else -> false
+}
