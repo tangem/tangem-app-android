@@ -34,6 +34,45 @@ internal class NorthernLightsCrashGuardTest {
     }
 
     @Test
+    fun `GIVEN clean storage WHEN init THEN no crash reported`() {
+        // Arrange
+        val store = FakeStore(NorthernLightsCrashGuard.State())
+
+        // Act
+        NorthernLightsCrashGuard.init(store = store, appVersion = APP_VERSION)
+
+        // Assert
+        assertThat(NorthernLightsCrashGuard.hasDetectedCrash).isFalse()
+        assertThat(NorthernLightsCrashGuard.crashCount).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN armed for current version WHEN init THEN crash reported once`() {
+        // Arrange
+        val store = FakeStore(NorthernLightsCrashGuard.State(armedVersion = APP_VERSION))
+
+        // Act
+        NorthernLightsCrashGuard.init(store = store, appVersion = APP_VERSION)
+
+        // Assert
+        assertThat(NorthernLightsCrashGuard.hasDetectedCrash).isTrue()
+        assertThat(NorthernLightsCrashGuard.crashCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN crash recorded but not armed WHEN init THEN disabled without new report`() {
+        // Arrange
+        val store = FakeStore(NorthernLightsCrashGuard.State(crashCount = 1, crashVersion = APP_VERSION))
+
+        // Act
+        NorthernLightsCrashGuard.init(store = store, appVersion = APP_VERSION)
+
+        // Assert
+        assertThat(NorthernLightsCrashGuard.isDisabled).isTrue()
+        assertThat(NorthernLightsCrashGuard.hasDetectedCrash).isFalse()
+    }
+
+    @Test
     fun `GIVEN armed for current version WHEN init THEN shader disabled and crash counted`() {
         // Arrange
         val store = FakeStore(NorthernLightsCrashGuard.State(armedVersion = APP_VERSION))
