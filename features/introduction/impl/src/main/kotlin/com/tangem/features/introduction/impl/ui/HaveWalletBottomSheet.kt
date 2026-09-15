@@ -1,6 +1,9 @@
 package com.tangem.features.introduction.impl.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,12 +28,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.ds2.button.Back
+import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_download_24
@@ -46,24 +51,21 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
 
     TangemModal<HaveWalletUM>(
         config = config,
-        presentation = TangemModal.Presentation.Dialog,
+        // Flat card for the same reason as the Create wallet sheet: the glass material would sample the
+        // video behind the screen, and a dialog window costs half a second before the sheet can animate.
+        isMaterialEnabled = false,
         // Back steps inside the sheet; on the first step it falls through to dismissing it.
         onBack = (step as? HaveWalletUM.Step.Import)?.onBack,
         title = { content ->
             TangemTopNavigation(
-                title = when (content.step) {
-                    is HaveWalletUM.Step.Options ->
-                        resourceReference(R.string.introduction_button_i_have_a_wallet)
-                    // The Import step carries its title in the body, so the bar keeps only its buttons.
-                    is HaveWalletUM.Step.Import,
-                    is HaveWalletUM.Step.Error,
-                    -> stringReference("")
-                },
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 windowInsets = WindowInsets(0.dp),
                 fadeEnabled = false,
-                onBack = (content.step as? HaveWalletUM.Step.Import)?.onBack,
-                onClose = content.onCloseClick,
+                startButton = (content.step as? HaveWalletUM.Step.Import)?.onBack?.let {
+                    { TangemButton.Back(onClick = it) }
+                },
+                endButton = { TangemButton.Close(onClick = content.onCloseClick) },
+                contentColumn = { StepTitle(step = content.step) },
             )
         },
     ) { content ->
@@ -85,6 +87,25 @@ internal fun HaveWalletBottomSheet(config: TangemBottomSheetConfig) {
                 }
             }
         }
+    }
+}
+
+/**
+ * The Import and Error steps carry their title in the body, so the bar keeps only its buttons. The title fades out
+ * in place instead of being swapped for an empty one: the bar's own title slot animates its width along with the
+ * cross-fade, which clips the outgoing words away one by one as the slot shrinks to nothing.
+ */
+@Composable
+private fun ColumnScope.StepTitle(step: HaveWalletUM.Step) {
+    AnimatedVisibility(
+        visible = step is HaveWalletUM.Step.Options,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        TangemNavigationText(
+            text = resourceReference(R.string.introduction_button_i_have_a_wallet),
+            role = TangemNavigationText.Role.Title,
+        )
     }
 }
 
