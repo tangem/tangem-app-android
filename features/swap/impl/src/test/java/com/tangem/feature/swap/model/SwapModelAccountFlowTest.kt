@@ -1142,7 +1142,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN the amount is entered THEN no network fee is requested and the button needs none`() =
+    fun `GIVEN a prediction withdraw WHEN the amount is entered THEN no network fee is requested, none is shown and the button needs none`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -1167,7 +1167,36 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                     feePaidCryptoCurrencyStatus = any(),
                     fee = null,
                     isTangemPayWithdrawal = true,
-                    feeSelectorUM = any(),
+                    feeSelectorUM = null,
+                    isHighNetworkFee = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the transfer state is built THEN the fee selector state is withheld from the builder`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair()
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+
+            // Act
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Assert
+            verify {
+                swapTransferStateBuilder.createTransferState(
+                    actions = any(),
+                    transferState = any(),
+                    uiStateHolder = any(),
+                    feePaidCryptoCurrencyStatus = any(),
+                    feeSelectorUM = null,
                     isHighNetworkFee = any(),
                 )
             }
