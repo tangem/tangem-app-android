@@ -225,13 +225,9 @@ abstract class BaseTestCase : TestCase(
             // Picks the transaction endpoints the Tangem Pay history tests assert on:
             // on -> /bff-v2/v1/transactions, off -> the legacy /bff-v2/v1/customer/transactions.
             "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED" to true,
-            // On from 6.4 ("undefined" on develop until the release branch merges back), and it swaps the stories
-            // start screen for the Welcome one. Forced on so the entry scenarios take the same path on both
-            // branches; they are written against the Welcome screen, which is the one that stays.
+            // On from 6.4, undefined on develop — forced so both branches take the same entry path.
             "TWI_1356_INTRODUCTION_REDESIGN_ENABLED" to true,
-            // On from 6.4, and the OTLP exporter ships metrics to the live https://otlp.services.tangem.org
-            // with its own HTTP client — outside the WireMock redirect. Off so a run neither depends on that
-            // service nor pollutes production telemetry with test traffic.
+            // The OTLP exporter has its own HTTP client, so it bypasses the WireMock redirect.
             "TWI_1627_OTEL_METRICS_ENABLED" to false,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch

@@ -104,8 +104,7 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessC
     step("Click on 'Import existing wallet' option") {
         onIntroductionScreen { importWalletOption.clickWithAssertion() }
     }
-    // The import step always offers this button (only the cloud backup one is toggle-gated), so wait for the step
-    // to render rather than skipping the click when it is not up yet.
+    // Only the cloud backup button is toggle-gated, so this one is always there — wait, never skip.
     step("Click on 'Use recovery phrase' button") {
         awaitSuccess { onIntroductionScreen { useRecoveryPhraseButton.assertIsDisplayed() } }
         onIntroductionScreen { useRecoveryPhraseButton.performClick() }
