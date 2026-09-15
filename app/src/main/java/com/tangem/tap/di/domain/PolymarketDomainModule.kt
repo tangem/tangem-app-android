@@ -27,6 +27,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -246,5 +247,13 @@ internal object PolymarketDomainModule {
         deriveAddresses = deriveAddresses,
         requisitesStore = requisitesStore,
         depositAddressWriter = depositAddressWriter,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionWithdrawDestinationsUseCase(
+        bridgeRepository: PolymarketBridgeRepository,
+    ): GetPredictionWithdrawDestinationsUseCase = GetPredictionWithdrawDestinationsUseCase(
+        bridgeRepository = bridgeRepository,
     )
 }
