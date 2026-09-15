@@ -32,6 +32,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
@@ -115,6 +117,7 @@ internal abstract class SwapModelTestBase {
     protected val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk(relaxed = true)
     protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
         mockk(relaxed = true)
+    protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
@@ -172,6 +175,7 @@ internal abstract class SwapModelTestBase {
         every { getSelectedAppCurrencyUseCase.invoke() } returns emptyFlow()
         coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
             emptyMap<CryptoCurrency.ID, PredictionWithdrawDestination>().right()
+        every { polymarketCollateralCurrencyFactory.createDepositTarget() } returns usdcPolygonToken()
         // Unstubbed, a relaxed mock would fabricate a nested SwapCurrencyStatus/Account chain instead of
         // echoing the real fromSwapCurrencyStatus, which can trip Account-type checks (e.g. isTangemPayWithdrawal).
         every {
@@ -181,6 +185,21 @@ internal abstract class SwapModelTestBase {
                 toSwapCurrencyStatus = any(),
             )
         } answers { secondArg() }
+    }
+
+    private fun usdcPolygonToken(): CryptoCurrency.Token {
+        val id: CryptoCurrency.ID = mockk {
+            every { rawCurrencyId } returns CryptoCurrency.RawID("usd-coin")
+        }
+        return mockk(relaxed = true) {
+            every { this@mockk.id } returns id
+            every { network } returns mockk(relaxed = true) { every { rawId } returns "polygon-pos" }
+            every { contractAddress } returns PolymarketContracts.USDC_TOKEN_ADDRESS
+            every { decimals } returns 6
+            every { name } returns "USDC"
+            every { symbol } returns "USDC"
+            every { iconUrl } returns null
+        }
     }
 
     protected fun createParams(
@@ -245,6 +264,7 @@ internal abstract class SwapModelTestBase {
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
         multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
+        polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,
         getSwapUiModeUseCase = getSwapUiModeUseCase,
