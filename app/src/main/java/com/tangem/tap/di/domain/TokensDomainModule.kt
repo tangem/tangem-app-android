@@ -28,7 +28,7 @@ import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -171,7 +171,7 @@ internal object TokensDomainModule {
         virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         stakingIdFactory: StakingIdFactory,
@@ -190,7 +190,7 @@ internal object TokensDomainModule {
             virtualAccountStatusFetcher = virtualAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,
             collectiblesFeatureToggles = collectiblesFeatureToggles,
             stakingIdFactory = stakingIdFactory,
