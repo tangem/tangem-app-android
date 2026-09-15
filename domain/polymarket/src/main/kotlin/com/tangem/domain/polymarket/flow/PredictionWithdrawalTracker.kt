@@ -66,13 +66,13 @@ class PredictionWithdrawalTracker(
         TangemLogger.e("Withdrawal $transactionId is still in progress after ${config.maxAttempts} polls")
     }
 
-    /** @return true when [receipt] is terminal, so the record has been released and polling must stop */
+    /** @return true when [receipt] is terminal and the record has been released, so polling must stop */
     private suspend fun release(userWalletId: UserWalletId, receipt: PredictionWithdrawalReceipt): Boolean {
         if (!receipt.state.isTerminal) return false
         TangemLogger.i("Withdrawal ${receipt.transactionId} reached ${receipt.state}")
-        runSuspendCatching { store.clear(userWalletId) }
+        return runSuspendCatching { store.clear(userWalletId) }
             .onFailure { TangemLogger.e("The finished withdrawal record could not be cleared", it) }
-        return true
+            .isSuccess
     }
 
     private fun PredictionWithdrawError.stopsTracking(transactionId: String): Boolean {

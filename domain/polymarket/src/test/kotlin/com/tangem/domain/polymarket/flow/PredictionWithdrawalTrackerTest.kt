@@ -164,6 +164,24 @@ internal class PredictionWithdrawalTrackerTest {
     }
 
     @Test
+    fun `GIVEN the finished record cannot be cleared WHEN polled THEN the clear is retried on the next poll`() = runTest {
+        // Arrange
+        coEvery { store.get(WALLET_ID) } returns record(transactionId = TX_ID)
+        coEvery { getState(any(), any()) } returns receipt(PredictionWithdrawalState.CONFIRMED).right()
+        coEvery { store.clear(WALLET_ID) } throws IllegalStateException("disk full") andThen Unit
+        val tracker = createTracker()
+
+        // Act
+        tracker.track(WALLET_ID)
+        advanceTimeBy(20.seconds)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { getState(any(), any()) }
+        coVerify(exactly = 2) { store.clear(WALLET_ID) }
+    }
+
+    @Test
     fun `GIVEN the id is not this wallet's WHEN polled THEN polling stops and the record stays`() = runTest {
         // Arrange
         coEvery { store.get(WALLET_ID) } returns record(transactionId = TX_ID)
