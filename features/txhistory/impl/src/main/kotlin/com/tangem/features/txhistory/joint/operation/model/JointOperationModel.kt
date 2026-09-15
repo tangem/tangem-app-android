@@ -96,7 +96,7 @@ internal class JointOperationModel @Inject constructor(
             signers = signersConverter.convert(
                 value = JointOperationSignersUMConverter.Input(
                     membersCount = state.membersCount,
-                    signers = state.signers,
+                    signers = state.signersWithOwnAnswer(answeredLocally = hasAnswered),
                 ),
             ),
         )
