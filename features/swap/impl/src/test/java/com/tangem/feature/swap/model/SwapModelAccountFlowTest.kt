@@ -2,7 +2,6 @@ package com.tangem.feature.swap.model
 
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -22,8 +21,8 @@ import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
-import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -968,7 +967,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN to selector settings THEN Markets is shown and payment tokens are hidden`() =
+    fun `GIVEN a prediction withdraw WHEN to selector settings THEN the chooser offers USDC on Polygon to add, hides payment tokens and joint accounts`() =
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -979,114 +978,38 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             val settings = model.chooseToTokenBridge.settings
 
             // Assert
-            assertThat(settings.chooserBlock).isEqualTo(ChooserBlock.Market)
+            val chooserBlock = settings.chooserBlock as ChooserBlock.Predefined
+            val predefinedTokens = chooserBlock.predefinedTokens.value
+            assertThat(predefinedTokens).hasSize(1)
+            val predefinedToken = predefinedTokens.single()
+            assertThat(predefinedToken.token.id).isEqualTo(CryptoCurrency.RawID("usd-coin"))
+            assertThat(predefinedToken.network.networkId).isEqualTo("polygon-pos")
+            assertThat(predefinedToken.network.contractAddress)
+                .isEqualTo(PolymarketContracts.USDC_TOKEN_ADDRESS)
+            assertThat(predefinedToken.network.decimalCount).isEqualTo(6)
             assertThat(settings.paymentAccountTokens).isEqualTo(PaymentAccountTokens.Hidden)
+            assertThat(settings.isJointAccountsShown).isFalse()
             model.onDestroy()
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN to tokenFilter applied THEN only the bridge destinations pass`() = runTest {
+    fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown`() = runTest {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-        val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-        val otherStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-        val portfolioStatus = personalAccountStatus(listOf(destinationStatus, otherStatus))
-        val portfolio = listOf(destinationStatus.currency, otherStatus.currency)
-        val destinations = mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id))
+        val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
+        val portfolioStatus = personalAccountStatus(listOf(currencyStatus))
         every { multiAccountStatusListSupplier() } returns
             flowOf(listOf(accountStatusList(listOf(portfolioStatus))))
-        coEvery { getPredictionWithdrawDestinationsUseCase(portfolio) } returns destinations.right()
+        coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns PolymarketBridgeError.Network.left()
+
+        // Act
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
         advanceUntilIdle()
 
-        // Act
-        val predicate = model.chooseToTokenBridge.tokenFilter.value
-
         // Assert
-        verify(exactly = 0) { messageSender.send(any()) }
-        assertThat(predicate(portfolioStatus, destinationStatus)).isTrue()
-        assertThat(predicate(portfolioStatus, otherStatus)).isFalse()
+        verify(exactly = 1) { messageSender.send(any()) }
         model.onDestroy()
     }
-
-    @Test
-    fun `GIVEN a prediction withdraw WHEN to tokenFilter sees a bridge destination held by another wallet THEN it passes`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-            val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-            val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
-            val otherWalletPortfolio = personalAccountStatus(
-                currencies = listOf(destinationStatus),
-                userWalletId = UserWalletId(stringValue = "FEDCBA9876543210"),
-            )
-            every { multiAccountStatusListSupplier() } returns
-                flowOf(listOf(accountStatusList(listOf(ownPortfolio)), accountStatusList(listOf(otherWalletPortfolio))))
-            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
-                mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id)).right()
-            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
-            advanceUntilIdle()
-
-            // Act
-            val predicate = model.chooseToTokenBridge.tokenFilter.value
-
-            // Assert
-            assertThat(predicate(ownPortfolio, destinationStatus)).isTrue()
-            assertThat(predicate(otherWalletPortfolio, destinationStatus)).isTrue()
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a prediction withdraw WHEN to tokenFilter sees a bridge destination in a payment account THEN it is rejected`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-            val destinationStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-            val ownPortfolio = personalAccountStatus(listOf(destinationStatus))
-            val paymentAccountStatus = MockAccounts.createPaymentAccountStatus(userWalletId = userWalletId)
-            every { multiAccountStatusListSupplier() } returns
-                flowOf(listOf(accountStatusList(listOf(ownPortfolio))))
-            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
-                mapOf(destinationStatus.currency.id to destination(destinationStatus.currency.id)).right()
-            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
-            advanceUntilIdle()
-
-            // Act
-            val predicate = model.chooseToTokenBridge.tokenFilter.value
-
-            // Assert
-            assertThat(predicate(ownPortfolio, destinationStatus)).isTrue()
-            assertThat(predicate(paymentAccountStatus, destinationStatus)).isFalse()
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown and the TO filter passes nothing`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-            val currencyStatus: CryptoCurrencyStatus = mockk(relaxed = true)
-            val portfolioStatus = personalAccountStatus(listOf(currencyStatus))
-            every { multiAccountStatusListSupplier() } returns
-                flowOf(listOf(accountStatusList(listOf(portfolioStatus))))
-            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns PolymarketBridgeError.Network.left()
-            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
-            advanceUntilIdle()
-
-            // Act
-            val predicate = model.chooseToTokenBridge.tokenFilter.value
-
-            // Assert
-            verify(exactly = 1) { messageSender.send(any()) }
-            assertThat(predicate(portfolioStatus, currencyStatus)).isFalse()
-            model.onDestroy()
-        }
-
-    private fun destination(id: CryptoCurrency.ID) = PredictionWithdrawDestination(
-        currencyId = id,
-        chainId = "137",
-        tokenAddress = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-    )
 
     private fun accountStatusList(accountStatuses: List<AccountStatus>) = AccountStatusList(
         userWalletId = userWalletId,
