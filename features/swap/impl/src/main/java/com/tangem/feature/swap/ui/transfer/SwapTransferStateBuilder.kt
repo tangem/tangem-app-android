@@ -622,6 +622,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             onShareClick = {},
         )
         val successState = requireNotNull(sentState.successState).copy(
+            title = resourceReference(R.string.prediction_withdraw_status_sent_title),
             fromTitle = AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = resourceReference(R.string.prediction_account_title),
