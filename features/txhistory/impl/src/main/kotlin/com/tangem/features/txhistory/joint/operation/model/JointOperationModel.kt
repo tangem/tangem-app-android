@@ -83,11 +83,12 @@ internal class JointOperationModel @Inject constructor(
         flow4 = isBalanceHidden,
     ) { state, isSigning, hasAnswered, isBalanceHidden ->
         state ?: return@combine JointOperationUM.Gone
+        val answered = state.withOwnAnswer(answeredLocally = hasAnswered)
 
         JointOperationUM.Content(
             operation = operationConverter.convert(
                 value = JointOperationUMConverter.Input(
-                    state = state,
+                    state = answered,
                     isSigning = isSigning,
                     hasAnswered = hasAnswered,
                     isBalanceHidden = isBalanceHidden,
@@ -95,8 +96,8 @@ internal class JointOperationModel @Inject constructor(
             ),
             signers = signersConverter.convert(
                 value = JointOperationSignersUMConverter.Input(
-                    membersCount = state.membersCount,
-                    signers = state.signersWithOwnAnswer(answeredLocally = hasAnswered),
+                    membersCount = answered.membersCount,
+                    signers = answered.signers,
                 ),
             ),
         )
