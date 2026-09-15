@@ -104,6 +104,30 @@ internal class TokenMarketListConverterTest {
         assertThat(actual.tokens.single().networks).isNull()
     }
 
+    @Test
+    fun `GIVEN a token restricted for the country WHEN convert THEN the flag is carried over`() {
+        // Arrange
+        val response = createResponse(createToken(id = "apple-xstock", isRestrictedForCountry = true))
+
+        // Act
+        val actual = TokenMarketListConverter.convert(response)
+
+        // Assert
+        assertThat(actual.tokens.single().isRestrictedForCountry).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the restriction flag is absent WHEN convert THEN the token counts as allowed`() {
+        // Arrange — an older backend omits the field; defaulting to restricted would hide the whole list
+        val response = createResponse(createToken(id = "ethereum", isRestrictedForCountry = null))
+
+        // Act
+        val actual = TokenMarketListConverter.convert(response)
+
+        // Assert
+        assertThat(actual.tokens.single().isRestrictedForCountry).isFalse()
+    }
+
     private fun createResponse(vararg tokens: TokenMarketListResponse.Token) = TokenMarketListResponse(
         imageHost = "https://img.tangem.org/",
         tokens = tokens.toList(),
@@ -116,9 +140,10 @@ internal class TokenMarketListConverterTest {
 
     private fun createToken(
         id: String,
-        networks: List<TokenMarketListResponse.Token.Network>?,
+        networks: List<TokenMarketListResponse.Token.Network>? = null,
         name: String = id,
         symbol: String = id.take(n = 3).uppercase(),
+        isRestrictedForCountry: Boolean? = null,
     ) = TokenMarketListResponse.Token(
         id = id,
         name = name,
@@ -131,6 +156,7 @@ internal class TokenMarketListConverterTest {
         stakingOpportunities = null,
         maxYieldApy = null,
         networks = networks,
+        isRestrictedForCountry = isRestrictedForCountry,
     )
 
     private fun createNetwork(
