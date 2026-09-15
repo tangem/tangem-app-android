@@ -1048,9 +1048,11 @@ internal class SwapTransferStateBuilderTest {
     @Test
     fun `GIVEN transfer dataState WHEN createPredictionWithdrawalSentState THEN an in-progress transfer holder without fee or explorer is built`() {
         // Arrange
+        val fromAmount = BigDecimal("5")
+        val toAmount = BigDecimal("5")
         val transferState = buildTransferState(
-            fromAmount = BigDecimal("5"),
-            toAmount = BigDecimal("5"),
+            fromAmount = fromAmount,
+            toAmount = toAmount,
             isAccountsMode = true,
         )
         val dataState = SwapProcessDataState(
@@ -1059,6 +1061,7 @@ internal class SwapTransferStateBuilderTest {
             amount = "5",
             currentTransferState = transferState,
         )
+        val appCurrency = transferState.appCurrency
 
         // Act
         val result = sut.createPredictionWithdrawalSentState(uiState = baseStateHolder(), dataState = dataState)
@@ -1068,8 +1071,24 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.isTransferMode).isTrue()
         assertThat(success.fee).isNull()
         assertThat(success.txUrl).isEmpty()
-        assertThat(success.fromTokenAmount).isEqualTo(stringReference("5"))
-        assertThat(success.toTokenAmount).isEqualTo(stringReference("5"))
+        assertThat(success.fromTokenAmount)
+            .isEqualTo(stringReference(fromAmount.format { crypto(symbol = "ETH", decimals = 18) }))
+        assertThat(success.toTokenAmount)
+            .isEqualTo(stringReference(toAmount.format { crypto(symbol = "ETH", decimals = 18) }))
+        assertThat(success.fromTokenFiatAmount).isEqualTo(
+            stringReference(
+                fromCurrencyStatus.status.value.fiatRate!!.multiply(fromAmount).format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+        )
+        assertThat(success.toTokenFiatAmount).isEqualTo(
+            stringReference(
+                toCurrencyStatus.status.value.fiatRate!!.multiply(toAmount).format {
+                    fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                },
+            ),
+        )
         assertThat((success.navigationUM as NavigationUM.Content).secondaryPairButtonsUM).isNull()
     }
 
