@@ -20,6 +20,10 @@ dependencies {
     implementation(deps.androidx.datastore)
     // endregion
 
+    // region Other libraries
+    implementation(deps.arrow.core)
+    // endregion
+
     // region Tangem SDKs
     implementation(tangemDeps.blockchain)
     // endregion
@@ -31,6 +35,7 @@ dependencies {
 
     // region Core
     api(projects.core.analytics)
+    implementation(projects.core.configToggles)
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.core.utils)
@@ -58,9 +63,11 @@ dependencies {
     // endregion
 
     // region tests
+    testImplementation(deps.arrow.core)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(projects.test.core)
     // endregion
 }
