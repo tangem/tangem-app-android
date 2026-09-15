@@ -1000,8 +1000,7 @@ internal fun jointPollingTarget(
     val hasJointAccount = accountStatusLists
         .firstOrNull { it.userWalletId == selectedWalletId }
         ?.accountStatuses
-        ?.any { it is AccountStatus.Joint }
-        ?: false
+        ?.any { it is AccountStatus.Joint } == true
 
     return selectedWalletId.takeIf { hasJointAccount }
 }
