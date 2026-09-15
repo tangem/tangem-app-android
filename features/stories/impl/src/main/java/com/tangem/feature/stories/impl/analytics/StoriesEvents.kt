@@ -14,29 +14,29 @@ internal sealed class StoriesEvents(
         val source: String,
         val watchCount: String,
     ) : StoriesEvents(
-        event = "Swap Story",
+        event = "Swap Stories",
         params = mapOf(
             AnalyticsParam.SOURCE to source,
             WATCHED to watchCount,
         ),
     )
 
-    data class YieldPromoStory(
+    data class YieldPromo(
         val source: String,
         val watchCount: String,
     ) : StoriesEvents(
-        event = "Yield Promo Story",
+        event = "Yield Promo",
         params = mapOf(
             AnalyticsParam.SOURCE to source,
             WATCHED to watchCount,
         ),
     )
 
-    data class PolymarketOnboardingStory(
+    data class PolymarketOnboarding(
         val source: String,
         val watchCount: String,
     ) : StoriesEvents(
-        event = "Polymarket Onboarding Story",
+        event = "Polymarket Onboarding",
         params = mapOf(
             AnalyticsParam.SOURCE to source,
             WATCHED to watchCount,
@@ -46,8 +46,8 @@ internal sealed class StoriesEvents(
     companion object {
 
         fun storyShown(storyId: String, source: String, watchCount: String): StoriesEvents = when (storyId) {
-            StoryContentIds.STORY_POLYMARKET_ONBOARDING.id -> PolymarketOnboardingStory(source, watchCount)
-            StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id -> YieldPromoStory(source, watchCount)
+            StoryContentIds.STORY_POLYMARKET_ONBOARDING.id -> PolymarketOnboarding(source, watchCount)
+            StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id -> YieldPromo(source, watchCount)
             else -> SwapStories(source, watchCount)
         }
     }
