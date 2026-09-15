@@ -11,7 +11,7 @@ internal data class JointOperationSignersUM(
     val signers: ImmutableList<SignerUM>,
 ) {
 
-    /** @property mark how the member answered; `null` while they are still to */
+    /** @property mark how the member answered; `null` while they are still to answer */
     @Immutable
     data class SignerUM(
         val name: String,
