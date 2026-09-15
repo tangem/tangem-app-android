@@ -113,7 +113,7 @@ internal class DefaultCustomerOffersRepositoryTest {
         runTest {
             // Arrange
             val response = CustomerOffersResponse(
-                result = offersResponse.result + CustomerOffersResponse.Offer(
+                result = offersResponse.result.orEmpty() + CustomerOffersResponse.Offer(
                     type = "CARD_ISSUE_PLASTIC_RAIN",
                     fee = null,
                     data = null,
@@ -140,6 +140,39 @@ internal class DefaultCustomerOffersRepositoryTest {
         // Assert
         assertThat(actual.getOrNull()?.single()?.type).isEqualTo(Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
         coVerify(exactly = 1) { tangemPayApi.getProductInstanceOffers(AUTH_HEADER, PRODUCT_INSTANCE_ID) }
+    }
+
+    @Test
+    fun `GIVEN a placeholder reissue offer WHEN getProductInstanceOffers THEN it is dropped`() = runTest {
+        // Arrange
+        val response = CustomerOffersResponse(
+            result = listOf(
+                CustomerOffersResponse.Offer(type = "CARD_REISSUE_PLASTIC_RAIN", fee = null, data = null),
+            ),
+        )
+        coEvery { tangemPayApi.getProductInstanceOffers(any(), any()) } returns ApiResponse.Success(response)
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a null result WHEN getOffers THEN no offers are returned instead of an error`() = runTest {
+        // Arrange
+        coEvery {
+            tangemPayApi.getCustomerOffers(any(), any())
+        } returns ApiResponse.Success(CustomerOffersResponse(result = null))
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getOffers(userWalletId)
+
+        // Assert
+        assertThat(actual.getOrNull()).isEmpty()
     }
 
     @Test
