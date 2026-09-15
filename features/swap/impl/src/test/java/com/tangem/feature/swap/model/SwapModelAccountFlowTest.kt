@@ -1031,6 +1031,25 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction withdraw WHEN the button goes into progress THEN it reads Withdrawing`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedPredictionPair()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState = model.uiState.copy(
+            swapButton = model.uiState.swapButton.copy(mode = SwapButton.Mode.SWAP_PROGRESSING),
+        )
+
+        // Assert
+        assertThat(model.uiState.swapButton.mode).isEqualTo(SwapButton.Mode.TRANSFER_PROGRESSING)
+        assertThat(model.uiState.swapButton.title).isEqualTo(resourceReference(R.string.common_withdrawing))
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() = runTest {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
