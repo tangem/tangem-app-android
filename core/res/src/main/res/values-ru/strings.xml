@@ -374,6 +374,7 @@
   <string name="common_explore">Обозреватель</string>
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
   <string name="common_explorer">Обозреватель</string>
+  <string name="common_featured">Популярное</string>
   <string name="common_fee_error">Не удалось получить комиссию</string>
   <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
   <string name="common_fee_selector_option_fast">Быстро</string>
@@ -496,7 +497,7 @@
   <string name="common_second_no_param">сек</string>
   <string name="common_see_all">Показать всё</string>
   <string name="common_seed_phrase">Seed-фраза</string>
-  <string name="common_select_account">Выбор счета</string>
+  <string name="common_select_account">Выберите счет</string>
   <string name="common_select_action">Выберите действие</string>
   <string name="common_sell">Продать</string>
   <string name="common_send">Отправить</string>
@@ -759,6 +760,13 @@
   <string name="fee_selector_choose_token_description">Выберите какой токен будет использоваться для оплаты комиссии сети. %s</string>
   <string name="fee_selector_choose_token_title">Выбрать токен</string>
   <string name="feed_market_and_news">Рынок и Новости</string>
+  <string name="feed_promo_earn_active_description">Получайте до %1$s APY на %2$s</string>
+  <string name="feed_promo_earn_description">Заставьте криптовалюту работать и получайте до %1$s APY</string>
+  <string name="feed_promo_earn_title">Начните зарабатывать</string>
+  <string name="feed_promo_referral_description">Получайте %1$s за каждого друга</string>
+  <string name="feed_promo_referral_title">Приглашайте друзей в Tangem</string>
+  <string name="feed_promo_tangem_pay_description">Получайте кэшбэк за повседневные покупки</string>
+  <string name="feed_promo_tangem_pay_title">Платите криптовалютой</string>
   <string name="feed_search_show_all_user_assets">Показать все</string>
   <string name="feed_search_show_less_user_assets">Скрыть</string>
   <string name="feed_trending_now">В тренде</string>
@@ -2448,10 +2456,10 @@
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обмена с %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Недоступно для обмена</string>
   <plurals name="top_assets_count">
-    <item quantity="one">Топ %d актив</item>
-    <item quantity="few">Топ %d актива</item>
-    <item quantity="many">Топ %d активов</item>
-    <item quantity="other"></item>
+    <item quantity="one">%d крупнейший актив</item>
+    <item quantity="few">%d крупнейших актива</item>
+    <item quantity="many">%d крупнейших активов</item>
+    <item quantity="other">%d крупнейших активов</item>
   </plurals>
   <string name="transaction_history_claiming_reward">Получение награды</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
