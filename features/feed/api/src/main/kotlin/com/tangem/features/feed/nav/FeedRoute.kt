@@ -25,6 +25,8 @@ interface FeedRoute : Route {
     /** true → pushing an already-present route brings it to front instead of stacking a duplicate. */
     val isSingleInstance: Boolean get() = false
 
+    val screenIdentity: Any get() = this
+
     @Serializable
     data class MarketsTokenList(
         val preselectedOrder: PreselectedMarketsOrder? = null,
@@ -46,6 +48,8 @@ interface FeedRoute : Route {
         val exchangesCount: Int? = null,
     ) : FeedRoute {
 
+        override val screenIdentity: Any get() = token.id
+
         @Serializable
         data class AnalyticsParams(
             val blockchain: String?,
@@ -63,7 +67,10 @@ interface FeedRoute : Route {
         val source: String,
         val preselectedArticlesId: List<Int> = emptyList(),
         val paginationConfig: NewsListConfig? = null,
-    ) : FeedRoute
+    ) : FeedRoute {
+
+        override val screenIdentity: Any get() = articleId
+    }
 
     @Serializable
     data class Earn(
