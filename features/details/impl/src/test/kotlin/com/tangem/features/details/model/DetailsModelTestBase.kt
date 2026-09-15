@@ -16,13 +16,13 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
-import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
+import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.utils.ItemsBuilder
@@ -62,7 +62,7 @@ internal abstract class DetailsModelTestBase {
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
     protected val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
-    protected val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase = mockk()
+    protected val getMoneyAccountEligibilityUseCase: GetMoneyAccountEligibilityUseCase = mockk()
     protected val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
@@ -86,7 +86,7 @@ internal abstract class DetailsModelTestBase {
         coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
         coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
-        coEvery { getVirtualAccountEligibilityUseCase(any()) } returns VirtualAccountEligibility.NotAvailable
+        coEvery { getMoneyAccountEligibilityUseCase(any()) } returns MoneyAccountEligibility.NotAvailable
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
 
         every {
@@ -125,7 +125,7 @@ internal abstract class DetailsModelTestBase {
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
         tangemPayFeatureToggles = tangemPayFeatureToggles,
-        getVirtualAccountEligibilityUseCase = getVirtualAccountEligibilityUseCase,
+        getMoneyAccountEligibilityUseCase = getMoneyAccountEligibilityUseCase,
         moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
