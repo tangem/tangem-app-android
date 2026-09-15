@@ -30,7 +30,7 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceF
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -60,8 +60,8 @@ internal class WalletBalanceFetcherTest {
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
-    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles = mockk {
-        every { isVirtualAccountsEnabled } returns false
+    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles = mockk {
+        every { isMoneyAccountsEnabled } returns false
     }
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
     private val polymarketFeatureToggles: PolymarketFeatureToggles = mockk {
@@ -86,7 +86,7 @@ internal class WalletBalanceFetcherTest {
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -1109,7 +1109,7 @@ internal class WalletBalanceFetcherTest {
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = mockk {
             every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
         },

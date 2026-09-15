@@ -32,7 +32,7 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceF
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -68,7 +68,7 @@ class WalletBalanceFetcher internal constructor(
     private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -89,7 +89,7 @@ class WalletBalanceFetcher internal constructor(
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
@@ -109,7 +109,7 @@ class WalletBalanceFetcher internal constructor(
         virtualAccountStatusFetcher = virtualAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
@@ -129,7 +129,7 @@ class WalletBalanceFetcher internal constructor(
         virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
         collectiblesFeatureToggles: CollectiblesFeatureToggles,
         stakingIdFactory: StakingIdFactory,
@@ -157,7 +157,7 @@ class WalletBalanceFetcher internal constructor(
         virtualAccountStatusFetcher = virtualAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
         dispatchers = dispatchers,
@@ -244,7 +244,7 @@ class WalletBalanceFetcher internal constructor(
             // Fetch Virtual account separately for the same reason as TangemPay
             if (
                 fetchingSources.any { it is WalletFetchingSource.VirtualAccount } &&
-                virtualAccountsFeatureToggles.isVirtualAccountsEnabled
+                moneyAccountsFeatureToggles.isMoneyAccountsEnabled
             ) {
                 virtualAccountStatusFetcher.invoke(VirtualAccountStatusFetcher.Params(userWalletId))
             }
