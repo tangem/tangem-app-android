@@ -15,9 +15,7 @@ internal object VirtualAccountMainModule {
 
     @Provides
     @Singleton
-    fun provideMoneyAccountFeatureToggles(
-        featureTogglesManager: FeatureTogglesManager,
-    ): MoneyAccountFeatureToggles {
+    fun provideMoneyAccountFeatureToggles(featureTogglesManager: FeatureTogglesManager): MoneyAccountFeatureToggles {
         return DefaultMoneyAccountFeatureToggles(featureTogglesManager = featureTogglesManager)
     }
 }
