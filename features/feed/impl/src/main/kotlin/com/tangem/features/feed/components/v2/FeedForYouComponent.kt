@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.nav.expandingSheetClick
 import com.tangem.features.foryou.ForYouComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -49,7 +50,7 @@ internal class FeedForYouComponent @AssistedInject constructor(
             contentPadding = PaddingValues(horizontal = 16.dp),
             fadeEnabled = false,
             blurBackground = false,
-            onBack = { router.pop() },
+            onBack = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() },
             modifier = modifier,
         )
     }
