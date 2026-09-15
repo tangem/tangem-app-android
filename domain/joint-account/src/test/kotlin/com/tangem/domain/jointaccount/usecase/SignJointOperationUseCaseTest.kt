@@ -8,10 +8,13 @@ import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
+import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.network.JointNetworkReader
+import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -42,6 +45,8 @@ internal class SignJointOperationUseCaseTest {
     private val blockaidGate: JointOperationBlockaidGate = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val networkReader: JointNetworkReader = mockk()
+    private val compositionChecker: SafeCompositionChecker = mockk()
+    private val refundReceiverProvider: JointRefundReceiverProvider = mockk()
     private val network: Network = mockk()
 
     private val useCase = SignJointOperationUseCase(
@@ -53,6 +58,8 @@ internal class SignJointOperationUseCaseTest {
         blockaidGate = blockaidGate,
         ownerAddressResolver = ownerAddressResolver,
         networkReader = networkReader,
+        compositionChecker = compositionChecker,
+        refundReceiverProvider = refundReceiverProvider,
     )
 
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 3)
@@ -60,12 +67,26 @@ internal class SignJointOperationUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, signer, fetcher, supplier, verifier, blockaidGate, ownerAddressResolver, networkReader)
+        clearMocks(
+            repository,
+            signer,
+            fetcher,
+            supplier,
+            verifier,
+            blockaidGate,
+            ownerAddressResolver,
+            networkReader,
+            compositionChecker,
+            refundReceiverProvider,
+        )
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
         coEvery { networkReader.getChainId(network) } returns CHAIN_ID.right()
-        coEvery { verifier.verify(any(), any(), any(), any()) } returns Unit.right()
+        coEvery { verifier.verify(any(), any(), any(), any(), any()) } returns Unit.right()
+        coEvery { networkReader.getGasPrice(any(), any()) } returns GAS_PRICE.right()
+        coEvery { refundReceiverProvider.refundReceiver() } returns REFUND_RECEIVER
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns Unit.right()
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns ALICE.right()
         coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.SAFE
@@ -101,6 +122,10 @@ internal class SignJointOperationUseCaseTest {
                 operation = operation(),
                 displayed = displayed,
                 ownerAddress = ALICE,
+                refundBounds = JointOperationVerifier.RefundBounds(
+                    refundReceiver = REFUND_RECEIVER,
+                    networkGasPrice = GAS_PRICE,
+                ),
             )
             blockaidGate.verify(
                 network = network,
@@ -132,7 +157,7 @@ internal class SignJointOperationUseCaseTest {
         val reason = JointOperationSignError.VerificationFailed(
             reason = JointOperationSignError.VerificationFailed.Reason.PAYLOAD_MISMATCH,
         )
-        coEvery { verifier.verify(any(), any(), any(), any()) } returns reason.left()
+        coEvery { verifier.verify(any(), any(), any(), any(), any()) } returns reason.left()
 
         // Act
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
@@ -156,6 +181,43 @@ internal class SignJointOperationUseCaseTest {
         assertThat(actual).isEqualTo(JointOperationSignError.Malicious.left())
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
+
+    /** The local checks pass on the composition the app knows; the deployed Safe is the second opinion */
+    @Test
+    fun `GIVEN the deployed safe answers another composition WHEN invoke THEN nothing is signed`() = runTest {
+        // Arrange
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            JointOperationCreateError.CompositionMismatch.left()
+
+        // Act
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            JointOperationSignError.VerificationFailed(
+                reason = JointOperationSignError.VerificationFailed.Reason.COMPOSITION_MISMATCH,
+            ).left(),
+        )
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the composition is checked WHEN invoke THEN it is checked against the account the app knows`() =
+        runTest {
+            // Act
+            useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+            // Assert
+            coVerify(exactly = 1) {
+                compositionChecker.ensureMatches(
+                    userWalletId = MockAccounts.userWalletId,
+                    network = network,
+                    safeAddress = SAFE_ADDRESS,
+                    owners = jointAccount().members.map { it.address },
+                    threshold = jointAccount().threshold,
+                )
+            }
+        }
 
     @Test
     fun `GIVEN blockaid could not validate WHEN invoke THEN signing proceeds`() = runTest {
@@ -200,7 +262,7 @@ internal class SignJointOperationUseCaseTest {
             reason = JointOperationSignError.VerificationFailed.Reason.OWNER_KEY_NOT_DERIVED,
         )
         assertThat(actual).isEqualTo(expected.left())
-        coVerify(exactly = 0) { verifier.verify(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { verifier.verify(any(), any(), any(), any(), any()) }
         coVerify(exactly = 1) { ownerAddressResolver.resolve(any(), any()) }
     }
 
@@ -322,6 +384,8 @@ internal class SignJointOperationUseCaseTest {
         const val SIGNATURE = "0xdeadbeef"
         const val OPERATION_ID = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708"
         const val CHAIN_ID = 137L
+        const val REFUND_RECEIVER = "0xfee0000000000000000000000000000000000001"
         val AMOUNT: BigInteger = BigInteger("1000000000000000000")
+        val GAS_PRICE: BigInteger = BigInteger("30000000000")
     }
 }
