@@ -28,6 +28,11 @@ import com.tangem.utils.logging.TangemLogger
  *    attaches the campaign order and returns the user to the pending verification, the same way the regular
  *    onboarding does from the main-screen banner.
  *
+ * Step 2 is unanswerable for a wallet whose Tangem Pay session is gone: whether it holds a Payment account is
+ * known from the static token, but the account state behind the user token is not. That is recoverable rather
+ * than fatal, so it resolves to [TangemPayCampaignResolution.SessionExpired] and the caller renews the session
+ * before resolving again. A wallet that resolves outright wins over one that would need the renewal.
+ *
  * Every request failure propagates as [Either.Left] — the caller shows a retryable error for it.
  */
 class ResolveTangemPayCampaignUseCase(
@@ -46,9 +51,17 @@ class ResolveTangemPayCampaignUseCase(
             return@either TangemPayCampaignResolution.Unavailable
         }
 
-        val payWalletId = findWalletWithIssuableAccount()
-            .onLeft { error -> logFailure(step = "findWalletWithIssuableAccount", error = error) }
+        val campaignWallet = findWalletForCampaign()
+            .onLeft { error -> logFailure(step = "findWalletForCampaign", error = error) }
             .bind()
+
+        val payWalletId = when (campaignWallet) {
+            is CampaignWallet.Issuable -> campaignWallet.userWalletId
+            is CampaignWallet.SessionExpired -> {
+                return@either TangemPayCampaignResolution.SessionExpired(campaignWallet.userWalletId)
+            }
+            CampaignWallet.None -> null
+        }
 
         val offer = if (payWalletId == null) {
             null
@@ -74,25 +87,59 @@ class ResolveTangemPayCampaignUseCase(
         TangemPayCampaignResolution.IssueCard(userWalletId = payWalletId, campaign = campaign, offer = offer)
     }
 
-    private suspend fun findWalletWithIssuableAccount(): Either<VisaApiError, UserWalletId?> = either {
-        eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
-            .firstOrNull { walletId -> canIssueCard(walletId).bind() }
+    private suspend fun findWalletForCampaign(): Either<VisaApiError, CampaignWallet> = either {
+        var walletWithExpiredSession: CampaignWallet.SessionExpired? = null
+
+        for (walletId in eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)) {
+            when (val state = walletState(walletId).bind()) {
+                is CampaignWallet.Issuable -> return@either state
+                is CampaignWallet.SessionExpired -> walletWithExpiredSession = walletWithExpiredSession ?: state
+                CampaignWallet.None -> Unit
+            }
+        }
+
+        walletWithExpiredSession ?: CampaignWallet.None
     }
 
-    private suspend fun canIssueCard(walletId: UserWalletId): Either<VisaApiError, Boolean> = either {
-        if (!onboardingRepository.hasTangemPayInWallet(walletId).bind()) return@either false
+    private suspend fun walletState(walletId: UserWalletId): Either<VisaApiError, CampaignWallet> = either {
+        if (!onboardingRepository.hasTangemPayInWallet(walletId).bind()) return@either CampaignWallet.None
 
-        val kycStatus = onboardingRepository.getCustomerInfo(walletId).bind().kycStatus
-        if (kycStatus != KycStatus.APPROVED) {
-            TangemLogger.i("$TAG Payment account of $walletId is still under review (kyc=$kycStatus)")
+        if (!onboardingRepository.isTangemPayInitialDataProduced(walletId)) {
+            TangemLogger.i("$TAG Tangem Pay credentials of $walletId are missing, renewal is required")
+            return@either CampaignWallet.SessionExpired(walletId)
         }
-        kycStatus == KycStatus.APPROVED
+
+        onboardingRepository.getCustomerInfo(walletId).fold(
+            ifLeft = { error ->
+                if (error != VisaApiError.RefreshTokenExpired) raise(error)
+                TangemLogger.i("$TAG Tangem Pay session of $walletId expired, renewal is required")
+                CampaignWallet.SessionExpired(walletId)
+            },
+            ifRight = { customerInfo ->
+                val kycStatus = customerInfo.kycStatus
+                if (kycStatus == KycStatus.APPROVED) {
+                    CampaignWallet.Issuable(walletId)
+                } else {
+                    TangemLogger.i("$TAG Payment account of $walletId is still under review (kyc=$kycStatus)")
+                    CampaignWallet.None
+                }
+            },
+        )
     }
 
     private fun campaignLink(campaignKey: String): String = "$MARKETING_LINK_PREFIX$campaignKey"
 
     private fun logFailure(step: String, error: UniversalError) {
         TangemLogger.e("$TAG Failed to resolve campaign at $step: $error")
+    }
+
+    private sealed interface CampaignWallet {
+
+        data class Issuable(val userWalletId: UserWalletId) : CampaignWallet
+
+        data class SessionExpired(val userWalletId: UserWalletId) : CampaignWallet
+
+        data object None : CampaignWallet
     }
 
     private companion object {
