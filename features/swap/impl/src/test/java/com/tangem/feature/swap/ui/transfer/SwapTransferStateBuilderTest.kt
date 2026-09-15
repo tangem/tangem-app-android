@@ -7,6 +7,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
@@ -16,6 +17,7 @@ import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -1090,6 +1092,22 @@ internal class SwapTransferStateBuilderTest {
             ),
         )
         assertThat((success.navigationUM as NavigationUM.Content).secondaryPairButtonsUM).isNull()
+        assertThat(success.fromTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.common_from),
+                name = resourceReference(R.string.prediction_account_title),
+                icon = AccountIconUM.Prediction,
+            ),
+        )
+        val toCurrency = toCurrencyStatus.currency
+        assertThat(success.toTitle).isEqualTo(
+            AccountTitleUM.Text(
+                combinedReference(
+                    resourceReference(R.string.common_to),
+                    stringReference(" ${toCurrency.symbol} · ${toCurrency.network.name}"),
+                ),
+            ),
+        )
     }
 
     private fun assertSharedCardShape(
