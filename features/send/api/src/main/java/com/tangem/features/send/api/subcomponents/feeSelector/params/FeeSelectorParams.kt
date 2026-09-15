@@ -26,6 +26,12 @@ sealed class FeeSelectorParams {
     abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
     abstract val shouldShowOnlySpeedOption: Boolean
 
+    /**
+     * Whether this flow wires the Tron gasless loader. Only the send flow does; the rest quote fees
+     * through the EVM gasless machinery, which cannot sponsor a Tron transfer.
+     */
+    abstract val isTronGaslessSupported: Boolean
+
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
         override val userWalletId: UserWalletId,
@@ -40,6 +46,7 @@ sealed class FeeSelectorParams {
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
+        override val isTronGaslessSupported: Boolean = false,
         override val onDisableCustomFee: () -> Boolean = { false },
         val bottomSheetShown: (Boolean) -> Unit = {},
     ) : FeeSelectorParams()
@@ -58,6 +65,7 @@ sealed class FeeSelectorParams {
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
+        override val isTronGaslessSupported: Boolean = false,
         override val onDisableCustomFee: () -> Boolean = { false },
         val callback: FeeSelectorModelCallback,
     ) : FeeSelectorParams()
