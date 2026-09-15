@@ -34,7 +34,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
+import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
+import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
@@ -118,6 +121,9 @@ internal abstract class SwapModelTestBase {
     protected val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase =
         mockk(relaxed = true)
     protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
+    protected val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor = mockk(relaxed = true)
+    protected val predictionWithdrawalTracker: PredictionWithdrawalTracker = mockk(relaxUnitFun = true)
+    protected val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase = mockk(relaxed = true)
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val getSwapUiModeUseCase: GetSwapUiModeUseCase = mockk(relaxed = true)
@@ -225,6 +231,7 @@ internal abstract class SwapModelTestBase {
         params: SwapComponent.Params = createParams(),
         accountFlow: AccountFlow? = null,
         dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider(),
+        swapTransferStateBuilder: SwapTransferStateBuilder = this.swapTransferStateBuilder,
     ): SwapModel = SwapModel(
         paramsContainer = MutableParamsContainer(
             if (accountFlow != null) createParams(accountFlow = accountFlow) else params,
@@ -265,6 +272,9 @@ internal abstract class SwapModelTestBase {
         multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         getPredictionWithdrawDestinationsUseCase = getPredictionWithdrawDestinationsUseCase,
         polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
+        submitPredictionWithdrawalInteractor = submitPredictionWithdrawalInteractor,
+        predictionWithdrawalTracker = predictionWithdrawalTracker,
+        derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,
         getSwapUiModeUseCase = getSwapUiModeUseCase,
