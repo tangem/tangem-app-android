@@ -6,26 +6,29 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PolymarketBridgeAsset
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 
 class GetPredictionWithdrawDestinationsUseCase(
     private val bridgeRepository: PolymarketBridgeRepository,
+    private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
 ) {
 
     /**
      * @param portfolio the currencies the wallet already holds
-     * @return the [portfolio] currencies the bridge delivers to, each carrying the chain and asset the bridge
-     *  named it by. An empty map means the wallet holds nothing deliverable — the caller's case to handle,
-     *  not an error.
+     * @return the [portfolio] currencies that are USDC on Polygon — the only destination phase 1 delivers to —
+     *  and that the bridge delivers to, each carrying the chain and asset the bridge named it by. An empty map
+     *  means the wallet holds nothing deliverable — the caller's case to handle, not an error.
      */
     suspend operator fun invoke(
         portfolio: List<CryptoCurrency>,
     ): Either<PolymarketBridgeError, Map<CryptoCurrency.ID, PredictionWithdrawDestination>> = either {
         val assets = bridgeRepository.getSupportedAssets().bind().associateBy { it.matchKey() }
+        val target = collateralCurrencyFactory.createDepositTarget()
 
-        portfolio.mapNotNull { currency ->
+        portfolio.filter { it.isDepositTarget(target) }.mapNotNull { currency ->
             val asset = currency.matchKey()?.let(assets::get) ?: return@mapNotNull null
 
             currency.id to PredictionWithdrawDestination(
@@ -35,6 +38,10 @@ class GetPredictionWithdrawDestinationsUseCase(
             )
         }.toMap()
     }
+
+    private fun CryptoCurrency.isDepositTarget(target: CryptoCurrency.Token): Boolean = this is CryptoCurrency.Token &&
+        network.rawId == target.network.rawId &&
+        contractAddress.equals(target.contractAddress, ignoreCase = true)
 
     private fun PolymarketBridgeAsset.matchKey(): MatchKey {
         val chain = chainName.takeIf { it in NON_EVM_CHAIN_NAMES } ?: chainId
