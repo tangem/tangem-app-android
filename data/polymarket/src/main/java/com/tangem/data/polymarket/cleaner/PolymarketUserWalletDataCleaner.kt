@@ -6,13 +6,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
  * Removes the Polymarket CLOB credentials, the cached prediction account status, the onboarding confirmation
- * record and the funding requisites of deleted wallets.
+ * record, the funding requisites and the in-flight withdrawal record of deleted wallets.
  *
  * [UserWalletId] is derived from the wallet key, so re-adding the same wallet reproduces the storage key.
  * Without this, the credentials of a deleted wallet are handed back to it: the onboarding run returns any
@@ -25,12 +26,14 @@ import javax.inject.Inject
  * @property predictionAccountStatusStore cache of the prediction account status
  * @property onboardedStore               record of wallets the backend confirmed as ready to trade
  * @property requisitesStore              session store of the funding requisites
+ * @property withdrawalStore              record of the withdrawal batch still awaiting the relayer
  */
 internal class PolymarketUserWalletDataCleaner @Inject constructor(
     private val credentialsStore: PolymarketCredentialsStore,
     private val predictionAccountStatusStore: PredictionAccountStatusStore,
     private val onboardedStore: PolymarketOnboardedStore,
     private val requisitesStore: PredictionDepositRequisitesStore,
+    private val withdrawalStore: PredictionWithdrawalStore,
 ) : UserWalletDataCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
@@ -46,6 +49,9 @@ internal class PolymarketUserWalletDataCleaner @Inject constructor(
 
             runSuspendCatching { requisitesStore.clear(userWalletId) }
                 .onFailure { TangemLogger.e("Failed to clear the funding requisites of $userWalletId", it) }
+
+            runSuspendCatching { withdrawalStore.clear(userWalletId) }
+                .onFailure { TangemLogger.e("Failed to clear the withdrawal record of $userWalletId", it) }
         }
     }
 }
