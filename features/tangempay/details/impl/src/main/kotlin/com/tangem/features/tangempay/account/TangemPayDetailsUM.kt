@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(
@@ -86,6 +87,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     data class Card(
         val lastDigits: String,
         val imageUrl: String?,
+        val cardType: TangemPayCardType,
         val onClick: () -> Unit,
         val state: TangemPayCardUiState,
         val isFrozen: Boolean,
