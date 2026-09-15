@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.model.TangemPayCampaignResolution
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
@@ -44,6 +45,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase,
+    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
@@ -54,6 +56,8 @@ internal class TangemPayCampaignModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayOnboardingNavigation> = SlotNavigation()
 
     val childNavigation: SlotNavigation<TangemPayCampaignChild> = SlotNavigation()
+
+    private val renewedWalletsIds = mutableSetOf<UserWalletId>()
 
     val uiState: StateFlow<TangemPayCampaignUM>
         field = MutableStateFlow<TangemPayCampaignUM>(TangemPayCampaignUM.Loading)
@@ -107,11 +111,34 @@ internal class TangemPayCampaignModel @Inject constructor(
                     when (resolution) {
                         is TangemPayCampaignResolution.IssueCard -> showIssueCard(resolution)
                         is TangemPayCampaignResolution.Landing -> showLanding(resolution.campaign)
+                        is TangemPayCampaignResolution.SessionExpired -> renewSession(resolution.userWalletId)
                         TangemPayCampaignResolution.Unavailable -> showUnavailableDialog()
                     }
                 },
             )
         }
+    }
+
+    private suspend fun renewSession(userWalletId: UserWalletId) {
+        if (!renewedWalletsIds.add(userWalletId)) {
+            TangemLogger.e("[TangemPay][Campaign] Session of $userWalletId is still expired after the renewal")
+            showError()
+            return
+        }
+
+        TangemLogger.i("[TangemPay][Campaign] Renewing the Tangem Pay session of $userWalletId")
+        produceTangemPayInitialDataUseCase(userWalletId).fold(
+            ifLeft = { error ->
+                TangemLogger.e("[TangemPay][Campaign] Failed to renew the Tangem Pay session", error)
+                showError()
+            },
+            ifRight = { resolveCampaign() },
+        )
+    }
+
+    private fun onRetryClick() {
+        renewedWalletsIds.clear()
+        resolveCampaign()
     }
 
     private fun showIssueCard(resolution: TangemPayCampaignResolution.IssueCard) {
@@ -150,7 +177,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     }
 
     private fun showError() {
-        uiState.value = TangemPayCampaignUM.Error(onRetry = ::resolveCampaign, onClose = ::onClose)
+        uiState.value = TangemPayCampaignUM.Error(onRetry = ::onRetryClick, onClose = ::onClose)
     }
 
     private fun showUnavailableDialog() {
