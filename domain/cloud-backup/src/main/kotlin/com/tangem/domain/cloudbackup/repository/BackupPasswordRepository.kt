@@ -17,4 +17,13 @@ interface BackupPasswordRepository {
      * entries are stored for the app.
      */
     suspend fun savePassword(username: String, password: CharArray): Boolean
+
+    /**
+     * Counterpart of [savePassword], asked on the same channel: waiting for the autofill provider to
+     * volunteer a suggestion instead would work only on the devices whose provider bothers to.
+     *
+     * `null` for everything that is not a password to work with — nothing stored, no provider, the user
+     * dismissed the picker. The returned array is the caller's to wipe.
+     */
+    suspend fun getPassword(): CharArray?
 }
