@@ -698,6 +698,28 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN an active prediction account WHEN withdraw is clicked THEN the swap opens with the collateral as the locked source`() =
+        runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val route = slot<AppRoute.Swap>()
+            every { router.push(capture(route), any()) } returns Unit
+
+            // Act
+            model.uiState.value.balance.withdraw.onClick()
+
+            // Assert
+            assertThat(route.captured.userWalletId).isEqualTo(USER_WALLET_ID)
+            assertThat(route.captured.fromCryptoCurrency).isEqualTo(COLLATERAL)
+            assertThat(route.captured.fromCurrencyPosition).isEqualTo(AppRoute.Swap.CurrencyPosition.FROM)
+            assertThat(route.captured.screenSource).isEqualTo(AnalyticsParam.ScreensSources.Predictions.value)
+            assertThat(route.captured.accountFlow).isEqualTo(AppRoute.Swap.AccountFlow.PredictionWithdraw)
+            verify(exactly = 0) { fundingWindow.arm(any()) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN funding window opens WHEN state observed THEN awaiting funds banner shown and hidden with it`() =
         runTest {
             // Arrange
