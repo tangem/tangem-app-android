@@ -11,15 +11,15 @@ internal class StoriesEventsTest {
         // Act
         val actual = StoriesEvents.storyShown(
             storyId = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id,
-            source = "Predictions",
+            source = "Onboarding",
             watchCount = "4",
         )
 
         // Assert
         assertThat(actual).isEqualTo(
-            StoriesEvents.PolymarketOnboardingStory(source = "Predictions", watchCount = "4"),
+            StoriesEvents.PolymarketOnboarding(source = "Onboarding", watchCount = "4"),
         )
-        assertThat(actual.event).isEqualTo("Polymarket Onboarding Story")
+        assertThat(actual.event).isEqualTo("Polymarket Onboarding")
     }
 
     @Test
@@ -33,9 +33,9 @@ internal class StoriesEventsTest {
 
         // Assert
         assertThat(actual).isEqualTo(
-            StoriesEvents.YieldPromoStory(source = "TokenDetails", watchCount = "3"),
+            StoriesEvents.YieldPromo(source = "TokenDetails", watchCount = "3"),
         )
-        assertThat(actual.event).isEqualTo("Yield Promo Story")
+        assertThat(actual.event).isEqualTo("Yield Promo")
     }
 
     @Test
@@ -49,5 +49,6 @@ internal class StoriesEventsTest {
 
         // Assert
         assertThat(actual).isEqualTo(StoriesEvents.SwapStories(source = "Main", watchCount = "1"))
+        assertThat(actual.event).isEqualTo("Swap Stories")
     }
 }
