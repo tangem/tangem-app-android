@@ -2527,7 +2527,7 @@ internal class SwapModel @Inject constructor(
         }
 
         chooseFromTokenBridge.tokenFilter.value = fromFilter
-        chooseToTokenBridge.tokenFilter.value = baseFilter
+        if (!isPredictionWithdrawFlow) chooseToTokenBridge.tokenFilter.value = baseFilter
     }
 
     private fun CryptoCurrency.Token.toPredefinedToken(): PredefinedTokenToAdd? {

@@ -1077,6 +1077,27 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a prediction withdraw WHEN the currencies settle THEN the to tokenFilter is left to the predefined chooser`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+            val cryptoPortfolioStatus: AccountStatus.Personal = mockk(relaxed = true)
+            val customStatus: CryptoCurrencyStatus = mockk(relaxed = true) {
+                every { currency.isCustom } returns true
+            }
+
+            // Act
+            val toPredicate = model.chooseToTokenBridge.tokenFilter.value
+
+            // Assert
+            assertThat(toPredicate(cryptoPortfolioStatus, customStatus)).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown`() = runTest {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
