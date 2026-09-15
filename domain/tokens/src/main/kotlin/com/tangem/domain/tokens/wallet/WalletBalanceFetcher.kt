@@ -32,7 +32,7 @@ import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceF
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async

@@ -29,8 +29,8 @@ import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetwo
 import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksComponent
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
+import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsListener
 
 internal class TangemPayCardPageScreenComponent(
     private val appComponentContext: AppComponentContext,
