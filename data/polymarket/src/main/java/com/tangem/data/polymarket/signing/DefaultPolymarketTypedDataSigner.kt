@@ -132,6 +132,27 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         }
         .getOrElse { it.toSigningError().left() }
 
+    override suspend fun signWithdrawal(
+        userWalletId: UserWalletId,
+        payload: PolymarketApprovalsPayload,
+    ): Either<PolymarketSigningError, String> = Either
+        .catchOn(dispatchers.io) {
+            val context = signingContext(userWalletId).getOrElse { return@catchOn it.left() }
+            val digest = EthereumUtils.makeTypedDataHash(
+                PolymarketTypedDataBuilder.buildApprovalsBatch(
+                    depositWallet = payload.depositWalletAddress,
+                    nonce = payload.nonce,
+                    deadline = payload.deadline,
+                    calls = payload.calls,
+                ),
+            )
+
+            val signatures = sign(context, listOf(digest)).getOrElse { return@catchOn it.left() }
+
+            formatter.format(signatures[0], digest, context.publicKey).right()
+        }
+        .getOrElse { it.toSigningError().left() }
+
     private suspend fun signingContext(userWalletId: UserWalletId): Either<PolymarketSigningError, SigningContext> {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val seedKey = userWallet.secp256k1SeedKey() ?: return PolymarketSigningError.MissingWallet.left()
