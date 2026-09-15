@@ -17,7 +17,7 @@ import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepo
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -52,8 +52,8 @@ class DefaultSingleAccountListProducerTest {
     private val userWalletsListRepository = mockk<UserWalletsListRepository> {
         every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(userWallet))
     }
-    private val virtualAccountsFeatureToggles = mockk<VirtualAccountFeatureToggles> {
-        every { isVirtualAccountsEnabled } returns false
+    private val moneyAccountsFeatureToggles = mockk<MoneyAccountFeatureToggles> {
+        every { isMoneyAccountsEnabled } returns false
     }
     private val polymarketFeatureToggles = mockk<PolymarketFeatureToggles> {
         every { isPolymarketEnabled } returns false
@@ -74,7 +74,7 @@ class DefaultSingleAccountListProducerTest {
         walletAccountListFlowFactory = walletAccountListFlowFactory,
         flowProducerTools = flowProducerTools,
         userWalletsListRepository = userWalletsListRepository,
-        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+        moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
         polymarketOnboardedStore = polymarketOnboardedStore,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
@@ -117,15 +117,15 @@ class DefaultSingleAccountListProducerTest {
         val userWalletsListRepository = mockk<UserWalletsListRepository> {
             every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(supportedWallet))
         }
-        val virtualAccountsFeatureToggles = mockk<VirtualAccountFeatureToggles> {
-            every { isVirtualAccountsEnabled } returns true
+        val moneyAccountsFeatureToggles = mockk<MoneyAccountFeatureToggles> {
+            every { isMoneyAccountsEnabled } returns true
         }
         val producer = DefaultSingleAccountListProducer(
             params = SingleAccountListProducer.Params(userWalletId = userWalletId),
             walletAccountListFlowFactory = walletAccountListFlowFactory,
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = userWalletsListRepository,
-            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,
             polymarketOnboardedStore = polymarketOnboardedStore,
             collectiblesFeatureToggles = collectiblesFeatureToggles,
@@ -399,7 +399,7 @@ class DefaultSingleAccountListProducerTest {
             walletAccountListFlowFactory = walletAccountListFlowFactory,
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = userWalletsListRepository,
-            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,
             polymarketOnboardedStore = polymarketOnboardedStore,
             collectiblesFeatureToggles = mockk {
@@ -423,7 +423,7 @@ class DefaultSingleAccountListProducerTest {
             walletAccountListFlowFactory = walletAccountListFlowFactory,
             flowProducerTools = flowProducerTools,
             userWalletsListRepository = walletsRepository,
-            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = mockk {
                 every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled
             },

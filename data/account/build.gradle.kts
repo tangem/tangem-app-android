@@ -59,7 +59,7 @@ dependencies {
     // endregion
 
     // region Project - Features
-    api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+    api(projects.features.virtualAccounts.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
     implementation(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
     implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
     implementation(projects.features.jointAccount.api) // JOINT_ACCOUNT_ENABLED
