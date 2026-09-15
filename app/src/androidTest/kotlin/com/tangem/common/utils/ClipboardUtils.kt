@@ -31,9 +31,7 @@ fun clearClipboard(
 }
 
 // Kotlin's assert() is a no-op on device (JVM assertions disabled) — use JUnit asserts here.
-//
-// The app writes the clip from its own process, so the value lands shortly after the UI has already
-// confirmed the copy (the snackbar) — reading once races that and sees an empty clipboard.
+// The app writes the clip after the snackbar confirms the copy, so a single read sees it empty.
 fun assertClipboardTextEquals(
     expected: String,
     context: Context = ApplicationProvider.getApplicationContext(),
