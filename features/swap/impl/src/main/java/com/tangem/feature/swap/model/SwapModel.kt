@@ -1015,8 +1015,6 @@ internal class SwapModel @Inject constructor(
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
                     feeSelectorUM = feeSelectorRepository.state.value,
                     isHighNetworkFee = isHighNetworkFee(selectedSwapFee),
-                    buttonTitle = resourceReference(R.string.prediction_main_withdraw)
-                        .takeIf { isPredictionWithdrawFlow },
                 )
                 when {
                     uiState.successState != null -> Unit
@@ -1066,7 +1064,6 @@ internal class SwapModel @Inject constructor(
                 isTangemPayWithdrawal = isTangemPayWithdrawal(),
                 feeSelectorUM = feeSelectorRepository.state.value,
                 isHighNetworkFee = isHighNetworkFee(getSelectedSwapFee()),
-                buttonTitle = resourceReference(R.string.prediction_main_withdraw).takeIf { isPredictionWithdrawFlow },
             )
         }
     }
@@ -2758,8 +2755,9 @@ internal class SwapModel @Inject constructor(
             },
         )
         if (flow is AccountFlow.PredictionWithdraw) {
-            val sendCard = titledState.sendCardData as? SwapCardState.SwapCardData ?: return titledState
-            return titledState.copy(sendCardData = sendCard.copy(isSelectionLocked = true))
+            val withdrawState = titledState.copy(swapButton = titledState.swapButton.asWithdrawButton())
+            val sendCard = withdrawState.sendCardData as? SwapCardState.SwapCardData ?: return withdrawState
+            return withdrawState.copy(sendCardData = sendCard.copy(isSelectionLocked = true))
         }
         if (!isAccountTopUp) return titledState
         val receiveCard = titledState.receiveCardData as? SwapCardState.SwapCardData ?: return titledState
@@ -2771,6 +2769,15 @@ internal class SwapModel @Inject constructor(
             ),
         )
     }
+
+    private fun SwapButton.asWithdrawButton(): SwapButton = copy(
+        mode = when (mode) {
+            SwapButton.Mode.SWAP -> SwapButton.Mode.TRANSFER
+            SwapButton.Mode.SWAP_PROGRESSING -> SwapButton.Mode.TRANSFER_PROGRESSING
+            SwapButton.Mode.TRANSFER, SwapButton.Mode.TRANSFER_PROGRESSING -> mode
+        },
+        title = resourceReference(R.string.prediction_main_withdraw),
+    )
 
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
         return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
