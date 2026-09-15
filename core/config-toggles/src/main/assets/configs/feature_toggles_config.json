@@ -120,6 +120,10 @@
         "version": "6.3"
     },
     {
+        "name": "TWI_1766_PASSWORD_MANAGER_ENABLED",
+        "version": "6.4"
+    },
+    {
         "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
         "version": "6.2"
     },
