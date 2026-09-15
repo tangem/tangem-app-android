@@ -7,6 +7,7 @@ import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -59,28 +61,56 @@ internal class AppsFlyerDeeplinkRouterTest {
         every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
     }
 
-    // region idle entry point
+    // region navigation blocklist
 
     @ParameterizedTest
     @ProvideTestModels
-    fun isIdle(model: IdleModel) {
-        assertThat(isIdleEntryPoint(model.currentRoute)).isEqualTo(model.expected)
+    fun isNavigationBlocked(model: BlockedRouteModel) {
+        assertThat(isNavigationBlocked(model.currentRoute)).isEqualTo(model.expected)
     }
 
-    private fun provideTestModels(): List<IdleModel> = listOf(
-        // Idle entry screens — a deep link may route from here.
-        IdleModel(AppRoute.Home(), expected = true),
-        IdleModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = true),
-        IdleModel(AppRoute.Wallet, expected = true),
-        // In-progress / already-on-onboarding / startup routes — must not be interrupted.
-        IdleModel(AppRoute.Initial, expected = false),
-        IdleModel(AppRoute.Disclaimer(isTosAccepted = true), expected = false),
-        IdleModel(AppRoute.TangemPayHotWalletOnboarding, expected = false),
-        IdleModel(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink), expected = false),
-        IdleModel(currentRoute = null, expected = false),
+    private fun provideTestModels(): List<BlockedRouteModel> = listOf(
+        // Any regular screen — a deep link may route from here.
+        BlockedRouteModel(AppRoute.Home(), expected = false),
+        BlockedRouteModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = false),
+        BlockedRouteModel(AppRoute.Wallet, expected = false),
+        BlockedRouteModel(AppRoute.Details(userWalletId = WALLET_ID), expected = false),
+        BlockedRouteModel(AppRoute.AppSettings, expected = false),
+        BlockedRouteModel(AppRoute.AddressBook(), expected = false),
+        BlockedRouteModel(AppRoute.Markets(), expected = false),
+        // Startup gates and the Tangem Pay flows the links open — must not be interrupted.
+        BlockedRouteModel(currentRoute = null, expected = true),
+        BlockedRouteModel(AppRoute.Initial, expected = true),
+        BlockedRouteModel(AppRoute.Welcome(), expected = true),
+        BlockedRouteModel(AppRoute.Disclaimer(isTosAccepted = true), expected = true),
+        BlockedRouteModel(AppRoute.Kyc(userWalletId = WALLET_ID), expected = true),
+        BlockedRouteModel(AppRoute.TangemPayHotWalletOnboarding, expected = true),
+        BlockedRouteModel(
+            AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
+            expected = true,
+        ),
+        BlockedRouteModel(AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), expected = true),
     )
 
-    data class IdleModel(val currentRoute: AppRoute?, val expected: Boolean)
+    data class BlockedRouteModel(val currentRoute: AppRoute?, val expected: Boolean)
+
+    @ParameterizedTest
+    @MethodSource("provideFreshInstallEntryModels")
+    fun isFreshInstallEntry(model: BlockedRouteModel) {
+        assertThat(isFreshInstallEntry(model.currentRoute)).isEqualTo(model.expected)
+    }
+
+    private fun provideFreshInstallEntryModels(): List<BlockedRouteModel> = listOf(
+        BlockedRouteModel(AppRoute.Home(), expected = true),
+        BlockedRouteModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = true),
+        BlockedRouteModel(AppRoute.Wallet, expected = false),
+        BlockedRouteModel(AppRoute.AppSettings, expected = false),
+        BlockedRouteModel(
+            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            expected = false,
+        ),
+        BlockedRouteModel(currentRoute = null, expected = false),
+    )
 
     // endregion
 
@@ -222,7 +252,7 @@ internal class AppsFlyerDeeplinkRouterTest {
         }
 
     @Test
-    fun `GIVEN campaign deeplink on non-idle route WHEN observe THEN does not route`() =
+    fun `GIVEN campaign deeplink on blocked route WHEN observe THEN does not route`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
             every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
@@ -234,6 +264,60 @@ internal class AppsFlyerDeeplinkRouterTest {
 
             // Assert
             verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN campaign deeplink and authorized wallet on AppSettings WHEN observe THEN push container`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.AppSettings)
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                appRouter.push(route = AppRoute.TangemPayCampaign(CAMPAIGN_VALUE), onComplete = any())
+            }
+        }
+
+    @Test
+    fun `GIVEN campaign deeplink and empty wallets on CreateWalletStart WHEN observe THEN does not route`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(CAMPAIGN_VALUE)
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(
+                AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            )
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { appRouter.push(any(), any()) }
+            verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
+        }
+
+    @Test
+    fun `GIVEN referral deeplink and empty wallets on CreateWalletStart WHEN observe THEN does not route again`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("referral")
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(
+                AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            )
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
             verify(exactly = 0) { appRouter.replaceAll(any(), onComplete = any()) }
         }
 
@@ -256,5 +340,6 @@ internal class AppsFlyerDeeplinkRouterTest {
 
     private companion object {
         const val CAMPAIGN_VALUE = "tpay_for_oxford"
+        val WALLET_ID = UserWalletId("0011")
     }
 }
