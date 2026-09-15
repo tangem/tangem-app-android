@@ -879,89 +879,6 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
-    fun `GIVEN a prediction withdraw WHEN a transfer state is built THEN the button title is Withdraw`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-        stubResolvedPredictionPair()
-        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
-        val transferState: SwapState.Transfer = mockk(relaxed = true)
-        coEvery {
-            swapTransferInteractor.updateTransfer(
-                fromSwapCurrencyStatus = any(),
-                toSwapCurrencyStatus = any(),
-                fromTokenAmount = any(),
-                feePaidCurrencyStatus = any(),
-                fee = any(),
-            )
-        } returns transferState
-
-        // Act
-        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
-        advanceUntilIdle()
-
-        // Assert
-        coVerify {
-            swapTransferStateBuilder.createTransferState(
-                actions = any(),
-                transferState = transferState,
-                uiStateHolder = any(),
-                feePaidCryptoCurrencyStatus = any(),
-                feeSelectorUM = any(),
-                isHighNetworkFee = any(),
-                buttonTitle = resourceReference(R.string.prediction_main_withdraw),
-            )
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN a Tangem Pay withdraw WHEN a transfer state is built THEN the button title is null`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
-        val fromStatus = swapCurrencyStatus()
-        val toStatus = swapCurrencyStatus()
-        coEvery {
-            initialCurrenciesResolver.invoke(
-                userWalletId = any(),
-                initialCryptoCurrency = any(),
-                swapCurrencyPosition = any(),
-                accountFlow = any(),
-                initialToCryptoCurrency = any(),
-                isAccountFlowEnabled = any(),
-            )
-        } returns (fromStatus to toStatus)
-        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
-        val transferState: SwapState.Transfer = mockk(relaxed = true)
-        coEvery {
-            swapTransferInteractor.updateTransfer(
-                fromSwapCurrencyStatus = any(),
-                toSwapCurrencyStatus = any(),
-                fromTokenAmount = any(),
-                feePaidCurrencyStatus = any(),
-                fee = any(),
-            )
-        } returns transferState
-
-        // Act
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
-        advanceUntilIdle()
-
-        // Assert
-        coVerify {
-            swapTransferStateBuilder.createTransferState(
-                actions = any(),
-                transferState = transferState,
-                uiStateHolder = any(),
-                feePaidCryptoCurrencyStatus = any(),
-                feeSelectorUM = any(),
-                isHighNetworkFee = any(),
-                buttonTitle = null,
-            )
-        }
-        model.onDestroy()
-    }
-
-    @Test
     fun `GIVEN a prediction withdraw WHEN checked THEN it is not a Tangem Pay withdrawal`() = runTest {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -1096,6 +1013,36 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(toPredicate(cryptoPortfolioStatus, customStatus)).isTrue()
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN no amount is entered yet THEN the button already reads Withdraw`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedPredictionPair()
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.swapButton.mode).isEqualTo(SwapButton.Mode.TRANSFER)
+        assertThat(model.uiState.swapButton.title).isEqualTo(resourceReference(R.string.prediction_main_withdraw))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a Tangem Pay withdraw WHEN no amount is entered yet THEN the button keeps its default label`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.swapButton.title).isNull()
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN a prediction withdraw WHEN the destinations request fails THEN an error is shown`() = runTest {
