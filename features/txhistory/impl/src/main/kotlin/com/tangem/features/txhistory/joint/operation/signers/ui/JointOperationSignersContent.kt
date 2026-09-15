@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,8 +28,10 @@ import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -78,12 +82,20 @@ private fun SignerRow(signer: JointOperationSignersUM.SignerUM, modifier: Modifi
             )
         },
         subtitleSlot = { TangemRowText(text = signer.statusText, role = TangemRowTextRole.Subtitle) },
-        endSlot = { signer.mark?.let { mark -> AnswerMark(mark = mark) } },
+        endSlot = {
+            signer.mark?.let { mark ->
+                AnswerMark(mark = mark, namesTheAnswer = signer.statusText == TextReference.EMPTY)
+            }
+        },
     )
 }
 
+/**
+ * @param namesTheAnswer the mark is the only sign of the answer, so a screen reader has to read it out; where the
+ * status subtitle spells the answer out, describing the mark too would say it twice
+ */
 @Composable
-private fun AnswerMark(mark: JointOperationSignersUM.Mark, modifier: Modifier = Modifier) {
+private fun AnswerMark(mark: JointOperationSignersUM.Mark, namesTheAnswer: Boolean, modifier: Modifier = Modifier) {
     val (icon, background, tint) = when (mark) {
         JointOperationSignersUM.Mark.Signed -> Triple(
             Icons.ic_checkmark_16,
@@ -97,11 +109,23 @@ private fun AnswerMark(mark: JointOperationSignersUM.Mark, modifier: Modifier = 
         )
     }
 
+    val description = if (namesTheAnswer) {
+        stringResourceSafe(
+            id = when (mark) {
+                JointOperationSignersUM.Mark.Signed -> CoreUiR.string.joint_operation_signed
+                JointOperationSignersUM.Mark.Declined -> CoreUiR.string.joint_operation_declined
+            },
+        )
+    } else {
+        null
+    }
+
     Box(
         modifier = modifier
             .size(24.dp)
             .clip(CircleShape)
-            .background(background),
+            .background(background)
+            .then(description?.let { Modifier.semantics { contentDescription = it } } ?: Modifier),
         contentAlignment = Alignment.Center,
     ) {
         TangemIcon(tangemIconUM = TangemIconUM.Icon(imageVector = icon, tintReference = { tint }))
