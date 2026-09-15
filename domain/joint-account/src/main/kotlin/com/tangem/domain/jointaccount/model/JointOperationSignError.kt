@@ -24,6 +24,16 @@ sealed interface JointOperationSignError {
 
             /** The wallet's owner key for the account is not derived — nothing to check membership with */
             OWNER_KEY_NOT_DERIVED,
+
+            /** The deployed Safe answers a different composition than the one the app knows */
+            COMPOSITION_MISMATCH,
+
+            /**
+             * The refund fields would pay someone or something other than what the operation was built to pay.
+             * Signing authorises `(baseGas + gasUsed) * gasPrice` in `gasToken` to leave the Safe for
+             * `refundReceiver` on top of the transfer the user sees, so these four move money.
+             */
+            REFUND_MISMATCH,
         }
     }
 

@@ -101,6 +101,7 @@ internal class JointOperationConverterTest {
         assertThat(actual.mapValues { it.value.operationId }).containsExactly(1L, "first", 137L, "other")
     }
 
+    /** One bad operation must not cost the wallet every joint account it has — the fetch would fall to cache */
     @Test
     fun `GIVEN one in-flight operation out of contract WHEN convert THEN only that one is dropped`() {
         // Arrange
