@@ -562,7 +562,9 @@ internal class DefaultMarketsTokenRepositoryTest {
         fun `GIVEN a category filter WHEN the list is reloaded THEN its id reaches the api`() = runTest {
             // Arrange
             coEvery {
-                marketsApi.getCoinsList(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+                marketsApi.getCoinsList(
+                    any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                )
             } returns ApiResponse.Success(tokenMarketListResponse())
             val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
                 replay = 1,
@@ -598,11 +600,55 @@ internal class DefaultMarketsTokenRepositoryTest {
         }
 
         @Test
+        fun `GIVEN a country WHEN the list is reloaded THEN it travels to the api`() = runTest {
+            // Arrange — without it every token comes back unrestricted, so the region marks never appear
+            coEvery {
+                marketsApi.getCoinsList(
+                    any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                )
+            } returns ApiResponse.Success(tokenMarketListResponse())
+            val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
+                replay = 1,
+            )
+            val sourceScope = testSourceScope()
+            repository.getTokenListFlow(
+                batchingContext = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                firstBatchSize = 1,
+                nextBatchSize = 1,
+            )
+
+            // Act
+            actions.emit(BatchAction.Reload(requestParams = listConfig(country = "GB")))
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                marketsApi.getCoinsList(
+                    currency = "USD",
+                    interval = any(),
+                    offset = 0,
+                    limit = 1,
+                    order = any(),
+                    search = null,
+                    timestamp = null,
+                    showNetworks = any(),
+                    categoryId = null,
+                    sectorId = null,
+                    geckoCategoryId = null,
+                    country = "GB",
+                )
+            }
+            sourceScope.cancel()
+        }
+
+        @Test
         fun `GIVEN no category filter WHEN the list is reloaded THEN the api is not narrowed to a category`() =
             runTest {
                 // Arrange
                 coEvery {
-                    marketsApi.getCoinsList(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+                    marketsApi.getCoinsList(
+                    any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                )
                 } returns ApiResponse.Success(tokenMarketListResponse())
                 val actions = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(
                     replay = 1,
@@ -644,12 +690,14 @@ internal class DefaultMarketsTokenRepositoryTest {
         priceChangeInterval: TokenMarketListConfig.Interval = TokenMarketListConfig.Interval.H24,
         order: TokenMarketListConfig.Order = TokenMarketListConfig.Order.ByRating,
         geckoCategoryId: String? = null,
+        country: String? = null,
     ) = TokenMarketListConfig(
         fiatPriceCurrency = fiatPriceCurrency,
         searchText = searchText,
         priceChangeInterval = priceChangeInterval,
         order = order,
         geckoCategoryId = geckoCategoryId,
+        country = country,
     )
 
     private fun tokenMarketListResponse(
