@@ -81,6 +81,21 @@ internal class SubmitPredictionWithdrawalInteractorTest {
     }
 
     @Test
+    fun `GIVEN the prepared deadline has passed WHEN confirmed THEN nothing is signed and Expired is raised`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!.copy(deadline = "1")
+
+            // Act
+            val result = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(result).isEqualTo(PredictionWithdrawalFailure.Expired.left())
+            coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+            coVerify(exactly = 0) { store.save(any(), any()) }
+        }
+
+    @Test
     fun `GIVEN the store cannot be read WHEN prepared THEN PersistenceFailed and no address is requested`() = runTest {
         // Arrange
         val cause = IllegalStateException("unreadable")
