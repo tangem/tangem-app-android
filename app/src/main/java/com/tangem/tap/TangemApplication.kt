@@ -11,6 +11,8 @@ import coil.ImageLoaderFactory
 import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuard
+import com.tangem.core.ui.components.background.northernlights.NorthernLightsCrashGuardPreferences
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
@@ -153,6 +155,10 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
      */
     fun preInit() {
         tangemLoggingInitializer.initAppLogging()
+        NorthernLightsCrashGuard.init(
+            store = NorthernLightsCrashGuardPreferences(context = this),
+            appVersion = BuildConfig.VERSION_CODE,
+        )
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
     }
 
