@@ -9,6 +9,7 @@ import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardSuccessComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -20,22 +21,37 @@ internal class TangemPayOrderCardSuccessModelTest {
     private val onFinish: () -> Unit = mockk(relaxed = true)
 
     @Test
-    fun `GIVEN the issue intent WHEN model created THEN the button shows the card`() = runTest {
+    fun `GIVEN the issue intent WHEN model created THEN the button label is Show card`() = runTest {
         // Act
         val model = createModel(intent = TangemPayOrderCardIntent.Issue)
 
         // Assert
         assertThat(model.state.value.buttonText)
             .isEqualTo(resourceReference(R.string.tangempay_order_success_show_card))
+        model.onDestroy()
     }
 
     @Test
-    fun `GIVEN the reissue intent WHEN model created THEN the button closes the flow`() = runTest {
+    fun `GIVEN the reissue intent WHEN model created THEN the button label is Close`() = runTest {
         // Act
         val model = createModel(intent = reissueIntent())
 
         // Assert
         assertThat(model.state.value.buttonText).isEqualTo(resourceReference(R.string.common_close))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN any intent WHEN the button is clicked THEN the order flow is finished`() = runTest {
+        // Arrange
+        val model = createModel(intent = reissueIntent())
+
+        // Act
+        model.state.value.onFinishClick()
+
+        // Assert
+        verify(exactly = 1) { onFinish() }
+        model.onDestroy()
     }
 
     private fun reissueIntent() = TangemPayOrderCardIntent.ReissuePlastic(
