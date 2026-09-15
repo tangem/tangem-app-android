@@ -222,11 +222,6 @@ abstract class BaseTestCase : TestCase(
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
             "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
-            // Picks the transaction endpoints the Tangem Pay history tests assert on:
-            // on -> /bff-v2/v1/transactions, off -> the legacy /bff-v2/v1/customer/transactions.
-            "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED" to true,
-            // On from 6.4, undefined on develop — forced so both branches take the same entry path.
-            "TWI_1356_INTRODUCTION_REDESIGN_ENABLED" to true,
             // The OTLP exporter has its own HTTP client, so it bypasses the WireMock redirect.
             "TWI_1627_OTEL_METRICS_ENABLED" to false,
         )
