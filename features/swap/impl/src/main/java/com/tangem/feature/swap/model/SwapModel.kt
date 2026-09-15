@@ -1015,6 +1015,8 @@ internal class SwapModel @Inject constructor(
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
                     feeSelectorUM = feeSelectorRepository.state.value,
                     isHighNetworkFee = isHighNetworkFee(selectedSwapFee),
+                    buttonTitle = resourceReference(R.string.prediction_main_withdraw)
+                        .takeIf { isPredictionWithdrawFlow },
                 )
                 when {
                     uiState.successState != null -> Unit
@@ -1064,6 +1066,7 @@ internal class SwapModel @Inject constructor(
                 isTangemPayWithdrawal = isTangemPayWithdrawal(),
                 feeSelectorUM = feeSelectorRepository.state.value,
                 isHighNetworkFee = isHighNetworkFee(getSelectedSwapFee()),
+                buttonTitle = resourceReference(R.string.prediction_main_withdraw).takeIf { isPredictionWithdrawFlow },
             )
         }
     }
