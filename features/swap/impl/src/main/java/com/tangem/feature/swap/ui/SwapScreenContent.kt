@@ -456,8 +456,7 @@ private fun MainButton(state: SwapStateHolder) {
 @Composable
 @ReadOnlyComposable
 private fun getButtonTitle(swapButton: SwapButton): String {
-    return swapButton.title.takeIf { swapButton.mode == SwapButton.Mode.TRANSFER }?.resolveReference()
-        ?: getButtonTitle(swapButton.mode)
+    return swapButton.title?.resolveReference() ?: getButtonTitle(swapButton.mode)
 }
 
 @Composable
