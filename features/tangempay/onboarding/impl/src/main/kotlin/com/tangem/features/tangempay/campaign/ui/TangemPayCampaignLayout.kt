@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.campaign.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -41,7 +40,7 @@ internal fun TangemPayCampaignLayout(
                     .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                Box(modifier = Modifier.padding(top = 8.dp)) { card() }
+                card()
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
