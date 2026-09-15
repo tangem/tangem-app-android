@@ -1821,7 +1821,11 @@ internal class SwapModel @Inject constructor(
                 showAlert(resourceReference(R.string.prediction_withdraw_in_progress_message))
             }
             is PredictionWithdrawalFailure.SigningFailed -> {
-                TangemLogger.e("onTransferClick: prediction withdrawal signing failed: ${failure.error}")
+                if (failure.error == PolymarketSigningError.UserCancelled) {
+                    TangemLogger.i("onTransferClick: prediction withdrawal signing failed: ${failure.error}")
+                } else {
+                    TangemLogger.e("onTransferClick: prediction withdrawal signing failed: ${failure.error}")
+                }
                 startLoadingQuotesFromLastState()
                 if (failure.error != PolymarketSigningError.UserCancelled) showAlert()
             }
