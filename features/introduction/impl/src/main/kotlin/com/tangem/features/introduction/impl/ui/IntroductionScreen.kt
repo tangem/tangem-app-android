@@ -14,7 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +31,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.KeepScreenOn
 import com.tangem.core.ui.components.legal.LegalCaption
@@ -47,6 +57,9 @@ private val ScrimGradient = listOf(
     0.82f to 1f,
     1f to 1f,
 )
+
+/** How long the warm-up pass waits for a frame nobody sees before taking one that someone might. */
+private val PREWARM_COVER_TIMEOUT = 1.seconds
 
 @Composable
 internal fun IntroductionScreen(
@@ -107,6 +120,7 @@ internal fun IntroductionScreen(
                     WelcomeTextScenes(
                         scenes = state.scenes,
                         isAnimated = isAnimated,
+                        isVideoRunning = state.isVideoRunning,
                         videoPositionMs = videoPositionMs,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -115,10 +129,50 @@ internal fun IntroductionScreen(
                     BottomActions(state = state)
                 }
             }
-            state.bottomSheetConfig?.let { CreateWalletBottomSheet(config = it) }
+            // One sheet is composed from the first frame, with or without a config of its own: a hidden modal
+            // shows nothing, and being composed is what lets it warm the machinery both sheets then reuse.
+            val isSheetShown = state.bottomSheetConfig != null || state.haveWalletBottomSheetConfig != null
+            CreateWalletBottomSheet(
+                config = state.bottomSheetConfig,
+                prewarm = rememberSheetPrewarmReady(isScreenCovered = !isAnimated || !state.isVideoReady) &&
+                    !rememberEverShown(isShown = isSheetShown),
+                onCollapseEnd = state.onCreateWalletSheetCollapsed,
+            )
             state.haveWalletBottomSheetConfig?.let { HaveWalletBottomSheet(config = it) }
         }
     }
+}
+
+/**
+ * Whether the sheet of this screen may take its warm-up pass yet (the `prewarm` flag of `TangemModal`).
+ *
+ * The pass is a full composition and measurement of a modal card, and the first one in a process is the expensive
+ * one — the few hundred milliseconds that otherwise sit between the viewer's first tap and the sheet starting to
+ * move. It costs a frame, so it waits for one nobody sees: this is the cold-start screen, and until the video has
+ * rendered its first frame (or is never going to) the shutter covers everything the pass could stutter.
+ *
+ * [PREWARM_COVER_TIMEOUT] bounds that wait — a screen that uncovers before the pass is taken still has to take it,
+ * since one stuttered frame is worth far less than half a second on the tap.
+ */
+@Composable
+private fun rememberSheetPrewarmReady(isScreenCovered: Boolean): Boolean {
+    var isReady by remember { mutableStateOf(false) }
+    val isCovered by rememberUpdatedState(isScreenCovered)
+    LaunchedEffect(Unit) {
+        // The screen's own first frame comes first: the pass must not be what delays it.
+        withFrameNanos {}
+        withTimeoutOrNull(PREWARM_COVER_TIMEOUT) { snapshotFlow { isCovered }.first { it } }
+        isReady = true
+    }
+    return isReady
+}
+
+/** Latches once the viewer has opened a sheet: from then on the machinery is warm and the pass has nothing to give. */
+@Composable
+private fun rememberEverShown(isShown: Boolean): Boolean {
+    var wasShown by remember { mutableStateOf(false) }
+    if (isShown) wasShown = true
+    return wasShown
 }
 
 @Composable
@@ -172,12 +226,14 @@ private fun IntroductionScreenPreview() {
             state = IntroductionUM(
                 isVideoReady = true,
                 isVideoFailed = false,
+                isVideoRunning = false,
                 isMotionEnabled = false,
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = {},
                 onIHaveWalletClick = {},
+                onCreateWalletSheetCollapsed = {},
                 onTermsOfServiceClick = {},
                 onPrivacyPolicyClick = {},
             ),
