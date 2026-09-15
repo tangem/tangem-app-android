@@ -3,6 +3,9 @@ package com.tangem.data.txhistory.fetcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.data.txhistory.repository.factory.DefaultTokenInfoRepository
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -13,6 +16,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.BeforeEach
@@ -27,14 +31,25 @@ internal class DefaultAppTxHistoryFetcherTest {
     private val walletFetcherFactory: DefaultWalletTxHistoryFetcher.Factory = mockk()
     private val expressRepository: ExpressRepository = mockk()
     private val onrampRepository: OnrampRepository = mockk()
+    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
+    private val tokenInfoRepository: DefaultTokenInfoRepository = mockk()
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
     @BeforeEach
     fun setup() {
-        clearMocks(getWalletsUseCase, walletFetcherFactory, expressRepository, onrampRepository)
+        clearMocks(
+            getWalletsUseCase,
+            walletFetcherFactory,
+            expressRepository,
+            onrampRepository,
+            multiAccountListSupplier,
+            tokenInfoRepository,
+        )
         coEvery { expressRepository.getProviders(any(), any()) } returns emptyList()
         coEvery { onrampRepository.fetchCurrencies(any()) } just Runs
+        every { multiAccountListSupplier.invoke() } returns flowOf(emptyList())
+        coEvery { tokenInfoRepository.save(any()) } just Runs
     }
 
     @Test
@@ -83,6 +98,22 @@ internal class DefaultAppTxHistoryFetcherTest {
         verify(exactly = 1) { walletFetcher2.close() }
         verify(inverse = true) { walletFetcher1.close() }
     }
+
+    @Test
+    fun `GIVEN account lists emitted WHEN collected THEN their currencies are saved to token info repository`() =
+        runTest {
+            // Arrange
+            val utils = createUtils()
+            every { getWalletsUseCase.invokeAsMap(any(), any()) } returns MutableStateFlow(linkedMapOf())
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountListOf(currency)))
+
+            // Act
+            createFetcher(utils)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { tokenInfoRepository.save(listOf(currency)) }
+        }
 
     @Test
     fun `routes trigger to the fetcher of the target wallet`() = runTest {
@@ -227,12 +258,18 @@ internal class DefaultAppTxHistoryFetcherTest {
         onrampRepository = onrampRepository,
         getWalletsUseCase = getWalletsUseCase,
         walletTxHistoryFetcherFactory = walletFetcherFactory,
+        multiAccountListSupplier = multiAccountListSupplier,
+        tokenInfoRepository = tokenInfoRepository,
     )
 
     private fun relaxedWalletFetcher() = mockk<DefaultWalletTxHistoryFetcher>(relaxed = true)
 
     private fun multiCurrencyWallet(): UserWallet = mockk<UserWallet.Cold>(relaxed = true) {
         every { isMultiCurrency } returns true
+    }
+
+    private fun accountListOf(vararg currencies: CryptoCurrency): AccountList = mockk {
+        every { flattenCurrencies() } returns currencies.toList()
     }
 
     private companion object {
