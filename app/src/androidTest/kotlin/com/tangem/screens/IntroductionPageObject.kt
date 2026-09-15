@@ -9,7 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
-/** Welcome screen behind TWI_1356_INTRODUCTION_REDESIGN_ENABLED; its sheet rows carry no tag, hence text matching. */
+/** Welcome screen: its bottom sheet rows carry no test tag, hence the text matching. */
 class IntroductionPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<IntroductionPageObject>(semanticsProvider = semanticsProvider) {
 
