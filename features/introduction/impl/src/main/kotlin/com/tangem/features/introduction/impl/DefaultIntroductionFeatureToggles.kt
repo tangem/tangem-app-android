@@ -9,5 +9,5 @@ internal class DefaultIntroductionFeatureToggles(
 ) : IntroductionFeatureToggles {
 
     override val isIntroductionRedesignEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.TWI_1356_INTRODUCTION_REDESIGN_ENABLED)
+        get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.TWI_1747_INTRODUCTION_REDESIGN_ENABLED)
 }

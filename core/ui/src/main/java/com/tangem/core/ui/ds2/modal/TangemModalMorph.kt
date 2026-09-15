@@ -11,7 +11,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.node.LayoutModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -64,6 +71,43 @@ internal class ModalMorphGeometry {
 
     /** Capsule ↔ card phase, 0..1: 0 is the fully-rounded capsule, 1 the settled card. */
     var unfold: Float = 1f
+
+    /** Width of the settled card, in px: the content is laid out for it whatever the capsule phase. */
+    var restingWidth: Int = 0
+
+    /** Height of the settled card, in px: the same deal for the collapse. */
+    var restingHeight: Int = 0
+}
+
+/**
+ * Intrinsic height of one modal's content, remembered across the frames of a morph.
+ *
+ * The probe walks the whole content subtree — every text paragraph laid out, every row measured —
+ * which is far too expensive to repeat 60 times a second, and pointless there: mid-morph only the
+ * slide progress moved, the content did not. So the height is kept and re-probed only on a
+ * measure pass the morph cannot explain: a new probe width, a settled slide, or a progress equal
+ * to the previous pass's — the latter two mean the pass was caused by something else (content
+ * recomposed, constraints changed), since a moving morph brings a new progress every frame.
+ *
+ * The trade-off: content that resizes itself *while* the capsule travels keeps the previous height
+ * until the slide settles, and the settling pass re-probes it.
+ */
+@PublishedApi
+internal class ModalContentHeightCache {
+
+    private var probeWidth: Int = -1
+    private var lastProgress: Float = Float.NaN
+    private var height: Int = 0
+
+    fun heightOf(measurable: IntrinsicMeasurable, width: Int, progress: Float): Int {
+        val isMorphing = progress != lastProgress && progress != OPEN_PROGRESS_SETTLED
+        if (width != probeWidth || !isMorphing) {
+            probeWidth = width
+            height = measurable.minIntrinsicHeight(width)
+        }
+        lastProgress = progress
+        return height
+    }
 }
 
 /**
@@ -115,20 +159,25 @@ internal fun combinedOpenProgress(openProgress: Float, backProgress: Float): Flo
  * While sliding in and out, the card is collapsed into a fully-rounded capsule
  * ([ModalCapsuleHeight] tall, [ModalCapsuleExtraInset] narrower per side) riding the sheet's
  * leading edge; over the last stretch of the slide it unfolds into the full card (see
- * [morphPhase]). The collapse is a real height re-measure — content is clipped by the card shape,
- * whose corners become a capsule automatically as the height drops below the corner diameter.
+ * [morphPhase]). Only the card box itself morphs: its content is laid out once for the settled
+ * card ([modalRestingSize]) and whatever sticks out is clipped by the card shape, whose corners
+ * become a capsule automatically as the height drops below the corner diameter. So the content
+ * sees the same constraints on every frame of the morph — Compose reuses its measurement instead
+ * of re-wrapping text and re-laying out rows per frame.
  *
  * The *reported* size stays constant for a given content (the full card plus its bottom margin):
  * it feeds the drag anchors, which must not move while the card inside morphs.
  *
  * The full content height is probed via intrinsic measurement, so the modal content must support
- * intrinsics (the built-in scrollable wrapper does; avoid a top-level lazy list as direct content).
+ * intrinsics (the built-in scrollable wrapper does; avoid a top-level lazy list as direct
+ * content); the probe itself is kept in [contentHeight] instead of being repeated per frame.
  * [geometry] receives the resulting flatten progress for the shape and opacity.
  */
 @PublishedApi
 @Suppress("LongParameterList")
 internal fun Modifier.modalMorphLayout(
     geometry: ModalMorphGeometry,
+    contentHeight: ModalContentHeightCache,
     isExpanded: Boolean,
     windowInsets: WindowInsets,
     progress: () -> Float,
@@ -141,7 +190,9 @@ internal fun Modifier.modalMorphLayout(
         val expandPhase = morphPhase(openNow)
 
         val probeWidth = (maxWidth - 2 * ModalInsetMedium.roundToPx()).coerceAtLeast(0)
-        val intrinsicHeight = measurable.minIntrinsicHeight(probeWidth).coerceAtMost(maxHeight)
+        val intrinsicHeight = contentHeight
+            .heightOf(measurable = measurable, width = probeWidth, progress = openNow)
+            .coerceAtMost(maxHeight)
 
         val baseInset: Float
         val fullness: Float
@@ -167,6 +218,11 @@ internal fun Modifier.modalMorphLayout(
         val capsuleHeight = ModalCapsuleHeight.roundToPx().coerceAtMost(fullHeight)
         val cardHeight = lerp(capsuleHeight.toFloat(), fullHeight.toFloat(), expandPhase).roundToInt()
         val cardWidth = (maxWidth - 2 * sideInset).coerceAtLeast(0)
+
+        // Progress-free, so the content below keeps its constraints for the whole morph.
+        geometry.restingWidth = (maxWidth - 2 * baseInset.roundToInt()).coerceAtLeast(0)
+        geometry.restingHeight = fullHeight
+
         val placeable = measurable.measure(Constraints.fixed(cardWidth, cardHeight))
 
         // Constant reported size: the anchors see the full card regardless of the morph.
@@ -182,6 +238,63 @@ internal fun Modifier.modalMorphLayout(
             placeable.placeRelative(x = (maxWidth - cardWidth) / 2, y = y)
         }
     }
+}
+
+/**
+ * Lays the card content out at the size of the *settled* card ([ModalMorphGeometry.restingWidth] ×
+ * [ModalMorphGeometry.restingHeight]) and reports the size of the *current* one, so the surplus is
+ * clipped by the card shape instead of being squeezed out of the layout: text does not re-wrap,
+ * rows do not slide and nothing below is re-measured while the capsule unfolds. The content stays
+ * centered horizontally and pinned to the card's top edge, which is where the collapsed capsule
+ * shows the drag indicator and the title.
+ *
+ * Intrinsic queries pass straight through to the content, so the height probe of
+ * [modalMorphLayout] still reads the content's own intrinsics (a `Column` computes those from its
+ * children and its weights — measuring it against an unbounded height instead would collapse
+ * weighted children to nothing).
+ *
+ * Expects the fixed constraints [modalMorphLayout] measures the card with.
+ */
+@PublishedApi
+internal fun Modifier.modalRestingSize(geometry: ModalMorphGeometry): Modifier {
+    return this then ModalRestingSizeElement(geometry = geometry)
+}
+
+private data class ModalRestingSizeElement(
+    private val geometry: ModalMorphGeometry,
+) : ModifierNodeElement<ModalRestingSizeNode>() {
+
+    override fun create(): ModalRestingSizeNode = ModalRestingSizeNode(geometry = geometry)
+
+    override fun update(node: ModalRestingSizeNode) {
+        node.geometry = geometry
+    }
+}
+
+private class ModalRestingSizeNode(var geometry: ModalMorphGeometry) : Modifier.Node(), LayoutModifierNode {
+
+    override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
+        val cardWidth = constraints.maxWidth
+        val cardHeight = constraints.maxHeight
+        val contentWidth = geometry.restingWidth.takeIf { it > 0 } ?: cardWidth
+        val contentHeight = geometry.restingHeight.takeIf { it > 0 } ?: cardHeight
+        val placeable = measurable.measure(Constraints.fixed(width = contentWidth, height = contentHeight))
+        return layout(cardWidth, cardHeight) {
+            placeable.placeRelative(x = (cardWidth - contentWidth) / 2, y = 0)
+        }
+    }
+
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int): Int =
+        measurable.minIntrinsicHeight(width)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurable: IntrinsicMeasurable, width: Int): Int =
+        measurable.maxIntrinsicHeight(width)
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int): Int =
+        measurable.minIntrinsicWidth(height)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurable: IntrinsicMeasurable, height: Int): Int =
+        measurable.maxIntrinsicWidth(height)
 }
 
 /** Resting side margin by content-height [fraction]: 8dp, blending to 0dp near the height cap. */
