@@ -312,6 +312,43 @@ internal class OfferConverterTest {
             expected = null,
         ),
         ConvertModel(
+            name = "offer with a blank order type -> dropped",
+            response = createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN", orderType = "  "),
+            expected = null,
+        ),
+        ConvertModel(
+            name = "offer with a fee object but no amount -> dropped",
+            response = createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN", amount = null),
+            expected = null,
+        ),
+        ConvertModel(
+            name = "unknown but present order type -> kept as OrderType.UNKNOWN",
+            response = createResponseOffer(type = "CARD_ISSUE_PLASTIC_RAIN", orderType = "ORDER_TYPE_FROM_THE_FUTURE"),
+            expected = Offer(
+                type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
+                fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(specificationName = "SP_000004", orderType = OrderType.UNKNOWN),
+            ),
+        ),
+        ConvertModel(
+            name = "offer without a type -> kept as Type.UNKNOWN",
+            response = createResponseOffer(type = null),
+            expected = Offer(
+                type = Offer.Type.UNKNOWN,
+                fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(specificationName = "SP_000004", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC),
+            ),
+        ),
+        ConvertModel(
+            name = "offer without a fee currency -> falls back to USD",
+            response = createResponseOffer(currency = null),
+            expected = Offer(
+                type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
+                fee = Offer.Fee(amount = BigDecimal("1.00"), currency = Currency.getInstance("USD")),
+                data = Offer.Data(specificationName = "SP_000004", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC),
+            ),
+        ),
+        ConvertModel(
             name = "offer without images -> mapped with no main image",
             response = createResponseOffer(type = "CARD_ISSUE_VIRTUAL_RAIN", images = null),
             expected = Offer(
@@ -399,9 +436,9 @@ internal class OfferConverterTest {
 
         const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/Physical-main.png"
         fun createResponseOffer(
-            type: String = "CARD_ISSUE_VIRTUAL_RAIN",
-            amount: String = "1.00",
-            currency: String = "USD",
+            type: String? = "CARD_ISSUE_VIRTUAL_RAIN",
+            amount: String? = "1.00",
+            currency: String? = "USD",
             specificationName: String? = "SP_000004",
             orderType: String? = "CARD_ISSUE_VIRTUAL_RAIN_KYC",
             deliveryEtaMinDays: Int? = null,
@@ -409,7 +446,7 @@ internal class OfferConverterTest {
             images: List<CustomerOffersResponse.Image>? = emptyList(),
         ) = CustomerOffersResponse.Offer(
             type = type,
-            fee = CustomerOffersResponse.Fee(amount = BigDecimal(amount), currency = currency),
+            fee = CustomerOffersResponse.Fee(amount = amount?.let(::BigDecimal), currency = currency),
             data = CustomerOffersResponse.Data(
                 specificationName = specificationName,
                 orderType = orderType,
