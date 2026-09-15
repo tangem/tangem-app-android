@@ -13,6 +13,7 @@ android {
 
 dependencies {
     /** Core */
+    api(projects.core.analytics)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
