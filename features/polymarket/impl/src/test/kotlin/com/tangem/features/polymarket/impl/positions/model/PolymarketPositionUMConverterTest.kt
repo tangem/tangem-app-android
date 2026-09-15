@@ -1,7 +1,15 @@
 package com.tangem.features.polymarket.impl.positions.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
+import com.tangem.core.ui.res.generated.icons.ic_heart_broken_16
+import com.tangem.core.ui.res.generated.icons.ic_arrow_split_top_16
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
@@ -72,15 +80,51 @@ internal class PolymarketPositionUMConverterTest {
 
         // Assert
         assertThat(actual.result).isEqualTo(
-            TangemBadgeUM(text = stringReference(model.text), status = model.status, size = TangemBadge.Size.X6),
+            model.badge,
         )
     }
 
     private fun provideTestModels() = listOf(
-        ResultModel(PolymarketPositionResult.WON, "Won $9.97", TangemBadge.Status.Success),
-        ResultModel(PolymarketPositionResult.LOST, "Lost", TangemBadge.Status.Error),
-        ResultModel(PolymarketPositionResult.SPLIT, "Split", TangemBadge.Status.Neutral),
-        ResultModel(PolymarketPositionResult.UNKNOWN, "Unknown", TangemBadge.Status.Neutral),
+        ResultModel(
+            PolymarketPositionResult.WON,
+            TangemBadgeUM(
+                text = resourceReference(
+                    R.string.prediction_positions_result_amount,
+                    wrappedList(resourceReference(R.string.prediction_positions_won), "$9.97"),
+                ),
+                status = TangemBadge.Status.Success,
+                variant = TangemBadge.Variant.Solid,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_checkmark_16),
+            ),
+        ),
+        ResultModel(
+            PolymarketPositionResult.LOST,
+            TangemBadgeUM(
+                text = resourceReference(
+                    R.string.prediction_positions_result_amount,
+                    wrappedList(resourceReference(R.string.prediction_positions_lost), "$9.97"),
+                ),
+                status = TangemBadge.Status.Error,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_heart_broken_16),
+            ),
+        ),
+        ResultModel(
+            PolymarketPositionResult.SPLIT,
+            TangemBadgeUM(
+                text = resourceReference(
+                    R.string.prediction_positions_result_amount,
+                    wrappedList(resourceReference(R.string.prediction_positions_split), "$9.97"),
+                ),
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_split_top_16),
+            ),
+        ),
+        ResultModel(
+            PolymarketPositionResult.UNKNOWN,
+            TangemBadgeUM(text = resourceReference(R.string.prediction_positions_unknown), size = TangemBadge.Size.X6),
+        ),
     )
 
     @ParameterizedTest
@@ -110,8 +154,6 @@ internal class PolymarketPositionUMConverterTest {
         assertThat(card.onClick).isNull()
     }
 
-    data class ResultModel(val result: PolymarketPositionResult, val text: String, val status: TangemBadge.Status)
-
     @ParameterizedTest
     @EnumSource(PolymarketPositionResult::class)
     fun `GIVEN redeemable position WHEN card tapped THEN passes known result and real data`(result: PolymarketPositionResult) {
@@ -127,4 +169,5 @@ internal class PolymarketPositionUMConverterTest {
         // Assert
         verify(exactly = if (result == PolymarketPositionResult.UNKNOWN) 0 else 1) { onClick(position) }
     }
+    data class ResultModel(val result: PolymarketPositionResult, val badge: TangemBadgeUM)
 }
