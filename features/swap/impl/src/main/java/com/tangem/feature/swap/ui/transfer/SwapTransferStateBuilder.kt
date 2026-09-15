@@ -554,31 +554,6 @@ internal class SwapTransferStateBuilder @Inject constructor(
         fee: Fee?,
         onExploreClick: () -> Unit,
         onShareClick: () -> Unit,
-    ): SwapStateHolder = createFeelessWithdrawalSuccessState(
-        uiState = uiState,
-        dataState = dataState,
-        fee = fee,
-        onExploreClick = onExploreClick,
-        onShareClick = onShareClick,
-    )
-
-    fun createPredictionWithdrawalSentState(
-        uiState: SwapStateHolder,
-        dataState: SwapProcessDataState,
-    ): SwapStateHolder = createFeelessWithdrawalSuccessState(
-        uiState = uiState,
-        dataState = dataState,
-        fee = null,
-        onExploreClick = {},
-        onShareClick = {},
-    )
-
-    private fun createFeelessWithdrawalSuccessState(
-        uiState: SwapStateHolder,
-        dataState: SwapProcessDataState,
-        fee: Fee?,
-        onExploreClick: () -> Unit,
-        onShareClick: () -> Unit,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
@@ -630,6 +605,19 @@ internal class SwapTransferStateBuilder @Inject constructor(
             ),
         )
     }
+
+    fun createPredictionWithdrawalSentState(
+        uiState: SwapStateHolder,
+        dataState: SwapProcessDataState,
+    ): SwapStateHolder = createSuccessState(
+        uiState = uiState,
+        dataState = dataState,
+        fee = null,
+        txUrl = "",
+        timestamp = System.currentTimeMillis(),
+        onExplorerClick = {},
+        onShareClick = {},
+    )
 
     private fun formatFeeForSuccess(transferState: SwapState.Transfer, fee: Fee): TextReference {
         val feeAmount = fee.amount
