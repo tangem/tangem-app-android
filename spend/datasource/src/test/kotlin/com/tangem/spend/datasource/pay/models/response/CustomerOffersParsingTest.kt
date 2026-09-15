@@ -23,31 +23,31 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN a plastic offer without fee and data WHEN parse THEN the whole response still parses`() {
         // Act
-        val result = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!
+        val offers = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!.result.orEmpty()
 
         // Assert
-        assertThat(result.result).hasSize(2)
+        assertThat(offers).hasSize(2)
     }
 
     @Test
     fun `GIVEN a plastic offer without fee and data WHEN parse THEN the virtual offer keeps its fee and data`() {
         // Act
-        val result = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!
+        val offers = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!.result.orEmpty()
 
         // Assert
-        val virtual = result.result.single { it.type == "CARD_ISSUE_VIRTUAL_RAIN" }
+        val virtual = offers.single { it.type == "CARD_ISSUE_VIRTUAL_RAIN" }
         assertThat(virtual.fee?.amount).isEqualTo(BigDecimal("5.00"))
         assertThat(virtual.fee?.currency).isEqualTo("USD")
         assertThat(virtual.data?.orderType).isEqualTo("CARD_ISSUE_VIRTUAL_RAIN_KYC_V2")
     }
 
     @Test
-    fun `GIVEN a plastic offer without fee and data WHEN parse THEN its fee and data are null`() {
+    fun `GIVEN a plastic offer without fee and data WHEN parse THEN its fee data are null and its image survives`() {
         // Act
-        val result = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!
+        val offers = adapter.fromJson(PLACEHOLDER_PLASTIC_OFFER_JSON)!!.result.orEmpty()
 
         // Assert
-        val plastic = result.result.single { it.type == "CARD_ISSUE_PLASTIC_RAIN" }
+        val plastic = offers.single { it.type == "CARD_ISSUE_PLASTIC_RAIN" }
         assertThat(plastic.fee).isNull()
         assertThat(plastic.data).isNull()
         assertThat(plastic.images?.single()?.url).isEqualTo(PLASTIC_IMAGE_URL)
@@ -56,13 +56,33 @@ internal class CustomerOffersParsingTest {
     @Test
     fun `GIVEN an offer without a type images and order type WHEN parse THEN they are null`() {
         // Act
-        val result = adapter.fromJson(UNTYPED_OFFER_JSON)!!
+        val offers = adapter.fromJson(UNTYPED_OFFER_JSON)!!.result.orEmpty()
 
         // Assert
-        val offer = result.result.single()
+        val offer = offers.single()
         assertThat(offer.type).isNull()
         assertThat(offer.images).isNull()
         assertThat(offer.data?.orderType).isNull()
+    }
+
+    @Test
+    fun `GIVEN a fee object without amount and currency WHEN parse THEN they are null`() {
+        // Act
+        val offers = adapter.fromJson(EMPTY_FEE_JSON)!!.result.orEmpty()
+
+        // Assert
+        val fee = offers.single().fee
+        assertThat(fee?.amount).isNull()
+        assertThat(fee?.currency).isNull()
+    }
+
+    @Test
+    fun `GIVEN a null result WHEN parse THEN the response still parses`() {
+        // Act
+        val result = adapter.fromJson(NULL_RESULT_JSON)!!
+
+        // Assert
+        assertThat(result.result).isNull()
     }
 
     private companion object {
@@ -118,6 +138,26 @@ internal class CustomerOffersParsingTest {
                 }
               ],
               "error": null
+            }
+        """.trimIndent()
+
+        val EMPTY_FEE_JSON = """
+            {
+              "result": [
+                {
+                  "type": "CARD_ISSUE_PLASTIC_RAIN",
+                  "fee": { "type": "OTC", "description": "Card issue fee" },
+                  "data": { "order_type": "CARD_ISSUE_PLASTIC_RAIN" }
+                }
+              ],
+              "error": null
+            }
+        """.trimIndent()
+
+        val NULL_RESULT_JSON = """
+            {
+              "result": null,
+              "error": { "code": "SOMETHING_WENT_WRONG" }
             }
         """.trimIndent()
     }
