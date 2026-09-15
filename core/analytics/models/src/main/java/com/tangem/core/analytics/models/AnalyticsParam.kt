@@ -306,6 +306,8 @@ sealed class AnalyticsParam {
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
+        const val SECTION = "Section"
+        const val CATEGORY = "Category"
         const val FEE_TYPE = "Fee Type"
         const val WALLET_FORM = "WalletForm"
         const val PERMISSION_TYPE = "Permission Type"
