@@ -65,10 +65,13 @@ interface FeedV2Component {
         /** Height of the tab row, including its vertical insets. */
         val TabRowHeight: Dp = 60.dp
 
+        /** Gap above the tab row while the top blocks are shown; it closes as they collapse away. */
+        val TabRowTopGap: Dp = 16.dp
+
         /**
          * Exact height of the semi-open layout below the host's sheet header: the top blocks and
          * the tab row, no tab content. The host sizes the shtorka's semi-open detent with it.
          */
-        val SemiOpenContentHeight: Dp = TopBlocksHeight + TabRowHeight
+        val SemiOpenContentHeight: Dp = TopBlocksHeight + TabRowTopGap + TabRowHeight
     }
 }
