@@ -79,7 +79,7 @@ internal class CardSettingsModel @Inject constructor(
         // Reset card scanned data
         cardSettingsInteractor.clear()
         // Restore the previous value of access code request policy
-        cardSdkConfigRepository.isBiometricsRequestPolicy = isBiometricsRequestPolicyPrevious
+        cardSdkConfigRepository.restoreAccessCodeRequestPolicy(isBiometricsRequestPolicyPrevious)
     }
 
     private fun updateAccessCodeRequestPolicy() {
