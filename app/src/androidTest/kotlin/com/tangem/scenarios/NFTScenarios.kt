@@ -14,8 +14,7 @@ import io.qameta.allure.kotlin.Allure.step
 fun BaseTestCase.enableNFTAndReturnToMain() {
     openWalletSettingsScreen()
     step("Click on 'NFT' switch") {
-        // The list is lazy and the Accounts section above loads async, so the NFT row is not composed until
-        // it is scrolled to — waiting for the switch before that waits for a node that cannot appear.
+        // The row is only composed once scrolled to, so waiting for the switch first waits for nothing.
         awaitSuccess {
             onWalletSettingsScreen {
                 scrollToNFT()
