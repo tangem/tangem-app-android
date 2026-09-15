@@ -21,7 +21,6 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
-import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
@@ -31,12 +30,9 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
-import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
-import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawalTrackingConfig
-import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -143,22 +139,6 @@ internal interface PolymarketDataModule {
         @Singleton
         fun providePredictionWithdrawalTrackingConfig(): PredictionWithdrawalTrackingConfig =
             PredictionWithdrawalTrackingConfig()
-
-        @Provides
-        @Singleton
-        fun providePredictionWithdrawalTracker(
-            store: PredictionWithdrawalStore,
-            submitInteractor: SubmitPredictionWithdrawalInteractor,
-            getState: GetPredictionWithdrawalStateUseCase,
-            config: PredictionWithdrawalTrackingConfig,
-            appScope: AppCoroutineScope,
-        ): PredictionWithdrawalTracker = PredictionWithdrawalTracker(
-            store = store,
-            submitInteractor = submitInteractor,
-            getState = getState,
-            config = config,
-            appScope = appScope,
-        )
 
         @Provides
         @Singleton
