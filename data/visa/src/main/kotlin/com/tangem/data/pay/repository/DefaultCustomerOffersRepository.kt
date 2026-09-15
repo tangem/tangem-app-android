@@ -17,7 +17,7 @@ internal class DefaultCustomerOffersRepository @Inject constructor(
     override suspend fun getOffers(userWalletId: UserWalletId): Either<VisaApiError, List<Offer>> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getCustomerOffers(authHeader = authHeader)
-        }.map { response -> response.result.mapNotNull(OfferConverter::convert) }
+        }.map { response -> response.result.orEmpty().mapNotNull(OfferConverter::convert) }
     }
 
     override suspend fun getProductInstanceOffers(
@@ -26,6 +26,6 @@ internal class DefaultCustomerOffersRepository @Inject constructor(
     ): Either<VisaApiError, List<Offer>> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getProductInstanceOffers(authHeader = authHeader, productInstanceId = productInstanceId)
-        }.map { response -> response.result.mapNotNull(OfferConverter::convert) }
+        }.map { response -> response.result.orEmpty().mapNotNull(OfferConverter::convert) }
     }
 }
