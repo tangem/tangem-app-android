@@ -21,9 +21,9 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.virtualaccount.model.VirtualAccountEligibility
-import com.tangem.domain.virtualaccount.model.VirtualAccountEntryPoint
-import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
+import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
+import com.tangem.domain.moneyaccount.model.MoneyAccountEntryPoint
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.analytics.Settings
@@ -38,7 +38,7 @@ import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
@@ -72,7 +72,7 @@ internal class DetailsModel @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
-    private val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase,
+    private val getMoneyAccountEligibilityUseCase: GetMoneyAccountEligibilityUseCase,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
@@ -104,7 +104,7 @@ internal class DetailsModel @Inject constructor(
         )
 
         addTangemPayItemIfEligible()
-        addVirtualAccountItemIfEligible()
+        addMoneyAccountItemIfEligible()
 
         state = MutableStateFlow(
             value = DetailsUM(
@@ -335,30 +335,30 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
-    private fun addVirtualAccountItemIfEligible() {
+    private fun addMoneyAccountItemIfEligible() {
         modelScope.launch {
             val isMoneyAccountEnabled = moneyAccountFeatureToggles.isMoneyAccountsEnabled
-            val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)
-            if (eligibility is VirtualAccountEligibility.Available && isMoneyAccountEnabled) {
+            val eligibility = getMoneyAccountEligibilityUseCase(MoneyAccountEntryPoint.DETAILS)
+            if (eligibility is MoneyAccountEligibility.Available && isMoneyAccountEnabled) {
                 items.update { items ->
-                    itemsBuilder.addVirtualAccountItem(
+                    itemsBuilder.addMoneyAccountItem(
                         items = items,
-                        onClick = ::onVirtualAccountItemClicked,
+                        onClick = ::onMoneyAccountItemClicked,
                     )
                 }
             }
         }
     }
 
-    private fun onVirtualAccountItemClicked() {
+    private fun onMoneyAccountItemClicked() {
         modelScope.launch {
-            when (val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)) {
-                is VirtualAccountEligibility.Available -> router.push(
-                    AppRoute.VirtualAccountOnboarding(
-                        AppRoute.VirtualAccountOnboarding.Mode.FromDetailsScreen(eligibility.wallets.first().walletId),
+            when (val eligibility = getMoneyAccountEligibilityUseCase(MoneyAccountEntryPoint.DETAILS)) {
+                is MoneyAccountEligibility.Available -> router.push(
+                    AppRoute.MoneyAccountOnboarding(
+                        AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen(eligibility.wallets.first().walletId),
                     ),
                 )
-                VirtualAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeVirtualAccountItem(it) }
+                MoneyAccountEligibility.NotAvailable -> items.update { itemsBuilder.removeMoneyAccountItem(it) }
             }
         }
     }

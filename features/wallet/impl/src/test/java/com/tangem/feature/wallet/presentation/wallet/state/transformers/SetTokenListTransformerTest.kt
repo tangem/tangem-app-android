@@ -28,7 +28,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -149,7 +149,7 @@ class SetTokenListTransformerTest {
         nftState = WalletNFTItemUM.Hidden,
         type = WalletType.Hot,
         tangemPayMainUM = TangemPayMainUM.Empty,
-        virtualAccountMainUM = VirtualAccountMainUM.Empty,
+        moneyAccountMainUM = MoneyAccountMainUM.Empty,
         polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
         collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
     )

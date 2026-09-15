@@ -22,8 +22,8 @@ import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockCompo
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 
 internal const val ORGANIZE_TOKENS_BUTTON_ITEM_KEY = "OrganizeTokensButton"
 
@@ -116,13 +116,13 @@ internal fun LazyListScope.collectiblesWalletBlock(
     }
 }
 
-internal fun LazyListScope.virtualAccount(
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
-    virtualAccountUM: VirtualAccountMainUM,
+internal fun LazyListScope.moneyAccount(
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
+    moneyAccountUM: MoneyAccountMainUM,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    with(virtualAccountComponent) {
-        virtualAccountMainContent(modifier = modifier, state = virtualAccountUM, isBalanceHidden = isBalanceHidden)
+    with(moneyAccountComponent) {
+        moneyAccountMainContent(modifier = modifier, state = moneyAccountUM, isBalanceHidden = isBalanceHidden)
     }
 }

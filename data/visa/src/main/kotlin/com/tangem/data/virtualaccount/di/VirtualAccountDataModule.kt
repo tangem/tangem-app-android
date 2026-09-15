@@ -21,8 +21,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.virtualaccount.repository.VirtualAccountActivationRepository
 import com.tangem.domain.virtualaccount.usecase.ActivateVirtualAccountUseCase
-import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountEligibilityUseCase
-import com.tangem.domain.virtualaccount.usecase.GetVirtualAccountSuitableWalletsUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -101,20 +101,20 @@ internal interface VirtualAccountDataModule {
 
         @Provides
         @Singleton
-        fun provideGetVirtualAccountSuitableWalletsUseCase(
+        fun provideGetMoneyAccountSuitableWalletsUseCase(
             userWalletsListRepository: UserWalletsListRepository,
-        ): GetVirtualAccountSuitableWalletsUseCase {
-            return GetVirtualAccountSuitableWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
+        ): GetMoneyAccountSuitableWalletsUseCase {
+            return GetMoneyAccountSuitableWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
         }
 
         @Provides
-        fun provideGetVirtualAccountEligibilityUseCase(
-            getVirtualAccountSuitableWalletsUseCase: GetVirtualAccountSuitableWalletsUseCase,
+        fun provideGetMoneyAccountEligibilityUseCase(
+            getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
             onboardingRepository: OnboardingRepository,
             deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
-        ): GetVirtualAccountEligibilityUseCase {
-            return GetVirtualAccountEligibilityUseCase(
-                getVirtualAccountSuitableWalletsUseCase = getVirtualAccountSuitableWalletsUseCase,
+        ): GetMoneyAccountEligibilityUseCase {
+            return GetMoneyAccountEligibilityUseCase(
+                getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
                 onboardingRepository = onboardingRepository,
                 deviceSecurityInfoProvider = deviceSecurityInfoProvider,
             )

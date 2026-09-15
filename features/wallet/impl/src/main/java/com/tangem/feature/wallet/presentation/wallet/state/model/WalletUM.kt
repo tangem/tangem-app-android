@@ -6,7 +6,7 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -29,7 +29,7 @@ internal sealed interface WalletUM {
 
     val tangemPayMainUM: TangemPayMainUM
 
-    val virtualAccountMainUM: VirtualAccountMainUM
+    val moneyAccountMainUM: MoneyAccountMainUM
 
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
 
@@ -46,7 +46,7 @@ internal sealed interface WalletUM {
         override val nftState: WalletNFTItemUM,
         override val type: WalletType,
         override val tangemPayMainUM: TangemPayMainUM,
-        override val virtualAccountMainUM: VirtualAccountMainUM,
+        override val moneyAccountMainUM: MoneyAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
         override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM,
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
@@ -64,7 +64,7 @@ internal sealed interface WalletUM {
         override val tokensListUM: WalletTokensListUM = WalletTokensListUM.Locked
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
-        override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
+        override val moneyAccountMainUM: MoneyAccountMainUM = MoneyAccountMainUM.Empty
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
         override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
         override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
