@@ -88,9 +88,11 @@ class PredictionWithdrawalTracker(
             is PredictionWithdrawError.Unexpected,
             -> false
         }
-        TangemLogger.e(
-            "Polling withdrawal $transactionId failed: $this, ${if (shouldStop) "giving up" else "retrying"}",
-        )
+        if (shouldStop) {
+            TangemLogger.e("Polling withdrawal $transactionId failed: $this, giving up")
+        } else {
+            TangemLogger.d("Polling withdrawal $transactionId failed: $this, retrying")
+        }
         return shouldStop
     }
 }
