@@ -83,6 +83,8 @@ internal class AppsFlyerDeeplinkRouterTest {
         BlockedRouteModel(AppRoute.Initial, expected = true),
         BlockedRouteModel(AppRoute.Welcome(), expected = true),
         BlockedRouteModel(AppRoute.Disclaimer(isTosAccepted = true), expected = true),
+        BlockedRouteModel(AppRoute.PushNotification(source = AppRoute.PushNotification.Source.Main), expected = true),
+        BlockedRouteModel(AppRoute.Onboarding(scanResponse = mockk()), expected = true),
         BlockedRouteModel(AppRoute.Kyc(userWalletId = WALLET_ID), expected = true),
         BlockedRouteModel(AppRoute.TangemPayHotWalletOnboarding, expected = true),
         BlockedRouteModel(
@@ -117,24 +119,25 @@ internal class AppsFlyerDeeplinkRouterTest {
     // region reactive observe
 
     @Test
-    fun `GIVEN deeplink and authorized wallet on Wallet WHEN observe THEN push onboarding and clear`() = runTest(UnconfinedTestDispatcher()) {
-        // Arrange
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
-        val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
+    fun `GIVEN deeplink and authorized wallet on Wallet WHEN observe THEN push onboarding and clear`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Wallet)
 
-        // Act
-        router.observe(backgroundScope, currentRoute)
-        advanceUntilIdle()
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
 
-        // Assert
-        verify {
-            appRouter.push(
-                route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
-                onComplete = any(),
-            )
+            // Assert
+            verify {
+                appRouter.push(
+                    route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink),
+                    onComplete = any(),
+                )
+            }
+            coVerify { clearAppsFlyerDeeplinkUseCase() }
         }
-        coVerify { clearAppsFlyerDeeplinkUseCase() }
-    }
 
     @Test
     fun `GIVEN deeplink and empty wallets on Home WHEN observe THEN stories kept and deeplink not consumed`() =
