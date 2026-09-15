@@ -33,8 +33,11 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
 /**
@@ -117,26 +120,43 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         userWallet: UserWallet.Cold,
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
-    ): Either<CollectiblesAccountError, Unit> {
+    ): Either<CollectiblesAccountError, Unit> = coroutineScope {
         val seedKey = userWallet.solanaSeedKey()
 
         if (seedKey == null) {
             TangemLogger.d("GachaVaultRepository: deriveOwnerAndSetUpVault: the wallet has no Solana key")
-            return GachaVaultError.WalletUnavailable.asFailure().left()
+            return@coroutineScope GachaVaultError.WalletUnavailable.asFailure().left()
         }
 
+        val vaultSetUpCompletion = CompletableDeferred<CompletionResult<Unit>>()
         val cardId = userWallet.sessionCardId()
         val task = DeriveCollectiblesOwnerAndSetUpVaultTask(
             userWallet = userWallet,
             seedKey = seedKey,
             derivationsRepository = derivationsRepository,
-            setUpVault = { session ->
-                setUpVault(
-                    userWallet = userWallet,
-                    hotDelegate = hotDelegate,
-                    limits = limits,
-                    session = session,
-                )
+            scope = this,
+            setUpVault = { session, callback ->
+                var isSigned = false
+
+                // A throw here would take this scope down, the session's own await included
+                val result = runSuspendCatching {
+                    setUpVault(
+                        userWallet = userWallet,
+                        hotDelegate = hotDelegate,
+                        limits = limits,
+                        session = session,
+                        onSigned = {
+                            isSigned = true
+                            callback(CompletionResult.Success(Unit))
+                        },
+                    )
+                }.getOrElse { error ->
+                    TangemLogger.e("GachaVaultRepository: the one-tap set-up threw", error)
+                    CompletionResult.Failure(GachaVaultError.Unexpected(cause = error).tangemError)
+                }
+
+                if (!isSigned) callback(result)
+                vaultSetUpCompletion.complete(result)
             },
         )
 
@@ -151,19 +171,26 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             registerColdWallet = false,
         )
 
-        return when (result) {
-            is CompletionResult.Success -> Unit.right()
+        when (result) {
+            is CompletionResult.Success -> vaultSetUpCompletion.await().toVaultResult()
             is CompletionResult.Failure -> result.error.toVaultFailure().left()
         }.also {
             TangemLogger.d(messageString = "GachaVaultRepository: deriveOwnerAndSetUpVault: done, result=$it")
         }
     }
 
+    private fun CompletionResult<Unit>.toVaultResult(): Either<CollectiblesAccountError, Unit> = when (this) {
+        is CompletionResult.Success -> Unit.right()
+        is CompletionResult.Failure -> error.toVaultFailure().left()
+    }
+
+    @Suppress("LongParameterList")
     private suspend fun setUpVault(
         userWallet: UserWallet.Cold,
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
         session: CardSession,
+        onSigned: () -> Unit,
     ): CompletionResult<Unit> = either {
         val network = networkProvider.create(userWallet).mapLeft { it.tangemError }.bind()
 
@@ -173,6 +200,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             hotDelegate = hotDelegate,
             limits = limits,
             signer = userWallet.signer(session = session),
+            onSigned = onSigned,
         )
             .onLeft { error ->
                 TangemLogger.e(
@@ -209,18 +237,20 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     }
 
     /** Reading first keeps it at one signature: `init_vault` over an existing vault fails with `already in use`. */
+    @Suppress("LongParameterList")
     private suspend fun initOrUpdateVaultInternal(
         userWalletId: UserWalletId,
         network: Network,
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
         signer: TransactionSigner,
+        onSigned: () -> Unit = {},
     ): Either<BlockchainError, Unit> = either {
         val walletManager = vaultWalletManager(userWalletId = userWalletId, network = network).bind()
         val existing = walletManager.getCollectiblesVault().toEither().bind()
 
         when {
-            existing == null -> walletManager.sendVaultTransaction(signer) {
+            existing == null -> walletManager.sendVaultTransaction(signer, onSigned) {
                 buildInitCollectiblesVault(
                     hotDelegate = hotDelegate.base58,
                     perSpinCap = limits.perSpinCap,
@@ -228,7 +258,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 )
             }.bind()
 
-            existing.hotDelegate != hotDelegate.base58 -> walletManager.sendVaultTransaction(signer) {
+            existing.hotDelegate != hotDelegate.base58 -> walletManager.sendVaultTransaction(signer, onSigned) {
                 buildUpdateCollectiblesVault(
                     hotDelegate = hotDelegate.base58,
                     perSpinCap = null,
@@ -259,10 +289,11 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     /** The SDK builds the wire bytes and the manager broadcasts them, so [TransactionData] never leaves here. */
     private suspend fun WalletManager.sendVaultTransaction(
         signer: TransactionSigner,
+        onSigned: () -> Unit = {},
         build: suspend WalletManager.() -> Result<TransactionData.Compiled>,
     ): Either<BlockchainError, Unit> = either {
         val transactionData = build().toEither().bind()
-        send(transactionData, signer).toEither().bind()
+        send(transactionData, signer, onSigned).toEither().bind()
     }
 
     private fun UserWallet.signer(): TransactionSigner = when (this) {
