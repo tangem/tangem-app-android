@@ -66,6 +66,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.markets.RawMarketToken
+import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.derivationIndex
@@ -77,6 +79,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
@@ -126,8 +129,10 @@ import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -193,6 +198,7 @@ internal class SwapModel @Inject constructor(
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase,
+    private val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
@@ -224,6 +230,10 @@ internal class SwapModel @Inject constructor(
     private var isAccountsMode: Boolean = false
 
     private var predictionWithdrawDestinations: Map<CryptoCurrency.ID, PredictionWithdrawDestination>? = null
+
+    private val predictionWithdrawTargets: StateFlow<List<PredefinedTokenToAdd>> = MutableStateFlow(
+        listOfNotNull(polymarketCollateralCurrencyFactory.createDepositTarget().toPredefinedToken()),
+    )
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -260,7 +270,11 @@ internal class SwapModel @Inject constructor(
             isAccountTopUp ->
                 ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.IssuedTokens)
             isPredictionWithdrawFlow ->
-                ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.Hidden)
+                ChooseTokenBridge.Settings.SwapTo.copy(
+                    chooserBlock = ChooserBlock.Predefined(predictionWithdrawTargets),
+                    paymentAccountTokens = PaymentAccountTokens.Hidden,
+                    isJointAccountsShown = false,
+                )
             else -> ChooseTokenBridge.Settings.SwapTo
         },
         analyticsPayload = setOf(
@@ -2509,18 +2523,22 @@ internal class SwapModel @Inject constructor(
             baseFilter
         }
 
-        val toFilter = if (isPredictionWithdrawFlow) {
-            { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
-                accountStatus is AccountStatus.CryptoPortfolio &&
-                    baseFilter(accountStatus, currencyStatus) &&
-                    predictionWithdrawDestinations?.containsKey(currencyStatus.currency.id) == true
-            }
-        } else {
-            baseFilter
-        }
-
         chooseFromTokenBridge.tokenFilter.value = fromFilter
-        chooseToTokenBridge.tokenFilter.value = toFilter
+        chooseToTokenBridge.tokenFilter.value = baseFilter
+    }
+
+    private fun CryptoCurrency.Token.toPredefinedToken(): PredefinedTokenToAdd? {
+        val rawId = id.rawCurrencyId ?: return null
+        return PredefinedTokenToAdd(
+            token = RawMarketToken(id = rawId, name = name, symbol = symbol),
+            network = TokenMarketInfo.Network(
+                networkId = network.rawId,
+                isExchangeable = false,
+                contractAddress = contractAddress,
+                decimalCount = decimals,
+            ),
+            iconUrl = iconUrl,
+        )
     }
 
     private fun observePredictionWithdrawDestinations() {
@@ -2543,7 +2561,6 @@ internal class SwapModel @Inject constructor(
                     },
                     ifRight = { destinations ->
                         predictionWithdrawDestinations = destinations
-                        filterTokensFromSelector()
                     },
                 )
             }
