@@ -22,6 +22,9 @@ interface TangemTechMarketsApi {
         @Query("categoryId") categoryId: String? = null,
         @Query("sectorId") sectorId: String? = null,
         @Query("geckoCategoryId") geckoCategoryId: String? = null,
+        /** ISO 3166-1 alpha-2 the `restricted_for_country` flag is evaluated for; omitting it leaves every
+         * token unrestricted. Undocumented in the categories spec, confirmed against the live endpoint. */
+        @Query("country") country: String? = null,
     ): ApiResponse<TokenMarketListResponse>
 
     @GET("v1/coins/{coin_id}")
