@@ -720,6 +720,23 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
+    fun `GIVEN the address cannot be confirmed WHEN withdraw is clicked THEN nothing opens and it is reported`() =
+        runTest {
+            // Arrange
+            statusFlow.value = activeStatus(depositAddress = null)
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.balance.withdraw.onClick()
+
+            // Assert
+            verify(exactly = 0) { router.push(any(), any()) }
+            verify { messageSender.send(SnackbarMessage(resourceReference(R.string.common_unknown_error))) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN funding window opens WHEN state observed THEN awaiting funds banner shown and hidden with it`() =
         runTest {
             // Arrange
