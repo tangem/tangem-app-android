@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
@@ -35,24 +36,27 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.campaign.TangemPayCampaignIssueCardUM
-import com.tangem.features.tangempay.common.TangemPayCampaignCardArt
+import com.tangem.features.tangempay.common.TangemPayCardArtwork
 import com.tangem.features.tangempay.details.impl.R
 
 @Composable
 internal fun TangemPayCampaignIssueCardScreen(state: TangemPayCampaignIssueCardUM, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors3.bg.primary),
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ill_tangempay_campaign_card_bg),
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth,
+    Box(modifier = modifier.fillMaxSize()) {
+        Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth(),
-        )
+                .matchParentSize()
+                .hazeSourceTangem()
+                .background(TangemTheme.colors3.bg.primary),
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ill_tangempay_campaign_card_bg),
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth(),
+            )
+        }
         Column(modifier = Modifier.fillMaxSize()) {
             TangemTopNavigation(
                 title = resourceReference(R.string.tangempay_campaign_issue_card_title),
@@ -66,7 +70,11 @@ internal fun TangemPayCampaignIssueCardScreen(state: TangemPayCampaignIssueCardU
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                TangemPayCampaignCardArt(cardArtUrl = state.cardArtUrl, showVirtualChip = true)
+                TangemPayCardArtwork(
+                    imageUrl = state.cardArtUrl,
+                    isVirtual = true,
+                    modifier = Modifier.padding(horizontal = 48.dp),
+                )
             }
             IssueCardDetails(state = state)
         }
@@ -120,7 +128,7 @@ private fun ColumnScope.IssueCardDetails(state: TangemPayCampaignIssueCardUM) {
 private fun InfoRow(title: TextReference, value: TextReference, divider: Boolean = false) {
     TangemRow(
         divider = divider,
-        contentLead = TangemRowContentLead.Equal,
+        contentLead = TangemRowContentLead.Start,
         titleSlot = {
             TangemRowText(text = title.resolveReference(), role = TangemRowTextRole.Title, maxLines = Int.MAX_VALUE)
         },
