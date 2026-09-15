@@ -33,8 +33,10 @@ import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.R
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_checkmark_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
@@ -69,7 +71,7 @@ fun CosignRequestRow(state: CosignRequestRowUM, modifier: Modifier = Modifier) {
                 if (state.onInfoClick != null) {
                     Icon(
                         imageVector = Icons.ic_info_20,
-                        contentDescription = null,
+                        contentDescription = stringResourceSafe(R.string.joint_operation_signers_title),
                         tint = TangemTheme.colors3.icon.secondary,
                         modifier = Modifier
                             .size(20.dp)

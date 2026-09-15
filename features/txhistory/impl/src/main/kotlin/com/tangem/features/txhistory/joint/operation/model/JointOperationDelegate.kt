@@ -108,9 +108,7 @@ internal class JointOperationDelegate @Inject constructor(
                 operation = operation,
                 ownerAddress = ownerAddress,
             ),
-            ownAnswer = ownerAddress?.let { own ->
-                signers.firstOrNull { it.member.address.equals(own, ignoreCase = true) }?.answer
-            },
+            ownAddress = ownerAddress,
         )
     }
 }
