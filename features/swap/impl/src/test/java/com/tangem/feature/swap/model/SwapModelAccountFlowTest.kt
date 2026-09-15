@@ -5,6 +5,7 @@ import arrow.core.left
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.express.models.ExpressError
@@ -876,6 +877,89 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat(model.dataState.currentTransferState).isNull()
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN a transfer state is built THEN the button title is Withdraw`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedPredictionPair()
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        val transferState: SwapState.Transfer = mockk(relaxed = true)
+        coEvery {
+            swapTransferInteractor.updateTransfer(
+                fromSwapCurrencyStatus = any(),
+                toSwapCurrencyStatus = any(),
+                fromTokenAmount = any(),
+                feePaidCurrencyStatus = any(),
+                fee = any(),
+            )
+        } returns transferState
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify {
+            swapTransferStateBuilder.createTransferState(
+                actions = any(),
+                transferState = transferState,
+                uiStateHolder = any(),
+                feePaidCryptoCurrencyStatus = any(),
+                feeSelectorUM = any(),
+                isHighNetworkFee = any(),
+                buttonTitle = resourceReference(R.string.prediction_main_withdraw),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a Tangem Pay withdraw WHEN a transfer state is built THEN the button title is null`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val fromStatus = swapCurrencyStatus()
+        val toStatus = swapCurrencyStatus()
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (fromStatus to toStatus)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        val transferState: SwapState.Transfer = mockk(relaxed = true)
+        coEvery {
+            swapTransferInteractor.updateTransfer(
+                fromSwapCurrencyStatus = any(),
+                toSwapCurrencyStatus = any(),
+                fromTokenAmount = any(),
+                feePaidCurrencyStatus = any(),
+                fee = any(),
+            )
+        } returns transferState
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify {
+            swapTransferStateBuilder.createTransferState(
+                actions = any(),
+                transferState = transferState,
+                uiStateHolder = any(),
+                feePaidCryptoCurrencyStatus = any(),
+                feeSelectorUM = any(),
+                isHighNetworkFee = any(),
+                buttonTitle = null,
+            )
+        }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN a prediction withdraw WHEN checked THEN it is not a Tangem Pay withdrawal`() = runTest {
