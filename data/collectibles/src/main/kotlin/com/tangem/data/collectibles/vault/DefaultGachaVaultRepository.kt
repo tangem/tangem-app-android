@@ -73,6 +73,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 hotDelegate = hotDelegate,
                 limits = limits,
                 signer = userWallet.signer(),
+                onSigned = {},
             )
                 .onLeft { error ->
                     TangemLogger.e("GachaVaultRepository: initOrUpdateVault failed: ${error.customMessage}")
@@ -244,7 +245,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
         signer: TransactionSigner,
-        onSigned: () -> Unit = {},
+        onSigned: () -> Unit,
     ): Either<BlockchainError, Unit> = either {
         val walletManager = vaultWalletManager(userWalletId = userWalletId, network = network).bind()
         val existing = walletManager.getCollectiblesVault().toEither().bind()
