@@ -61,6 +61,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         feeSelectorUM: FeeSelectorUM?,
         isHighNetworkFee: Boolean = false,
+        buttonTitle: TextReference? = null,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
@@ -89,6 +90,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 walletInteractionIcon = walletInterationIcon(transferState.userWallet),
                 isEnabled = false,
                 mode = Mode.TRANSFER,
+                title = buttonTitle,
                 onClick = actions.onTransferClick,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
@@ -348,6 +350,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         isTangemPayWithdrawal: Boolean,
         feeSelectorUM: FeeSelectorUM?,
         isHighNetworkFee: Boolean = false,
+        buttonTitle: TextReference? = null,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
@@ -364,6 +367,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             receiveCardData = createReceiveCard(actions = actions, transferState = transferState),
             swapButton = uiStateHolder.swapButton.copy(
                 isEnabled = getTransferButtonEnabled(notifications, fee, isTangemPayWithdrawal),
+                title = buttonTitle,
             ),
             transferFooter = getSendingFooterText(
                 dataState = dataState,

@@ -410,6 +410,52 @@ internal class SwapTransferStateBuilderTest {
         }
 
     @Test
+    fun `GIVEN a button title WHEN createTransferState THEN the swap button carries it`() = runTest {
+        // Arrange
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("1.5"),
+            toAmount = BigDecimal("1.5"),
+            isAccountsMode = false,
+        )
+        val buttonTitle = resourceReference(R.string.prediction_main_withdraw)
+
+        // Act
+        val result = sut.createTransferState(
+            actions = actions,
+            transferState = transferState,
+            uiStateHolder = baseStateHolder(),
+            feePaidCryptoCurrencyStatus = null,
+            feeSelectorUM = null,
+            buttonTitle = buttonTitle,
+        )
+
+        // Assert
+        assertThat(result.swapButton.title).isEqualTo(buttonTitle)
+    }
+
+    @Test
+    fun `GIVEN no button title WHEN createTransferState THEN the swap button title is null`() = runTest {
+        // Arrange
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("1.5"),
+            toAmount = BigDecimal("1.5"),
+            isAccountsMode = false,
+        )
+
+        // Act
+        val result = sut.createTransferState(
+            actions = actions,
+            transferState = transferState,
+            uiStateHolder = baseStateHolder(),
+            feePaidCryptoCurrencyStatus = null,
+            feeSelectorUM = null,
+        )
+
+        // Assert
+        assertThat(result.swapButton.title).isNull()
+    }
+
+    @Test
     fun `GIVEN high network fee warning WHEN updateTransferButtonEnableState THEN swap button stays enabled`() =
         runTest {
             // Arrange
