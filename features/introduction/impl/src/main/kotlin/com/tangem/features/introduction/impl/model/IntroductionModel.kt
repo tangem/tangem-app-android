@@ -2,12 +2,9 @@ package com.tangem.features.introduction.impl.model
 
 import android.view.SurfaceView
 import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -67,20 +64,11 @@ internal class IntroductionModel @Inject constructor(
     private val legalLinks: IntroductionLegalLinks,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host {
+) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host, IntroductionStories.Host {
 
     private val params = paramsContainer.require<IntroductionComponent.Params>()
 
-    val storiesNavigation = SlotNavigation<Unit>()
-
     private var isScreenResumed = false
-    private var isStoryShown = false
-
-    /** The scan tap being served; cleared once settled or once the viewer closes the story around it. */
-    private var pendingScanStoryAction: StoriesV2PendingAction? = null
-
-    /** An ended story kept on screen because navigation is covering it; dismissed on the next resume. */
-    private var isStoryDismissPendingResume = false
     private var isVideoRestartPendingResume = false
     private var isCreatingMobileWallet = false
     private var hasRenderedFrame = false
@@ -100,17 +88,29 @@ internal class IntroductionModel @Inject constructor(
         resolveCloudRestoreBackups = resolveCloudRestoreBackups,
     )
 
+    private val stories = IntroductionStories(
+        host = this,
+        scope = modelScope,
+        analyticsEventHandler = analyticsEventHandler,
+        urlOpener = urlOpener,
+        generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
+    )
+
+    val storiesNavigation: SlotNavigation<Unit> get() = stories.navigation
+
     val uiState: StateFlow<IntroductionUM>
         field = MutableStateFlow(
             IntroductionUM(
                 isVideoReady = false,
                 isVideoFailed = false,
+                isVideoRunning = false,
                 isMotionEnabled = videoPlayer.isMotionEnabled,
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
                 onCreateWalletClick = ::onCreateWalletClick,
                 onIHaveWalletClick = ::onIHaveWalletClick,
+                onCreateWalletSheetCollapsed = stories::onSheetCollapsed,
                 onTermsOfServiceClick = legalLinks::openTermsOfService,
                 onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
             ),
@@ -168,12 +168,7 @@ internal class IntroductionModel @Inject constructor(
 
     fun setVideoRunning(isRunning: Boolean) {
         isScreenResumed = isRunning
-        if (isRunning && isStoryDismissPendingResume) {
-            // The viewer backed out of the flow that covered the ended story: welcome, without the sheet.
-            isStoryDismissPendingResume = false
-            isStoryShown = false
-            storiesNavigation.dismiss()
-        }
+        if (isRunning) stories.onScreenResumed()
         if (isRunning && isVideoRestartPendingResume) {
             isVideoRestartPendingResume = false
             videoPlayer.restart()
@@ -181,17 +176,21 @@ internal class IntroductionModel @Inject constructor(
         applyVideoRunning()
     }
 
+    override fun onStoryVisibilityChanged() = applyVideoRunning()
+
     /**
      * Two independent reasons to stop the background video, so neither may override the other: the screen is not
      * resumed, or the story is on top of it. A slot child leaves its host resumed, so returning from background
      * while the story plays would otherwise restart the video behind it.
      */
     private fun applyVideoRunning() {
-        videoPlayer.setRunning(isRunning = isScreenResumed && !isStoryShown)
+        val isRunning = isScreenResumed && !stories.isShown
+        videoPlayer.setRunning(isRunning = isRunning)
+        uiState.update { it.copy(isVideoRunning = isRunning) }
     }
 
     private fun onCreateWalletClick() {
-        if (isAnySheetShown()) return
+        if (isAnySheetShown() || stories.isOpening) return
         analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet())
         modelScope.launch {
             val referralId = referral.readId()
@@ -253,77 +252,16 @@ internal class IntroductionModel @Inject constructor(
         if (!isCreateWalletSheetShown() || isCreatingMobileWallet) return
         analyticsEventHandler.send(IntroductionProcess.ButtonHardwareWallet())
         onBottomSheetDismissed()
-        isStoryShown = true
-        applyVideoRunning()
-        storiesNavigation.activate(Unit)
+        stories.openAfterSheetCollapse()
     }
 
-    /**
-     * The story hands back every terminal decision instead of navigating, so this owns the routing table for it.
-     * Kept short on purpose: for a bundled composition the result can arrive re-entrantly, inside `activate`.
-     */
-    fun onStoryResult(result: StoriesV2Result) {
-        when (result) {
-            // A looping story reports neither on its own; both mean the viewer left it alone.
-            StoriesV2Result.Dismissed,
-            StoriesV2Result.Completed,
-            -> {
-                pendingScanStoryAction = null
-                closeStory()
-            }
-            // Nothing to show, so the tap that opened it must still do what its scan slide would have, the way
-            // iOS does — otherwise the card row answers a tap with a blank flash.
-            is StoriesV2Result.Unavailable -> {
-                closeStory()
-                startCardScan(action = null)
-            }
-            // A scan that navigated away is covered by the next screen: tearing the player down now would flash
-            // the welcome screen behind the closing NFC sheet, so that teardown waits for the next resume.
-            is StoriesV2Result.ActionInvoked -> when (result.actionId) {
-                SCAN_WALLET_ACTION_ID -> isStoryDismissPendingResume = true
-                else -> closeStory()
-            }
-        }
-    }
+    fun onStoryResult(result: StoriesV2Result) = stories.onResult(result)
 
-    /**
-     * Keyed on the action id rather than the target type: the id is what the composition promises, while several
-     * actions can share a target type. A remotely delivered action this build does not know must land the viewer
-     * back where they acted from instead of on a bare screen.
-     */
-    fun onStoryAction(action: StoriesV2PendingAction) {
-        when (action.actionId) {
-            LEARN_MORE_ACTION_ID -> openTangemStore(action)
-            SCAN_WALLET_ACTION_ID -> startCardScan(action)
-            else -> {
-                TangemLogger.e("Unhandled story action: id=${action.actionId}, target=${action.target}")
-                action.resume()
-            }
-        }
-    }
+    fun onStoryAction(action: StoriesV2PendingAction) = stories.onAction(action)
 
-    private fun closeStory() {
-        isStoryShown = false
-        applyVideoRunning()
-        storiesNavigation.dismiss()
-    }
-
-    private fun openTangemStore(action: StoriesV2PendingAction) {
-        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
-        // Deliberately a terminal exit: the tap ends the story rather than suspending it around the browser.
-        action.end()
-        modelScope.launch {
-            // The url the story carries is the bare storefront; the generated one adds the language, the utm
-            // campaign and the referral promocode, which is what every other buy entry point reports on.
-            urlOpener.openUrl(generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Creation))
-        }
-    }
-
-    /** [action] is `null` when no story is left to settle around the scan. */
-    private fun startCardScan(action: StoriesV2PendingAction?) {
-        pendingScanStoryAction = action
+    override fun scanCardFromStory() {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Intro))
-        launchCardScan(onNavigatedAway = ::onScanNavigatedAway, onFailed = ::onScanFailed)
+        launchCardScan(onNavigatedAway = ::onScanNavigatedAway, onFailed = stories::onScanFailed)
     }
 
     private fun launchCardScan(onNavigatedAway: () -> Unit, onFailed: () -> Unit) {
@@ -337,16 +275,8 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onScanNavigatedAway() {
-        // The closing analytics must beat the navigation that kills the tree.
-        pendingScanStoryAction?.end()
-        pendingScanStoryAction = null
+        stories.onScanNavigatedAway()
         onTerminalFlowEntered()
-    }
-
-    private fun onScanFailed() {
-        val action = pendingScanStoryAction
-        pendingScanStoryAction = null
-        action?.resume()
     }
 
     private fun onCreateSeedPhraseWalletClick() {
@@ -384,7 +314,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onIHaveWalletClick() {
-        if (isAnySheetShown() || isCreatingMobileWallet) return
+        if (isAnySheetShown() || isCreatingMobileWallet || stories.isOpening) return
         analyticsEventHandler.send(IntroductionProcess.ButtonIHaveWallet())
         haveWalletSheet.open()
     }
@@ -416,11 +346,5 @@ internal class IntroductionModel @Inject constructor(
         if (isHotWalletCreationSupported()) return true
         uiMessageSender.send(hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()))
         return false
-    }
-
-    private companion object {
-        // Declared by the bundled composition in BundledStoryV2ContentSource; a remote one must reuse them.
-        const val LEARN_MORE_ACTION_ID = "learn_more"
-        const val SCAN_WALLET_ACTION_ID = "scan_wallet"
     }
 }
