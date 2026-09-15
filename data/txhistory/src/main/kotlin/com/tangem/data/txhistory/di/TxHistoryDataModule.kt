@@ -8,8 +8,10 @@ import com.tangem.data.txhistory.list.DefaultHistoryTxListManager
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
 import com.tangem.data.txhistory.repository.DefaultTxHistoryRepository
 import com.tangem.data.txhistory.repository.RefactoredTxHistoryRepository
+import com.tangem.data.txhistory.repository.factory.DefaultTokenInfoRepository
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.list.HistoryTxListManager
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import dagger.Binds
@@ -40,6 +42,10 @@ internal interface TxHistoryDataModule {
     @Binds
     @Singleton
     fun provideExpressHistoryRepository(default: DefaultExpressHistoryRepository): ExpressHistoryRepository
+
+    @Binds
+    @Singleton
+    fun provideTokenInfoRepository(default: DefaultTokenInfoRepository): TokenInfoRepository
 
     @Binds
     fun provideHistoryTxListManagerFactory(default: DefaultHistoryTxListManager.Factory): HistoryTxListManager.Factory
