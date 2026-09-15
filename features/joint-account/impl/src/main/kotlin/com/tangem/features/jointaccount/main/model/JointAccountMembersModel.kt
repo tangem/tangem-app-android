@@ -22,9 +22,11 @@ import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationError
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
@@ -40,6 +42,7 @@ import com.tangem.features.jointaccount.main.state.JointAccountMembersStateContr
 import com.tangem.features.jointaccount.main.state.transformers.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -48,6 +51,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.ui.R as CoreUiR
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
 @Suppress("LongParameterList")
@@ -60,6 +64,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val shareManager: ShareManager,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val jointAccountListFetcher: SingleJointAccountListFetcher,
+    private val pollingCoordinator: JointAccountPollingCoordinator,
     private val singleAccountSupplier: SingleAccountSupplier,
     private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
     private val activateJointAccountUseCase: ActivateJointAccountUseCase,
@@ -96,10 +101,27 @@ internal class JointAccountMembersModel @Inject constructor(
     /** The account a currently open [activationConfirmationNavigation] sheet, if any, was opened for. */
     private var confirmedAccountId: String? = null
 
+    private val isResumed = MutableStateFlow(false)
+
+    private val resolvedAccountFlow: Flow<JointAccount?> = jointAccountListSupplier(userWalletId = params.userWalletId)
+        .map { accounts ->
+            accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
+        }
+        .distinctUntilChanged()
+
     init {
         stateController.update(UpdateMembersInitialStateTransformer(onCloseClick = ::onCloseClick))
         observeAccount()
+        subscribePolling()
         refreshAccounts()
+    }
+
+    fun onResume() {
+        isResumed.value = true
+    }
+
+    fun onPause() {
+        isResumed.value = false
     }
 
     private fun refreshAccounts() {
@@ -111,11 +133,7 @@ internal class JointAccountMembersModel @Inject constructor(
     }
 
     private fun observeAccount() {
-        jointAccountListSupplier(userWalletId = params.userWalletId)
-            .map { accounts ->
-                accounts.firstOrNull { params.cryptoAccountId == null || it.cryptoAccountId == params.cryptoAccountId }
-            }
-            .distinctUntilChanged()
+        resolvedAccountFlow
             .map { account ->
                 account?.let { found ->
                     found to getJointAccountInvitesUseCase(
@@ -138,6 +156,21 @@ internal class JointAccountMembersModel @Inject constructor(
                     ?: ClearMembersAccountTransformer()
 
                 stateController.update(transformer)
+            }
+            .launchIn(modelScope)
+    }
+
+    /**
+     * The backend won't silent-push joint-account state changes (a slot filling, activation, an operation awaiting
+     * a co-signature), so while this screen is on top a 60-second poll keeps it fresh — the current status can't
+     * tell us whether it's stale, so it isn't used to gate this, and neither is whether an account is currently
+     * resolved: an empty store (offline, cold start, a failed [refreshAccounts]) must still poll, or it could
+     * never recover on its own. [pollingCoordinator] paces itself — this only decides whether to collect.
+     */
+    private fun subscribePolling() {
+        isResumed
+            .flatMapLatest { resumed ->
+                if (resumed) pollingCoordinator.poll(walletId = params.userWalletId) else emptyFlow()
             }
             .launchIn(modelScope)
     }
