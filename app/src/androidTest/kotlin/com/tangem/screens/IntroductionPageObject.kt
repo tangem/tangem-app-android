@@ -9,11 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
-/**
- * Welcome screen shown behind [TWI_1356_INTRODUCTION_REDESIGN_ENABLED], which replaces the stories screen with its
- * "Get started" button. Both entry buttons open a bottom sheet whose rows are [WalletOptionCard]s, so the options
- * are matched by their title text rather than by a button tag.
- */
+/** Welcome screen behind TWI_1356_INTRODUCTION_REDESIGN_ENABLED; its sheet rows carry no tag, hence text matching. */
 class IntroductionPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<IntroductionPageObject>(semanticsProvider = semanticsProvider) {
 
@@ -29,7 +25,7 @@ class IntroductionPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
-    /** Scans an existing card in the "I have a wallet" sheet; the same title creates one in the "Create wallet" sheet. */
+    /** Scans an existing card in the 'I have a wallet' sheet, creates one in the 'Create wallet' sheet. */
     val cardOrRingOption: KNode = child {
         hasText(getResourceString(R.string.introduction_create_wallet_hardware_title))
         useUnmergedTree = true
