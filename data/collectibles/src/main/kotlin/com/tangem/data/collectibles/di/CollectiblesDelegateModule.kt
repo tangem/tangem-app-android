@@ -1,8 +1,6 @@
 package com.tangem.data.collectibles.di
 
-import com.tangem.data.collectibles.delegate.CollectiblesHotDelegateStore
 import com.tangem.data.collectibles.delegate.DefaultCollectiblesHotDelegate
-import com.tangem.data.collectibles.delegate.DefaultCollectiblesHotDelegateStore
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import dagger.Binds
 import dagger.Module
@@ -15,7 +13,4 @@ internal interface CollectiblesDelegateModule {
 
     @Binds
     fun bindCollectiblesHotDelegate(impl: DefaultCollectiblesHotDelegate): CollectiblesHotDelegate
-
-    @Binds
-    fun bindCollectiblesHotDelegateStore(impl: DefaultCollectiblesHotDelegateStore): CollectiblesHotDelegateStore
 }

@@ -20,6 +20,7 @@ import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.TestScope
@@ -45,7 +46,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         clearMocks(hotDelegate, ownerDeriver, gachaVaultRepository, accountRepository, accountStatusFetcher)
         coEvery { accountRepository.getStatusSync(any()) } returns null
         coEvery { accountRepository.saveAccount(any(), any()) } returns Unit
-        coEvery { hotDelegate.getPublicKey(any()) } returns DELEGATE
+        coEvery { hotDelegate.provision(any()) } returns DELEGATE.right()
     }
 
     @Test
@@ -59,7 +60,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 0) {
-            hotDelegate.getPublicKey(any())
+            hotDelegate.provision(any())
             gachaVaultRepository.initOrUpdateVault(any(), any(), any())
             gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any())
         }
@@ -87,10 +88,8 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
     }
 
     @Test
-    fun `GIVEN no delegate yet WHEN invoked THEN one is provisioned before the vault is touched`() = runTest {
+    fun `GIVEN a wallet WHEN invoked THEN the delegate is provisioned before the vault is touched`() = runTest {
         // Arrange
-        coEvery { hotDelegate.getPublicKey(any()) } returns null
-        coEvery { hotDelegate.provision(any()) } returns DELEGATE.right()
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns null
         coEvery { gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any()) } returns Unit.right()
 
@@ -99,14 +98,16 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { hotDelegate.provision(ACCOUNT_ID) }
+        coVerifyOrder {
+            hotDelegate.provision(ACCOUNT_ID)
+            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, DELEGATE, GachaVaultLimits.Default)
+        }
     }
 
     @Test
     fun `GIVEN provisioning fails WHEN invoked THEN the vault is not read`() = runTest {
         // Arrange
         val error = CollectiblesAccountError.DelegateKeyCreationFailed(IllegalStateException("keystore is locked"))
-        coEvery { hotDelegate.getPublicKey(any()) } returns null
         coEvery { hotDelegate.provision(any()) } returns error.left()
 
         // Act

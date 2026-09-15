@@ -2,7 +2,7 @@ package com.tangem.data.collectibles.account.flow
 
 import arrow.core.Option
 import arrow.core.some
-import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
+import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
 import com.tangem.domain.core.flow.FlowProducerTools
@@ -32,7 +32,7 @@ import java.math.BigDecimal
 internal class DefaultCollectiblesAccountStatusProducer @AssistedInject constructor(
     @Assisted private val params: CollectiblesAccountStatusProducer.Params,
     override val flowProducerTools: FlowProducerTools,
-    private val collectiblesAccountStatusStore: CollectiblesAccountStatusStore,
+    private val collectiblesAccountStore: CollectiblesAccountStore,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesAccountStatusProducer {
@@ -42,7 +42,7 @@ internal class DefaultCollectiblesAccountStatusProducer @AssistedInject construc
 
     override fun produce(): Flow<CollectiblesAccountStatusValue> {
         return combine(
-            flow = collectiblesAccountStatusStore.get(userWalletId = params.userWalletId),
+            flow = collectiblesAccountStore.get(userWalletId = params.userWalletId),
             flow2 = rate(CollectiblesVaultCurrencies.USDC_RAW_ID),
         ) { stored, usdcRate ->
             priced(stored = stored, usdcRate = usdcRate)
