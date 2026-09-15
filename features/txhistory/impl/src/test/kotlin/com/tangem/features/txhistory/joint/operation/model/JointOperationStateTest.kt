@@ -17,10 +17,27 @@ internal class JointOperationStateTest {
         val state = state(signers = listOf(signer(address = OWN, answer = Answer.WAITING), signer(address = OTHER)))
 
         // Act
-        val actual = state.signersWithOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = true)
 
         // Assert
-        assertThat(actual.map { it.answer }).containsExactly(Answer.SIGNED, Answer.WAITING).inOrder()
+        assertThat(actual.signers.map { it.answer }).containsExactly(Answer.SIGNED, Answer.WAITING).inOrder()
+    }
+
+    @Test
+    fun `GIVEN this member is still waiting WHEN they answered locally THEN the progress counts their signature`() {
+        // Arrange
+        val state = state(
+            signers = listOf(
+                signer(address = OWN, answer = Answer.WAITING),
+                signer(address = OTHER, answer = Answer.CREATED),
+            ),
+        )
+
+        // Act
+        val actual = state.withOwnAnswer(answeredLocally = true)
+
+        // Assert
+        assertThat(actual.collected).isEqualTo(2)
     }
 
     @Test
@@ -30,10 +47,10 @@ internal class JointOperationStateTest {
         val state = state(signers = signers)
 
         // Act
-        val actual = state.signersWithOwnAnswer(answeredLocally = false)
+        val actual = state.withOwnAnswer(answeredLocally = false)
 
         // Assert
-        assertThat(actual).isEqualTo(signers)
+        assertThat(actual.signers).isEqualTo(signers)
     }
 
     @Test
@@ -43,10 +60,10 @@ internal class JointOperationStateTest {
         val state = state(signers = signers)
 
         // Act
-        val actual = state.signersWithOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = true)
 
         // Assert
-        assertThat(actual).isEqualTo(signers)
+        assertThat(actual.signers).isEqualTo(signers)
     }
 
     @Test
@@ -56,10 +73,10 @@ internal class JointOperationStateTest {
         val state = state(signers = signers, ownAddress = null)
 
         // Act
-        val actual = state.signersWithOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = true)
 
         // Assert
-        assertThat(actual).isEqualTo(signers)
+        assertThat(actual.signers).isEqualTo(signers)
     }
 
     @Test
