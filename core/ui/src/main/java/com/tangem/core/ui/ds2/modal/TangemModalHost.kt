@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.dialog
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,10 @@ class TangemModalHostState internal constructor(private val scope: CoroutineScop
 
     internal val entries = mutableStateListOf<Entry>()
 
-    /** Whether at least one modal is currently registered. */
+    /** Modals registered for warm-up only: composed and measured by [TangemModalHost], never shown. */
+    internal val prewarmEntries = mutableStateListOf<Entry>()
+
+    /** Whether at least one modal is currently on screen; warm-up entries are not on screen. */
     val hasVisibleModal: Boolean
         get() = entries.isNotEmpty()
 
@@ -55,14 +59,39 @@ class TangemModalHostState internal constructor(private val scope: CoroutineScop
 
     @PublishedApi
     internal fun show(key: Any, content: @Composable () -> Unit) {
-        val entry = Entry(key = key, content = content)
-        val index = entries.indexOfFirst { it.key == key }
-        if (index >= 0) entries[index] = entry else entries += entry
+        entries.upsert(key = key, content = content)
     }
 
     @PublishedApi
     internal fun dismiss(key: Any) {
         entries.removeAll { it.key == key }
+    }
+
+    /**
+     * Registers [content] to be composed and measured without ever being shown, so that the first
+     * real appearance of a modal no longer pays for it.
+     *
+     * The first modal opened in a fresh process starts moving a few hundred milliseconds after the
+     * tap, while every later one — even a different modal with different content — starts within
+     * ~100ms: the price is the one-off warm-up of the shared machinery (classes and their JIT, the
+     * layout and shape nodes, the surface material, the intrinsic height probe of the content), not
+     * the content of the particular sheet. Paying it while the viewer is still reading the screen
+     * makes their first tap behave like their second.
+     *
+     * A prewarmed entry is invisible and inert — [TangemModalHost] measures it but never places it,
+     * and it carries neither scrim nor back handler. What it does *not* suppress is composition
+     * itself: effects, animations and image loads inside the content do run. Hence opt-in per call
+     * site (see the `prewarm` parameter of [TangemModal]).
+     */
+    @PublishedApi
+    internal fun prewarm(key: Any, content: @Composable () -> Unit) {
+        prewarmEntries.upsert(key = key, content = content)
+    }
+
+    /** Drops the warm-up entry of [key] — it is either being shown for real now, or is gone. */
+    @PublishedApi
+    internal fun stopPrewarm(key: Any) {
+        prewarmEntries.removeAll { it.key == key }
     }
 
     /**
@@ -85,6 +114,12 @@ class TangemModalHostState internal constructor(private val scope: CoroutineScop
             }
         }
     }
+
+    private fun MutableList<Entry>.upsert(key: Any, content: @Composable () -> Unit) {
+        val entry = Entry(key = key, content = content)
+        val index = indexOfFirst { it.key == key }
+        if (index >= 0) set(index, entry) else add(entry)
+    }
 }
 
 /**
@@ -105,6 +140,10 @@ fun rememberTangemModalHostState(): TangemModalHostState {
  * top). Place it above the content the modals should cover, and mark that content as the haze
  * source of [hazeState] (`Modifier.hazeSourceTangem(hazeState)`) so the modal material blurs it.
  *
+ * Modals registered for warm-up only (see [TangemModalHostState.prewarm]) are rendered in a
+ * separate layer that is measured but never placed, so they cost composition and measurement and
+ * nothing else. With none of those registered the host tree is exactly what it was before.
+ *
  * @param state the registry of shown modals
  * @param hazeState haze state whose source is the content behind the modals; provided as
  *   [LocalHazeState] to modal content
@@ -112,7 +151,7 @@ fun rememberTangemModalHostState(): TangemModalHostState {
  */
 @Composable
 fun TangemModalHost(state: TangemModalHostState, hazeState: HazeState, modifier: Modifier = Modifier) {
-    if (state.entries.isEmpty()) return
+    if (state.entries.isEmpty() && state.prewarmEntries.isEmpty()) return
     CompositionLocalProvider(LocalHazeState provides hazeState) {
         Box(modifier = modifier) {
             state.entries.forEachIndexed { index, entry ->
@@ -128,8 +167,37 @@ fun TangemModalHost(state: TangemModalHostState, hazeState: HazeState, modifier:
                     }
                 }
             }
+            if (state.prewarmEntries.isNotEmpty()) {
+                ModalPrewarmLayer(entries = state.prewarmEntries)
+            }
         }
     }
+}
+
+/**
+ * Renders prewarmed modals measured but never placed.
+ *
+ * Composition and measurement are the expensive halves of a first modal appearance — class loading
+ * and JIT of the sheet machinery, the intrinsic height probe, the text layout of the content — and
+ * both of them happen here. Skipping the placement is what keeps the warm-up invisible: an unplaced
+ * placeable is not drawn, not hit-tested and not reachable by semantics, so neither the screen nor
+ * the viewer's taps ever meet it. The layer reports a zero size, so it cannot influence the host's
+ * own layout either, and the modals are measured against the host's constraints — the same ones the
+ * real appearance will get.
+ */
+@Composable
+private fun ModalPrewarmLayer(entries: List<TangemModalHostState.Entry>) {
+    Layout(
+        content = {
+            entries.forEach { entry ->
+                key(entry.key) { entry.content() }
+            }
+        },
+        measurePolicy = { measurables, constraints ->
+            measurables.forEach { it.measure(constraints) }
+            layout(width = 0, height = 0) {}
+        },
+    )
 }
 
 /**

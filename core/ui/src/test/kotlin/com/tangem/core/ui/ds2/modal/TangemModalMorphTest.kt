@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds2.modal
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Density
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
@@ -54,6 +55,70 @@ internal class TangemModalMorphTest {
         assertThat(halfwayProgress).isEqualTo(0.5f)
     }
 
+    @Test
+    fun `GIVEN a moving progress WHEN heightOf THEN the content is probed once`() {
+        // Arrange
+        val cache = ModalContentHeightCache()
+        val content = CountingMeasurable(contentHeight = CONTENT_HEIGHT)
+
+        // Act
+        val heights = listOf(0f, 0.4f, 0.8f).map { progress ->
+            cache.heightOf(measurable = content, width = PROBE_WIDTH, progress = progress)
+        }
+
+        // Assert
+        assertThat(heights).containsExactly(CONTENT_HEIGHT, CONTENT_HEIGHT, CONTENT_HEIGHT)
+        assertThat(content.probes).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN a settled progress WHEN heightOf THEN the content is probed on every pass`() {
+        // Arrange
+        val cache = ModalContentHeightCache()
+        val content = CountingMeasurable(contentHeight = CONTENT_HEIGHT)
+
+        // Act
+        repeat(times = 3) {
+            cache.heightOf(measurable = content, width = PROBE_WIDTH, progress = OPEN_PROGRESS_SETTLED)
+        }
+
+        // Assert
+        assertThat(content.probes).isEqualTo(3)
+    }
+
+    @Test
+    fun `GIVEN a new probe width WHEN heightOf THEN the content is probed again`() {
+        // Arrange
+        val cache = ModalContentHeightCache()
+        val content = CountingMeasurable(contentHeight = CONTENT_HEIGHT)
+
+        // Act
+        cache.heightOf(measurable = content, width = PROBE_WIDTH, progress = 0.4f)
+        cache.heightOf(measurable = content, width = PROBE_WIDTH + 1, progress = 0.8f)
+
+        // Assert
+        assertThat(content.probes).isEqualTo(2)
+    }
+
+    private class CountingMeasurable(private val contentHeight: Int) : IntrinsicMeasurable {
+
+        var probes: Int = 0
+            private set
+
+        override val parentData: Any? = null
+
+        override fun minIntrinsicHeight(width: Int): Int {
+            probes++
+            return contentHeight
+        }
+
+        override fun maxIntrinsicHeight(width: Int): Int = contentHeight
+
+        override fun minIntrinsicWidth(height: Int): Int = 0
+
+        override fun maxIntrinsicWidth(height: Int): Int = 0
+    }
+
     internal data class OpenProgressModel(
         val initialValue: TangemSheetValue,
         val skipPartiallyExpanded: Boolean,
@@ -82,5 +147,7 @@ internal class TangemModalMorphTest {
         const val HIDDEN_POSITION = 1000f
         const val EXPANDED_POSITION = 200f
         const val HALFWAY_DELTA = 400f
+        const val PROBE_WIDTH = 1064
+        const val CONTENT_HEIGHT = 640
     }
 }

@@ -24,23 +24,35 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.introduction.impl.ui.state.WelcomeSceneUM
 import kotlinx.collections.immutable.ImmutableList
 
+/** A position the video has never reported, so it cannot be confused with the zero the loop wraps through. */
+private const val NOT_STARTED_MS = -1L
+
 /**
  * The scenes are composed on top of each other; animation frames read the position inside the draw phase, while the
- * active scene recomposes when it changes to keep only that scene in accessibility semantics. Without a playing video
- * the first scene stays.
+ * active scene recomposes when it changes to keep only that scene in accessibility semantics. With no video at all
+ * the first scene stays; a video that stops holds the last scene it showed.
  */
 @Composable
 internal fun WelcomeTextScenes(
     scenes: ImmutableList<WelcomeSceneUM>,
     isAnimated: Boolean,
+    isVideoRunning: Boolean,
     videoPositionMs: () -> Long,
     modifier: Modifier = Modifier,
 ) {
-    val positionMs = remember { mutableLongStateOf(videoPositionMs()) }
+    val positionMs = remember { mutableLongStateOf(videoPositionMs().takeIf { it > 0 } ?: NOT_STARTED_MS) }
     if (isAnimated) {
-        LaunchedEffect(Unit) {
-            while (true) {
-                withFrameMillis { positionMs.longValue = videoPositionMs() }
+        LaunchedEffect(isVideoRunning) {
+            if (isVideoRunning) {
+                while (true) {
+                    withFrameMillis { positionMs.longValue = videoPositionMs() }
+                }
+            } else if (positionMs.longValue != NOT_STARTED_MS) {
+                // A stopped screen stays on display for as long as the transition that stopped it, so the scenes
+                // hold a frame that still has text in it. Playback that never started has nothing to hold: the
+                // scenes are waiting for their first frame rather than holding one. Position is measured inside
+                // the current loop copy, so it returns to zero on every wrap and cannot stand for that state.
+                positionMs.longValue = WelcomeTextTimeline.holdPosition(positionMs.longValue)
             }
         }
     }
