@@ -22,7 +22,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
+import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
@@ -125,13 +125,13 @@ internal class AddAccountBlockComponent(
 private fun AddAccountIcon(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(size = 28.dp)
+            .size(size = 24.dp)
             .clip(shape = CircleShape)
             .background(color = TangemTheme.colors3.bg.accent.blue),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.ic_sign_plus_24,
+            imageVector = Icons.ic_sign_plus_16,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.staticDark,
             modifier = Modifier.size(size = 20.dp),
