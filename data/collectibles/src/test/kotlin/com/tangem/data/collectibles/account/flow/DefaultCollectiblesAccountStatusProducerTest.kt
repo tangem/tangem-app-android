@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
-import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
+import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
@@ -175,7 +175,7 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
         return flowOf(QuoteStatus(rawCurrencyId = USDC_RAW_ID, value = value))
     }
 
-    private fun createStore(testScope: TestScope) = CollectiblesAccountStatusStore(
+    private fun createStore(testScope: TestScope) = CollectiblesAccountStore(
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore(default = emptyMap()),
         converter = CollectiblesAccountStatusValueDTOConverter(
@@ -184,10 +184,10 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
         scope = TestAppCoroutineScope(testScope),
     )
 
-    private fun createProducer(store: CollectiblesAccountStatusStore) = DefaultCollectiblesAccountStatusProducer(
+    private fun createProducer(store: CollectiblesAccountStore) = DefaultCollectiblesAccountStatusProducer(
         params = CollectiblesAccountStatusProducer.Params(userWalletId = WALLET),
         flowProducerTools = mockk(),
-        collectiblesAccountStatusStore = store,
+        collectiblesAccountStore = store,
         singleQuoteStatusSupplier = quoteSupplier,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
