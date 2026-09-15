@@ -33,6 +33,9 @@ enum class PredictionWithdrawalState {
     FAILED,
     ;
 
+    val isTerminal: Boolean
+        get() = this != IN_PROGRESS
+
     companion object {
 
         /** @return [IN_PROGRESS] for anything unrecognised, so a new backend state cannot fake a terminal. */
