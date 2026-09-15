@@ -111,6 +111,26 @@ internal class PredictionWithdrawalTrackerTest {
     }
 
     @Test
+    fun `GIVEN the resend answers with a terminal receipt WHEN tracked THEN the record is cleared and nothing is polled`() =
+        runTest {
+            // Arrange
+            coEvery { store.get(WALLET_ID) } returns record(transactionId = null)
+            coEvery {
+                submitInteractor.resend(userWalletId = WALLET_ID, walletId = WALLET_ID.stringValue)
+            } returns receipt(PredictionWithdrawalState.CONFIRMED).right()
+            val tracker = createTracker()
+
+            // Act
+            tracker.track(WALLET_ID)
+            advanceTimeBy(20.seconds)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { store.clear(WALLET_ID) }
+            coVerify(exactly = 0) { getState(any(), any()) }
+        }
+
+    @Test
     fun `GIVEN no record WHEN tracked THEN nothing is resent or polled`() = runTest {
         // Arrange
         coEvery { store.get(WALLET_ID) } returns null
