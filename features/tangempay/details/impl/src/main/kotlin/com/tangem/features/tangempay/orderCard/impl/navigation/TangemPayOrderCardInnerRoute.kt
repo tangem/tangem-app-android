@@ -20,6 +20,6 @@ internal sealed class TangemPayOrderCardInnerRoute : Route {
     data class Success(
         val deliveryEtaMaxBusinessDays: Int,
         val email: String,
-        val intent: TangemPayOrderCardIntent,
+        val intent: TangemPayOrderCardIntent = TangemPayOrderCardIntent.Issue,
     ) : TangemPayOrderCardInnerRoute()
 }
