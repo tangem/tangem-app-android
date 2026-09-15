@@ -29,12 +29,13 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
         val fiatBalance = value.balance?.fiat
 
         val productInstances = value.productInstances.map { it.toDomain() }
+        val cards = value.cards.mapNotNull { it.toDomain() }
 
         return CustomerInfo(
             customerId = value.id,
             paymentAccount = value.paymentAccount?.toDomain(),
             productInstances = productInstances,
-            cards = value.cards.mapNotNull { it.toDomain() },
+            cards = cards,
             kycStatus = kycStatus,
             state = CustomerInfo.State.fromString(value.state),
             fiatBalance = fiatBalance?.toDomain(),
@@ -43,7 +44,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             country = value.profile?.country,
             phoneMask = value.profile?.phoneMask,
             email = value.profile?.email,
-            embossName = value.profile?.embossName?.trim()?.ifEmpty { null },
+            embossName = cards.firstNotNullOfOrNull(CardInfo::embossName),
         )
     }
 
