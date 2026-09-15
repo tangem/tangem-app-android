@@ -3,23 +3,26 @@ package com.tangem.features.txhistory.joint.operation.component
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.stack.childStack
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
-import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.model.JointOperationModel
+import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.signers.component.JointOperationSignersScreenComponent
 import com.tangem.features.txhistory.joint.operation.ui.JointOperationContentSheet
+import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 
 internal class DefaultJointOperationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -28,45 +31,66 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
 
     private val model: JointOperationModel = getOrCreateModel(params)
 
-    private val converter = JointOperationUMConverter(
-        currency = params.currency,
-        onSignClick = model::onSignClick,
-        onCopyRecipientClick = model::onCopyRecipientClick,
+    private val innerRouter = InnerRouter<JointOperationRoutes>(
+        stackNavigation = model.stackNavigation,
+        popCallback = { onChildBack() },
     )
 
-    private val state: StateFlow<TxHistoryDetailsUM.SingleAsset?> = combine(
-        flow = model.state,
-        flow2 = model.isSigning,
-        flow3 = model.hasAnswered,
-        flow4 = model.isBalanceHidden,
-    ) { state, isSigning, hasAnswered, isBalanceHidden ->
-        converter.convert(
-            value = JointOperationUMConverter.Input(
-                state = state,
-                isSigning = isSigning,
-                hasAnswered = hasAnswered,
-                isBalanceHidden = isBalanceHidden,
-            ),
-        )
-    }
-        .stateIn(componentScope, SharingStarted.WhileSubscribed(), initialValue = null)
+    private val contentStack = childStack(
+        key = "JointOperationStack",
+        source = model.stackNavigation,
+        serializer = JointOperationRoutes.serializer(),
+        initialConfiguration = JointOperationRoutes.Operation,
+        handleBackButton = false,
+        childFactory = ::screenChild,
+    )
 
     init {
-        // Executed or cancelled by someone else: nothing left to show or sign
-        model.isGone
-            .filter { it }
+        model.uiState
+            .filterIsInstance<JointOperationUM.Gone>()
             .onEach { dismiss() }
             .launchIn(componentScope)
     }
 
     @Composable
     override fun BottomSheet() {
-        val uiState by state.collectAsStateWithLifecycle()
+        val stack by contentStack.subscribeAsState()
+        val uiState by model.uiState.collectAsStateWithLifecycle()
 
-        JointOperationContentSheet(state = uiState, onCloseClick = ::dismiss)
+        JointOperationContentSheet(
+            state = uiState as? JointOperationUM.Content,
+            contentStack = stack,
+            onBackClick = ::onChildBack,
+            onCloseClick = ::dismiss,
+        )
     }
 
     override fun dismiss() = params.onDismiss()
+
+    private fun onChildBack() {
+        when (contentStack.value.active.configuration) {
+            JointOperationRoutes.Signers -> model.onBackClick()
+            JointOperationRoutes.Operation -> dismiss()
+        }
+    }
+
+    private fun screenChild(
+        config: JointOperationRoutes,
+        componentContext: ComponentContext,
+    ): ComposableContentComponent {
+        val childContext = childByContext(componentContext = componentContext, router = innerRouter)
+
+        return when (config) {
+            JointOperationRoutes.Operation -> JointOperationDetailComponent(
+                appComponentContext = childContext,
+                state = model.uiState,
+            )
+            JointOperationRoutes.Signers -> JointOperationSignersScreenComponent(
+                appComponentContext = childContext,
+                state = model.uiState,
+            )
+        }
+    }
 
     @AssistedFactory
     interface Factory : JointOperationComponent.Factory {

@@ -5,6 +5,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
+/** One sheet over two screens — the operation and its signers — so moving between them keeps a single sheet on screen */
 internal interface JointOperationComponent : ComposableBottomSheetComponent {
 
     /** The sheet closes itself once the backend stops reporting [operationId] — an executed or cancelled operation */
