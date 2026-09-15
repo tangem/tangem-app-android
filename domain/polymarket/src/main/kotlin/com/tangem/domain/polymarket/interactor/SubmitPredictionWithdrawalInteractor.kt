@@ -41,6 +41,8 @@ sealed interface PredictionWithdrawalFailure {
 
     data object SigningFailed : PredictionWithdrawalFailure
 
+    data object Expired : PredictionWithdrawalFailure
+
     data class Rejected(val error: PredictionWithdrawError) : PredictionWithdrawalFailure
 
     data class PersistenceFailed(val cause: Throwable) : PredictionWithdrawalFailure
@@ -103,6 +105,8 @@ class SubmitPredictionWithdrawalInteractor(
     suspend fun confirm(
         prepared: PreparedPredictionWithdrawal,
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
+        ensure(!PolymarketRelayerDeadline.isExpired(prepared.deadline)) { PredictionWithdrawalFailure.Expired }
+
         val signature = signer.signWithdrawal(
             userWalletId = prepared.userWalletId,
             payload = PolymarketApprovalsPayload(
