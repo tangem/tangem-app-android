@@ -374,6 +374,7 @@
   <string name="common_explore">Оглядач</string>
   <string name="common_explore_transaction_history">Переглянути історію транзакцій</string>
   <string name="common_explorer">Оглядач</string>
+  <string name="common_featured">Популярне</string>
   <string name="common_fee_error">Не вдалося отримати комісію</string>
   <string name="common_fee_selector_footer">Мережеві комісії – це збори, які користувачі сплачують за обробку та підтвердження транзакцій. На розмір комісії може впливати перевантаження мережі, розмір транзакції та пріоритет виконання. %s</string>
   <string name="common_fee_selector_option_fast">Швидко</string>
@@ -758,6 +759,13 @@
   <string name="fee_selector_choose_token_description">Оберіть, який токен буде використовуватися для оплати мережевої комісії. %s</string>
   <string name="fee_selector_choose_token_title">Обрати токен</string>
   <string name="feed_market_and_news">Ринок та Новини</string>
+  <string name="feed_promo_earn_active_description">Отримуйте до %1$s APY на %2$s</string>
+  <string name="feed_promo_earn_description">Змусьте криптовалюту працювати й отримуйте до %1$s APY</string>
+  <string name="feed_promo_earn_title">Почніть заробляти</string>
+  <string name="feed_promo_referral_description">Отримуйте %1$s за кожного друга</string>
+  <string name="feed_promo_referral_title">Запрошуйте друзів до Tangem</string>
+  <string name="feed_promo_tangem_pay_description">Отримуйте кешбек за щоденні покупки</string>
+  <string name="feed_promo_tangem_pay_title">Платіть криптовалютою</string>
   <string name="feed_search_show_all_user_assets">Показати всі</string>
   <string name="feed_search_show_less_user_assets">Сховати</string>
   <string name="feed_trending_now">В тренді</string>
@@ -2445,10 +2453,10 @@
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обміну з %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Недоступно для обміну</string>
   <plurals name="top_assets_count">
-    <item quantity="one">Найбільший актив</item>
+    <item quantity="one">%d найбільший актив</item>
     <item quantity="few">%d найбільші активи</item>
     <item quantity="many">%d найбільших активів</item>
-    <item quantity="other"></item>
+    <item quantity="other">%d найбільших активів</item>
   </plurals>
   <string name="transaction_history_claiming_reward">Отримання нагороди</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
