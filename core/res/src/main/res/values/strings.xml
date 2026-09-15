@@ -1785,6 +1785,7 @@
   <string name="prediction_search_results_title">Search results</string>
   <string name="prediction_withdraw_confirm_fee_footer">No network fee is charged for this withdrawal. The amount you receive may differ slightly due to bridge conversion.</string>
   <string name="prediction_withdraw_confirm_title">Confirm withdrawal</string>
+  <string name="prediction_withdraw_in_progress_message">Your previous withdrawal is still being processed. Wait for it to finish before starting a new one.</string>
   <string name="prediction_withdraw_status_failed_description">Something went wrong while processing your withdrawal. Please try again or contact support.</string>
   <string name="prediction_withdraw_status_failed_title">Withdrawal failed</string>
   <string name="prediction_withdraw_status_sent_description">Delivery may take up to %1$d minutes</string>
