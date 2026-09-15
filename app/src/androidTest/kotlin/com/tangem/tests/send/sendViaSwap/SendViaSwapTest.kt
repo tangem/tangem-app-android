@@ -273,9 +273,7 @@ class SendViaSwapTest : BaseTestCase() {
                 onSendScreen { swapToAnotherTokenButton.assertIsDisplayed() }
             }
             step("Assert amount: '$inputAmount'") {
-                // Closing the convert block rebuilds the amount field, so the assert can land on the frame
-                // where it is still empty.
-                awaitAssert { onSendScreen { amountInputTextField.assertTextContains(inputAmount) } }
+                onSendScreen { amountInputTextField.assertTextContains(inputAmount) }
             }
             step("Click on 'Swap to another token' button") {
                 onSendScreen { swapToAnotherTokenButton.performClick() }
