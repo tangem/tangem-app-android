@@ -20,7 +20,7 @@ internal class IntroductionLegalLinks @Inject constructor(
     }
 
     private companion object {
-        const val TERMS_OF_SERVICE_URL = "https://tangem.com/terms-of-service/"
-        const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy/"
+        const val TERMS_OF_SERVICE_URL = "https://tangem.com/tangem_tos.html"
+        const val PRIVACY_POLICY_URL = "https://tangem.com/privacy-policy.html"
     }
 }
