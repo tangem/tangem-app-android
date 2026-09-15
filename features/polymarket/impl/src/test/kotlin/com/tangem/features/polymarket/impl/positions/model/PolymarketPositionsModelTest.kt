@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
@@ -28,6 +29,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketPositionsModelTest {
@@ -42,6 +45,7 @@ internal class PolymarketPositionsModelTest {
     private val wallet = UserWalletId("022")
     private var model: PolymarketPositionsModel? = null
     private val positionClick = slot<(PolymarketPosition.Open) -> Unit>()
+    private val finishedClick = slot<(PolymarketPosition.Closed) -> Unit>()
 
     @AfterEach
     fun tearDown() {
@@ -60,7 +64,7 @@ internal class PolymarketPositionsModelTest {
         // Assert
         assertThat(model.uiState.value.selectedTab).isEqualTo(Tab.Finished)
         assertThat(model.uiState.value.content).isEqualTo(Content.Empty)
-        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED) }
+        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED, null, any()) }
         verify(exactly = 1) { finished.resume(any()) }
         verify(exactly = 0) { active.resume(any()) }
     }
@@ -218,9 +222,80 @@ internal class PolymarketPositionsModelTest {
         verify(exactly = 1) { router.pop() }
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN Finished details WHEN dismissed or back pressed THEN closes only the sheet and retains the list`(
+        useBack: Boolean,
+    ) = runTest {
+        // Arrange
+        val position = createClosedPolymarketPosition()
+        val content = Content.Data(persistentListOf(PolymarketPositionUMConverter().convert(position)))
+        finishedState.value = FilteredContent(content = content)
+        val model = createModel(PolymarketPositionsTab.FINISHED)
+        model.onResume()
+        runCurrent()
+
+        // Act
+        finishedClick.captured(position)
+        val opened = model.uiState.value
+        if (useBack) opened.onBackClick() else opened.onFinishedPositionDismiss()
+        runCurrent()
+
+        // Assert
+        assertThat(opened.finishedPosition?.summary?.title).isEqualTo(stringReference(position.title))
+        assertThat(opened.content).isSameInstanceAs(content)
+        assertThat(model.uiState.value.finishedPosition).isNull()
+        assertThat(model.uiState.value.content).isSameInstanceAs(content)
+        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED, null, any()) }
+        verify(exactly = 1) { finished.resume(any()) }
+        verify(exactly = 0) { finished.dispose() }
+        verify(exactly = 0) { router.pop() }
+        model.uiState.value.onBackClick()
+        verify(exactly = 1) { router.pop() }
+    }
+
+    @Test
+    fun `GIVEN Finished details WHEN tab changes and old card callback fires THEN sheet stays closed`() = runTest {
+        // Arrange
+        val model = createModel(PolymarketPositionsTab.FINISHED)
+        val oldClick = finishedClick.captured
+        val position = createClosedPolymarketPosition()
+        oldClick(position)
+
+        // Act
+        model.uiState.value.onTabSelect(Tab.Active)
+        oldClick(position)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.finishedPosition).isNull()
+        assertThat(model.uiState.value.selectedTab).isEqualTo(Tab.Active)
+        assertThat(model.uiState.value.content).isSameInstanceAs(activeContent)
+    }
+
+    @Test
+    fun `GIVEN Finished details WHEN app resumes THEN retains the selected position and feed`() = runTest {
+        // Arrange
+        val model = createModel(PolymarketPositionsTab.FINISHED)
+        model.onResume()
+        runCurrent()
+        finishedClick.captured(createClosedPolymarketPosition())
+        val opened = model.uiState.value.finishedPosition
+
+        // Act
+        model.onPause()
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.finishedPosition).isSameInstanceAs(opened)
+        verify(exactly = 1) { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED, null, any()) }
+        verify(exactly = 0) { finished.dispose() }
+    }
+
     private fun TestScope.createModel(initialTab: PolymarketPositionsTab = PolymarketPositionsTab.ACTIVE): PolymarketPositionsModel {
         every { loader.createFeed(wallet, PolymarketPositionsTab.ACTIVE, capture(positionClick)) } returns active
-        every { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED) } returns finished
+        every { loader.createFeed(wallet, PolymarketPositionsTab.FINISHED, null, capture(finishedClick)) } returns finished
         every { active.state } returns activeState
         every { finished.state } returns finishedState
         val dispatcher = StandardTestDispatcher(testScheduler)
