@@ -383,7 +383,7 @@ internal class ChildFactory @Inject constructor(
                         componentFactory = introductionComponentFactory,
                     )
                 } else {
-                    @RemoveWithToggle("TWI_1356_INTRODUCTION_REDESIGN_ENABLED")
+                    @RemoveWithToggle("TWI_1747_INTRODUCTION_REDESIGN_ENABLED")
                     createComponentChild(
                         context = context,
                         params = HomeComponent.Params(route.launchMode),
