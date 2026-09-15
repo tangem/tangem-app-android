@@ -23,6 +23,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -372,6 +373,33 @@ internal class PolymarketPositionsLoaderTest {
         assertThat(ids(active)).containsExactly("condition:ACTIVE")
         assertThat(ids(finished)).containsExactly("condition:FINISHED")
         assertThat(ids(other)).containsExactly("condition:other")
+    }
+
+    @Test
+    fun `GIVEN loaded Finished page WHEN card tapped THEN opens that snapshot without another portfolio request`() = runTest {
+        // Arrange
+        val selected = createClosedPolymarketPosition()
+        val other = selected.copy(id = selected.id.copy(assetId = "other"), title = "Another position")
+        val onClosedClick: (PolymarketPosition.Closed) -> Unit = mockk(relaxed = true)
+        val feed = createLoader().createFeed(
+            wallet, PolymarketPositionsTab.FINISHED, onClosedPositionClick = onClosedClick,
+        )
+        fetch = { _, _ -> BatchFetchResult.Success(listOf(selected, other), empty = false, last = true) }
+        feed.resume(backgroundScope)
+        runCurrent()
+        val initial = data(feed)
+
+        // Act
+        initial.positions[1].onClick?.invoke()
+        runCurrent()
+
+        // Assert
+        verify(exactly = 1) { onClosedClick(other) }
+        verify(exactly = 0) { onClosedClick(selected) }
+        assertThat(feed.state.value.content).isSameInstanceAs(initial)
+        assertThat(requests).containsExactly(PolymarketPositionsListConfig(addresses, PolymarketPositionsTab.FINISHED) to 0)
+        coVerify(exactly = 1) { deriveAddresses.stored(wallet) }
+        coVerify(exactly = 0) { deriveAddresses.invoke(any()) }
     }
 
     private suspend fun TestScope.twoPages(): PolymarketPositionsLoader.Feed {
