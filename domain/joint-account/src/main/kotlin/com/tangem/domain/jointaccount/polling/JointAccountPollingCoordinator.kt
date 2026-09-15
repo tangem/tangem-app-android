@@ -21,6 +21,12 @@ import kotlin.time.Duration.Companion.seconds
  * [poll]. One self-paced ticker per wallet, paced off the wall-clock time of its own previous fetch — never
  * reset or fast-forwarded by an outside event (a pull-to-refresh, a mutating use case).
  *
+ * A wallet's very first fetch waits out a full [POLL_INTERVAL] too, same as every one after it — [poll] never
+ * fires on subscribe. Every current caller starts collecting [poll] alongside its own explicit initial fetch
+ * (a screen's `refreshAccounts()`, an already-resolved account elsewhere), so an immediate first fetch here
+ * would race that unserialized write to the same wallet's cache; waiting it out leaves that first fetch solely
+ * to the caller.
+ *
  * The ticker's underlying producer coroutine can still be torn down by [SharingStarted.WhileSubscribed] once
  * every subscriber is gone for [STOP_TIMEOUT_MILLIS] — that's fine: [lastFetchAt] lives outside that
  * coroutine, so a restart doesn't lose the wait. Coming back mid-interval waits out only what's left of it;
@@ -57,8 +63,8 @@ class JointAccountPollingCoordinator(
         replay = 0,
     )
     private suspend fun awaitNextFetch(walletId: UserWalletId) {
-        val lastFetch = lastFetchAt[walletId] ?: return
-        val remaining = POLL_INTERVAL.inWholeMilliseconds - (now() - lastFetch)
+        val elapsedSinceLastFetch = lastFetchAt[walletId]?.let { now() - it } ?: 0L
+        val remaining = POLL_INTERVAL.inWholeMilliseconds - elapsedSinceLastFetch
         if (remaining > 0) delay(remaining.milliseconds)
     }
 
