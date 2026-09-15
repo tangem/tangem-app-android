@@ -4,7 +4,6 @@ import androidx.room.withTransaction
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntities
 import com.tangem.data.txhistory.repository.converter.toHistoryIndexEntity
-import com.tangem.data.txhistory.repository.factory.TokenInfoRepository
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.grow.datasource.express.TangemExpressApi
@@ -26,6 +25,7 @@ import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
