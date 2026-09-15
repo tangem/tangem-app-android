@@ -15,24 +15,20 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.children.ChildNavState
 import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.router.pages.Pages
-import com.arkivanov.decompose.router.pages.PagesNavigation
 import com.arkivanov.decompose.router.pages.childPages
-import com.arkivanov.decompose.router.pages.select
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.nav.FeedScreenComponent
+import com.tangem.features.feed.components.v2.model.FeedHomeModel
 import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.nav.FeedTabContributor
 import com.tangem.features.feed.nav.FeedTabId
-import com.tangem.features.feed.nav.FeedTabSet
-import com.tangem.features.feed.ui.FeedTabUM
 import com.tangem.features.feed.ui.v2.FeedV2Content
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Root of the v2 feed stack ([FeedHomeRoute]): top blocks + the tab pager.
@@ -42,35 +38,22 @@ import kotlinx.collections.immutable.toImmutableList
  */
 internal class FeedHomeComponent(
     context: AppComponentContext,
-    tabSet: FeedTabSet,
-    isPredictionsEntryVisible: Boolean,
-    isCollectiblesVisible: Boolean,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     override val isPartialExpansionSupported: Boolean = true
 
+    private val model: FeedHomeModel = getOrCreateModel()
+
     private val topBlocksComponent = FeedTopBlocksComponent(
         context = child("feedTopBlocks"),
-        isPredictionsEntryVisible = isPredictionsEntryVisible,
-        isCollectiblesVisible = isCollectiblesVisible,
         portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
     )
 
-    private val contributors: List<FeedTabContributor> = tabSet.tabs
-
-    private val contributorsById: Map<FeedTabId, FeedTabContributor> = contributors.associateBy { it.id }
-
-    private val tabs: ImmutableList<FeedTabUM> = contributors
-        .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
-        .toImmutableList()
-
-    private val pagesNavigation = PagesNavigation<FeedTabId>()
-
     private val pages: Value<ChildPages<FeedTabId, FeedTabComponent>> = childPages(
-        source = pagesNavigation,
+        source = model.pagesNavigation,
         serializer = null,
-        initialPages = { Pages(items = contributors.map { it.id }, selectedIndex = 0) },
+        initialPages = { Pages(items = model.contributors.map { it.id }, selectedIndex = 0) },
         key = "feedTabs",
         pageStatus = { index, pages ->
             if (index == pages.selectedIndex) ChildNavState.Status.RESUMED else ChildNavState.Status.CREATED
@@ -89,9 +72,9 @@ internal class FeedHomeComponent(
         val pagesState by pages.subscribeAsState()
 
         FeedV2Content(
-            tabs = tabs,
+            tabs = model.tabs,
             selectedTabIndex = pagesState.selectedIndex,
-            onTabSelect = { index -> pagesNavigation.select(index = index) },
+            onTabSelect = model::selectTab,
             isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED,
             contentPadding = contentPadding,
             onExpandSheet = onExpandSheet,
@@ -125,7 +108,7 @@ internal class FeedHomeComponent(
     }
 
     private fun createTab(id: FeedTabId, componentContext: ComponentContext): FeedTabComponent {
-        val contributor = requireNotNull(contributorsById[id]) { "No tab contributor for ${id.value}" }
+        val contributor = requireNotNull(model.contributorsById[id]) { "No tab contributor for ${id.value}" }
         return contributor.createTab(context = childByContext(componentContext = componentContext))
     }
 }
