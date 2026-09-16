@@ -12,11 +12,13 @@ import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCl
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerDeriver
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusFetcher
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusProducer
+import com.tangem.data.collectibles.vault.DefaultCollectiblesVaultCurrencyFactory
 import com.tangem.data.collectibles.vault.DefaultGachaVaultRepository
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
@@ -57,6 +59,12 @@ internal interface CollectiblesDataModule {
     @Binds
     @Singleton
     fun bindGachaVaultRepository(impl: DefaultGachaVaultRepository): GachaVaultRepository
+
+    @Binds
+    @Singleton
+    fun bindCollectiblesVaultCurrencyFactory(
+        impl: DefaultCollectiblesVaultCurrencyFactory,
+    ): CollectiblesVaultCurrencyFactory
 
     @Binds
     @Singleton
