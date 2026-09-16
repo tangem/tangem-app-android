@@ -1156,6 +1156,8 @@
   <string name="joint_operation_delete_alert_title">Delete this transaction?</string>
   <string name="joint_operation_malicious_subtitle">This transaction was flagged as malicious. Signing is blocked</string>
   <string name="joint_operation_malicious_title">Dangerous transaction</string>
+  <string name="joint_operation_sending_to_network">Sending to the network</string>
+  <string name="joint_operation_sent_footer">Signed by %1$s of %2$s and sent to the network</string>
   <string name="joint_operation_signatures_progress">Signatures %1$s of %2$s</string>
   <string name="joint_operation_signed">Signed</string>
   <string name="joint_operation_signed_at">Signed at %s</string>
