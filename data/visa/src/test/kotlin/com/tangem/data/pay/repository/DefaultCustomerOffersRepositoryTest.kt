@@ -119,15 +119,37 @@ internal class DefaultCustomerOffersRepositoryTest {
                     data = null,
                 ),
             )
-            coEvery { tangemPayApi.getCustomerOffers(any(), any()) } returns ApiResponse.Success(response)
+            coEvery { tangemPayApi.getCustomerOffers(any()) } returns ApiResponse.Success(response)
             val repository = createRepository()
 
             // Act
             val actual = repository.getOffers(userWalletId)
 
             // Assert
-            assertThat(actual.getOrNull()?.single()?.type).isEqualTo(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
+            assertThat(actual.getOrNull()?.orderable?.single()?.type).isEqualTo(Offer.Type.CARD_ISSUE_VIRTUAL_RAIN)
         }
+
+    @Test
+    fun `GIVEN a plastic offer without fee and data WHEN getOffers THEN its artwork is kept`() = runTest {
+        // Arrange
+        val response = CustomerOffersResponse(
+            result = offersResponse.result.orEmpty() + CustomerOffersResponse.Offer(
+                type = "CARD_ISSUE_PLASTIC_RAIN",
+                fee = null,
+                data = null,
+                images = listOf(CustomerOffersResponse.Image(type = "MAIN", url = PLASTIC_IMAGE_URL)),
+            ),
+        )
+        coEvery { tangemPayApi.getCustomerOffers(any()) } returns ApiResponse.Success(response)
+        val repository = createRepository()
+
+        // Act
+        val actual = repository.getOffers(userWalletId)
+
+        // Assert
+        assertThat(actual.getOrNull()?.artwork)
+            .containsExactly(Offer.Type.CARD_ISSUE_PLASTIC_RAIN, PLASTIC_IMAGE_URL)
+    }
 
     @Test
     fun `GIVEN a product instance WHEN getProductInstanceOffers THEN the instance offers are returned`() = runTest {
@@ -138,7 +160,7 @@ internal class DefaultCustomerOffersRepositoryTest {
         val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
 
         // Assert
-        assertThat(actual.getOrNull()?.single()?.type).isEqualTo(Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
+        assertThat(actual.getOrNull()?.orderable?.single()?.type).isEqualTo(Offer.Type.CARD_REISSUE_PLASTIC_RAIN)
         coVerify(exactly = 1) { tangemPayApi.getProductInstanceOffers(AUTH_HEADER, PRODUCT_INSTANCE_ID) }
     }
 
@@ -157,14 +179,14 @@ internal class DefaultCustomerOffersRepositoryTest {
         val actual = repository.getProductInstanceOffers(userWalletId, PRODUCT_INSTANCE_ID)
 
         // Assert
-        assertThat(actual.getOrNull()).isEmpty()
+        assertThat(actual.getOrNull()?.orderable).isEmpty()
     }
 
     @Test
     fun `GIVEN a null result WHEN getOffers THEN no offers are returned instead of an error`() = runTest {
         // Arrange
         coEvery {
-            tangemPayApi.getCustomerOffers(any(), any())
+            tangemPayApi.getCustomerOffers(any())
         } returns ApiResponse.Success(CustomerOffersResponse(result = null))
         val repository = createRepository()
 
@@ -172,7 +194,7 @@ internal class DefaultCustomerOffersRepositoryTest {
         val actual = repository.getOffers(userWalletId)
 
         // Assert
-        assertThat(actual.getOrNull()).isEmpty()
+        assertThat(actual.getOrNull()?.orderable).isEmpty()
     }
 
     @Test
@@ -196,6 +218,7 @@ internal class DefaultCustomerOffersRepositoryTest {
 
     private companion object {
         const val AUTH_HEADER = "auth-header"
+        const val PLASTIC_IMAGE_URL = "https://images.us.paera.com/whitebird-plastic.png"
         const val PRODUCT_INSTANCE_ID = "pi_source_0001"
     }
 }
