@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.collectibles.account.derivation.COLLECTIBLES_OWNER_DERIVATION_PATH
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.vault.GachaVaultError
@@ -33,22 +34,26 @@ internal class CollectiblesOwnerNetworkProvider @Inject constructor(
             return GachaVaultError.WalletUnavailable.left()
         }
 
+        val blockchain = userWallet.collectiblesVaultBlockchain
         val network = networkFactory.create(
-            blockchain = blockchain(),
+            blockchain = blockchain,
             extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
             userWallet = userWallet,
         ) ?: run {
-            TangemLogger.d(messageString = "Collectibles vault: no network for ${blockchain()}")
+            TangemLogger.d(messageString = "Collectibles vault: no network for $blockchain")
             return GachaVaultError.WalletUnavailable.left()
         }
 
         return network.right()
     }
-
-    /** Devnet only while the SDK's gacha provider and program id are. */
-    @Suppress("FunctionOnlyReturningConstant")
-    private fun blockchain(): Blockchain {
-        return Blockchain.SolanaTestnet
-        // return if (USE_DEVNET) Blockchain.SolanaTestnet else Blockchain.Solana
-    }
 }
+
+/**
+ * The chain the gacha vault is addressed on. A hot wallet has no card behind it, so it is never a test one.
+ */
+private val UserWallet.collectiblesVaultBlockchain: Blockchain
+    get() = if (this is UserWallet.Cold && cardTypesResolver.isTestCard()) {
+        Blockchain.SolanaTestnet
+    } else {
+        Blockchain.Solana
+    }
