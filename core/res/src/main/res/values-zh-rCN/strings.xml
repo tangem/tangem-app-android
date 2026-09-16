@@ -350,6 +350,7 @@
   <string name="common_explore">探索</string>
   <string name="common_explore_transaction_history">查看交易历史</string>
   <string name="common_explorer">查看</string>
+  <string name="common_featured">精选</string>
   <string name="common_fee_error">未能获得费用</string>
   <string name="common_fee_selector_footer">网络费是用户为处理和确认交易而支付的费用。费用金额会受到网络拥堵、交易规模和执行优先级的影响。 %s</string>
   <string name="common_fee_selector_option_fast">较快</string>
