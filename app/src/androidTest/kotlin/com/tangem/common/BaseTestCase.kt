@@ -207,6 +207,14 @@ abstract class BaseTestCase : TestCase(
         composeTestRule.waitUntil(timeoutMillis = timeoutMillis) { runCatching(block).isSuccess }
     }
 
+    /**
+     * Like [awaitSuccess], but on timeout runs [block] once more so the failure carries its own assertion
+     * message ("expected X, was Y") instead of a bare `ComposeTimeoutException`.
+     */
+    fun awaitAssert(timeoutMillis: Long = WAIT_UNTIL_TIMEOUT, block: () -> Unit) {
+        runCatching { awaitSuccess(timeoutMillis, block) }.onFailure { block() }
+    }
+
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         // Toggle states can be set from code here — base defaults for the UI-test build. Launch-time
         // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
@@ -214,6 +222,8 @@ abstract class BaseTestCase : TestCase(
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
             "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
+            // The OTLP exporter has its own HTTP client, so it bypasses the WireMock redirect.
+            "TWI_1627_OTEL_METRICS_ENABLED" to false,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty
