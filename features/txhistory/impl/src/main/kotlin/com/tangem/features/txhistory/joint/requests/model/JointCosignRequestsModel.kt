@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.models.network.Network
 import com.tangem.features.txhistory.component.JointCosignRequestsComponent
@@ -55,6 +56,7 @@ internal class JointCosignRequestsModel @Inject constructor(
         JointCosignRequestsUM(
             items = listOfNotNull(request).map(converter::convert).toImmutableList(),
             isBalanceHidden = isBalanceHidden,
+            isSending = request?.operation?.status == JointOperation.Status.PENDING,
         )
     }
         .flowOn(dispatchers.io)
