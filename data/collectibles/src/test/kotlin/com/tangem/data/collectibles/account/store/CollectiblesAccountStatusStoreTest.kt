@@ -3,13 +3,15 @@ package com.tangem.data.collectibles.account.store
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountStatusValueDTO
 import com.tangem.data.collectibles.account.entity.CollectiblesVaultBalanceDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.test.core.datastore.MockStateDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -45,7 +47,7 @@ internal class CollectiblesAccountStatusStoreTest {
         assertThat(store.get(WALLET_B).first()).isNull()
         assertThat(persisted.data.first()).containsExactly(
             WALLET_A.stringValue,
-            CollectiblesAccountStatusValueDTO.Onboarded(balance = null),
+            ACCOUNT_DTO,
         )
     }
 
@@ -95,7 +97,7 @@ internal class CollectiblesAccountStatusStoreTest {
         // Arrange
         val persisted = MockStateDataStore<WalletIdWithCollectiblesStatusDTO>(
             default = mapOf(
-                WALLET_A.stringValue to CollectiblesAccountStatusValueDTO.Onboarded(balance = BALANCE_DTO),
+                WALLET_A.stringValue to ONBOARDED_WITH_BALANCE_DTO,
             ),
         )
 
@@ -113,7 +115,7 @@ internal class CollectiblesAccountStatusStoreTest {
     fun `GIVEN a persisted status WHEN getSyncOrNull runs before the preload THEN it waits for the disk`() = runTest {
         // Arrange — no advanceUntilIdle: the cache load has not run yet
         val persisted = MockStateDataStore<WalletIdWithCollectiblesStatusDTO>(
-            default = mapOf(WALLET_A.stringValue to CollectiblesAccountStatusValueDTO.Onboarded(balance = null)),
+            default = mapOf(WALLET_A.stringValue to ACCOUNT_DTO),
         )
         val store = createStore(testScope = this, persistenceDataStore = persisted)
 
@@ -141,7 +143,7 @@ internal class CollectiblesAccountStatusStoreTest {
         )
         assertThat(persisted.data.first()).containsExactly(
             WALLET_A.stringValue,
-            CollectiblesAccountStatusValueDTO.Onboarded(balance = BALANCE_DTO),
+            ONBOARDED_WITH_BALANCE_DTO,
         )
     }
 
@@ -180,6 +182,9 @@ internal class CollectiblesAccountStatusStoreTest {
     ) = CollectiblesAccountStatusStore(
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = persistenceDataStore,
+        converter = CollectiblesAccountStatusValueDTOConverter(
+            currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc),
+        ),
         scope = TestAppCoroutineScope(testScope),
     )
 
@@ -189,7 +194,14 @@ internal class CollectiblesAccountStatusStoreTest {
 
         val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE)
 
-        val BALANCE = CollectiblesVaultBalance(usdcAmount = BigDecimal("20"))
-        val BALANCE_DTO = CollectiblesVaultBalanceDTO(usdcAmount = BigDecimal("20"))
+        val BALANCE = MockCollectibles.vaultBalance(amount = BigDecimal("20"))
+        val BALANCE_DTO = CollectiblesVaultBalanceDTO(
+            usdcAmount = BigDecimal("20"),
+            usdcMint = MockCollectibles.USDC_MINT,
+        )
+
+        val ACCOUNT_DTO = CollectiblesAccountStatusValueDTO.Onboarded(balance = null)
+        val ONBOARDED_WITH_BALANCE_DTO = CollectiblesAccountStatusValueDTO.Onboarded(balance = BALANCE_DTO)
+
     }
 }
