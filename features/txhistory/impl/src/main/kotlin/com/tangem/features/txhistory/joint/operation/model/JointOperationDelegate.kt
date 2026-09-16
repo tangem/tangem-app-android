@@ -1,17 +1,23 @@
 package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.Either
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AddressBookOpenMode
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -30,6 +36,7 @@ import javax.inject.Inject
  */
 @Suppress("LongParameterList")
 internal class JointOperationDelegate @Inject constructor(
+    private val router: Router,
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val transferResolver: JointOperationTransferResolver,
@@ -38,7 +45,24 @@ internal class JointOperationDelegate @Inject constructor(
     private val signJointOperationUseCase: SignJointOperationUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val rejectJointOperationUseCase: RejectJointOperationUseCase,
+    private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
 ) {
+
+    /** An address book stored by a newer build cannot be written to, so creating a contact is not offered */
+    fun canCreateContact(userWalletId: UserWalletId): Flow<Boolean> = isAddressBookCompatibleUseCase(userWalletId)
+
+    fun openContactCreation(address: String, network: Network) {
+        router.push(
+            AppRoute.AddressBook(
+                AddressBookOpenMode.WithContactCreation(
+                    address = address,
+                    networkId = network.rawId,
+                    source = AddressBookOpenMode.ContactCreationSource.TransactionDetails,
+                ),
+            ),
+        )
+    }
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointOperationState?> {
         if (currency.network.derivationPath !is Network.DerivationPath.Joint) return flowOf(null)
@@ -74,6 +98,14 @@ internal class JointOperationDelegate @Inject constructor(
         val metaInfo = getWalletMetaInfoUseCase(userWalletId).getOrNull() ?: return
 
         sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
+    }
+
+    suspend fun reject(
+        state: JointOperationState,
+        network: Network,
+        operationId: String,
+    ): Either<JointOperationRejectError, Unit> {
+        return rejectJointOperationUseCase(account = state.account, network = network, operationId = operationId)
     }
 
     private suspend fun resolve(
@@ -121,6 +153,7 @@ internal class JointOperationDelegate @Inject constructor(
                 ownerAddress = ownerAddress,
             ),
             ownAddress = ownerAddress,
+            initiator = operation.initiator,
         )
     }
 }
