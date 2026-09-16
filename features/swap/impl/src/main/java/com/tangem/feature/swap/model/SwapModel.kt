@@ -49,6 +49,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -83,6 +84,7 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
+import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -1795,7 +1797,7 @@ internal class SwapModel @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
     ): SubmitPredictionWithdrawalInteractor.Params? {
         val addresses = derivePolymarketAddressesUseCase.stored(params.userWalletId) ?: return null
-        val destination = predictionWithdrawDestinations?.get(toSwapCurrencyStatus.currency.id) ?: return null
+        val destination = predictionWithdrawDestination(toSwapCurrencyStatus.currency.id) ?: return null
         val recipientAddress = toSwapCurrencyStatus.status.value.networkAddress
             ?.defaultAddress
             ?.value
@@ -2640,27 +2642,31 @@ internal class SwapModel @Inject constructor(
     private fun observePredictionWithdrawDestinations() {
         if (!isPredictionWithdrawFlow) return
         multiAccountStatusListSupplier()
-            .map { statusLists ->
-                statusLists.flatMap { statusList ->
-                    statusList.accountStatuses
-                        .filterIsInstance<AccountStatus.CryptoPortfolio>()
-                        .flatMap { it.flattenCurrencies() }
-                        .map { it.currency }
-                }
-            }
+            .map { statusLists -> statusLists.portfolioCurrencies() }
             .distinctUntilChanged()
-            .onEach { portfolio ->
-                getPredictionWithdrawDestinationsUseCase(portfolio).fold(
-                    ifLeft = { error ->
-                        TangemLogger.e("Unable to load the prediction withdraw destinations: $error")
-                        showAlert()
-                    },
-                    ifRight = { destinations ->
-                        predictionWithdrawDestinations = destinations
-                    },
-                )
-            }
+            .onEach { portfolio -> loadPredictionWithdrawDestinations(portfolio).onLeft { showAlert() } }
             .launchIn(modelScope)
+    }
+
+    private suspend fun loadPredictionWithdrawDestinations(
+        portfolio: List<CryptoCurrency>,
+    ): Either<PolymarketBridgeError, Map<CryptoCurrency.ID, PredictionWithdrawDestination>> =
+        getPredictionWithdrawDestinationsUseCase(portfolio)
+            .onLeft { error -> TangemLogger.e("Unable to load the prediction withdraw destinations: $error") }
+            .onRight { destinations -> predictionWithdrawDestinations = destinations }
+
+    private suspend fun predictionWithdrawDestination(currencyId: CryptoCurrency.ID): PredictionWithdrawDestination? {
+        val destinations = predictionWithdrawDestinations
+            ?: loadPredictionWithdrawDestinations(multiAccountStatusListSupplier().first().portfolioCurrencies())
+                .getOrNull()
+        return destinations?.get(currencyId)
+    }
+
+    private fun List<AccountStatusList>.portfolioCurrencies(): List<CryptoCurrency> = flatMap { statusList ->
+        statusList.accountStatuses
+            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .flatMap { it.flattenCurrencies() }
+            .map { it.currency }
     }
 
     private fun sendSuccessSwapEvent(
