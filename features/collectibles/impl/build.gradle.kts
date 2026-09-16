@@ -63,6 +63,7 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(projects.common.test)
     testImplementation(projects.core.error)
 }
