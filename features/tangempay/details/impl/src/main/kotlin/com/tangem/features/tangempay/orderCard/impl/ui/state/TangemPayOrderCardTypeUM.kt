@@ -29,9 +29,13 @@ internal data class TangemPayOrderCardTypeUM(
     sealed interface Plastic {
 
         val country: String
+        val offerImageUrl: String?
 
         @Immutable
-        data class Unavailable(override val country: String) : Plastic
+        data class Unavailable(
+            override val country: String,
+            override val offerImageUrl: String? = null,
+        ) : Plastic
 
         @Immutable
         data class Available(
@@ -39,7 +43,7 @@ internal data class TangemPayOrderCardTypeUM(
             val deliveryFee: String?,
             val deliveryEta: DeliveryEta,
             val feeState: FeeState,
-            val offerImageUrl: String? = null,
+            override val offerImageUrl: String? = null,
         ) : Plastic
     }
 
@@ -56,10 +60,7 @@ internal enum class OrderCardType { Virtual, Plastic }
 
 internal fun TangemPayOrderCardTypeUM.imageUrlFor(type: OrderCardType): String? = when (type) {
     OrderCardType.Virtual -> virtual.offerImageUrl
-    OrderCardType.Plastic -> when (val plastic = plastic) {
-        is TangemPayOrderCardTypeUM.Plastic.Available -> plastic.offerImageUrl
-        is TangemPayOrderCardTypeUM.Plastic.Unavailable -> null
-    }
+    OrderCardType.Plastic -> plastic.offerImageUrl
 } ?: cardImageUrl.takeIf { !isLoading }
 
 internal fun availableTypesOf(isPlasticEnabled: Boolean, isVirtualAvailable: Boolean = true): List<OrderCardType> =
