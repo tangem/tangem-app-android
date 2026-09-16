@@ -34,6 +34,9 @@ class SwapRatingTest : BaseTestCase() {
     private val assetsExchangeEnabledState = "BitcoinExchangeEnabled"
     private val exchangeStatusScenario = "exchange_status_provider"
     private val changellyStatusState = "Changelly"
+    // The stars are offered only for a rateable (final) deal, so the deal is finished before its status is
+    // opened; auto-disposal of a finished deal only happens once the sheet is closed, so the row stays.
+    private val changellyFinishedState = "Finished"
     private val nativeBalanceScenario = "polygon_coin_balance"
     private val zeroBalanceState = "ZeroBalance"
     // Stories auto-advance forever, which keeps Compose non-idle and flakes everything after them.
@@ -96,6 +99,9 @@ class SwapRatingTest : BaseTestCase() {
             }
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
+            }
+            step("Switch WireMock scenario '$exchangeStatusScenario' to '$changellyFinishedState'") {
+                setWireMockScenarioState(scenarioName = exchangeStatusScenario, state = changellyFinishedState)
             }
             step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
