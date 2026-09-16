@@ -74,7 +74,7 @@ internal class JointOperationErrorMessageTest {
         val dialog = converter.convert(JointOperationSignError.OperationNotFound)
 
         // Act
-        dialog?.firstAction?.onClick?.invoke()
+        dialog?.onDismissRequest?.invoke()
 
         // Assert
         assertThat(operationGone).isEqualTo(1)
