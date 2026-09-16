@@ -7,10 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +38,8 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenuItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -125,20 +124,13 @@ private fun MembersMenuButton(onArchiveClick: () -> Unit) {
             contentDescription = stringResourceSafe(CoreUiR.string.common_more),
             onClick = { isExpanded = true },
         )
-        DropdownMenu(
+        TangemContextMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
-            containerColor = TangemTheme.colors3.bg.secondary,
         ) {
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = stringResourceSafe(CoreUiR.string.account_details_archive),
-                        color = TangemTheme.colors3.text.status.error,
-                        style = TangemTheme.typography3.body.medium,
-                    )
-                },
-                colors = MenuDefaults.itemColors(),
+            TangemContextMenuItem(
+                title = resourceReference(CoreUiR.string.account_details_archive),
+                isDestructive = true,
                 onClick = {
                     isExpanded = false
                     onArchiveClick()
