@@ -9,9 +9,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.common.ui.backup.BackupErrorWarningSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -25,7 +25,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -33,6 +32,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
@@ -70,11 +70,7 @@ import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
-import com.tangem.features.send.send.confirm.model.transformers.SendConfirmInitialStateTransformer
-import com.tangem.features.send.send.confirm.model.transformers.SendConfirmJointOperationCreatedTransformer
-import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSendingStateTransformer
-import com.tangem.features.send.send.confirm.model.transformers.SendConfirmSentStateTransformer
-import com.tangem.features.send.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
+import com.tangem.features.send.send.confirm.model.transformers.*
 import com.tangem.features.send.send.joint.JointSendDelegate
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -419,7 +415,14 @@ internal class SendConfirmModel @Inject constructor(
             )
             return null
         }
-        return SendSignaturesUM(threshold = jointAccount.threshold, membersCount = jointAccount.membersCount)
+        return SendSignaturesUM(
+            threshold = jointAccount.threshold,
+            membersCount = jointAccount.membersCount,
+            isFirstOperation = !jointSendDelegate.isSafeDeployed(
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrencyStatus.currency.network,
+            ),
+        )
     }
 
     private fun subscribeOnTapHelpUpdates() {
