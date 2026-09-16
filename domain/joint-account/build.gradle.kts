@@ -11,12 +11,14 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
-    implementation(deps.spongecastle.core)
+    runtimeOnly(deps.spongecastle.core)
     // endregion
 
     // region Domain
     api(projects.domain.core)
+    api(projects.core.utils)
     api(projects.domain.models)
+    implementation(projects.domain.account)
     // endregion
 
     // region Tangem SDK (derivation path and derived public keys types)
@@ -25,5 +27,8 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(deps.web3j.core)
+    testImplementation(deps.spongecastle.core)
     // endregion
 }

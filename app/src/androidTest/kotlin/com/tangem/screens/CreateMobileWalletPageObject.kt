@@ -18,6 +18,12 @@ class CreateMobileWalletPageObject(semanticsProvider: SemanticsNodeInteractionsP
         useUnmergedTree = true
     }
 
+    val createWalletButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.onboarding_create_wallet_button_create_wallet))
+        useUnmergedTree = true
+    }
+
     val useRecoveryPhraseButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.hw_cloud_backup_restore_use_recovery_phrase))

@@ -4,6 +4,7 @@ import com.tangem.data.pushnotificationpreferences.DefaultWalletPushNotification
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.pushnotificationpreferences.repository.WalletPushNotificationPreferencesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -21,11 +22,13 @@ internal object PushNotificationPreferencesModule {
     fun providesWalletPushNotificationPreferencesRepository(
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletPushNotificationPreferencesRepository = DefaultWalletPushNotificationPreferencesRepository(
         tangemTechApi = tangemTechApi,
         cache = RuntimeSharedStore(),
         appPreferencesStore = appPreferencesStore,
+        storePreferencesKeys = storePreferencesKeys,
         dispatchers = dispatchers,
     )
 }

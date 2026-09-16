@@ -9,7 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
@@ -19,15 +21,9 @@ import com.tangem.features.feed.v2.FeedV2Component
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-/**
- * Slack below which the row is dropped instead of squeezed. A fully collapsed shtorka leaves the feed no
- * room at all, while the semi-open detent leaves a full [FeedV2Component.TabRowHeight].
- */
-private val MinRoom = 8.dp
-
 /** One entry of the feed's tab row. */
 @Immutable
-data class FeedTabUM(val id: String, val title: TextReference)
+data class FeedTabUM(val id: String, val title: TextReference, val icon: ImageVector)
 
 /**
  * The feed's tab row, shared by every feed surface that pages over [FeedTabSet].
@@ -54,10 +50,10 @@ fun FeedTabRow(
 ) {
     TangemTabNavigation(
         tabs = rememberTabItems(tabs = tabs, selectedTabIndex = selectedTabIndex, onTabClick = onTabSelect),
-        variant = TangemTabItem.Variant.Transparent,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        variant = TangemTabItem.Variant.Material,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         modifier = modifier
-            .dropWhenNoRoom(minRoom = MinRoom)
+            .dropWhenNoRoom(minRoom = 8.dp)
             .fillMaxWidth()
             .height(FeedV2Component.TabRowHeight),
     )
@@ -77,6 +73,7 @@ private fun rememberTabItems(
                 TangemTabItemUM.Content(
                     id = tab.id,
                     label = tab.title,
+                    iconStart = TangemIconUM.Icon(tab.icon),
                     isSelected = index == selectedTabIndex,
                     onClick = { currentOnTabClick(index) },
                 )

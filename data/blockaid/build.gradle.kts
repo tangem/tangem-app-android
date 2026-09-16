@@ -47,6 +47,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testRuntimeOnly(deps.orgJson)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)

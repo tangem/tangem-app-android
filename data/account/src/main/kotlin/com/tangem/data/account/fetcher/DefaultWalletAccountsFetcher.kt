@@ -12,10 +12,9 @@ import com.tangem.data.account.utils.isJoint
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
-import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
-import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -42,7 +41,7 @@ import javax.inject.Singleton
  * @property userTokensSaver                 saves user tokens to the database
  * @property fetchWalletAccountsErrorHandler handles errors during fetching wallet accounts
  * @property defaultWalletAccountsResponseFactory creates [GetWalletAccountsResponse] from [UserTokensResponse]
- * @property eTagsStore                      store for ETags to manage caching
+ * @property walletAccountsETags             the wallet-level ETag of the accounts document
  * @property dispatchers                     dispatchers
  *
 [REDACTED_AUTHOR]
@@ -55,7 +54,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val userTokensSaver: UserTokensSaver,
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler,
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory,
-    private val eTagsStore: ETagsStore,
+    private val walletAccountsETags: WalletAccountsETags,
     private val dispatchers: CoroutineDispatcherProvider,
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
@@ -218,7 +217,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private fun GetWalletAccountsResponse.withoutJointAccountsIfDisabled(
         userWalletId: UserWalletId,
     ): GetWalletAccountsResponse {
-        if (jointAccountFeatureToggles.isJointAccountCreationEnabled) return this
+        if (jointAccountFeatureToggles.isJointAccountEnabled) return this
 
         val ownAccounts = accounts.filterNot(WalletAccountDTO::isJoint)
         if (ownAccounts.size == accounts.size) return this
@@ -255,7 +254,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         val isFailed = push(userWalletId = userWalletId, accounts = response.accounts) == null
         if (isFailed) {
             // Clear ETags if push failed to avoid different state in the cache and API
-            eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+            walletAccountsETags.clear(userWalletId)
         }
 
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
@@ -280,15 +279,11 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     }
 
     private suspend fun getETag(userWalletId: UserWalletId): String? {
-        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+        return walletAccountsETags.getSyncOrNull(userWalletId = userWalletId)
     }
 
     private suspend fun saveETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
-        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
-
-        if (eTag != null) {
-            eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
-        }
+        walletAccountsETags.store(userWalletId = userWalletId, apiResponse = apiResponse)
     }
 
     private fun GetWalletAccountsResponse.enrichByAccountId(): GetWalletAccountsResponse {

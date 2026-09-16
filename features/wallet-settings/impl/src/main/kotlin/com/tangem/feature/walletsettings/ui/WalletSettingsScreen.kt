@@ -30,10 +30,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.CardImage
 import com.tangem.common.ui.userwallet.UserWalletItem
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.TangemSwitch
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.block.BlockItemColors
@@ -42,11 +41,12 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.AccountReorderUM
@@ -64,28 +64,26 @@ internal fun WalletSettingsScreen(
     modifier: Modifier = Modifier,
     dialog: @Composable () -> Unit,
 ) {
-    val backgroundColor = TangemTheme.colors3.bg.primary
-
-    Scaffold(
+    TangemTopBarScaffold(
         modifier = modifier,
-        containerColor = backgroundColor,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
-            TangemTopAppBar(
-                modifier = Modifier.statusBarsPadding(),
-                startButton = TopAppBarButtonUM.Back(state.popBack),
+            TangemTopNavigation(
+                title = resourceReference(R.string.wallet_settings_title),
+                contentAlign = TangemTopNavigation.ContentAlign.Center,
+                onBack = state.popBack,
             )
         },
-        content = { paddingValues ->
-            Content(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .testTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER),
-                state = state,
-            )
+    ) { contentPadding ->
+        Content(
+            modifier = Modifier
+                .padding(contentPadding)
+                .testTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER),
+            state = state,
+        )
 
-            dialog()
-        },
-    )
+        dialog()
+    }
 }
 
 @Suppress("LongMethod")
@@ -104,14 +102,6 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
             bottom = TangemTheme.dimens.spacing16,
         ),
     ) {
-        item {
-            Text(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                text = stringResourceSafe(id = R.string.wallet_settings_title),
-                style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.primary,
-            )
-        }
         items(
             items = state.items,
             key = WalletSettingsItemUM::id,
@@ -156,14 +146,18 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     model = item,
                 )
                 is WalletSettingsAccountsUM.Header -> AccountsHeader(item, itemModifier)
-                is WalletSettingsAccountsUM.Account -> AccountItem(
-                    model = item,
+                is WalletSettingsAccountsUM.Account -> ReorderableAccountItem(
+                    id = item.id,
+                    accountState = item.state,
                     reorderableListState = reorderableListState,
                     accountReorderUM = state.accountReorderUM,
                     modifier = itemModifier,
                 )
-                is WalletSettingsAccountsUM.JointAccount -> JointAccountItem(
-                    model = item,
+                is WalletSettingsAccountsUM.JointAccount -> ReorderableAccountItem(
+                    id = item.id,
+                    accountState = item.state,
+                    reorderableListState = reorderableListState,
+                    accountReorderUM = state.accountReorderUM,
                     modifier = itemModifier,
                 )
                 is WalletSettingsAccountsUM.Footer -> AccountsFooter(item, itemModifier)
@@ -342,15 +336,16 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
 
 @Suppress("MagicNumber")
 @Composable
-private fun LazyItemScope.AccountItem(
-    model: WalletSettingsAccountsUM.Account,
+private fun LazyItemScope.ReorderableAccountItem(
+    id: String,
+    accountState: UserWalletItemUM,
     reorderableListState: ReorderableLazyListState,
     accountReorderUM: AccountReorderUM,
     modifier: Modifier = Modifier,
 ) {
     ReorderableItem(
         state = reorderableListState,
-        key = model.id,
+        key = id,
         modifier = modifier,
     ) { isDragging ->
         val elevation by animateDpAsState(if (isDragging) 9.dp else 0.dp)
@@ -363,7 +358,7 @@ private fun LazyItemScope.AccountItem(
             modifier = Modifier.scale(scale),
         ) {
             UserWalletItem(
-                state = model.state,
+                state = accountState,
                 blockColors = walletSettingsBlockCardColors,
                 modifier = Modifier
                     .longPressDraggableHandle(
@@ -374,15 +369,6 @@ private fun LazyItemScope.AccountItem(
             )
         }
     }
-}
-
-@Composable
-private fun JointAccountItem(model: WalletSettingsAccountsUM.JointAccount, modifier: Modifier = Modifier) {
-    UserWalletItem(
-        state = model.state,
-        blockColors = walletSettingsBlockCardColors,
-        modifier = modifier.background(color = TangemTheme.colors3.bg.secondary),
-    )
 }
 
 @Composable
@@ -522,7 +508,7 @@ private val walletSettingsBlockItemColors: BlockItemColors
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_WalletSettingsScreen() {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         PreviewWalletSettingsComponent().Content(modifier = Modifier.fillMaxSize())
     }
 }

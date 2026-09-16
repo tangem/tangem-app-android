@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
@@ -12,8 +13,11 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.Personal.Companion.createMainAccount
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
@@ -21,6 +25,7 @@ import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TestContacts
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
@@ -372,6 +377,71 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
         assertThat(subtitle.walletName).isEqualTo("Main wallet")
         assertThat(subtitle.deviceIconUM).isEqualTo(DeviceIconUM.Mobile)
+    }
+
+    @Test
+    fun `GIVEN outgoing Transfer to a saved contact WHEN convert THEN Contact subtitle with monogram`() {
+        // Arrange
+        val converter = contactConverter(contacts = listOf(SAVED_CONTACT))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.title).isEqualTo(resRef(R.string.common_sent))
+        val subtitle = result.subtitle as ContentSubtitle.Contact
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+        assertThat(subtitle.contactName).isEqualTo("Binance")
+        assertThat((subtitle.avatar as ContentSubtitle.ContactAvatar.Monogram).char).isEqualTo('B')
+    }
+
+    @Test
+    fun `GIVEN outgoing Transfer to a contact with a picked icon WHEN convert THEN Contact subtitle with resource`() {
+        // Arrange
+        val contact = TestContacts.create(
+            name = "Mom",
+            address = EXTERNAL_ADDRESS,
+            walletId = OWN_WALLET_ID,
+            networkId = coin.network.id.rawId,
+            icon = CryptoPortfolioIcon.Icon.User.name,
+        )
+        val converter = contactConverter(contacts = listOf(contact))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        val subtitle = result.subtitle as ContentSubtitle.Contact
+        assertThat(subtitle.contactName).isEqualTo("Mom")
+        assertThat((subtitle.avatar as ContentSubtitle.ContactAvatar.Resource).resId)
+            .isEqualTo(CryptoPortfolioIcon.Icon.User.getResId())
+    }
+
+    @Test
+    fun `GIVEN incoming Transfer from a saved contact WHEN convert THEN ExternalAddress subtitle`() {
+        // Arrange
+        val converter = contactConverter(contacts = listOf(SAVED_CONTACT))
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = false,
+            interactionAddressType = TxInfo.InteractionAddressType.User(EXTERNAL_ADDRESS),
+        )
+
+        // Act
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(result.subtitle).isInstanceOf(ContentSubtitle.ExternalAddress::class.java)
     }
 
     @Test
@@ -939,6 +1009,18 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
     private fun resRef(id: Int): TextReference = TextReference.Res(id = id)
 
+    private fun contactConverter(contacts: List<Contact>) = TxHistoryItemToTransactionItemUMConverter(
+        currency = coin,
+        txHistoryUiActions = txHistoryUiActions,
+        lookupContext = TxHistoryLookupContext(
+            ownAccountByNetwork = emptyMap(),
+            isAccountsModeEnabled = true,
+            walletInfoById = emptyMap(),
+            contacts = ContactAddressLookup.of(contacts),
+            viewedWalletId = OWN_WALLET_ID,
+        ),
+    )
+
     private fun resRef(id: Int, args: List<Any>): TextReference = TextReference.Res(
         id = id,
         formatArgs = com.tangem.core.ui.extensions.WrappedList(args),
@@ -994,6 +1076,12 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         const val EXTERNAL_ADDRESS = "0xExternalAddress5678"
         const val TOKEN_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
         val OWN_WALLET_ID = UserWalletId(stringValue = "00")
+        val SAVED_CONTACT = TestContacts.create(
+            name = "Binance",
+            address = EXTERNAL_ADDRESS,
+            walletId = OWN_WALLET_ID,
+            networkId = Network.RawID(value = "ethereum"),
+        )
     }
 
     // endregion

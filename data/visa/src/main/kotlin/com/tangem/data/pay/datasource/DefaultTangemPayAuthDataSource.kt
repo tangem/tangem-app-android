@@ -20,7 +20,7 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
     ): Either<Throwable, TangemPayInitialCredentials> {
         return when (userWallet) {
             is UserWallet.Cold -> {
-                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet)
                 tangemSdkManager.tangemPayProduceInitialCredentials(preflightReadFilter = preflightReadFilter)
             }
             is UserWallet.Hot -> tangemPayHotSdkManager.produceInitialCredentials(userWallet)
@@ -32,7 +32,7 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
     ): Either<Throwable, VirtualAccountActivationData> {
         return when (userWallet) {
             is UserWallet.Cold -> {
-                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet)
                 tangemSdkManager.tangemPayProduceVirtualAccountData(preflightReadFilter = preflightReadFilter)
             }
             is UserWallet.Hot -> tangemPayHotSdkManager.produceVirtualAccountData(userWallet)
@@ -45,7 +45,7 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
     ): Either<Throwable, WithdrawalSignatureResult> {
         return when (userWallet) {
             is UserWallet.Cold -> {
-                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet)
                 tangemSdkManager.getWithdrawalSignature(hash = hash, preflightReadFilter = preflightReadFilter)
             }
             is UserWallet.Hot -> tangemPayHotSdkManager.getWithdrawalSignature(hotWallet = userWallet, hash = hash)

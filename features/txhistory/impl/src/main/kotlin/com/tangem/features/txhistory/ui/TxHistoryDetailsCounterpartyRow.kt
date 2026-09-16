@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -31,6 +33,7 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyAvatar
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyUM
 import com.tangem.features.txhistory.impl.R
@@ -38,8 +41,8 @@ import com.tangem.features.txhistory.impl.R
 /**
  * Counterparty ("Recipient" / "From") card of the single-asset detail, built on the DS3 [TangemRow] inside a tinted
  * `bg.opaque.primary` cell. The layout is identical across counterparty kinds — only the leading
- * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]). The whole row is clickable and triggers
- * [CounterpartyUM.onCopyClick] when it is non-null.
+ * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]). The whole row is clickable and copies the
+ * counterparty address via [CounterpartyUM.onCopyClick].
  *
  * The section [label][CounterpartyUM.label] sits above the counterparty value. [TangemRow] renders its `titleSlot`
  * above the `subtitleSlot`, so the slots are filled inverted to their semantic role: the small caption label goes in
@@ -95,6 +98,14 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
             size = AccountIconSize.Default,
             modifier = avatarModifier,
         )
+        // The raw modifier, not the pre-sized avatarModifier: AccountIcon sizes itself from ContactDefault (40dp),
+        // and an outer size() would pin that instead of following the design-system size.
+        is CounterpartyAvatar.Contact -> AccountIcon(
+            name = stringReference(avatar.name),
+            icon = avatar.icon,
+            size = AccountIconSize.ContactDefault,
+            modifier = modifier,
+        )
     }
 }
 
@@ -136,7 +147,21 @@ private fun TxHistoryDetailsCounterpartyRowPreview() {
                     avatar = CounterpartyAvatar.Wallet(
                         deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
                     ),
-                    onCopyClick = null,
+                    onCopyClick = {},
+                ),
+            )
+            TxHistoryDetailsCounterpartyRow(
+                counterparty = CounterpartyUM(
+                    label = stringReference("Recipient"),
+                    title = stringReference("Binance"),
+                    avatar = CounterpartyAvatar.Contact(
+                        name = "Binance",
+                        icon = AccountIconUM.CryptoPortfolio(
+                            value = CryptoPortfolioIcon.Icon.Letter,
+                            color = CryptoPortfolioIcon.Color.Pattypan,
+                        ),
+                    ),
+                    onCopyClick = {},
                 ),
             )
         }

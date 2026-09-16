@@ -35,6 +35,7 @@ dependencies {
     /** Features api */
     api(projects.features.txhistory.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.jointAccount.api)
     implementation(projects.features.rating.api)
 
     /** Domain */
@@ -46,6 +47,8 @@ dependencies {
     api(projects.domain.txhistory)
     api(projects.domain.wallets)
     implementation(projects.domain.account)
+    implementation(projects.domain.addressBook)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.express.models)
     implementation(projects.domain.onramp.models)

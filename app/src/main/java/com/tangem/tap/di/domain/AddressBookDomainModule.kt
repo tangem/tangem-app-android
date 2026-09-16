@@ -66,6 +66,14 @@ object AddressBookDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetContactAddressLookupUseCase(
+        getVerifiedContactsInteractor: GetVerifiedContactsInteractor,
+    ): GetContactAddressLookupUseCase {
+        return GetContactAddressLookupUseCase(getVerifiedContacts = getVerifiedContactsInteractor)
+    }
+
+    @Provides
+    @Singleton
     fun provideSaveContactInteractor(
         repository: AddressBookRepository,
         contactNameValidator: ContactNameValidator,

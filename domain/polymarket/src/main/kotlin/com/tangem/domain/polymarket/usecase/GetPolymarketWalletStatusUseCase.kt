@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
@@ -23,6 +24,11 @@ class GetPolymarketWalletStatusUseCase(
         .getWalletStatus(ownerAddress = addresses.ownerAddress)
         .mapLeft { it.toOnboardingError() }
         .flatMap { state -> state.ensureDepositWalletMatches(expected = addresses.depositWalletAddress) }
+
+    suspend fun byWalletId(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketWalletState> =
+        polymarketRepository
+            .getWalletStatusByWalletId(walletId = userWalletId.stringValue)
+            .mapLeft { it.toOnboardingError() }
 
     private fun PolymarketWalletState.ensureDepositWalletMatches(
         expected: String,

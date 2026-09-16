@@ -68,6 +68,7 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
         targetTariffPlanId: String?,
         transitionType: TangemPayTariffPlanTransition.Type?,
         chainId: Int?,
+        deeplinkValue: String?,
     ): Either<VisaApiError, Order> {
         val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
         return requestHelper.performRequest(userWalletId) { authHeader ->
@@ -81,6 +82,7 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                         targetTariffPlanId = targetTariffPlanId,
                         tariffPlanTransitionType = transitionType?.name,
                         chainId = chainId,
+                        deeplinkValue = deeplinkValue,
                     ),
                     idempotencyKey = idempotencyKey,
                 ),

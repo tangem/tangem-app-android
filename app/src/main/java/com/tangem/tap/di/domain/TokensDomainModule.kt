@@ -11,6 +11,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
@@ -25,8 +26,9 @@ import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -168,8 +170,10 @@ internal object TokensDomainModule {
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+        collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+        moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
+        collectiblesFeatureToggles: CollectiblesFeatureToggles,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -185,8 +189,10 @@ internal object TokensDomainModule {
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             virtualAccountStatusFetcher = virtualAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
-            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+            moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
             stakingIdFactory = stakingIdFactory,
             dispatchers = dispatchers,
         )

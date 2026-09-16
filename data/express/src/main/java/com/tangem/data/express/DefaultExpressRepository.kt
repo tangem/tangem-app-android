@@ -4,10 +4,9 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.express.converter.ExpressProviderConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.express.TangemExpressApi
-import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.grow.datasource.express.ExpressUtils
 import com.tangem.datasource.local.converter.toEntity
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
@@ -20,7 +19,7 @@ import com.tangem.utils.logging.TangemLogger
 internal class DefaultExpressRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val expressHistoryDao: ExpressHistoryDao,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val expressUtils: ExpressUtils,
     private val dispatchers: CoroutineDispatcherProvider,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : ExpressRepository {
@@ -33,10 +32,7 @@ internal class DefaultExpressRepository(
             call = {
                 val providers = tangemExpressApi.getProviders(
                     userWalletId = userWallet.walletId.stringValue,
-                    refCode = ExpressUtils.getRefCode(
-                        userWallet = userWallet,
-                        appPreferencesStore = appPreferencesStore,
-                    ),
+                    refCode = expressUtils.getRefCode(userWallet = userWallet),
                 ).getOrThrow()
 
                 if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {

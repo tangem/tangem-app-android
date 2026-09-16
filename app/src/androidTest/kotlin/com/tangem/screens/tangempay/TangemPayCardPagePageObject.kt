@@ -42,6 +42,15 @@ class TangemPayCardPagePageObject(semanticsProvider: SemanticsNodeInteractionsPr
         useUnmergedTree = true
     }
 
+    // Title and description are one combinedReference text node, so the title only matches as a substring.
+    val issuingInProgressBlock: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_issuing_new_digital_card_title),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
+
     val changePinRow: KNode = child {
         hasTestTag(TangemPayTestTags.CHANGE_PIN_ROW)
         useUnmergedTree = true
