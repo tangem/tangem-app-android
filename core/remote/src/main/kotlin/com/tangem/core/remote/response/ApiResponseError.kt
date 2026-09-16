@@ -22,6 +22,7 @@ sealed class ApiResponseError : Exception() {
             Code.OK,
             Code.CREATED,
             Code.ACCEPTED,
+            Code.NO_CONTENT,
             Code.NOT_MODIFIED,
             Code.BAD_REQUEST,
             Code.UNAUTHORIZED,
@@ -73,6 +74,7 @@ sealed class ApiResponseError : Exception() {
             OK(numericCode = 200),
             CREATED(numericCode = 201),
             ACCEPTED(numericCode = 202),
+            NO_CONTENT(numericCode = 204),
             // 3xx Server Errors
             NOT_MODIFIED(numericCode = 304),
             // 4xx Server Errors
