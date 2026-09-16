@@ -6,8 +6,6 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -16,6 +14,7 @@ import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.domain.models.pay.isAwaitingActivation
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.models.pay.thumbnailUrl
@@ -68,8 +67,7 @@ internal class TangemPayDetailsStateFactory(
                 ),
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = null,
+            messageBanner = null,
             cashbackBlockState = null,
         )
     }
@@ -99,6 +97,7 @@ internal class TangemPayDetailsStateFactory(
                     TangemPayDetailsBalanceBlockState.Card(
                         lastDigits = if (isAwaitingActivation) "" else cardItem.lastDigits,
                         imageUrl = if (isAwaitingActivation) null else cardItem.thumbnailUrl,
+                        cardType = cardItem.cardType,
                         onClick = { intents.onCardClick(cardItem.id) },
                         isEnabled = status.error == null,
                         isFrozen = cardItem.isFrozen && !isAwaitingActivation,
@@ -129,8 +128,7 @@ internal class TangemPayDetailsStateFactory(
                 isWithdrawEnabled = areActionButtonsEnabled && hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = errorNotification ?: tiersNotification,
-            statusBannerState = null,
+            messageBanner = (errorNotification ?: tiersNotification)?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -208,8 +206,7 @@ internal class TangemPayDetailsStateFactory(
                 isWithdrawEnabled = hasWithdrawableBalance,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = MessageBannerUM(state = accountDeactivatedBanner),
+            messageBanner = MessageBannerUM(state = accountDeactivatedBanner),
             cashbackBlockState = null,
         )
     }
@@ -237,6 +234,7 @@ internal class TangemPayDetailsStateFactory(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "",
                             imageUrl = null,
+                            cardType = TangemPayCardType.UNDEFINED,
                             onClick = {},
                             isEnabled = false,
                             isFrozen = false,
@@ -253,8 +251,7 @@ internal class TangemPayDetailsStateFactory(
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = notification,
-            statusBannerState = null,
+            messageBanner = notification?.let(::MessageBannerUM),
             cashbackBlockState = null,
         )
     }
@@ -292,8 +289,7 @@ internal class TangemPayDetailsStateFactory(
                 isBalanceFlickering = false,
             ),
             isBalanceHidden = false,
-            errorNotificationConfig = null,
-            statusBannerState = MessageBannerUM(
+            messageBanner = MessageBannerUM(
                 state = notificationFactory.createCardIssueFailedBannerState(),
                 onClose = intents::onCardIssueFailedBannerDismissed,
             ).takeUnless { isBannerDismissed },
@@ -357,28 +353,6 @@ internal class TangemPayDetailsStateFactory(
                     ),
                 )
             }
-            if (isTiersPlusPlanEnabled && tariffPlan != null && !tariffPlan.tariff.plan.isBasicTier) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = resourceReference(R.string.tangempay_visa_benefits),
-                        onClick = intents::onClickVisaBenefits,
-                        icon = TangemIconUM.Icon(
-                            iconRes = CoreUiR.drawable.ic_heart_20,
-                            tintReference = { TangemTheme.colors3.icon.primary },
-                        ),
-                    ),
-                )
-            }
-            add(
-                TangemPayDropDownItemUM(
-                    title = resourceReference(R.string.tangem_pay_terms_limits),
-                    onClick = intents::onClickTermsAndLimits,
-                    icon = TangemIconUM.Icon(
-                        imageVector = Icons.ic_document_20,
-                        tintReference = { TangemTheme.colors3.icon.primary },
-                    ),
-                ),
-            )
             add(
                 TangemPayDropDownItemUM(
                     title = resourceReference(R.string.tangempay_pay_support),

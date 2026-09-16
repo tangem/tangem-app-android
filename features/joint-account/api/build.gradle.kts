@@ -9,6 +9,9 @@ android {
 }
 
 dependencies {
+    /** Kotlin */
+    api(deps.kotlin.coroutines)
+
     /** Core */
     api(projects.core.decompose)
     api(projects.core.ui)
@@ -23,7 +26,9 @@ dependencies {
     api(deps.compose.foundation)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
+    implementation(deps.androidx.annotation)
 
     /** Other */
     api(deps.kotlin.immutable.collections)
+    implementation(deps.androidx.annotation)
 }

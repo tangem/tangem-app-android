@@ -857,6 +857,7 @@ internal class SendDestinationModelTest {
             backupErrorFeatureToggles = backupErrorFeatureToggles,
             addressBookSendAnalytics = addressBookSendAnalytics,
             syncAddressBooksUseCase = syncAddressBooksUseCase,
+            getJointAccountSupportedNetworksUseCase = mockk { every { this@mockk.invoke() } returns emptyList() },
             isAddressBookCompatibleUseCase = isAddressBookCompatibleUseCase,
             getVerifiedContactsInteractor = getVerifiedContactsInteractor,
             contactSelectionListener = contactSelectionListener,

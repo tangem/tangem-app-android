@@ -45,6 +45,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
 /**
  * Covers the **wiring** of the balance-contributions seam inside the status producer — the part the factory and
@@ -171,6 +172,9 @@ internal class SingleAccountStatusListProducerContributionsTest {
             userWalletsListRepository = mockk<UserWalletsListRepository> {
                 every { userWallets } returns MutableStateFlow(listOf(wallet))
             },
+            singleJointAccountListSupplier = mockk<SingleJointAccountListSupplier> {
+                every { this@mockk.invoke(userWalletId = any()) } returns flowOf(emptyList())
+            },
             singleAccountListSupplier = mockk<SingleAccountListSupplier> {
                 every { this@mockk.invoke(id) } returns flowOf(accountList(id))
             },
@@ -184,6 +188,9 @@ internal class SingleAccountStatusListProducerContributionsTest {
                 every { this@mockk.invoke(userWalletId = id) } returns flowOf(PredictionAccountStatusValue.Loading)
             },
             polymarketFeatureToggles = mockk { every { isPolymarketEnabled } returns true },
+            // the toggle is off, so the supplier is never invoked
+            collectiblesAccountStatusSupplier = mockk(),
+            collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
             networksRepository = mockk<NetworksRepository> {
                 coEvery { hasCachedStatuses(id) } returns true
             },

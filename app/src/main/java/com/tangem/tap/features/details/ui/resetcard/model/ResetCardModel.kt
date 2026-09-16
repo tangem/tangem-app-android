@@ -42,7 +42,7 @@ import javax.inject.Inject
 internal class ResetCardModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
-    getUserWalletUseCase: GetUserWalletUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val resetCardUseCase: ResetCardUseCase,
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
@@ -210,7 +210,7 @@ internal class ResetCardModel @Inject constructor(
             resetCardUseCase(
                 cardNumber = resetBackupCardCount + 1,
                 params = currentUserCodeParams,
-                userWalletId = currentUserWalletId,
+                userWallet = userWallet,
             )
                 .onRight { isResetCompleted ->
                     if (isResetCompleted) {
@@ -258,6 +258,25 @@ internal class ResetCardModel @Inject constructor(
         finishFullReset()
     }
 
+    /**
+     * The user wallet is deleted right after the primary card is reset, while the backup cards are still ahead. Until
+     * the flow is finished the whole screen stack belongs to a wallet that no longer exists, so leaving the screen has
+     * to go through the same completion path as the dialogs instead of a plain pop.
+     */
+    fun onBackClick() {
+        val isUserWalletDeleted = getUserWalletUseCase(userWalletId = currentUserWalletId).isLeft()
+
+        if (isUserWalletDeleted) {
+            analyticsEventHandler.send(
+                Settings.CardSettings.FactoryResetCanceled(cardsCount = resetBackupCardCount + 1),
+            )
+
+            finishFullReset()
+        } else {
+            appRouter.pop()
+        }
+    }
+
     private fun finishFullReset() {
         cardSettingsInteractor.clear()
 
@@ -266,7 +285,7 @@ internal class ResetCardModel @Inject constructor(
         if (newSelectedWallet != null) {
             appRouter.popTo<AppRoute.Wallet>()
         } else {
-            appRouter.replaceAll(AppRoute.Home())
+            appRouter.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
         }
     }
 

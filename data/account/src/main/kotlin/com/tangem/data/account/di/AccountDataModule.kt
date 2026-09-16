@@ -13,7 +13,7 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
+import com.tangem.data.account.store.AccountTokenMigrationStore
 import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration

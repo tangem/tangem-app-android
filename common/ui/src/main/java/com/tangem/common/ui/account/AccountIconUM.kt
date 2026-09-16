@@ -16,4 +16,6 @@ sealed class AccountIconUM {
     }
 
     data object Prediction : AccountIconUM()
+
+    data object Collectibles : AccountIconUM()
 }

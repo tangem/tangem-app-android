@@ -30,6 +30,7 @@ internal fun RecentFeedSearchItem.toDTO(timestamp: Long): ItemDTO = when (this) 
             h24Percent = token.tokenQuotes.h24Percent?.toPlainString(),
             weekPercent = token.tokenQuotes.weekPercent?.toPlainString(),
             monthPercent = token.tokenQuotes.monthPercent?.toPlainString(),
+            isRestrictedForCountry = token.isRestrictedForCountry,
         ),
     )
 }
@@ -49,6 +50,7 @@ private fun MarketTokenDTO.toDomain(id: String): RecentFeedSearchItem.MarketToke
                 monthPercent = monthPercent?.toBigDecimalOrNull(),
             ),
             imageUrl = imageUrl,
+            isRestrictedForCountry = isRestrictedForCountry,
         ),
     )
 }

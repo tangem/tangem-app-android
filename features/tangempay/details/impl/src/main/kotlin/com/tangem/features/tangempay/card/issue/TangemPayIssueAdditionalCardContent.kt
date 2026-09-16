@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +37,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_card_plus_32
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.common.TangemPayInsufficientFundsNotification
 import com.tangem.features.tangempay.details.impl.R
 
@@ -158,6 +160,7 @@ private fun FeeBlock(state: TangemPayIssueAdditionalCardUM, modifier: Modifier =
         },
         valueSlot = {
             TangemRowText(
+                modifier = Modifier.testTag(TangemPayTestTags.ISSUE_ADDITIONAL_CARD_FEE_VALUE),
                 text = state.feeText,
                 role = TangemRowTextRole.Value,
             )
@@ -170,7 +173,8 @@ private fun IssueButton(state: TangemPayIssueAdditionalCardUM, modifier: Modifie
     TangemButton(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .testTag(TangemPayTestTags.ISSUE_ADDITIONAL_CARD_CONFIRM_BUTTON),
         size = TangemButton.Size.X12,
         onClick = state.onIssueClick,
         isEnabled = !state.isLoading && !state.isBalanceInsufficient,

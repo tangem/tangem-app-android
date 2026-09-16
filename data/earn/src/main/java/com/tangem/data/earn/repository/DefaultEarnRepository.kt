@@ -8,6 +8,7 @@ import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.earn.converter.EarnTokenConverter
 import com.tangem.data.earn.datastore.EarnFilterStore
 import com.tangem.data.earn.datastore.EarnNetworksStore
+import com.tangem.data.earn.datastore.EarnTokensCatalogStore
 import com.tangem.data.earn.datastore.EarnTopTokensStore
 import com.tangem.data.earn.repository.batch.EarnTokensBatchFetcher
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -21,10 +22,7 @@ import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.earn.repository.EarnRepository
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.earn.EarnNetwork
-import com.tangem.domain.models.earn.EarnNetworks
-import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.pagination.BatchListSource
@@ -40,6 +38,7 @@ internal class DefaultEarnRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val earnNetworksStore: EarnNetworksStore,
     private val earnTopTokensStore: EarnTopTokensStore,
+    private val earnTokensCatalogStore: EarnTokensCatalogStore,
     private val earnFilterStore: EarnFilterStore,
     private val earnErrorResolver: EarnErrorResolver,
     private val excludedBlockchains: ExcludedBlockchains,
@@ -95,27 +94,9 @@ internal class DefaultEarnRepository(
                 limit = limit,
             ).getOrThrow()
 
-            val userWallet = userWalletsListRepository
-                .selectedUserWallet
-                .value
-                .takeIf { wallet -> wallet?.isLocked?.not() == true }
-                ?: return@runCatching
+            val userWallet = selectedUnlockedWallet() ?: return@runCatching
 
-            val items = response.items.mapNotNull { dto ->
-                val earnToken = EarnTokenConverter.convert(dto)
-                createCryptoCurrencyForEarnToken(
-                    cryptoCurrencyFactory = cryptoCurrencyFactory,
-                    userWallet = userWallet,
-                    earnToken = dto,
-                )?.let { cryptoCurrency ->
-                    EarnTokenWithCurrency(
-                        earnToken = earnToken,
-                        cryptoCurrency = cryptoCurrency,
-                        networkName = Blockchain.fromNetworkId(dto.networkId)?.fullName.orEmpty(),
-                    )
-                }
-            }
-            earnTopTokensStore.store(Either.Right(items))
+            earnTopTokensStore.store(Either.Right(response.items.toEarnTokens(userWallet)))
         }.onFailure { error ->
             val earnError = earnErrorResolver.resolve(error)
             earnTopTokensStore.store(Either.Left(earnError))
@@ -126,6 +107,41 @@ internal class DefaultEarnRepository(
         return earnTopTokensStore.get()
     }
 
+    override suspend fun fetchEarnTokensCatalog() {
+        runCatching(dispatchers.io) {
+            val userWallet = selectedUnlockedWallet() ?: return@runCatching
+
+            val received = mutableListOf<EarnResponse>()
+            var page = FIRST_PAGE
+            do {
+                val response = tangemTechApi.getEarnTokens(
+                    isForEarn = false,
+                    page = page.toString(),
+                    limit = CATALOG_PAGE_SIZE,
+                ).getOrThrow()
+
+                received += response.items
+
+                val hasNext = response.meta.hasNext ?: (response.items.size >= response.meta.limit)
+                page++
+            } while (hasNext)
+
+            // one list renders every page at once, and a repeated row would be a duplicate Compose key
+            val items = received
+                .distinctBy { Triple(it.token.id, it.networkId, it.type) }
+                .toEarnTokens(userWallet)
+
+            earnTokensCatalogStore.store(Either.Right(items))
+        }.onFailure { error ->
+            val earnError = earnErrorResolver.resolve(error)
+            earnTokensCatalogStore.store(Either.Left(earnError))
+        }
+    }
+
+    override fun observeEarnTokensCatalog(): Flow<EarnTokensCatalog?> {
+        return earnTokensCatalogStore.get()
+    }
+
     override fun observeEarnFilter(): Flow<EarnFilter> {
         return earnFilterStore.get()
     }
@@ -134,9 +150,31 @@ internal class DefaultEarnRepository(
         earnFilterStore.store(filter)
     }
 
+    private fun selectedUnlockedWallet(): UserWallet? = userWalletsListRepository
+        .selectedUserWallet
+        .value
+        .takeIf { wallet -> wallet?.isLocked?.not() == true }
+
+    private fun List<EarnResponse>.toEarnTokens(userWallet: UserWallet): List<EarnTokenWithCurrency> {
+        return mapNotNull { dto ->
+            createCryptoCurrencyForEarnToken(
+                cryptoCurrencyFactory = cryptoCurrencyFactory,
+                userWallet = userWallet,
+                earnToken = dto,
+            )?.let { cryptoCurrency ->
+                EarnTokenWithCurrency(
+                    earnToken = EarnTokenConverter.convert(dto),
+                    cryptoCurrency = cryptoCurrency,
+                    networkName = Blockchain.fromNetworkId(dto.networkId)?.fullName.orEmpty(),
+                )
+            }
+        }
+    }
+
     companion object {
         internal const val FIRST_PAGE = 1
         private const val INITIAL_BATCH_KEY = 0
+        private const val CATALOG_PAGE_SIZE = 50
     }
 }
 

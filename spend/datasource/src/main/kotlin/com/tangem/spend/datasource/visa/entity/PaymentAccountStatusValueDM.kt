@@ -1,0 +1,122 @@
+@file:Suppress("BooleanPropertyNaming")
+package com.tangem.spend.datasource.visa.entity
+
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import dev.onenowy.moshipolymorphicadapter.PolymorphicAdapterType
+import dev.onenowy.moshipolymorphicadapter.annotations.NameLabel
+import java.math.BigDecimal
+
+/**
+ * Payment account status for storage in the local cache.
+ *
+ * @see [com.tangem.domain.models.account.AccountStatus.Payment]
+ */
+@JsonClass(generateAdapter = true, generator = PolymorphicAdapterType.NAME_POLYMORPHIC_ADAPTER)
+sealed interface PaymentAccountStatusValueDM {
+
+    @NameLabel("empty")
+    data class Empty(
+        @Json(name = "empty") val marker: Boolean = true,
+    ) : PaymentAccountStatusValueDM
+
+    @NameLabel("not_created")
+    data class NotCreated(
+        @Json(name = "not_created") val marker: Boolean = true,
+    ) : PaymentAccountStatusValueDM
+
+    @NameLabel("kyc_status")
+    data class UnderReview(
+        @Json(name = "kyc_status") val kycStatus: KycStatus,
+        @Json(name = "customer_id") val customerId: String,
+    ) : PaymentAccountStatusValueDM
+
+    @NameLabel("issuing_card")
+    data class IssuingCard(
+        @Json(name = "issuing_card") val marker: Boolean = true,
+    ) : PaymentAccountStatusValueDM
+
+    /**
+     * Balance fields are nullable: an operational account can be delivered by `customer/me` without balances,
+     * and the status is still worth caching for its cards and customer id.
+     */
+    @NameLabel("active_account")
+    data class ActiveAccount(
+        @Json(name = "active_account") val marker: Boolean = true,
+        @Json(name = "customer_id") val customerId: String,
+        @Json(name = "currency_code") val currencyCode: String?,
+        @Json(name = "deposit_address") val depositAddress: String?,
+        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
+        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM?,
+        @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
+        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal?,
+        @Json(name = "cards") val cards: List<TangemPayCard>,
+    ) : PaymentAccountStatusValueDM
+
+    @NameLabel("card_issue_failed")
+    data class CardIssueFailed(
+        @Json(name = "card_issue_failed") val marker: Boolean = true,
+        @Json(name = "customer_id") val customerId: String,
+        @Json(name = "fiat_rate") val fiatRate: BigDecimal? = null,
+        @Json(name = "balance") val balance: BalanceDM? = null,
+    ) : PaymentAccountStatusValueDM
+
+    /** Balance fields are nullable for the same reason as in [ActiveAccount]. */
+    @NameLabel("deactivated_account")
+    data class DeactivatedAccount(
+        @Json(name = "deactivated_account") val marker: Boolean = true,
+        @Json(name = "customer_id") val customerId: String,
+        @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
+        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
+        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM?,
+        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal?,
+    ) : PaymentAccountStatusValueDM
+
+    /** @see [com.tangem.domain.models.account.PaymentAccountStatusValue.Balance] */
+    @JsonClass(generateAdapter = true)
+    data class BalanceDM(
+        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
+        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
+        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class FiatBalanceDM(
+        @Json(name = "available_balance") val availableBalance: BigDecimal,
+        @Json(name = "currency") val currency: String,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class CryptoBalanceDM(
+        @Json(name = "id") val id: String,
+        @Json(name = "chain_id") val chainId: Long,
+        @Json(name = "deposit_address") val depositAddress: String,
+        @Json(name = "token_contract_address") val tokenContractAddress: String,
+        @Json(name = "balance") val balance: BigDecimal,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class TangemPayCard(
+        @Json(name = "id") val id: String,
+        @Json(name = "product_instance_id") val productInstanceId: String,
+        @Json(name = "card_status") val cardStatus: String,
+        @Json(name = "has_pin_code") val hasPinCode: Boolean,
+        @Json(name = "display_name") val displayName: String?,
+        @Json(name = "actual_daily_limit") val actualDailyLimit: SerializedBigDecimal?,
+        @Json(name = "admin_daily_limit") val adminDailyLimit: SerializedBigDecimal?,
+        @Json(name = "frozen_state") val frozenState: String,
+        @Json(name = "last_digits") val lastDigits: String,
+        @Json(name = "images") val images: List<ImageDM>,
+        @Json(name = "state") val state: String,
+        @Json(name = "emboss_name") val embossName: String?,
+        @Json(name = "card_type") val cardType: String? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class ImageDM(
+        @Json(name = "type") val type: String,
+        @Json(name = "url") val url: String,
+    )
+}

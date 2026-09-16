@@ -1,10 +1,12 @@
 package com.tangem.features.tangempay.di
 
 import com.tangem.features.tangempay.account.DefaultTangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.campaign.DefaultTangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.card.details.CardDetailsEventListener
 import com.tangem.features.tangempay.card.details.DefaultCardDetailsEventListener
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.DefaultTangemPayCashbackComponent
+import com.tangem.features.tangempay.components.TangemPayCampaignIssueCardComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
@@ -47,4 +49,10 @@ internal interface TangemPayDetailsFeatureModule {
     fun bindTangemPayOrderCardComponentFactory(
         factory: DefaultTangemPayOrderCardComponent.Factory,
     ): TangemPayOrderCardComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindTangemPayCampaignIssueCardComponentFactory(
+        factory: DefaultTangemPayCampaignIssueCardComponent.Factory,
+    ): TangemPayCampaignIssueCardComponent.Factory
 }

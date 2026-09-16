@@ -18,9 +18,18 @@ abstract class TangemGatewayApiConfig : ApiConfig() {
         headers = headers,
     )
 
-    private companion object {
+    companion object {
 
-        fun gatewayBaseUrl(environment: ApiEnvironment): String = when (environment) {
+        /**
+         * Id of the primary Tangem gateway config (TangemTech). It lives on the shared gateway base
+         * so a Retrofit API in any stream can attach to that config by id
+         * (`RetrofitApiSpec(apiConfigId = TANGEM_TECH_ID, …)`) without depending on the module that
+         * owns the config implementation.
+         */
+        const val TANGEM_TECH_KEY = "TangemTech"
+        val TANGEM_TECH_ID = ApiConfig.ID(TANGEM_TECH_KEY)
+
+        private fun gatewayBaseUrl(environment: ApiEnvironment): String = when (environment) {
             ApiEnvironment.PROD -> "https://api.tangem.org/"
             ApiEnvironment.DEV,
             ApiEnvironment.DEV_2,

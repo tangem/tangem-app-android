@@ -18,8 +18,16 @@ import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
+import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderState
+import com.tangem.domain.polymarket.model.PredictionOrderStateError
+import com.tangem.domain.polymarket.model.PredictionPriceError
+import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import java.math.BigDecimal
 import java.math.BigInteger
 
 interface PolymarketRepository {
@@ -58,9 +66,32 @@ interface PolymarketRepository {
      * The result is only as good as the book at the moment it was served, so callers re-request it on a
      * timer rather than caching it.
      */
+    suspend fun placeOrder(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        signedOrder: PredictionSignedOrder,
+        isNegRisk: Boolean,
+    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult>
+
     suspend fun getOrderQuote(
         request: PredictionOrderQuoteRequest,
     ): Either<PredictionOrderQuoteError, PredictionOrderQuote>
+
+    /**
+     * One placed order as the book sees it (CLOB `GET /data/order/{id}`). Polled while a delayed order sits in
+     * its matching window, so a transport failure is reported as such rather than folded into unknown.
+     */
+    suspend fun getOrder(
+        ownerAddress: String,
+        credentials: PolymarketApiCredentials,
+        orderId: String,
+    ): Either<PredictionOrderStateError, PredictionOrderState>
+
+    /**
+     * Best price on [side] of the asset's book (CLOB `GET /price`). Serves the empty order form, where
+     * there is no amount to quote yet; callers poll it on a timer the way they poll [getOrderQuote].
+     */
+    suspend fun getPrice(assetId: String, side: PredictionOrderSide): Either<PredictionPriceError, BigDecimal>
 
     /**
      * Read the owner's deposit-wallet address and onboarding status (BFF `GET /wallet`).
@@ -94,6 +125,8 @@ interface PolymarketRepository {
      * be deployed first (otherwise the BFF responds 409).
      */
     suspend fun submitApprovals(batch: PolymarketApprovalsBatch): Either<PolymarketWalletError, PolymarketWalletStatus>
+
+    suspend fun getBuilderCode(walletId: String): Either<DataError, String>
 
     /**
      * Check whether Polymarket is geo-blocked for the caller's region (`GET polymarket.com/api/geoblock`).

@@ -79,7 +79,7 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Pair<UserWallet.Cold, Map<ByteArrayKey, ExtendedPublicKeysMap>> = withContext(dispatchers.io) {
         // todo replace it in task [REDACTED_JIRA]
-        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+        val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet)
         val result = tangemSdkManager.derivePublicKeys(
             cardId = null,
             derivations = derivations,

@@ -27,10 +27,10 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import kotlinx.collections.immutable.ImmutableList
 
-private val CardShape = RoundedCornerShape(16.dp)
 private val ChipShape = RoundedCornerShape(50.dp)
 
 /** One card per market, in the order the backend serves them. */
@@ -50,7 +50,7 @@ private fun MarketCard(state: PolymarketDetailsMarketUM, modifier: Modifier = Mo
     TangemSurface(
         modifier = modifier.fillMaxWidth(),
         color = TangemTheme.colors3.bg.secondary,
-        shape = CardShape,
+        shape = PolymarketCardShape,
     ) {
         Column(
             modifier = Modifier
@@ -74,22 +74,20 @@ private fun MarketCard(state: PolymarketDetailsMarketUM, modifier: Modifier = Mo
                         overflow = TextOverflow.Ellipsis,
                     )
 
-                    state.volume?.let { volume ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                text = stringResourceSafe(R.string.prediction_details_market_volume),
-                                color = TangemTheme.colors3.text.secondary,
-                                style = TangemTheme.typography3.caption.medium,
-                                maxLines = 1,
-                            )
-                            Text(
-                                text = volume.resolveReference(),
-                                color = TangemTheme.colors3.text.primary,
-                                style = TangemTheme.typography3.caption.medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResourceSafe(R.string.prediction_details_market_volume),
+                            color = TangemTheme.colors3.text.secondary,
+                            style = TangemTheme.typography3.caption.medium,
+                            maxLines = 1,
+                        )
+                        Text(
+                            text = state.volume.resolveReference(),
+                            color = TangemTheme.colors3.text.primary,
+                            style = TangemTheme.typography3.caption.medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
 

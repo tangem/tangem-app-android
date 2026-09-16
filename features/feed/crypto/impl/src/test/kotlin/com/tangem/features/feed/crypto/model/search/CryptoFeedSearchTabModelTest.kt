@@ -447,6 +447,7 @@ internal class CryptoFeedSearchTabModelTest {
         yieldRate = null,
         updateTimestamp = null,
         networks = null,
+        isRestrictedForCountry = false,
         imageHost = "",
     )
 

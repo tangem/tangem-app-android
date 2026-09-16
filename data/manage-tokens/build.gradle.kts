@@ -19,6 +19,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.arrow.core)
+    implementation(deps.moshi)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
@@ -33,7 +34,8 @@ dependencies {
     // endregion
 
     // region Project - Core
-    api(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.core.pagination)
     // endregion
@@ -47,6 +49,7 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.manageTokens)
     implementation(projects.domain.card)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     runtimeOnly(projects.domain.account)
@@ -59,5 +62,10 @@ dependencies {
     // region Project - Libs
     api(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
+    // endregion
+
+    // region Tests
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
     // endregion
 }

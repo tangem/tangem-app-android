@@ -145,6 +145,7 @@ internal class TangemPayMainBlockConverterTest {
             fiatRate = null,
             error = null,
             virtualAccount = null,
+            isBankOfframpAvailable = null,
             tariffPlan = null,
         )
     }

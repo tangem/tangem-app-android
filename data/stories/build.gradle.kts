@@ -4,7 +4,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     id("configuration")
-}
+}    
 
 android {
     namespace = "com.tangem.data.stories"
@@ -26,7 +26,8 @@ dependencies {
     // endregion
 
     // region Core modules
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
+    implementation(projects.grow.datasource)
     api(projects.core.utils)
     // endregion
 

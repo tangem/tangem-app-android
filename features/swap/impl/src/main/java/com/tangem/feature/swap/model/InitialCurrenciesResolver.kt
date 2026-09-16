@@ -6,10 +6,12 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.swap.models.isSwapTargetOnly
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
@@ -68,7 +70,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
      * @param swapCurrencyPosition preferred position for the initial currency
      * @param accountFlow non-null when the swap screen was opened for an account top-up/withdraw flow;
      *  `null` for a regular swap. Determines both where [initialCryptoCurrency] is looked up
-     *  (payment accounts vs. crypto portfolio accounts) and, combined with [isAccountFlowEnabled],
+     *  (payment, prediction or crypto portfolio accounts) and, combined with [isAccountFlowEnabled],
      *  which account FROM auto-fill priority applies.
      * @param initialToCryptoCurrency optional currency to pre-select as TO. It is placed into the TO slot
      *  ONLY if it already exists in the user's crypto portfolio (and the TO slot wasn't filled otherwise);
@@ -78,7 +80,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
      *  the account flow's own priority. For [AccountFlow.TopUp]: (a) the most-funded wallet token that is one of the account's own
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
-     *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token.
+     *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
+     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral.
      * @return pair of (from, to) [SwapCurrencyStatus]; either or both may be null
      */
     suspend operator fun invoke(
@@ -89,7 +92,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
         initialToCryptoCurrency: CryptoCurrency? = null,
         isAccountFlowEnabled: Boolean = false,
     ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
-        val isPaymentAccount = accountFlow != null
+        val isPaymentAccount = accountFlow is AccountFlow.TopUp || accountFlow is AccountFlow.Withdraw
+        val isPredictionWithdraw = accountFlow is AccountFlow.PredictionWithdraw
         val walletAccountList = getWalletAccountCurrencyStatusList(userWalletId, isAccountFlowEnabled)
         val cryptoPortfolioAccounts = walletAccountList.filterKeys { accountStatus ->
             accountStatus is AccountStatus.CryptoPortfolio
@@ -97,32 +101,35 @@ internal class InitialCurrenciesResolver @Inject constructor(
         val cryptoPaymentAccounts = walletAccountList.filterKeys { accountStatus ->
             accountStatus is AccountStatus.Payment
         }
+        val predictionAccounts = walletAccountList.filterKeys { accountStatus ->
+            accountStatus is AccountStatus.Prediction
+        }
 
-        val cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten()
+        val targetOnlyAccounts = walletAccountList.filterKeys { accountStatus ->
+            accountStatus.account.isSwapTargetOnly(isPredictionWithdraw)
+        }
+
+        val fromEligibleAccounts = cryptoPortfolioAccounts.filterKeys {
+            !it.account.isSwapTargetOnly(isPredictionWithdraw)
+        }
+        val cryptoCurrencyList = fromEligibleAccounts.values.flatten()
+        val lookupAccounts = when {
+            isPaymentAccount -> cryptoPaymentAccounts
+            isPredictionWithdraw -> predictionAccounts
+            else -> cryptoPortfolioAccounts
+        }
 
         val (from, to) = if (initialCryptoCurrency != null) {
-            val selectedSwapCurrencyStatus = if (isPaymentAccount) {
-                cryptoPaymentAccounts
-            } else {
-                cryptoPortfolioAccounts
-            }.firstNotNullOfOrNull { (_, currencyList) ->
-                currencyList.firstOrNull { currencyStatus ->
-                    currencyStatus.currency.id == initialCryptoCurrency.id
-                }
-            }
-
-            if (selectedSwapCurrencyStatus == null) {
-                null to null
-            } else {
-                placeSelectedCurrency(
-                    selectedSwapCurrencyStatus = selectedSwapCurrencyStatus,
-                    swapCurrencyPosition = swapCurrencyPosition,
-                    cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
-                )
-            }
+            resolveInitialPair(
+                initialCryptoCurrency = initialCryptoCurrency,
+                swapCurrencyPosition = swapCurrencyPosition,
+                lookupAccounts = lookupAccounts,
+                targetOnlyAccounts = targetOnlyAccounts,
+                cryptoPortfolioAccounts = fromEligibleAccounts,
+            )
         } else {
             selectCryptoCurrency(
-                cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+                cryptoPortfolioAccountsMap = fromEligibleAccounts,
                 cryptoCurrencyList = cryptoCurrencyList,
             ) to null
         }
@@ -133,15 +140,16 @@ internal class InitialCurrenciesResolver @Inject constructor(
             cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
         )
 
-        val prioritizedFrom = when {
-            !isAccountFlowEnabled -> from
-            accountFlow is AccountFlow.TopUp -> resolveAccountTopUpFromPriority(
+        val prioritizedFrom = if (isAccountFlowEnabled) {
+            resolveAccountFlowFromPriority(
+                accountFlow = accountFlow,
+                from = from,
                 userWalletId = userWalletId,
-                cryptoPortfolioAccounts = cryptoPortfolioAccounts,
-                cryptoCurrencyList = cryptoCurrencyList,
+                cryptoPortfolioAccounts = fromEligibleAccounts,
+                accountFlowAccounts = lookupAccounts,
             )
-            accountFlow is AccountFlow.Withdraw -> mostFundedAccountCurrency(cryptoPaymentAccounts) ?: from
-            else -> from
+        } else {
+            from
         }
 
         // Add funds anchors TO to the account, but passes in its legacy currency, which a multichain account
@@ -156,14 +164,70 @@ internal class InitialCurrenciesResolver @Inject constructor(
     }
 
     /**
+     * Places [initialCryptoCurrency] into its slot. A currency of a [target-only][isSwapTargetOnly] account goes
+     * to TO whatever position was asked for, and FROM is auto-filled from the portfolio — the entry point can
+     * only have meant "fund this".
+     */
+    private fun resolveInitialPair(
+        initialCryptoCurrency: CryptoCurrency,
+        swapCurrencyPosition: CurrencyPosition,
+        lookupAccounts: Map<out AccountStatus, List<SwapCurrencyStatus>>,
+        targetOnlyAccounts: Map<out AccountStatus, List<SwapCurrencyStatus>>,
+        cryptoPortfolioAccounts: Map<AccountStatus.CryptoPortfolio, List<SwapCurrencyStatus>>,
+    ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
+        val targetOnly = targetOnlyAccounts.findCurrency(initialCryptoCurrency)
+        if (targetOnly != null) {
+            return selectCryptoCurrency(
+                cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+                cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten(),
+            ) to targetOnly
+        }
+
+        val selected = lookupAccounts.findCurrency(initialCryptoCurrency) ?: return null to null
+
+        return placeSelectedCurrency(
+            selectedSwapCurrencyStatus = selected,
+            swapCurrencyPosition = swapCurrencyPosition,
+            cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+        )
+    }
+
+    private fun Map<out AccountStatus, List<SwapCurrencyStatus>>.findCurrency(
+        currency: CryptoCurrency,
+    ): SwapCurrencyStatus? = firstNotNullOfOrNull { (_, currencyList) ->
+        currencyList.firstOrNull { it.currency.id == currency.id }
+    }
+
+    /**
      * The account's own token holding the most funds, preferring one the user can actually swap. Used wherever
      * the entry point's currency is only an intent: it is the account's hardcoded legacy currency, which a
      * multichain account may not hold at all.
      */
     private fun mostFundedAccountCurrency(
-        cryptoPaymentAccounts: Map<AccountStatus, List<SwapCurrencyStatus>>,
-    ): SwapCurrencyStatus? = cryptoPaymentAccounts.values.flatten()
+        accountCurrencies: Map<out AccountStatus, List<SwapCurrencyStatus>>,
+    ): SwapCurrencyStatus? = accountCurrencies.values.flatten()
         .maxWithOrNull(compareBy<SwapCurrencyStatus> { it.isAvailableForSwap }.then(fundsComparator))
+
+    /**
+     * @param accountFlowAccounts the accounts the flow anchors; a withdrawal draws FROM from their most-funded token
+     * @return the flow's own FROM priority, or [from] when the flow has none
+     */
+    private suspend fun resolveAccountFlowFromPriority(
+        accountFlow: AccountFlow?,
+        from: SwapCurrencyStatus?,
+        userWalletId: UserWalletId,
+        cryptoPortfolioAccounts: Map<AccountStatus.CryptoPortfolio, List<SwapCurrencyStatus>>,
+        accountFlowAccounts: Map<out AccountStatus, List<SwapCurrencyStatus>>,
+    ): SwapCurrencyStatus? = when (accountFlow) {
+        is AccountFlow.TopUp -> resolveAccountTopUpFromPriority(
+            userWalletId = userWalletId,
+            cryptoPortfolioAccounts = cryptoPortfolioAccounts,
+            cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten(),
+        )
+        is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw ->
+            mostFundedAccountCurrency(accountFlowAccounts) ?: from
+        null -> from
+    }
 
     /**
      * Account top-up FROM auto-fill priority: (a) the most-funded wallet token that is one of the
@@ -232,14 +296,15 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
         return walletAccountCurrencyStatuses.associateWith { accountStatus ->
             val currencyStatuses = when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.flattenCurrencies()
+                is AccountStatus.Personal -> accountStatus.flattenCurrencies()
                 is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus, isAccountFlowEnabled)
                 // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
                 is AccountStatus.Virtual -> emptyList()
-                // Prediction account isn't a swap source either — the same MVP rule
-                is AccountStatus.Prediction -> emptyList()
-                // Joint currencies live on the Safe contract and never swap through the participant's EOA
-                is AccountStatus.Joint -> emptyList()
+                is AccountStatus.Prediction -> listOfNotNull(
+                    (accountStatus.value as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus,
+                )
+                is AccountStatus.Collectibles -> emptyList()
+                is AccountStatus.Joint -> accountStatus.flattenCurrencies()
             }
             val availabilityStates = rampStateManager.availableForSwap(
                 userWalletId,

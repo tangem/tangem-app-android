@@ -4,15 +4,15 @@ import android.net.Uri
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
+import com.tangem.grow.datasource.config.GrowEnvironmentConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class MercuryoTopUpRepository @Inject constructor(
-    private val environmentConfig: EnvironmentConfig,
+    private val growEnvironmentConfig: GrowEnvironmentConfig,
     private val dispatchersProvider: CoroutineDispatcherProvider,
 ) : LegacyTopUpRepository {
 
@@ -23,11 +23,11 @@ internal class MercuryoTopUpRepository @Inject constructor(
             val builder = Uri.Builder()
                 .scheme(LegacyTopUpRepository.SCHEME)
                 .authority("exchange.mercuryo.io")
-                .appendQueryParameter("widget_id", environmentConfig.mercuryoWidgetId)
+                .appendQueryParameter("widget_id", growEnvironmentConfig.mercuryoWidgetId)
                 .appendQueryParameter("type", "buy")
                 .appendQueryParameter("currency", cryptoCurrency.symbol)
                 .appendQueryParameter("address", walletAddress)
-                .appendQueryParameter("signature", environmentConfig.signature(walletAddress))
+                .appendQueryParameter("signature", growEnvironmentConfig.signature(walletAddress))
                 .appendQueryParameter("fix_currency", "true")
                 .appendQueryParameter("redirect_url", LegacyTopUpRepository.SUCCESS_URL)
 
@@ -38,7 +38,7 @@ internal class MercuryoTopUpRepository @Inject constructor(
             builder.build().toString()
         }
 
-    private fun EnvironmentConfig.signature(address: String) = (address + mercuryoSecret)
+    private fun GrowEnvironmentConfig.signature(address: String) = (address + mercuryoSecret)
         .calculateSha512()
         .toHexString()
         .lowercase()

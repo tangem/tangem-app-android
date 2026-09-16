@@ -341,7 +341,7 @@ internal class DefaultSwapDeepLinkHandler @AssistedInject constructor(
         val userWallet = getUserWalletUseCase(walletId).getOrNull() ?: return emptyList()
         val accountList = singleAccountStatusListSupplier.getSyncOrNull(walletId) ?: return emptyList()
         val portfolioStatuses = accountList.accountStatuses
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterIsInstance<AccountStatus.Personal>()
             .map { portfolio -> portfolio.account to portfolio.flattenCurrencies() }
         val allCurrencies = portfolioStatuses.flatMap { (_, statuses) -> statuses.map { it.currency } }
         val availability = rampStateManager.availableForSwap(walletId, allCurrencies)

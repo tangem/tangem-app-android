@@ -15,8 +15,9 @@ import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.create
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -46,6 +47,7 @@ internal object WalletsDataModule {
     @Singleton
     fun providesWalletsRepository(
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
@@ -54,6 +56,7 @@ internal object WalletsDataModule {
     ): WalletsRepository {
         return DefaultWalletsRepository(
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
@@ -83,8 +86,11 @@ internal object WalletsDataModule {
 
     @Provides
     @Singleton
-    fun provideMigrateNamesRepository(appPreferencesStore: AppPreferencesStore): WalletNamesMigrationRepository {
-        return DefaultWalletNamesMigrationRepository(appPreferencesStore)
+    fun provideMigrateNamesRepository(
+        appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
+    ): WalletNamesMigrationRepository {
+        return DefaultWalletNamesMigrationRepository(appPreferencesStore, storePreferencesKeys)
     }
 
     @Provides
@@ -94,14 +100,14 @@ internal object WalletsDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
-        appsFlyerStore: AppsFlyerStore,
+        appsFlyerRepository: AppsFlyerRepository,
     ): WalletsPromoRepository {
         return DefaultWalletsPromoRepository(
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
-            appsFlyerStore = appsFlyerStore,
+            appsFlyerRepository = appsFlyerRepository,
         )
     }
 

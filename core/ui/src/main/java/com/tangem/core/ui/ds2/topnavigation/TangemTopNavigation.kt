@@ -3,14 +3,11 @@ package com.tangem.core.ui.ds2.topnavigation
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,18 +18,21 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.ds2.animation.TangemTransition
+import com.tangem.core.ui.ds2.animation.WithoutMaterialShadowWhileAnimating
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
+import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.fade.TangemFade
-import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -52,8 +52,11 @@ private enum class SlotId { Start, Content, Group, End }
  * @param blurBackground Whether the fade behind the row should blur the content below.
  * @param fadeEnabled Whether the fade behind the row is shown. Alpha is animated on change. Defaults to true.
  * @param startButton Leading slot. Typically a back button (see [TangemButton.Back]).
- * @param endButtonsGroup Optional pill-grouped secondary actions placed just before [endButton].
- * @param isEndButtonsGroupBackgroundShown Whether the pill-grouped secondary actions should have a background. Defaults to true.
+ * @param endButtonsGroup Optional secondary actions placed just before [endButton], grouped in a
+ *   [TangemButtonStack]. Expected to emit its entries — see [TangemButton.GroupEntry].
+ * @param isEndButtonsGroupBackgroundShown Whether the grouped secondary actions keep the stack's
+ *   material pill ([TangemButtonStack.Variant.Material]) or drop it
+ *   ([TangemButtonStack.Variant.Ghost]). Toggling cross-fades the pill. Defaults to true.
  * @param endButton Trailing slot. Typically, a close button (see [TangemButton.Close]).
  * @param contentColumn Center slot. Place title/subtitle children here.
  */
@@ -128,9 +131,13 @@ fun TangemTopNavigation(
                     ) {
                         WithoutMaterialShadowWhileAnimating {
                             displayedGroup?.let { group ->
-                                EndButtonsGroup(
-                                    isBackgroundShown = isEndButtonsGroupBackgroundShown,
-                                    group = group,
+                                TangemButtonStack(
+                                    variant = if (isEndButtonsGroupBackgroundShown) {
+                                        TangemButtonStack.Variant.Material
+                                    } else {
+                                        TangemButtonStack.Variant.Ghost
+                                    },
+                                    content = group,
                                 )
                             }
                         }
@@ -292,49 +299,6 @@ fun TangemTopNavigation(
     )
 }
 
-/**
- * The group slot's content: the secondary actions, optionally wrapped in a material pill.
- *
- * Only the pill cross-fades — [group] is hosted by both branches, so its row is built once and handed
- * to whichever one is showing.
- */
-@Composable
-private fun EndButtonsGroup(isBackgroundShown: Boolean, group: @Composable RowScope.() -> Unit) {
-    val buttons: @Composable () -> Unit = {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), content = group)
-    }
-
-    AnimatedContent(
-        targetState = isBackgroundShown,
-        transitionSpec = { TangemTransition.FadeEnter togetherWith TangemTransition.FadeExit },
-        label = "TangemTopNavigation.endButtonsGroupBackground",
-    ) { shown ->
-        WithoutMaterialShadowWhileAnimating {
-            if (shown) {
-                TangemSurface(isMaterial = true, shape = CircleShape) { buttons() }
-            } else {
-                buttons()
-            }
-        }
-    }
-}
-
-/**
- * Runs [content] with the material drop shadow suppressed while this enter/exit transition animates.
- *
- * A running transition draws its content into a graphics layer, which clips drawing to the content's
- * bounding box. A material surface paints its shadow outside its own bounds, so the clip turns the soft
- * halo into a hard rectangle for the length of the animation. See [LocalMaterialShadowEnabled].
- */
-@Composable
-private fun AnimatedVisibilityScope.WithoutMaterialShadowWhileAnimating(content: @Composable () -> Unit) {
-    // AND-ed with the current value so an outer animation keeps the shadow off while an inner one idles.
-    val isShadowEnabled = LocalMaterialShadowEnabled.current && !transition.isRunning
-    CompositionLocalProvider(LocalMaterialShadowEnabled provides isShadowEnabled) {
-        content()
-    }
-}
-
 @Composable
 private fun ColumnScope.TitleSubtitle(title: TextReference, subtitle: TextReference?) {
     // Title swaps in place (no size change), so a pure cross-fade reads better than expand/shrink,
@@ -419,8 +383,9 @@ private fun Preview() {
                     TangemNavigationText(text = "Subtitle", role = TangemNavigationText.Role.Subtitle)
                 },
                 endButtonsGroup = {
-                    TangemButton(variant = TangemButton.Variant.Ghost) { }
-                    TangemButton(variant = TangemButton.Variant.Ghost) { }
+                    val icon = TangemIconUM.Icon(iconRes = R.drawable.ic_information_24)
+                    TangemButton.GroupEntry(iconUM = icon) { }
+                    TangemButton.GroupEntry(iconUM = icon) { }
                 },
                 endButton = { TangemButton.Close { } },
             )

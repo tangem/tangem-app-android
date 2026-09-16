@@ -5,12 +5,14 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -18,7 +20,10 @@ import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 
 /**
  * Creates a joint account: picks the owner derivation index, signs the payload with the card in one tap,
@@ -32,6 +37,7 @@ class CreateJointAccountUseCase(
     private val signer: JointAccountSigner,
     private val fetcher: SingleJointAccountListFetcher,
     private val supplier: SingleJointAccountListSupplier,
+    private val accountListFetcher: SingleAccountListFetcher,
 ) {
 
     suspend operator fun invoke(
@@ -41,11 +47,11 @@ class CreateJointAccountUseCase(
     ): Either<JointAccountCreationError, JointAccount> = either {
         val rawIndex = Either
             .catch { repository.getFreeOwnerDerivationIndex(userWalletId = userWalletId) }
-            .mapLeft(JointAccountCreationError::Failed)
+            .mapLeft(JointAccountFlowError::Failed)
             .bind()
 
         val derivationIndex = DerivationIndex(value = rawIndex)
-            .mapLeft { JointAccountCreationError.InvalidDerivationIndex(cause = it) }
+            .mapLeft { JointAccountFlowError.InvalidDerivationIndex(cause = it) }
             .bind()
 
         val signResult = signer
@@ -78,7 +84,7 @@ class CreateJointAccountUseCase(
                     signature = signResult.signature,
                 )
             }
-            .mapLeft(JointAccountCreationError::Failed)
+            .mapLeft(JointAccountFlowError::Failed)
             .bind()
 
         val refresh = refreshAccounts(userWalletId = userWalletId)
@@ -90,7 +96,7 @@ class CreateJointAccountUseCase(
             JointAccountCreationResult.CreatorAlreadyRegistered -> {
                 // Here the refresh is the only source of the existing account, so its failure is the real cause —
                 // reporting "not found" instead would blame the data for a network problem
-                refresh.mapLeft(JointAccountCreationError::Failed).bind()
+                refresh.mapLeft(JointAccountFlowError::Failed).bind()
 
                 findOwnAccount(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress).bind()
             }
@@ -115,8 +121,21 @@ class CreateJointAccountUseCase(
         )
     }
 
-    private suspend fun refreshAccounts(userWalletId: UserWalletId): Either<Throwable, Unit> {
-        return fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
+    private suspend fun refreshAccounts(userWalletId: UserWalletId): Either<Throwable, Unit> = coroutineScope {
+        launch { refreshAccountList(userWalletId = userWalletId) }
+
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId))
+    }
+
+    /**
+     * The wallet screen takes `Account.Joint` from the accounts document, not from the joint accounts store, so
+     * without this refetch the new row shows up only after a pull-to-refresh. Best-effort: the account is already
+     * registered, and the document catches up on the next fetch.
+     */
+    private suspend fun refreshAccountList(userWalletId: UserWalletId) {
+        accountListFetcher(params = SingleAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
+            TangemLogger.e("Failed to refetch the account list of $userWalletId after joint account creation", it)
+        }
     }
 
     /** The own account is found by the owner address derived from the card, never by trusting an index. */
@@ -133,7 +152,7 @@ class CreateJointAccountUseCase(
     }
 
     private fun toCreationError(cause: Throwable): JointAccountCreationError = when (cause) {
-        is TangemSdkError.UserCancelled -> JointAccountCreationError.UserCancelled
-        else -> JointAccountCreationError.Failed(cause = cause)
+        is TangemSdkError.UserCancelled -> JointAccountFlowError.UserCancelled
+        else -> JointAccountFlowError.Failed(cause = cause)
     }
 }

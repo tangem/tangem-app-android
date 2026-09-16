@@ -21,7 +21,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.requestPermission
-import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
+import com.tangem.data.account.store.AccountTokenMigrationStore
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.feature.walletsettings.component.NetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
@@ -138,8 +138,8 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
             addAccountTypeComponentFactory.create(
                 context = childByContext(componentContext),
                 params = AddAccountTypeComponent.Params(
-                    onCryptoAccountClick = model::onAddCryptoAccountClick,
-                    onJointAccountClick = model::onAddJointAccountClick,
+                    onCryptoAccountClick = { model.onAddCryptoAccountClick(config.isCryptoAccountEnabled) },
+                    onJointAccountClick = { model.onAddJointAccountClick(config.isJointAccountEnabled) },
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )

@@ -47,7 +47,7 @@ internal class TokenActionsHandlerSwapTest {
         status = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading),
         actions = emptyList(),
         isAccountMode = false,
-        account = mockk<AccountStatus.CryptoPortfolio>(relaxed = true),
+        account = mockk<AccountStatus.Personal>(relaxed = true),
     )
 
     @Test

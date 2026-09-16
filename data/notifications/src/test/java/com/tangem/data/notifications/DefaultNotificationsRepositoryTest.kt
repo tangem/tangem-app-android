@@ -1,7 +1,7 @@
 package com.tangem.data.notifications
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -22,8 +22,11 @@ class DefaultNotificationsRepositoryTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = preferencesDataStore,
     )
+    private val storePreferencesKeys = StorePreferencesKeys()
+
     private val repository = DefaultNotificationsRepository(
         appPreferencesStore = appPreferencesStore,
+        storePreferencesKeys = storePreferencesKeys,
     )
 
     @Test
@@ -31,7 +34,7 @@ class DefaultNotificationsRepositoryTest {
         // GIVEN
         val key = "test-key"
         val preferences = mockk<Preferences>(relaxed = true)
-        every { preferences[PreferencesKeys.getShouldShowNotificationKey(key)] } returns true
+        every { preferences[storePreferencesKeys.getShouldShowNotificationKey(key)] } returns true
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
 
         // WHEN
@@ -46,7 +49,7 @@ class DefaultNotificationsRepositoryTest {
         // GIVEN
         val key = "test-key"
         val preferences = mockk<Preferences>(relaxed = true)
-        every { preferences[PreferencesKeys.getShouldShowNotificationKey(key)] } returns false
+        every { preferences[storePreferencesKeys.getShouldShowNotificationKey(key)] } returns false
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
 
         // WHEN
@@ -87,7 +90,7 @@ class DefaultNotificationsRepositoryTest {
         // GIVEN
         val expectedCount = 5
         val preferences = mockk<Preferences>(relaxed = true)
-        every { preferences[PreferencesKeys.TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY] } returns expectedCount
+        every { preferences[storePreferencesKeys.tronNetworkFeeNotificationShowCountKey] } returns expectedCount
         coEvery { preferencesDataStore.data } returns flowOf(preferences)
 
         // WHEN

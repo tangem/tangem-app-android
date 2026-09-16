@@ -14,6 +14,7 @@ import com.tangem.features.storiesv2.impl.content.StoryV2EndBehavior
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Origin
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
+import com.tangem.core.res.R as CoreResR
 
 /**
  * Compositions the tester showcase can play, each making one behaviour of the engine visible. Compositions rather
@@ -59,7 +60,7 @@ internal enum class StoryV2Preset(val title: String, val description: String) {
 
         private val primaryAction = StoryV2Action(
             id = "scan_wallet",
-            label = resourceReference(R.string.stories_onboarding_action_scan),
+            label = resourceReference(CoreResR.string.introduction_stories_button_primary),
             style = StoryV2Action.Style.PRIMARY,
             target = StoryV2Action.Target.Screen(key = "scan_wallet"),
             icon = StoryV2MediaRef.DrawableResource(R.drawable.ic_tangem_24),

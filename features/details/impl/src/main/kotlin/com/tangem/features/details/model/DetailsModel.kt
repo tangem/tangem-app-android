@@ -37,7 +37,8 @@ import com.tangem.features.details.entity.SelectContactSupportTypeBS
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
@@ -68,7 +69,8 @@ internal class DetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val virtualAccountFeatureToggles: VirtualAccountFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val getVirtualAccountEligibilityUseCase: GetVirtualAccountEligibilityUseCase,
 ) : Model() {
@@ -300,12 +302,16 @@ internal class DetailsModel @Inject constructor(
 
     private fun addTangemPayItemIfEligible() {
         modelScope.launch {
-            val isEligible = tangemPayEligibilityManager
-                .getEligibleWallets(
-                    shouldExcludePaeraCustomers = true,
-                    entryPoint = TangemPayEntryPoint.DETAILS,
-                )
-                .isNotEmpty()
+            val isEligible = if (tangemPayFeatureToggles.isResidencyStepEnabled) {
+                tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true).isNotEmpty()
+            } else {
+                tangemPayEligibilityManager
+                    .getEligibleWallets(
+                        shouldExcludePaeraCustomers = true,
+                        entryPoint = TangemPayEntryPoint.DETAILS,
+                    )
+                    .isNotEmpty()
+            }
             if (isEligible) {
                 analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonShowed())
                 items.update { itemsBuilder.addTangemPayItem(items = it, onClick = ::onTangemPayItemClicked) }
@@ -316,6 +322,10 @@ internal class DetailsModel @Inject constructor(
     private fun onTangemPayItemClicked() {
         modelScope.launch {
             analyticsEventHandler.send(TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked())
+            if (tangemPayFeatureToggles.isResidencyStepEnabled) {
+                router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
+                return@launch
+            }
             val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DETAILS)
             if (isEligible) {
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
@@ -327,9 +337,9 @@ internal class DetailsModel @Inject constructor(
 
     private fun addVirtualAccountItemIfEligible() {
         modelScope.launch {
-            val isVirtualAccountEnabled = virtualAccountFeatureToggles.isVirtualAccountsEnabled
+            val isMoneyAccountEnabled = moneyAccountFeatureToggles.isMoneyAccountsEnabled
             val eligibility = getVirtualAccountEligibilityUseCase(VirtualAccountEntryPoint.DETAILS)
-            if (eligibility is VirtualAccountEligibility.Available && isVirtualAccountEnabled) {
+            if (eligibility is VirtualAccountEligibility.Available && isMoneyAccountEnabled) {
                 items.update { items ->
                     itemsBuilder.addVirtualAccountItem(
                         items = items,

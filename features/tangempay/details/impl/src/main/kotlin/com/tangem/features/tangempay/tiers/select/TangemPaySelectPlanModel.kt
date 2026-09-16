@@ -177,7 +177,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         onPlanSelected = ::onPlanSelected,
         onBackClick = ::onBackClick,
         onCloseClick = ::onCloseClick,
-        onPointLinkClick = urlOpener::openUrl,
+        onLinkClick = urlOpener::openUrl,
         content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
         compare = if (showPlanCompare) buildCompare() else null,
     )

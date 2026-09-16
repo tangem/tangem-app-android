@@ -5,7 +5,7 @@ import com.appsflyer.AppsFlyerLib
 import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
 import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
 import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
@@ -24,7 +24,7 @@ class AppsFlyerClient @AssistedInject constructor(
     @ApplicationContext private val context: Context,
     appsFlyerDeepLinkListener: AppsFlyerDeepLinkListener,
     tangemAFConversionListener: TangemAFConversionListener,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
 ) : AppsFlyerAnalyticsClient {
 
@@ -71,7 +71,7 @@ class AppsFlyerClient @AssistedInject constructor(
             val appsFlyerUID = appsFlyerLib.getAppsFlyerUID(context)
 
             if (appsFlyerUID != null) {
-                appsFlyerStore.storeUIDIfAbsent(appsFlyerUID)
+                appsFlyerRepository.storeUIDIfAbsent(appsFlyerUID)
             }
         }
     }

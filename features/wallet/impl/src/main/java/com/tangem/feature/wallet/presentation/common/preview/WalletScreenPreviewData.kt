@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.top
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
@@ -183,6 +184,7 @@ internal object WalletScreenPreviewData {
         tangemPayMainUM = TangemPayMainUM.Loading,
         virtualAccountMainUM = VirtualAccountMainUM.Loading,
         polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+        collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
     )
 
     private val walletEmpty = WalletUM.Content(
@@ -200,6 +202,7 @@ internal object WalletScreenPreviewData {
         tangemPayMainUM = TangemPayMainUM.Empty,
         virtualAccountMainUM = VirtualAccountMainUM.Empty,
         polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+        collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
     )
 
     private val walletAccountDefault = walletDefault.copy(

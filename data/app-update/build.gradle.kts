@@ -12,7 +12,8 @@ android {
 
 dependencies {
 
-    implementation(projects.core.datasource)
+    implementation(projects.core.local)
+    implementation(projects.store.datasource)
     implementation(projects.core.utils)
 
     implementation(projects.domain.appUpdate)

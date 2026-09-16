@@ -7,7 +7,7 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO

@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.AddressBookOpenMode
+import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
@@ -23,6 +24,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
@@ -41,7 +43,15 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Home(
         val launchMode: InitScreenLaunchMode = InitScreenLaunchMode.Standard,
-    ) : AppRoute(path = "/home")
+        val entryReason: EntryReason = EntryReason.Launch,
+    ) : AppRoute(path = "/home") {
+
+        @Serializable
+        enum class EntryReason {
+            Launch,
+            LastWalletForgotten,
+        }
+    }
 
     @Serializable
     data class Welcome(
@@ -126,7 +136,10 @@ sealed class AppRoute(val path: String) : Route {
     data object AppSettings : AppRoute(path = "/app_settings")
 
     @Serializable
-    data object Collectibles : AppRoute(path = "/collectibles")
+    data class Collectibles(
+        val userWalletId: UserWalletId,
+        val startRoute: CollectiblesStartRoute,
+    ) : AppRoute(path = "/collectibles")
 
     /**
      * Reset to factory
@@ -254,12 +267,16 @@ sealed class AppRoute(val path: String) : Route {
          * Explicit mode for account top-up / withdraw flows opened on the swap screen.
          * TopUp anchors the account as an abstract TO; Withdraw anchors it as the concrete FROM.
          * Single Payment account per wallet — resolved by userWalletId on the swap side, no id needed here.
+         * PredictionWithdraw anchors the prediction account as the concrete FROM; the debit is not signed with
+         * a wallet key but submitted as a signed batch through our backend.
          */
         @Serializable
         sealed interface AccountFlow {
             @Serializable data object TopUp : AccountFlow
 
             @Serializable data object Withdraw : AccountFlow
+
+            @Serializable data object PredictionWithdraw : AccountFlow
         }
     }
 
@@ -504,12 +521,14 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/joint_account_join/$inviteId")
 
     @Serializable
+    /** [cryptoAccountId] is null only in navigation state saved before the field existed: the screen falls back
+     * to the wallet's first joint account. */
     data class JointAccountMembers(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/joint_account_members/${userWalletId.stringValue}")
-
-    @Serializable
-    data object JointSupportedNetworks : AppRoute(path = "/joint_account_supported_networks")
+        val cryptoAccountId: String? = null,
+    ) : AppRoute(
+        path = "/joint_account_members/${userWalletId.stringValue}" + cryptoAccountId?.let { "/$it" }.orEmpty(),
+    )
 
     @Serializable
     data class EditAccount(
@@ -534,6 +553,11 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
+
+    @Serializable
+    data class TangemPayCampaign(
+        val campaignKey: String,
+    ) : AppRoute(path = "/tangem_pay_campaign")
 
     @Serializable
     data class TangemPayOnboarding(
@@ -570,6 +594,11 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class TangemPayEligibility(
+        val product: TangemPayProduct,
+    ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
     data class VirtualAccountOnboarding(

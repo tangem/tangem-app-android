@@ -8,6 +8,7 @@ import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
+import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
@@ -143,6 +144,61 @@ internal class MarketPulseBatchFlowManagerTest {
         assertThat(manager.isSearchNotFoundState.value).isTrue()
     }
 
+    @Test
+    fun `GIVEN no category filter WHEN reload is called THEN the request is not narrowed to a category`() = runTest {
+        // Arrange
+        val actions = captureActions()
+        val manager = createManager(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        manager.reload()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(reloadConfigs(actions).map(TokenMarketListConfig::geckoCategoryId)).containsExactly(null)
+    }
+
+    @Test
+    fun `GIVEN a category filter WHEN reload is called THEN the request carries its id`() = runTest {
+        // Arrange
+        val actions = captureActions()
+        val manager = createManager(testScope = this, currentCategoryFilter = { selectionOf("layer-1") })
+        advanceUntilIdle()
+
+        // Act
+        manager.reload()
+        advanceUntilIdle()
+
+        // Assert — only the id travels; the name is the tab chip's label
+        assertThat(reloadConfigs(actions).map(TokenMarketListConfig::geckoCategoryId)).containsExactly("layer-1")
+    }
+
+    @Test
+    fun `GIVEN the filter changed between reloads WHEN they are sent THEN each request carries the current one`() =
+        runTest {
+            // Arrange - the filter is a lambda, so a reload reads the selection of its own moment
+            val actions = captureActions()
+            var selection = MarketCategorySelection()
+            val manager = createManager(testScope = this, currentCategoryFilter = { selection })
+            advanceUntilIdle()
+            manager.reload()
+            advanceUntilIdle()
+
+            // Act
+            selection = selectionOf("ai")
+            manager.reload()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(reloadConfigs(actions).map(TokenMarketListConfig::geckoCategoryId))
+                .containsExactly(null, "ai").inOrder()
+        }
+
+    private fun selectionOf(id: String) = MarketCategorySelection(
+        category = MarketCategorySelection.Entry(id = id, name = id.uppercase()),
+    )
+
     private fun TestScope.captureActions(
         state: MutableStateFlow<BatchListState<Int, List<TokenMarket>>> = MutableStateFlow(
             BatchListState(data = emptyList(), status = PaginationStatus.None),
@@ -175,6 +231,7 @@ internal class MarketPulseBatchFlowManagerTest {
     private fun createManager(
         testScope: TestScope,
         searchText: String? = null,
+        currentCategoryFilter: () -> MarketCategorySelection = { MarketCategorySelection() },
     ): MarketPulseBatchFlowManager {
         val testDispatcher = StandardTestDispatcher(testScope.testScheduler)
         // not backgroundScope: its jobs are not advanced by advanceUntilIdle here, and the manager's
@@ -186,6 +243,7 @@ internal class MarketPulseBatchFlowManagerTest {
             currentTrendInterval = { MarketPulseInterval.H24 },
             currentAppCurrency = { AppCurrency.Default },
             currentCategory = { MarketPulseCategory.MarketCap },
+            currentCategoryFilter = currentCategoryFilter,
             onItemClick = {},
             modelScope = scope,
             dispatchers = TestingCoroutineDispatcherProvider(

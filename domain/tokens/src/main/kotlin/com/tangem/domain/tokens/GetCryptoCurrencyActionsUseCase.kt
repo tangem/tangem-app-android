@@ -4,6 +4,7 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.stories.StoriesRepository
@@ -12,6 +13,7 @@ import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.actions.CommonActionsFactory
+import com.tangem.domain.tokens.actions.JointAccountActionsFactory
 import com.tangem.domain.tokens.actions.MissedDerivationsActionsFactory
 import com.tangem.domain.tokens.actions.OutdatedDataActionsFactory
 import com.tangem.domain.tokens.actions.UnreachableActionsFactory
@@ -53,6 +55,10 @@ class GetCryptoCurrencyActionsUseCase(
         walletManagersFacade = walletManagersFacade,
         rampStateManager = rampManager,
     )
+    private val jointAccountActionsFactory = JointAccountActionsFactory(
+        walletManagersFacade = walletManagersFacade,
+        rampStateManager = rampManager,
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(
@@ -61,6 +67,20 @@ class GetCryptoCurrencyActionsUseCase(
         yieldSupplyAvailability: YieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
     ): Flow<TokenActionsState> {
         return when {
+            cryptoCurrencyStatus.currency.network.derivationPath is Network.DerivationPath.Joint -> {
+                getStakingAvailabilityFlow(
+                    userWalletId = userWallet.walletId,
+                    currency = cryptoCurrencyStatus.currency,
+                )
+                    .mapLatest { stakingAvailability ->
+                        jointAccountActionsFactory.create(
+                            userWallet = userWallet,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            stakingAvailability = stakingAvailability,
+                            yieldSupplyAvailability = yieldSupplyAvailability,
+                        )
+                    }
+            }
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation -> {
                 flowOf(value = MissedDerivationsActionsFactory.create())
             }

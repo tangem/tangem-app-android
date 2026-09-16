@@ -92,12 +92,15 @@ internal class SendConfirmComponent(
         onClick = model::showEditAmount,
     )
 
+    private val isJointAccount = params.accountFlow.value is Account.Joint
+
     private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
         context = appComponentContext,
         params = FeeSelectorParams.FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = params.onLoadFee,
-            onLoadFeeExtended = params.onLoadFeeExtended,
+            onLoadFeeExtended = params.onLoadFeeExtended.takeUnless { isJointAccount },
+            onDisableCustomFee = { isJointAccount },
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeStateConfiguration = model.feeStateConfiguration,

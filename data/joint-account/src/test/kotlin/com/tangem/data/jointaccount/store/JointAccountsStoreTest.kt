@@ -32,6 +32,25 @@ internal class JointAccountsStoreTest {
     )
 
     @Test
+    fun `GIVEN two wallets WHEN remove one THEN it is gone from runtime and persistence, the other stays`() = runTest {
+        // Arrange
+        val otherWalletId = UserWalletId("0A0B0C0D0E0F011121314151617181910A0B0C0D0E0F01112131415161718191")
+        val persistence = MockStateDataStore<WalletIdWithJointAccountsDM>(default = emptyMap())
+        val store = createStore(persistence = persistence, scope = TestAppCoroutineScope(testScope = this))
+        advanceUntilIdle()
+        store.store(walletId, listOf(createJointAccount()))
+        store.store(otherWalletId, listOf(createJointAccount(cryptoAccountId = "B")))
+
+        // Act
+        store.remove(listOf(walletId))
+
+        // Assert
+        assertThat(store.getSyncOrNull(walletId)).isNull()
+        assertThat(store.getSyncOrNull(otherWalletId)).hasSize(1)
+        assertThat(persistence.data.first().keys).containsExactly(otherWalletId.stringValue)
+    }
+
+    @Test
     fun `GIVEN empty persistence WHEN created THEN get emits null for unknown wallet instead of hanging`() = runTest {
         // Arrange
         val store = createStore(scope = TestAppCoroutineScope(testScope = this))

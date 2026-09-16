@@ -20,7 +20,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.visa.model.VirtualAccountActivationData
@@ -120,7 +120,7 @@ class MockTangemSdkManager(
         return CompletionResult.Success(true)
     }
 
-    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWallet: UserWallet.Cold): CompletionResult<Boolean> {
         return CompletionResult.Success(true)
     }
 

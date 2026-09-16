@@ -7,6 +7,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
+import java.time.Instant
 
 /**
  * Fills the header the user reads before paying.
@@ -27,8 +28,12 @@ internal class SetMarketTransformer(
             imageUrl = market.imageUrl ?: market.iconUrl,
             outcomeTitle = outcome.title,
             outcomePriceCents = outcome.probability?.toCents(),
+            resolutionDateMillis = market.endDate?.toEpochMillisOrNull(),
         ),
+        isMarketAcceptingOrders = market.isAcceptingOrders,
     ).recomputeGate()
 
     private fun BigDecimal.toCents(): Int = movePointRight(2).toInt()
+
+    private fun String.toEpochMillisOrNull(): Long? = runCatching { Instant.parse(this).toEpochMilli() }.getOrNull()
 }

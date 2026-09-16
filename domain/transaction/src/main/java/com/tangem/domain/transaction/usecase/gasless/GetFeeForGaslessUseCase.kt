@@ -139,7 +139,7 @@ class GetFeeForGaslessUseCase(
         val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
         val networkCurrenciesStatuses = accountStatusList
-            .flattenCurrencies()
+            .flattenPersonalCurrencies()
             .filter { it.currency.network.id == network.id }
 
         val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO

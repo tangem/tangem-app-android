@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,6 +21,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.NFTCollectionsScreenTestTags
 import com.tangem.features.nft.collections.entity.NFTCollectionAssetsListUM
 import com.tangem.features.nft.collections.entity.NFTCollectionUM
 import com.tangem.features.nft.common.ui.NFTLogo
@@ -39,6 +41,7 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
         Row(
             modifier = Modifier
                 .clickable(onClick = state.onExpandClick)
+                .testTag(NFTCollectionsScreenTestTags.COLLECTION_ITEM)
                 .padding(
                     vertical = TangemTheme.dimens.spacing16,
                     horizontal = TangemTheme.dimens.spacing12,

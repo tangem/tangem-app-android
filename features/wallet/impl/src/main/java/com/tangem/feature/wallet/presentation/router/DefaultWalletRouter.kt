@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
@@ -70,6 +71,10 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route)
     }
 
+    override fun openJointAccountMembers(userWalletId: UserWalletId, cryptoAccountId: String) {
+        router.push(AppRoute.JointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId))
+    }
+
     override fun openAddAndManageBottomSheet(userWalletId: UserWalletId) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.AddAndManage(userWalletId = userWalletId),
@@ -124,6 +129,12 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openPolymarket(userWalletId: UserWalletId) {
         router.push(AppRoute.Polymarket(userWalletId = userWalletId))
+    }
+
+    override fun openCollectibles(userWalletId: UserWalletId) {
+        router.push(
+            AppRoute.Collectibles(userWalletId = userWalletId, startRoute = CollectiblesStartRoute.Main),
+        )
     }
 
     override fun openNFT(userWallet: UserWallet) {

@@ -6,9 +6,13 @@ internal interface PlacePredictionIntents {
 
     fun onAmountChange(value: String)
 
-    fun onSlippageSelected(percent: BigDecimal)
-
     fun onSlippageClick()
+
+    fun onSlippageValueChange(value: String)
+
+    fun onSlippagePresetClick(percent: BigDecimal)
+
+    fun onSlippageConfirmClick()
 
     fun onAddFundsClick()
 
@@ -25,4 +29,5 @@ internal interface PlacePredictionIntents {
     fun onBackClick()
 
     fun onCloseClick()
+    fun onToMainClick()
 }

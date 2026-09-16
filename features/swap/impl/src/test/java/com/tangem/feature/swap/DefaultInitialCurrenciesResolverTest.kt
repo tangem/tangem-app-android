@@ -24,6 +24,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
 import com.tangem.feature.swap.model.InitialCurrenciesResolver
 import com.tangem.features.swap.SwapComponent.Params.CurrencyPosition
+import com.tangem.test.mock.MockAccounts
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -1783,6 +1784,246 @@ internal class DefaultInitialCurrenciesResolverTest {
         return AccountStatus.Payment(account = Account.Payment(userWalletId), value = statusValue)
     }
 
+    @Test
+    fun `GIVEN the prediction collateral WHEN it is the initial currency THEN it lands as TO with a portfolio FROM`() =
+        runTest {
+            // Arrange
+            val walletCurrency = mockCryptoCurrency()
+            val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+            val collateral = mockCryptoCurrency()
+            val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal.ZERO)
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    createPredictionAccountStatus(collateralStatus),
+                ),
+            )
+            setupAvailability(linkedMapOf(walletCurrency to true))
+            setupAvailability(linkedMapOf(collateral to true))
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = null,
+            )
+
+            // Assert
+            assertThat(to?.status).isSameInstanceAs(collateralStatus)
+            assertThat(from?.status).isSameInstanceAs(walletStatus)
+        }
+
+    @Test
+    fun `GIVEN no account flow WHEN the collateral is asked for as FROM THEN it still lands as TO`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(collateral to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(collateralStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the collateral is asked for as FROM THEN it lands as FROM`() = runTest {
+        // Arrange
+        val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = AccountFlow.PredictionWithdraw,
+            isAccountFlowEnabled = true,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(collateralStatus)
+        assertThat(to).isNull()
+    }
+
+    @Test
+    fun `GIVEN a prediction withdraw and a payment account WHEN resolved THEN FROM is the collateral, not the payment token`() =
+        runTest {
+            // Arrange
+            val paymentTokenStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val collateral = mockCryptoCurrency()
+            val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal("50"))
+            setupSupplier(
+                listOf(
+                    createPaymentAccountStatus(paymentTokenStatus),
+                    createPredictionAccountStatus(collateralStatus),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.FROM,
+                accountFlow = AccountFlow.PredictionWithdraw,
+                isAccountFlowEnabled = true,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(collateralStatus)
+        }
+
+    @Test
+    fun `GIVEN a prediction account without a confirmed address WHEN the collateral is asked for THEN nothing resolves`() =
+        runTest {
+            // Arrange
+            val walletCurrency = mockCryptoCurrency()
+            val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+            val collateral = mockCryptoCurrency()
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    createPredictionAccountStatus(collateralStatus = null),
+                ),
+            )
+            setupAvailability(linkedMapOf(walletCurrency to true))
+            coEvery { rampStateManager.availableForSwap(userWalletId, emptyList()) } returns emptyMap()
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = collateral,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = null,
+            )
+
+            // Assert
+            assertThat(from).isNull()
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN a joint token WHEN it is the initial currency THEN it lands as TO with a portfolio FROM`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val jointCurrency = mockCryptoCurrency()
+        val jointStatus = createCurrencyStatus(jointCurrency, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createJointAccountStatus(listOf(jointStatus)),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(jointCurrency to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = jointCurrency,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = null,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(jointStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
+    fun `GIVEN a joint token WHEN asked for as FROM THEN it still lands as TO`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val jointCurrency = mockCryptoCurrency()
+        val jointStatus = createCurrencyStatus(jointCurrency, fiatAmount = BigDecimal("50"))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                createJointAccountStatus(listOf(jointStatus)),
+            ),
+        )
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf(jointCurrency to true))
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = jointCurrency,
+            swapCurrencyPosition = CurrencyPosition.FROM,
+            accountFlow = null,
+        )
+
+        // Assert
+        assertThat(to?.status).isSameInstanceAs(jointStatus)
+        assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @Test
+    fun `GIVEN a joint token with higher balance than any wallet token WHEN no initial currency THEN it is never auto-picked as FROM`() =
+        runTest {
+            // Arrange
+            val walletCurrency = mockCryptoCurrency()
+            val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("1"))
+            val jointCurrency = mockCryptoCurrency()
+            val jointStatus = createCurrencyStatus(jointCurrency, fiatAmount = BigDecimal("1000"))
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(walletStatus)),
+                    createJointAccountStatus(listOf(jointStatus)),
+                ),
+            )
+            setupAvailability(linkedMapOf(walletCurrency to true))
+            setupAvailability(linkedMapOf(jointCurrency to true))
+
+            // Act
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                accountFlow = null,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(walletStatus)
+            assertThat(to).isNull()
+        }
+
+    private fun createPredictionAccountStatus(collateralStatus: CryptoCurrencyStatus?): AccountStatus.Prediction {
+        val statusValue = mockk<PredictionAccountStatusValue.Active>(relaxed = true) {
+            every { cryptoCurrencyStatus } returns collateralStatus
+        }
+        return AccountStatus.Prediction(account = Account.Prediction(userWalletId), value = statusValue)
+    }
+
     private fun mockCryptoCurrency(
         id: CryptoCurrency.ID = mockCurrencyId(),
     ): CryptoCurrency = mockk(relaxed = true) {
@@ -1813,8 +2054,28 @@ internal class DefaultInitialCurrenciesResolverTest {
         currencies: List<CryptoCurrencyStatus>,
     ): AccountStatus.CryptoPortfolio {
         val account = Account.Personal.createMainAccount(userWalletId = userWalletId)
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
+            tokenList = TokenList.Ungrouped(
+                totalFiatBalance = TotalFiatBalance.Loaded(
+                    amount = BigDecimal.ZERO,
+                    source = StatusSource.ACTUAL,
+                ),
+                sortedBy = TokensSortType.NONE,
+                currencies = currencies,
+            ),
+            priceChangeLce = Lce.Content(PriceChange(value = BigDecimal.ZERO, source = StatusSource.ACTUAL)),
+        )
+    }
+
+    private fun createJointAccountStatus(currencies: List<CryptoCurrencyStatus>): AccountStatus.Joint {
+        return AccountStatus.Joint(
+            account = MockAccounts.createJointAccount(userWalletId = userWalletId),
+            value = JointAccountStatusValue.Active(
+                source = StatusSource.ACTUAL,
+                totalMembers = 2,
+                safeAddress = "0x5afe000000000000000000000000000000000002",
+            ),
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(
                     amount = BigDecimal.ZERO,
@@ -1851,7 +2112,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
             derivationIndex = derivationIndex,
         )
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(

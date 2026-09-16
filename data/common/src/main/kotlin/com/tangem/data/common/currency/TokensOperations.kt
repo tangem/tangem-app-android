@@ -76,18 +76,7 @@ fun List<UserTokensResponse.Token>.hasCoinForToken(network: Network): Boolean {
 }
 
 private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
-    return when (val path = network.derivationPath) {
-        is Network.DerivationPath.Custom -> CurrencyIdBody.NetworkIdWithDerivationPath(
-            rawId = network.rawId,
-            derivationPath = path.value,
-        )
-        is Network.DerivationPath.Card -> CurrencyIdBody.NetworkIdWithDerivationPath(
-            rawId = network.rawId,
-            derivationPath = path.value,
-        )
-        is Network.DerivationPath.None,
-        -> CurrencyIdBody.NetworkId(network.rawId)
-    }
+    return CurrencyIdBody.create(rawId = network.rawId, derivationPath = network.derivationPath)
 }
 
 fun getTokenIconUrlFromDefaultHost(tokenId: CryptoCurrency.RawID): String {

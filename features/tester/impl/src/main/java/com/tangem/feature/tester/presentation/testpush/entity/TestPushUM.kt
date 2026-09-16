@@ -5,6 +5,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 
 internal data class TestPushUM(
     val fcmToken: String,
+    val payload: TextFieldValue,
+    val payloadError: String?,
     val title: TextFieldValue,
     val message: TextFieldValue,
     val data: List<Pair<TextFieldValue, TextFieldValue>>,

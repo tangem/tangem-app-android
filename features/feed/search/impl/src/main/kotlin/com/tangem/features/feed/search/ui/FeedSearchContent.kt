@@ -1,14 +1,24 @@
 package com.tangem.features.feed.search.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.features.feed.search.ui.state.RecentUM
 import com.tangem.features.feed.ui.FeedTabRow
 import com.tangem.features.feed.ui.FeedTabUM
+import com.tangem.features.feed.v2.FeedV2Component
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -44,12 +54,35 @@ internal fun FeedSearchTabsContent(
     modifier: Modifier = Modifier,
     tabContent: @Composable (Modifier) -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(top = contentPadding.calculateTopPadding()),
-    ) {
-        FeedTabRow(tabs = tabs, selectedTabIndex = selectedTabIndex, onTabSelect = onTabSelect)
-        tabContent(Modifier.fillMaxSize())
+    // A local haze source — LocalHazeState here would sample the screen behind the card instead.
+    val outerHazeState = LocalHazeState.current
+    val searchHazeState = rememberHazeState()
+    SideEffect { searchHazeState.blurEnabled = outerHazeState.blurEnabled }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        tabContent(
+            Modifier
+                .fillMaxSize()
+                .hazeSourceTangem(state = searchHazeState),
+        )
+        CompositionLocalProvider(LocalHazeState provides searchHazeState) {
+            TangemFade(
+                position = TangemFade.Position.Top,
+                variant = TangemFade.Variant.Soft,
+                blur = true,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .height(contentPadding.calculateTopPadding() + FeedV2Component.TabRowHeight)
+                    .hazeSourceTangem(state = searchHazeState, zIndex = 1f),
+            )
+            FeedTabRow(
+                tabs = tabs,
+                selectedTabIndex = selectedTabIndex,
+                onTabSelect = onTabSelect,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = contentPadding.calculateTopPadding()),
+            )
+        }
     }
 }

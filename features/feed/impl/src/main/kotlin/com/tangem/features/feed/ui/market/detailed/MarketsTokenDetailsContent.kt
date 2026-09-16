@@ -55,6 +55,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 private val FloatingBlockMinRoom = 8.dp
 
+private const val PRICE_BLOCK_KEY = "header"
+
 @Suppress("LongParameterList")
 @Composable
 internal fun MarketsTokenDetailsContent(
@@ -99,6 +101,7 @@ private fun Content(
     val lazyListState = rememberLazyListState()
     ShowPriceSubtitleEffect(
         lazyListState = lazyListState,
+        pinnedHeaderHeightPx = with(density) { contentPadding.calculateTopPadding().roundToPx() },
         onShouldShowPriceSubtitleChange = state.onShouldShowPriceSubtitleChange,
     )
     EventEffect(state.scrollToSection) { targetKey ->
@@ -123,7 +126,7 @@ private fun Content(
                 contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
                 modifier = Modifier.testTag(MarketsTestTags.TOKEN_DETAILS_CONTENT),
             ) {
-                item("header") {
+                item(PRICE_BLOCK_KEY) {
                     Header(state = state)
                 }
                 item {
@@ -151,6 +154,7 @@ private fun Content(
                 item { SpacerH24() }
 
                 tokenMarketDetailsBody(
+                    regionRestriction = state.regionRestriction,
                     state = state.body,
                     relatedNews = state.relatedNews,
                     marketingBanner = marketingBanner,
@@ -306,15 +310,30 @@ private fun IntervalSelector(
 }
 
 @Composable
-private fun ShowPriceSubtitleEffect(lazyListState: LazyListState, onShouldShowPriceSubtitleChange: (Boolean) -> Unit) {
-    val showPriceSubtitleFlow = remember(lazyListState) {
-        snapshotFlow { lazyListState.firstVisibleItemIndex > 1 }
+private fun ShowPriceSubtitleEffect(
+    lazyListState: LazyListState,
+    pinnedHeaderHeightPx: Int,
+    onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
+) {
+    val showPriceSubtitleFlow = remember(lazyListState, pinnedHeaderHeightPx) {
+        snapshotFlow { lazyListState.isPriceBlockCovered(pinnedHeaderHeightPx) }
             .distinctUntilChanged()
     }
     LaunchedEffect(showPriceSubtitleFlow) {
         showPriceSubtitleFlow.collect { isVisible ->
             onShouldShowPriceSubtitleChange(isVisible)
         }
+    }
+}
+
+private fun LazyListState.isPriceBlockCovered(pinnedHeaderHeightPx: Int): Boolean {
+    val visibleItems = layoutInfo.visibleItemsInfo
+    val priceBlock = visibleItems.firstOrNull { it.key == PRICE_BLOCK_KEY }
+
+    return if (priceBlock != null) {
+        priceBlock.offset + priceBlock.size <= pinnedHeaderHeightPx
+    } else {
+        visibleItems.isNotEmpty() && firstVisibleItemIndex > 0
     }
 }
 

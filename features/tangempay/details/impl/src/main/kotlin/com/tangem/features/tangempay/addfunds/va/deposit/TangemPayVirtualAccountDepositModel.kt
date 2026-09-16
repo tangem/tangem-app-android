@@ -82,6 +82,7 @@ internal class TangemPayVirtualAccountDepositModel @Inject constructor(
                     val rows = fees.map { fee ->
                         val currency = getJavaCurrencyByCode(fee.currency)
                         TangemPayVirtualAccountDepositUM.FeeRow(
+                            type = fee.type,
                             title = stringReference(fee.name),
                             value = fee.amount.format {
                                 fiat(currency.currencyCode, currency.symbol).optionalDecimals()

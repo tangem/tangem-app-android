@@ -40,6 +40,7 @@ data class AccountId private constructor(
         const val PaymentAccountIdPrefix = "payment_"
         const val VirtualAccountIdPrefix = "virtual_"
         const val PredictionAccountIdPrefix = "prediction_"
+        const val CollectiblesAccountIdPrefix = "collectibles_"
 
         private val sha256Digest: MessageDigest by lazy { MessageDigest.getInstance("SHA-256") }
         private val hexRegex = Regex("^[a-fA-F0-9]{64}$")
@@ -102,6 +103,10 @@ data class AccountId private constructor(
 
         fun forPredictionAccount(userWalletId: UserWalletId): AccountId {
             return AccountId(value = "$PredictionAccountIdPrefix$userWalletId", userWalletId = userWalletId)
+        }
+
+        fun forCollectiblesAccount(userWalletId: UserWalletId): AccountId {
+            return AccountId(value = "$CollectiblesAccountIdPrefix$userWalletId", userWalletId = userWalletId)
         }
     }
 }

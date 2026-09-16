@@ -1,6 +1,7 @@
 package com.tangem.features.storiesv2.impl.engine
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.storiesv2.StoryV2Source
@@ -38,6 +39,7 @@ internal class StoryPlaybackController(
     private val source: StoryV2Source,
     private val analytics: AnalyticsEventHandler,
     private val onHaptic: () -> Unit,
+    private val onAction: (StoriesV2PendingAction) -> Unit,
     private val onResult: (StoriesV2Result) -> Unit,
 ) {
 
@@ -52,6 +54,7 @@ internal class StoryPlaybackController(
                 isDragging = false,
                 isInForeground = true,
                 isFinished = false,
+                pendingAction = null,
                 renderMode = SlideRenderMode.ASSET,
             ),
         )
@@ -105,7 +108,7 @@ internal class StoryPlaybackController(
      * @param stalledForMs how long the position has stood still, as reported by the slide's clock.
      */
     fun onProgress(positionMs: Long, elapsedMs: Long, stalledForMs: Long = 0L) {
-        if (state.value.isFinished) return
+        if (state.value.isFinished || state.value.pendingAction != null) return
 
         slidePositionMs = positionMs
         slideWatchedMs += elapsedMs
@@ -137,7 +140,7 @@ internal class StoryPlaybackController(
     }
 
     fun onPlayerAdvancedTo(slideIndex: Int) {
-        if (state.value.isFinished) return
+        if (state.value.isFinished || state.value.pendingAction != null) return
         if (slideIndex != state.value.slideIndex + 1) return
 
         leaveSlide(StoryV2AdvanceReason.AUTO)
@@ -146,7 +149,7 @@ internal class StoryPlaybackController(
 
     /** Only meaningful when the last item of the playlist belongs to the current slide. */
     fun onPlayerEnded() {
-        if (state.value.isFinished || !isDrivenByPlayer()) return
+        if (state.value.isFinished || state.value.pendingAction != null || !isDrivenByPlayer()) return
         advance(StoryV2AdvanceReason.AUTO)
     }
 
@@ -159,7 +162,7 @@ internal class StoryPlaybackController(
     }
 
     fun onTapForward() {
-        if (state.value.isFinished) return
+        if (state.value.isFinished || state.value.pendingAction != null) return
         advance(StoryV2AdvanceReason.TAP_FORWARD)
     }
 
@@ -168,7 +171,7 @@ internal class StoryPlaybackController(
      * slide would read as going forward.
      */
     fun onTapBack() {
-        if (state.value.isFinished) return
+        if (state.value.isFinished || state.value.pendingAction != null) return
 
         leaveSlide(StoryV2AdvanceReason.TAP_BACK)
         enterSlide(index = (state.value.slideIndex - 1).coerceAtLeast(0), isManual = true)
@@ -194,25 +197,58 @@ internal class StoryPlaybackController(
 
     fun onSwipedDown() = finish(StoryV2ExitReason.SWIPE_DOWN, StoriesV2Result.Dismissed)
 
+    /**
+     * A close target ends the story itself; every other target suspends playback until the host settles the
+     * handle. Close, swipe and back stay live while suspended, so a host that never settles cannot trap the story.
+     */
     fun onActionClicked(action: StoryV2Action) {
-        if (state.value.isFinished) return
+        val current = state.value
+        if (current.isFinished || current.pendingAction != null) return
 
-        val result = when (val target = action.target) {
-            is StoryV2Action.Target.Screen -> StoriesV2Result.ActionInvoked(
-                actionId = action.id,
-                target = StoryV2ActionTarget.Screen(key = target.key),
-            )
-            is StoryV2Action.Target.Web -> StoriesV2Result.ActionInvoked(
-                actionId = action.id,
-                target = StoryV2ActionTarget.Web(url = target.url),
-            )
-            is StoryV2Action.Target.Deeplink -> StoriesV2Result.ActionInvoked(
-                actionId = action.id,
-                target = StoryV2ActionTarget.Deeplink(uri = target.uri),
-            )
-            StoryV2Action.Target.Close -> StoriesV2Result.Dismissed
+        val target = action.target.toPublicTarget()
+        if (target == null) {
+            finish(reason = StoryV2ExitReason.ACTION, result = StoriesV2Result.Dismissed, action = action)
+            return
         }
-        finish(reason = StoryV2ExitReason.ACTION, result = result, action = action)
+
+        state.update { it.copy(pendingAction = action) }
+        onAction(PendingAction(action = action, target = target))
+    }
+
+    /**
+     * The host died without settling the suspended story — navigation replaced the screen. Flushes the closing
+     * analytics; the result is skipped, since nobody is left to act on it.
+     */
+    fun onHostDestroyed() {
+        val action = state.value.pendingAction ?: return
+        finish(reason = StoryV2ExitReason.ACTION, result = null, action = action)
+    }
+
+    private inner class PendingAction(
+        private val action: StoryV2Action,
+        override val target: StoryV2ActionTarget,
+    ) : StoriesV2PendingAction {
+
+        override val actionId: String = action.id
+        override val slideId: String = currentSlide.id
+        override val slideIndex: Int = state.value.slideIndex + 1
+
+        override fun resume() {
+            if (!isLive()) return
+            state.update { it.copy(pendingAction = null) }
+        }
+
+        override fun end() {
+            if (!isLive()) return
+            state.update { it.copy(pendingAction = null) }
+            finish(
+                reason = StoryV2ExitReason.ACTION,
+                result = StoriesV2Result.ActionInvoked(actionId = actionId, target = target),
+                action = action,
+            )
+        }
+
+        private fun isLive(): Boolean = !state.value.isFinished && state.value.pendingAction === action
     }
 
     private fun advance(reason: StoryV2AdvanceReason) {
@@ -292,7 +328,7 @@ internal class StoryPlaybackController(
 
     private fun finish(
         reason: StoryV2ExitReason,
-        result: StoriesV2Result,
+        result: StoriesV2Result?,
         action: StoryV2Action? = null,
         advanceReason: StoryV2AdvanceReason = StoryV2AdvanceReason.STORY_CLOSED,
     ) {
@@ -317,7 +353,7 @@ internal class StoryPlaybackController(
                 source = source.analyticsValue,
             ),
         )
-        onResult(result)
+        result?.let(onResult)
     }
 
     private fun degradeToPoster(reason: StoryV2FallbackReason) {
@@ -368,6 +404,13 @@ internal class StoryPlaybackController(
         )
     }
 
+    private fun StoryV2Action.Target.toPublicTarget(): StoryV2ActionTarget? = when (this) {
+        is StoryV2Action.Target.Screen -> StoryV2ActionTarget.Screen(key = key)
+        is StoryV2Action.Target.Web -> StoryV2ActionTarget.Web(url = url)
+        is StoryV2Action.Target.Deeplink -> StoryV2ActionTarget.Deeplink(uri = uri)
+        StoryV2Action.Target.Close -> null
+    }
+
     private fun isDrivenByPlayer(): Boolean {
         return state.value.renderMode == SlideRenderMode.ASSET && currentSlide.asset is StoryV2Asset.Video
     }
@@ -393,10 +436,12 @@ internal data class StoryPlaybackState(
     val isDragging: Boolean,
     val isInForeground: Boolean,
     val isFinished: Boolean,
+    val pendingAction: StoryV2Action?,
     val renderMode: SlideRenderMode,
 ) {
 
-    val isRunning: Boolean get() = !isHeld && !isDragging && isInForeground && !isFinished
+    val isRunning: Boolean
+        get() = !isHeld && !isDragging && isInForeground && !isFinished && pendingAction == null
 }
 
 internal enum class SlideRenderMode {

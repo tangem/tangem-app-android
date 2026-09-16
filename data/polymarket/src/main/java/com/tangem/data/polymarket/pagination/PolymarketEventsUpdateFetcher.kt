@@ -10,18 +10,12 @@ import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
 
 /**
- * Refreshes a loaded page of the Discovery feed in place: the page is requested again with the cursor it was
- * loaded by, and the response is merged into it **by event id**.
+ * Requests a loaded page again with the cursor it was loaded by and merges the response into it **by event id**.
  *
- * The merge never changes what the page holds or in which order — only the data of the cards already on it:
- * an event served again is replaced, an event the response no longer carries keeps its previous data, and an
- * event that drifted in from a neighbouring page is ignored. The feed's live sort would otherwise reshuffle
+ * The merge never changes what the page holds or in which order: the feed's live sort would otherwise reshuffle
  * cards under the user's finger, and a keyset cursor over a shifting order would duplicate them.
  *
- * A failed request is left to propagate: the poller counts it, and the next tick asks again. Retrying here would
- * only hide a stale page behind a longer silence.
- *
- * @param fetchPage loads a single page — the same call the pagination loads the feed with.
+ * A failed request is left to propagate — the poller counts it and the next tick asks again.
  */
 internal class PolymarketEventsUpdateFetcher(
     private val batchSize: Int,

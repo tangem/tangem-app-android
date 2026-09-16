@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
@@ -32,6 +33,9 @@ internal sealed interface WalletUM {
 
     val polymarketWalletBlockUM: PolymarketWalletBlockUM
 
+    val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
+    val jointOperationBanners: ImmutableList<JointOperationBannerUM>
+
     data class Content(
         override val pullToRefreshConfig: PullToRefreshConfig,
         override val walletsBalanceUM: WalletBalanceUM,
@@ -44,6 +48,8 @@ internal sealed interface WalletUM {
         override val tangemPayMainUM: TangemPayMainUM,
         override val virtualAccountMainUM: VirtualAccountMainUM,
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM,
+        override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM,
+        override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf(),
         val areActionsAvailable: Boolean = false,
     ) : WalletUM
 
@@ -60,5 +66,7 @@ internal sealed interface WalletUM {
         override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
         override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
         override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
+        override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
+        override val jointOperationBanners: ImmutableList<JointOperationBannerUM> = persistentListOf()
     }
 }

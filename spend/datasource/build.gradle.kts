@@ -20,6 +20,7 @@ dependencies {
     implementation(deps.jodatime)
 
     api(deps.moshi)
+    implementation(deps.moshi.adapters.ext)
     ksp(deps.moshi.kotlin.codegen)
     api(deps.retrofit)
     api(deps.jodatime)
@@ -39,4 +40,5 @@ dependencies {
     implementation(projects.core.local)
 
     testImplementation(projects.test.core)
+    testImplementation(deps.moshi.kotlin)
 }

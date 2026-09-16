@@ -1,6 +1,7 @@
 package com.tangem.data.common.currency
 
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.common.cache.etag.WalletAccountsETags
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
@@ -11,6 +12,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.retryer.Retryer
@@ -25,6 +27,8 @@ class UserTokensSaver(
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
     private val walletServerBinder: WalletServerBinder,
     private val pushTokensRetryerPool: RetryerPool,
+    private val walletAccountsETags: WalletAccountsETags,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) {
 
     suspend fun push(
@@ -68,21 +72,21 @@ class UserTokensSaver(
     private suspend fun push(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
         safeApiCall(
             call = {
-                val apiResponse = tangemTechApi.saveTokens(
-                    userId = userWallet.walletId.stringValue,
-                    userTokens = response,
-                )
+                // Both codes are expected flow, not failures, so they are handled before bind() gets to log them
+                var apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
 
-                val isWalletNotFound = apiResponse is ApiResponse.Error &&
-                    apiResponse.cause.isNetworkError(ApiResponseError.HttpException.Code.NOT_FOUND)
-
-                if (isWalletNotFound) {
+                if (apiResponse.isError(code = ApiResponseError.HttpException.Code.NOT_FOUND)) {
                     walletServerBinder.bind(userWallet).bind()
 
-                    tangemTechApi.saveTokens(
-                        userId = userWallet.walletId.stringValue,
-                        userTokens = response,
-                    ).bind()
+                    apiResponse = saveTokensWithETag(userWalletId = userWallet.walletId, response = response)
+                }
+
+                // The gate is belt and braces: without the toggle no If-Match is sent, so a 412 cannot arrive
+                val isRecoverableStaleWrite = jointAccountFeatureToggles.isJointAccountEnabled &&
+                    apiResponse.isError(code = ApiResponseError.HttpException.Code.PRECONDITION_FAILED)
+
+                if (isRecoverableStaleWrite) {
+                    mergeAndRetry(userWalletId = userWallet.walletId, response = response, onFailSend = onFailSend)
                 } else {
                     apiResponse.bind()
                 }
@@ -92,6 +96,78 @@ class UserTokensSaver(
                 onFailSend()
             },
         )
+    }
+
+    private fun ApiResponse<*>.isError(code: ApiResponseError.HttpException.Code): Boolean {
+        return this is ApiResponse.Error && cause.isNetworkError(code)
+    }
+
+    private suspend fun saveTokensWithETag(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+    ): ApiResponse<Unit> {
+        val apiResponse = tangemTechApi.saveTokens(
+            userId = userWalletId.stringValue,
+            userTokens = response,
+            eTag = getETagOrNull(userWalletId = userWalletId),
+        )
+
+        if (apiResponse is ApiResponse.Success) {
+            refreshETag(userWalletId = userWalletId, apiResponse = apiResponse)
+        }
+
+        return apiResponse
+    }
+
+    private suspend fun mergeAndRetry(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        onFailSend: () -> Unit,
+    ) {
+        safeApiCall(
+            call = {
+                val accountsResponse = tangemTechApi.getWalletAccountsV2(walletId = userWalletId.stringValue)
+                storeETag(userWalletId = userWalletId, apiResponse = accountsResponse)
+
+                // The raw response carries no accountId on the tokens — it is implied by the owning account,
+                // the same way DefaultWalletAccountsFetcher enriches it after every GET
+                val fresh = accountsResponse.bind().toResponse()
+                val remoteTokens = fresh.accounts.flatMap { account ->
+                    account.tokens.orEmpty().map { token -> token.copy(accountId = account.id) }
+                } + fresh.unassignedTokens
+
+                // Token.equals compares the identity fields (network, derivation, contract), which is exactly
+                // the dedup key here: our push stays authoritative, remote-only tokens are appended
+                val pushedTokens = response.tokens.toSet()
+                val merged = response.copy(
+                    tokens = response.tokens + remoteTokens.filterNot { it in pushedTokens },
+                )
+
+                saveTokensWithETag(userWalletId = userWalletId, response = merged).bind()
+            },
+            onError = { error ->
+                TangemLogger.e("Failed to merge and re-push user tokens after a 412", error)
+                onFailSend()
+            },
+        )
+    }
+
+    private suspend fun getETagOrNull(userWalletId: UserWalletId): String? {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return null
+
+        return walletAccountsETags.getSyncOrNull(userWalletId = userWalletId)
+    }
+
+    private suspend fun refreshETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return
+
+        walletAccountsETags.refresh(userWalletId = userWalletId, apiResponse = apiResponse)
+    }
+
+    private suspend fun storeETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return
+
+        walletAccountsETags.store(userWalletId = userWalletId, apiResponse = apiResponse)
     }
 
     /**
