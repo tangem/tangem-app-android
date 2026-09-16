@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -34,6 +35,9 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PushNotificationsModelTest {
@@ -286,6 +290,33 @@ internal class PushNotificationsModelTest {
 
     private fun wallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
 
+    @ParameterizedTest
+    @MethodSource("providePermissionStatusSources")
+    fun `GIVEN a source WHEN permission is answered THEN Permission Status carries the point it came from`(
+        source: AppRoute.PushNotification.Source,
+        expected: AnalyticsParam.ScreensSources,
+        isAllowed: Boolean,
+    ) = runTest {
+        // Arrange
+        val model = createModel(testScope = this, source = source)
+
+        // Act
+        if (isAllowed) model.onAllowPermission() else model.onDenyPermission()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analyticHandler.send(
+                match<PushNotificationAnalyticEvents.PermissionStatus> {
+                    it.params == mapOf(
+                        AnalyticsParam.STATE to if (isAllowed) "Allow" else "Cancel",
+                        AnalyticsParam.SOURCE to expected.value,
+                    )
+                },
+            )
+        }
+    }
+
     private fun createModel(
         testScope: TestScope,
         isBottomSheet: Boolean = false,
@@ -326,7 +357,19 @@ internal class PushNotificationsModelTest {
         )
     }
 
-    private companion object {
+    companion object {
         val NEXT_ROUTE: AppRoute = AppRoute.Home()
+
+        @JvmStatic
+        fun providePermissionStatusSources(): List<Arguments> = listOf(
+            AppRoute.PushNotification.Source.Stories to AnalyticsParam.ScreensSources.Stories,
+            AppRoute.PushNotification.Source.Main to AnalyticsParam.ScreensSources.MainRequestSheet,
+            AppRoute.PushNotification.Source.Onboarding to AnalyticsParam.ScreensSources.Onboarding,
+            AppRoute.PushNotification.Source.ColdCreation to AnalyticsParam.ScreensSources.ColdCreation,
+            AppRoute.PushNotification.Source.HotCreation to AnalyticsParam.ScreensSources.HotCreation,
+            AppRoute.PushNotification.Source.FirstSignIn to AnalyticsParam.ScreensSources.FirstSignIn,
+        ).flatMap { (source, expected) ->
+            listOf(Arguments.of(source, expected, true), Arguments.of(source, expected, false))
+        }
     }
 }

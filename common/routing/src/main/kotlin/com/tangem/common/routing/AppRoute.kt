@@ -296,9 +296,23 @@ sealed class AppRoute(val path: String) : Route {
         val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/push_notification") {
         enum class Source {
+            /** Launch-time ask, before any wallet exists: the legacy onboarding and the ToS screen. */
             Stories,
+
+            /** Bottom sheet on the wallet screen. */
             Main,
+
+            /** Address-sync wizard step, which serves both a first sign-in and adding a wallet later. */
             Onboarding,
+
+            /** Card activation wizard, after the wallet is registered. */
+            ColdCreation,
+
+            /** Mobile wallet activation and backup. */
+            HotCreation,
+
+            /** Card scan and mobile import: a wallet that is new to this install. */
+            FirstSignIn,
         }
     }
 
