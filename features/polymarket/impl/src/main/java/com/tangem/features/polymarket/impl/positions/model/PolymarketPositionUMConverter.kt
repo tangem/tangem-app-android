@@ -9,16 +9,16 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
 import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
+import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
 import com.tangem.utils.converter.Converter
 
 internal class PolymarketPositionUMConverter(
-    private val onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+    private val onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
 ) : Converter<PolymarketPosition, PolymarketPositionUM> {
 
     override fun convert(value: PolymarketPosition): PolymarketPositionUM = when (value) {
@@ -48,7 +48,9 @@ internal class PolymarketPositionUMConverter(
         ),
         currentValue = stringReference(value.currentValue.formatPolymarketMoney()),
         result = resultBadge(value),
-        onClick = onPositionClick?.takeIf { value.canOpenPositionDetails }?.let { { it(value.id) } },
+        onClick = onPositionClick
+            ?.takeIf { value.canOpenPositionDetails || value.canOpenPositionResult }
+            ?.let { { it(value) } },
     )
 
     private fun convertClosed(value: PolymarketPosition.Closed): PolymarketPositionUM {

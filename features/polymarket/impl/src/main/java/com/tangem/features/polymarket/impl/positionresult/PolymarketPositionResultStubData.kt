@@ -6,7 +6,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
 
-/** Temporary screen data shared by the model and previews until position results are available. */
+/** Sample states for layout previews; the model uses the selected position. */
 internal object PolymarketPositionResultStubData {
 
     val won = PolymarketPositionResultUM(
