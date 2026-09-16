@@ -38,6 +38,7 @@ import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
@@ -60,6 +61,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -89,6 +91,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     private val router: Router,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -149,16 +152,23 @@ internal class TxHistoryDetailsModel @Inject constructor(
         }
     }
 
+    private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
+        emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
+    }
+        .onStart { emit(emptySet()) }
+        .flowOn(dispatchers.io)
+
     /**
-     * The owner/contact lookup paired with whether saving a contact is possible at all: an address book whose stored
-     * contract version is newer than this build's cannot be written to, so "Add contact" must not be offered — the
-     * editor would only show its incompatible screen. Combined here rather than in the [uiState] `combine` below,
-     * which is already at the five-source overload.
+     * The owner/contact lookup, whether saving a contact is possible at all (an address book stored by a newer build
+     * cannot be written to, so "Add contact" must not be offered), and the wallet's cached tokens. Combined here
+     * rather than in the [uiState] `combine` below, which is already at the five-source overload.
      */
-    private val lookupWithAddressBook: Flow<Pair<TxHistoryLookupContext, Boolean>> = combine(
-        flow = ownerLookupProducer(params.userWalletId),
-        flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
-    ) { lookup, isCompatible -> lookup to isCompatible }
+    private val lookupWithAddressBook: Flow<Triple<TxHistoryLookupContext, Boolean, Set<CryptoCurrency.Token>>> =
+        combine(
+            flow = ownerLookupProducer(params.userWalletId),
+            flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
+            flow3 = networkTokensFlow,
+        ) { lookup, isCompatible, tokens -> Triple(lookup, isCompatible, tokens) }
 
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
@@ -166,7 +176,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
         flow5 = balanceHidingSettings.isBalanceHidden(),
-    ) { txInfo, (lookup, isAddressBookCompatible), stakingTargets, refundToken, isBalanceHidden ->
+    ) { txInfo, (lookup, isAddressBookCompatible, networkTokens), stakingTargets, refundToken, isBalanceHidden ->
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops "Transaction ID".
@@ -196,6 +206,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
             isBalanceHidden = isBalanceHidden,
             onOpenValidator = urlOpener::openUrl,
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
+            networkTokens = networkTokens,
         ).convert(txInfo)
     }
         .flowOn(dispatchers.default)
