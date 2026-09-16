@@ -51,7 +51,7 @@ import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComp
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.virtualaccount.onboarding.component.VirtualAccountOnboardingComponent
+import com.tangem.features.moneyaccount.onboarding.component.MoneyAccountOnboardingComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
@@ -129,7 +129,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
-    private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
+    private val moneyAccountOnboardingComponentFactory: MoneyAccountOnboardingComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
     private val jointAccountJoinComponentFactory: JointAccountJoinComponent.Factory,
     private val jointAccountMembersComponentFactory: JointAccountMembersComponent.Factory,
@@ -786,21 +786,21 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = tangemPayCampaignComponentFactory,
                 )
             }
-            is AppRoute.VirtualAccountOnboarding -> {
+            is AppRoute.MoneyAccountOnboarding -> {
                 createComponentChild(
                     context = context,
                     params = when (val mode = route.mode) {
-                        is AppRoute.VirtualAccountOnboarding.Mode.Deeplink ->
-                            VirtualAccountOnboardingComponent.Params.Deeplink(
+                        is AppRoute.MoneyAccountOnboarding.Mode.Deeplink ->
+                            MoneyAccountOnboardingComponent.Params.Deeplink(
                                 userWalletId = mode.userWalletId,
                                 deeplink = mode.deeplink,
                             )
-                        is AppRoute.VirtualAccountOnboarding.Mode.FromMain ->
-                            VirtualAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
-                        is AppRoute.VirtualAccountOnboarding.Mode.FromDetailsScreen ->
-                            VirtualAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
+                        is AppRoute.MoneyAccountOnboarding.Mode.FromMain ->
+                            MoneyAccountOnboardingComponent.Params.FromMain(userWalletId = mode.userWalletId)
+                        is AppRoute.MoneyAccountOnboarding.Mode.FromDetailsScreen ->
+                            MoneyAccountOnboardingComponent.Params.FromDetailsScreen(userWalletId = mode.userWalletId)
                     },
-                    componentFactory = virtualAccountOnboardingComponentFactory,
+                    componentFactory = moneyAccountOnboardingComponentFactory,
                 )
             }
             is AppRoute.Kyc -> {
