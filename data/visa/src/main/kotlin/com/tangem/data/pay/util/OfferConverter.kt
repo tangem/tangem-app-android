@@ -19,12 +19,14 @@ internal object OfferConverter : Converter<CustomerOffersResponse.Offer, Offer?>
             type = Offer.Type.fromString(value.type),
             fee = fee,
             data = data,
-            mainImageUrl = value.images
-                .orEmpty()
-                .firstOrNull { it.type.equals(MAIN_IMAGE_TYPE, ignoreCase = true) }
-                ?.url,
+            mainImageUrl = mainImageUrl(value),
         )
     }
+
+    fun mainImageUrl(value: CustomerOffersResponse.Offer): String? = value.images
+        .orEmpty()
+        .firstOrNull { it.type.equals(MAIN_IMAGE_TYPE, ignoreCase = true) }
+        ?.url
 
     private fun CustomerOffersResponse.Offer.drop(reason: String): Offer? {
         TangemLogger.withTag(TAG).i("Offer '$type' is not orderable and was skipped: $reason")
