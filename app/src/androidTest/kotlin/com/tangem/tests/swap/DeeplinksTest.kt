@@ -350,7 +350,7 @@ class DeeplinksTest : BaseTestCase() {
     @Test
     fun deeplinkThroughClickableBannerTest() {
         val tokenDetailsTitle = "Ethereum"
-        val bannerText = "Swap ETH for POL"
+        val bannerText = "Swap POL for ETH"
         val bannerScenarioName = "marketing_campaigns_token_details"
         val bannerActiveState = "TokenDetailsSwapBanner"
         val amount = "0.0008"
