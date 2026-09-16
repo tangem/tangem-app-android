@@ -26,7 +26,7 @@ internal class MultiWalletScanPrimaryComponent(
         params.innerNavigation.update {
             it.copy(
                 stackSize = 4,
-                stackMaxSize = 9,
+                stackMaxSize = 10,
             )
         }
 
