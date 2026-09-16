@@ -729,6 +729,13 @@
   <string name="fee_selector_choose_token_description">Elige qué token utilizar para pagar\nla tarifa de red. %s</string>
   <string name="fee_selector_choose_token_title">Elija token</string>
   <string name="feed_market_and_news">Mercado y noticias</string>
+  <string name="feed_promo_earn_active_description">Consigue hasta un %1$s de APY en tu %2$s</string>
+  <string name="feed_promo_earn_description">Pon tus criptos a trabajar y gana hasta un %1$s APY</string>
+  <string name="feed_promo_earn_title">Empieza a ganar</string>
+  <string name="feed_promo_referral_description">Ganar %1$s por amigo</string>
+  <string name="feed_promo_referral_title">Invita a tus amigos a Tangem</string>
+  <string name="feed_promo_tangem_pay_description">Obtén reembolsos en tus gastos diarios</string>
+  <string name="feed_promo_tangem_pay_title">Paga con cripto</string>
   <string name="feed_search_show_all_user_assets">Mostrar todo</string>
   <string name="feed_search_show_less_user_assets">Mostrar menos</string>
   <string name="feed_trending_now">De actualidad</string>
@@ -1007,10 +1014,14 @@
   <string name="manage_tokens_unavailable_description">El token seleccionado no está disponible actualmente para acciones dentro de la billetera cripto. Pero no se preocupa, puede expresar su interés votando a favor.</string>
   <string name="manage_tokens_unavailable_vote">Votar a favor</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">La billetera no admite más de una red</string>
+  <string name="market_chart_ai_total">Total de IA:</string>
+  <string name="market_chart_ask_for_ai_summary_button">Solicitar resumen de IA</string>
   <string name="market_chart_bubble_no_amount">Sin tokens \n/ valor de activos</string>
+  <string name="market_chart_bubble_no_data">No hay datos</string>
   <string name="market_chart_bubble_total_value">Valor total</string>
   <string name="market_chart_can_not_load_data">No se pudieron cargar los datos</string>
-  <string name="market_chart_no_amount">Sin tokens o valor desconocido</string>
+  <string name="market_chart_no_amount">No hay tokens, o su valor no se puede determinar.</string>
+  <string name="market_chart_top_holding">%s de su portafolio</string>
   <string name="markets_about_coin_header">Sobre la moneda</string>
   <string name="markets_add_to_my_portfolio_description">Para comprar, intercambiar o recibir este activo, agréguelo a su portafolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Este activo no está disponible en la billetera</string>
@@ -2386,8 +2397,8 @@
   <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">No disponible para intercambio</string>
   <plurals name="top_assets_count">
-    <item quantity="one">Activo principal</item>
-    <item quantity="other">%d principales activos</item>
+    <item quantity="one">Activo %d principal</item>
+    <item quantity="other">Principales %d activos</item>
   </plurals>
   <string name="transaction_history_claiming_reward">Reclamar recompensa</string>
   <string name="transaction_history_contract_address">contacto: %s</string>
