@@ -2,6 +2,9 @@ package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.Either
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
@@ -25,6 +28,7 @@ import javax.inject.Inject
  * Only an operation in [JointOperation.Status.AWAITING_SIGNATURES] is exposed: one past the threshold is already an
  * ordinary unconfirmed transaction with nothing left to sign.
  */
+@Suppress("LongParameterList")
 internal class JointOperationDelegate @Inject constructor(
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
@@ -32,6 +36,8 @@ internal class JointOperationDelegate @Inject constructor(
     private val signersResolver: JointOperationSignersResolver,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val signJointOperationUseCase: SignJointOperationUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) {
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointOperationState?> {
@@ -62,6 +68,13 @@ internal class JointOperationDelegate @Inject constructor(
             operationId = operationId,
             displayed = state.displayed,
         )
+    }
+
+    /** The same request the send flow files for a failed transaction */
+    suspend fun openSupport(userWalletId: UserWalletId) {
+        val metaInfo = getWalletMetaInfoUseCase(userWalletId).getOrNull() ?: return
+
+        sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
     }
 
     private suspend fun resolve(
