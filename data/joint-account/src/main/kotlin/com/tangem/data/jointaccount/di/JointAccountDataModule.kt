@@ -11,6 +11,7 @@ import com.tangem.data.jointaccount.blockaid.DefaultJointOperationBlockaidGate
 import com.tangem.data.jointaccount.DefaultJointAccountSupportedNetworksRepository
 import com.tangem.data.jointaccount.cleaner.JointAccountUserWalletDataCleaner
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
+import com.tangem.data.jointaccount.derivation.DefaultJointOwnerKeysRepository
 import com.tangem.data.jointaccount.fetcher.DefaultSingleJointAccountListFetcher
 import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProducer
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
@@ -26,6 +27,7 @@ import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -95,6 +97,10 @@ internal interface JointAccountDataModule {
     @Binds
     @Singleton
     fun bindJointOwnerAddressResolver(resolver: DefaultJointOwnerAddressResolver): JointOwnerAddressResolver
+
+    @Binds
+    @Singleton
+    fun bindJointOwnerKeysRepository(repository: DefaultJointOwnerKeysRepository): JointOwnerKeysRepository
 
     @Binds
     @Singleton
