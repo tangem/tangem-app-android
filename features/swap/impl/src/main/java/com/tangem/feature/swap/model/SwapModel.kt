@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.model
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -368,6 +369,7 @@ internal class SwapModel @Inject constructor(
 
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
+    private var lastGeoRestrictionTokens: Pair<String, String>? = null
 
     private var preselectedFromCurrency: CryptoCurrency? = null
     private var preselectedToCurrency: CryptoCurrency? = null
@@ -1290,13 +1292,25 @@ internal class SwapModel @Inject constructor(
                     }
                 }
             },
-            onError = { error ->
-                TangemLogger.e("Error when loading quotes", error)
-                performanceTracker.onLoadingFinished(hasError = true)
-                feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
-                uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
-            },
+            onError = ::handleQuotesLoadingError,
         )
+    }
+
+    /**
+     * The general error replaces every notification, the regional restriction among them, so the guard
+     * behind [updateGeoRestrictionNotificationState] has to re-arm: a restriction that comes back after
+     * the error is a new appearance rather than a repeat of the reported one.
+     *
+     * [updatePermissionNotificationState]'s guard has the same gap and is knowingly left armed: re-arming
+     * it would change how often the permission notice is reported.
+     */
+    @VisibleForTesting
+    fun handleQuotesLoadingError(error: Throwable) {
+        TangemLogger.e("Error when loading quotes", error)
+        performanceTracker.onLoadingFinished(hasError = true)
+        feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
+        uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
+        lastGeoRestrictionTokens = null
     }
 
     private suspend fun setupLoadedState(
@@ -1310,15 +1324,18 @@ internal class SwapModel @Inject constructor(
                 setupQuotesLoadedUiState(provider, state)
                 sendAnalyticsForNotifications(provider, fromSwapCurrencyStatus.status, toSwapCurrencyStatus.status)
                 updatePermissionNotificationState(state)
+                updateGeoRestrictionNotificationState(state)
             }
             is SwapState.Transfer -> Unit
             is SwapState.EmptyAmountState -> {
                 setupEmptyAmountUiState(state, fromSwapCurrencyStatus)
                 lastPermissionNotificationTokens = null
+                lastGeoRestrictionTokens = null
             }
             is SwapState.SwapError -> {
                 setupErrorUiState(provider, state)
                 lastPermissionNotificationTokens = null
+                lastGeoRestrictionTokens = null
             }
         }
     }
@@ -1410,6 +1427,30 @@ internal class SwapModel @Inject constructor(
             lastPermissionNotificationTokens != currentTokenPair -> {
                 sendNoticePermissionNeededEvent()
                 lastPermissionNotificationTokens = currentTokenPair
+            }
+        }
+    }
+
+    @VisibleForTesting
+    fun updateGeoRestrictionNotificationState(state: SwapState.QuotesLoadedState) {
+        val fromCurrency = state.fromTokenInfo.swapCurrencyStatus.currency
+        val toCurrency = state.toTokenInfo.swapCurrencyStatus.currency
+        val currentTokenPair = Pair(fromCurrency.id.value, toCurrency.id.value)
+
+        when {
+            uiState.notifications.none { it is SwapNotificationUM.Error.RegionalRestriction } -> {
+                lastGeoRestrictionTokens = null
+            }
+            lastGeoRestrictionTokens != currentTokenPair -> {
+                analyticsEventHandler.send(
+                    SwapEvents.NoticeGeoRestriction(
+                        sendToken = fromCurrency.symbol,
+                        receiveToken = toCurrency.symbol,
+                        sendBlockchain = fromCurrency.network.name,
+                        receiveBlockchain = toCurrency.network.name,
+                    ),
+                )
+                lastGeoRestrictionTokens = currentTokenPair
             }
         }
     }
