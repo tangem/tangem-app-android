@@ -1241,6 +1241,44 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN the destinations are not loaded yet WHEN confirmed THEN they are fetched on demand and the withdrawal is submitted`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val destination = polygonUsdcDestination()
+            stubResolvedPredictionPair(destination = destination)
+            val withdrawDestination = PredictionWithdrawDestination(
+                currencyId = destination.currency.id,
+                chainId = POLYGON_CHAIN_ID,
+                tokenAddress = USDC_CONTRACT_ADDRESS.lowercase(),
+            )
+            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returnsMany listOf(
+                PolymarketBridgeError.Network.left(),
+                mapOf(destination.currency.id to withdrawDestination).right(),
+            )
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            val params = slot<SubmitPredictionWithdrawalInteractor.Params>()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(capture(params)) } returns
+                PredictionWithdrawalFailure.NothingToResend.left()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { getPredictionWithdrawDestinationsUseCase(any()) }
+            assertThat(params.captured.toChainId).isEqualTo(POLYGON_CHAIN_ID)
+            assertThat(params.captured.toTokenAddress).isEqualTo(USDC_CONTRACT_ADDRESS.lowercase())
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction withdraw WHEN confirmed THEN the recipient is the user's address on the destination network`() =
         runTest {
             // Arrange
