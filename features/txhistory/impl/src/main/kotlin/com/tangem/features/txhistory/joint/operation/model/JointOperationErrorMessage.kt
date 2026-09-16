@@ -55,9 +55,10 @@ internal class JointOperationErrorMessage(
     private fun gone(title: Int, message: Int) = DialogMessage(
         title = resourceReference(title),
         message = resourceReference(message),
+        // The dialog runs onDismissRequest itself once the button is tapped, so the action only carries the title
         onDismissRequest = onOperationGone,
         firstActionBuilder = {
-            EventMessageAction(title = resourceReference(CoreUiR.string.common_got_it), onClick = onDismissRequest)
+            EventMessageAction(title = resourceReference(CoreUiR.string.common_got_it), onClick = {})
         },
     )
 
