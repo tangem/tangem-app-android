@@ -34,6 +34,11 @@ internal data class MarketTokenDTO(
     val h24Percent: String? = null,
     val weekPercent: String? = null,
     val monthPercent: String? = null,
+    /**
+     * Kept with the entry because reopening it from Recent bypasses the list the flag came from, and the
+     * token details endpoint cannot supply it. Defaulted so entries written before this field still load.
+     */
+    val isRestrictedForCountry: Boolean = false,
 )
 
 internal object ItemKind {

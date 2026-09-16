@@ -67,6 +67,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
                 data = model.tokenActionsData,
                 bottomAction = flowOf(BottomAction.GoToToken),
                 context = TokenActionsContext.AddFunds,
+                isRegionRestricted = params.isRegionRestricted,
             ),
         )
     }
