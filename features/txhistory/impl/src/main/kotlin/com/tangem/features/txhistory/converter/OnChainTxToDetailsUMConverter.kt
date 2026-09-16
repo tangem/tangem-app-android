@@ -19,6 +19,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_lightning_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.core.ui.res.generated.icons.ic_stack_20
 import com.tangem.core.ui.res.generated.icons.ic_success_20
 import com.tangem.domain.addressbook.model.portfolioIcon
@@ -60,6 +61,8 @@ internal class OnChainTxToDetailsUMConverter(
     /** Resolves a transfer counterparty to one of the user's own accounts/wallets — the same lookup the list uses. */
     private val lookup: TxHistoryLookupContext,
     private val isBalanceHidden: Boolean,
+    /** Names and draws the asset of a network-fee transaction. */
+    private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -81,12 +84,12 @@ internal class OnChainTxToDetailsUMConverter(
             header = tx.toHeaderUM(),
             isBalanceHidden = isBalanceHidden,
             amountBlock = tx.toAmountBlockUM(),
-            counterparty = tx.toCounterpartyUM(),
+            counterparty = tx.toTransferredAssetUM() ?: tx.toCounterpartyUM(),
             // Validator (staking) / protocol (yield-supply), then the network fee from the tx; rate is not surfaced.
             rows = buildList {
                 tx.validatorRow()?.let(::add)
                 tx.protocolRow()?.let(::add)
-                if (!tx.hasForeignFee()) addAll(tx.toInfoRows())
+                if (!tx.hasForeignFee() && !tx.isFeeOnly()) addAll(tx.toInfoRows())
             }.toImmutableList(),
             statusBanner = tx.approveRiskBanner(),
         )
@@ -220,10 +223,39 @@ internal class OnChainTxToDetailsUMConverter(
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         icon = amountIcon(),
-        amount = approveAmountText() ?: stringReference(signedAmount(currency)),
+        amount = feeAmountText() ?: approveAmountText() ?: stringReference(signedAmount(currency)),
         label = amountLabel(),
         isFailed = status is TxInfo.TransactionStatus.Failed,
     )
+
+    /** A [TransactionType.NetworkFee] moved no coin of its own, so the card shows the fee it paid instead. */
+    private fun TxInfo.feeAmountText(): TextReference? {
+        if (type !is TransactionType.NetworkFee) return null
+        val feeValue = fee?.value ?: return null
+        val formatted = feeValue.format { crypto(cryptoCurrency = currency, ignoreSymbolPosition = true) }
+        val prefix = if (status is TxInfo.TransactionStatus.Failed) "" else "${StringsSigns.MINUS} "
+        return stringReference((prefix + formatted).trim())
+    }
+
+    /**
+     * The card of a fee-only transaction, standing in for the counterparty one: the asset the fee was paid for, over
+     * the "Send" label. An untracked token can be neither named nor denominated, so the card is dropped altogether.
+     */
+    private fun TxInfo.toTransferredAssetUM(): TxHistoryDetailsUM.CounterpartyUM? {
+        val networkFee = type as? TransactionType.NetworkFee ?: return null
+        val transferred = networkFee.amount ?: return null
+        val symbol = transferred.currencySymbol.ifBlank { null } ?: return null
+        val amount = transferred.value?.format {
+            crypto(symbol = symbol, decimals = transferred.decimals, ignoreSymbolPosition = true)
+        }
+
+        return TxHistoryDetailsUM.CounterpartyUM(
+            label = resourceReference(R.string.common_send),
+            title = stringReference(amount ?: symbol),
+            avatar = TxHistoryDetailsUM.CounterpartyAvatar.Glyph(icon = TxIcon.Vector(Icons.ic_arrow_up_20)),
+            titleIcon = networkFee.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+        )
+    }
 
     /**
      * Approve's amount is a parameter of the granted allowance, not the tx's own transferred value — it comes from
@@ -421,9 +453,15 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
     return (prefix + formatted).trim()
 }
 
+/** The amount of a fee-only transaction already shows the fee, so the card does not repeat it as an info row. */
+private fun TxInfo.isFeeOnly(): Boolean = type is TransactionType.NetworkFee || type is TransactionType.GaslessFee
+
 /** Type glyph. Unlike the history list, the failed state keeps the type glyph (only the color changes). */
 private fun TxInfo.headerIcon(): TxIcon = when (val type = type) {
     is TransactionType.Approve -> TxIcon.Vector(Icons.ic_success_20)
+    is TransactionType.GaslessFee,
+    is TransactionType.NetworkFee,
+    -> TxIcon.Vector(Icons.ic_percent_20)
     is TransactionType.Staking.Stake,
     is TransactionType.Staking.Unstake,
     is TransactionType.Staking.Restake,
