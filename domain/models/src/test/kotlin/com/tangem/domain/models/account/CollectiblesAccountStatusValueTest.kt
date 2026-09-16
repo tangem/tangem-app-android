@@ -67,14 +67,14 @@ internal class CollectiblesAccountStatusValueTest {
             TotalFiatBalanceModel(
                 value = CollectiblesAccountStatusValue.Onboarded(
                     source = StatusSource.ACTUAL,
-                    vaultBalance = balance(usdc = "310", usdcRate = "1"),
+                    vaultBalance = vaultBalance(amount = "310", rate = "1"),
                 ),
                 expected = TotalFiatBalance.Loaded(amount = BigDecimal("310"), source = StatusSource.ACTUAL),
             ),
             TotalFiatBalanceModel(
                 value = CollectiblesAccountStatusValue.UpdateRequired(
                     source = StatusSource.ONLY_CACHE,
-                    vaultBalance = balance(usdc = "310", usdcRate = "1"),
+                    vaultBalance = vaultBalance(amount = "310", rate = "1"),
                 ),
                 expected = TotalFiatBalance.Loaded(amount = BigDecimal("310"), source = StatusSource.ONLY_CACHE),
             ),
@@ -82,7 +82,7 @@ internal class CollectiblesAccountStatusValueTest {
             TotalFiatBalanceModel(
                 value = CollectiblesAccountStatusValue.Onboarded(
                     source = StatusSource.ACTUAL,
-                    vaultBalance = balance(usdc = "2", usdcRate = null),
+                    vaultBalance = vaultBalance(amount = "2", rate = null),
                 ),
                 expected = TotalFiatBalance.Failed,
             ),
@@ -170,11 +170,6 @@ internal class CollectiblesAccountStatusValueTest {
     private companion object {
 
         fun loadedZero(source: StatusSource) = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = source)
-
-        fun balance(usdc: String, usdcRate: String?) = CollectiblesVaultBalance(
-            usdcAmount = BigDecimal(usdc),
-            usdcFiatRate = usdcRate?.let(::BigDecimal),
-        )
 
         fun allStates() = listOf(
             CollectiblesAccountStatusValue.Loading,
