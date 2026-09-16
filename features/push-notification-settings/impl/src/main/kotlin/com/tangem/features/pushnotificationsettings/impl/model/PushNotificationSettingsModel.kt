@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -144,7 +145,12 @@ internal class PushNotificationSettingsModel @Inject constructor(
             // instantly, and pre-Android 13 there is no runtime permission at all.
             val isNotificationsEnabled = systemNotificationsStateProvider.areNotificationsEnabled()
             osNotificationsEnabled.value = isNotificationsEnabled
-            analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = isGranted))
+            analyticsEventHandler.send(
+                PushNotificationAnalyticEvents.PermissionStatus(
+                    isAllowed = isGranted,
+                    source = AnalyticsParam.ScreensSources.Settings,
+                ),
+            )
 
             if (isNotificationsEnabled) {
                 applyPendingToggle()

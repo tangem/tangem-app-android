@@ -19,9 +19,12 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import com.tangem.core.res.R as CoreResR
@@ -37,6 +40,7 @@ internal class IntroductionCardScanner @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
@@ -130,9 +134,27 @@ internal class IntroductionCardScanner @Inject constructor(
                     ),
                 )
                 onNavigatedAway()
-                router.replaceAll(AppRoute.Wallet)
+                openWalletOrAskForPush()
             },
         )
+    }
+
+    private suspend fun openWalletOrAskForPush() {
+        // The wallet is saved by now, so a failing read opens it rather than stranding the viewer.
+        val shouldAsk = runSuspendCatching { shouldAskPermissionUseCase(PUSH_PERMISSION) }
+            .getOrElse {
+                TangemLogger.e("Unable to read the push permission preference", it)
+                false
+            }
+        val route = if (shouldAsk) {
+            AppRoute.PushNotification(
+                source = AppRoute.PushNotification.Source.FirstSignIn,
+                nextRoute = AppRoute.Wallet,
+            )
+        } else {
+            AppRoute.Wallet
+        }
+        router.replaceAll(route)
     }
 
     private fun reportFailure(messageId: Int?, onFailed: () -> Unit) {
