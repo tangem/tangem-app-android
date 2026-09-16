@@ -16,12 +16,11 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayReissuePlasticCardUM
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -200,17 +199,6 @@ internal class TangemPayReissuePlasticCardModelTest {
         onboardingRepository = onboardingRepository,
         analytics = analytics,
     ).also { model = it }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private fun reissueOffer(deliveryEtaMaxDays: Int? = DELIVERY_ETA_MAX_DAYS) = Offer(
         type = Offer.Type.CARD_REISSUE_PLASTIC_RAIN,
