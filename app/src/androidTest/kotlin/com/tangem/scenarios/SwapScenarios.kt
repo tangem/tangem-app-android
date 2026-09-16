@@ -474,6 +474,29 @@ fun BaseTestCase.changeReceiveToken(tokenName: String) {
     }
 }
 
+/** Opens the FROM token selector via the swap-card icon. The balance filter is only wired for FROM, not TO. */
+fun BaseTestCase.openSwapFromTokenSelector() {
+    step("Click on 'Select token' icon in 'From' field") {
+        onSwapTokenScreen { swapSelectTokenIcon.performClick() }
+    }
+}
+
+/**
+ * Opens the balance-filter dropdown on the FROM token selector and picks [filterLabel].
+ *
+ * The chip only renders once the portfolio block loads, so wait for it before clicking — callers may
+ * reach this right after opening the selector.
+ */
+fun BaseTestCase.selectBalanceFilter(filterLabel: String) {
+    step("Click on balance filter chip") {
+        awaitSuccess { onSwapSelectTokenScreen { balanceFilterChip.assertIsDisplayed() } }
+        onSwapSelectTokenScreen { balanceFilterChip.performClick() }
+    }
+    step("Click on '$filterLabel' filter option") {
+        onSwapSelectTokenScreen { balanceFilterOption(filterLabel).clickWithAssertion() }
+    }
+}
+
 /**
  * From a clean start: open the main screen (cold by default, or an existing hot wallet when
  * [seedPhrase] is given), open Swap for [fromTokenName], choose [receiveTokenName] to receive and

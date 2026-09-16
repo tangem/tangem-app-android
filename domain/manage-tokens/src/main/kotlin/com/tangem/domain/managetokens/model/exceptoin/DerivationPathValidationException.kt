@@ -5,4 +5,6 @@ sealed class DerivationPathValidationException {
     data object Empty : DerivationPathValidationException()
 
     data object Invalid : DerivationPathValidationException()
+
+    data object ReservedForJointAccounts : DerivationPathValidationException()
 }

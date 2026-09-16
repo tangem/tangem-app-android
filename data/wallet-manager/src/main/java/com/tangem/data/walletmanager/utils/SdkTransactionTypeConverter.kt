@@ -1,7 +1,6 @@
 package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
@@ -22,7 +21,7 @@ internal class SdkTransactionTypeConverter(
     private val yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
     private val currency: CryptoCurrency,
-    private val networkTokens: Set<Token> = emptySet(),
+    private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
     private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
@@ -180,7 +179,7 @@ internal class SdkTransactionTypeConverter(
                 currencySymbol = token.symbol,
                 value = rawAllowance?.movePointLeft(token.decimals),
                 decimals = token.decimals,
-                type = SdkAmountType.Token(contractAddress = token.contractAddress, id = token.id),
+                type = SdkAmountType.Token(contractAddress = token.contractAddress, id = token.id.rawCurrencyId?.value),
             )
         } else {
             SdkAmount(

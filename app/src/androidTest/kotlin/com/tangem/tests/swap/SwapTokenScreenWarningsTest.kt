@@ -1,9 +1,9 @@
 package com.tangem.tests.swap
 
+import com.tangem.core.res.R
 import com.tangem.grow.datasource.config.Express
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO

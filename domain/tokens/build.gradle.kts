@@ -30,6 +30,7 @@ dependencies {
     api(projects.domain.express)
     api(projects.domain.legacy)
     api(projects.domain.networks)
+    api(projects.domain.collectibles)
     api(projects.domain.polymarket)
     api(projects.domain.quotes)
     api(projects.domain.staking)
@@ -49,7 +50,8 @@ dependencies {
     // endregion
 
     // region Features
-    api(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+    api(projects.features.virtualAccounts.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
+    api(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
     api(projects.features.polymarket.api) // POLYMARKET_ENABLED
     // endregion
 

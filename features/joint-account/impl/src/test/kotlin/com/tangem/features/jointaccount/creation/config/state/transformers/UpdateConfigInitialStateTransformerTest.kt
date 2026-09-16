@@ -12,6 +12,7 @@ internal class UpdateConfigInitialStateTransformerTest {
 
     private val transformer = UpdateConfigInitialStateTransformer(
         onNameChange = onNameChange,
+        onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
         onColorClick = onColorClick,
         onIconClick = onIconClick,
         onContinueClick = onContinueClick,
@@ -35,6 +36,8 @@ internal class UpdateConfigInitialStateTransformerTest {
             icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
             wallet = null,
             isContinueEnabled = false,
+            isValuePasted = false,
+            onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
             onNameChange = onNameChange,
             onColorClick = onColorClick,
             onIconClick = onIconClick,
@@ -63,6 +66,7 @@ internal class UpdateConfigInitialStateTransformerTest {
         // Assert
         val expected = filledState.copy(
             onNameChange = onNameChange,
+            onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
             onColorClick = onColorClick,
             onIconClick = onIconClick,
             onContinueClick = onContinueClick,
@@ -87,7 +91,9 @@ internal class UpdateConfigInitialStateTransformerTest {
             icons = CryptoPortfolioIcon.Icon.entries.toImmutableList(),
             wallet = null,
             isContinueEnabled = false,
-            onNameChange = {},
+            isValuePasted = false,
+            onValuePastedTriggerDismiss = {},
+            onNameChange = { _, _ -> },
             onColorClick = {},
             onIconClick = {},
             onContinueClick = {},
@@ -95,7 +101,8 @@ internal class UpdateConfigInitialStateTransformerTest {
         )
 
         // Shared instances so the expected state can pin the exact callbacks passed to the transformer
-        val onNameChange: (String) -> Unit = {}
+        val onNameChange: (String, Boolean) -> Unit = { _, _ -> }
+        val onValuePastedTriggerDismiss: () -> Unit = {}
         val onColorClick: (CryptoPortfolioIcon.Color) -> Unit = {}
         val onIconClick: (CryptoPortfolioIcon.Icon) -> Unit = {}
         val onContinueClick: () -> Unit = {}

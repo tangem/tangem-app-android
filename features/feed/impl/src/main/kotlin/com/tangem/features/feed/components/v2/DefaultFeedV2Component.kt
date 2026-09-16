@@ -18,6 +18,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
@@ -28,32 +29,43 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.decompose.value.operator.map
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
+import com.tangem.core.ui.extensions.dropWhenNoRoom
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
-import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
 import com.tangem.features.feed.v2.FeedV2Component
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 
+@Suppress("LongParameterList")
 @Stable
 internal class DefaultFeedV2Component @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Suppress("UnusedPrivateProperty") @Assisted params: Unit,
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
-    private val tabSet: FeedTabSet,
     private val searchBarController: DefaultFeedSearchBarController,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedV2Component, AppComponentContext by context {
+
+    override val isSheetBlurEnabled: StateFlow<Boolean>
+        field = MutableStateFlow(true)
 
     private val stackNavigation = StackNavigation<FeedRoute>()
 
@@ -72,6 +84,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         childFactory = ::createChild,
     )
 
+    override val isPartialExpansionSupported: Value<Boolean> =
+        stack.map { it.active.instance.isPartialExpansionSupported }
+
     init {
         componentScope.launch {
             searchBarController.activationRequests.collect(::onSearchActivationRequest)
@@ -82,12 +97,14 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             searchBarController.setActive(
                 isActive = stackState.items.any { it.configuration is FeedRoute.Search },
             )
+            val active = stackState.active.configuration
+            isSheetBlurEnabled.value = active is FeedHomeRoute || active is FeedRoute.Search
         }
         lifecycle.doOnDestroy { searchBarController.setActive(isActive = false) }
     }
 
     @Composable
-    override fun Header(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit, modifier: Modifier) {
+    override fun Header(sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit, modifier: Modifier) {
         val stackState by stack.subscribeAsState()
         val active = stackState.active
 
@@ -116,7 +133,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 )
             } else {
                 screen.Header(
-                    bottomSheetState = bottomSheetState,
+                    sheetExpansion = sheetExpansion,
                     onExpandSheet = onExpandSheet,
                     modifier = Modifier,
                 )
@@ -142,7 +159,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
 
         Children(
             stack = stackState,
-            modifier = modifier,
+            modifier = modifier.dropWhenNoRoom(minRoom = contentPadding.calculateTopPadding() + 8.dp),
             animation = stackAnimation(slide()),
         ) { child ->
             child.instance.Content(
@@ -158,7 +175,11 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         val childContext = childByContext(componentContext = factoryContext, router = feedRouter)
 
         return when (route) {
-            is FeedHomeRoute -> FeedHomeComponent(context = childContext, tabSet = tabSet)
+            is FeedHomeRoute -> FeedHomeComponent(
+                context = childContext,
+                portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+                analyticsEventHandler = analyticsEventHandler,
+            )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()
                 .create(context = childContext, route = route)

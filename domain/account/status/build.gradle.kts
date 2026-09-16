@@ -37,7 +37,10 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.jointAccount)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.polymarket)
+    implementation(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
     implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
 
     implementation(deps.kotlin.serialization)
