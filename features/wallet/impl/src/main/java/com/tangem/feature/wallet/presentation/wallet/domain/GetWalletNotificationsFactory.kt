@@ -14,8 +14,10 @@ import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
+import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -58,6 +60,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -100,6 +103,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
+            val jointAccounts = accountList.accountStatuses.mapNotNull { it.account as? Account.Joint }
 
             val paymentAccountStatus = accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Payment>()
@@ -130,8 +134,10 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 addInformationalNotifications(
                     userWallet = userWallet,
+                    derivedKeysWallet = activationWallet,
                     cardTypesResolver = cardTypesResolver,
                     flattenCurrencies = flattenCurrencies,
+                    jointAccounts = jointAccounts,
                     clickIntents = clickIntents,
                 )
 
@@ -229,10 +235,12 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         }
     }
 
-    private fun MutableList<WalletNotificationUM>.addInformationalNotifications(
+    private suspend fun MutableList<WalletNotificationUM>.addInformationalNotifications(
         userWallet: UserWallet,
+        derivedKeysWallet: UserWallet,
         cardTypesResolver: CardTypesResolver?,
         flattenCurrencies: List<CryptoCurrencyStatus>,
+        jointAccounts: List<Account.Joint>,
         clickIntents: WalletClickIntents,
     ) {
         addIf(
@@ -240,19 +248,24 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             condition = cardTypesResolver != null && isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
         )
 
-        addMissingAddressesNotification(userWallet, flattenCurrencies, clickIntents)
+        addMissingAddressesNotification(userWallet, derivedKeysWallet, flattenCurrencies, jointAccounts, clickIntents)
     }
 
-    private fun MutableList<WalletNotificationUM>.addMissingAddressesNotification(
+    private suspend fun MutableList<WalletNotificationUM>.addMissingAddressesNotification(
         userWallet: UserWallet,
+        derivedKeysWallet: UserWallet,
         flattenCurrencies: List<CryptoCurrencyStatus>,
+        jointAccounts: List<Account.Joint>,
         clickIntents: WalletClickIntents,
     ) {
-        val currencies = flattenCurrencies.getMissingAddressCurrencies().ifEmpty { return }
+        val currencies = flattenCurrencies.getMissingAddressCurrencies()
+        val missingJointOwnerKeysCount = getMissingJointOwnerKeysCountUseCase(jointAccounts, derivedKeysWallet)
+        val missingAddressesCount = currencies.distinctBy { it.network.id }.count() + missingJointOwnerKeysCount
+
         addIf(
             element = WalletNotificationUM.MissingAddresses(
                 tangemIcon = walletInterationIcon(userWallet),
-                missingAddressesCount = currencies.distinctBy { it.network.id }.count(),
+                missingAddressesCount = missingAddressesCount,
                 isHotWallet = userWallet is UserWallet.Hot,
                 onGenerateClick = {
                     clickIntents.onGenerateMissedAddressesClick(
@@ -261,7 +274,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     )
                 },
             ),
-            condition = currencies.isNotEmpty(),
+            condition = missingAddressesCount > 0,
         )
     }
 
