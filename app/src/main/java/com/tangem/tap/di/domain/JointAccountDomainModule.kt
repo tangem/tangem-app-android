@@ -9,6 +9,7 @@ import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
@@ -23,6 +24,7 @@ import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
+import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
@@ -239,5 +241,13 @@ internal object JointAccountDomainModule {
             supplier = supplier,
             accountListFetcher = accountListFetcher,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetMissingJointOwnerKeysCountUseCase(
+        repository: JointOwnerKeysRepository,
+    ): GetMissingJointOwnerKeysCountUseCase {
+        return GetMissingJointOwnerKeysCountUseCase(repository)
     }
 }
