@@ -11,6 +11,7 @@ import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -19,7 +20,10 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CollectiblesOwnerNetworkProviderTest {
 
     private val networkFactory: NetworkFactory = mockk()
@@ -31,7 +35,7 @@ internal class CollectiblesOwnerNetworkProviderTest {
     )
 
     private val userWalletId = UserWalletId("011")
-    private val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+    private val userWallet: UserWallet = mockColdWallet(walletId = userWalletId)
     private val network: Network = mockk()
 
     @BeforeEach
@@ -39,26 +43,30 @@ internal class CollectiblesOwnerNetworkProviderTest {
         clearMocks(networkFactory, ownerDeriver)
     }
 
-    @Test
-    fun `GIVEN the owner key is stored WHEN create THEN the network is built on the owner derivation path`() =
-        runTest {
-            // Arrange
-            coEvery { ownerDeriver.storedOwner(userWalletId) } returns OWNER
-            stubNetwork(network)
+    /** The owner address is the vault's `cold_owner`, so it must be built on the same chain the vault is. */
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN the owner key is stored WHEN create THEN the network is built on the card's chain and owner path`(
+        model: VaultChainModel,
+    ) = runTest {
+        // Arrange
+        val wallet = mockColdWallet(walletId = userWalletId, isTestCard = model.isTestCard)
+        coEvery { ownerDeriver.storedOwner(userWalletId) } returns OWNER
+        stubNetwork(userWallet = wallet, blockchain = model.blockchain, network = network)
 
-            // Act
-            val actual = provider.create(userWallet)
+        // Act
+        val actual = provider.create(wallet)
 
-            // Assert
-            assertThat(actual).isEqualTo(network.right())
-            verify(exactly = 1) {
-                networkFactory.create(
-                    blockchain = Blockchain.SolanaTestnet,
-                    extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
-                    userWallet = userWallet,
-                )
-            }
+        // Assert
+        assertThat(actual).isEqualTo(network.right())
+        verify(exactly = 1) {
+            networkFactory.create(
+                blockchain = model.blockchain,
+                extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
+                userWallet = wallet,
+            )
         }
+    }
 
     @Test
     fun `GIVEN no owner key WHEN create THEN wallet is unavailable and no network is built`() = runTest {
@@ -77,7 +85,7 @@ internal class CollectiblesOwnerNetworkProviderTest {
     fun `GIVEN no network WHEN create THEN wallet is unavailable`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(userWalletId) } returns OWNER
-        stubNetwork(null)
+        stubNetwork(userWallet = userWallet, blockchain = Blockchain.Solana, network = null)
 
         // Act
         val actual = provider.create(userWallet)
@@ -86,15 +94,17 @@ internal class CollectiblesOwnerNetworkProviderTest {
         assertThat(actual).isEqualTo(GachaVaultError.WalletUnavailable.left())
     }
 
-    private fun stubNetwork(network: Network?) {
+    private fun stubNetwork(userWallet: UserWallet, blockchain: Blockchain, network: Network?) {
         every {
             networkFactory.create(
-                blockchain = Blockchain.SolanaTestnet,
+                blockchain = blockchain,
                 extraDerivationPath = COLLECTIBLES_OWNER_DERIVATION_PATH,
                 userWallet = userWallet,
             )
         } returns network
     }
+
+    private fun provideTestModels() = vaultChainModels()
 
     private companion object {
 
