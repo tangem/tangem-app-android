@@ -829,9 +829,13 @@ fun BaseTestCase.openTangemPayReceiveSheet(network: String): String {
         awaitSuccess { onChooseNetworkBottomSheet { networkItem(network).assertIsDisplayed() } }
         onChooseNetworkBottomSheet { networkItem(network).performClick() }
     }
+    // The sheet renders before the network status arrives, and an address-less sheet keeps its actions
+    // disabled — so the wait is on the address itself, not on the node being on screen.
     step("Read the deposit address on the receive sheet") {
-        awaitSuccess { onTangemPayReceiveSheet { address.assertIsDisplayed() } }
-        onTangemPayReceiveSheet { depositAddress = address.extractText() }
+        awaitSuccess {
+            onTangemPayReceiveSheet { depositAddress = address.extractText() }
+            if (depositAddress.isBlank()) throw AssertionError("Deposit address has not arrived yet")
+        }
     }
     return depositAddress
 }
