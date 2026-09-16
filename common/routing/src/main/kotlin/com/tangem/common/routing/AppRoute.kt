@@ -601,9 +601,9 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_eligibility")
 
     @Serializable
-    data class VirtualAccountOnboarding(
+    data class MoneyAccountOnboarding(
         val mode: Mode,
-    ) : AppRoute(path = "/virtual_account_onboarding/$mode") {
+    ) : AppRoute(path = "/money_account_onboarding/$mode") {
 
         @Serializable
         sealed class Mode {
