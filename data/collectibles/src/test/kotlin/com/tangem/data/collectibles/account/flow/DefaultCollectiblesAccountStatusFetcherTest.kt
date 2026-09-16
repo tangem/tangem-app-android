@@ -3,16 +3,18 @@ package com.tangem.data.collectibles.account.flow
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
 import com.tangem.data.collectibles.account.store.WalletIdWithCollectiblesStatusDTO
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -109,6 +111,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         CollectiblesAccountStatusStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceDataStore = MockStateDataStore<WalletIdWithCollectiblesStatusDTO>(default = emptyMap()),
+            converter = CONVERTER,
             scope = TestAppCoroutineScope(testScope),
         ).apply {
             recorded?.let { store(userWalletId = WALLET, value = it) }
@@ -140,7 +143,11 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
             every { isLocked } returns true
         }
 
+        val CONVERTER = CollectiblesAccountStatusValueDTOConverter(
+            currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc),
+        )
+
         val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE)
-        val CACHED = CollectiblesVaultBalance(usdcAmount = BigDecimal("9"))
+        val CACHED = MockCollectibles.vaultBalance(amount = BigDecimal("9"))
     }
 }
