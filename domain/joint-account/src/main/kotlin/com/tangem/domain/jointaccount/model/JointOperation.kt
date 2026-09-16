@@ -13,6 +13,7 @@ package com.tangem.domain.jointaccount.model
  * (the slot stays busy), never sent back
 
  * backend did not report one
+
  * @property signatures  only the members who responded; the rest of the roster is drawn from
  * [JointAccount.members] and rendered as waiting
  */
@@ -23,6 +24,7 @@ data class JointOperation(
     val status: Status,
     val initiator: String?,
     val signatures: List<MemberSignature>,
+    val createdAt: String? = null,
 ) {
 
     enum class Status {
