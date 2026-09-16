@@ -9,6 +9,8 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
+import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
@@ -126,4 +128,11 @@ interface JointAccountRepository {
         safeTx: SafeTx,
         signature: String,
     ): Either<JointOperationSignError, Unit>
+
+    /** Cancels the operation when [signature] is the initiator's, records a decline otherwise */
+    suspend fun rejectOperation(
+        userWalletId: UserWalletId,
+        payload: JointOperationRejectPayload,
+        signature: String,
+    ): Either<JointOperationRejectError, Unit>
 }
