@@ -29,7 +29,7 @@ class MultiWalletBackupComponent(
         params.innerNavigation.update {
             it.copy(
                 stackSize = 5,
-                stackMaxSize = 9,
+                stackMaxSize = 10,
             )
         }
 
