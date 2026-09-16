@@ -88,14 +88,12 @@ internal object JointAccountDomainModule {
     @Singleton
     fun provideRejectJointOperationUseCase(
         repository: JointAccountRepository,
-        signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
         supplier: SingleJointAccountListSupplier,
         networkReader: JointNetworkReader,
     ): RejectJointOperationUseCase {
         return RejectJointOperationUseCase(
             repository = repository,
-            signer = signer,
             fetcher = fetcher,
             supplier = supplier,
             networkReader = networkReader,
