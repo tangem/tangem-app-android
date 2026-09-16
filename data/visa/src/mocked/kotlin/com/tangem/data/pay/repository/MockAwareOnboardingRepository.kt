@@ -176,15 +176,16 @@ internal class MockAwareOnboardingRepository @Inject constructor(
         real.setHideMainOnboardingBanner(userWalletId)
     }
 
-    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
-        if (isMockMode) return Unit.right()
-        return real.disableTangemPay(userWalletId)
-    }
+    // Not short-circuited in MOCK env: the account removal is only observable through what this call does —
+    // the pay-enabled request against WireMock, clearing the wallet's Tangem Pay data and storing the empty
+    // payment-account status that hides the block.
+    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> =
+        real.disableTangemPay(userWalletId)
 
-    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
-        if (isMockMode) return false
-        return real.isTangemPayDeactivated(userWalletId)
-    }
+    // Follows the flag the customer-state mock writes (FORMER / all product instances DEACTIVATED), so a
+    // removed account stays hidden across a restart instead of reappearing.
+    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean =
+        real.isTangemPayDeactivated(userWalletId)
 
     private companion object {
         const val MOCK_ORDER_ID = "mock-order-id"
