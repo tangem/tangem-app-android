@@ -264,13 +264,15 @@ class SendFeeScreenTest : BaseTestCase() {
     fun checkNetworkFeeBottomSheetForBitcoinTest() {
         val tokenName = "Bitcoin"
         val tokenAmount = "0.00000001"
-        val feeAmount = "$0.72"
+        // Follows the mocked estimatesmartfee rates (Market = blocks 4 = 20.48 sat/byte); the custom
+        // values further down are what the same transaction costs at 1 sat/byte.
+        val feeAmount = "$5.01"
         val fiatFeeAmount = "$0.24"
         val marketSelectorItem = getResourceString(R.string.common_fee_selector_option_market)
         val fastSelectorItem = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSelectorItem = getResourceString(R.string.common_fee_selector_option_slow)
         val feeUpTo = getResourceString(R.string.send_max_fee)
-        val feeUpToValue = "0.0000066 BTC"
+        val feeUpToValue = "0.0000462 BTC"
         val newFeeUpToValue = "0.0000022 BTC"
         val satoshi = getResourceString(R.string.send_satoshi_per_byte_title)
         val satoshiValue = "2"
@@ -280,8 +282,18 @@ class SendFeeScreenTest : BaseTestCase() {
         val bitcoinUtxoScenarioState = "Balance"
         val feeScenarioName = "bitcoin_estimate_smart_fee"
         val feeScenarioState = "Started"
+        val networksProvidersScenario = "networks_providers"
+        val bitcoinMockOnlyState = "BitcoinMockOnly"
 
-        setupHooks().run {
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                // The live Bitcoin providers outvote the mocked fee, and networks_providers is read at launch.
+                check(setWireMockScenarioState(networksProvidersScenario, bitcoinMockOnlyState)) {
+                    "Failed to set '$networksProvidersScenario' to '$bitcoinMockOnlyState' — the fee below " +
+                        "would then follow the live network instead of the mock."
+                }
+            }
+        ).run {
             step("Set WireMock scenario: '$bitcoinUtxoScenarioName' to state: '$bitcoinUtxoScenarioState'") {
                 setWireMockScenarioState(bitcoinUtxoScenarioName, bitcoinUtxoScenarioState)
             }

@@ -11,4 +11,7 @@ interface CardSdkProvider {
 
     /** CardSDK instance */
     val sdk: TangemSdk
+
+    /** CardSDK instance, or `null` when none is registered — unlike [sdk], never re-registers to create one. */
+    val sdkOrNull: TangemSdk?
 }

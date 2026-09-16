@@ -31,19 +31,22 @@ internal class DefaultCardSdkConfigRepository(
     override var isBiometricsRequestPolicy: Boolean
         get() = sdk.config.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
         set(value) {
-            sdk.config.userCodeRequestPolicy = if (value) {
-                UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-            } else {
-                UserCodeRequestPolicy.Default
-            }
+            sdk.config.userCodeRequestPolicy = value.toUserCodeRequestPolicy()
         }
 
+    override fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
+        val config = cardSdkProvider.sdkOrNull?.config ?: return
+        config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+    }
+
     override fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
-        sdk.config.userCodeRequestPolicy = if (isBiometricsRequestPolicy) {
-            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-        } else {
-            UserCodeRequestPolicy.Default
-        }
+        sdk.config.userCodeRequestPolicy = isBiometricsRequestPolicy.toUserCodeRequestPolicy()
+    }
+
+    private fun Boolean.toUserCodeRequestPolicy(): UserCodeRequestPolicy = if (this) {
+        UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
+    } else {
+        UserCodeRequestPolicy.Default
     }
 
     override fun resetCardIdDisplayFormat() {
