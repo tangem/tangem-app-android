@@ -13,11 +13,16 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.converter.JointAccountStatusValueConverter
+import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -52,6 +57,8 @@ import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -69,6 +76,7 @@ import java.math.BigDecimal
  * @property flowProducerTools Tools for managing the flow producer.
  * @property userWalletsListRepository Repository for getting user wallet by id.
  * @property singleAccountListSupplier Supplier to get the list of accounts for the user wallet.
+ * @property singleJointAccountListSupplier Supplier to get the joint accounts the wallet participates in.
  * @property networksRepository Repository for checking network statuses in a cache.
  * @property dispatchers Coroutine dispatcher provider for managing threading.
  * @property networkStatusSupplier Supplier for getting network statuses.
@@ -87,10 +95,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     override val flowProducerTools: FlowProducerTools,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val singleJointAccountListSupplier: SingleJointAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -109,8 +120,26 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
     private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
         get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
+    private val Account.Collectibles.errorCollectiblesAccountStatus: AccountStatus.Collectibles
+        get() = AccountStatus.Collectibles(this, CollectiblesAccountStatusValue.Error.Unavailable)
+    private val Account.Collectibles.loadingCollectiblesAccountStatus: AccountStatus.Collectibles
+        get() = AccountStatus.Collectibles(this, CollectiblesAccountStatusValue.Loading)
+    private val emptyPriceChangeLce: Lce<Unit, PriceChange>
+        get() = PriceChange(value = BigDecimal.ZERO.movePointLeft(2), source = StatusSource.ACTUAL).lceContent()
     private val Account.Joint.errorJointAccountStatus: AccountStatus.Joint
-        get() = AccountStatus.Joint(this, JointAccountStatusValue.Error.Unavailable)
+        get() = AccountStatus.Joint(
+            account = this,
+            value = JointAccountStatusValue.Error.Unavailable,
+            tokenList = TokenList.Empty,
+            priceChangeLce = emptyPriceChangeLce,
+        )
+    private val Account.Joint.loadingJointAccountStatus: AccountStatus.Joint
+        get() = AccountStatus.Joint(
+            account = this,
+            value = JointAccountStatusValue.Loading,
+            tokenList = TokenList.Empty,
+            priceChangeLce = lceLoading(),
+        )
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -163,32 +192,40 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
 
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
-            paymentAccountStatusSupplier.invoke(userWalletId = walletId),
-            virtualAccountStatusSupplier.invoke(userWalletId = walletId),
-            predictionStatusFlow(userWallet = userWallet),
-        ) { paymentStatus, virtualStatus, predictionValue ->
+            flow = paymentAccountStatusSupplier.invoke(userWalletId = walletId),
+            flow2 = virtualAccountStatusSupplier.invoke(userWalletId = walletId),
+            flow3 = predictionStatusFlow(userWallet = userWallet),
+            flow4 = collectiblesStatusFlow(walletId = walletId),
+        ) { paymentStatus, virtualStatus, predictionValue, collectiblesValue ->
             val predictionStatus = AccountStatus.Prediction(
                 account = Account.Prediction(userWalletId = walletId),
                 value = predictionValue,
+            )
+            val collectiblesStatus = AccountStatus.Collectibles(
+                account = Account.Collectibles(userWalletId = walletId),
+                value = collectiblesValue,
             )
 
             mapOf(
                 paymentStatus.accountId to paymentStatus,
                 virtualStatus.accountId to virtualStatus,
                 predictionStatus.accountId to predictionStatus,
+                collectiblesStatus.accountId to collectiblesStatus,
             )
         }
 
         combine(
-            accountListFlow,
-            cryptoCurrencyStatusFlow,
-            specialStatusesFlow,
-        ) { accountList, currencyStatusMap, specialStatuses ->
+            flow = accountListFlow,
+            flow2 = cryptoCurrencyStatusFlow,
+            flow3 = specialStatusesFlow,
+            flow4 = jointAccountsFlow(walletId = walletId),
+        ) { accountList, currencyStatusMap, specialStatuses, jointAccounts ->
             logger.i(
                 "combine[$walletId] transform:" +
                     "accounts=${accountList.accounts.size}, " +
                     "currencyStatusMap=${currencyStatusMap.size}, " +
-                    "specialStatuses=${specialStatuses.size}",
+                    "specialStatuses=${specialStatuses.size}, " +
+                    "jointAccounts=${jointAccounts?.size}",
             )
             val accountStatuses = accountList.accounts.map { account ->
                 when (account) {
@@ -197,18 +234,79 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
                     is Account.Prediction ->
                         specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
-                    // The joint status source arrives with the wallet-screen integration step
-                    is Account.Joint -> account.errorJointAccountStatus
+                    is Account.Collectibles ->
+                        specialStatuses[account.accountId] ?: account.errorCollectiblesAccountStatus
+                    is Account.Joint -> buildJointStatus(
+                        account = account,
+                        currencyStatusMap = currencyStatusMap,
+                        jointAccounts = jointAccounts,
+                        accountList = accountList,
+                    )
                 }
             }
             buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
         }.collect { accountStatusList -> channel.send(accountStatusList) }
     }
 
+    private fun jointAccountsFlow(walletId: UserWalletId): Flow<Map<String, JointAccount>?> {
+        return singleJointAccountListSupplier(userWalletId = walletId)
+            .map<List<JointAccount>, Map<String, JointAccount>?> { accounts ->
+                accounts.associateBy(JointAccount::cryptoAccountId)
+            }
+            .onStart { emit(null) }
+    }
+
+    /**
+     * The lifecycle state comes from the joint accounts, the money from the network statuses — read by the Safe
+     * address, so only an active account has any. A pending one, or one this device has no record of yet
+     */
+    private fun buildJointStatus(
+        account: Account.Joint,
+        currencyStatusMap: Map<AccountCurrencyId, CryptoCurrencyStatus>,
+        jointAccounts: Map<String, JointAccount>?,
+        accountList: AccountList,
+    ): AccountStatus.Joint {
+        val loadedAccounts = jointAccounts ?: return account.loadingJointAccountStatus
+        val jointAccount = loadedAccounts[account.accountId.value] ?: return account.errorJointAccountStatus
+        val value = JointAccountStatusValueConverter.convert(value = jointAccount)
+
+        if (value !is JointAccountStatusValue.Active || account.cryptoCurrencies.isEmpty()) {
+            return AccountStatus.Joint(
+                account = account,
+                value = value,
+                tokenList = TokenList.Empty,
+                priceChangeLce = emptyPriceChangeLce,
+            )
+        }
+
+        val statuses: List<CryptoCurrencyStatus> = account.cryptoCurrencies.map { currency ->
+            currencyStatusMap[account.accountId to currency.id] ?: currency.toLoadingCurrencyStatus()
+        }
+        return AccountStatus.Joint(
+            account = account,
+            value = value,
+            tokenList = TokenListFactory.create(
+                statuses = statuses,
+                groupType = accountList.groupType,
+                sortType = accountList.sortType,
+            ),
+            priceChangeLce = PriceChangeCalculator.calculate(statuses = statuses),
+        )
+    }
+
     /**
      * Subscribed only for a wallet that can hold the account, and seeded before the join: this flow gates every
      * account on the screen, so a supplier that goes quiet must cost one loading row rather than all of them.
      */
+    private fun collectiblesStatusFlow(walletId: UserWalletId): Flow<CollectiblesAccountStatusValue> {
+        if (!collectiblesFeatureToggles.isCollectiblesEnabled) {
+            return flowOf(CollectiblesAccountStatusValue.Error.Unavailable)
+        }
+
+        return collectiblesAccountStatusSupplier(userWalletId = walletId)
+            .onStart { emit(CollectiblesAccountStatusValue.Loading) }
+    }
+
     private fun predictionStatusFlow(userWallet: UserWallet): Flow<PredictionAccountStatusValue> {
         if (!polymarketFeatureToggles.isPolymarketEnabled || !userWallet.isPredictionAccountSupported) {
             return flowOf(PredictionAccountStatusValue.Error.Unavailable)
@@ -219,17 +317,17 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     private fun buildCryptoPortfolioStatus(
-        account: Account.CryptoPortfolio,
+        account: Account.Personal,
         currencyStatusMap: Map<AccountCurrencyId, CryptoCurrencyStatus>,
         accountList: AccountList,
-    ): AccountStatus.CryptoPortfolio {
+    ): AccountStatus.Personal {
         if (account.cryptoCurrencies.isEmpty()) return account.toEmptyAccountStatus()
 
         val statuses: List<CryptoCurrencyStatus> = account.cryptoCurrencies.map { currency ->
             val acId = account.accountId to currency.id
             currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
         }
-        return AccountStatus.CryptoPortfolio(
+        return AccountStatus.Personal(
             account = account,
             tokenList = TokenListFactory.create(
                 statuses = statuses,
@@ -401,7 +499,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
     }
 
-    private fun Account.CryptoPortfolio.toEmptyAccountStatus() = AccountStatus.CryptoPortfolio(
+    private fun Account.Personal.toEmptyAccountStatus() = AccountStatus.Personal(
         account = this,
         tokenList = TokenList.Empty,
         priceChangeLce = PriceChange(
@@ -422,13 +520,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
-                // The statuses carry
-                // no amount yet — it arrives with the balances step; until then only pre-activation states exist,
-                // and their balance is genuinely zero (the Safe is not deployed)
-                is AccountStatus.Joint -> TotalFiatBalance.Loaded(
-                    amount = SerializedBigDecimal.ZERO,
-                    source = accountStatus.value.source,
-                )
+                is AccountStatus.Collectibles -> accountStatus.value.totalFiatBalance
             }
         }
     }
@@ -443,7 +535,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                             CryptoCurrencyStatus(currency = it, value = CryptoCurrencyStatus.Loading)
                         }
 
-                        AccountStatus.CryptoPortfolio(
+                        AccountStatus.Personal(
                             account = account,
                             tokenList = TokenListFactory.create(
                                 statuses = currencyStatuses,
@@ -456,7 +548,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     is Account.Payment -> null
                     is Account.Virtual -> null
                     is Account.Prediction -> null
-                    is Account.Joint -> null
+                    is Account.Collectibles -> account.loadingCollectiblesAccountStatus
+                    is Account.Joint -> account.loadingJointAccountStatus
                 }
             },
             totalAccounts = accountList.totalAccounts,

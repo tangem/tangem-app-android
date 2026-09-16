@@ -6,4 +6,7 @@ interface TangemPayFeatureToggles {
     val isPlasticCardOrderEnabled: Boolean
     val isAccountMultichainEnabled: Boolean
     val isPinBiometryGateEnabled: Boolean
+    val isBankOfframpEnabled: Boolean
+    val isCustomCardsCobrandEnabled: Boolean
+    val isResidencyStepEnabled: Boolean
 }

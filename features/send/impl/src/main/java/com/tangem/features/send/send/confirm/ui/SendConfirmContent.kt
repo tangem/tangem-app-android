@@ -15,7 +15,9 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockComponent
+import com.tangem.features.send.common.ui.SignaturesBanner
 import com.tangem.features.send.common.ui.state.ConfirmUM
+import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.common.ui.tapHelp
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.features.send.subcomponents.amount.DefaultSendAmountBlockComponent
@@ -50,6 +52,7 @@ internal fun SendConfirmContent(
                 destinationBlockComponent = destinationBlockComponent,
                 amountBlockComponent = amountBlockComponent,
                 feeSelectorBlockComponent = feeSelectorBlockComponent,
+                signaturesUM = confirmUM?.signaturesUM,
             )
             if (confirmUM != null) {
                 tapHelp(isDisplay = confirmUM.isShowTapHelp)
@@ -75,6 +78,7 @@ private fun LazyListScope.blocks(
     destinationBlockComponent: DefaultSendDestinationBlockComponent,
     amountBlockComponent: DefaultSendAmountBlockComponent,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    signaturesUM: SendSignaturesUM?,
 ) {
     item(key = BLOCKS_KEY) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -85,6 +89,9 @@ private fun LazyListScope.blocks(
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
                     .background(TangemTheme.colors.background.action),
             )
+            if (signaturesUM != null) {
+                SignaturesBanner(signaturesUM = signaturesUM)
+            }
         }
     }
 }

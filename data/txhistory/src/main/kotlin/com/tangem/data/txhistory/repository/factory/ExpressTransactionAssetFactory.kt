@@ -2,15 +2,15 @@ package com.tangem.data.txhistory.repository.factory
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.TokenInfoEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.repository.TokenInfoRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
@@ -54,7 +54,7 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it.walletId == userWalletId }
 
-        val cachedTokens = loadCachedTokens(assetIds)
+        val cachedTokens = loadCachedTokens(userWalletId, assetIds)
 
         return buildMap {
             assetIds.forEach { id ->
@@ -66,39 +66,20 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
 
     private fun resolveUnmatched(
         id: ExpressAsset.ID,
-        cachedTokens: Map<String, TokenInfoEntity>,
+        cachedTokens: Map<ExpressAsset.ID, CryptoCurrency.Token>,
         userWallet: UserWallet?,
     ): CryptoCurrency? {
         return if (id.contractAddress == ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE) {
             createCoin(id, userWallet)
         } else {
-            cachedTokens[cacheKey(id)]?.let { createToken(it, userWallet) }
+            cachedTokens[id]
         }
     }
 
-    private suspend fun loadCachedTokens(assetIds: Set<ExpressAsset.ID>): Map<String, TokenInfoEntity> =
-        tokenInfoRepository.getCached(assetIds).associateBy { cacheKey(it.networkId, it.contractAddress) }
-
-    private fun createToken(entity: TokenInfoEntity, userWallet: UserWallet?): CryptoCurrency.Token? {
-        userWallet ?: return null
-        return cryptoCurrencyFactory.createToken(
-            token = CryptoCurrencyFactory.Token(
-                name = entity.name,
-                symbol = entity.symbol,
-                contractAddress = entity.contractAddress,
-                decimals = entity.decimals,
-                id = entity.coinId,
-            ),
-            networkId = entity.networkId,
-            extraDerivationPath = null,
-            userWallet = userWallet,
-        )
-    }
-
-    private fun cacheKey(id: ExpressAsset.ID): String = cacheKey(id.networkId, id.contractAddress)
-
-    private fun cacheKey(networkId: String, contractAddress: String): String =
-        "$networkId|${contractAddress.lowercase()}"
+    private suspend fun loadCachedTokens(
+        userWalletId: UserWalletId,
+        assetIds: Set<ExpressAsset.ID>,
+    ): Map<ExpressAsset.ID, CryptoCurrency.Token> = tokenInfoRepository.getCachedTokens(userWalletId, assetIds)
 
     private fun List<CryptoCurrency>.findMatching(id: ExpressAsset.ID): CryptoCurrency? {
         val isCoin = id.contractAddress == ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE

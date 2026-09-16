@@ -12,7 +12,7 @@ internal data class TangemPaySelectPlanUM(
     val onPlanSelected: (Int) -> Unit,
     val onBackClick: () -> Unit,
     val onCloseClick: () -> Unit,
-    val onPointLinkClick: (url: String) -> Unit,
+    val onLinkClick: (url: String) -> Unit,
     val content: Content,
     val compare: ComparePlans? = null,
 ) {

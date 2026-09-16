@@ -47,7 +47,7 @@ dependencies {
     api(projects.core.analytics)
     implementation(projects.core.local)
     api(projects.core.configToggles)
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.grow.datasource)

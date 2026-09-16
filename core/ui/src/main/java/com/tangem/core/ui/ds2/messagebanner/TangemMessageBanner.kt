@@ -404,6 +404,7 @@ fun TangemMessageBanner.CloseButton(
         contentDescription = null,
         tint = TangemTheme.colors3.icon.secondary,
         modifier = modifier
+            .testTag(NotificationTestTags.CLOSE_BUTTON)
             .size(20.dp)
             .clip(RoundedCornerShape(percent = 50))
             .clickableSingle(onClick = onClick)

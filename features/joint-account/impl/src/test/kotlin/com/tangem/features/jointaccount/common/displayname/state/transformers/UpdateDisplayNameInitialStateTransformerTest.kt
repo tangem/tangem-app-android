@@ -25,7 +25,6 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
         // Assert
         val expected = JointAccountDisplayNameUM(
             name = model.initialName,
-            isError = model.expectedError,
             buttonText = buttonText,
             buttonIconRes = null,
             isButtonEnabled = model.expectedButtonEnabled,
@@ -39,26 +38,25 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
 
     private fun provideTestModels() = listOf(
         // no name was entered before: the button text is set but the button stays locked
-        TransformModel(initialName = "", expectedError = false, expectedButtonEnabled = false),
+        TransformModel(initialName = "", expectedButtonEnabled = false),
         // a valid name restored from the draft unlocks the button right away
-        TransformModel(initialName = "Ivan Zolo", expectedError = false, expectedButtonEnabled = true),
+        TransformModel(initialName = "Ivan Zolo", expectedButtonEnabled = true),
         // letters of any script and digits are valid
-        TransformModel(initialName = "Иван 2й", expectedError = false, expectedButtonEnabled = true),
+        TransformModel(initialName = "Иван 2й", expectedButtonEnabled = true),
         // emoji are valid characters for a display name
-        TransformModel(initialName = "Ivan 🚀", expectedError = false, expectedButtonEnabled = true),
-        // a forbidden character highlights the field as an error
-        TransformModel(initialName = "Ivan!", expectedError = true, expectedButtonEnabled = false),
+        TransformModel(initialName = "Ivan 🚀", expectedButtonEnabled = true),
+        // special characters are valid too
+        TransformModel(initialName = "Anna-Maria O'Neil!", expectedButtonEnabled = true),
         // exactly 25 characters is the maximum allowed
-        TransformModel(initialName = "a".repeat(n = 25), expectedError = false, expectedButtonEnabled = true),
-        // an over-long name is not an error, but it does not unlock the button either
-        TransformModel(initialName = "a".repeat(n = 26), expectedError = false, expectedButtonEnabled = false),
+        TransformModel(initialName = "a".repeat(n = 25), expectedButtonEnabled = true),
+        // an over-long name does not unlock the button
+        TransformModel(initialName = "a".repeat(n = 26), expectedButtonEnabled = false),
         // spaces are allowed characters, but a blank-only name is not a name
-        TransformModel(initialName = "   ", expectedError = false, expectedButtonEnabled = false),
+        TransformModel(initialName = "   ", expectedButtonEnabled = false),
     )
 
     internal data class TransformModel(
         val initialName: String,
-        val expectedError: Boolean,
         val expectedButtonEnabled: Boolean,
     )
 
@@ -78,7 +76,6 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
         // Assert
         val expected = prevState.copy(
             name = "Ivan Zolo",
-            isError = false,
             buttonText = buttonText,
             isButtonEnabled = true,
             onNameChange = onNameChange,
@@ -101,7 +98,6 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
         /** The state the controller starts with, before the model wires the callbacks */
         val emptyState = JointAccountDisplayNameUM(
             name = "",
-            isError = false,
             buttonText = TextReference.EMPTY,
             buttonIconRes = null,
             isButtonEnabled = false,

@@ -13,7 +13,7 @@ import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
@@ -36,6 +36,7 @@ import kotlinx.coroutines.withContext
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val tangemTechApi: TangemTechApi,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -45,7 +46,7 @@ internal class DefaultWalletsRepository(
 
     override suspend fun useBiometricAuthentication(): Boolean {
         val shouldUseBiometricAuth = appPreferencesStore.getSyncOrNull(
-            key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+            key = storePreferencesKeys.useBiometricAuthenticationKey,
         )
 
         if (shouldUseBiometricAuth != null) {
@@ -53,13 +54,13 @@ internal class DefaultWalletsRepository(
         }
 
         val isLegacySaveWalletsInTheApp = appPreferencesStore.getSyncOrNull(
-            key = PreferencesKeys.SAVE_USER_WALLETS_KEY,
+            key = storePreferencesKeys.saveUserWalletsKey,
         )
 
         if (isLegacySaveWalletsInTheApp != null) {
             // Migrate legacy setting to new one
             appPreferencesStore.store(
-                key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
+                key = storePreferencesKeys.useBiometricAuthenticationKey,
                 value = isLegacySaveWalletsInTheApp,
             )
             return isLegacySaveWalletsInTheApp
@@ -71,12 +72,12 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun setUseBiometricAuthentication(value: Boolean) {
-        appPreferencesStore.store(key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY, value = value)
+        appPreferencesStore.store(key = storePreferencesKeys.useBiometricAuthenticationKey, value = value)
     }
 
     override suspend fun requireAccessCode(): Boolean {
         val isRequireAccessCode = appPreferencesStore.getSyncOrNull(
-            key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
+            key = storePreferencesKeys.requireAccessCodeKey,
         )
 
         if (isRequireAccessCode != null) {
@@ -84,13 +85,13 @@ internal class DefaultWalletsRepository(
         }
 
         val isLegacyShouldSaveAccessCode = appPreferencesStore.getSyncOrNull(
-            key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY,
+            key = storePreferencesKeys.shouldSaveAccessCodesKey,
         )
 
         if (isLegacyShouldSaveAccessCode != null) {
             // Migrate legacy setting to new one
             appPreferencesStore.store(
-                key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
+                key = storePreferencesKeys.requireAccessCodeKey,
                 value = isLegacyShouldSaveAccessCode.not(),
             )
             return isLegacyShouldSaveAccessCode.not()
@@ -102,20 +103,20 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun setRequireAccessCode(value: Boolean) {
-        appPreferencesStore.store(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY, value = value)
+        appPreferencesStore.store(key = storePreferencesKeys.requireAccessCodeKey, value = value)
     }
 
     override suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean {
         return appPreferencesStore
-            .getSyncOrDefault(key = PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY, default = emptySet())
+            .getSyncOrDefault(key = storePreferencesKeys.addedWalletsWithRingKey, default = emptySet())
             .contains(element = userWalletId.stringValue)
     }
 
     override suspend fun setHasWalletsWithRing(userWalletId: UserWalletId) {
         appPreferencesStore.editData { mutablePreferences ->
-            val added = mutablePreferences[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY].orEmpty()
+            val added = mutablePreferences[storePreferencesKeys.addedWalletsWithRingKey].orEmpty()
 
-            mutablePreferences[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY] = added + userWalletId.stringValue
+            mutablePreferences[storePreferencesKeys.addedWalletsWithRingKey] = added + userWalletId.stringValue
         }
     }
 
@@ -129,18 +130,18 @@ internal class DefaultWalletsRepository(
     }
 
     override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
-        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .getObjectMap<Boolean>(storePreferencesKeys.walletsNftEnabledStatesKey)
         .map { it[userWalletId.stringValue] == true }
 
     override fun nftEnabledStatuses(): Flow<Map<UserWalletId, Boolean>> = appPreferencesStore
-        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .getObjectMap<Boolean>(storePreferencesKeys.walletsNftEnabledStatesKey)
         .map { map -> map.mapKeys { UserWalletId(it.key) } }
 
     override suspend fun enableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData { mutablePreferences ->
             mutablePreferences.setObjectMap(
-                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
-                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                key = storePreferencesKeys.walletsNftEnabledStatesKey,
+                value = mutablePreferences.getObjectMap<Boolean>(storePreferencesKeys.walletsNftEnabledStatesKey)
                     .plus(userWalletId.stringValue to true),
             )
         }
@@ -149,27 +150,27 @@ internal class DefaultWalletsRepository(
     override suspend fun disableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData { mutablePreferences ->
             mutablePreferences.setObjectMap(
-                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
-                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                key = storePreferencesKeys.walletsNftEnabledStatesKey,
+                value = mutablePreferences.getObjectMap<Boolean>(storePreferencesKeys.walletsNftEnabledStatesKey)
                     .plus(userWalletId.stringValue to false),
             )
         }
     }
 
     override fun notificationsEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
-        .getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+        .getObjectMap<Boolean>(storePreferencesKeys.notificationsEnabledStatesKey)
         .map { it[userWalletId.stringValue] == true }
 
     override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
-        appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+        appPreferencesStore.getObjectMap<Boolean>(storePreferencesKeys.notificationsEnabledStatesKey)
             .map { it[userWalletId.stringValue] == true }
             .firstOrNull() == true
 
     override suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean) {
         appPreferencesStore.editData { mutablePreferences ->
             mutablePreferences.setObjectMap(
-                key = PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY,
-                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+                key = storePreferencesKeys.notificationsEnabledStatesKey,
+                value = mutablePreferences.getObjectMap<Boolean>(storePreferencesKeys.notificationsEnabledStatesKey)
                     .plus(userWalletId.stringValue to isEnabled),
             )
         }

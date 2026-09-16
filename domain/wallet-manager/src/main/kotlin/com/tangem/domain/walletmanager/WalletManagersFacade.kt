@@ -49,6 +49,23 @@ interface WalletManagersFacade {
     ): UpdateWalletManagerResult
 
     /**
+     * Updates the balance of a joint account — a Safe contract at [safeAddress] — in [network], the account's own
+     * network at the owner key path. No key is derived and no wallet manager is built: the balance is read by the
+     * address. The result is either [UpdateWalletManagerResult.Verified] or [UpdateWalletManagerResult.Unreachable].
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param network The joint account's network.
+     * @param extraTokens The tokens of the joint account in this network.
+     * @param safeAddress The Safe address of the joint account.
+     */
+    suspend fun updateJoint(
+        userWalletId: UserWalletId,
+        network: Network,
+        extraTokens: Set<CryptoCurrency.Token>,
+        safeAddress: String,
+    ): UpdateWalletManagerResult
+
+    /**
      * Removes the wallet managers associated with a user's wallet and networks.
      *
      * @param userWalletId The ID of the user's wallet.
@@ -121,6 +138,13 @@ interface WalletManagersFacade {
 
     @Deprecated("Will be removed in future")
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
+
+    @Deprecated("Will be removed in future")
+    suspend fun getStoredWalletManager(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): WalletManager?
 
     /**
      * Returns default network address for selected wallet in given network

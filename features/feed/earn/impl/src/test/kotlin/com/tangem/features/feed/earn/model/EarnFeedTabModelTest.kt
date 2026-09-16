@@ -111,6 +111,49 @@ internal class EarnFeedTabModelTest {
     }
 
     @Test
+    fun `GIVEN a filter that ignores networks WHEN the networks arrive THEN the list is requested once`() = runTest {
+        // Arrange — the default filter is AllNetworks, so the request config does not read the networks at all
+        createModel(testScope = this)
+        filterFlow.emit(createEarnFilter())
+        advanceUntilIdle()
+
+        // Act
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions.filterIsInstance<BatchAction.Reload<EarnTokensListConfig>>()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN a filter scoped to my networks WHEN the networks arrive THEN the list is requested again`() = runTest {
+        // Arrange — here the networks do change the config, so the second request is the point
+        createModel(testScope = this)
+        filterFlow.emit(createEarnFilter(network = EarnFilterNetwork.MyNetworks(isSelected = true)))
+        advanceUntilIdle()
+
+        // Act
+        networksFlow.value = loadedNetworks
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dispatchedActions.filterIsInstance<BatchAction.Reload<EarnTokensListConfig>>())
+            .containsExactly(
+                BatchAction.Reload(
+                    requestParams = EarnTokensListConfig(type = null, networks = listOf("-1"), isForEarn = false),
+                ),
+                BatchAction.Reload(
+                    requestParams = EarnTokensListConfig(
+                        type = null,
+                        networks = listOf("ethereum"),
+                        isForEarn = false,
+                    ),
+                ),
+            )
+            .inOrder()
+    }
+
+    @Test
     fun `GIVEN the top tokens have not arrived WHEN the tab loads THEN the carousel shimmers`() = runTest {
         // Act
         val underTest = createModel(testScope = this)
@@ -127,11 +170,14 @@ internal class EarnFeedTabModelTest {
 
         // Act
         topTokensFlow.value = listOf(
-            createEarnTokenWithCurrency(cryptoCurrency = createEarnCurrency(currencyId = "btc")),
+            createEarnTokenWithCurrency(
+                earnToken = createEarnToken(tokenId = "btc"),
+                cryptoCurrency = createEarnCurrency(currencyId = "btc"),
+            ),
         ).right()
         advanceUntilIdle()
 
-        // Assert
+        // Assert — the carousel keeps the currency-based id; only the row converter was hardened
         val content = underTest.state.value.mostlyUsed as EarnListUM.Content
         assertThat(content.items.map { it.id }).containsExactly("btc_STAKING")
     }
@@ -161,7 +207,7 @@ internal class EarnFeedTabModelTest {
 
         // Assert
         val content = underTest.state.value.bestOpportunities as EarnBestOpportunitiesUM.Content
-        assertThat(content.items.map { it.id }).containsExactly("btc_STAKING")
+        assertThat(content.items.map { it.id }).containsExactly("btc_ethereum_STAKING")
     }
 
     @Test
@@ -275,7 +321,10 @@ internal class EarnFeedTabModelTest {
             Batch(
                 key = 0,
                 data = listOf(
-                    createEarnTokenWithCurrency(cryptoCurrency = createEarnCurrency(currencyId = currencyId)),
+                    createEarnTokenWithCurrency(
+                        earnToken = createEarnToken(tokenId = currencyId),
+                        cryptoCurrency = createEarnCurrency(currencyId = currencyId),
+                    ),
                 ),
             ),
         ),

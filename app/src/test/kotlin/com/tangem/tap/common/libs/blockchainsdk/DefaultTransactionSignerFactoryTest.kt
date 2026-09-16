@@ -7,8 +7,11 @@ import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.analytics.store.LastSignedWalletFormStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.tap.domain.TangemSignerResponse
+import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.test.core.TestAppCoroutineScope
+import dagger.Lazy
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -26,10 +29,15 @@ internal class DefaultTransactionSignerFactoryTest {
     private val lastSignedWalletFormStore = mockk<LastSignedWalletFormStore>(relaxed = true)
     private val userWalletsListRepository = mockk<UserWalletsListRepository>()
 
+    private val walletRegistrationLauncher = mockk<WalletRegistrationLauncher>(relaxed = true)
+    private val authFeatureToggles = mockk<AuthFeatureToggles>(relaxed = true)
+
     private val factory = DefaultTransactionSignerFactory(
         lastSignedWalletFormStore = lastSignedWalletFormStore,
         userWalletsListRepository = userWalletsListRepository,
         coroutineScope = TestAppCoroutineScope(),
+        walletRegistrationLauncher = Lazy { walletRegistrationLauncher },
+        authFeatureToggles = authFeatureToggles,
     )
 
     private val baseWallet = MockUserWalletFactory.create()

@@ -5,7 +5,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.ApplicationVersionsResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
@@ -20,38 +20,39 @@ import kotlinx.coroutines.withContext
 internal class DefaultAppUpdateRepository(
     private val tangemTechApi: TangemTechApi,
     private val appPreferencesStore: AppPreferencesStore,
+    private val storePreferencesKeys: StorePreferencesKeys,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) : AppUpdateRepository {
 
     override suspend fun getCachedAppVersionInfo(): AppVersionInfo? = appPreferencesStore
-        .getObjectSyncOrNull<ApplicationVersionsResponse>(PreferencesKeys.CACHED_APP_VERSIONS_KEY)
+        .getObjectSyncOrNull<ApplicationVersionsResponse>(storePreferencesKeys.cachedAppVersionsKey)
         ?.toDomain()
 
     override suspend fun getCachedAppVersionTimestamp(): Long? =
-        appPreferencesStore.getSyncOrNull(PreferencesKeys.CACHED_APP_VERSIONS_AT_KEY)
+        appPreferencesStore.getSyncOrNull(storePreferencesKeys.cachedAppVersionsAtKey)
 
     override suspend fun refreshAppVersionInfo(): Either<Throwable, AppVersionInfo> = withContext(dispatchers.io) {
         Either.catch {
             val response = tangemTechApi.getApplicationVersions().getOrThrow()
-            appPreferencesStore.storeObject(PreferencesKeys.CACHED_APP_VERSIONS_KEY, response)
-            appPreferencesStore.store(PreferencesKeys.CACHED_APP_VERSIONS_AT_KEY, currentTimeMillis())
+            appPreferencesStore.storeObject(storePreferencesKeys.cachedAppVersionsKey, response)
+            appPreferencesStore.store(storePreferencesKeys.cachedAppVersionsAtKey, currentTimeMillis())
             response.toDomain()
         }.onLeft { error -> TangemLogger.e("Unable to fetch application versions", error) }
     }
 
     override suspend fun getOptionalUpdateShown(): OptionalUpdateShown? {
-        val version = appPreferencesStore.getSyncOrNull(PreferencesKeys.LAST_OPTIONAL_UPDATE_SHOWN_VERSION_KEY)
+        val version = appPreferencesStore.getSyncOrNull(storePreferencesKeys.lastOptionalUpdateShownVersionKey)
             ?: return null
-        val shownAtMillis = appPreferencesStore.getSyncOrNull(PreferencesKeys.LAST_OPTIONAL_UPDATE_SHOWN_AT_KEY)
+        val shownAtMillis = appPreferencesStore.getSyncOrNull(storePreferencesKeys.lastOptionalUpdateShownAtKey)
             ?: return null
 
         return OptionalUpdateShown(version = version, shownAtMillis = shownAtMillis)
     }
 
     override suspend fun setOptionalUpdateShown(shown: OptionalUpdateShown) {
-        appPreferencesStore.store(PreferencesKeys.LAST_OPTIONAL_UPDATE_SHOWN_VERSION_KEY, shown.version)
-        appPreferencesStore.store(PreferencesKeys.LAST_OPTIONAL_UPDATE_SHOWN_AT_KEY, shown.shownAtMillis)
+        appPreferencesStore.store(storePreferencesKeys.lastOptionalUpdateShownVersionKey, shown.version)
+        appPreferencesStore.store(storePreferencesKeys.lastOptionalUpdateShownAtKey, shown.shownAtMillis)
     }
 
     private fun ApplicationVersionsResponse.toDomain() = AppVersionInfo(
