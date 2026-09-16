@@ -233,7 +233,7 @@ internal class SwapModel @Inject constructor(
     private val isPredictionWithdrawFlow: Boolean
         get() = accountFlow is AccountFlow.PredictionWithdraw
 
-    val isFeelessWithdrawal: Boolean
+    val isGaslessWithdrawal: Boolean
         get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
 
     private var isBalanceHidden = true
@@ -1029,12 +1029,12 @@ internal class SwapModel @Inject constructor(
                     transferState = swapState,
                     uiStateHolder = uiState,
                     feePaidCryptoCurrencyStatus = feePaidCryptoCurrency,
-                    feeSelectorUM = feeSelectorRepository.state.value.takeUnless { isFeelessWithdrawal },
+                    feeSelectorUM = feeSelectorRepository.state.value.takeUnless { isGaslessWithdrawal },
                     isHighNetworkFee = isHighNetworkFee(selectedSwapFee),
                 )
                 when {
                     uiState.successState != null -> Unit
-                    isFeelessWithdrawal -> refreshTransferUIStateIfNeeded()
+                    isGaslessWithdrawal -> refreshTransferUIStateIfNeeded()
                     else -> {
                         feeSelectorRepository.state.value = FeeSelectorUM.Loading
                         feeSelectorReloadTrigger.triggerUpdate()
@@ -1077,8 +1077,8 @@ internal class SwapModel @Inject constructor(
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatus ?: dataState.feePaidCryptoCurrency,
                 fee = fee,
-                isTangemPayWithdrawal = isFeelessWithdrawal,
-                feeSelectorUM = feeSelectorRepository.state.value.takeUnless { isFeelessWithdrawal },
+                isTangemPayWithdrawal = isGaslessWithdrawal,
+                feeSelectorUM = feeSelectorRepository.state.value.takeUnless { isGaslessWithdrawal },
                 isHighNetworkFee = isHighNetworkFee(getSelectedSwapFee()),
             )
         }
