@@ -9,7 +9,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
+import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMConverter
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
@@ -42,7 +44,7 @@ internal class JointOperationModel @Inject constructor(
 
     private val params: JointOperationComponent.Params = paramsContainer.require()
 
-    private val observed: SharedFlow<JointOperationState?> = delegate
+    private val operationState: SharedFlow<JointOperationState?> = delegate
         .observe(
             userWalletId = params.userWalletId,
             currency = params.currency,
@@ -52,45 +54,68 @@ internal class JointOperationModel @Inject constructor(
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     /** What the sheet shows right now; the actions act on it, not on a cache of their own */
-    private val shown: JointOperationState?
-        get() = observed.replayCache.firstOrNull()
+    private val currentState: JointOperationState?
+        get() = operationState.replayCache.firstOrNull()
 
     private val isBalanceHidden = getBalanceHidingSettingsUseCase()
         .map { it.isBalanceHidden }
         .distinctUntilChanged()
 
     private val isSigning = MutableStateFlow(false)
+    private val isRefusing = MutableStateFlow(false)
 
-    /** The sign use case tolerates a failed refresh, so the cached operation may still miss this member's answer */
-    private val hasAnswered = MutableStateFlow(false)
+    /** The use cases tolerate a failed refresh, so the cached operation may still miss this member's answer */
+    private val localAnswer = MutableStateFlow<Answer?>(null)
+
+    private val userActions = combine(
+        flow = isSigning,
+        flow2 = isRefusing,
+        flow3 = localAnswer,
+        transform = ::UserActions,
+    )
+
+    private val isBusy: Boolean
+        get() = isSigning.value || isRefusing.value
+
+    private val canCreateContact = delegate.canCreateContact(userWalletId = params.userWalletId)
 
     private val operationConverter = JointOperationUMConverter(
         currency = params.currency,
         onSignClick = ::onSignClick,
         onSignersClick = ::onSignersClick,
         onCopyRecipientClick = ::onCopyRecipientClick,
+        onCreateContactClick = ::onCreateContactClick,
+        onRefuseClick = ::onRefuseClick,
     )
+
+    private val refusalMessages = JointOperationRefusalMessages(onConfirm = ::refuse)
 
     private val signersConverter = JointOperationSignersUMConverter()
 
     val stackNavigation = StackNavigation<JointOperationRoutes>()
 
-    /** [JointOperationUM.Gone] is told apart from nothing having arrived yet: an operation gone before the sheet opened */
+    /**
+     * [JointOperationUM.Gone] is told apart from nothing having arrived yet: an operation gone before the sheet
+     * opened, or one whose threshold the remaining members can no longer reach — the backend drops it, the sheet
+     * does not wait for that
+     */
     val uiState: StateFlow<JointOperationUM> = combine(
-        flow = observed,
-        flow2 = isSigning,
-        flow3 = hasAnswered,
+        flow = operationState,
+        flow2 = userActions,
+        flow3 = canCreateContact,
         flow4 = isBalanceHidden,
-    ) { state, isSigning, hasAnswered, isBalanceHidden ->
-        state ?: return@combine JointOperationUM.Gone
-        val answered = state.withOwnAnswer(answeredLocally = hasAnswered)
+    ) { state, actions, canCreateContact, isBalanceHidden ->
+        val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
+        if (answered == null || !answered.isReachable) return@combine JointOperationUM.Gone
 
         JointOperationUM.Content(
             operation = operationConverter.convert(
                 value = JointOperationUMConverter.Input(
                     state = answered,
-                    isSigning = isSigning,
-                    hasAnswered = hasAnswered,
+                    isSigning = actions.isSigning,
+                    isRefusing = actions.isRefusing,
+                    hasAnswered = actions.localAnswer != null,
+                    canCreateContact = canCreateContact,
                     isBalanceHidden = isBalanceHidden,
                 ),
             ),
@@ -105,8 +130,8 @@ internal class JointOperationModel @Inject constructor(
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = JointOperationUM.Loading)
 
     fun onSignClick() {
-        val operation = shown ?: return
-        if (!operation.canSign || isSigning.value) return
+        val operation = currentState ?: return
+        if (!operation.canSign || isBusy) return
 
         modelScope.launch {
             isSigning.value = true
@@ -116,12 +141,25 @@ internal class JointOperationModel @Inject constructor(
                     network = params.currency.network,
                     operationId = params.operationId,
                 )
-                    .onRight { hasAnswered.value = true }
+                    .onRight { localAnswer.value = Answer.SIGNED }
                     .onLeft(::showSignError)
             } finally {
                 isSigning.value = false
             }
         }
+    }
+
+    fun onRefuseClick() {
+        val operation = currentState ?: return
+        if (isBusy) return
+
+        uiMessageSender.send(refusalMessages.confirmation(isInitiator = operation.isInitiator))
+    }
+
+    fun onCreateContactClick() {
+        val recipient = currentState?.displayed?.recipient ?: return
+
+        delegate.openContactCreation(address = recipient, network = params.currency.network)
     }
 
     fun onSignersClick() {
@@ -133,9 +171,30 @@ internal class JointOperationModel @Inject constructor(
     }
 
     fun onCopyRecipientClick() {
-        val recipient = shown?.displayed?.recipient ?: return
+        val recipient = currentState?.displayed?.recipient ?: return
 
         clipboardManager.setText(text = recipient, isSensitive = false)
+    }
+
+    /** The initiator's refusal deletes the operation, so the sheet closes with it; a member's decline stays on screen */
+    private fun refuse() {
+        val operation = currentState ?: return
+        if (isBusy) return
+
+        modelScope.launch {
+            isRefusing.value = true
+            try {
+                delegate.reject(
+                    state = operation,
+                    network = params.currency.network,
+                    operationId = params.operationId,
+                )
+                    .onRight { if (!operation.isInitiator) localAnswer.value = Answer.DECLINED }
+                    .onLeft(::showRejectError)
+            } finally {
+                isRefusing.value = false
+            }
+        }
     }
 
     private fun showSignError(error: JointOperationSignError) {
@@ -150,4 +209,14 @@ internal class JointOperationModel @Inject constructor(
     private fun onSupportClick() {
         modelScope.launch { delegate.openSupport(userWalletId = params.userWalletId) }
     }
+
+    private fun showRejectError(error: JointOperationRejectError) {
+        val message = refusalMessages.error(error) ?: return
+
+        TangemLogger.e("Unable to reject the joint operation: $error")
+        uiMessageSender.send(message)
+    }
+
+    /** What this member is doing or has done on the sheet, on top of what the backend reports */
+    private data class UserActions(val isSigning: Boolean, val isRefusing: Boolean, val localAnswer: Answer?)
 }
