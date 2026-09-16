@@ -18,7 +18,7 @@ import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.isPredictionAccountSupported
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -47,7 +47,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     override val flowProducerTools: FlowProducerTools,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
+    private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
@@ -93,7 +93,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     }
 
     private fun UserWallet.isVirtualAccountSupported(): Boolean {
-        if (!virtualAccountsFeatureToggles.isVirtualAccountsEnabled) return false
+        if (!moneyAccountsFeatureToggles.isMoneyAccountsEnabled) return false
 
         return isTangemPayCompatible
     }
