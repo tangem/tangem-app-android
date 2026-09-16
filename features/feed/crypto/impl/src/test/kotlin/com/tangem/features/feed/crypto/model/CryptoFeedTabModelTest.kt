@@ -22,13 +22,19 @@ import com.tangem.domain.markets.TokenListBatchingContext
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.TokenMarketUpdateRequest
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
+import com.tangem.features.feed.crypto.categories.MarketCategoryResolver
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.impl.R
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.features.feed.crypto.model.entity.FeedCryptoTabBottomSheetConfig
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory
+import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryFilter
+import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopGainers
 import com.tangem.features.feed.crypto.model.list.MarketPulseCategory.TopLosers
 import com.tangem.features.feed.crypto.model.list.MarketPulseInterval
@@ -89,6 +95,9 @@ internal class CryptoFeedTabModelTest {
     private val sentEvents = mutableListOf<AnalyticsEvent>()
 
     private val filterController = MarketCategoryFilterController()
+    private val categoryResolver: MarketCategoryResolver = mockk()
+    private val pendingFilter = MutableStateFlow<FeedEntryFilter?>(null)
+    private val feedEntryController = FakeFeedEntryController(pendingFilter)
     private val actions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
     private var model: CryptoFeedTabModel? = null
 
@@ -461,6 +470,75 @@ internal class CryptoFeedTabModelTest {
         return tracked
     }
 
+    @Test
+    fun `GIVEN a category deeplink WHEN the tab opens THEN the list is requested once, already filtered`() = runTest {
+        // Arrange
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, categoryId = "layer-1")
+        coEvery { categoryResolver.resolve(categoryId = "layer-1", currency = any()) } returns
+            MarketCategorySelection.Entry(id = "layer-1", name = "Layer 1")
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert - loading unfiltered first would show the wrong list and then swap it out
+        assertThat(actions.reloadCategoryIds()).containsExactly("layer-1")
+        assertThat((model.chip() as TangemFilterItemUM.Active).value).isEqualTo(TextReference.Str("Layer 1"))
+        // the host reports the open; the tab must not also report a pick the user never made
+        assertThat(sectionEvents()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a deeplink applied the filter WHEN the user then picks one THEN only that pick is reported`() =
+        runTest {
+            // Arrange
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, categoryId = "layer-1")
+            coEvery { categoryResolver.resolve(categoryId = "layer-1", currency = any()) } returns
+                MarketCategorySelection.Entry(id = "layer-1", name = "Layer 1")
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            filterController.onSelectionApplied(selectionOf(id = "meme", name = "Meme"))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sectionEvents()).containsExactly(
+                FeedSectionAnalyticsEvent.SelectCategory(section = "Crypto", categoryId = "meme"),
+            )
+        }
+
+    @Test
+    fun `GIVEN a category deeplink nothing matches WHEN the tab opens THEN it loads unfiltered once`() = runTest {
+        // Arrange
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, categoryId = "made-up")
+        coEvery { categoryResolver.resolve(categoryId = "made-up", currency = any()) } returns null
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(actions.reloadCategoryIds()).containsExactly(null)
+        assertThat(model.chip()).isInstanceOf(TangemFilterItemUM.Inactive::class.java)
+    }
+
+    @Test
+    fun `GIVEN a deeplink for another tab WHEN the tab opens THEN it is left alone and the list is unfiltered`() =
+        runTest {
+            // Arrange
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, earnType = PreselectedEarnType.Staking)
+
+            // Act
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(actions.reloadCategoryIds()).containsExactly(null)
+            assertThat(pendingFilter.value).isNotNull()
+            coVerify(exactly = 0) { categoryResolver.resolve(any(), any()) }
+        }
+
     /** The capitalisation stays below `1` so `compact()` keeps off `android.icu`, which unit tests lack */
     private fun indicators() = MarketIndicators(
         totalMarketCap = BigDecimal("0.5"),
@@ -636,9 +714,28 @@ internal class CryptoFeedTabModelTest {
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getMarketIndicatorsUseCase = getMarketIndicatorsUseCase,
             categoryFilterController = filterController,
+            categoryResolver = categoryResolver,
+            feedEntryController = feedEntryController,
             router = router,
             analyticsEventHandler = analyticsEventHandler,
         ).also { model = it }
+    }
+
+    private class FakeFeedEntryController(
+        override val pendingFilter: MutableStateFlow<FeedEntryFilter?>,
+    ) : FeedEntryController {
+
+        override val pendingEntry = MutableStateFlow<FeedEntryRequest?>(null)
+
+        override fun request(request: FeedEntryRequest) = Unit
+
+        override fun consumeEntry() {
+            pendingEntry.value = null
+        }
+
+        override fun consumeFilter() {
+            pendingFilter.value = null
+        }
     }
 
     private class FakeBatchFlow : TokenListBatchFlow {
