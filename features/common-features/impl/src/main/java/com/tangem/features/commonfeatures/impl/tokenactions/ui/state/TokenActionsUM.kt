@@ -5,6 +5,7 @@ import com.tangem.common.ui.markets.action.QuickActions
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 
 internal data class TokenActionsUM(
@@ -15,6 +16,8 @@ internal data class TokenActionsUM(
     val isBalancesHidden: Boolean = false,
     val portfolioBadge: PortfolioBadgeUM = PortfolioBadgeUM.None,
     val isCompact: Boolean = false,
+    /** Banner explaining why the trading rows are inert; `null` hides it. */
+    val regionRestriction: TangemMessageBanner.State? = null,
 )
 
 @Immutable
