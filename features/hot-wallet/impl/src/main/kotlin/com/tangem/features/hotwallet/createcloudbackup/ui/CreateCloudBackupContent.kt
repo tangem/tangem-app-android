@@ -34,7 +34,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -240,8 +239,6 @@ private fun ConfirmPasswordScreen(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    val autofillManager = LocalAutofillManager.current
-
     ScrollableContent(
         contentPadding = contentPadding,
         modifier = modifier,
@@ -252,12 +249,7 @@ private fun ConfirmPasswordScreen(
                 text = resourceReference(R.string.common_confirm),
                 isEnabled = state.isConfirmEnabled && !state.isLoading,
                 isLoading = state.isLoading,
-                onClick = {
-                    // FR-13: offers saving the freshly set password to the platform password manager,
-                    // while both fields are still composed and the autofill session is open
-                    autofillManager?.commit()
-                    state.onConfirmClick()
-                },
+                onClick = state.onConfirmClick,
             )
         },
         bottomContent = {

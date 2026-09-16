@@ -32,7 +32,7 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.datasource)
+    implementation(projects.core.local)
     api(projects.core.utils)
     // endregion
 
@@ -41,6 +41,8 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.transaction)
     implementation(projects.domain.card)
+    implementation(projects.domain.jointAccount)
+    implementation(projects.domain.txhistory)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion

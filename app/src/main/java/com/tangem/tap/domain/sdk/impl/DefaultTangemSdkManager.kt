@@ -30,7 +30,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
@@ -165,6 +165,7 @@ internal class DefaultTangemSdkManager(
                 ),
                 cardId = cardId,
                 initialMessage = message,
+                registerColdWallet = true,
             ).also { sendAnalytics(result = it, source = source) }
         }
     }
@@ -195,6 +196,7 @@ internal class DefaultTangemSdkManager(
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
             iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
+            registerColdWallet = true,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -243,6 +245,7 @@ internal class DefaultTangemSdkManager(
             } else {
                 Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
+            registerColdWallet = true,
         )
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
@@ -276,6 +279,7 @@ internal class DefaultTangemSdkManager(
             runnable = DeriveMultipleWalletPublicKeysTask(derivations),
             cardId = cardId,
             preflightReadFilter = preflightReadFilter,
+            registerColdWallet = true,
         )
     }
 
@@ -285,8 +289,9 @@ internal class DefaultTangemSdkManager(
         derivation: DerivationPath,
     ): CompletionResult<ExtendedPublicKey> = withContext(Dispatchers.Main) {
         runTaskAsyncReturnOnMain(
-            DeriveWalletPublicKeyTask(walletPublicKey, derivation),
-            cardId,
+            runnable = DeriveWalletPublicKeyTask(walletPublicKey, derivation),
+            cardId = cardId,
+            registerColdWallet = true,
         )
     }
 
@@ -304,9 +309,9 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun resetBackupCard(cardNumber: Int, userWalletId: UserWalletId): CompletionResult<Boolean> {
+    override suspend fun resetBackupCard(cardNumber: Int, userWallet: UserWallet.Cold): CompletionResult<Boolean> {
         return runTaskAsyncReturnOnMain(
-            runnable = ResetBackupCardTask(userWalletId),
+            runnable = ResetBackupCardTask(userWallet),
             initialMessage = Message(
                 resources.getStringSafe(
                     R.string.initial_message_reset_backup_card_header,
@@ -329,25 +334,28 @@ internal class DefaultTangemSdkManager(
 
     override suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
-            SetUserCodeCommand.changePasscode(null),
-            cardId,
+            runnable = SetUserCodeCommand.changePasscode(null),
+            cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_change_passcode_body)),
+            registerColdWallet = false,
         )
     }
 
     override suspend fun setAccessCode(cardId: String?): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
-            SetUserCodeCommand.changeAccessCode(null),
-            cardId,
+            runnable = SetUserCodeCommand.changeAccessCode(null),
+            cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_change_access_code_body)),
+            registerColdWallet = false,
         )
     }
 
     override suspend fun setLongTap(cardId: String?): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
-            SetUserCodeCommand.resetUserCodes(),
-            cardId,
+            runnable = SetUserCodeCommand.resetUserCodes(),
+            cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            registerColdWallet = false,
         )
     }
 
@@ -356,9 +364,10 @@ internal class DefaultTangemSdkManager(
         enabled: Boolean,
     ): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
-            SetUserCodeRecoveryAllowedTask(enabled),
-            cardId,
+            runnable = SetUserCodeRecoveryAllowedTask(enabled),
+            cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            registerColdWallet = false,
         )
     }
 
@@ -370,6 +379,7 @@ internal class DefaultTangemSdkManager(
             runnable = ScanTask(allowRequestAccessCodeFromRepository),
             cardId = cardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            registerColdWallet = false,
         )
             .map { CardDTO(it) }
     }
@@ -409,7 +419,7 @@ internal class DefaultTangemSdkManager(
         cardId: String? = null,
         initialMessage: Message? = null,
         preflightReadFilter: PreflightReadFilter? = null,
-        registerColdWallet: Boolean = true,
+        registerColdWallet: Boolean,
     ): CompletionResult<T> {
         val result = runTaskAsync(
             runnable = runnable,
@@ -423,18 +433,14 @@ internal class DefaultTangemSdkManager(
 
     /**
      * Wraps [runnable] so that, on success, the card is bound to the device via cold wallet
-     * registration on the same NFC tap — applied to every card operation except reset and Visa
-     * (they pass `registerColdWallet = false`). Twin / Visa / walletless cards are skipped inside
-     * [WalletRegistrationLauncher]. Uses the enclosing session [CoroutineScope] receiver so the
-     * launched in-session registration is cancelled with the caller and can't outlive the tap.
+     * registration on the same NFC tap. Applied only when the call site opts in via
+     * `registerColdWallet = true` (and the backend-auth toggle is on) — currently scan / wallet
+     * creation / key derivation; signing opts in separately in `TangemSigner`. Twin / Visa /
+     * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched
+     * on the card session's own scope (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
      */
-    private fun <T> CoroutineScope.withColdWalletRegistration(
-        runnable: CardSessionRunnable<T>,
-    ): CardSessionRunnable<T> = RegisterColdWalletRunnable(
-        inner = runnable,
-        launcher = walletRegistrationLauncher.get(),
-        sessionScope = this,
-    )
+    private fun <T> withColdWalletRegistration(runnable: CardSessionRunnable<T>): CardSessionRunnable<T> =
+        RegisterColdWalletRunnable(inner = runnable, launcher = walletRegistrationLauncher.get())
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
@@ -467,6 +473,7 @@ internal class DefaultTangemSdkManager(
             preflightReadFilter = null,
             cardId = cardId,
             initialMessage = initialMessage,
+            registerColdWallet = false,
         )
     }
 
@@ -485,7 +492,12 @@ internal class DefaultTangemSdkManager(
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
         )
-        return runTaskAsync(runnable = task, preflightReadFilter = null, initialMessage = initialMessage)
+        return runTaskAsync(
+            runnable = task,
+            preflightReadFilter = null,
+            initialMessage = initialMessage,
+            registerColdWallet = false,
+        )
     }
 
     override fun changeProductType(isRing: Boolean) {
@@ -513,6 +525,7 @@ internal class DefaultTangemSdkManager(
             preflightReadFilter = null,
             cardId = cardId,
             initialMessage = initialMessage,
+            registerColdWallet = false,
         )
     }
 

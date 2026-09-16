@@ -1,0 +1,34 @@
+package com.tangem.data.nft.converter
+
+import com.tangem.domain.nft.models.NFTCollection
+import com.tangem.utils.converter.TwoWayConverter
+import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
+
+internal object NFTSdkCollectionIdentifierConverter :
+    TwoWayConverter<SdkNFTCollection.Identifier, NFTCollection.Identifier> {
+    override fun convert(value: SdkNFTCollection.Identifier): NFTCollection.Identifier = when (value) {
+        is SdkNFTCollection.Identifier.EVM -> NFTCollection.Identifier.EVM(
+            tokenAddress = value.tokenAddress,
+        )
+        is SdkNFTCollection.Identifier.TON -> NFTCollection.Identifier.TON(
+            contractAddress = value.contractAddress,
+        )
+        is SdkNFTCollection.Identifier.Solana -> NFTCollection.Identifier.Solana(
+            collectionAddress = value.collectionAddress,
+        )
+        is SdkNFTCollection.Identifier.Unknown -> NFTCollection.Identifier.Unknown
+    }
+
+    override fun convertBack(value: NFTCollection.Identifier): SdkNFTCollection.Identifier = when (value) {
+        is NFTCollection.Identifier.EVM -> SdkNFTCollection.Identifier.EVM(
+            tokenAddress = value.tokenAddress,
+        )
+        is NFTCollection.Identifier.TON -> SdkNFTCollection.Identifier.TON(
+            contractAddress = value.contractAddress,
+        )
+        is NFTCollection.Identifier.Solana -> SdkNFTCollection.Identifier.Solana(
+            collectionAddress = value.collectionAddress,
+        )
+        is NFTCollection.Identifier.Unknown -> SdkNFTCollection.Identifier.Unknown
+    }
+}
