@@ -5,29 +5,24 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
-import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.network.Network
 
 /**
  * Refuses the operation of a joint account in [Network]: the initiator cancels it, any other member declines it.
- * The backend tells the two apart by the signer, so the app only signs the operation with the owner key and sends it.
+ * The backend tells the two apart by the caller, so no card tap is involved.
  */
 class RejectJointOperationUseCase(
     private val repository: JointAccountRepository,
-    private val signer: JointAccountSigner,
     private val fetcher: SingleJointAccountListFetcher,
     private val supplier: SingleJointAccountListSupplier,
     private val networkReader: JointNetworkReader,
@@ -48,22 +43,8 @@ class RejectJointOperationUseCase(
             .bind()
         val operation = refusableOperation(jointAccount = jointAccount, chainId = chainId, operationId = operationId)
 
-        val derivationIndex = DerivationIndex(value = account.ownerKeyIndex.value)
-            .mapLeft(::invalidOwnerKeyIndex)
-            .bind()
         val payload = JointOperationRejectPayload(operationId = operation.operationId, safeTx = operation.safeTx)
-
-        val signResult = signer
-            .sign(
-                userWalletId = userWalletId,
-                input = JointAccountSignInput(derivationIndex = derivationIndex) { payload },
-            )
-            .mapLeft(::toRejectError)
-            .bind()
-
-        repository
-            .rejectOperation(userWalletId = userWalletId, payload = payload, signature = signResult.signature)
-            .bind()
+        repository.rejectOperation(userWalletId = userWalletId, payload = payload).bind()
 
         // The backend has already applied the refusal, so a failed refresh must not report it as failed — the
         // list catches up on the next fetch
@@ -89,14 +70,5 @@ class RejectJointOperationUseCase(
                 ),
             )
         }
-    }
-
-    private fun toRejectError(cause: Throwable): JointOperationRejectError = when (cause) {
-        is TangemSdkError.UserCancelled -> JointOperationRejectError.UserCancelled
-        else -> JointOperationRejectError.Failed(cause = cause)
-    }
-
-    private fun invalidOwnerKeyIndex(error: DerivationIndex.Error): JointOperationRejectError.Failed {
-        return JointOperationRejectError.Failed(cause = IllegalStateException(error.toString()))
     }
 }
