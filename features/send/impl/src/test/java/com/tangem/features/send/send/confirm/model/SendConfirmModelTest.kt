@@ -512,6 +512,60 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 1) { sendConfirmAlertFactory.getJointSlotBusyState() }
         }
 
+        @Test
+        fun `GIVEN the joint account is not active WHEN onSendClick THEN the not activated alert is shown`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.AccountNotReady.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointAccountNotReadyState() }
+        }
+
+        @Test
+        fun `GIVEN the network state moved WHEN onSendClick THEN the network changed alert is shown`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.NetworkStateMoved.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointNetworkStateMovedState() }
+        }
+
+        @Test
+        fun `GIVEN the composition mismatches WHEN onSendClick THEN the sending blocked alert is shown`() = runTest {
+            // Arrange
+            coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery {
+                jointSendDelegate.createOperation(jointAccount, any(), any(), any())
+            } returns JointOperationCreateError.CompositionMismatch.left()
+            val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction = mockk(relaxed = true)))
+            advanceUntilIdle()
+
+            // Act
+            sut.onSendClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { sendConfirmAlertFactory.getJointSendBlockedState(onSupportClick = any()) }
+        }
+
         /** Confirm starts empty so the model builds the real Content with the signatures itself */
         private fun jointConfirmParams(onSendTransaction: () -> Unit) = MutableParamsContainer(
             defaultSendConfirmParams(
