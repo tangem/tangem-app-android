@@ -254,6 +254,21 @@ sealed class SwapEvents(
         ),
     )
 
+    class NoticeGeoRestriction(
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+    ) : SwapEvents(
+        event = "Notice - Geo Restriction",
+        params = mapOf(
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            SEND_BLOCKCHAIN to sendBlockchain,
+            RECEIVE_BLOCKCHAIN to receiveBlockchain,
+        ),
+    )
+
     class NoticeProviderError(
         val sendToken: String,
         val receiveToken: String,
