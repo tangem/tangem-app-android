@@ -70,6 +70,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.flow.flowOf
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -1102,6 +1104,38 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction top-up WHEN the transfer is sent THEN the funding window opens`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { predictionFundingWindow.open(userWalletId) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createTopUpTransferModel(accountFlow = null)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { predictionFundingWindow.open(any()) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a prediction withdraw WHEN to selector settings THEN the chooser offers USDC on Polygon to add, hides payment tokens and joint accounts`() =
         runTest {
             // Arrange
@@ -1827,6 +1861,35 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         return from
     }
 
+    private fun TestScope.createTopUpTransferModel(accountFlow: AccountFlow?): SwapModel {
+        val from = swapCurrencyStatus()
+        val collateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to collateral)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        coEvery {
+            swapTransferInteractor.sendTransfer(any(), any(), any(), any(), any())
+        } returns TRANSFER_TX_HASH.right()
+        every { getExplorerTransactionUrlUseCase(txHash = any(), currency = any()) } returns EXPLORER_URL.right()
+
+        val model = createModel(accountFlow = accountFlow, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
+            every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+        }
+        return model
+    }
+
     private fun stubResolvedTopUpPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
         val wallet = accountFlowUserWallet()
         val from = buildSwapCurrencyStatus(wallet)
@@ -2020,5 +2083,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         const val POLYGON_CHAIN_ID = "137"
         const val NATIVE_ASSET_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
         const val RECIPIENT_ADDRESS = "0xRecipientOnPolygon"
+        const val TRANSFER_TX_HASH = "0xTransferHash"
+        const val EXPLORER_URL = "https://polygonscan.com/tx/0xTransferHash"
     }
 }
