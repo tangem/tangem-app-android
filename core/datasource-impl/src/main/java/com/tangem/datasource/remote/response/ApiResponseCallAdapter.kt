@@ -15,6 +15,6 @@ internal class ApiResponseCallAdapter(
     override fun responseType(): Type = resultType
 
     override fun adapt(call: Call<Type>): Call<ApiResponse<Type>> {
-        return ApiResponseCallDelegate(call, analyticsErrorHandler)
+        return ApiResponseCallDelegate(call, analyticsErrorHandler, isBodyOptional = resultType == Unit::class.java)
     }
 }
