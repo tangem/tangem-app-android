@@ -110,7 +110,8 @@ internal class JointOperationModel @Inject constructor(
         flow4 = isBalanceHidden,
     ) { state, actions, canCreateContact, isBalanceHidden ->
         val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
-        if (answered == null || actions.isGone || !answered.isReachable) return@combine JointOperationUM.Gone
+        val isGone = answered == null || actions.isGone || !answered.isReachable && !answered.isSending
+        if (isGone) return@combine JointOperationUM.Gone
 
         JointOperationUM.Content(
             operation = operationConverter.convert(
