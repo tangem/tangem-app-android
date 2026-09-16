@@ -20,8 +20,9 @@ import kotlin.coroutines.cancellation.CancellationException
  * 3. bails out with [GoogleAuthError.NetworkError] when the device is offline;
  * 4. on a cache miss, delegates to [GoogleAuthorizer] (honoring `interactive`) and caches the result.
  *
+ * Only the [scopes] the caller asked for are requested, so Tangem sees nothing else of the user's
 
- * the user's Drive.
+ * scope set gets its own instance, so a token granted for one is never served to the other.
  *
  * The 401/403 → re-auth path belongs to the callers, which invalidate the token and retry;
  * this provider intentionally exposes nothing extra.
@@ -31,6 +32,7 @@ internal class DefaultGoogleDriveTokenProvider(
     private val api: GoogleDriveApi,
     private val context: Context,
     private val networkConnectionManager: NetworkConnectionManager,
+    private val scopes: List<GoogleAuthScope> = listOf(DRIVE_FILE_SCOPE),
 ) : GoogleDriveTokenProvider {
 
     private val authMutex = Mutex()
@@ -47,7 +49,7 @@ internal class DefaultGoogleDriveTokenProvider(
             cachedToken?.let { return@withLock it.right() }
             if (!networkConnectionManager.isOnline) return@withLock GoogleAuthError.NetworkError.left()
 
-            authorizer.authorize(scopes = listOf(DRIVE_FILE_SCOPE), interactive = interactive).map { result ->
+            authorizer.authorize(scopes = scopes, interactive = interactive).map { result ->
                 cachedToken = result.accessToken
                 result.accessToken
             }
@@ -84,7 +86,10 @@ internal class DefaultGoogleDriveTokenProvider(
         }
     }
 
-    private companion object {
+    companion object {
         val DRIVE_FILE_SCOPE = GoogleAuthScope("https://www.googleapis.com/auth/drive.file")
+
+        /** Grants access to the hidden `appDataFolder` only — nothing the user can see in their Drive */
+        val DRIVE_APP_DATA_SCOPE = GoogleAuthScope("https://www.googleapis.com/auth/drive.appdata")
     }
 }
