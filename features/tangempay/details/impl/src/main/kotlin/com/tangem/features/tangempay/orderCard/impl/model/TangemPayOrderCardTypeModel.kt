@@ -153,6 +153,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 offers.plastic?.toPlasticContent(customerInfo)
                     ?: TangemPayOrderCardTypeUM.Plastic.Unavailable(
                         country = CountryNames.getDisplayName(customerInfo.country),
+                        offerImageUrl = offers.plasticArtworkUrl,
                     )
             } else {
                 null
