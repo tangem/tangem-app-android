@@ -13,6 +13,7 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     api(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Core
@@ -23,8 +24,6 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.common)
-    implementation(projects.domain.swap)
-    implementation(projects.domain.swap.models)
     // endregion
 
     // region SDK
