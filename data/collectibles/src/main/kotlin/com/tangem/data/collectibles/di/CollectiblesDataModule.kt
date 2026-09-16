@@ -6,6 +6,7 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.collectibles.DefaultCollectiblesRepository
 import com.tangem.data.collectibles.account.DefaultCollectiblesAccountRepository
+import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountStatusValueDTO
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
@@ -86,6 +87,7 @@ internal interface CollectiblesDataModule {
             @ApplicationContext context: Context,
             scope: AppCoroutineScope,
             dataStoreFactory: AppDataStoreFactory,
+            converter: CollectiblesAccountStatusValueDTOConverter,
         ): CollectiblesAccountStatusStore {
             return CollectiblesAccountStatusStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -101,6 +103,7 @@ internal interface CollectiblesDataModule {
                     produceFile = { context.dataStoreFile(fileName = "collectibles_account_statuses") },
                     scope = scope,
                 ),
+                converter = converter,
                 scope = scope,
             )
         }
