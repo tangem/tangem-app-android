@@ -1,9 +1,9 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
-import com.tangem.data.pay.util.OfferConverter
+import com.tangem.data.pay.util.CustomerOffersConverter
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
@@ -14,18 +14,18 @@ internal class DefaultCustomerOffersRepository @Inject constructor(
     private val requestHelper: TangemPayRequestPerformer,
 ) : CustomerOffersRepository {
 
-    override suspend fun getOffers(userWalletId: UserWalletId): Either<VisaApiError, List<Offer>> {
+    override suspend fun getOffers(userWalletId: UserWalletId): Either<VisaApiError, CustomerOffers> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getCustomerOffers(authHeader = authHeader)
-        }.map { response -> response.result.orEmpty().mapNotNull(OfferConverter::convert) }
+        }.map(CustomerOffersConverter::convert)
     }
 
     override suspend fun getProductInstanceOffers(
         userWalletId: UserWalletId,
         productInstanceId: String,
-    ): Either<VisaApiError, List<Offer>> {
+    ): Either<VisaApiError, CustomerOffers> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.getProductInstanceOffers(authHeader = authHeader, productInstanceId = productInstanceId)
-        }.map { response -> response.result.orEmpty().mapNotNull(OfferConverter::convert) }
+        }.map(CustomerOffersConverter::convert)
     }
 }
