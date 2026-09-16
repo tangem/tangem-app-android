@@ -51,6 +51,8 @@ dependencies {
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
