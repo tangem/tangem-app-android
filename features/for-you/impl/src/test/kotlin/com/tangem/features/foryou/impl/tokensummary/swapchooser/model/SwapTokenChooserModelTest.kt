@@ -22,8 +22,8 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.foryou.impl.tokensummary.model.SwapHolding
 import com.tangem.features.foryou.impl.tokensummary.swapchooser.SwapTokenChooserComponent
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -31,7 +31,6 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -189,18 +188,6 @@ internal class SwapTokenChooserModelTest {
             isAccountsModeEnabledUseCase = isAccountsModeEnabledUseCase,
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = WalletIconUMConverter(),
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 
