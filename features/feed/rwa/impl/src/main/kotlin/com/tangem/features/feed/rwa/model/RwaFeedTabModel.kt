@@ -24,7 +24,9 @@ import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.RwaCategoryNames
 import com.tangem.features.feed.rwa.categories.RwaDefaultCategory
+import com.tangem.features.feed.rwa.categories.RwaRegionRestriction
 import com.tangem.features.feed.rwa.categories.components.CategorySelectorComponent
+import com.tangem.features.feed.rwa.model.analytics.RwaAnalyticsEvent
 import com.tangem.features.feed.rwa.model.list.RwaBatchFlowManager
 import com.tangem.features.feed.rwa.model.list.RwaFeaturedAssetsManager
 import com.tangem.features.feed.rwa.model.list.RwaInterval
@@ -200,6 +202,7 @@ internal class RwaFeedTabModel @Inject constructor(
             onVisibleItemsChange = { ids -> visibleItemIds.value = ids.map(CryptoCurrency::RawID) },
             list = RwaListUM.Loading,
             appliedSelection = request.selection,
+            regionRestriction = null,
         )
     }
 
@@ -229,6 +232,9 @@ internal class RwaFeedTabModel @Inject constructor(
             categoriesState.update { it.copy(featuredCategoryId = featured.id) }
             reloadFeatured()
         }
+
+        categoriesState.update { it.copy(restrictedCategoryIds = RwaRegionRestriction.restrictedIds(categories)) }
+        applyRegionRestriction(selection = uiState.value.appliedSelection)
 
         val umbrella = categories.firstOrNull { it.code == ReservedCategoryCodes.REAL_WORLD_ASSETS }
 
@@ -388,10 +394,29 @@ internal class RwaFeedTabModel @Inject constructor(
                 categoryId = selection.category?.code ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
             ),
         )
-        uiState.update {
-            it.copy(appliedSelection = selection, categoriesFilter = categoriesFilterItem(selection = selection))
+        uiState.update { state ->
+            state.copy(
+                appliedSelection = selection,
+                categoriesFilter = categoriesFilterItem(selection = selection),
+            )
         }
+        applyRegionRestriction(selection = selection)
         reloadList()
+    }
+
+    /** The notice only ever accompanies a picked category, which the analytics event reports by name. */
+    private fun applyRegionRestriction(selection: CategorySelection) {
+        val banner = RwaRegionRestriction.banner(
+            restrictedIds = categoriesState.value.restrictedCategoryIds,
+            selection = selection,
+        )
+        uiState.update { it.copy(regionRestriction = banner) }
+
+        val category = selection.category ?: return
+
+        if (banner != null) {
+            analyticsEventHandler.send(RwaAnalyticsEvent.RegionNotSupportedNotification(category.displayName))
+        }
     }
 
     private fun CoroutineScope.loadQuotesWithTimer(timeMillis: Long) {
@@ -415,5 +440,6 @@ internal class RwaFeedTabModel @Inject constructor(
         val isFailed: Boolean = false,
         val isDefaultApplied: Boolean = false,
         val country: String? = null,
+        val restrictedCategoryIds: Set<String> = emptySet(),
     )
 }
