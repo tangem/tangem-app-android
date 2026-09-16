@@ -429,6 +429,7 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    runtimeOnly(deps.firebase.crashlytics.ndk)
     implementation(deps.firebase.messaging)
     implementation(deps.firebase.perf) {
         exclude(group = "com.google.firebase", module = "protolite-well-known-types")
