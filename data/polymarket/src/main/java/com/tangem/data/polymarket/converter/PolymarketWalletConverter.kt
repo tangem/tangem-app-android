@@ -1,8 +1,8 @@
 package com.tangem.data.polymarket.converter
 
-import com.tangem.datasource.api.polymarket.models.PolymarketApprovalCallDto
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletApprovalsRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketWalletStatusResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketApprovalCallDto
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketWalletState
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus

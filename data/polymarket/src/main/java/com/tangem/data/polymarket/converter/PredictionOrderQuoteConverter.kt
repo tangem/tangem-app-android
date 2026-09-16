@@ -1,8 +1,8 @@
 package com.tangem.data.polymarket.converter
 
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteFeesResponse
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteRequest
-import com.tangem.datasource.api.polymarket.models.PolymarketOrderQuoteResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteResponse
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
@@ -28,6 +28,7 @@ internal object PredictionOrderQuoteConverter : Converter<PolymarketOrderQuoteRe
         total = BigDecimal(value.total),
         builderCode = value.builderCode,
         minOrderSize = BigDecimal(value.minOrderSize),
+        minOrderAmount = value.minOrderAmount?.let(::BigDecimal),
         tickSize = BigDecimal(value.tickSize),
         isLive = value.isLive,
     )

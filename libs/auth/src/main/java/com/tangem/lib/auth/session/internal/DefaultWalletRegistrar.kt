@@ -17,13 +17,16 @@ import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
+import com.tangem.lib.auth.performance.NonceRequestPerformanceTracker
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.PreparedWalletRegistration
+import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -40,6 +43,7 @@ internal class DefaultWalletRegistrar(
     private val attestationProvider: AttestationProvider,
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
+    private val nonceRequestPerformanceTracker: NonceRequestPerformanceTracker,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletRegistrar {
 
@@ -51,23 +55,50 @@ internal class DefaultWalletRegistrar(
 
     override suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit> =
         withContext(dispatchers.io) {
-            // Hold the per-wallet lock across the WHOLE one-shot flow (prepare + submit), so two
-            // concurrent register() calls for the same wallet can't both pass the idempotency check
-            // and consume/sign separate nonces. Calls the internal steps directly instead of
-            // re-entering the public prepare()/submit() (which would take the same lock again).
+            // Hold the per-wallet lock across the WHOLE one-shot flow (idempotency + nonce + sign +
+            // submit), so two concurrent register() calls for the same wallet can't both pass the
+            // idempotency check and consume/sign separate nonces.
             getMutex(walletId).withLock {
                 either {
-                    val prepared = runPrepare(walletId, signer).bind() ?: return@either
+                    if (isAlreadyRegistered(walletId)) return@either
+                    requireSession()
+                    val nonce = fetchNonce()
+                    val prepared = assemble(walletId, nonce, signer)
                     handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
                 }
             }
         }
 
+    override suspend fun isRegistered(walletId: String): Boolean = withContext(dispatchers.io) {
+        runSuspendCatching { walletId in registeredWalletIds() }
+            .getOrElse { e ->
+                // Best-effort gate: on a read error assume not-registered — the prepare-time
+                // idempotency check still guards against a duplicate registration.
+                TangemLogger.e("Failed to read registered wallet ids", e)
+                false
+            }
+    }
+
+    override suspend fun requestNonce(): Either<WalletRegistrationError, WalletNonce> = withContext(dispatchers.io) {
+        // No per-wallet lock: the nonce request is card- and wallet-independent (device-scoped),
+        // so it can be prefetched before the wallet id is known.
+        either {
+            requireSession()
+            fetchNonce()
+        }
+    }
+
     override suspend fun prepare(
         walletId: String,
+        nonce: WalletNonce,
         signer: WalletSigner,
     ): Either<WalletRegistrationError, PreparedWalletRegistration?> = withContext(dispatchers.io) {
-        getMutex(walletId).withLock { runPrepare(walletId, signer) }
+        getMutex(walletId).withLock {
+            either {
+                if (isAlreadyRegistered(walletId)) return@either null
+                assemble(walletId, nonce, signer)
+            }
+        }
     }
 
     override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
@@ -123,28 +154,42 @@ internal class DefaultWalletRegistrar(
 
     private fun getMutex(walletId: String): Mutex = mutexes.computeIfAbsent(walletId) { Mutex() }
 
-    private suspend fun runPrepare(
-        walletId: String,
-        signer: WalletSigner,
-    ): Either<WalletRegistrationError, PreparedWalletRegistration?> = either {
-        val isAlreadyRegistered = try {
+    private suspend fun Raise<WalletRegistrationError>.isAlreadyRegistered(walletId: String): Boolean {
+        val isRegistered = try {
             walletId in registeredWalletIds()
         } catch (e: Exception) {
             TangemLogger.e("Failed to read registered wallet ids", e)
             raise(WalletRegistrationError.PersistenceFailed(e))
         }
-        if (isAlreadyRegistered) {
-            TangemLogger.i("Wallet already registered — skipping /wallet")
-            return@either null
-        }
+        if (isRegistered) TangemLogger.i("Wallet already registered — skipping /wallet")
+        return isRegistered
+    }
 
-        TangemLogger.i("Preparing wallet registration")
+    private suspend fun Raise<WalletRegistrationError>.requireSession() {
+        // /wallet/register is @RequiresSessionAuth. Without a session the request goes out
+        // unauthenticated and 401s, wasting the one-time wallet nonce. Bail up front; the session is
+        // established by device registration, and this retries idempotently once it exists.
+        val hasSession = runSuspendCatching { store.get().getOrNull() != null }
+            .getOrElse { e ->
+                TangemLogger.e("Failed to read session tokens before wallet registration", e)
+                raise(WalletRegistrationError.PersistenceFailed(e))
+            }
+        if (!hasSession) {
+            TangemLogger.i("No active session — skipping wallet registration until authenticated")
+            raise(WalletRegistrationError.NoActiveSession)
+        }
+    }
+
+    private suspend fun Raise<WalletRegistrationError>.fetchNonce(): WalletNonce {
+        TangemLogger.i("Requesting wallet nonce")
 
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
             ?: raise(WalletRegistrationError.DeviceKeyUnavailable)
         val devicePublicKeyBase64 = devicePublicKey.toBase64NoWrap()
 
-        val nonceResponse = authApi.requestWalletNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
+        val nonceResponse = nonceRequestPerformanceTracker.track {
+            authApi.requestWalletNonce(NonceApiRequest(devicePublicKey = devicePublicKeyBase64))
+        }
         val cipheredNonce = when (nonceResponse) {
             is ApiResponse.Success -> nonceResponse.data.cipheredNonce
             is ApiResponse.Error -> {
@@ -172,24 +217,34 @@ internal class DefaultWalletRegistrar(
             raise(WalletRegistrationError.NonceDecodingFailed(e))
         }
 
+        return WalletNonce(nonce = nonce, nonceBytes = nonceBytes)
+    }
+
+    private suspend fun Raise<WalletRegistrationError>.assemble(
+        walletId: String,
+        nonce: WalletNonce,
+        signer: WalletSigner,
+    ): PreparedWalletRegistration {
+        TangemLogger.i("Preparing wallet registration")
+
         val bundle = try {
-            signer.sign(nonceBytes = nonceBytes)
+            signer.sign(nonceBytes = nonce.nonceBytes)
         } catch (e: Exception) {
             TangemLogger.e("Failed to sign wallet-registration payload", e)
             raise(WalletRegistrationError.SigningFailed(e))
         }
 
-        PreparedWalletRegistration(
+        return PreparedWalletRegistration(
             walletId = walletId,
             request = WalletRegistrationRequest(
-                nonce = nonce,
+                nonce = nonce.nonce,
                 walletId = walletId,
                 walletSignature = bundle.walletSignature.toBase64NoWrap(),
                 walletSignatureSalt = bundle.walletSignatureSalt.toBase64NoWrap(),
                 cardSignature = bundle.cardSignature?.toBase64NoWrap(),
                 cardSignatureSalt = bundle.cardSignatureSalt?.toBase64NoWrap(),
                 walletStatus = bundle.walletStatusByte?.let { byteArrayOf(it).toBase64NoWrap() },
-                attestationToken = attestationProvider.getAttestationTokenOrNull(nonce),
+                attestationToken = attestationProvider.getAttestationTokenOrNull(nonce.nonce),
                 metadata = signedRequestPayload.deviceMetadata,
             ),
         )

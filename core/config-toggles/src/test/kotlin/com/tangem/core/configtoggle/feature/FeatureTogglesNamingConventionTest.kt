@@ -40,7 +40,6 @@ internal class FeatureTogglesNamingConventionTest {
         val EXCLUDED_TOGGLES_LIST = setOf(
             "ADDRESS_SYNC_ENABLED",
             "NEW_CARD_SCANNING_ENABLED",
-            "VIRTUAL_ACCOUNTS_ENABLED",
             "VISA_ONBOARDING_ENABLED",
             "WALLET_CONNECT_BITCOIN_ENABLED",
         )

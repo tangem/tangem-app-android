@@ -1,6 +1,7 @@
 package com.tangem.data.pay.flow
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.util.PlasticCardStateResolver
 import com.tangem.domain.core.utils.catchOn
@@ -615,7 +616,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         }
 
-        val virtualAccount = resolveVirtualAccountOnramp(userWalletId)
+        val channels = fetchEligibilityChannels(userWalletId)
+        val virtualAccount = resolveVirtualAccountOnramp(userWalletId = userWalletId, channels = channels)
 
         return PaymentAccountStatusValue.Loaded(
             source = source,
@@ -628,6 +630,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             balance = balance,
             error = null,
             virtualAccount = virtualAccount,
+            isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
             tariffPlan = tariffPlan?.let { tariff ->
                 getTangemPayTariffPlanStateUseCase(
                     userWalletId = userWalletId,
@@ -652,7 +655,10 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
      * 3. Otherwise (or after a CANCELED order) — surfaces [VirtualAccountOnramp.Eligible] when the wallet has
      *    the `VISA_VIRTUAL_ACCOUNT` eligibility channel (fetched fresh via the user token), else `null`.
      */
-    private suspend fun CustomerInfo.resolveVirtualAccountOnramp(userWalletId: UserWalletId): VirtualAccountOnramp? {
+    private suspend fun CustomerInfo.resolveVirtualAccountOnramp(
+        userWalletId: UserWalletId,
+        channels: List<TangemPayEligibilityType>?,
+    ): VirtualAccountOnramp? {
         val accountInstance = productInstances.firstOrNull {
             it.specificationDataType == SpecificationDataType.ACCOUNT
         }
@@ -669,7 +675,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     logger.e("getOrderData(va) failed for $vaOrderId: $error")
                     if (error is VisaApiError.OrderNotFound) {
                         onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-                        resolveEligibility(userWalletId)
+                        channels.toVirtualAccountOnramp()
                     } else {
                         VirtualAccountOnramp.Processing
                     }
@@ -678,7 +684,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     when (orderData.status) {
                         OrderStatus.CANCELED -> {
                             onboardingRepository.clearVirtualAccountOrderId(userWalletId)
-                            resolveEligibility(userWalletId)
+                            channels.toVirtualAccountOnramp()
                         }
                         OrderStatus.NEW,
                         OrderStatus.PROCESSING,
@@ -689,7 +695,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         }
 
-        return resolveEligibility(userWalletId)
+        return channels.toVirtualAccountOnramp()
     }
 
     private fun CustomerInfo.ProductInstance.isProvisioning(): Boolean = when (status) {
@@ -709,21 +715,22 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         -> false
     }
 
-    private suspend fun resolveEligibility(userWalletId: UserWalletId): VirtualAccountOnramp? {
-        return onboardingRepository.fetchCustomerEligibility(userWalletId).fold(
-            ifLeft = { error ->
-                logger.e("fetchCustomerEligibility failed for $userWalletId: $error")
-                null
-            },
-            ifRight = { channels ->
-                if (channels.contains(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT)) {
-                    VirtualAccountOnramp.Eligible
-                } else {
-                    null
-                }
-            },
-        )
+    /**
+     * The customer's eligibility channels, or `null` when the lookup fails. Fetched once per status build: both
+     * the VA on-ramp and the bank off-ramp are decided from the same list, and the channels are read with the
+     * user token rather than from a cache.
+     */
+    private suspend fun fetchEligibilityChannels(userWalletId: UserWalletId): List<TangemPayEligibilityType>? {
+        return onboardingRepository.fetchCustomerEligibility(userWalletId).getOrElse { error ->
+            logger.e("fetchCustomerEligibility failed for $userWalletId: $error")
+            null
+        }
     }
+
+    private fun List<TangemPayEligibilityType>?.toVirtualAccountOnramp(): VirtualAccountOnramp? =
+        VirtualAccountOnramp.Eligible.takeIf {
+            this?.contains(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT) == true
+        }
 
     /**
      * Order of real (product-instance-backed) cards from the previously stored status, used as the stable

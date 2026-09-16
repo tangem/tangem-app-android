@@ -11,6 +11,7 @@ import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
+import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -125,10 +126,17 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private fun createModel(testScope: TestScope): TangemPayHotWalletOnboardingModel {
         return TangemPayHotWalletOnboardingModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            createHotWalletUseCase = createHotWalletUseCase,
-            isHotWalletCreationSupported = isHotWalletCreationSupported,
             router = router,
-            uiMessageSender = uiMessageSender,
+            onboardingStarter = TangemPayOnboardingStarter(
+                router = router,
+                uiMessageSender = uiMessageSender,
+                repository = mockk(relaxed = true),
+                produceInitialDataUseCase = mockk(relaxed = true),
+                getCustomerOffersUseCase = mockk(relaxed = true),
+                createHotWalletUseCase = createHotWalletUseCase,
+                isHotWalletCreationSupported = isHotWalletCreationSupported,
+                tangemPayFeatureToggles = mockk(relaxed = true),
+            ),
         )
     }
 

@@ -163,6 +163,7 @@ internal class PortfolioBlockModel @Inject constructor(
         }
 
         val firstCurrency = allCurrencies.first().currency
+
         return PortfolioBlockUM.Content(
             totalBalance = formattedBalance,
             tokensInPortfolioCount = allCurrencies.size,
