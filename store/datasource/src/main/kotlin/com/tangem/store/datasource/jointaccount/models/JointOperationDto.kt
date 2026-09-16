@@ -17,8 +17,8 @@ import com.squareup.moshi.JsonClass
  * @property status      `awaiting_signatures` | `pending` | `executed` | `failed`. Raw string: mapping (and
  * tolerance to values a newer backend adds) is the data layer's job, a parse must never fail on it
 
- * @property deadline    reserved for swap operations; always `null` for a transfer
- * @property signatures  only the members who responded, with their decision; the rest of the roster is drawn
+
+ * @property votes       only the members who responded, with their decision; the rest of the roster is drawn
  * from [JointAccountDto.members]
  */
 @JsonClass(generateAdapter = true)
@@ -28,8 +28,8 @@ data class JointOperationDto(
     @Json(name = "safeTx") val safeTx: SafeTxDto,
     @Json(name = "status") val status: String,
     @Json(name = "initiator") val initiator: String? = null,
-    @Json(name = "deadline") val deadline: String? = null,
-    @Json(name = "signatures") val signatures: List<SignatureDto> = emptyList(),
+    @Json(name = "createdAt") val createdAt: String? = null,
+    @Json(name = "votes") val votes: List<VoteDto> = emptyList(),
 ) {
 
     /**
@@ -54,10 +54,11 @@ data class JointOperationDto(
      * @property state   `signed` | `declined`. Raw string, same reasoning as [JointOperationDto.status]
      * @property at      when the member responded, ISO-8601
      */
+    /** The signature bytes the backend also sends are not read: the client never verifies other members' votes */
     @JsonClass(generateAdapter = true)
-    data class SignatureDto(
+    data class VoteDto(
         @Json(name = "address") val address: String,
-        @Json(name = "state") val state: String,
-        @Json(name = "at") val at: String? = null,
+        @Json(name = "vote") val vote: String,
+        @Json(name = "votedAt") val votedAt: String? = null,
     )
 }
