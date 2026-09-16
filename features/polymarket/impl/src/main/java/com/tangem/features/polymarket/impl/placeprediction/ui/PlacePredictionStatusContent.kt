@@ -126,9 +126,9 @@ private fun BannerIcon(icon: ImageVector) {
 
 @Composable
 private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM) {
-    val tokensBought = when (result) {
-        is PlaceResultUM.Filled -> result.tokensBought
-        is PlaceResultUM.PartiallyFilled -> result.tokensBought
+    val shares = when (result) {
+        is PlaceResultUM.Filled -> result.shares
+        is PlaceResultUM.PartiallyFilled -> result.shares
         is PlaceResultUM.NotFilled,
         is PlaceResultUM.Submitted,
         -> return
@@ -137,7 +137,7 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM) {
     Column(modifier = Modifier.fillMaxWidth()) {
         DetailRow(
             title = resourceReference(R.string.prediction_place_result_tokens_bought),
-            value = tokensBought?.formatPolymarketShares() ?: DASH_SIGN,
+            value = shares?.formatPolymarketShares() ?: DASH_SIGN,
         )
         DetailRow(
             title = resourceReference(R.string.prediction_details_resolution_date),
@@ -172,14 +172,17 @@ private fun PlaceResultUM.variant(): TangemStatusScreen.Variant = when (this) {
 private fun PlaceResultUM.title(): TextReference = when (this) {
     is PlaceResultUM.Filled -> resourceReference(
         R.string.prediction_place_result_placed_title,
-        wrappedList(amount.formatPolymarketEnteredAmount()),
+        wrappedList(collateralAmount.formatPolymarketEnteredAmount()),
     )
     is PlaceResultUM.PartiallyFilled -> combinedReference(
         resourceReference(R.string.prediction_place_result_partial_title),
         stringReference(value = "\n"),
         resourceReference(
             R.string.prediction_place_result_partial_amount,
-            wrappedList(filledAmount.formatPolymarketEnteredAmount(), requestedAmount.formatPolymarketEnteredAmount()),
+            wrappedList(
+                filledCollateral.formatPolymarketEnteredAmount(),
+                requestedCollateral.formatPolymarketEnteredAmount(),
+            ),
         ),
     )
     is PlaceResultUM.NotFilled -> resourceReference(R.string.prediction_place_result_no_fill_title)
