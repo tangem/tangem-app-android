@@ -2717,6 +2717,7 @@
   <string name="tangempay_visa_benefits">Benefícios Visa</string>
   <string name="tangempay_waitlist_description">Enviaremos um e-mail assim que estiver disponível na sua região</string>
   <string name="tangempay_waitlist_email_placeholder">satoshi.nakamoto@tangem.com</string>
+  <string name="tangempay_waitlist_joined_message">Entrou na lista de espera</string>
   <string name="tangempay_waitlist_marketing_consent">Também gostaria de receber comunicações de marketing da Tangem. Você pode retirar esse consentimento a qualquer momento — consulte nossos %s</string>
   <string name="tangempay_waitlist_title"> Entrar na lista de espera</string>
   <string name="tangempay_withdraw_bank_account_type_checking">Conta corrente</string>
@@ -2761,6 +2762,8 @@
   <string name="tangempay_withdraw_bank_sending_summary">Você está enviando %1$s, incluindo uma taxa de %3$s pela rede %2$s</string>
   <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
   <string name="tangempay_withdraw_bank_step_counter">%1$d de %2$d</string>
+  <string name="tangempay_withdraw_bank_success_description">A transferência está a caminho da conta bancária do destinatário.</string>
+  <string name="tangempay_withdraw_bank_success_title">Enviando %s</string>
   <string name="tangempay_withdraw_bank_title_to_recipient">Para %s</string>
   <string name="tangempay_withdraw_bank_transfer_type_own">Sua conta</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">Conta de terceiros</string>
@@ -3387,7 +3390,7 @@
   <string name="yield_module_balance_info_sheet_subtitle">Seus fundos estão atualmente vinculados ao protocolo Aave, mas você pode gerenciá-los a qualquer momento.</string>
   <string name="yield_module_balance_info_sheet_title">Seu %s é fornecido à Aave</string>
   <string name="yield_module_chart_loading_error">Não foi possível carregar o gráfico...</string>
-  <string name="yield_module_claim_button_title">Resgatar %1$@</string>
+  <string name="yield_module_claim_button_title">Resgatar %1$s</string>
   <string name="yield_module_claim_destination_aave_title">Será adicionado à sua posição ativa na Aave</string>
   <string name="yield_module_claim_destination_module_title">Permanecerá no Yield Mode</string>
   <string name="yield_module_claim_destination_owner_title">Será enviado para sua carteira</string>
@@ -3397,7 +3400,7 @@
   <string name="yield_module_claim_footer_note">Você resgatará todos os tokens de recompensa disponíveis.</string>
   <string name="yield_module_claim_rewards_unavailable_notification_description">O serviço não confirmou o resgate dessas recompensas. Tente novamente em alguns minutos.</string>
   <string name="yield_module_claim_rewards_unavailable_notification_title">O resgate não está disponível no momento</string>
-  <string name="yield_module_claim_service_fee_note">A Tangem fica com %1$@ das recompensas resgatadas.</string>
+  <string name="yield_module_claim_service_fee_note">A Tangem fica com %1$s das recompensas resgatadas.</string>
   <string name="yield_module_claim_service_fee_title">Taxa de serviço</string>
   <string name="yield_module_claim_sheet_subtitle">Para receber</string>
   <string name="yield_module_claim_sheet_title">Resgatar recompensa</string>
