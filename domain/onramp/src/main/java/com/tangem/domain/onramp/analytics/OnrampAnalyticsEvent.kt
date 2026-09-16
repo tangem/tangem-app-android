@@ -220,6 +220,17 @@ sealed class OnrampAnalyticsEvent(
         params = emptyMap(),
     )
 
+    data class NoticeGeoRestriction(
+        private val tokenSymbol: String,
+        private val providerName: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Notice - Geo Restriction",
+        params = mapOf(
+            TOKEN_PARAM to tokenSymbol,
+            PROVIDER to providerName,
+        ),
+    )
+
     data class NoticeBuyNotSupported(
         private val source: OnrampSource,
         private val tokenSymbol: String,
