@@ -32,7 +32,7 @@ dependencies {
     /** Core */
     implementation(projects.core.local)
     api(projects.core.analytics)
-    api(projects.core.datasource)
+    implementation(projects.store.datasource)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.utils)

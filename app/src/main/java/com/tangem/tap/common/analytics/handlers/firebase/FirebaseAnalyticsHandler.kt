@@ -49,7 +49,7 @@ class FirebaseAnalyticsHandler(
     class Builder : AnalyticsHandlerBuilder {
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
             !data.isDebug -> FirebaseClient()
-            data.isDebug && data.logConfig.isFirebaseLogEnabled -> FirebaseLogClient(data.jsonConverter)
+            data.isDebug && data.logConfig.isFirebaseLogEnabled -> FirebaseLogClient()
             else -> null
         }?.let { FirebaseAnalyticsHandler(it) }
     }

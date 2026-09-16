@@ -1,9 +1,11 @@
 package com.tangem.data.settings.di
 
 import android.content.Context
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.settings.BuildConfig
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultPermissionRepository
+import com.tangem.data.settings.DefaultSettingsFeatureToggles
 import com.tangem.data.settings.DefaultSettingsRepository
 import com.tangem.data.settings.DevHotWalletRestrictionManager
 import com.tangem.data.settings.DevUsedeskTokenTtlManager
@@ -12,7 +14,9 @@ import com.tangem.data.settings.ProdUsedeskTokenTtlManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.settings.HotWalletRestrictionManager
+import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
@@ -33,32 +37,50 @@ internal object SettingsDataModule {
     @Singleton
     fun provideSettingsRepository(
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         appLogsStore: AppLogsStore,
         tangemTechApi: TangemTechApi,
+        settingsFeatureToggles: SettingsFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): SettingsRepository {
         return DefaultSettingsRepository(
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             appLogsStore = appLogsStore,
             tangemTechApi = tangemTechApi,
+            settingsFeatureToggles = settingsFeatureToggles,
             dispatchers = dispatchers,
         )
     }
 
     @Provides
     @Singleton
-    fun provideAppRatingRepository(appPreferencesStore: AppPreferencesStore): AppRatingRepository {
-        return DefaultAppRatingRepository(appPreferencesStore = appPreferencesStore)
+    fun provideSettingsFeatureToggles(featureTogglesManager: FeatureTogglesManager): SettingsFeatureToggles {
+        return DefaultSettingsFeatureToggles(featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppRatingRepository(
+        appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
+    ): AppRatingRepository {
+        return DefaultAppRatingRepository(
+            appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
+        )
     }
 
     @Provides
     @Singleton
     fun providePushPermissionRepository(
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         @ApplicationContext context: Context,
     ): PermissionRepository {
         return DefaultPermissionRepository(
             appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
             context = context,
         )
     }

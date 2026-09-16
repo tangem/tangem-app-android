@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.animateToWithDecay
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -17,10 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.sign
 
 /**
@@ -65,16 +68,31 @@ class TangemShtorkaState internal constructor(
     internal var rawOverdrag: Float by mutableFloatStateOf(0f)
 
     /** Expand progress of the floating-card → edge-to-edge morph, written during layout. */
-    internal var expandProgress: Float = 0f
+    internal var expandProgress: Float by mutableFloatStateOf(0f)
 
     /** 1 at the collapsed detent, 0 at the next one up; drives the capsule corners. */
     internal var collapseProgress: Float = 0f
+
+    /** Width ratio of the card to its [TangemShtorka.Detent.Full] width, written during layout. */
+    internal var chromeScale: Float = 1f
+
+    /** Scale of the content slot — equals [chromeScale] except on the collapse leg, where it freezes. */
+    internal var contentScale: Float = 1f
+
+    /** Size of the content slot in card coordinates, written during layout; freezes on the collapse leg. */
+    internal var contentCardSize: IntSize = IntSize.Zero
+
+    /** 1 at the detent above the collapsed one, 0 at the collapsed detent; fades the content slot. */
+    internal var contentAlpha: Float = 1f
 
     /** Whether a settle animation is running — used to grab the shtorka mid-flight. */
     internal var isSettling: Boolean by mutableStateOf(false)
         private set
 
     private var settleJob: Job? = null
+
+    var skippedDetents: Set<TangemShtorka.Detent> by mutableStateOf(emptySet())
+        private set
 
     /** The detent the shtorka currently rests at (or rested at before an ongoing gesture). */
     val currentDetent: TangemShtorka.Detent
@@ -91,6 +109,15 @@ class TangemShtorkaState internal constructor(
      * @throws IllegalStateException if called before the first layout pass
      */
     fun requireOffset(): Float = anchoredDraggableState.requireOffset()
+
+    fun updateSkippedDetents(skippedDetents: Set<TangemShtorka.Detent>) {
+        if (this.skippedDetents == skippedDetents) return
+        this.skippedDetents = skippedDetents
+
+        if (targetDetent in skippedDetents) {
+            animateTo(detent = nearestSettleableAbove(targetDetent) ?: return)
+        }
+    }
 
     /** Animate to [detent], cancelling any ongoing settle. [detent] must be one of [detents]. */
     fun animateTo(detent: TangemShtorka.Detent) {
@@ -138,7 +165,7 @@ class TangemShtorkaState internal constructor(
                 launch { relaxOverdrag(velocity) }
             }
             val projected = ShtorkaProjectionDecay.calculateTargetValue(requireOffset(), velocity)
-            val target = anchoredDraggableState.anchors.closestAnchor(projected) ?: return@launchSettle
+            val target = nearestSettleableTo(projected) ?: return@launchSettle
             anchoredDraggableState.animateToWithDecay(
                 targetValue = target,
                 velocity = velocity,
@@ -174,6 +201,25 @@ class TangemShtorkaState internal constructor(
         }
     }
 
+    private fun nearestSettleableTo(position: Float): TangemShtorka.Detent? {
+        val anchors = anchoredDraggableState.anchors
+
+        return detents
+            .filter { it !in skippedDetents && !anchors.positionOf(it).isNaN() }
+            .minByOrNull { abs(anchors.positionOf(it) - position) }
+    }
+
+    private fun nearestSettleableAbove(detent: TangemShtorka.Detent): TangemShtorka.Detent? {
+        val anchors = anchoredDraggableState.anchors
+        val position = anchors.positionOf(detent)
+        if (position.isNaN()) return null
+
+        return detents
+            .filter { it !in skippedDetents && anchors.positionOf(it) < position }
+            .maxByOrNull { anchors.positionOf(it) }
+            ?: nearestSettleableTo(position)
+    }
+
     private suspend fun relaxOverdrag(velocity: Float) {
         animate(
             initialValue = rawOverdrag,
@@ -194,11 +240,16 @@ class TangemShtorkaState internal constructor(
 fun rememberTangemShtorkaState(
     detents: List<TangemShtorka.Detent>,
     initialDetent: TangemShtorka.Detent = detents.first(),
+    skippedDetents: Set<TangemShtorka.Detent> = emptySet(),
 ): TangemShtorkaState {
     val scope = rememberCoroutineScope()
-    return remember(detents, scope) {
+    val state = remember(detents, scope) {
         TangemShtorkaState(detents = detents, initialDetent = initialDetent, scope = scope)
     }
+
+    SideEffect { state.updateSkippedDetents(skippedDetents) }
+
+    return state
 }
 
 /**
@@ -230,9 +281,9 @@ internal fun TangemShtorkaState.shtorkaNestedScrollConnection(): NestedScrollCon
         override suspend fun onPreFling(available: Velocity): Velocity {
             val toFling = available.y
             val minPosition = anchoredDraggableState.anchors.minPosition()
-            return if (toFling < 0 && requireOffset() > minPosition) {
+            return if (toFling != 0f && requireOffset() > minPosition) {
                 startSettle(toFling)
-                available
+                Velocity(x = 0f, y = toFling)
             } else {
                 Velocity.Zero
             }

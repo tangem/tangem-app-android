@@ -4,12 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationError
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountFlowError
 import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -36,18 +38,21 @@ internal class CreateJointAccountUseCaseTest {
     private val signer: JointAccountSigner = mockk()
     private val fetcher: SingleJointAccountListFetcher = mockk()
     private val supplier: SingleJointAccountListSupplier = mockk()
+    private val accountListFetcher: SingleAccountListFetcher = mockk()
 
     private val useCase = CreateJointAccountUseCase(
         repository = repository,
         signer = signer,
         fetcher = fetcher,
         supplier = supplier,
+        accountListFetcher = accountListFetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, signer, fetcher, supplier)
+        clearMocks(repository, signer, fetcher, supplier, accountListFetcher)
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
+        coEvery { accountListFetcher.invoke(params = any()) } returns Unit.right()
     }
 
     @Test
@@ -71,6 +76,8 @@ internal class CreateJointAccountUseCaseTest {
         assertThat(payloadSlot.captured.creator.name).isEqualTo(CREATOR_NAME)
         assertThat(payloadSlot.captured.config).isEqualTo(config())
         coVerify(exactly = 1) { fetcher.invoke(params = SingleJointAccountListFetcher.Params(WALLET_ID)) }
+        // The wallet screen reads the row from the accounts document, so it is refetched alongside
+        coVerify(exactly = 1) { accountListFetcher.invoke(params = SingleAccountListFetcher.Params(WALLET_ID)) }
     }
 
     @Test
@@ -107,6 +114,7 @@ internal class CreateJointAccountUseCaseTest {
         assertThat(actual).isEqualTo(own.right())
         // The list is refreshed first — the existing account may be missing from the cached copy
         coVerify(exactly = 1) { fetcher.invoke(params = SingleJointAccountListFetcher.Params(WALLET_ID)) }
+        coVerify(exactly = 1) { accountListFetcher.invoke(params = SingleAccountListFetcher.Params(WALLET_ID)) }
     }
 
     @Test
@@ -140,8 +148,26 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
         verify(inverse = true) { supplier.invoke(userWalletId = any()) }
+    }
+
+    @Test
+    fun `GIVEN account list refetch fails on conflict WHEN invoke THEN own account is still resolved`() = runTest {
+        // Arrange — the joint list is the source of the account; the document only feeds the wallet screen row
+        coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+        coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+        coEvery { repository.create(any(), any(), any()) } returns
+            JointAccountCreationResult.CreatorAlreadyRegistered
+        coEvery { accountListFetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
+        val own = account()
+        every { supplier.invoke(userWalletId = WALLET_ID) } returns flowOf(listOf(own))
+
+        // Act
+        val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+        // Assert
+        assertThat(actual).isEqualTo(own.right())
     }
 
     @Test
@@ -161,6 +187,23 @@ internal class CreateJointAccountUseCaseTest {
     }
 
     @Test
+    fun `GIVEN account list refetch fails after creation WHEN invoke THEN the created account is still returned`() =
+        runTest {
+            // Arrange — the row on the wallet screen is best-effort; the document catches up on the next fetch
+            coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
+            coEvery { signer.sign(WALLET_ID, any()) } returns signResult().right()
+            val created = account()
+            coEvery { repository.create(any(), any(), any()) } returns JointAccountCreationResult.Created(created)
+            coEvery { accountListFetcher.invoke(params = any()) } returns IllegalStateException("no network").left()
+
+            // Act
+            val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
+
+            // Assert
+            assertThat(actual).isEqualTo(created.right())
+        }
+
+    @Test
     fun `GIVEN card session dismissed WHEN invoke THEN UserCancelled and nothing is created`() = runTest {
         // Arrange
         coEvery { repository.getFreeOwnerDerivationIndex(WALLET_ID) } returns 0
@@ -170,8 +213,9 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.UserCancelled.left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.UserCancelled.left())
         coVerify(exactly = 0) { repository.create(any(), any(), any()) }
+        coVerify(exactly = 0) { accountListFetcher.invoke(params = any()) }
     }
 
     @Test
@@ -185,7 +229,7 @@ internal class CreateJointAccountUseCaseTest {
 
             // Assert
             // Broken backend data must not crash the app on a failed requirement
-            val expected = JointAccountCreationError.InvalidDerivationIndex(
+            val expected = JointAccountFlowError.InvalidDerivationIndex(
                 cause = DerivationIndex.Error.NegativeDerivationIndex(derivationIndex = -1),
             )
             assertThat(actual).isEqualTo(expected.left())
@@ -202,7 +246,7 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
         coVerify(exactly = 0) { signer.sign(any(), any()) }
     }
 
@@ -218,7 +262,7 @@ internal class CreateJointAccountUseCaseTest {
         val actual = useCase(userWalletId = WALLET_ID, config = config(), creatorName = CREATOR_NAME)
 
         // Assert
-        assertThat(actual).isEqualTo(JointAccountCreationError.Failed(cause = cause).left())
+        assertThat(actual).isEqualTo(JointAccountFlowError.Failed(cause = cause).left())
     }
 
     private fun config() = JointAccountConfig(

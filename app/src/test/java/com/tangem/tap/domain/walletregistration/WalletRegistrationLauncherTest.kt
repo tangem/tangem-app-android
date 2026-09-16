@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.AuthFeatureToggles
+import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -98,9 +99,21 @@ internal class WalletRegistrationLauncherTest {
         // The toggle is checked before the card is mapped, so no cold signing/prepare is attempted.
         every { authFeatureToggles.isBackendAuthenticationEnabled } returns false
 
-        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>())
+        launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(), mockk<WalletNonce>())
 
-        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any()) }
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any()) }
+    }
+
+    @Test
+    fun `requestColdNonce is a no-op when backend auth is disabled`() = runTest {
+        // The toggle is checked before the card is mapped, so nothing is requested from the registrar.
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns false
+
+        val nonce = launcher.requestColdNonce(mockk<Card>(), checkRegistered = true)
+
+        assertThat(nonce).isNull()
+        coVerify(exactly = 0) { walletRegistrar.isRegistered(any()) }
+        coVerify(exactly = 0) { walletRegistrar.requestNonce() }
     }
 
     @Test

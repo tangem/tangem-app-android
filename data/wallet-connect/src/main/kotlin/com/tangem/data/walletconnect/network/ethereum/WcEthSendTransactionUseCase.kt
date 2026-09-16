@@ -95,6 +95,8 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                     feeAssetType = AnalyticsParam.FeeAssetType.Coin,
                 ),
                 memoType = MemoType.Null,
+                isCustomToken = false,
+                isCustomFeeToken = false,
             ),
         )
         val respondResult = respondService.respond(rawSdkRequest, hash.formatHex())

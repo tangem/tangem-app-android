@@ -1,0 +1,41 @@
+package com.tangem.datasource.local.config.environment
+
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.datasource.local.config.environment.models.ExpressModel
+import com.tangem.datasource.local.config.environment.models.P2PKeys
+import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
+@Serializable
+data class EnvironmentConfig(
+    val moonPayApiKey: String = "",
+    val moonPayApiSecretKey: String = "",
+    val mercuryoWidgetId: String = "",
+    val mercuryoSecret: String = "",
+    val amplitudeApiKey: String = "",
+    val amplitudeApiKeyDev: String? = null,
+    val appsFlyerApiKey: String = "",
+    val appsAppId: String = "",
+    val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
+    val walletConnectProjectId: String = "",
+    val express: ExpressModel? = null,
+    val devExpress: ExpressModel? = null,
+    val stakeKitApiKey: String? = null,
+    val p2pApiKey: P2PKeys? = null,
+    val blockAidApiKey: String? = null,
+    val tangemApiKey: String? = null,
+    val tangemApiKeyDev: String? = null,
+    val tangemApiKeyStage: String? = null,
+    val yieldModuleApiKey: String? = null,
+    val yieldModuleApiKeyDev: String? = null,
+    val bffStaticToken: String? = null,
+    val bffStaticTokenDev: String? = null,
+    val gaslessTxApiKeyDev: String? = null,
+    val gaslessTxApiKey: String? = null,
+    val customerIoCdpApiKey: String? = null,
+    val surveySparrowToken: String? = null,
+    @Transient
+    val surveySparrowSwapRating: SurveySparrowSwapRatingConfig? = null,
+    val otlpApiKey: String? = null,
+)
