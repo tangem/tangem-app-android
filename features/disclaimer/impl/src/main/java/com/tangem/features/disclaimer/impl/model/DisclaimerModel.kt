@@ -48,22 +48,24 @@ internal class DisclaimerModel @Inject constructor(
             router.pop()
         } else {
             cardRepository.acceptTangemTOS()
-            val nextRoute = params.nextRoute
-            if (nextRoute != null) {
-                router.replaceAll(nextRoute)
-                return@launch
-            }
+            // Forwarded through the push step too, so an NFC cold start keeps its InitScreenLaunchMode on Welcome.
+            val nextRoute = params.nextRoute ?: AppRoute.Home()
             val shouldAskPushPermission = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             if (shouldAskPushPermission) {
                 notificationsRepository.setShouldShowNotifications(
                     key = NotificationId.EnablePushesReminderNotification.key,
                     value = false,
                 )
-                router.push(AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories))
+                router.replaceAll(
+                    AppRoute.PushNotification(
+                        source = AppRoute.PushNotification.Source.Stories,
+                        nextRoute = nextRoute,
+                    ),
+                )
             } else {
                 neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
                 neverRequestPermissionUseCase(PUSH_PERMISSION)
-                router.replaceAll(AppRoute.Home())
+                router.replaceAll(nextRoute)
             }
         }
     }

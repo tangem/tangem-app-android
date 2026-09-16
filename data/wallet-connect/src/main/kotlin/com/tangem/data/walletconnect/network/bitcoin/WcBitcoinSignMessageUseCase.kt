@@ -11,7 +11,7 @@ import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
-import com.tangem.datasource.di.SdkMoshi
+import com.tangem.core.local.moshi.SdkMoshi
 import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult

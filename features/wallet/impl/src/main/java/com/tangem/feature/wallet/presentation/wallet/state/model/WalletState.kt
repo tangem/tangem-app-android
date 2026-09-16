@@ -10,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedTx
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedWalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.WalletStateHolder
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
@@ -29,6 +30,7 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val tangemPayMainUM: TangemPayMainUM
         abstract val virtualAccountMainUM: VirtualAccountMainUM
         abstract val polymarketWalletBlockUM: PolymarketWalletBlockUM
+        abstract val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
         abstract val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM
 
         data class Content(
@@ -43,6 +45,7 @@ internal sealed interface WalletState : WalletStateHolder {
             override val tangemPayMainUM: TangemPayMainUM,
             override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty,
             override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+            override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
             override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
         ) : MultiCurrency()
 
@@ -65,6 +68,7 @@ internal sealed interface WalletState : WalletStateHolder {
             override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
             override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
             override val polymarketWalletBlockUM: PolymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden
+            override val collectiblesWalletBlockUM: CollectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden
             override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle
         }
     }
