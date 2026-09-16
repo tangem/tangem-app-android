@@ -20,6 +20,7 @@ import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -279,6 +280,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                         event = TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
                             currency = currency,
                             source = TokenDetailsAnalyticsEvent.Notice.NotEnoughFee.Source.DynamicAddresses,
+                            balance = AnalyticsParam.TokenBalanceState.fromAmount(balance),
                         ),
                     )
                     _bottomSheetConfig.value = disableWithConsolidationConfig().copy(

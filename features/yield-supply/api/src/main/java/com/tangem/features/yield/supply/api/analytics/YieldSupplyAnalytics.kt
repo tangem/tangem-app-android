@@ -1,7 +1,9 @@
 package com.tangem.features.yield.supply.api.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
@@ -141,11 +143,13 @@ sealed class YieldSupplyAnalytics(
     data class NoticeNotEnoughFee(
         val token: String,
         val blockchain: String,
+        val balance: AnalyticsParam.TokenBalanceState,
     ) : YieldSupplyAnalytics(
         event = "Notice - Not Enough Fee",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
+            BALANCE to balance.value,
         ),
     )
 
