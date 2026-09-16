@@ -242,7 +242,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
                         safeAddress = safeAddress,
                         chainId = chainId,
                         safeTx = safeTxDto,
-                        deadline = null,
                         signature = signature,
                     ),
                 ).bind()
@@ -283,7 +282,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
     override suspend fun rejectOperation(
         userWalletId: UserWalletId,
         payload: JointOperationRejectPayload,
-        signature: String,
     ): Either<JointOperationRejectError, Unit> = withContext(dispatchers.io) {
         val safeTxDto = Either
             .catch { safeTxConverter.convertBack(payload.safeTx) }
@@ -299,7 +297,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
                             operationId = payload.operationId,
                             safeTx = safeTxDto,
                         ),
-                        signature = signature,
                     ),
                 ).bind()
 
