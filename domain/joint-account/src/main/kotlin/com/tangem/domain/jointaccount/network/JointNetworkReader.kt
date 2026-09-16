@@ -18,6 +18,10 @@ interface JointNetworkReader {
     /** The bytecode at the Safe address as a `0x`-prefixed hex string; `0x` while the Safe is not deployed */
     suspend fun getCode(userWalletId: UserWalletId, network: Network): Either<Throwable, String>
 
+    suspend fun isSafeDeployed(userWalletId: UserWalletId, network: Network): Either<Throwable, Boolean> {
+        return getCode(userWalletId = userWalletId, network = network).map { code -> code != EMPTY_CODE }
+    }
+
     /** The Safe contract `nonce()`; only meaningful for a deployed Safe */
     suspend fun getContractNonce(userWalletId: UserWalletId, network: Network): Either<Throwable, BigInteger>
 
@@ -35,4 +39,8 @@ interface JointNetworkReader {
 
     /** `eth_call` to the Safe contract itself with [data] calldata; returns the raw `0x`-prefixed result */
     suspend fun callSafeContract(userWalletId: UserWalletId, network: Network, data: String): Either<Throwable, String>
+
+    companion object {
+        const val EMPTY_CODE = "0x"
+    }
 }
