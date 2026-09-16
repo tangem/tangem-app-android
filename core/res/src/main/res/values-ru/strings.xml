@@ -2144,7 +2144,7 @@
   <string name="tangempay_cashback_details_eu_excluded">Пока не начисляем кэшбэк за офлайн-покупки у продавцов из ЕС</string>
   <string name="tangempay_cashback_details_paid_in">Платим в %1$s</string>
   <string name="tangempay_cashback_details_tier">%1$s%% за все покупки по %2$s-картам, мин. покупка %3$s</string>
-  <string name="tangempay_cashback_earned_title">%1$s заработано в %2$s</string>
+  <string name="tangempay_cashback_earned_title">%1$s заработали в %2$s</string>
   <string name="tangempay_cashback_empty_subtitle">Накопленная сумма будет показана здесь</string>
   <string name="tangempay_cashback_empty_title">Начните тратить\nи получайте кэшбэк</string>
   <string name="tangempay_cashback_error_title">Не удалось загрузить страницу.\nНажмите, чтобы обновить</string>
