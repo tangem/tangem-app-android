@@ -64,7 +64,7 @@ internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM,
                     PositionDetailsFooter(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .onSizeChanged { footerHeight = it.height },
+                            .onSizeChanged { size -> footerHeight = size.height },
                     )
                 }
             },
