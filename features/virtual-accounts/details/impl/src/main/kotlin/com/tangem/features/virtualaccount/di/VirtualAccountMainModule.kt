@@ -1,8 +1,8 @@
 package com.tangem.features.virtualaccount.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.features.virtualaccount.DefaultVirtualAccountFeatureToggles
-import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
+import com.tangem.features.virtualaccount.DefaultMoneyAccountFeatureToggles
+import com.tangem.features.virtualaccount.MoneyAccountFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,9 +15,7 @@ internal object VirtualAccountMainModule {
 
     @Provides
     @Singleton
-    fun provideVirtualAccountFeatureToggles(
-        featureTogglesManager: FeatureTogglesManager,
-    ): VirtualAccountFeatureToggles {
-        return DefaultVirtualAccountFeatureToggles(featureTogglesManager = featureTogglesManager)
+    fun provideMoneyAccountFeatureToggles(featureTogglesManager: FeatureTogglesManager): MoneyAccountFeatureToggles {
+        return DefaultMoneyAccountFeatureToggles(featureTogglesManager = featureTogglesManager)
     }
 }
