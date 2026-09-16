@@ -36,6 +36,13 @@ internal class FeedHomeModel @Inject constructor(
 
     val pagesNavigation = PagesNavigation<FeedTabId>()
 
+    /** Silent on purpose: [selectTab] reports a section the *user* switched to. */
+    fun selectSection(id: FeedTabId) {
+        val index = contributors.indexOfFirst { it.id == id }.takeIf { it >= 0 } ?: return
+
+        pagesNavigation.select(index = index)
+    }
+
     fun selectTab(index: Int) {
         pagesNavigation.select(
             index = index,
