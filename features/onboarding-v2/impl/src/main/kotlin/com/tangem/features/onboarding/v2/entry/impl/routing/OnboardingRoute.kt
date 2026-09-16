@@ -8,6 +8,7 @@ import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 
 sealed class OnboardingRoute : Route {
 
@@ -46,6 +47,10 @@ sealed class OnboardingRoute : Route {
 
     data class AskBiometry(
         val modelCallbacks: AskBiometryComponent.ModelCallbacks,
+    ) : OnboardingRoute()
+
+    data class PushNotifications(
+        val modelCallbacks: PushNotificationsModelCallbacks,
     ) : OnboardingRoute()
 
     data class Done(
