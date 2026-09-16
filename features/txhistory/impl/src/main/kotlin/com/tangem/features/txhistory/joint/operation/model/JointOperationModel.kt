@@ -67,10 +67,14 @@ internal class JointOperationModel @Inject constructor(
     /** The use cases tolerate a failed refresh, so the cached operation may still miss this member's answer */
     private val localAnswer = MutableStateFlow<Answer?>(null)
 
+    /** The backend no longer has the operation (deleted here, or gone before the refusal); the cache may still */
+    private val isGoneLocally = MutableStateFlow(false)
+
     private val userActions = combine(
         flow = isSigning,
         flow2 = isRefusing,
         flow3 = localAnswer,
+        flow4 = isGoneLocally,
         transform = ::UserActions,
     )
 
@@ -106,7 +110,7 @@ internal class JointOperationModel @Inject constructor(
         flow4 = isBalanceHidden,
     ) { state, actions, canCreateContact, isBalanceHidden ->
         val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
-        if (answered == null || !answered.isReachable) return@combine JointOperationUM.Gone
+        if (answered == null || actions.isGone || !answered.isReachable) return@combine JointOperationUM.Gone
 
         JointOperationUM.Content(
             operation = operationConverter.convert(
@@ -176,7 +180,7 @@ internal class JointOperationModel @Inject constructor(
         clipboardManager.setText(text = recipient, isSensitive = false)
     }
 
-    /** The initiator's refusal deletes the operation, so the sheet closes with it; a member's decline stays on screen */
+    /** The use case tolerates a failed refresh, so a deletion (or an operation already gone) is recorded locally too */
     private fun refuse() {
         val operation = currentState ?: return
         if (isBusy) return
@@ -189,12 +193,19 @@ internal class JointOperationModel @Inject constructor(
                     network = params.currency.network,
                     operationId = params.operationId,
                 )
-                    .onRight { if (!operation.isInitiator) localAnswer.value = Answer.DECLINED }
-                    .onLeft(::showRejectError)
+                    .onRight { onRefused(operation) }
+                    .onLeft { error ->
+                        if (error is JointOperationRejectError.OperationNotFound) isGoneLocally.value = true
+                        showRejectError(error)
+                    }
             } finally {
                 isRefusing.value = false
             }
         }
+    }
+
+    private fun onRefused(operation: JointOperationState) {
+        if (operation.isInitiator) isGoneLocally.value = true else localAnswer.value = Answer.DECLINED
     }
 
     private fun showSignError(error: JointOperationSignError) {
@@ -218,5 +229,10 @@ internal class JointOperationModel @Inject constructor(
     }
 
     /** What this member is doing or has done on the sheet, on top of what the backend reports */
-    private data class UserActions(val isSigning: Boolean, val isRefusing: Boolean, val localAnswer: Answer?)
+    private data class UserActions(
+        val isSigning: Boolean,
+        val isRefusing: Boolean,
+        val localAnswer: Answer?,
+        val isGone: Boolean,
+    )
 }
