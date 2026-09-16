@@ -3,7 +3,6 @@ package com.tangem.domain.jointaccount.usecase
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
-import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
@@ -21,10 +20,9 @@ import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.coroutines.flow.firstOrNull
 import java.math.BigInteger
 
 /**
@@ -55,7 +53,9 @@ class CreateJointOperationUseCase(
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 
-        val jointAccount = findJointAccount(userWalletId = userWalletId, cryptoAccountId = account.accountId.value)
+        val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
+            JointOperationCreateError.AccountNotReady
+        }
         ensure(jointAccount.status == JointAccount.Status.ACTIVE) { JointOperationCreateError.AccountNotReady }
         val safeAddress = ensureNotNull(jointAccount.safeAddress) { JointOperationCreateError.AccountNotReady }
 
@@ -144,16 +144,6 @@ class CreateJointOperationUseCase(
                 signature = signature,
             )
             .bind()
-    }
-
-    private suspend fun Raise<JointOperationCreateError>.findJointAccount(
-        userWalletId: UserWalletId,
-        cryptoAccountId: String,
-    ): JointAccount {
-        val accounts = supplier(userWalletId = userWalletId).firstOrNull().orEmpty()
-        val own = accounts.firstOrNull { it.cryptoAccountId.equals(cryptoAccountId, ignoreCase = true) }
-
-        return ensureNotNull(own) { JointOperationCreateError.AccountNotReady }
     }
 
     /** Only the two known transfer shapes exist, and the Safe never calls itself */

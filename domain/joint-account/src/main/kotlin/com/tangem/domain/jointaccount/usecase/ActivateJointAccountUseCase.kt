@@ -2,12 +2,10 @@ package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
-import arrow.core.right
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
@@ -21,13 +19,11 @@ import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.flow.firstOrNull
 
 class ActivateJointAccountUseCase(
     private val repository: JointAccountRepository,
@@ -40,7 +36,12 @@ class ActivateJointAccountUseCase(
     suspend operator fun invoke(account: Account.Joint): Either<JointAccountActivationError, Unit> = either {
         val userWalletId = account.accountId.userWalletId
 
-        val jointAccount = findJointAccount(userWalletId = userWalletId, accountId = account.accountId).bind()
+        val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
+            refused(
+                error = JointAccountActivationError.AccountNotFound,
+                reason = "none of the wallet's joint accounts is the tapped one",
+            )
+        }
         ensure(jointAccount.status == JointAccount.Status.CONFIRMING) {
             refused(
                 error = JointAccountActivationError.NotReadyForActivation,
@@ -103,19 +104,6 @@ class ActivateJointAccountUseCase(
         // The account is active on the backend, so a failed refresh must not fail the activation: the list
         // catches up on the next fetch, and reporting an error here would push the user into a pointless retry
         fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).getOrElse {}
-    }
-
-    private suspend fun findJointAccount(
-        userWalletId: UserWalletId,
-        accountId: AccountId,
-    ): Either<JointAccountActivationError, JointAccount> {
-        val accounts = supplier(userWalletId = userWalletId).firstOrNull().orEmpty()
-        val own = accounts.firstOrNull { it.cryptoAccountId.equals(accountId.value, ignoreCase = true) }
-
-        return own?.right() ?: refused(
-            error = JointAccountActivationError.AccountNotFound,
-            reason = "the wallet holds ${accounts.size} joint accounts and none of them is the tapped one",
-        ).left()
     }
 
     /**
