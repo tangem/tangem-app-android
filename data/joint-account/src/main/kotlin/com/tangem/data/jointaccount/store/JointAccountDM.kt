@@ -33,6 +33,7 @@ internal data class JointAccountDM(
         val status: String,
         val initiator: String?,
         val signatures: List<SignatureDM>,
+        val createdAt: String? = null,
         val to: String,
         val value: String,
         val data: String,
