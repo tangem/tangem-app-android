@@ -1363,6 +1363,55 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
+        fun `GIVEN the market stopped accepting orders WHEN place clicked THEN nothing is signed AND the user is told`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                    createPosition().copy(isAcceptingOrders = false).right()
+                model.onScreenHidden()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
+                verify { messageSender.send(any()) }
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the position is gone WHEN place clicked THEN nothing is signed AND the user is told`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            model.onScreenHidden()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            verify { messageSender.send(any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the position cannot be re-read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
             // Arrange
             coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()

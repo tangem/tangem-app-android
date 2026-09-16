@@ -238,8 +238,11 @@ internal class PlacePredictionModel @Inject constructor(
         when (val power = spendingPower(addresses = addresses, frozen = frozen)) {
             is SpendingPower.Sufficient -> Unit
             is SpendingPower.Insufficient -> {
-                val reason = power.reason
-                if (reason == null) returnToIdle() else showPlaceFailure(reason = reason)
+                returnToIdle()
+                return
+            }
+            is SpendingPower.Refused -> {
+                showPlaceFailure(reason = power.reason)
                 return
             }
             is SpendingPower.Unknown -> {
@@ -306,7 +309,7 @@ internal class PlacePredictionModel @Inject constructor(
 
         uiState.update(SetBalanceTransformer(balance = balance.balance))
 
-        return if (balance.balance >= required) SpendingPower.Sufficient else SpendingPower.Insufficient(reason = null)
+        return if (balance.balance >= required) SpendingPower.Sufficient else SpendingPower.Insufficient
     }
 
     private suspend fun sharesPower(
@@ -315,16 +318,23 @@ internal class PlacePredictionModel @Inject constructor(
         required: BigDecimal,
     ): SpendingPower {
         val position = withContext(dispatchers.default) {
-            positionsRepository.getPosition(addresses = addresses, id = positionId).getOrNull()
-        } ?: return SpendingPower.Unknown
+            positionsRepository.getPosition(addresses = addresses, id = positionId)
+        }.fold(
+            ifLeft = { return SpendingPower.Unknown },
+            ifRight = { it ?: return SpendingPower.Refused(reason = "Position is no longer held") },
+        )
 
         uiState.update(SetPositionTransformer(position = position))
+
+        if (!position.isAcceptingOrders) {
+            return SpendingPower.Refused(reason = "Market stopped accepting orders before signing")
+        }
 
         val available = SharesCalculator.available(held = position.size)
         return if (available >= required) {
             SpendingPower.Sufficient
         } else {
-            SpendingPower.Insufficient(reason = "Position holds $available shares, the quote was for $required")
+            SpendingPower.Refused(reason = "Position holds $available shares, the quote was for $required")
         }
     }
 
@@ -332,8 +342,10 @@ internal class PlacePredictionModel @Inject constructor(
 
         data object Sufficient : SpendingPower
 
-        /** @property reason what to log when the shortfall is not already on the screen, or `null` when it is */
-        data class Insufficient(val reason: String?) : SpendingPower
+        data object Insufficient : SpendingPower
+
+        /** @property reason what the exported log says when the order is turned away before a signature */
+        data class Refused(val reason: String) : SpendingPower
 
         data object Unknown : SpendingPower
     }
@@ -565,17 +577,28 @@ internal class PlacePredictionModel @Inject constructor(
 
     private fun loadPosition(params: PlacePredictionComponent.Params.Sell) {
         modelScope.launch {
-            val position = withContext(dispatchers.default) {
-                val addresses = derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
-                    ?: return@withContext null
-
-                positionsRepository.getPosition(addresses = addresses, id = params.positionId).getOrNull()
+            val addresses = withContext(dispatchers.default) {
+                derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
             }
-
-            if (position == null) {
-                logger.e("Position could not be read; the screen keeps nothing sellable")
+            if (addresses == null) {
+                logger.e("No stored addresses; the screen keeps nothing sellable")
                 return@launch
             }
+
+            val position = withContext(dispatchers.default) {
+                positionsRepository.getPosition(addresses = addresses, id = params.positionId)
+            }.fold(
+                ifLeft = { error ->
+                    logger.e("Position could not be read, the screen keeps nothing sellable: $error")
+                    return@launch
+                },
+                ifRight = { position ->
+                    position ?: run {
+                        logger.e("Position is not held or not indexed yet; the screen keeps nothing sellable")
+                        return@launch
+                    }
+                },
+            )
 
             isNegRiskMarket = position.isNegRisk
             isMarketLive = position.isLive
