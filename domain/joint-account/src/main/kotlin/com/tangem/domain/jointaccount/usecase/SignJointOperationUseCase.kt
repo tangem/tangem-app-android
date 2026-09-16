@@ -202,6 +202,10 @@ class SignJointOperationUseCase(
         )
 
         ensure(verdict != JointOperationBlockaidGate.Verdict.MALICIOUS) { JointOperationSignError.Malicious }
+        // No verdict is not a pass: a co-signer cannot read the payload, so an unverified one is not signed
+        ensure(verdict != JointOperationBlockaidGate.Verdict.UNKNOWN) {
+            JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict"))
+        }
     }
 
     private suspend fun Raise<JointOperationSignError>.findJointAccount(
