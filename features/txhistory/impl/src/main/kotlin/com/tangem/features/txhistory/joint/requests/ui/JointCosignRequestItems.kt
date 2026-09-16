@@ -13,7 +13,12 @@ internal fun LazyListScope.jointCosignRequestItems(state: JointCosignRequestsUM)
     if (state.items.isEmpty()) return
 
     item(key = "joint_cosign_requests_header", contentType = "joint_cosign_requests_header") {
-        TxHistoryDateHeader(title = stringResourceSafe(R.string.transaction_history_pending))
+        val title = if (state.isSending) {
+            R.string.joint_operation_sending_to_network
+        } else {
+            R.string.transaction_history_pending
+        }
+        TxHistoryDateHeader(title = stringResourceSafe(title))
     }
     items(
         items = state.items,

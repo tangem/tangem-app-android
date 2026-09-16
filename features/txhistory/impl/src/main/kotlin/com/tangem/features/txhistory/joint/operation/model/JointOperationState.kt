@@ -12,6 +12,8 @@ import java.math.BigInteger
  * @property ownAddress this member's owner address, `null` where it is not resolvable here
 
  * report one
+ * @property isSending  the threshold is reached and the operation is on its way to the network; nothing to sign or
+ * refuse any more
  */
 internal data class JointOperationState(
     val account: Account.Joint,
@@ -24,6 +26,7 @@ internal data class JointOperationState(
     val canSign: Boolean,
     val ownAddress: String?,
     val initiator: String?,
+    val isSending: Boolean = false,
 ) {
 
     /** The initiator deletes the operation, every other member declines it */
