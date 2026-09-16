@@ -381,6 +381,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.Contact -> ContactSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+        is ContentSubtitle.FeeFor -> FeeForSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
     }
 }
@@ -446,6 +447,34 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
         color = secondary,
         highlights = listOfNotNull(subtitle.symbol, ownerName),
         highlightColor = valueColor,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Fee-only counterparty subtitle: "Send {tokenIcon} {SYMBOL}". Only the ticker is highlighted — the "Send" literal
+ * belongs to the template a translator controls, so its wording and word order stay localizable.
+ */
+@Composable
+private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, modifier: Modifier = Modifier) {
+    val secondary = TangemTheme.colors3.text.secondary
+
+    InlineImagesText(
+        template = stringResourceSafe(R.string.transaction_history_fee_sending_asset, subtitle.symbol),
+        icons = listOf {
+            subtitle.icon?.let { iconState ->
+                CurrencyIcon(
+                    state = iconState,
+                    shouldDisplayNetwork = false,
+                    withFixedSize = false,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        },
+        color = secondary,
+        highlights = listOf(subtitle.symbol),
+        highlightColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary,
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     )
