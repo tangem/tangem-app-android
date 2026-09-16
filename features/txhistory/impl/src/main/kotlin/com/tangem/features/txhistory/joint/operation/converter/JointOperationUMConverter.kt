@@ -13,7 +13,11 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_24
+import com.tangem.core.ui.res.generated.icons.ic_cross_24
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
+import com.tangem.core.ui.res.generated.icons.ic_trash_bin_24
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_24
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -22,6 +26,7 @@ import com.tangem.features.txhistory.joint.operation.model.JointOperationState
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import com.tangem.core.ui.R as CoreUiR
 
@@ -31,6 +36,8 @@ internal class JointOperationUMConverter(
     private val onSignClick: () -> Unit,
     private val onSignersClick: () -> Unit,
     private val onCopyRecipientClick: () -> Unit,
+    private val onCreateContactClick: () -> Unit,
+    private val onRefuseClick: () -> Unit,
 ) : Converter<JointOperationUMConverter.Input, TxHistoryDetailsUM.SingleAsset> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -39,7 +46,7 @@ internal class JointOperationUMConverter(
         val state = value.state
 
         return TxHistoryDetailsUM.SingleAsset(
-            header = header(),
+            header = header(menu = menu(state = state, canCreateContact = value.canCreateContact)),
             isBalanceHidden = value.isBalanceHidden,
             amountBlock = TxHistoryDetailsUM.AmountBlockUM(
                 icon = TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency)),
@@ -61,25 +68,62 @@ internal class JointOperationUMConverter(
                 progress = SignatureProgressUM(collected = state.collected, total = state.membersCount),
                 onInfoClick = onSignersClick,
             ),
-            cosignAction = action(state = state, isSigning = value.isSigning, hasAnswered = value.hasAnswered),
+            cosignAction = action(
+                state = state,
+                isSigning = value.isSigning,
+                isRefusing = value.isRefusing,
+                hasAnswered = value.hasAnswered,
+            ),
         )
     }
 
     /** Neutral icon and title by design: the warning-coloured subtitle alone says the operation is pending */
-    private fun header() = TxHistoryDetailsUM.HeaderUM(
+    private fun header(menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>) = TxHistoryDetailsUM.HeaderUM(
         icon = TxIcon.Vector(Icons.ic_arrow_up_20),
         status = TransactionItemUM.Content.Status.Confirmed,
         title = resourceReference(R.string.common_send),
         subtitle = resourceReference(CoreUiR.string.transaction_history_pending),
         subtitleStyle = TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning,
+        menu = menu,
     )
+
+    private fun menu(state: JointOperationState, canCreateContact: Boolean) = buildList {
+        add(
+            TxHistoryDetailsUM.MenuItemUM(
+                icon = Icons.ic_copy_24,
+                title = resourceReference(CoreUiR.string.common_copy_address),
+                action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(onCopyRecipientClick),
+            ),
+        )
+        if (canCreateContact) {
+            add(
+                TxHistoryDetailsUM.MenuItemUM(
+                    icon = Icons.ic_user_plus_24,
+                    title = resourceReference(CoreUiR.string.address_book_add_contact),
+                    action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(onCreateContactClick),
+                ),
+            )
+        }
+        if (state.ownAnswer == Answer.DECLINED) return@buildList
+        add(
+            TxHistoryDetailsUM.MenuItemUM(
+                icon = if (state.isInitiator) Icons.ic_trash_bin_24 else Icons.ic_cross_24,
+                title = resourceReference(
+                    if (state.isInitiator) CoreUiR.string.common_delete else CoreUiR.string.common_decline,
+                ),
+                isDestructive = true,
+                action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(onRefuseClick),
+            ),
+        )
+    }.toImmutableList()
 
     private fun action(
         state: JointOperationState,
         isSigning: Boolean,
+        isRefusing: Boolean,
         hasAnswered: Boolean,
     ): TxHistoryDetailsUM.CosignActionUM {
-        val canSign = state.canSign && !hasAnswered
+        val canSign = state.canSign && !hasAnswered && !isRefusing
 
         val (buttonText, caption) = when {
             state.ownAnswer == Answer.DECLINED ->
@@ -96,7 +140,7 @@ internal class JointOperationUMConverter(
                 formatArgs = wrappedList(state.threshold, state.membersCount),
             ),
             isEnabled = canSign,
-            isLoading = isSigning,
+            isLoading = isSigning || isRefusing,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_20).takeIf { canSign },
             onClick = onSignClick,
         )
@@ -125,7 +169,9 @@ internal class JointOperationUMConverter(
     data class Input(
         val state: JointOperationState,
         val isSigning: Boolean,
+        val isRefusing: Boolean,
         val hasAnswered: Boolean,
+        val canCreateContact: Boolean,
         val isBalanceHidden: Boolean,
     )
 }
