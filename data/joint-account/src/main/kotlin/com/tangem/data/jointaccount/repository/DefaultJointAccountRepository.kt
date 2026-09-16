@@ -15,9 +15,11 @@ import com.tangem.data.jointaccount.converter.JoinJointAccountRequestConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointAccountInvitePreviewDtoConverter
 import com.tangem.data.jointaccount.converter.JointOperationCreateErrorConverter
+import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
+import com.tangem.store.datasource.jointaccount.models.RejectJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
@@ -28,6 +30,8 @@ import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
+import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -53,6 +57,7 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val logger = TangemLogger.withTag(tag = TAG)
     private val createErrorConverter = JointOperationCreateErrorConverter()
     private val signErrorConverter = JointOperationSignErrorConverter()
+    private val rejectErrorConverter = JointOperationRejectErrorConverter()
 
     override suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int {
         return withContext(dispatchers.io) {
@@ -272,6 +277,35 @@ internal class DefaultJointAccountRepository @Inject constructor(
                 Unit.right()
             },
             onError = { error -> signErrorConverter.convert(error).left() },
+        )
+    }
+
+    override suspend fun rejectOperation(
+        userWalletId: UserWalletId,
+        payload: JointOperationRejectPayload,
+        signature: String,
+    ): Either<JointOperationRejectError, Unit> = withContext(dispatchers.io) {
+        val safeTxDto = Either
+            .catch { safeTxConverter.convertBack(payload.safeTx) }
+            .getOrElse { return@withContext JointOperationRejectError.Failed(cause = it).left() }
+
+        safeApiCall(
+            call = {
+                jointAccountApi.rejectJointOperation(
+                    walletId = userWalletId.stringValue,
+                    operationId = payload.operationId,
+                    body = RejectJointOperationRequest(
+                        payload = RejectJointOperationRequest.Payload(
+                            operationId = payload.operationId,
+                            safeTx = safeTxDto,
+                        ),
+                        signature = signature,
+                    ),
+                ).bind()
+
+                Unit.right()
+            },
+            onError = { error -> rejectErrorConverter.convert(error).left() },
         )
     }
 
