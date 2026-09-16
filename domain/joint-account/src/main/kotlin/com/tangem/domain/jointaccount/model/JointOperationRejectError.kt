@@ -11,7 +11,5 @@ sealed interface JointOperationRejectError {
     /** The signature recovers to an address that is not a member of the account */
     data object NotAMember : JointOperationRejectError
 
-    data object UserCancelled : JointOperationRejectError
-
     data class Failed(val cause: Throwable) : JointOperationRejectError
 }
