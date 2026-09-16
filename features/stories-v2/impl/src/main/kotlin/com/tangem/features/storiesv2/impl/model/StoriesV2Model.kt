@@ -15,7 +15,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.features.storiesv2.StoriesV2Component
 import com.tangem.features.storiesv2.StoriesV2Result
@@ -25,6 +24,7 @@ import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorStage
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
+import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -184,7 +185,7 @@ internal class StoriesV2Model @Inject constructor(
             composition = composition,
             source = params.source,
             analytics = analytics,
-            onHaptic = { hapticManager.performOneTime(TangemHapticEffect.OneTime.HeavyClick) },
+            onHaptic = ::playHaptic,
             onAction = params.onAction,
             onResult = params.onResult,
         )
@@ -205,6 +206,15 @@ internal class StoriesV2Model @Inject constructor(
     }
 
     /** Decodes on IO; the snapshot state map is only touched from the model's main-immediate dispatcher. */
+    private fun playHaptic(haptic: StoryV2Haptic) {
+        modelScope.launch {
+            repeat(haptic.pulses) { pulse ->
+                if (pulse > 0) delay(haptic.pulseIntervalMs)
+                hapticManager.performOneTime(haptic.effect)
+            }
+        }
+    }
+
     private fun prefetchPosters(composition: StoryV2Composition) {
         modelScope.launch {
             val ids = composition.slides
