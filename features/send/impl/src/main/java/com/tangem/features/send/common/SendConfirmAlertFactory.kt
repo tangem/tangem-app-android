@@ -63,7 +63,6 @@ internal class SendConfirmAlertFactory @Inject constructor(
         )
     }
 
-    /** Nothing was created and no funds moved: one "Got it" is all the dialog needs */
     private fun sendJointNotice(title: Int, message: Int) {
         messageSender.send(
             DialogMessage(
