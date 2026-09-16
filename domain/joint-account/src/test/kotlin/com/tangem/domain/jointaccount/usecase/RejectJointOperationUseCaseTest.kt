@@ -3,17 +3,14 @@ package com.tangem.domain.jointaccount.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountSignResult
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
@@ -23,7 +20,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
-import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -35,7 +31,6 @@ import java.math.BigInteger
 internal class RejectJointOperationUseCaseTest {
 
     private val repository: JointAccountRepository = mockk()
-    private val signer: JointAccountSigner = mockk()
     private val fetcher: SingleJointAccountListFetcher = mockk()
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val networkReader: JointNetworkReader = mockk()
@@ -43,7 +38,6 @@ internal class RejectJointOperationUseCaseTest {
 
     private val useCase = RejectJointOperationUseCase(
         repository = repository,
-        signer = signer,
         fetcher = fetcher,
         supplier = supplier,
         networkReader = networkReader,
@@ -53,55 +47,37 @@ internal class RejectJointOperationUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, signer, fetcher, supplier, networkReader)
+        clearMocks(repository, fetcher, supplier, networkReader)
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns flowOf(listOf(jointAccount()))
         coEvery { networkReader.getChainId(network) } returns CHAIN_ID.right()
-        coEvery { signer.sign(any(), any()) } returns signResult().right()
-        coEvery { repository.rejectOperation(any(), any(), any()) } returns Unit.right()
+        coEvery { repository.rejectOperation(any(), any()) } returns Unit.right()
     }
 
     @Test
-    fun `GIVEN awaiting operation WHEN invoke THEN it is signed sent and the list refreshed in order`() = runTest {
-        // Arrange
-        val payload = slot<JointOperationRejectPayload>()
-
+    fun `GIVEN awaiting operation WHEN invoke THEN the shown operation is sent and the list refreshed after`() = runTest {
         // Act
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerifyOrder {
-            signer.sign(userWalletId = MockAccounts.userWalletId, input = any())
             repository.rejectOperation(
                 userWalletId = MockAccounts.userWalletId,
-                payload = capture(payload),
-                signature = SIGNATURE,
+                payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = operation().safeTx),
             )
             fetcher.invoke(params = SingleJointAccountListFetcher.Params(userWalletId = MockAccounts.userWalletId))
         }
-        assertThat(payload.captured).isEqualTo(
-            JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = operation().safeTx),
-        )
     }
 
     @Test
-    fun `GIVEN the owner key index WHEN invoke THEN the signature is asked at that derivation`() = runTest {
-        // Act
-        useCase(account = account, network = network, operationId = OPERATION_ID)
-
-        // Assert
-        coVerify { signer.sign(any(), match { it.derivationIndex.value == account.ownerKeyIndex.value }) }
-    }
-
-    @Test
-    fun `GIVEN the slot holds another operation WHEN invoke THEN OperationNotFound and nothing is signed`() = runTest {
+    fun `GIVEN the slot holds another operation WHEN invoke THEN OperationNotFound and nothing is sent`() = runTest {
         // Act
         val actual = useCase(account = account, network = network, operationId = "another-operation")
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationRejectError.OperationNotFound.left())
-        coVerify(exactly = 0) { signer.sign(any(), any()) }
+        coVerify(exactly = 0) { repository.rejectOperation(any(), any()) }
     }
 
     @Test
@@ -115,11 +91,11 @@ internal class RejectJointOperationUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationRejectError.ThresholdReached.left())
-        coVerify(exactly = 0) { signer.sign(any(), any()) }
+        coVerify(exactly = 0) { repository.rejectOperation(any(), any()) }
     }
 
     @Test
-    fun `GIVEN operation status unknown WHEN invoke THEN Failed and nothing is signed`() = runTest {
+    fun `GIVEN operation status unknown WHEN invoke THEN Failed and nothing is sent`() = runTest {
         // Arrange
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount(operation = operation(status = JointOperation.Status.UNKNOWN))))
@@ -129,27 +105,13 @@ internal class RejectJointOperationUseCaseTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(JointOperationRejectError.Failed::class.java)
-        coVerify(exactly = 0) { signer.sign(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN the card tap is dismissed WHEN invoke THEN UserCancelled and nothing is sent`() = runTest {
-        // Arrange
-        coEvery { signer.sign(any(), any()) } returns TangemSdkError.UserCancelled().left()
-
-        // Act
-        val actual = useCase(account = account, network = network, operationId = OPERATION_ID)
-
-        // Assert
-        assertThat(actual).isEqualTo(JointOperationRejectError.UserCancelled.left())
-        coVerify(exactly = 0) { repository.rejectOperation(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.rejectOperation(any(), any()) }
     }
 
     @Test
     fun `GIVEN the backend refuses WHEN invoke THEN its error comes back and the list is not refreshed`() = runTest {
         // Arrange
-        coEvery { repository.rejectOperation(any(), any(), any()) } returns
-            JointOperationRejectError.ThresholdReached.left()
+        coEvery { repository.rejectOperation(any(), any()) } returns JointOperationRejectError.ThresholdReached.left()
 
         // Act
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID)
@@ -170,13 +132,6 @@ internal class RejectJointOperationUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
     }
-
-    private fun signResult() = JointAccountSignResult(
-        ownerAddress = ALICE,
-        canonicalPayload = ByteArray(0),
-        signature = SIGNATURE,
-        derivedKeys = emptyMap(),
-    )
 
     private fun jointAccount(operation: JointOperation = operation()): JointAccount = JointAccount(
         cryptoAccountId = account.accountId.value,
@@ -217,7 +172,6 @@ internal class RejectJointOperationUseCaseTest {
         const val ALICE = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
         const val RECIPIENT = "0x1111111111111111111111111111111111111111"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
-        const val SIGNATURE = "0xdeadbeef"
         const val OPERATION_ID = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708"
         const val CHAIN_ID = 137L
     }
