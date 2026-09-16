@@ -71,7 +71,8 @@ internal class WalletActivationChildFactory @Inject constructor(
                 context = childContext,
                 params = PushNotificationsParams(
                     modelCallbacks = model.pushNotificationsCallbacks,
-                    source = AppRoute.PushNotification.Source.Onboarding,
+                    source = AppRoute.PushNotification.Source.HotCreation,
+                    isBackHandledByHost = true,
                 ),
             )
             is WalletActivationRoute.SetupFinished -> MobileWalletSetupFinishedComponent(

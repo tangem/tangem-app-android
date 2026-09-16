@@ -31,7 +31,7 @@ internal class MultiWalletUpgradeWalletComponent(
             params.innerNavigation.update {
                 it.copy(
                     stackSize = 2,
-                    stackMaxSize = 9,
+                    stackMaxSize = 10,
                 )
             }
 
