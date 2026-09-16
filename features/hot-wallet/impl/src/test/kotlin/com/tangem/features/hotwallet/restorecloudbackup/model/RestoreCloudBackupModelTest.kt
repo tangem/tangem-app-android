@@ -11,6 +11,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
@@ -18,6 +19,7 @@ import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -45,11 +47,18 @@ internal class RestoreCloudBackupModelTest {
 
     private val restoreCloudBackupUseCase: RestoreCloudBackupUseCase = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val getBackupPasswordUseCase: GetBackupPasswordUseCase = mockk {
+        coEvery { this@mockk.invoke() } returns null
+    }
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk {
+        every { isPasswordManagerEnabled } returns true
+    }
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val mnemonicRepository: MnemonicRepository = mockk()
     private val hotWalletImporter: HotWalletImporter = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val callbacks: RestoreCloudBackupComponent.ModelCallbacks = mockk(relaxed = true)
+    private var model: RestoreCloudBackupModel? = null
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -107,6 +116,58 @@ internal class RestoreCloudBackupModelTest {
         assertThat(state).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
         assertThat((state as RestoreCloudBackupUM.EnterPassword).walletName).isEqualTo("My Wallet")
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a stored password WHEN EnterPassword opens THEN it is filled in from the manager`() = runTest {
+        // Arrange
+        coEvery { getBackupPasswordUseCase() } returns "Str0ng!Pass".toCharArray()
+        val holder = holderOf(backupInfo)
+
+        // Act
+        val model = createModel(this, holder)
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.uiState.value as RestoreCloudBackupUM.EnterPassword
+        assertThat(state.password).isEqualTo("Str0ng!Pass")
+        assertThat(state.isRestoreEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the password manager is off WHEN EnterPassword opens THEN it is never asked`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isPasswordManagerEnabled } returns false
+        val holder = holderOf(backupInfo)
+
+        // Act
+        val model = createModel(this, holder)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((model.uiState.value as RestoreCloudBackupUM.EnterPassword).password).isEmpty()
+        coVerify(exactly = 0) { getBackupPasswordUseCase() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the user typed while the picker was up WHEN it answers THEN the typed password stays`() = runTest {
+        // Arrange
+        val holder = holderOf(backupInfo)
+        coEvery { getBackupPasswordUseCase() } coAnswers {
+            (model!!.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange("typed-by-hand")
+            "Str0ng!Pass".toCharArray()
+        }
+
+        // Act
+        model = createModel(this, holder)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((model!!.uiState.value as RestoreCloudBackupUM.EnterPassword).password)
+            .isEqualTo("typed-by-hand")
+        model!!.onDestroy()
     }
 
     @Test
@@ -448,6 +509,8 @@ internal class RestoreCloudBackupModelTest {
             hotWalletImporter = hotWalletImporter,
             uiMessageSender = uiMessageSender,
             analyticsEventHandler = analyticsEventHandler,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
+            getBackupPasswordUseCase = getBackupPasswordUseCase,
         )
     }
 
