@@ -16,8 +16,8 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
@@ -267,7 +267,7 @@ internal class CollectiblesMainModelTest {
 
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,
-            vaultBalance = CollectiblesVaultBalance(usdcAmount = BigDecimal("25.5"), usdcFiatRate = BigDecimal.ONE),
+            vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal("25.5"), fiatRate = BigDecimal.ONE),
         )
     }
 

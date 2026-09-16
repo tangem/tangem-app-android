@@ -8,6 +8,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -34,7 +35,6 @@ import io.mockk.every
 import io.mockk.mockk
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.TotalFiatBalance
 import io.mockk.verify
 import kotlinx.coroutines.flow.Flow
@@ -167,7 +167,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             // Arrange
             val value = CollectiblesAccountStatusValue.Onboarded(
                 source = StatusSource.ACTUAL,
-                vaultBalance = CollectiblesVaultBalance(usdcAmount = BigDecimal.TEN, usdcFiatRate = BigDecimal.ONE),
+                vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal.TEN, fiatRate = BigDecimal.ONE),
             )
             val producer = createProducer(
                 accounts = accountListWithSpecialAccounts().plus(Account.Collectibles(walletId)).getOrNull()!!,
