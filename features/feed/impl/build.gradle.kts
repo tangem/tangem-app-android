@@ -112,9 +112,6 @@ dependencies {
     implementation(tangemDeps.blockchain)
 
     /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
     testImplementation(projects.domain.wallets.models)
 }
