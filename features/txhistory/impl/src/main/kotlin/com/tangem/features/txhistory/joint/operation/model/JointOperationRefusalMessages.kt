@@ -39,8 +39,8 @@ internal class JointOperationRefusalMessages(private val onConfirm: () -> Unit) 
     }
 
     /**
-     * An operation that is already gone closes the sheet by itself. The threshold text is inline until the agreed
-     * keys land with the error-texts change.
+     * An operation the backend has already lost needs no dialog: the model closes the sheet. The threshold text is
+     * inline until the agreed keys land with the error-texts change.
      */
     fun error(error: JointOperationRejectError): DialogMessage? = when (error) {
         JointOperationRejectError.OperationNotFound -> null
