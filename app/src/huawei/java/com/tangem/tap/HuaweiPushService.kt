@@ -3,6 +3,7 @@ package com.tangem.tap
 import android.os.Bundle
 import com.huawei.hms.push.HmsMessageService
 import com.huawei.hms.push.RemoteMessage
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.tap.common.pushes.PushMessageHandler
 import com.tangem.tap.common.pushes.PushNotificationDelegate
@@ -16,8 +17,11 @@ class HuaweiPushService : HmsMessageService() {
     @Inject
     internal lateinit var pushMessageHandler: PushMessageHandler
 
+    @Inject
+    internal lateinit var analyticsExceptionHandler: AnalyticsExceptionHandler
+
     private val pushNotificationDelegate: PushNotificationDelegate by lazy {
-        PushNotificationDelegate(applicationContext)
+        PushNotificationDelegate(applicationContext, analyticsExceptionHandler)
     }
 
     override fun onNewToken(token: String?, bundle: Bundle?) {

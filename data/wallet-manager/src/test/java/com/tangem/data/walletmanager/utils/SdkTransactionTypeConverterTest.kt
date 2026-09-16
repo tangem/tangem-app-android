@@ -2,7 +2,6 @@ package com.tangem.data.walletmanager.utils
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -66,12 +65,12 @@ internal class SdkTransactionTypeConverterTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Approve {
 
-        private val usdt = Token(
-            name = "Tether",
-            symbol = "USDT",
-            contractAddress = USDT_CONTRACT,
-            decimals = 6,
+        private val usdt = currencyFactory.createToken(
+            blockchain = Blockchain.Ethereum,
             id = "tether",
+            contractAddress = USDT_CONTRACT,
+            symbol = "USDT",
+            decimals = 6,
         )
 
         @ParameterizedTest
@@ -192,7 +191,7 @@ internal class SdkTransactionTypeConverterTest {
 
     private fun createConverter(
         currency: CryptoCurrency,
-        networkTokens: Set<Token> = emptySet(),
+        networkTokens: Set<CryptoCurrency.Token> = emptySet(),
     ) = SdkTransactionTypeConverter(
         smartContractMethods = mapOf(
             GASLESS_METHOD_ID to SmartContractMethod(info = null, source = null, name = "gaslessTransaction"),
@@ -235,7 +234,7 @@ internal class SdkTransactionTypeConverterTest {
 
     internal data class ApproveModel(
         val currency: CryptoCurrency,
-        val networkTokens: Set<Token>,
+        val networkTokens: Set<CryptoCurrency.Token>,
         val tokenContract: String,
         val rawAllowanceHex: String,
         val expected: TxInfo.TransactionType,

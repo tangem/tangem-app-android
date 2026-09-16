@@ -36,6 +36,12 @@ class ChooseTokenBottomSheetPageObject(semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    /** The account group header the selector draws above each account's tokens. */
+    fun accountHeader(accountName: String): KNode = child {
+        hasText(accountName)
+        useUnmergedTree = true
+    }
+
     fun tokenWithTitle(tokenTitle: String): KNode = child {
         hasTestTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
         hasAnyDescendant(withTestTag(TokenElementsTestTags.TOKEN_TITLE))

@@ -17,11 +17,13 @@ internal sealed class ConfirmUM {
         val isShowTapHelp: Boolean,
         val sendingFooter: TextReference,
         val notifications: ImmutableList<NotificationUM>,
+        val signaturesUM: SendSignaturesUM? = null,
     ) : ConfirmUM()
 
     data class Success(
         val transactionDate: Long,
         val txUrl: String,
+        val signaturesUM: SendSignaturesUM? = null,
     ) : ConfirmUM() {
         override val isPrimaryButtonEnabled: Boolean = true
     }

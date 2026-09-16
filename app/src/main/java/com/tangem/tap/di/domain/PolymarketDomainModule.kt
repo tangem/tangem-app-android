@@ -1,14 +1,22 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
+import com.tangem.domain.polymarket.PredictionDepositAddressWriter
+import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
+import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
+import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
@@ -19,11 +27,14 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCa
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
+import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
+import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,6 +43,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal object PolymarketDomainModule {
 
     @Provides
@@ -146,6 +158,46 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
+    fun provideBuildPredictionOrderDraftUseCase(): BuildPredictionOrderDraftUseCase = BuildPredictionOrderDraftUseCase()
+
+    @Provides
+    @Singleton
+    fun provideValidatePredictionOrderUseCase(): ValidatePredictionOrderUseCase = ValidatePredictionOrderUseCase()
+
+    @Provides
+    @Singleton
+    fun provideSignPredictionOrderInteractor(
+        buildDraft: BuildPredictionOrderDraftUseCase,
+        validateOrder: ValidatePredictionOrderUseCase,
+        signer: PolymarketTypedDataSigner,
+    ): SignPredictionOrderInteractor = SignPredictionOrderInteractor(
+        buildDraft = buildDraft,
+        validateOrder = validateOrder,
+        signer = signer,
+    )
+
+    @Provides
+    @Singleton
+    fun providePlacePredictionOrderUseCase(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
+    fun provideAwaitDelayedPredictionOrderUseCase(
+        polymarketRepository: PolymarketRepository,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): AwaitDelayedPredictionOrderUseCase = AwaitDelayedPredictionOrderUseCase(
+        polymarketRepository = polymarketRepository,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
     fun provideGetPolymarketBalanceInteractor(
         polymarketRepository: PolymarketRepository,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
@@ -168,7 +220,7 @@ internal object PolymarketDomainModule {
         submitApprovals: SubmitApprovalsUseCase,
         syncBalanceAllowance: SyncBalanceAllowanceUseCase,
         polymarketOnboardedStore: PolymarketOnboardedStore,
-        checkGeoblock: CheckPolymarketGeoblockUseCase,
+        predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
@@ -180,6 +232,30 @@ internal object PolymarketDomainModule {
         submitApprovals = submitApprovals,
         syncBalanceAllowance = syncBalanceAllowance,
         polymarketOnboardedStore = polymarketOnboardedStore,
-        checkGeoblock = checkGeoblock,
+        predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+    )
+
+    @Provides
+    @Singleton
+    fun provideRefreshPredictionDepositRequisitesInteractor(
+        bridgeRepository: PolymarketBridgeRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        requisitesStore: PredictionDepositRequisitesStore,
+        depositAddressWriter: PredictionDepositAddressWriter,
+    ): RefreshPredictionDepositRequisitesInteractor = RefreshPredictionDepositRequisitesInteractor(
+        bridgeRepository = bridgeRepository,
+        deriveAddresses = deriveAddresses,
+        requisitesStore = requisitesStore,
+        depositAddressWriter = depositAddressWriter,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionWithdrawDestinationsUseCase(
+        bridgeRepository: PolymarketBridgeRepository,
+        collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
+    ): GetPredictionWithdrawDestinationsUseCase = GetPredictionWithdrawDestinationsUseCase(
+        bridgeRepository = bridgeRepository,
+        collateralCurrencyFactory = collateralCurrencyFactory,
     )
 }

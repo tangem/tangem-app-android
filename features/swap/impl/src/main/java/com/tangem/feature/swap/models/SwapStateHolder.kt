@@ -93,6 +93,7 @@ data class SwapButton(
     val isEnabled: Boolean,
     val mode: Mode = Mode.SWAP,
     val isHoldToConfirm: Boolean = false,
+    val title: TextReference? = null,
     val onClick: () -> Unit,
 ) {
     enum class Mode {

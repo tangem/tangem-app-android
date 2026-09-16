@@ -45,6 +45,7 @@ interface CustomerOrderRepository {
         targetTariffPlanId: String? = null,
         transitionType: TangemPayTariffPlanTransition.Type? = null,
         chainId: Int? = null,
+        deeplinkValue: String? = null,
     ): Either<VisaApiError, Order>
 
     suspend fun createPlasticIssueOrder(

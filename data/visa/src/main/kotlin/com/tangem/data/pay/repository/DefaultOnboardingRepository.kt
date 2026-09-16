@@ -157,38 +157,55 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return customerInfoStore.get().value[userWalletId]
     }
 
-    override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> =
-        withContext(dispatcherProvider.io) {
-            val existingOrderId = getOrderId(userWalletId)
-            if (existingOrderId != null) {
-                val orderStatus = requestHelper.performRequest(userWalletId) { authHeader ->
-                    tangemPayApi.getOrder(authHeader, existingOrderId)
-                }.map { it.result?.status }.getOrNull()
+    override suspend fun createOrder(
+        userWalletId: UserWalletId,
+        deeplinkValue: String?,
+        specificationName: String,
+        type: OrderType,
+    ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
+        val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+        val isCampaignOrder = deeplinkValue != null
+        val reusableOrderId = findReusableOrderId(
+            userWalletId = userWalletId,
+            walletAddress = walletAddress,
+            isCampaignOrder = isCampaignOrder,
+        )
+        if (reusableOrderId != null) return@withContext reusableOrderId.right()
 
-                if (orderStatus == OrderResponse.Result.Status.NEW ||
-                    orderStatus == OrderResponse.Result.Status.PROCESSING
-                ) {
-                    return@withContext existingOrderId.right()
-                }
-            }
-
-            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-            requestHelper.performRequest(userWalletId) { authHeader ->
-                val data = OrderRequest.Data(
-                    customerWalletAddress = walletAddress,
-                    specificationName = "SP_000004",
-                    type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC.wireValue,
-                )
-                tangemPayApi.createOrder(
-                    authHeader = authHeader,
-                    body = OrderRequest(data = data, idempotencyKey = UUID.randomUUID().toString()),
-                )
-            }.map { response ->
-                val result = requireNotNull(response.result)
-                tangemPayStorage.storeOrderId(walletAddress, result.id)
-                result.id
-            }
+        requestHelper.performRequest(userWalletId) { authHeader ->
+            val data = OrderRequest.Data(
+                customerWalletAddress = walletAddress,
+                specificationName = specificationName,
+                type = type.wireValue,
+                deeplinkValue = deeplinkValue,
+            )
+            tangemPayApi.createOrder(
+                authHeader = authHeader,
+                body = OrderRequest(data = data, idempotencyKey = UUID.randomUUID().toString()),
+            )
+        }.map { response ->
+            val result = requireNotNull(response.result)
+            tangemPayStorage.storeOrderId(walletAddress, result.id, isCampaignOrder)
+            result.id
         }
+    }
+
+    private suspend fun findReusableOrderId(
+        userWalletId: UserWalletId,
+        walletAddress: String,
+        isCampaignOrder: Boolean,
+    ): String? {
+        val existingOrderId = tangemPayStorage.getOrderId(walletAddress) ?: return null
+        if (isCampaignOrder && !tangemPayStorage.isCampaignOrder(walletAddress)) return null
+
+        val orderStatus = requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.getOrder(authHeader, existingOrderId)
+        }.map { it.result?.status }.getOrNull()
+        val isActive = orderStatus == OrderResponse.Result.Status.NEW ||
+            orderStatus == OrderResponse.Result.Status.PROCESSING
+
+        return existingOrderId.takeIf { isActive }
+    }
 
     override suspend fun createVirtualAccountOrder(
         userWalletId: UserWalletId,
@@ -283,17 +300,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> {
         val response = requestHelper.performWithStaticToken {
             tangemPayApi.getEligibilityChannels()
-        }.getOrNull()
+        }.getOrNull() ?: return emptyList()
 
-        val channels = response?.result?.channels
-        val eligibility = channels.orEmpty().toSet()
+        val eligibility = response.result.channels.toSet()
         tangemPayStorage.storeTangemPayEligibility(eligibility = eligibility)
 
         return eligibility.map(TangemPayEligibilityType::fromString)
     }
 
-    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> {
-        return tangemPayStorage.getTangemPayEligibility().map(TangemPayEligibilityType::fromString)
+    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType>? {
+        return tangemPayStorage.getTangemPayEligibility()?.map(TangemPayEligibilityType::fromString)
     }
 
     override suspend fun fetchCustomerEligibility(

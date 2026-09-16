@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.model
 
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -15,6 +16,9 @@ import com.tangem.domain.models.wallet.UserWalletId
  *  - [ownAccountByNetwork] / [walletInfoById] — `address -> account` maps per network (a swap's legs can sit on
  *    different networks) plus per-wallet display info, used to render "to / from MY account / wallet".
  *  - [isAccountsModeEnabled] — toggles whether a resolved owner is rendered as account or wallet.
+ *  - [contacts] / [viewedWalletId] — the address books of every wallet, plus the wallet whose history is being
+ *    viewed, so a recipient saved as a contact is named instead of shown as an address. [viewedWalletId] is the
+ *    priority wallet of [ContactAddressLookup.resolve]; `null` leaves the newest matching contact to win.
  *
  * The address → owner resolution lives in `ResolvedOwner.kt`; the on-chain `TxInfo` reclassification in
  * `TxInfoOwnClassification.kt`.
@@ -23,6 +27,8 @@ internal data class TxHistoryLookupContext(
     val ownAccountByNetwork: Map<Network.RawID, Map<String, Account>>,
     val isAccountsModeEnabled: Boolean,
     val walletInfoById: Map<UserWalletId, WalletInfo>,
+    val contacts: ContactAddressLookup = ContactAddressLookup.EMPTY,
+    val viewedWalletId: UserWalletId? = null,
 )
 
 internal data class WalletInfo(val name: String, val deviceIconUM: DeviceIconUM)
@@ -55,7 +61,7 @@ internal fun buildOwnAccountAddressMapAllNetworks(
                 }
                 is AccountStatus.Virtual -> Unit
                 is AccountStatus.Prediction -> Unit
-                is AccountStatus.Joint -> Unit
+                is AccountStatus.Collectibles -> Unit
             }
         }
     }

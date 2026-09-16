@@ -11,23 +11,20 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
-import com.tangem.features.tangempay.components.WalletSelectorListener
+import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -44,11 +41,11 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val repository: OnboardingRepository,
-    private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
-) : Model(), WalletSelectorListener {
+    private val onboardingStarter: TangemPayOnboardingStarter,
+    private val featureToggles: TangemPayFeatureToggles,
+) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
@@ -56,6 +53,25 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     val uiState: StateFlow<TangemPayOnboardingScreenState>
         field = MutableStateFlow(getInitialState())
+
+    private val starterMode = when (params) {
+        is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+        is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
+        -> TangemPayOnboardingStarter.Mode.ContinueToKyc
+        is TangemPayOnboardingComponent.Params.Deeplink,
+        is TangemPayOnboardingComponent.Params.FromBannerInSettings,
+        is TangemPayOnboardingComponent.Params.FromBannerOnMain,
+        is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
+        -> TangemPayOnboardingStarter.Mode.StartOnboarding
+    }
+
+    private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
+        onLoadingChange = { isLoading ->
+            uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = isLoading))
+        },
+        onExit = ::back,
+        onWalletSelectorRequested = ::openWalletSelector,
+    )
 
     init {
         analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened())
@@ -71,10 +87,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         .onLeft { back() }
                 }
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
-                    openKyc(userWalletId = params.userWalletId)
+                    onboardingStarter.openKyc(userWalletId = params.userWalletId)
                 }
                 is TangemPayOnboardingComponent.Params.HotWalletOnboarding -> {
-                    startOnboarding(userWalletId = params.userWalletId)
+                    onboardingStarter.startOnboarding(
+                        userWalletId = params.userWalletId,
+                        campaignKey = null,
+                        callbacks = starterCallbacks,
+                    )
                 }
                 // FromBanner* and mobile-onboard skip the backend validation that Params.Deeplink performs.
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
@@ -102,47 +122,23 @@ internal class TangemPayOnboardingModel @Inject constructor(
         uiState.update { state -> TangemPayOnboardingScreenState.NotAvailable(onBack = state.onBack) }
     }
 
-    private fun checkCustomerInfo(userWalletId: UserWalletId) {
-        modelScope.launch {
-            uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
-            repository.getCustomerInfo(userWalletId = userWalletId)
-                .onRight { customerInfo ->
-                    when {
-                        customerInfo.kycStatus != KycStatus.APPROVED -> {
-                            if (shouldCreateOrderBeforeKyc(customerInfo)) {
-                                repository.createOrder(userWalletId)
-                                    .onLeft { error ->
-                                        TangemLogger.e("Error creating order before KYC: $error")
-                                    }
-                            }
-                            when (params) {
-                                is TangemPayOnboardingComponent.Params.ContinueOnboarding,
-                                is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
-                                -> openKyc(userWalletId)
-                                else -> startOnboarding(userWalletId)
-                            }
-                        }
-                        else -> back()
-                    }
-                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
-                }
-                .onLeft { startOnboarding(userWalletId) }
-        }
-    }
-
     private fun onTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
-        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
+        urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
+        if (featureToggles.isResidencyStepEnabled) {
+            router.push(AppRoute.TangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT))
+            return
+        }
         if (params is TangemPayOnboardingComponent.Params.Deeplink ||
             params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
         ) {
             modelScope.launch {
-                openWalletSelectorIfNeeds(
-                    walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
+                proceedWithWallets(
+                    walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true),
                 )
             }
         } else {
@@ -164,63 +160,34 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         checkCustomerInfo(params.userWalletId)
                     }
                     else -> {
-                        openWalletSelectorIfNeeds(eligibleWalletsIds)
+                        proceedWithWallets(eligibleWalletsIds)
                     }
                 }
             }
         }
     }
 
-    private fun openWalletSelectorIfNeeds(walletsIds: List<UserWalletId>) {
-        if (walletsIds.size == 1) {
-            checkCustomerInfo(userWalletId = walletsIds[0])
-        } else {
-            analytics.send(TangemPayAnalyticsEvents.ChooseWalletPopup())
-            bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(walletsIds))
-        }
-    }
-
-    private fun startOnboarding(userWalletId: UserWalletId) {
-        uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
-        modelScope.launch {
-            val result = produceInitialDataUseCase(userWalletId)
-            if (result.isLeft()) {
-                val errorMessage = result.leftOrNull()?.message ?: "Unknown error"
-                TangemLogger.e("Error producing initial data: $errorMessage")
-                uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
-                return@launch
-            }
-            repository.getCustomerInfo(userWalletId = userWalletId)
-                .fold(
-                    ifLeft = { error ->
-                        TangemLogger.e("Error getCustomerInfo: ${error.errorCode}")
-                        uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
-                    },
-                    ifRight = { customerInfo ->
-                        if (customerInfo.kycStatus == KycStatus.APPROVED) {
-                            back()
-                        } else {
-                            if (shouldCreateOrderBeforeKyc(customerInfo)) {
-                                repository.createOrder(userWalletId)
-                                    .onLeft { error ->
-                                        TangemLogger.e("Error creating order before KYC: $error")
-                                    }
-                            }
-                            openKyc(userWalletId)
-                        }
-                    },
-                )
-        }
-    }
-
-    private fun shouldCreateOrderBeforeKyc(customerInfo: CustomerInfo): Boolean =
-        !tangemPayFeatureToggles.isTiersPlusPlanEnabled && customerInfo.productInstance == null
-
-    private fun openKyc(userWalletId: UserWalletId) {
-        router.replaceAll(
-            AppRoute.Wallet,
-            AppRoute.Kyc(userWalletId = userWalletId),
+    private suspend fun proceedWithWallets(walletsIds: List<UserWalletId>) {
+        onboardingStarter.proceedWithWallets(
+            walletsIds = walletsIds,
+            mode = starterMode,
+            campaignKey = null,
+            callbacks = starterCallbacks,
         )
+    }
+
+    private suspend fun checkCustomerInfo(userWalletId: UserWalletId) {
+        onboardingStarter.checkCustomerInfo(
+            userWalletId = userWalletId,
+            mode = starterMode,
+            campaignKey = null,
+            callbacks = starterCallbacks,
+        )
+    }
+
+    private fun openWalletSelector(walletsIds: List<UserWalletId>) {
+        analytics.send(TangemPayAnalyticsEvents.ChooseWalletPopup())
+        bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(walletsIds))
     }
 
     private fun back() {
@@ -233,7 +200,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     override fun onWalletSelected(userWalletId: UserWalletId) {
         bottomSheetNavigation.dismiss()
-        checkCustomerInfo(userWalletId)
+        modelScope.launch { checkCustomerInfo(userWalletId) }
     }
 
     override fun onWalletSelectorDismiss() {

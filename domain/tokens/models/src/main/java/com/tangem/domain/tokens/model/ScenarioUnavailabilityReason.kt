@@ -3,6 +3,9 @@ package com.tangem.domain.tokens.model
 sealed class ScenarioUnavailabilityReason {
     data object None : ScenarioUnavailabilityReason()
 
+    /** The token belongs to a joint account — a Safe contract; the wallet's own keys spend nothing from it */
+    data object JointAccount : ScenarioUnavailabilityReason()
+
     data object UsedOutdatedData : ScenarioUnavailabilityReason()
 
     data object DataLoading : ScenarioUnavailabilityReason()

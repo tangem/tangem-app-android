@@ -14,8 +14,8 @@ import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
-import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
@@ -46,7 +46,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val polymarketRepository: PolymarketRepository,
     private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
-    private val checkPolymarketGeoblockUseCase: CheckPolymarketGeoblockUseCase,
+    private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
 
@@ -83,7 +83,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             ?: return null
 
         return toStatusValue(userWalletId = userWalletId, status = state.status) {
-            active(addresses = addresses)
+            active(userWalletId = userWalletId, addresses = addresses)
         }
     }
 
@@ -125,7 +125,10 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
      * the collateral, not the account. The resolver also answers `KeyNotFound` for any `404` from the CLOB — all the
      * more reason to withhold the wallet total here rather than contribute a zero to it.
      */
-    private suspend fun active(addresses: PolymarketAddresses): PredictionAccountStatusValue? {
+    private suspend fun active(
+        userWalletId: UserWalletId,
+        addresses: PolymarketAddresses,
+    ): PredictionAccountStatusValue? {
         return getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
                 when (error) {
@@ -144,24 +147,22 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                     source = StatusSource.ACTUAL,
                     balance = balanceAllowance.balance,
                     fiatRate = null,
-                    isTradingAllowed = isTradingAllowed(),
+                    depositCurrency = collateralCurrencyFactory.createDepositTarget(),
+                    depositAddress = storedDepositAddress(userWalletId = userWalletId),
                 )
             },
         )
     }
 
     /**
-     * A region check that fails is not treated as a block: the screens that let the user trade run their own check
-     * before anything can be sent, so guessing "blocked" here would only hide a balance the user does own.
+     * The address a previous funding flow confirmed, carried over so a balance refresh does not drop it. This
+     * fetcher never asks the bridge itself: it runs on the wallet screen's cadence, while the address is only
+     * acted on right after a refresh on screen open confirmed it.
      */
-    private suspend fun isTradingAllowed(): Boolean {
-        return checkPolymarketGeoblockUseCase().fold(
-            ifLeft = { error ->
-                logger.e("Prediction region check failed, trading is left allowed: $error")
-                true
-            },
-            ifRight = { isBlocked -> !isBlocked },
-        )
+    private suspend fun storedDepositAddress(userWalletId: UserWalletId): String? {
+        val stored = statusStore.getSyncOrNull(userWalletId = userWalletId)
+
+        return (stored as? PredictionAccountStatusValue.Active)?.depositAddress
     }
 
     /** A wallet this device never derived an address for: the backend still knows it by its Tangem wallet id. */

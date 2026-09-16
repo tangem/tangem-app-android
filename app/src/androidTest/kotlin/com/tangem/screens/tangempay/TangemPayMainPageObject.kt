@@ -1,10 +1,13 @@
 package com.tangem.screens.tangempay
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.res.R as CoreResR
@@ -34,6 +37,11 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val tileCacheIcon: KNode = child {
+        hasTestTag(TangemPayTestTags.MAIN_SCREEN_TILE_CACHE_ICON)
+        useUnmergedTree = true
+    }
+
     val balance: KNode = child {
         hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE)
         useUnmergedTree = true
@@ -41,6 +49,28 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
 
     val cardButton: KNode = child {
         hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val addCardButton: KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_ADD_CARD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    /** Every card tile carries the same tag, so a specific one is addressed by its position in the row. */
+    fun cardButtonAt(index: Int): KNode = child {
+        hasTestTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON)
+        hasPosition(index)
+        useUnmergedTree = true
+    }
+
+    val paymentAccountTitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_payment_account))
+        useUnmergedTree = true
+    }
+
+    val multinetworkSubtitle: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_multinetwork))
         useUnmergedTree = true
     }
 
@@ -61,9 +91,26 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
-    val termsAndFeesMenuItem: KNode = child {
-        hasText(getResourceString(CoreResR.string.tangem_pay_terms_limits))
+    val sessionExpiredBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_sync_needed_title)
+
+    val sessionExpiredBannerMessage: KNode = bannerMessage(CoreResR.string.tangempay_sync_needed_body)
+
+    val connectionIssuesBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_temporarily_unavailable)
+
+    val connectionIssuesBannerMessage: KNode =
+        bannerMessage(CoreResR.string.tangempay_service_unreachable_try_later)
+
+    val renewSessionButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_sync_needed_button)))
+        useUnmergedTree = true
     }
+
+    // The chip container carries the tag, but the enabled-state semantics sit on the button next to its label.
+    // That button is the DS2 one — it has no BASE_BUTTON tag, so it is addressed by its label sibling.
+    val addFundsButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_add_funds)
+
+    val withdrawButtonControl: KNode = actionButtonControl(CoreResR.string.tangempay_card_details_withdraw)
 
     fun transactionRowWithText(text: String): KNode = child {
         hasText(text)
@@ -85,8 +132,35 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val emptyHistoryIcon: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val emptyHistoryText: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.TEXT)
+        hasText(getResourceString(CoreResR.string.transaction_history_empty_transactions))
+        useUnmergedTree = true
+    }
+
     val reloadHistoryButton: KNode = child {
         hasTestTag(TangemPayTestTags.TRANSACTION_HISTORY_RELOAD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val issuingCardBanner: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_issuing_new_digital_card_title),
+            substring = true,
+        )
+        useUnmergedTree = true
+    }
+
+    val issuingCardBannerDescription: KNode = child {
+        hasText(
+            text = getResourceString(CoreResR.string.tangempay_reissue_card_in_progress_description),
+            substring = true,
+        )
         useUnmergedTree = true
     }
 
@@ -98,14 +172,33 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    private fun bannerTitle(@StringRes textRes: Int): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(textRes))
+        useUnmergedTree = true
+    }
+
+    private fun bannerMessage(@StringRes textRes: Int): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(textRes))
+        useUnmergedTree = true
+    }
+
+    private fun actionButtonControl(@StringRes titleRes: Int): KNode = child {
+        hasAnyAncestor(withTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON))
+        hasAnySibling(withText(getResourceString(titleRes)))
+        useUnmergedTree = true
+    }
+
     // History is the tail of the payment-account lazy list, so its rows start off the fold.
     @OptIn(ExperimentalTestApi::class)
     fun scrollToTransactionWithText(text: String) = paymentAccountContent {
         performScrollToNode(withText(text))
     }
 
+    // The empty and the failed-to-load history states share this block, so both are reached with it.
     @OptIn(ExperimentalTestApi::class)
-    fun scrollToHistoryErrorBlock() = paymentAccountContent {
+    fun scrollToHistoryStateBlock() = paymentAccountContent {
         performScrollToNode(withTestTag(EmptyTransactionBlockTestTags.BLOCK))
     }
 }

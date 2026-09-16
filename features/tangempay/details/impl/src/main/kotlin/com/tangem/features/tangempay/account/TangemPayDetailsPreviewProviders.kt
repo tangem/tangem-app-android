@@ -4,7 +4,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
@@ -15,6 +14,7 @@ import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_error_20
+import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.txhistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.TangemPayTxHistoryUM
@@ -55,6 +55,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             imageUrl = null,
+                            cardType = TangemPayCardType.VIRTUAL,
                             onClick = {},
                             isEnabled = false,
                             isFrozen = false,
@@ -63,6 +64,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "3456",
                             imageUrl = null,
+                            cardType = TangemPayCardType.PHYSICAL,
                             onClick = {},
                             isEnabled = true,
                             isFrozen = false,
@@ -76,7 +78,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 isInactive = false,
             ),
             isBalanceHidden = false,
-            statusBannerState = MessageBannerUM(
+            messageBanner = MessageBannerUM(
                 state = TangemMessageBanner.State(
                     title = resourceReference(R.string.tangempay_account_deactivated_message_title),
                     variant = TangemMessageBanner.Variant.Error,
@@ -91,7 +93,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                     ),
                 ),
             ),
-            errorNotificationConfig = null,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -108,6 +109,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = "1234",
                             imageUrl = null,
+                            cardType = TangemPayCardType.VIRTUAL,
                             onClick = {},
                             isFrozen = false,
                             isEnabled = true,
@@ -120,15 +122,23 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 ),
             ),
             isBalanceHidden = false,
-            statusBannerState = null,
-            errorNotificationConfig = NotificationConfig(
-                title = TextReference.Str("Error title"),
-                subtitle = TextReference.Str("Error subtitle"),
-                iconResId = R.drawable.ic_alert_circle_24,
-                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                    text = TextReference.Str("Error btn text"),
-                    onClick = {},
-                    iconResId = R.drawable.ic_tangem_24,
+            messageBanner = MessageBannerUM(
+                state = TangemMessageBanner.State(
+                    title = TextReference.Str("Error title"),
+                    variant = TangemMessageBanner.Variant.Error,
+                    description = TextReference.Str("Error subtitle"),
+                    secondaryButton = TangemMessageBanner.Button(
+                        text = TextReference.Str("Error btn text"),
+                        onClick = {},
+                        iconEnd = TangemIconUM.Icon(
+                            iconRes = R.drawable.ic_tangem_24,
+                            tintReference = { TangemTheme.colors3.icon.primary },
+                        ),
+                    ),
+                    iconEnd = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_alert_circle_24,
+                        tintReference = { TangemTheme.colors3.icon.primary },
+                    ),
                 ),
             ),
         ),

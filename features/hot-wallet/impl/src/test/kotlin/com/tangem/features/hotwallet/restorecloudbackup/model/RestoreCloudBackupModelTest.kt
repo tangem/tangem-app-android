@@ -21,8 +21,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResult
-import com.tangem.features.hotwallet.restorecloudbackup.CloudRestoreResultHolder
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
+import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
 import com.tangem.features.hotwallet.restorecloudbackup.RestoreCloudBackupComponent
 import com.tangem.features.hotwallet.restorecloudbackup.entity.RestoreCloudBackupUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -57,12 +57,14 @@ internal class RestoreCloudBackupModelTest {
 
     private val backupInfo = CloudBackupInfo(
         fileId = "file-1",
+        backupName = "My Wallet",
         walletName = "My Wallet",
         createdAtMillis = 0L,
         walletId = "011",
     )
     private val secondBackupInfo = CloudBackupInfo(
         fileId = "file-2",
+        backupName = "Savings",
         walletName = "Savings",
         createdAtMillis = 1_000L,
         walletId = "012",

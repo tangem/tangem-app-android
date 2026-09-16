@@ -22,6 +22,7 @@ import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.domain.search.model.toEntries
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.feed.crypto.CryptoFeedSearchTabComponent
