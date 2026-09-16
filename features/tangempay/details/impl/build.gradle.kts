@@ -34,7 +34,7 @@ dependencies {
     implementation(projects.features.tangempay.eligibility.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.virtualAccounts.details.api)
+    api(projects.features.moneyAccount.details.api)
 
     /** Domain */
     api(projects.domain.balanceHiding)

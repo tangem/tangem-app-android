@@ -24,7 +24,7 @@ import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
-import com.tangem.features.virtualaccount.onboarding.deeplink.OnboardVirtualAccountsDeepLinkHandler
+import com.tangem.features.moneyaccount.onboarding.deeplink.OnboardMoneyAccountDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
@@ -92,7 +92,7 @@ internal class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
-    private val onboardVirtualAccountsDeepLink = mockk<OnboardVirtualAccountsDeepLinkHandler.Factory>(relaxed = true) {
+    private val onboardMoneyAccountDeepLink = mockk<OnboardMoneyAccountDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
 
@@ -170,7 +170,7 @@ internal class DeepLinkFactoryTest {
         swapDeepLink = swapDeepLinkFactory,
         promoDeepLink = promoDeepLinkFactory,
         onboardVisaDeepLink = onboardVisaDeepLink,
-        onboardVirtualAccountsDeepLink = onboardVirtualAccountsDeepLink,
+        onboardMoneyAccountDeepLink = onboardMoneyAccountDeepLink,
         tangemPayMainDeepLink = tangemPayMainDeepLink,
         tangemPayAccountDeepLink = tangemPayAccountDeepLink,
         newsDetailsDeepLink = newsDeeplink,

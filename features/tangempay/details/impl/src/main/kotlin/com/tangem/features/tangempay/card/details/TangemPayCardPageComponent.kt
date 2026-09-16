@@ -31,7 +31,7 @@ import com.tangem.features.tangempay.card.pin.TangemPayChangePinSuccessComponent
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

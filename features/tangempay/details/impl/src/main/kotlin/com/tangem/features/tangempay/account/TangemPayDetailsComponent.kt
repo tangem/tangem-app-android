@@ -33,8 +33,8 @@ import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tangempay.txhistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.txhistory.details.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
-import com.tangem.features.virtualaccount.details.component.VirtualAccountAddFundsListener
+import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsListener
 
 internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,

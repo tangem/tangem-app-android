@@ -28,13 +28,13 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeToken
 import com.tangem.feature.wallet.presentation.wallet.ui.components.collectiblesWalletBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.polymarketWalletBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
-import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
+import com.tangem.feature.wallet.presentation.wallet.ui.components.moneyAccount
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
-import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
 
 @Suppress("LongParameterList")
@@ -44,7 +44,7 @@ internal fun WalletListContent(
     isBalanceHidden: Boolean,
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
-    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
     collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
@@ -95,9 +95,9 @@ internal fun WalletListContent(
             modifier = itemModifier,
         )
 
-        virtualAccount(
-            virtualAccountComponent = virtualAccountComponent,
-            virtualAccountUM = currentWallet.virtualAccountMainUM,
+        moneyAccount(
+            moneyAccountComponent = moneyAccountComponent,
+            moneyAccountUM = currentWallet.moneyAccountMainUM,
             isBalanceHidden = isBalanceHidden,
             modifier = itemModifier,
         )
