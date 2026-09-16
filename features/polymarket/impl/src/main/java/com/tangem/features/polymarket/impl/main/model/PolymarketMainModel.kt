@@ -90,7 +90,7 @@ internal class PolymarketMainModel @Inject constructor(
 
     private val balanceConverter = PredictionBalanceUMConverter(
         onAddFundsClick = ::onAddFundsClick,
-        onWithdrawClick = {},
+        onWithdrawClick = ::onWithdrawClick,
     )
 
     private val activeStatus = MutableStateFlow<PredictionAccountStatusValue.Active?>(value = null)
@@ -389,11 +389,26 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun openAddFunds() {
-        if (activeStatus.value?.cryptoCurrencyStatus == null) {
-            return messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
-        }
+        if (activeStatus.value?.cryptoCurrencyStatus == null) return reportUnconfirmedAddress()
 
         addFundsNavigation.activate(Unit)
+    }
+
+    private fun onWithdrawClick() {
+        val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return reportUnconfirmedAddress()
+        router.push(
+            AppRoute.Swap(
+                userWalletId = params.userWalletId,
+                fromCryptoCurrency = collateral,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                screenSource = AnalyticsParam.ScreensSources.Predictions.value,
+                accountFlow = AppRoute.Swap.AccountFlow.PredictionWithdraw,
+            ),
+        )
+    }
+
+    private fun reportUnconfirmedAddress() {
+        messageSender.send(SnackbarMessage(message = resourceReference(R.string.common_unknown_error)))
     }
 
     override fun onSwapClick() {
