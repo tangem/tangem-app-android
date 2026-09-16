@@ -10,6 +10,8 @@ import java.math.BigInteger
  * @property displayed handed back to the sign use case, which refuses to sign an operation that no longer matches
  * what the screen showed
  * @property ownAddress this member's owner address, `null` where it is not resolvable here
+
+ * report one
  */
 internal data class JointOperationState(
     val account: Account.Joint,
@@ -21,13 +23,21 @@ internal data class JointOperationState(
     val signers: List<JointOperationSignerState>,
     val canSign: Boolean,
     val ownAddress: String?,
+    val initiator: String?,
 ) {
+
+    /** The initiator deletes the operation, every other member declines it */
+    val isInitiator: Boolean = ownAddress != null && ownAddress.equals(initiator, ignoreCase = true)
 
     /** The initiator signed on creation, so their answer counts towards the threshold */
     val collected: Int = signers.count { signer ->
         signer.answer == JointOperationSignerState.Answer.CREATED ||
             signer.answer == JointOperationSignerState.Answer.SIGNED
     }
+
+    /** Every member who has not declined can still sign, so the threshold is out of reach once too many declined */
+    val isReachable: Boolean =
+        membersCount - signers.count { it.answer == JointOperationSignerState.Answer.DECLINED } >= threshold
 
     private val ownSigner: JointOperationSignerState? = signers.firstOrNull { signer ->
         ownAddress != null && signer.member.address.equals(ownAddress, ignoreCase = true)
@@ -37,21 +47,17 @@ internal data class JointOperationState(
     val ownAnswer: JointOperationSignerState.Answer? = ownSigner?.answer
 
     /**
-     * The sign use case tolerates a failed refresh, so [signers] can still carry this member as waiting after they
-     * signed. [answeredLocally] holds that answer until a refresh lands, so every reader of this state — the signers
-     * list and [collected] alike — sees the same answer.
+     * The sign and reject use cases tolerate a failed refresh, so [signers] can still carry this member as waiting
+     * after they answered. [answeredLocally] holds that answer until a refresh lands, so every reader of this state —
+     * the signers list and [collected] alike — sees the same answer.
      */
-    fun withOwnAnswer(answeredLocally: Boolean): JointOperationState {
+    fun withOwnAnswer(answeredLocally: JointOperationSignerState.Answer?): JointOperationState {
         val isWaiting = ownSigner?.answer == JointOperationSignerState.Answer.WAITING
-        if (!answeredLocally || !isWaiting) return this
+        if (answeredLocally == null || !isWaiting) return this
 
         return copy(
             signers = signers.map { signer ->
-                if (signer == ownSigner) {
-                    signer.copy(answer = JointOperationSignerState.Answer.SIGNED)
-                } else {
-                    signer
-                }
+                if (signer == ownSigner) signer.copy(answer = answeredLocally) else signer
             },
         )
     }
