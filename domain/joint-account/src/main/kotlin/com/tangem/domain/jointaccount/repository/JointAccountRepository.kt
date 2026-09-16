@@ -129,10 +129,9 @@ interface JointAccountRepository {
         signature: String,
     ): Either<JointOperationSignError, Unit>
 
-    /** Cancels the operation when [signature] is the initiator's, records a decline otherwise */
+    /** Cancels the operation when the caller is its initiator, records a decline otherwise */
     suspend fun rejectOperation(
         userWalletId: UserWalletId,
         payload: JointOperationRejectPayload,
-        signature: String,
     ): Either<JointOperationRejectError, Unit>
 }
