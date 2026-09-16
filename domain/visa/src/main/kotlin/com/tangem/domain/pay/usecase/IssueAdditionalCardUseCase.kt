@@ -103,6 +103,7 @@ class IssueAdditionalCardUseCase(
                     .getOffers(userWalletId = userWalletId, deeplinkValue = deeplinkValue)
                     .mapLeft(VisaApiError::toIssueError)
                     .bind()
+                    .orderable
             },
             catch = { handleError(it) },
         )
