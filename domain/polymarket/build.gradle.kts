@@ -29,6 +29,7 @@ dependencies {
 
     // region SDK
     implementation(projects.core.utils)
+    implementation(projects.libs.blockchainSdk)
     implementation(tangemDeps.blockchain)
     // endregion
 
