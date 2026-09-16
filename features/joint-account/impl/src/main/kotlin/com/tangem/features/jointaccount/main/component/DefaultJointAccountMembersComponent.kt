@@ -8,6 +8,8 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -52,6 +54,11 @@ internal class DefaultJointAccountMembersComponent @AssistedInject constructor(
         key = "activationConfirmationSlot",
         childFactory = ::activationConfirmationChild,
     )
+
+    init {
+        lifecycle.doOnResume { model.onResume() }
+        lifecycle.doOnPause { model.onPause() }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
