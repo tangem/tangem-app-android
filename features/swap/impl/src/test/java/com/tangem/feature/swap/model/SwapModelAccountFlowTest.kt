@@ -998,6 +998,77 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card is locked and the title is Add funds`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            assertThat(receiveCard.isSelectionLocked).isTrue()
+            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
+            assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the account swap toggle is off WHEN a prediction top-up is built THEN the top-up presentation holds`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+            stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
+            assertThat((model.uiState.receiveCardData as SwapCardState.SwapCardData).isSelectionLocked).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the send card stays selectable`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedTopUpPair()
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+        advanceUntilIdle()
+
+        // Assert
+        val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+        assertThat(sendCard.isSelectionLocked).isFalse()
+        assertThat(sendCard.currencyIconState).isNotInstanceOf(CurrencyIconState.PaymentAccount::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN reverse is clicked THEN the pair does not flip`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val (from, collateral) = stubResolvedTopUpPair()
+        val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.onChangeCardsClicked()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.dataState.fromSwapCurrencyStatus).isSameInstanceAs(from)
+        assertThat(model.dataState.toSwapCurrencyStatus).isSameInstanceAs(collateral)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a prediction withdraw WHEN to selector settings THEN the chooser offers USDC on Polygon to add, hides payment tokens and joint accounts`() =
         runTest {
             // Arrange
@@ -1706,6 +1777,23 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             )
         } returns (collateral to destination)
         return collateral to destination
+    }
+
+    private fun stubResolvedTopUpPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
+        val wallet = accountFlowUserWallet()
+        val from = buildSwapCurrencyStatus(wallet)
+        val collateral = buildSwapCurrencyStatus(wallet).copy(account = Account.Prediction(userWalletId))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to collateral)
+        return from to collateral
     }
 
     // -------------------------------------------------------------------------

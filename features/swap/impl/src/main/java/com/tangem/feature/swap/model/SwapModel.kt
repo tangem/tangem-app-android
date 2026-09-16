@@ -236,6 +236,9 @@ internal class SwapModel @Inject constructor(
     private val isPredictionWithdrawFlow: Boolean
         get() = accountFlow is AccountFlow.PredictionWithdraw
 
+    private val isPredictionTopUpFlow: Boolean
+        get() = accountFlow is AccountFlow.PredictionTopUp
+
     val isGaslessWithdrawal: Boolean
         get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
 
@@ -325,6 +328,7 @@ internal class SwapModel @Inject constructor(
     private val isReverseLocked: Boolean
         get() = isAccountFlowActive ||
             isPredictionWithdrawFlow ||
+            isPredictionTopUpFlow ||
             dataState.fromSwapCurrencyStatus?.account is Account.Prediction ||
             isTargetOnlyDestination
 
@@ -2889,23 +2893,38 @@ internal class SwapModel @Inject constructor(
      * button is deliberately left alone: it keeps its dynamic Transfer/Swap label in account flows too.
      */
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
-        if (!isAccountFlowActive && !isPredictionWithdrawFlow) return this
+        if (!isAccountFlowActive && !isPredictionWithdrawFlow && !isPredictionTopUpFlow) return this
         val flow = accountFlow ?: return this
-        val titledState = copy(
-            titleId = when (flow) {
-                is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
-                is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
-                is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
-            },
-        )
-        if (flow is AccountFlow.PredictionWithdraw) {
-            val withdrawState = titledState.copy(swapButton = titledState.swapButton.asWithdrawButton())
-            val sendCard = withdrawState.sendCardData as? SwapCardState.SwapCardData ?: return withdrawState
-            return withdrawState.copy(sendCardData = sendCard.copy(isSelectionLocked = true))
+        val titledState = copy(titleId = flow.titleId())
+        return when {
+            flow is AccountFlow.PredictionWithdraw -> titledState.withPredictionWithdrawCards()
+            flow is AccountFlow.PredictionTopUp -> titledState.withLockedReceiveCard()
+            isAccountTopUp -> titledState.withAccountTopUpReceiveCard()
+            else -> titledState
         }
-        if (!isAccountTopUp) return titledState
-        val receiveCard = titledState.receiveCardData as? SwapCardState.SwapCardData ?: return titledState
-        return titledState.copy(
+    }
+
+    private fun AccountFlow.titleId(): Int = when (this) {
+        is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
+        is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
+        is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
+        is AccountFlow.PredictionTopUp -> R.string.common_add_funds
+    }
+
+    private fun SwapStateHolder.withPredictionWithdrawCards(): SwapStateHolder {
+        val withdrawState = copy(swapButton = swapButton.asWithdrawButton())
+        val sendCard = withdrawState.sendCardData as? SwapCardState.SwapCardData ?: return withdrawState
+        return withdrawState.copy(sendCardData = sendCard.copy(isSelectionLocked = true))
+    }
+
+    private fun SwapStateHolder.withLockedReceiveCard(): SwapStateHolder {
+        val receiveCard = receiveCardData as? SwapCardState.SwapCardData ?: return this
+        return copy(receiveCardData = receiveCard.copy(isSelectionLocked = true))
+    }
+
+    private fun SwapStateHolder.withAccountTopUpReceiveCard(): SwapStateHolder {
+        val receiveCard = receiveCardData as? SwapCardState.SwapCardData ?: return this
+        return copy(
             receiveCardData = receiveCard.copy(
                 currencyIconState = CurrencyIconState.PaymentAccount(),
                 fiatSymbolOverride = ACCOUNT_TOP_UP_ABSTRACT_SYMBOL,
