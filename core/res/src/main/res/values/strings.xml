@@ -1135,6 +1135,8 @@
   <string name="joint_account_send_operation_in_progress_subtitle">Wait for it to be executed or reject it. Your operation was not created and no funds were spent</string>
   <string name="joint_account_send_operation_in_progress_title">An operation is already in progress</string>
   <string name="joint_account_send_sends_automatically">Sends automatically once collected</string>
+  <string name="joint_account_send_sends_automatically_setup_fee">Sends automatically once collected. First send includes a one-time setup fee.</string>
+  <string name="joint_account_send_setup_fee_note">First transaction in %1$s. The fee includes a one-time %2$s to set up the joint account on-chain.</string>
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one.</string>
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
@@ -1154,6 +1156,7 @@
   <string name="joint_operation_declined_footer">You declined. Others can still reach %1$s of %2$s</string>
   <string name="joint_operation_delete_alert_message">The transaction can\'t reach the required signatures without you. It will be rejected for all members.</string>
   <string name="joint_operation_delete_alert_title">Delete this transaction?</string>
+  <string name="joint_operation_deleted_snackbar">Transaction deleted</string>
   <string name="joint_operation_malicious_subtitle">This transaction was flagged as malicious. Signing is blocked</string>
   <string name="joint_operation_malicious_title">Dangerous transaction</string>
   <string name="joint_operation_sending_to_network">Sending to the network</string>
