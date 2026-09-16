@@ -680,7 +680,7 @@ internal class PlacePredictionModelTest {
         assertThat(submitWhilePosting).isEqualTo(SubmitUM.Posting)
         val result = (model.uiState.value.submit as SubmitUM.Result).result
         assertThat(result).isInstanceOf(PlaceResultUM.Filled::class.java)
-        assertThat((result as PlaceResultUM.Filled).amount).isEqualTo(BigDecimal("10"))
+        assertThat((result as PlaceResultUM.Filled).collateralAmount).isEqualTo(BigDecimal("10"))
         verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
 
         model.onDestroy()
@@ -838,8 +838,8 @@ internal class PlacePredictionModelTest {
             assertThat((model.uiState.value.submit as SubmitUM.Result).result).isEqualTo(
                 PlaceResultUM.Filled(
                     placedAt = (model.uiState.value.submit as SubmitUM.Result).result.placedAt,
-                    amount = BigDecimal("11.60"),
-                    tokensBought = BigDecimal("23.2"),
+                    collateralAmount = BigDecimal("11.60"),
+                    shares = BigDecimal("23.2"),
                 ),
             )
             verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
