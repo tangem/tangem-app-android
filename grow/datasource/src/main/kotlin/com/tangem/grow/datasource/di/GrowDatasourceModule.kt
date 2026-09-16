@@ -35,6 +35,7 @@ import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.addStakeKitEnumFallbackAdapters
+import com.tangem.grow.datasource.yield.YieldIncentivesApi
 import com.tangem.grow.datasource.yield.YieldSupplyApi
 import com.tangem.grow.datasource.yield.local.DefaultYieldMarketsStore
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
@@ -228,6 +229,18 @@ internal object GrowDatasourceModule {
     @Provides
     @Singleton
     fun provideYieldSupplyApi(factory: RetrofitFactory): YieldSupplyApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = YieldSupply.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldIncentivesApi(factory: RetrofitFactory): YieldIncentivesApi {
         return factory.build(
             RetrofitApiSpec(
                 apiConfigId = YieldSupply.ID,
