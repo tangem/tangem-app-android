@@ -22,6 +22,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -50,6 +51,7 @@ internal class IntroductionCardScannerTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
     private val router: Router = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
+    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
 
     private val scanResponse: ScanResponse = mockk(relaxed = true)
     private val userWallet: UserWallet.Cold = mockk(relaxed = true)
@@ -61,6 +63,7 @@ internal class IntroductionCardScannerTest {
         settingsRepository = settingsRepository,
         coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
         saveWalletUseCase = saveWalletUseCase,
+        shouldAskPermissionUseCase = shouldAskPermissionUseCase,
         userWalletsListRepository = userWalletsListRepository,
         analyticsEventHandler = analyticsEventHandler,
         router = router,
@@ -76,6 +79,7 @@ internal class IntroductionCardScannerTest {
             walletBuilder,
             coldUserWalletBuilderFactory,
             saveWalletUseCase,
+            shouldAskPermissionUseCase,
             userWalletsListRepository,
             analyticsEventHandler,
             router,
@@ -99,6 +103,7 @@ internal class IntroductionCardScannerTest {
                 onSuccess = any(),
             )
         } coAnswers { arg<suspend (ScanResponse) -> Unit>(n = 7).invoke(scanResponse) }
+        coEvery { shouldAskPermissionUseCase(any()) } returns false
     }
 
     @Test
@@ -120,6 +125,51 @@ internal class IntroductionCardScannerTest {
         assertThat(isLeavingReported).isTrue()
         verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
     }
+
+    @Test
+    fun `GIVEN push permission not asked yet WHEN a card is scanned THEN the wallet opens behind the push screen`() =
+        runTest {
+            // Arrange
+            coEvery { saveWalletUseCase(any(), any(), any()) } returns Unit.right()
+            coEvery { shouldAskPermissionUseCase(any()) } returns true
+
+            // Act
+            scanner.scanAndOpenWallet(
+                analyticsSource = SOURCE,
+                onNavigatedAway = {},
+                onFailed = { error("must not be called") },
+            )
+
+            // Assert
+            verify(exactly = 1) {
+                router.replaceAll(
+                    AppRoute.PushNotification(
+                        source = AppRoute.PushNotification.Source.FirstSignIn,
+                        nextRoute = AppRoute.Wallet,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN the wallet is already saved AND push not asked yet WHEN a card is scanned THEN no push screen`() =
+        runTest {
+            // Arrange
+            coEvery { saveWalletUseCase(any(), any(), any()) } returns
+                SaveWalletError.WalletAlreadySaved(messageId = 0).left()
+            coEvery { userWalletsListRepository.unlock(any(), any()) } returns Unit.right()
+            coEvery { shouldAskPermissionUseCase(any()) } returns true
+
+            // Act
+            scanner.scanAndOpenWallet(
+                analyticsSource = SOURCE,
+                onNavigatedAway = {},
+                onFailed = { error("must not be called") },
+            )
+
+            // Assert
+            verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+        }
 
     @Test
     fun `GIVEN the wallet is already saved WHEN a card is scanned THEN it is unlocked by the scan and opened`() = runTest {

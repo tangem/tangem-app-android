@@ -105,6 +105,10 @@ sealed class AnalyticsParam {
         Earn("Earn"),
         ForYou("For You"),
         Predictions("Predictions"),
+        HotCreation("Hot Creation"),
+        ColdCreation("Cold Creation"),
+        FirstSignIn("First Sign In"),
+        MainRequestSheet("Main Request Sheet"),
     }
 
     sealed class TxSentFrom(val value: String) {
