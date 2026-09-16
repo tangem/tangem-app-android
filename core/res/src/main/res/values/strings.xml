@@ -3412,7 +3412,7 @@
   <string name="yield_module_balance_info_sheet_subtitle">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is supplied to Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
-  <string name="yield_module_claim_button_title">Claim %1$@</string>
+  <string name="yield_module_claim_button_title">Claim %1$s</string>
   <string name="yield_module_claim_destination_aave_title">Will be added to your active Aave position</string>
   <string name="yield_module_claim_destination_module_title">Will remain in Yield Mode</string>
   <string name="yield_module_claim_destination_owner_title">Will be sent to your wallet</string>
@@ -3422,7 +3422,7 @@
   <string name="yield_module_claim_footer_note">You will claim all available reward tokens</string>
   <string name="yield_module_claim_rewards_unavailable_notification_description">The service didn\'t confirm a claim for these rewards. Try again in a few minutes.</string>
   <string name="yield_module_claim_rewards_unavailable_notification_title">Claiming isn\'t available right now</string>
-  <string name="yield_module_claim_service_fee_note">Tangem takes %1$@ of the claimed rewards.</string>
+  <string name="yield_module_claim_service_fee_note">Tangem takes %1$s of the claimed rewards.</string>
   <string name="yield_module_claim_service_fee_title">Service fee</string>
   <string name="yield_module_claim_sheet_subtitle">To receive</string>
   <string name="yield_module_claim_sheet_title">Claim reward</string>
