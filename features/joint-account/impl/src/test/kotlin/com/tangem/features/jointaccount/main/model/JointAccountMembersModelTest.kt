@@ -19,6 +19,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
@@ -42,9 +43,11 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -72,6 +75,7 @@ internal class JointAccountMembersModelTest {
     private val shareManager: ShareManager = mockk(relaxed = true)
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
+    private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val getInvitesUseCase: GetJointAccountInvitesUseCase = mockk()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val activateUseCase: ActivateJointAccountUseCase = mockk()
@@ -87,6 +91,7 @@ internal class JointAccountMembersModelTest {
             shareManager,
             supplier,
             jointAccountListFetcher,
+            pollingCoordinator,
             getInvitesUseCase,
             singleAccountSupplier,
             activateUseCase,
@@ -97,6 +102,7 @@ internal class JointAccountMembersModelTest {
             every { walletId } returns USER_WALLET_ID
         }
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(coldWallet))
+        every { pollingCoordinator.poll(walletId = any()) } returns emptyFlow()
     }
 
     @Test
@@ -166,6 +172,99 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         verify(exactly = 1) { shareManager.shareText("$INVITE_LINK_PREFIX$INVITE_A") }
+    }
+
+    @Test
+    fun `GIVEN account WHEN model created but not resumed THEN polling does not start`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+
+        // Act
+        createModel()
+
+        // Assert
+        verify(exactly = 0) { pollingCoordinator.poll(walletId = any()) }
+    }
+
+    @Test
+    fun `GIVEN account WHEN resumed THEN polling starts for the wallet`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { pollingCoordinator.poll(walletId = USER_WALLET_ID) }
+    }
+
+    /**
+     * The whole point of polling is to discover state the client doesn't know about yet — an active account with
+     * no in-flight operations locally cached can still gain one on the backend (another member creates an
+     * operation) at any moment, so polling must not be gated on the currently-known status.
+     */
+    @Test
+    fun `GIVEN active account with no known pending operations WHEN resumed THEN polling still starts`() = runTest {
+        // Arrange
+        val active = pendingAccount(members = listOf(creator, member)).copy(
+            status = JointAccount.Status.ACTIVE,
+            safeAddress = SAFE_ADDRESS,
+        )
+        stub(account = active, invites = emptyList())
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { pollingCoordinator.poll(walletId = USER_WALLET_ID) }
+    }
+
+    /**
+     * An empty store isn't proof there's nothing to find — offline, a cold start, or a failed [refreshAccounts]
+     * all look the same locally. Gating polling on a resolved account would make the screen unable to recover
+     * from any of them on its own, so [subscribePolling] doesn't wait for one.
+     */
+    @Test
+    fun `GIVEN no account resolved yet WHEN resumed THEN polling still starts`() = runTest {
+        // Arrange
+        every { supplier.invoke(userWalletId = USER_WALLET_ID) } returns flowOf(emptyList())
+        coEvery { getInvitesUseCase(any(), any()) } returns emptyList()
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { pollingCoordinator.poll(walletId = USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN resumed with an account WHEN paused THEN polling stops`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)), invites = listOf(INVITE_A))
+        val pollCancelled = MutableStateFlow(false)
+        every { pollingCoordinator.poll(walletId = USER_WALLET_ID) } returns flow {
+            try {
+                awaitCancellation()
+            } finally {
+                pollCancelled.value = true
+            }
+        }
+        val model = createModel()
+        model.onResume()
+        advanceUntilIdle()
+
+        // Act
+        model.onPause()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(pollCancelled.value).isTrue()
     }
 
     private fun stubConfirmingAccount() {
@@ -478,6 +577,7 @@ internal class JointAccountMembersModelTest {
             shareManager = shareManager,
             jointAccountListSupplier = supplier,
             jointAccountListFetcher = jointAccountListFetcher,
+            pollingCoordinator = pollingCoordinator,
             getJointAccountInvitesUseCase = getInvitesUseCase,
             singleAccountSupplier = singleAccountSupplier,
             activateJointAccountUseCase = activateUseCase,
@@ -508,6 +608,7 @@ internal class JointAccountMembersModelTest {
         const val THREE_SLOTS = 3
         const val INVITE_A = "invite-a"
         const val INVITE_LINK_PREFIX = "https://tangem.com/joint-account/join/"
+        const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
 
         val creator = JointAccount.Member(
             name = "Ivan",
