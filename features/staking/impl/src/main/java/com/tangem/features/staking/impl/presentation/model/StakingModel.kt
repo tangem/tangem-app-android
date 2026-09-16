@@ -1181,6 +1181,7 @@ internal class StakingModel @Inject constructor(
             StakingAnalyticsEvent.NotEnoughFee(
                 token = cryptoCurrencyStatus.currency.symbol,
                 blockchain = cryptoCurrencyStatus.currency.network.name,
+                balance = AnalyticsParam.TokenBalanceState.fromAmount(cryptoCurrencyStatus.value.amount),
             ),
         )
     }
