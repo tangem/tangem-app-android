@@ -26,6 +26,8 @@ dependencies {
     api(projects.features.marketing.api)
     implementation(projects.features.polymarket.api)
     implementation(projects.features.collectibles.api)
+    implementation(projects.features.jointAccount.api)
+    implementation(projects.features.walletSettings.api)
 
     /* Data */
     implementation(projects.data.common)
