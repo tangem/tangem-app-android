@@ -139,9 +139,15 @@ internal class JointOperationModel @Inject constructor(
     }
 
     private fun showSignError(error: JointOperationSignError) {
-        val message = JointOperationErrorMessage().convert(error) ?: return
+        val message = JointOperationErrorMessage(onSupportClick = ::onSupportClick, onOperationGone = params.onDismiss)
+            .convert(error)
+            ?: return
 
         TangemLogger.e("Unable to sign the joint operation: $error")
         uiMessageSender.send(message)
+    }
+
+    private fun onSupportClick() {
+        modelScope.launch { delegate.openSupport(userWalletId = params.userWalletId) }
     }
 }
