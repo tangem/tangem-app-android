@@ -1,7 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
@@ -35,7 +35,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     fun resume(
         scope: CoroutineScope,
         userWalletId: UserWalletId,
-        onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
     ) {
         isResumed = true
         val converter = PolymarketPositionUMConverter(onPositionClick)
