@@ -142,7 +142,7 @@ dependencies {
     api(projects.features.tangempay.details.api)
     api(projects.features.tangempay.main.api)
     api(projects.features.tokenRecieve.api)
-    api(projects.features.virtualAccounts.main.api)
+    api(projects.features.moneyAccount.main.api)
     api(projects.features.wallet.api)
     api(projects.features.walletSettings.api)
     api(projects.features.yieldSupply.api)
