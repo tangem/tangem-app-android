@@ -45,6 +45,13 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasText(getResourceString(R.string.common_got_it))
     }
 
+    // The deactivated-account banner carries a button with the same label, so this one is scoped to the dialog.
+    val removeAccountButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(CoreResR.string.tangempay_remove_account))
+        hasAnyAncestor(withTestTag(BaseDialogTestTags.CONTAINER))
+    }
+
     val cancelButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_cancel))

@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,6 +41,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -115,6 +117,7 @@ private fun PaymentReceiveMainContent(state: PaymentReceiveUM, onShowQr: () -> U
         )
         SpacerH(8.dp)
         Text(
+            modifier = Modifier.testTag(TangemPayTestTags.RECEIVE_ADDRESS),
             text = state.address,
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -126,6 +129,7 @@ private fun PaymentReceiveMainContent(state: PaymentReceiveUM, onShowQr: () -> U
         // rendering it as a QR crashes ZXing — keep the actions disabled until it arrives.
         val hasAddress = state.address.isNotEmpty()
         TangemButton(
+            modifier = Modifier.testTag(TangemPayTestTags.RECEIVE_COPY_BUTTON),
             text = resourceReference(R.string.common_copy),
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_copy_24),
             onClick = state.onCopy,
@@ -139,7 +143,9 @@ private fun PaymentReceiveMainContent(state: PaymentReceiveUM, onShowQr: () -> U
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TangemButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TangemPayTestTags.RECEIVE_SHOW_QR_BUTTON),
                 text = resourceReference(R.string.tangempay_multichain_show_qr),
                 iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_qr_24),
                 onClick = onShowQr,
@@ -148,7 +154,9 @@ private fun PaymentReceiveMainContent(state: PaymentReceiveUM, onShowQr: () -> U
                 isEnabled = hasAddress,
             )
             TangemButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TangemPayTestTags.RECEIVE_SHARE_BUTTON),
                 text = resourceReference(R.string.common_share),
                 iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_share_android_24),
                 onClick = state.onShare,
@@ -173,6 +181,7 @@ private fun PaymentReceiveQrContent(state: PaymentReceiveUM, modifier: Modifier 
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
+                .testTag(TangemPayTestTags.RECEIVE_QR_CODE)
                 .border(
                     width = 16.dp,
                     color = TangemTheme.colors3.bg.secondary,
@@ -183,6 +192,7 @@ private fun PaymentReceiveQrContent(state: PaymentReceiveUM, modifier: Modifier 
         )
         SpacerH(24.dp)
         Text(
+            modifier = Modifier.testTag(TangemPayTestTags.RECEIVE_ADDRESS),
             text = state.address,
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
@@ -194,7 +204,9 @@ private fun PaymentReceiveQrContent(state: PaymentReceiveUM, modifier: Modifier 
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TangemButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TangemPayTestTags.RECEIVE_COPY_BUTTON),
                 text = resourceReference(R.string.common_copy),
                 iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_copy_24),
                 onClick = state.onCopy,
@@ -202,7 +214,9 @@ private fun PaymentReceiveQrContent(state: PaymentReceiveUM, modifier: Modifier 
                 size = TangemButton.Size.X12,
             )
             TangemButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TangemPayTestTags.RECEIVE_SHARE_BUTTON),
                 text = resourceReference(R.string.common_share),
                 iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_share_android_24),
                 onClick = state.onShare,

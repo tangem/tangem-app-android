@@ -20,7 +20,11 @@ import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
+import com.tangem.common.extensions.restartApp
+import com.tangem.common.utils.decodeQrCode
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
@@ -29,9 +33,13 @@ import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
+import org.junit.Assert
 
 /** A fiat balance rendered with a currency symbol and two decimals, e.g. `$1,234.00`. */
 private val FIAT_BALANCE_REGEX = """^\D\d[\d,]*\.\d{2}$""".toRegex()
+
+/** Endpoint the app calls to disable Tangem Pay for the wallet — the account-removal request. */
+private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
 
 fun BaseTestCase.openTangemPay() {
     // Existing customer: callers set the `tangem_pay_eligibility` scenario to PaeraCustomer (in
@@ -707,8 +715,10 @@ fun BaseTestCase.openTangemPayAddFunds() {
         awaitSuccess { onTangemPayMainScreen { topUpButton.assertIsDisplayed() } }
         onTangemPayMainScreen { topUpButton.performClick() }
     }
+    // Gated on an option rather than the title: the sheet's title repeats the action chip's own label, so a
+    // disabled chip that never opened the sheet would satisfy a title assertion.
     step("Assert 'Add funds' sheet is displayed") {
-        awaitSuccess { onTangemPayAddFundsSheet { title.assertIsDisplayed() } }
+        awaitSuccess { onTangemPayAddFundsSheet { receiveOption.assertIsDisplayed() } }
     }
 }
 
@@ -745,5 +755,92 @@ fun BaseTestCase.assertVirtualAccountFee(feeType: String, expectedTitle: String,
 fun BaseTestCase.assertVirtualAccountFeeNotDisplayed(feeType: String, expectedTitle: String) {
     step("Assert '$expectedTitle' fee row is not displayed") {
         onTangemPayVirtualAccountDepositSheet { feeTitle(feeType).assertVisibility(shouldBeDisplayed = false) }
+    }
+}
+
+/** Opens the payment account of a deactivated customer and asserts the account-closed banner. */
+fun BaseTestCase.openDeactivatedTangemPay() {
+    openTangemPay()
+    step("Assert 'Your account has been closed' banner is displayed") {
+        awaitSuccess { onTangemPayMainScreen { accountClosedBannerTitle.assertIsDisplayed() } }
+    }
+}
+
+/** Confirms the 'Remove account?' dialog raised by either of the two removal entry points. */
+fun BaseTestCase.confirmTangemPayAccountRemoval() {
+    val alertTitle = getResourceString(CoreResR.string.tangempay_remove_account_alert_title)
+
+    step("Assert '$alertTitle' dialog is displayed") {
+        awaitSuccess { onDialog { containerWithText(alertTitle).assertIsDisplayed() } }
+    }
+    step("Click on 'Remove account' button") {
+        onDialog { removeAccountButton.performClick() }
+    }
+}
+
+/** Asserts the Main screen renders without the Tangem Pay block. */
+fun BaseTestCase.assertTangemPayTileNotDisplayed() {
+    step("Assert 'Main' screen is displayed") {
+        awaitSuccess { onMainScreen { screenContainer.assertIsDisplayed() } }
+    }
+    step("Assert Tangem Pay block is not displayed") {
+        awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertDoesNotExist() } }
+    }
+}
+
+/** Number of account-removal requests WireMock has served so far; the journal outlives a single test. */
+fun BaseTestCase.getTangemPayRemovalRequestCount(): Int =
+    getWireMockRequestCount(method = "PATCH", urlPathPattern = PAY_ENABLED_ENDPOINT)
+
+/**
+ * Asserts the removal took effect: the request reached the backend (compared against [countBefore], since the
+ * WireMock journal outlives a single test) and the Tangem Pay block is gone, both now and after a restart.
+ */
+fun BaseTestCase.assertTangemPayAccountRemoved(countBefore: Int, packageName: String) {
+    step("Assert Tangem Pay block is not displayed on Main") {
+        assertTangemPayTileNotDisplayed()
+    }
+    step("Assert '$PAY_ENABLED_ENDPOINT' request was sent") {
+        val countAfter = getTangemPayRemovalRequestCount()
+        Assert.assertTrue(
+            "Removing the account should call $PAY_ENABLED_ENDPOINT, count stayed $countAfter",
+            countAfter > countBefore,
+        )
+    }
+    step("Force-close and re-launch the app") {
+        restartApp(packageName)
+    }
+    step("Assert Tangem Pay block is still not displayed on Main") {
+        assertTangemPayTileNotDisplayed()
+    }
+}
+
+/**
+ * On the open 'Add funds' sheet, takes 'From another wallet or exchange' through the network picker into
+ * the receive sheet of [network], and returns the deposit address it shows.
+ */
+fun BaseTestCase.openTangemPayReceiveSheet(network: String): String {
+    var depositAddress = ""
+
+    step("Click on 'From another wallet or exchange' option") {
+        onTangemPayAddFundsSheet { receiveOption.clickWithAssertion() }
+    }
+    step("Click on the '$network' network") {
+        awaitSuccess { onChooseNetworkBottomSheet { networkItem(network).assertIsDisplayed() } }
+        onChooseNetworkBottomSheet { networkItem(network).performClick() }
+    }
+    step("Read the deposit address on the receive sheet") {
+        awaitSuccess { onTangemPayReceiveSheet { address.assertIsDisplayed() } }
+        onTangemPayReceiveSheet { depositAddress = address.extractText() }
+    }
+    return depositAddress
+}
+
+/** Asserts the QR code on the Tangem Pay receive sheet encodes [expectedAddress]. */
+fun BaseTestCase.assertTangemPayQrCodeEncodes(expectedAddress: String) {
+    step("Assert the QR code encodes '$expectedAddress'") {
+        onTangemPayReceiveSheet {
+            Assert.assertEquals(expectedAddress, decodeQrCode(captureQrCodeBitmap()))
+        }
     }
 }
