@@ -476,7 +476,6 @@ internal class DefaultJointAccountRepositoryTest {
                 safeAddress = SAFE_ADDRESS,
                 chainId = CHAIN_ID,
                 safeTx = SafeTxConverter().convertBack(safeTx),
-                deadline = null,
                 signature = SIGNATURE,
             ),
         )
@@ -539,8 +538,8 @@ internal class DefaultJointAccountRepositoryTest {
         safeTx = SafeTxConverter().convertBack(createSafeTx()),
         status = "awaiting_signatures",
         initiator = null,
-        deadline = null,
-        signatures = emptyList(),
+        createdAt = null,
+        votes = emptyList(),
     )
 
     private fun operationErrorResponse(
@@ -580,7 +579,7 @@ internal class DefaultJointAccountRepositoryTest {
 
     @Suppress("UNCHECKED_CAST")
     @Test
-    fun `GIVEN payload WHEN reject THEN the refused body and the signature are sent verbatim`() = runTest {
+    fun `GIVEN payload WHEN reject THEN the refused operation is sent verbatim`() = runTest {
         // Arrange
         val bodySlot = slot<RejectJointOperationRequest>()
         val safeTx = createSafeTx()
@@ -596,7 +595,6 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.rejectOperation(
             userWalletId = WALLET_ID,
             payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = safeTx),
-            signature = SIGNATURE,
         )
 
         // Assert
@@ -607,7 +605,6 @@ internal class DefaultJointAccountRepositoryTest {
                     operationId = OPERATION_ID,
                     safeTx = SafeTxConverter().convertBack(safeTx),
                 ),
-                signature = SIGNATURE,
             ),
         )
     }
@@ -622,7 +619,6 @@ internal class DefaultJointAccountRepositoryTest {
         val actual = repository.rejectOperation(
             userWalletId = WALLET_ID,
             payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = createSafeTx()),
-            signature = SIGNATURE,
         )
 
         // Assert
