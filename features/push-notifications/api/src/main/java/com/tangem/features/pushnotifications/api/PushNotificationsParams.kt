@@ -7,4 +7,6 @@ data class PushNotificationsParams(
     val nextRoute: AppRoute? = null,
     val modelCallbacks: PushNotificationsModelCallbacks,
     val source: AppRoute.PushNotification.Source,
+    /** Leave back to the hosting flow instead of finishing the activity. */
+    val isBackHandledByHost: Boolean = false,
 )
