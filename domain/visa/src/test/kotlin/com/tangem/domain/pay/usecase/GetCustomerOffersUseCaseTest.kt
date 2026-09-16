@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CardIssueOffers
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOffersRepository
@@ -174,11 +175,11 @@ internal class GetCustomerOffersUseCaseTest {
     private fun givenProductInstanceOffers(vararg offers: Offer) {
         coEvery {
             customerOffersRepository.getProductInstanceOffers(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
-        } returns offers.toList().right()
+        } returns customerOffers(*offers).right()
     }
 
     private fun givenOffers(vararg offers: Offer) {
-        coEvery { customerOffersRepository.getOffers(USER_WALLET_ID) } returns offers.toList().right()
+        coEvery { customerOffersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(*offers).right()
     }
 
     private fun plasticOffer() = offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN)
@@ -198,3 +199,6 @@ internal class GetCustomerOffersUseCaseTest {
         const val PRODUCT_INSTANCE_ID = "pi_source_0001"
     }
 }
+
+private fun customerOffers(vararg offers: Offer) =
+    CustomerOffers(orderable = offers.toList(), artwork = emptyMap())
