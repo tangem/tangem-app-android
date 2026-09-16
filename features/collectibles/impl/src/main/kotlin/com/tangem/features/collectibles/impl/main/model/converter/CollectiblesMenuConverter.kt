@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
+import com.tangem.core.ui.res.generated.icons.ic_copy_20
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.generated.icons.ic_mail_20
@@ -17,6 +18,7 @@ internal enum class CollectiblesMenuItem(val id: String) {
     DELIVERIES("deliveries"),
     HOW_IT_WORKS("how_it_works"),
     GET_ASSISTANCE("get_assistance"),
+    COPY_TOP_UP_ADDRESS("copy_top_up_address"),
     CLOSE_ACCOUNT("close_account"),
 }
 
@@ -39,12 +41,17 @@ internal class CollectiblesMenuConverter(
             ),
             item(item = CollectiblesMenuItem.GET_ASSISTANCE, icon = Icons.ic_mail_20, title = "Get assistance"),
 
-            // TODO move it to test menu
+            // TODO move both to test menu
+            item(
+                item = CollectiblesMenuItem.COPY_TOP_UP_ADDRESS,
+                icon = Icons.ic_copy_20,
+                title = "Copy USDC address",
+                hasDividerAbove = true,
+            ),
             item(
                 item = CollectiblesMenuItem.CLOSE_ACCOUNT,
                 icon = Icons.ic_trash_bin_20,
                 title = "Close account",
-                hasDividerAbove = true,
             ),
         ),
         isShown = false,
