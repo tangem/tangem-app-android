@@ -77,7 +77,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.networks)
     api(projects.domain.quotes)
-    api(projects.domain.virtualAccount)
+    api(projects.domain.moneyAccount)
     api(projects.domain.visa)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
