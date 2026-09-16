@@ -676,7 +676,7 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN requisites ready WHEN swap row tapped THEN swap pushed as target with no account flow`() = runTest {
+    fun `GIVEN requisites ready WHEN swap row tapped THEN swap pushed as target in the top-up flow`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -688,7 +688,7 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(route.captured.fromCurrencyPosition).isEqualTo(AppRoute.Swap.CurrencyPosition.TO)
-        assertThat(route.captured.accountFlow).isNull()
+        assertThat(route.captured.accountFlow).isEqualTo(AppRoute.Swap.AccountFlow.PredictionTopUp)
         assertThat(route.captured.screenSource).isEqualTo(AnalyticsParam.ScreensSources.Predictions.value)
         verifyOrder {
             fundingWindow.arm(USER_WALLET_ID)
