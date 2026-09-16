@@ -1,6 +1,7 @@
 package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
+import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
@@ -17,12 +18,16 @@ import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal class SdkTransactionTypeConverter(
-    private val smartContractMethods: Map<String, SmartContractMethod>,
+    smartContractMethods: Map<String, SmartContractMethod>,
     private val yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
+
+    /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
+    private val smartContractMethods: Map<String, SmartContractMethod> =
+        smartContractMethods.mapKeys { (selector, _) -> selector.toSelectorKey() }
 
     private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
 
@@ -33,7 +38,7 @@ internal class SdkTransactionTypeConverter(
         return when (type) {
             is TransactionType.ContractMethod -> {
                 getTransactionType(
-                    methodName = smartContractMethods[type.id]?.name,
+                    methodName = smartContractMethods[type.id.toSelectorKey()]?.name,
                     callData = type.callData,
                     destination = destination,
                     source = source,
@@ -196,6 +201,8 @@ internal class SdkTransactionTypeConverter(
             )
         }
     }
+
+    private fun String.toSelectorKey(): String = lowercase().formatHex()
 
     private fun getTypeForGaslessMethod(destination: TransactionHistoryItem.DestinationType): TxInfo.TransactionType {
         return when (destination) {
