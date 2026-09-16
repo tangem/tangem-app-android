@@ -50,7 +50,7 @@ import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockCompo
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
+import com.tangem.features.moneyaccount.main.component.MoneyAccountMainBlockComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -66,7 +66,7 @@ internal class WalletComponent @AssistedInject constructor(
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     feedV2ComponentFactory: FeedV2Component.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
-    virtualAccountMainBlockComponentFactory: VirtualAccountMainBlockComponent.Factory,
+    moneyAccountMainBlockComponentFactory: MoneyAccountMainBlockComponent.Factory,
     jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
     polymarketWalletBlockComponentFactory: PolymarketWalletBlockComponent.Factory,
     collectiblesWalletBlockComponentFactory: CollectiblesWalletBlockComponent.Factory,
@@ -103,9 +103,9 @@ internal class WalletComponent @AssistedInject constructor(
             params = Unit,
         )
     }
-    private val virtualAccountMainBlockComponent by lazy {
-        virtualAccountMainBlockComponentFactory.create(
-            context = child("virtualAccountMainBlockComponent"),
+    private val moneyAccountMainBlockComponent by lazy {
+        moneyAccountMainBlockComponentFactory.create(
+            context = child("moneyAccountMainBlockComponent"),
             params = Unit,
         )
     }
@@ -338,7 +338,7 @@ internal class WalletComponent @AssistedInject constructor(
             state = uiState,
             promoBannersBlockComponent = promoBannersBlockComponent,
             tangemPayComponent = tangemPayMainBlockComponent,
-            virtualAccountComponent = virtualAccountMainBlockComponent,
+            moneyAccountComponent = moneyAccountMainBlockComponent,
             jointAccountComponent = jointAccountMainBlockComponent,
             polymarketComponent = polymarketWalletBlockComponent,
             collectiblesComponent = collectiblesWalletBlockComponent,
