@@ -1,6 +1,7 @@
 package com.tangem.features.storiesv2.impl.content
 
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.features.storiesv2.impl.R
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,6 +45,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_1),
                     durationMs = SLIDE_DURATION_MS,
                 ),
+                haptics = SLIDE_1_HAPTICS,
             ),
             StoryV2Slide(
                 id = "multiple_cards",
@@ -54,6 +56,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_2),
                     durationMs = SLIDE_DURATION_MS,
                 ),
+                haptics = SLIDE_2_HAPTICS,
             ),
             StoryV2Slide(
                 id = "your_keys",
@@ -64,6 +67,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_3),
                     durationMs = SLIDE_DURATION_MS,
                 ),
+                haptics = SLIDE_3_HAPTICS,
             ),
             StoryV2Slide(
                 id = "trusted_by_millions",
@@ -74,6 +78,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_4),
                     durationMs = SLIDE_DURATION_MS,
                 ),
+                haptics = SLIDE_4_HAPTICS,
             ),
         ),
     )
@@ -89,5 +94,39 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
         // Authoritative for progress: a value that disagrees with the media makes the bar and the picture
         // disagree too. The masters are cuts of one continuous reel, every clip exactly this long.
         const val SLIDE_DURATION_MS = 7_000L
+
+        // Offsets and pulse counts come from the designers' haptic prototype, one timeline per slide. ProtoPie
+        // offers a single Android vibration, so the iOS effects it names map here as
+        // IMPACT_SOFT -> Tick, NOTIFICATION_SUCCESS -> DoubleClick, SELECTION_CHANGED -> a Tick burst.
+        private const val BURST_INTERVAL_MS = 30L
+
+        val SLIDE_1_HAPTICS = listOf(
+            StoryV2Haptic(atMs = 600, effect = TangemHapticEffect.OneTime.Tick),
+            StoryV2Haptic(atMs = 1_050, effect = TangemHapticEffect.OneTime.DoubleClick),
+            StoryV2Haptic(atMs = 1_460, effect = TangemHapticEffect.OneTime.Tick),
+        )
+
+        val SLIDE_2_HAPTICS = listOf(
+            StoryV2Haptic(atMs = 4_700, effect = TangemHapticEffect.OneTime.Tick),
+        )
+
+        val SLIDE_3_HAPTICS = listOf(
+            StoryV2Haptic(
+                atMs = 340,
+                effect = TangemHapticEffect.OneTime.Tick,
+                pulses = 12,
+                pulseIntervalMs = BURST_INTERVAL_MS,
+            ),
+        )
+
+        val SLIDE_4_HAPTICS = listOf(
+            StoryV2Haptic(
+                atMs = 270,
+                effect = TangemHapticEffect.OneTime.Tick,
+                pulses = 8,
+                pulseIntervalMs = BURST_INTERVAL_MS,
+            ),
+            StoryV2Haptic(atMs = 1_500, effect = TangemHapticEffect.OneTime.Tick),
+        )
     }
 }
