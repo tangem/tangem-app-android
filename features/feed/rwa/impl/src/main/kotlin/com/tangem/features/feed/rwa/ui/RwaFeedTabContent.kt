@@ -31,12 +31,14 @@ import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -46,6 +48,8 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.model.list.RwaInterval
 import com.tangem.features.feed.rwa.ui.state.*
@@ -100,6 +104,7 @@ internal fun RwaFeedTabContent(
                 modifier = Modifier.padding(bottom = 16.dp),
             )
         }
+        regionRestrictionItem(banner = state.regionRestriction)
         listItems(list = state.list)
     }
 
@@ -125,6 +130,17 @@ internal fun RwaFeedTabContent(
             }
         },
     )
+}
+
+private fun LazyListScope.regionRestrictionItem(banner: TangemMessageBanner.State?) {
+    banner ?: return
+
+    item(key = "regionRestriction") {
+        TangemMessageBanner(
+            state = banner,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        )
+    }
 }
 
 private fun LazyListScope.listItems(list: RwaListUM) {
@@ -439,6 +455,12 @@ private fun previewRwaFeedTabUM(): RwaFeedTabUM {
         ),
         appliedSelection = CategorySelection(
             category = CategorySelection.Entry(id = "rwa_categories", displayName = "Stocks", code = "xstocks"),
+        ),
+        regionRestriction = TangemMessageBanner.State(
+            title = resourceReference(R.string.markets_real_assets_region_restriction_title),
+            description = resourceReference(R.string.markets_real_assets_region_restriction_description),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_info_20),
         ),
     )
 }
