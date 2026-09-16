@@ -55,6 +55,13 @@ interface GachaVaultRepository {
     ): Either<CollectiblesAccountError, CollectiblesVaultBalance>
 
     /**
+     * The address a top-up of the vault is sent to — its associated token account, not the vault itself: the
+     * vault is a PDA owned by the gacha program, and a transfer addressed to it is refused as an unknown
+     * destination.
+     */
+    suspend fun getVaultTopUpAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String>
+
+    /**
      * Closes the vault and returns its rent. Refused only while a buyback delegate is live (6014 `VaultNotClean`);
      * a vault that still owns token accounts closes successfully and strands their rent, so emptying it first is
      * the caller's job.
