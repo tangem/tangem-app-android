@@ -15,7 +15,10 @@ import java.net.UnknownHostException
 import java.util.concurrent.TimeoutException
 import javax.net.ssl.SSLHandshakeException
 
-internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: AnalyticsErrorHandler): ApiResponse<T> {
+internal fun <T : Any> Response<T>.toSafeApiResponse(
+    analyticsErrorHandler: AnalyticsErrorHandler,
+    isBodyOptional: Boolean = false,
+): ApiResponse<T> {
     val headers = headers().toMultimap()
     val body = body()
 
@@ -24,6 +27,8 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: Anal
 
     return if (isSuccessful && body != null) {
         apiSuccess(data = body, code = code, headers = headers)
+    } else if (isSuccessful && isBodyOptional) {
+        apiSuccess(data = Unit as T, code = code, headers = headers)
     } else {
         val e = try {
             if (code == null) {
