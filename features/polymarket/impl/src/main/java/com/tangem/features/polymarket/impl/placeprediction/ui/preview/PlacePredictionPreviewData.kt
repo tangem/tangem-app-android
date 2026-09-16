@@ -58,12 +58,16 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
 
     override val values: Sequence<PlaceResultUM>
         get() = sequenceOf(
-            PlaceResultUM.Filled(placedAt = PLACED_AT, amount = BigDecimal("4400.1"), tokensBought = BigDecimal("500")),
+            PlaceResultUM.Filled(
+                placedAt = PLACED_AT,
+                collateralAmount = BigDecimal("4400.1"),
+                shares = BigDecimal("500"),
+            ),
             PlaceResultUM.PartiallyFilled(
                 placedAt = PLACED_AT,
-                filledAmount = BigDecimal("2000"),
-                requestedAmount = BigDecimal("4000"),
-                tokensBought = BigDecimal("250"),
+                filledCollateral = BigDecimal("2000"),
+                requestedCollateral = BigDecimal("4000"),
+                shares = BigDecimal("250"),
             ),
             PlaceResultUM.NotFilled(placedAt = PLACED_AT),
             PlaceResultUM.Submitted(placedAt = PLACED_AT),

@@ -23,7 +23,6 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
-import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -263,6 +262,7 @@ internal class PlacePredictionModel @Inject constructor(
             .map { result ->
                 PlaceResultUMConverter.convert(
                     result = result,
+                    side = params.side,
                     quotedShares = frozen.quote.shares,
                     quotedAmount = frozen.quote.notional,
                     placedAt = System.currentTimeMillis(),
@@ -548,8 +548,7 @@ internal class PlacePredictionModel @Inject constructor(
 
     private suspend fun requestPrice(): Boolean {
         val result = withContext(dispatchers.default) {
-            // A buy executes against the SELL side of the book, so the fair price to show is the best ask.
-            getPredictionPriceUseCase(assetId = params.assetId, side = PredictionOrderSide.SELL)
+            getPredictionPriceUseCase(assetId = params.assetId, side = params.side.opposite())
         }
 
         return result.fold(
@@ -562,6 +561,10 @@ internal class PlacePredictionModel @Inject constructor(
                     PredictionPriceError.InvalidAsset -> {
                         uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
                         false
+                    }
+                    PredictionPriceError.EmptyBook -> {
+                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.EmptyBook))
+                        true
                     }
                     PredictionPriceError.Network,
                     is PredictionPriceError.Unknown,

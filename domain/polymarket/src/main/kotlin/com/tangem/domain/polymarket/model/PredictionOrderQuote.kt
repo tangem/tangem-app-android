@@ -27,8 +27,12 @@ data class PredictionOrderQuote(
     val isLive: Boolean,
 ) {
 
+    /** @return the floor for the amount the user types — collateral on a buy, shares on a sell. */
     val minAmount: BigDecimal
-        get() = maxOf(minOrderSize * worstCasePrice, minOrderAmount ?: BigDecimal.ZERO)
+        get() = when (side) {
+            PredictionOrderSide.BUY -> maxOf(minOrderSize * worstCasePrice, minOrderAmount ?: BigDecimal.ZERO)
+            PredictionOrderSide.SELL -> minOrderSize
+        }
 }
 
 data class PredictionOrderFees(
