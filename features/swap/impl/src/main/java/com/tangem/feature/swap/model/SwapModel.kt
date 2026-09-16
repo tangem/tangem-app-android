@@ -49,6 +49,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
@@ -65,6 +66,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.markets.RawMarketToken
+import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.derivationIndex
@@ -76,6 +79,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
 import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.IsHighNetworkFeeUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -123,8 +129,10 @@ import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.commonfeatures.api.choosetoken.PredefinedTokenToAdd
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
@@ -188,6 +196,9 @@ internal class SwapModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val accountUnderlyingCurrencies: AccountUnderlyingCurrencies,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    private val getPredictionWithdrawDestinationsUseCase: GetPredictionWithdrawDestinationsUseCase,
+    private val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
@@ -211,9 +222,18 @@ internal class SwapModel @Inject constructor(
     private val isTangemPayWithdrawFlow: Boolean
         get() = isAccountFlowActive && accountFlow is AccountFlow.Withdraw
 
+    private val isPredictionWithdrawFlow: Boolean
+        get() = accountFlow is AccountFlow.PredictionWithdraw
+
     private var isBalanceHidden = true
 
     private var isAccountsMode: Boolean = false
+
+    private var predictionWithdrawDestinations: Map<CryptoCurrency.ID, PredictionWithdrawDestination>? = null
+
+    private val predictionWithdrawTargets: StateFlow<List<PredefinedTokenToAdd>> = MutableStateFlow(
+        listOfNotNull(polymarketCollateralCurrencyFactory.createDepositTarget().toPredefinedToken()),
+    )
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -249,6 +269,12 @@ internal class SwapModel @Inject constructor(
             // Topping up targets the account, so its issued tokens are the destinations.
             isAccountTopUp ->
                 ChooseTokenBridge.Settings.SwapTo.copy(paymentAccountTokens = PaymentAccountTokens.IssuedTokens)
+            isPredictionWithdrawFlow ->
+                ChooseTokenBridge.Settings.SwapTo.copy(
+                    chooserBlock = ChooserBlock.Predefined(predictionWithdrawTargets),
+                    paymentAccountTokens = PaymentAccountTokens.Hidden,
+                    isJointAccountsShown = false,
+                )
             else -> ChooseTokenBridge.Settings.SwapTo
         },
         analyticsPayload = setOf(
@@ -280,7 +306,13 @@ internal class SwapModel @Inject constructor(
         }
 
     private val isTargetOnlyDestination: Boolean
-        get() = dataState.toSwapCurrencyStatus?.isTargetOnly == true
+        get() = dataState.toSwapCurrencyStatus?.isTargetOnly(isPredictionWithdrawFlow) == true
+
+    private val isReverseLocked: Boolean
+        get() = isAccountFlowActive ||
+            isPredictionWithdrawFlow ||
+            dataState.fromSwapCurrencyStatus?.account is Account.Prediction ||
+            isTargetOnlyDestination
 
     /**
      * Request flow for the STANDALONE marketing banner shown on the swap screen.
@@ -441,6 +473,7 @@ internal class SwapModel @Inject constructor(
         userCountry = getUserCountryUseCase.invokeSync().getOrNull() ?: UserCountry.fromDeviceLocale()
 
         initTokens()
+        observePredictionWithdrawDestinations()
 
         getBalanceHidingSettingsUseCase().onEach { settings ->
             isBalanceHidden = settings.isBalanceHidden
@@ -745,7 +778,7 @@ internal class SwapModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun onChangeCardsClicked() {
-        if (isAccountFlowActive || isTargetOnlyDestination) return
+        if (isReverseLocked) return
         modelScope.launch {
             singleTaskScheduler.cancelTask()
 
@@ -2491,7 +2524,47 @@ internal class SwapModel @Inject constructor(
         }
 
         chooseFromTokenBridge.tokenFilter.value = fromFilter
-        chooseToTokenBridge.tokenFilter.value = baseFilter
+        if (!isPredictionWithdrawFlow) chooseToTokenBridge.tokenFilter.value = baseFilter
+    }
+
+    private fun CryptoCurrency.Token.toPredefinedToken(): PredefinedTokenToAdd? {
+        val rawId = id.rawCurrencyId ?: return null
+        return PredefinedTokenToAdd(
+            token = RawMarketToken(id = rawId, name = name, symbol = symbol),
+            network = TokenMarketInfo.Network(
+                networkId = network.rawId,
+                isExchangeable = false,
+                contractAddress = contractAddress,
+                decimalCount = decimals,
+            ),
+            iconUrl = iconUrl,
+        )
+    }
+
+    private fun observePredictionWithdrawDestinations() {
+        if (!isPredictionWithdrawFlow) return
+        multiAccountStatusListSupplier()
+            .map { statusLists ->
+                statusLists.flatMap { statusList ->
+                    statusList.accountStatuses
+                        .filterIsInstance<AccountStatus.CryptoPortfolio>()
+                        .flatMap { it.flattenCurrencies() }
+                        .map { it.currency }
+                }
+            }
+            .distinctUntilChanged()
+            .onEach { portfolio ->
+                getPredictionWithdrawDestinationsUseCase(portfolio).fold(
+                    ifLeft = { error ->
+                        TangemLogger.e("Unable to load the prediction withdraw destinations: $error")
+                        showAlert()
+                    },
+                    ifRight = { destinations ->
+                        predictionWithdrawDestinations = destinations
+                    },
+                )
+            }
+            .launchIn(modelScope)
     }
 
     private fun sendSuccessSwapEvent(
@@ -2660,7 +2733,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
-        return if (isAccountFlowActive || isTargetOnlyDestination) {
+        return if (isReverseLocked) {
             copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
         } else {
             this
@@ -2672,14 +2745,20 @@ internal class SwapModel @Inject constructor(
      * button is deliberately left alone: it keeps its dynamic Transfer/Swap label in account flows too.
      */
     private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
-        if (!isAccountFlowActive) return this
+        if (!isAccountFlowActive && !isPredictionWithdrawFlow) return this
         val flow = accountFlow ?: return this
         val titledState = copy(
             titleId = when (flow) {
                 is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
                 is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
+                is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
             },
         )
+        if (flow is AccountFlow.PredictionWithdraw) {
+            val withdrawState = titledState.copy(swapButton = titledState.swapButton.asWithdrawButton())
+            val sendCard = withdrawState.sendCardData as? SwapCardState.SwapCardData ?: return withdrawState
+            return withdrawState.copy(sendCardData = sendCard.copy(isSelectionLocked = true))
+        }
         if (!isAccountTopUp) return titledState
         val receiveCard = titledState.receiveCardData as? SwapCardState.SwapCardData ?: return titledState
         return titledState.copy(
@@ -2689,6 +2768,12 @@ internal class SwapModel @Inject constructor(
                 isSelectionLocked = true,
             ),
         )
+    }
+
+    private fun SwapButton.asWithdrawButton(): SwapButton = if (isInProgress) {
+        copy(mode = SwapButton.Mode.TRANSFER_PROGRESSING, title = resourceReference(R.string.common_withdrawing))
+    } else {
+        copy(mode = SwapButton.Mode.TRANSFER, title = resourceReference(R.string.prediction_main_withdraw))
     }
 
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
