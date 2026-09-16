@@ -5,7 +5,9 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
@@ -37,7 +39,7 @@ internal class PolymarketPositionsModelTest {
     private val finishedState = MutableStateFlow<Content>(Content.Empty)
     private val wallet = UserWalletId("022")
     private var model: PolymarketPositionsModel? = null
-    private val positionClick = slot<(PolymarketPositionId) -> Unit>()
+    private val positionClick = slot<(PolymarketPosition.Open) -> Unit>()
 
     @AfterEach
     fun tearDown() {
@@ -178,12 +180,29 @@ internal class PolymarketPositionsModelTest {
     fun `GIVEN active position WHEN tapped THEN passes wallet and outcome to details`() = runTest {
         // Arrange
         createModel()
-        val id = createPolymarketPosition().id
+        val position = createPolymarketPosition()
 
         // Act
-        positionClick.captured(id)
+        positionClick.captured(position)
 
         // Assert
-        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(wallet, id), any()) }
+        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(wallet, position.id), any()) }
+    }
+
+    @Test
+    fun `GIVEN claimable position WHEN tapped THEN passes wallet and snapshot to result screen`() = runTest {
+        // Arrange
+        createModel()
+        val position = createPolymarketPosition(
+            result = PolymarketPositionResult.WON,
+            resolutionStatus = PolymarketResolutionStatus.RESOLVED,
+        ).copy(isRedeemable = true)
+
+        // Act
+        positionClick.captured(position)
+
+        // Assert
+        verify(exactly = 1) { router.push(PolymarketRoute.PositionResult(wallet, position), any()) }
+        verify(exactly = 0) { router.push(ofType<PolymarketRoute.PositionDetails>(), any()) }
     }
 }
