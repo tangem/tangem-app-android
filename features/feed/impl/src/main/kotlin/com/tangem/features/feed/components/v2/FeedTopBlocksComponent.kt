@@ -44,6 +44,7 @@ internal class FeedTopBlocksComponent(
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
             addAccountTypeComponentFactory = addAccountTypeComponentFactory,
         ),
+        TangemPayBlockComponent(context = child(key = TangemPayBlockComponent.KEY)),
         PredictionsBlockComponent(context = child(key = PredictionsBlockComponent.KEY)),
         CollectiblesBlockComponent(
             context = child(key = CollectiblesBlockComponent.KEY),

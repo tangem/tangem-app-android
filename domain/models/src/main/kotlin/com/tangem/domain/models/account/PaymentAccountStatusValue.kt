@@ -395,6 +395,28 @@ fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is PaymentAccount
     this is PaymentAccountStatusValue.Deactivated ||
     this is PaymentAccountStatusValue.Error.CardIssueFailed && balance != null
 
+/**
+ * Whether the customer has a payment (spending) account at all, whatever shape it is in. Deactivated,
+ * failed and still-being-issued accounts all count as existing — only [PaymentAccountStatusValue.Empty]
+
+ * known account never briefly reads as absent while its status refreshes.
+ */
+val PaymentAccountStatusValue.isCreated: Boolean
+    get() = when (this) {
+        is PaymentAccountStatusValue.Empty,
+        is PaymentAccountStatusValue.NotCreated,
+        -> false
+        is PaymentAccountStatusValue.Error,
+        is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.AwaitingPlanSelection,
+        is PaymentAccountStatusValue.Inactive,
+        is PaymentAccountStatusValue.Loaded,
+        is PaymentAccountStatusValue.Loading,
+        is PaymentAccountStatusValue.UnderReview,
+        is PaymentAccountStatusValue.Deactivated,
+        -> true
+    }
+
 /** Balances of an account-bearing status, or `null` when the status has none (or they are unavailable). */
 val PaymentAccountStatusValue.balanceOrNull: PaymentAccountStatusValue.Balance?
     get() = when (this) {
