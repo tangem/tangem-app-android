@@ -24,6 +24,14 @@ interface CardSdkConfigRepository {
     /** Set access code request policy by [isBiometricsRequestPolicy] */
     fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
 
+    /**
+     * Restore the access code request policy when a screen that changed it goes away.
+     *
+     * Unlike [setAccessCodeRequestPolicy], does nothing without a registered SDK: the teardown also runs while the
+     * activity is being destroyed, where asking for the instance re-registers against a dead one and throws.
+     */
+    fun restoreAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
+
     /** Reset the card ID display format to start value */
     fun resetCardIdDisplayFormat()
 

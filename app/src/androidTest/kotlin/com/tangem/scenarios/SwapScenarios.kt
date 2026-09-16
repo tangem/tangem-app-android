@@ -564,7 +564,12 @@ fun BaseTestCase.switchFeeTokenAndApply(currentFeeToken: String, newFeeToken: St
         openSwapNetworkFeeSelector()
     }
     step("Click on '$currentFeeToken' fee token to open 'Choose token'") {
-        onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() }
+        // A quote refresh rebuilds the sheet and stales its rows, and only reopening brings them back.
+        awaitAssert(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { onSwapTokenScreen { networkFeeBlock.performClick() } }
+            runCatching { onSendFeeSelectorBottomSheet { feeTokenItem(currentFeeToken).performClick() } }
+            onSendFeeSelectorBottomSheet { chooseTokenTitle.assertIsDisplayed() }
+        }
     }
     step("Select '$newFeeToken' as the fee-paying token") {
         awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
