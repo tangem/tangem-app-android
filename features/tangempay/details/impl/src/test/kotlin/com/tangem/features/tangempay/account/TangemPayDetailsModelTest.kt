@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -31,6 +33,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
+import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.pay.usecase.GetCashbackSummaryUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -41,7 +44,6 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.addFundsButton
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.details.impl.R
@@ -49,7 +51,6 @@ import com.tangem.features.tangempay.tangemPayCard
 import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
-import com.tangem.features.tangempay.withdrawButton
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -67,7 +68,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -97,6 +97,7 @@ internal class TangemPayDetailsModelTest {
     private val getCustomerOffers: GetCustomerOffersUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
+    private val tangemPayWithdrawRepository: TangemPayWithdrawRepository = mockk(relaxed = true)
 
     @BeforeEach
     fun resetCashbackMocks() {
@@ -107,6 +108,7 @@ internal class TangemPayDetailsModelTest {
             getCashbackSummaryUseCase,
             getBankCredentialsUseCase,
             sendFeedbackEmailUseCase,
+            tangemPayWithdrawRepository,
         )
     }
 
@@ -629,7 +631,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.statusBannerState?.state?.title)
+        assertThat(model.uiState.value.messageBanner?.state?.title)
             .isEqualTo(resourceReference(R.string.tangempay_failed_to_issue_card))
         verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
         model.onDestroy()
@@ -648,7 +650,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.statusBannerState).isNull()
+        assertThat(model.uiState.value.messageBanner).isNull()
         model.onDestroy()
     }
 
@@ -667,7 +669,7 @@ internal class TangemPayDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.statusBannerState).isNotNull()
+        assertThat(model.uiState.value.messageBanner).isNotNull()
         model.onDestroy()
     }
 
@@ -785,6 +787,119 @@ internal class TangemPayDetailsModelTest {
         assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.AddFunds>()).hasSize(1)
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN bank offramp disabled WHEN withdraw clicked THEN swap is pushed without hub`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
+        val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+        advanceUntilIdle()
+
+        // Act
+        model.onClickWithdraw()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(match<AppRoute.Swap> { it.accountFlow == AccountFlow.Withdraw }) }
+        verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank offramp enabled WHEN withdraw clicked THEN hub screen pushed and swap not pushed`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+        val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+        advanceUntilIdle()
+
+        // Act
+        model.onClickWithdraw()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+        verify(exactly = 0) { router.push(ofType<AppRoute.Swap>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank offramp channel missing WHEN withdraw clicked THEN swap pushed instead of the hub`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+        val model = createModel(
+            testScope = this,
+            availableForWithdrawal = BigDecimal.TEN,
+            isBankOfframpAvailable = false,
+        )
+        advanceUntilIdle()
+
+        // Act
+        model.onClickWithdraw()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+        verify(exactly = 1) { router.push(ofType<AppRoute.Swap>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank offramp channel not known yet WHEN withdraw clicked THEN hub screen pushed`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+        val model = createModel(
+            testScope = this,
+            availableForWithdrawal = BigDecimal.TEN,
+            isBankOfframpAvailable = null,
+        )
+        advanceUntilIdle()
+
+        // Act
+        model.onClickWithdraw()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN active withdrawal and bank offramp enabled WHEN withdraw clicked THEN hub pushed without in progress error`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns true
+            coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
+            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.WithdrawHub) }
+            verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN active withdrawal and bank offramp disabled WHEN withdraw clicked THEN in progress error shown and nothing pushed`() =
+        runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isBankOfframpEnabled } returns false
+            coEvery { tangemPayWithdrawRepository.hasWithdrawOrder(any()) } returns true
+            val model = createModel(testScope = this, availableForWithdrawal = BigDecimal.TEN)
+            advanceUntilIdle()
+
+            // Act
+            model.onClickWithdraw()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
+            verify(exactly = 0) { router.push(any()) }
+            model.onDestroy()
+        }
 
     private fun SlotNavigation<TangemPayDetailsNavigation>.trackSlot(): List<TangemPayDetailsNavigation?> {
         val tracked = mutableListOf<TangemPayDetailsNavigation?>()
@@ -917,6 +1032,7 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         statusValue: PaymentAccountStatusValue? = null,
         virtualAccount: VirtualAccountOnramp? = null,
+        isBankOfframpAvailable: Boolean? = true,
         planState: TangemPayTariffPlanState? = null,
         initialRoute: TangemPayDetailsInitialRoute = TangemPayDetailsInitialRoute.ACCOUNT_DETAILS,
         statusEmissions: Int = 1,
@@ -928,6 +1044,7 @@ internal class TangemPayDetailsModelTest {
                 accountError = accountError,
                 availableForWithdrawal = availableForWithdrawal,
                 virtualAccount = virtualAccount,
+                isBankOfframpAvailable = isBankOfframpAvailable,
                 planState = planState,
             ),
         )
@@ -945,11 +1062,10 @@ internal class TangemPayDetailsModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
-            urlOpener = mockk(relaxed = true),
             getBalanceHidingSettingsUseCase = mockk(relaxed = true),
             uiMessageSender = uiMessageSender,
             txHistoryUpdateListener = mockk(relaxed = true),
-            tangemPayWithdrawRepository = mockk(relaxed = true),
+            tangemPayWithdrawRepository = tangemPayWithdrawRepository,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             paymentAccountStatusFetcher = mockk(relaxed = true),
@@ -988,6 +1104,7 @@ internal class TangemPayDetailsModelTest {
         accountError: PaymentAccountStatusValue.Error? = null,
         availableForWithdrawal: BigDecimal = BigDecimal.ZERO,
         virtualAccount: VirtualAccountOnramp? = null,
+        isBankOfframpAvailable: Boolean? = true,
         cardState: TangemPayCardState = TangemPayCardState.Active,
         planState: TangemPayTariffPlanState? = null,
     ): PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
@@ -997,6 +1114,7 @@ internal class TangemPayDetailsModelTest {
         every { customerId } returns "customer-id"
         every { depositAddress } returns "address"
         every { this@mockk.virtualAccount } returns virtualAccount
+        every { this@mockk.isBankOfframpAvailable } returns isBankOfframpAvailable
         every { cards } returns listOf(tangemPayCard(state = cardState))
         every { balance } returns PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(

@@ -20,4 +20,8 @@ dependencies {
     // region Domain models
     api(projects.domain.stories.models)
     // endregion
+
+    // region Test
+    testImplementation(projects.test.core)
+    // endregion
 }

@@ -16,25 +16,44 @@ import arrow.core.Either
  * fetched before signing (the signature is over the nonce), so the registrar fetches it and hands
  * the deciphered bytes to the signer.
  *
+ * The nonce request is card-independent, so COLD callers can prefetch it via [requestNonce] before
+ * the card is tapped (overlapping the round-trip with the tap) and feed the result into [prepare].
+ *
  * Tokens returned by wallet registration are written to `SessionTokensStore`, not surfaced to callers — the
  * result type carries only success/failure so callers can log transient errors.
  */
 interface WalletRegistrar {
 
     /**
-     * Registers the wallet identified by [walletId] (Base64 `UserWalletId`) in one shot: [prepare]
-     * followed by [submit]. Use this when there is no session/UX constraint (MOBILE wallets).
+     * Registers the wallet identified by [walletId] (Base64 `UserWalletId`) in one shot: nonce
+     * request, signing and POST. Use this when there is no session/UX constraint (MOBILE wallets).
      */
     suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit>
 
     /**
-     * Phase 1: idempotency check, nonce request/decryption, and signing via [signer]. For COLD
+     * Best-effort check of whether [walletId] (Base64 `UserWalletId`) is already registered. Lets a
+     * COLD caller skip the nonce request entirely for a known, already-registered card (e.g. every
+     * subsequent scan). Returns `false` if the marker store can't be read — the authoritative
+     * idempotency check still runs inside [prepare], so a stale `false` only costs one nonce request.
+     */
+    suspend fun isRegistered(walletId: String): Boolean
+
+    /**
+     * Phase 0 (COLD prefetch): requests and deciphers a wallet nonce. Card-independent — needs only
+     * a valid session and the device key — so it can run before the card is tapped, letting the
+     * network round-trip overlap the tap. Feed the result into [prepare].
+     */
+    suspend fun requestNonce(): Either<WalletRegistrationError, WalletNonce>
+
+    /**
+     * Phase 1: idempotency check and signing via [signer] over the prefetched [nonce]. For COLD
      * wallets this must run while the card session is open (the signer taps the card). Returns the
      * assembled registration to hand to [submit] later, or `null` if the wallet is already
      * registered (no-op). Performs NO network write — pair it with [submit] after the session closes.
      */
     suspend fun prepare(
         walletId: String,
+        nonce: WalletNonce,
         signer: WalletSigner,
     ): Either<WalletRegistrationError, PreparedWalletRegistration?>
 

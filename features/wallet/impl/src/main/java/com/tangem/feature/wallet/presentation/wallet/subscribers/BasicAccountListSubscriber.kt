@@ -47,6 +47,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
+        accountIdsWithInvites: Set<String> = emptySet(),
     ) {
         stateController.update(
             SetTokenListTransformer(
@@ -60,6 +61,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = isAccountMode,
                 isAccountMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled,
                 isHotBackedUp = isHotBackedUp,
+                accountIdsWithInvites = accountIdsWithInvites,
             ),
         )
     }

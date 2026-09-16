@@ -113,7 +113,7 @@ internal class EarnTokensBatchFetcher(
             }
         }
 
-        val isLast = items.size < limit
+        val isLast = response.meta.hasNext?.not() ?: (response.items.size < response.meta.limit)
 
         val batchResult = BatchFetchResult.Success(
             data = items,

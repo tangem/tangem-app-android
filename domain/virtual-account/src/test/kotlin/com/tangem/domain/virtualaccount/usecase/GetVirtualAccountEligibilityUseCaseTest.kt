@@ -13,6 +13,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -98,11 +99,11 @@ internal class GetVirtualAccountEligibilityUseCaseTest {
     }
 
     @Test
-    fun `GIVEN cached eligibility empty WHEN invoke THEN falls back to fetched eligibility`() = runTest {
+    fun `GIVEN no cached eligibility WHEN invoke THEN falls back to fetched eligibility`() = runTest {
         // GIVEN
         val wallets = listOf(mockWallet())
         every { getVirtualAccountSuitableWalletsUseCase() } returns wallets
-        coEvery { onboardingRepository.getCustomerEligibility() } returns emptyList()
+        coEvery { onboardingRepository.getCustomerEligibility() } returns null
         coEvery {
             onboardingRepository.checkCustomerEligibility()
         } returns listOf(TangemPayEligibilityType.BANNER_VIRTUAL_ACCOUNT)
@@ -112,6 +113,22 @@ internal class GetVirtualAccountEligibilityUseCaseTest {
 
         // THEN
         assertThat(result).isEqualTo(VirtualAccountEligibility.Available(wallets))
+    }
+
+    @Test
+    fun `GIVEN cached eligibility empty WHEN invoke THEN eligibility is not fetched again`() = runTest {
+        // GIVEN
+        val wallet = mockWallet()
+        every { getVirtualAccountSuitableWalletsUseCase() } returns listOf(wallet)
+        coEvery { onboardingRepository.getCustomerEligibility() } returns emptyList()
+        coEvery { onboardingRepository.hasTangemPayInWallet(wallet.walletId) } returns false.right()
+
+        // WHEN
+        val result = useCase(VirtualAccountEntryPoint.BANNER)
+
+        // THEN
+        assertThat(result).isEqualTo(VirtualAccountEligibility.NotAvailable)
+        coVerify(exactly = 0) { onboardingRepository.checkCustomerEligibility() }
     }
 
     @Test

@@ -9,6 +9,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_share_android_24
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_24
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -96,7 +97,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     // region Header menu building
 
     @Test
-    fun `GIVEN all menu callbacks WHEN convert THEN header menu has copy-id, share and explore rows wired`() {
+    fun `GIVEN all menu callbacks WHEN convert THEN header menu has address, copy-id, share and explore rows wired`() {
         // Arrange
         var copiedTxId = false
         val sharedTexts = mutableListOf<String>()
@@ -108,26 +109,65 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
             onExplore = { explored = true },
         )
 
-        // Act
-        val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
+        // Act — an outgoing transfer to a recipient, so the counterparty-driven row is present too.
+        val tx = onChain(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+        val menu = converter.convert(tx).header.menu
 
         // Assert
-        assertThat(menu).hasSize(3)
+        assertThat(menu).hasSize(4)
         assertThat(menu[0].icon).isEqualTo(Icons.ic_copy_24)
-        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
-        assertThat(menu[1].icon).isEqualTo(Icons.ic_share_android_24)
-        assertThat(menu[1].title).isEqualTo(resourceReference(R.string.common_share))
-        assertThat(menu[2].icon).isEqualTo(Icons.ic_globe_24)
-        assertThat(menu[2].title).isEqualTo(resourceReference(R.string.common_explore))
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
+        assertThat(menu[1].icon).isEqualTo(Icons.ic_copy_24)
+        assertThat(menu[1].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+        assertThat(menu[2].icon).isEqualTo(Icons.ic_share_android_24)
+        assertThat(menu[2].title).isEqualTo(resourceReference(R.string.common_share))
+        assertThat(menu[3].icon).isEqualTo(Icons.ic_globe_24)
+        assertThat(menu[3].title).isEqualTo(resourceReference(R.string.common_explore))
 
-        menu[0].clickDirect()
-        menu[2].clickDirect()
-        val share = menu[1].action as TxHistoryDetailsUM.MenuItemUM.Action.Share
+        menu[1].clickDirect()
+        menu[3].clickDirect()
+        val share = menu[2].action as TxHistoryDetailsUM.MenuItemUM.Action.Share
         assertThat(share.text).isEqualTo(stringReference("deal summary"))
         share.onShare("resolved summary")
         assertThat(copiedTxId).isTrue()
         assertThat(explored).isTrue()
         assertThat(sharedTexts).containsExactly("resolved summary")
+    }
+
+    @Test
+    fun `GIVEN add-contact callback WHEN convert THEN header menu leads with a wired add-contact row`() {
+        // Arrange
+        var addedContact = false
+        val converter = dispatcher(
+            onCopyTxId = {},
+            onAddContact = { addedContact = true },
+        )
+
+        // Act
+        val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(2)
+        assertThat(menu[0].icon).isEqualTo(Icons.ic_user_plus_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.address_book_add_contact))
+        menu[0].clickDirect()
+        assertThat(addedContact).isTrue()
+    }
+
+    @Test
+    fun `GIVEN no add-contact callback WHEN convert THEN header menu has no add-contact row`() {
+        // Arrange — the counterparty is already a contact, or is not an address worth saving.
+        val converter = dispatcher(onCopyTxId = {}, onAddContact = null)
+
+        // Act
+        val menu = converter.convert(onChain(type = TransactionType.Transfer)).header.menu
+
+        // Assert
+        assertThat(menu.map { it.icon }).doesNotContain(Icons.ic_user_plus_24)
     }
 
     @Test
@@ -145,7 +185,8 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
 
     @Test
     fun `GIVEN no menu callbacks WHEN convert THEN header menu is empty`() {
-        // Arrange — every menu action is absent (e.g. a blank tx id with no on-chain leg to share or open).
+        // Arrange — every menu action is absent (e.g. a blank tx id with no on-chain leg to share or open), and the
+        // fixture names no counterparty either.
         val converter = dispatcher(onCopyTxId = null, shareText = null, onExplore = null)
 
         // Act
@@ -156,7 +197,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
     }
 
     @Test
-    fun `GIVEN menu WHEN convert express swap THEN same menu is shared on the express header`() {
+    fun `GIVEN menu WHEN convert express swap THEN shared rows follow the payout Copy address`() {
         // Arrange — the menu is built once and handed to both sub-converters.
         val converter = dispatcher(onCopyTxId = {})
 
@@ -164,8 +205,43 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         val menu = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).header.menu
 
         // Assert
+        assertThat(menu).hasSize(2)
+        assertThat(menu[0].icon).isEqualTo(Icons.ic_copy_24)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
+        assertThat(menu[1].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+
+        menu[0].clickDirect()
+        assertThat(copiedAddresses).containsExactly(PAYOUT_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN swap payout into an own account WHEN convert THEN Copy address is still offered`() {
+        // Arrange — the leg reads as the user's own account, but the row copies its address all the same.
+        val converter = dispatcher(
+            lookup = lookupOf(bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownAccount)),
+        )
+
+        // Act
+        val menu = converter.convert(expressSwap(status = ExpressExchangeStatus.Exchanging)).header.menu
+
+        // Assert
         assertThat(menu).hasSize(1)
-        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_transaction_id))
+
+        menu[0].clickDirect()
+        assertThat(copiedAddresses).containsExactly(PAYOUT_ADDRESS)
+    }
+
+    @Test
+    fun `GIVEN onramp WHEN convert THEN Copy address copies the payout address`() {
+        // Act
+        val menu = dispatcher().convert(expressOnramp(status = ExpressOnrampStatus.Finished)).header.menu
+
+        // Assert
+        assertThat(menu).hasSize(1)
+        assertThat(menu[0].title).isEqualTo(resourceReference(R.string.common_copy_address))
+
+        menu[0].clickDirect()
+        assertThat(copiedAddresses).containsExactly(PAYOUT_ADDRESS)
     }
 
     // endregion
@@ -304,6 +380,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onExplore: (() -> Unit)? = null,
         lookup: TxHistoryLookupContext = lookupOf(),
         isBalanceHidden: Boolean = false,
+        onAddContact: (() -> Unit)? = null,
     ) = TxHistoryInfoToTxHistoryDetailsUMConverter(
         currency = currency,
         onCopyAddress = copiedAddresses::add,
@@ -314,6 +391,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverterTest : TxDetailsConvert
         onShare = onShare,
         onExplore = onExplore,
         lookup = lookup,
+        onAddContact = onAddContact,
     )
 
     private fun TxHistoryDetailsUM.MenuItemUM.clickDirect() {

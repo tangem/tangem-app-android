@@ -13,16 +13,21 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class UpdateAccountNameTransformerTest {
 
-    private val prevState = createState(name = "Old", isContinueEnabled = true)
+    private val prevState = createState(name = "Old", isContinueEnabled = true, isValuePasted = false)
 
     @ParameterizedTest
     @ProvideTestModels
     fun transform(model: TransformModel) {
         // Act
-        val actual = UpdateAccountNameTransformer(name = model.input).transform(prevState)
+        val actual = UpdateAccountNameTransformer(name = model.input, isValuePasted = model.inputIsValuePasted)
+            .transform(prevState)
 
         // Assert
-        val expected = prevState.copy(name = model.expectedName, isContinueEnabled = model.expectedContinueEnabled)
+        val expected = prevState.copy(
+            name = model.expectedName,
+            isContinueEnabled = model.expectedContinueEnabled,
+            isValuePasted = model.expectedIsValuePasted,
+        )
         assertThat(actual).isEqualTo(expected)
     }
 
@@ -43,15 +48,25 @@ internal class UpdateAccountNameTransformerTest {
         TransformModel(input = "", expectedName = "", expectedContinueEnabled = false),
         // blank-only input is not a valid name either
         TransformModel(input = "   ", expectedName = "   ", expectedContinueEnabled = false),
+        // a programmatically seeded default carries isValuePasted through, moving the cursor to the end
+        TransformModel(
+            input = "Joint account",
+            inputIsValuePasted = true,
+            expectedName = "Joint account",
+            expectedContinueEnabled = true,
+            expectedIsValuePasted = true,
+        ),
     )
 
     internal data class TransformModel(
         val input: String,
+        val inputIsValuePasted: Boolean = false,
         val expectedName: String,
         val expectedContinueEnabled: Boolean,
+        val expectedIsValuePasted: Boolean = false,
     )
 
-    private fun createState(name: String, isContinueEnabled: Boolean): JointAccountConfigUM {
+    private fun createState(name: String, isContinueEnabled: Boolean, isValuePasted: Boolean): JointAccountConfigUM {
         return JointAccountConfigUM(
             name = name,
             namePlaceholder = stringReference(value = "Joint account"),
@@ -63,7 +78,9 @@ internal class UpdateAccountNameTransformerTest {
             icons = persistentListOf(),
             wallet = null,
             isContinueEnabled = isContinueEnabled,
-            onNameChange = {},
+            isValuePasted = isValuePasted,
+            onValuePastedTriggerDismiss = {},
+            onNameChange = { _, _ -> },
             onColorClick = {},
             onIconClick = {},
             onContinueClick = {},

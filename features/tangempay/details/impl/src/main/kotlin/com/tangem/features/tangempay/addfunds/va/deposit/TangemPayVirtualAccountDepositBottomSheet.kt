@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
@@ -34,6 +35,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_info_24
 import com.tangem.core.ui.res.generated.icons.ic_sign_usd_32
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
@@ -89,7 +91,8 @@ private fun DepositContent(state: TangemPayVirtualAccountDepositUM, modifier: Mo
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens2.x4),
+                .padding(top = TangemTheme.dimens2.x4)
+                .testTag(TangemPayTestTags.VA_DEPOSIT_SHOW_DETAILS_BUTTON),
             text = resourceReference(R.string.tangempay_bank_transfer_show_details),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
@@ -130,12 +133,14 @@ private fun FeesBlock(fees: TangemPayVirtualAccountDepositUM.FeesUM, modifier: M
                         divider = index != fees.rows.lastIndex,
                         titleSlot = {
                             TangemRowText(
+                                modifier = Modifier.testTag(TangemPayTestTags.vaDepositFeeTitle(fee.type)),
                                 text = fee.title,
                                 role = TangemRowTextRole.Title,
                             )
                         },
                         valueSlot = {
                             TangemRowText(
+                                modifier = Modifier.testTag(TangemPayTestTags.vaDepositFeeValue(fee.type)),
                                 text = stringReference(fee.value),
                                 role = TangemRowTextRole.Value,
                             )
@@ -166,7 +171,9 @@ private fun FeesColumn(modifier: Modifier = Modifier, rows: @Composable ColumnSc
 @Composable
 private fun FeesErrorBanner(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemMessageBanner(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(TangemPayTestTags.VA_DEPOSIT_FEE_ERROR_BANNER),
         variant = TangemMessageBanner.Variant.Error,
         title = resourceReference(R.string.tangempay_bank_transfer_fee_error_title),
         description = resourceReference(R.string.tangempay_bank_transfer_fee_error_subtitle),
@@ -355,10 +362,12 @@ private fun previewState(
     fees: TangemPayVirtualAccountDepositUM.FeesUM = TangemPayVirtualAccountDepositUM.FeesUM.Content(
         rows = persistentListOf(
             TangemPayVirtualAccountDepositUM.FeeRow(
+                type = "ACH_ONRAMP",
                 title = resourceReference(R.string.tangempay_bank_transfer_fee_ach),
                 value = "$1",
             ),
             TangemPayVirtualAccountDepositUM.FeeRow(
+                type = "FEDWIRE_ONRAMP",
                 title = resourceReference(R.string.tangempay_bank_transfer_fee_fedwire),
                 value = "$11",
             ),
