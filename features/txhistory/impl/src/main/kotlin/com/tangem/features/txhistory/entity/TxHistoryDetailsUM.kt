@@ -262,14 +262,18 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
      * @property label Section label above the counterparty: "Recipient" (outgoing) / "From" (incoming).
      * @property title Counterparty value: brief address / account name / wallet name.
      * @property avatar Leading avatar.
+     * @property titleIcon Currency avatar drawn after the [title] — the asset of a fee-only card ("120.03 USDT ⓣ").
+     * `null` on a counterparty card, which names an address rather than an asset.
      * @property onCopyClick Copies the counterparty address — the same address the header menu's "Copy address" row
-     * copies, so the two entry points never disagree.
+     * copies, so the two entry points never disagree. `null` on a card with no address behind it (the fee-only
+     * card), which is then not tappable.
      */
     data class CounterpartyUM(
         val label: TextReference,
         val title: TextReference,
         val avatar: CounterpartyAvatar,
-        val onCopyClick: () -> Unit,
+        val titleIcon: CurrencyIconState? = null,
+        val onCopyClick: (() -> Unit)? = null,
     )
 
     /** Leading avatar of the [CounterpartyUM] card — the only thing that differs between counterparty kinds. */
@@ -278,6 +282,9 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
 
         /** External blockchain address — rendered as an identicon generated from [rawAddress]. */
         data class Address(val rawAddress: String) : CounterpartyAvatar
+
+        /** A plain type glyph over the neutral avatar circle — the ↑ of a fee-only card, which has no owner. */
+        data class Glyph(val icon: TxIcon) : CounterpartyAvatar
 
         /** User's own account — rendered as [iconResId] tinted over [backgroundColor]. */
         data class Account(

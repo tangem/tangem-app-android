@@ -24,6 +24,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
@@ -66,6 +67,7 @@ internal class TxHistoryModel @Inject constructor(
     private val appTxHistoryFetcher: AppTxHistoryFetcher,
     private val router: Router,
     private val cryptoCurrencyDeepLinkListener: ExpressDeepLinkListener,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     repository: TxHistoryRepositoryV2,
     paramsContainer: ParamsContainer,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
@@ -77,6 +79,12 @@ internal class TxHistoryModel @Inject constructor(
     private val lookupDataFlow: Flow<TxHistoryLookupContext> = ownerLookupProducer(params.userWalletId)
         .flowOn(dispatchers.default)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
+
+    private val networkTokensFlow: StateFlow<Set<CryptoCurrency.Token>> = flow {
+        emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
+    }
+        .flowOn(dispatchers.io)
+        .stateIn(modelScope, SharingStarted.Eagerly, initialValue = emptySet())
 
     @RemoveWithToggle("AND_15767_NEW_TX_HISTORY_ENABLED")
     private val txHistoryListManager: TxHistoryListManager? = if (!txHistoryFeatureToggle.isNewTxHistoryEnabled) {
@@ -143,15 +151,20 @@ internal class TxHistoryModel @Inject constructor(
             combine(
                 flow = historyTxListManager.state,
                 flow2 = lookupDataFlow,
-                transform = { state, lookup -> state to lookup },
+                flow3 = networkTokensFlow,
+                transform = { state, lookup, tokens -> Triple(state, lookup, tokens) },
             )
-                .onEach { (state, lookup) -> applyHistoryState(state, lookup) }
+                .onEach { (state, lookup, tokens) -> applyHistoryState(state, lookup, tokens) }
                 .flowOn(dispatchers.default)
                 .launchIn(modelScope)
         }
     }
 
-    private fun applyHistoryState(state: HistoryTxListManager.HistoryState, lookup: TxHistoryLookupContext) {
+    private fun applyHistoryState(
+        state: HistoryTxListManager.HistoryState,
+        lookup: TxHistoryLookupContext,
+        networkTokens: Set<CryptoCurrency.Token>,
+    ) {
         when (state) {
             HistoryTxListManager.HistoryState.Loading ->
                 stateController.setLoadingIfNotContent(onExploreClick = ::openExplorer)
@@ -163,7 +176,7 @@ internal class TxHistoryModel @Inject constructor(
                 stateController.setError(onReloadClick = ::reload, onExploreClick = ::openExplorer)
             is HistoryTxListManager.HistoryState.Content -> {
                 stateController.setContent(
-                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup)),
+                    snapshot = TxHistoryItemsSnapshot.Items(buildUiItems(state.items, lookup, networkTokens)),
                     loadMore = ::loadMoreItems,
                     onExploreClick = ::openExplorer,
                 )
@@ -175,12 +188,14 @@ internal class TxHistoryModel @Inject constructor(
     private fun buildUiItems(
         merged: List<TxHistoryInfo>,
         lookup: TxHistoryLookupContext,
+        networkTokens: Set<CryptoCurrency.Token>,
     ): ImmutableList<TxHistoryItemsUM.TxHistoryItemUM> {
         val converter = TxHistoryInfoToTransactionItemUMConverter(
             txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
                 currency = params.currency,
                 txHistoryUiActions = this,
                 lookupContext = lookup,
+                networkTokens = networkTokens,
             ),
             expressConverter = ExpressTxToTransactionItemUMConverter(
                 currency = params.currency,
@@ -335,6 +350,7 @@ internal class TxHistoryModel @Inject constructor(
                         currency = params.currency,
                         txHistoryUiActions = this,
                         lookupContext = lookupContext,
+                        networkTokens = networkTokensFlow.value,
                     )
                     pending.map(converter::convert).toPersistentList()
                 },
