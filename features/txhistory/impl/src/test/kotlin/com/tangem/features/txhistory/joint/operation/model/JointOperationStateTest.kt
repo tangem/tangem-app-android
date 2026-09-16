@@ -17,7 +17,7 @@ internal class JointOperationStateTest {
         val state = state(signers = listOf(signer(address = OWN, answer = Answer.WAITING), signer(address = OTHER)))
 
         // Act
-        val actual = state.withOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = Answer.SIGNED)
 
         // Assert
         assertThat(actual.signers.map { it.answer }).containsExactly(Answer.SIGNED, Answer.WAITING).inOrder()
@@ -34,7 +34,7 @@ internal class JointOperationStateTest {
         )
 
         // Act
-        val actual = state.withOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = Answer.SIGNED)
 
         // Assert
         assertThat(actual.collected).isEqualTo(2)
@@ -47,7 +47,7 @@ internal class JointOperationStateTest {
         val state = state(signers = signers)
 
         // Act
-        val actual = state.withOwnAnswer(answeredLocally = false)
+        val actual = state.withOwnAnswer(answeredLocally = null)
 
         // Assert
         assertThat(actual.signers).isEqualTo(signers)
@@ -60,7 +60,7 @@ internal class JointOperationStateTest {
         val state = state(signers = signers)
 
         // Act
-        val actual = state.withOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = Answer.SIGNED)
 
         // Assert
         assertThat(actual.signers).isEqualTo(signers)
@@ -73,7 +73,7 @@ internal class JointOperationStateTest {
         val state = state(signers = signers, ownAddress = null)
 
         // Act
-        val actual = state.withOwnAnswer(answeredLocally = true)
+        val actual = state.withOwnAnswer(answeredLocally = Answer.SIGNED)
 
         // Assert
         assertThat(actual.signers).isEqualTo(signers)
@@ -103,9 +103,83 @@ internal class JointOperationStateTest {
         assertThat(actual).isNull()
     }
 
+    @Test
+    fun `GIVEN this member is still waiting WHEN they declined locally THEN the list shows them declined`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.WAITING)))
+
+        // Act
+        val actual = state.withOwnAnswer(answeredLocally = Answer.DECLINED)
+
+        // Assert
+        assertThat(actual.signers.single().answer).isEqualTo(Answer.DECLINED)
+        assertThat(actual.ownAnswer).isEqualTo(Answer.DECLINED)
+    }
+
+    @Test
+    fun `GIVEN the initiator spelled in another case WHEN state built THEN this member is the initiator`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), initiator = OWN.uppercase())
+
+        // Act
+        val actual = state.isInitiator
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN the owner address is not resolvable WHEN state built THEN this member is not the initiator`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), ownAddress = null)
+
+        // Act
+        val actual = state.isInitiator
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN as many declines as the threshold allows WHEN state built THEN it is still reachable`() {
+        // Arrange — 3 members, threshold 2: one decline leaves exactly two who can sign
+        val state = state(
+            signers = listOf(
+                signer(address = OTHER, answer = Answer.CREATED),
+                signer(address = OWN, answer = Answer.DECLINED),
+                signer(address = THIRD),
+            ),
+        )
+
+        // Act
+        val actual = state.isReachable
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN one decline too many WHEN state built THEN the threshold is out of reach`() {
+        // Arrange
+        val state = state(
+            signers = listOf(
+                signer(address = OTHER, answer = Answer.CREATED),
+                signer(address = OWN, answer = Answer.DECLINED),
+                signer(address = THIRD, answer = Answer.DECLINED),
+            ),
+        )
+
+        // Act
+        val actual = state.isReachable
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
     private fun state(
         signers: List<JointOperationSignerState>,
         ownAddress: String? = OWN,
+        initiator: String? = OTHER,
     ) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = OTHER, amountWei = BigInteger.ONE),
@@ -116,6 +190,7 @@ internal class JointOperationStateTest {
         signers = signers,
         canSign = true,
         ownAddress = ownAddress,
+        initiator = initiator,
     )
 
     private fun signer(address: String, answer: Answer = Answer.WAITING, at: String? = null) =
@@ -128,6 +203,7 @@ internal class JointOperationStateTest {
     private companion object {
         const val OWN = "0xowner"
         const val OTHER = "0xother"
+        const val THIRD = "0xthird"
         const val AT = "2026-09-01T12:00:00Z"
     }
 }
