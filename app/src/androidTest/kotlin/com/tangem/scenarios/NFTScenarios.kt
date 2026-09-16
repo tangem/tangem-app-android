@@ -14,9 +14,14 @@ import io.qameta.allure.kotlin.Allure.step
 fun BaseTestCase.enableNFTAndReturnToMain() {
     openWalletSettingsScreen()
     step("Click on 'NFT' switch") {
-        awaitSuccess { onWalletSettingsScreen { nftSwitch.assertExists() } }
+        // The row is only composed once scrolled to, so waiting for the switch first waits for nothing.
+        awaitSuccess {
+            onWalletSettingsScreen {
+                scrollToNFT()
+                nftSwitch.assertExists()
+            }
+        }
         onWalletSettingsScreen {
-            scrollToNFT()
             // Enabling only: a caller arriving with NFT already on fails here rather than having this
             // helper switch it off, which would also hide state leaking in from an earlier test.
             nftSwitch.assertIsOff()
