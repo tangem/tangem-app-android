@@ -23,8 +23,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,7 +33,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -268,17 +267,6 @@ internal class CollectiblesMainModelTest {
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,
             vaultBalance = CollectiblesVaultBalance(usdcAmount = BigDecimal("25.5"), usdcFiatRate = BigDecimal.ONE),
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }
