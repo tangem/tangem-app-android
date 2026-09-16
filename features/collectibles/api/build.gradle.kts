@@ -9,6 +9,11 @@ android {
 }
 
 dependencies {
+    /** Compose */
+    api(deps.compose.foundation)
+    api(deps.compose.ui)
+    implementation(deps.compose.runtime)
+
     /** Project - Common */
     api(projects.common.routing)
 
