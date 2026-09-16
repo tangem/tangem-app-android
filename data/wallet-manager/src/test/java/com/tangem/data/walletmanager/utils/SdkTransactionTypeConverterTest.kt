@@ -30,7 +30,7 @@ internal class SdkTransactionTypeConverterTest {
         @ProvideTestModels
         fun convert(model: GaslessModel) {
             // Act
-            val actual = converter.convert(item(destination = model.destination, methodId = GASLESS_METHOD_ID))
+            val actual = converter.convert(item(destination = model.destination, methodId = model.methodId))
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -57,6 +57,17 @@ internal class SdkTransactionTypeConverterTest {
                     ),
                 ),
                 expected = TxInfo.TransactionType.UnknownOperation,
+            ),
+            // The asset is keyed with the 0x prefix; a selector parsed out of the raw call data arrives without one
+            GaslessModel(
+                destination = singleUser(FEE_RECIPIENT),
+                methodId = GASLESS_METHOD_ID.removePrefix("0x"),
+                expected = TxInfo.TransactionType.GaslessFee,
+            ),
+            GaslessModel(
+                destination = singleUser(FEE_RECIPIENT),
+                methodId = GASLESS_METHOD_ID.uppercase(),
+                expected = TxInfo.TransactionType.GaslessFee,
             ),
         )
     }
@@ -230,6 +241,7 @@ internal class SdkTransactionTypeConverterTest {
     internal data class GaslessModel(
         val destination: TransactionHistoryItem.DestinationType,
         val expected: TxInfo.TransactionType,
+        val methodId: String = GASLESS_METHOD_ID,
     )
 
     internal data class ApproveModel(
