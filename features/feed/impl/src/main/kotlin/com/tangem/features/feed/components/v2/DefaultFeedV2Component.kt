@@ -39,6 +39,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
@@ -61,6 +62,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
     private val searchBarController: DefaultFeedSearchBarController,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedV2Component, AppComponentContext by context {
 
@@ -178,6 +180,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             is FeedHomeRoute -> FeedHomeComponent(
                 context = childContext,
                 portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+                addAccountTypeComponentFactory = addAccountTypeComponentFactory,
                 analyticsEventHandler = analyticsEventHandler,
             )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
