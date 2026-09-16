@@ -3,7 +3,6 @@ package com.tangem.features.txhistory.joint.operation.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -63,7 +62,7 @@ internal class JointOperationRefusalMessagesTest {
         ErrorModel(error = JointOperationRejectError.OperationNotFound, expectedTitle = null),
         ErrorModel(
             error = JointOperationRejectError.ThresholdReached,
-            expectedTitle = stringReference("Enough signatures collected"),
+            expectedTitle = res(CoreUiR.string.joint_operation_threshold_reached_title),
         ),
         ErrorModel(error = JointOperationRejectError.NotAMember, expectedTitle = errorTitle()),
         ErrorModel(error = JointOperationRejectError.Failed(IllegalStateException()), expectedTitle = errorTitle()),

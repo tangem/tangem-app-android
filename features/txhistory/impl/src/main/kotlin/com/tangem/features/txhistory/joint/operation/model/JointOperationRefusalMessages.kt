@@ -1,7 +1,6 @@
 package com.tangem.features.txhistory.joint.operation.model
 
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
@@ -38,15 +37,12 @@ internal class JointOperationRefusalMessages(private val onConfirm: () -> Unit) 
         )
     }
 
-    /**
-     * An operation the backend has already lost needs no dialog: the model closes the sheet. The threshold text is
-     * inline until the agreed keys land with the error-texts change.
-     */
+    /** An operation the backend has already lost needs no dialog: the model closes the sheet */
     fun error(error: JointOperationRejectError): DialogMessage? = when (error) {
         JointOperationRejectError.OperationNotFound -> null
         JointOperationRejectError.ThresholdReached -> DialogMessage(
-            title = stringReference("Enough signatures collected"),
-            message = stringReference("The operation is being executed. Your signature is not needed"),
+            title = resourceReference(CoreUiR.string.joint_operation_threshold_reached_title),
+            message = resourceReference(CoreUiR.string.joint_operation_threshold_reached_subtitle),
             firstActionBuilder = { okAction() },
         )
         JointOperationRejectError.NotAMember,
