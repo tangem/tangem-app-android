@@ -26,7 +26,9 @@ internal object PlacePredictionNotificationsFactory {
         when (state.priceError) {
             PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
             PriceErrorUM.Unknown -> add(PredictionNotificationUM.PriceFailed)
-            null -> Unit
+            PriceErrorUM.EmptyBook,
+            null,
+            -> Unit
         }
 
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
