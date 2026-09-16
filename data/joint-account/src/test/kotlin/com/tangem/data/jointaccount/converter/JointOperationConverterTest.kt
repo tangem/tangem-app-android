@@ -26,11 +26,12 @@ internal class JointOperationConverterTest {
                 value = UINT256_MAX,
             ),
             initiator = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
-            signatures = listOf(
-                JointOperationDto.SignatureDto(
+            createdAt = "2026-09-07T09:00:00Z",
+            votes = listOf(
+                JointOperationDto.VoteDto(
                     address = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
-                    state = "declined",
-                    at = "2026-09-07T10:00:00Z",
+                    vote = "decline",
+                    votedAt = "2026-09-07T10:00:00Z",
                 ),
             ),
         )
@@ -57,6 +58,7 @@ internal class JointOperationConverterTest {
                 ),
                 status = JointOperation.Status.AWAITING_SIGNATURES,
                 initiator = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                createdAt = "2026-09-07T09:00:00Z",
                 signatures = listOf(
                     JointOperation.MemberSignature(
                         address = "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
@@ -76,6 +78,29 @@ internal class JointOperationConverterTest {
 
         // Assert
         assertThat(actual.status).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN every vote the backend can send WHEN convert THEN approve signs, decline declines, the rest is unknown`() {
+        // Arrange
+        val dto = operationDto(
+            chainId = 1,
+            votes = listOf(
+                JointOperationDto.VoteDto(address = "0xa", vote = "approve", votedAt = "2026-09-07T10:00:00Z"),
+                JointOperationDto.VoteDto(address = "0xb", vote = "decline", votedAt = "2026-09-07T10:01:00Z"),
+                JointOperationDto.VoteDto(address = "0xc", vote = "abstain", votedAt = null),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(dto).signatures.map { it.state }
+
+        // Assert
+        assertThat(actual).containsExactly(
+            JointOperation.MemberSignature.State.SIGNED,
+            JointOperation.MemberSignature.State.DECLINED,
+            JointOperation.MemberSignature.State.UNKNOWN,
+        ).inOrder()
     }
 
     internal data class StatusModel(val raw: String, val expected: JointOperation.Status)
@@ -157,7 +182,8 @@ internal class JointOperationConverterTest {
         operationId: String = OPERATION_ID,
         safeTx: JointOperationDto.SafeTxDto = safeTxDto(),
         initiator: String? = null,
-        signatures: List<JointOperationDto.SignatureDto> = emptyList(),
+        createdAt: String? = null,
+        votes: List<JointOperationDto.VoteDto> = emptyList(),
         status: String = "awaiting_signatures",
     ) = JointOperationDto(
         operationId = operationId,
@@ -165,8 +191,8 @@ internal class JointOperationConverterTest {
         safeTx = safeTx,
         status = status,
         initiator = initiator,
-        deadline = null,
-        signatures = signatures,
+        createdAt = createdAt,
+        votes = votes,
     )
 
     private fun safeTxDto(
