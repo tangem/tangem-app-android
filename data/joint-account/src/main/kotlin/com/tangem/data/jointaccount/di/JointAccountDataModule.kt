@@ -25,6 +25,7 @@ import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
@@ -162,6 +163,15 @@ internal interface JointAccountDataModule {
                 factory = factory,
                 keyCreator = { params -> "joint_account_list_${params.userWalletId.stringValue}" },
             ) {}
+        }
+
+        @Provides
+        @Singleton
+        fun provideJointAccountPollingCoordinator(
+            fetcher: SingleJointAccountListFetcher,
+            appScope: AppCoroutineScope,
+        ): JointAccountPollingCoordinator {
+            return JointAccountPollingCoordinator(fetcher = fetcher, appScope = appScope)
         }
     }
 }
