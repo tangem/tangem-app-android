@@ -12,7 +12,7 @@ internal object StoryV2CompositionValidator {
     fun validate(composition: StoryV2Composition): StoryV2Composition? {
         val slides = composition.slides
             .filter { it.asset.durationMs > 0 }
-            .map { it.copy(actions = it.actions?.let(::sanitizeActions), hapticAtMs = sanitizeHaptics(it)) }
+            .map { it.copy(actions = it.actions?.let(::sanitizeActions), haptics = sanitizeHaptics(it)) }
 
         if (slides.isEmpty()) return null
 
@@ -28,12 +28,12 @@ internal object StoryV2CompositionValidator {
      * Markers are offsets inside the slide, so anything at or past the duration is never reached and a duplicate
      * fires twice on one frame. Images have no timeline to hang a marker on.
      */
-    private fun sanitizeHaptics(slide: StoryV2Slide): List<Long> {
+    private fun sanitizeHaptics(slide: StoryV2Slide): List<StoryV2Haptic> {
         if (slide.asset is StoryV2Asset.Image) return emptyList()
 
-        return slide.hapticAtMs
-            .filter { it >= 0 && it < slide.asset.durationMs }
-            .distinct()
-            .sorted()
+        return slide.haptics
+            .filter { it.atMs >= 0 && it.atMs < slide.asset.durationMs }
+            .distinctBy(StoryV2Haptic::atMs)
+            .sortedBy(StoryV2Haptic::atMs)
     }
 }

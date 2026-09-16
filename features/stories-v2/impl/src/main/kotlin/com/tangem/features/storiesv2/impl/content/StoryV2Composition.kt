@@ -3,6 +3,7 @@ package com.tangem.features.storiesv2.impl.content
 import androidx.annotation.DrawableRes
 import androidx.annotation.RawRes
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.haptic.TangemHapticEffect
 
 /**
  * A story as the player sees it: an ordered set of slides, already resolved to assets that exist on this device.
@@ -53,7 +54,15 @@ internal data class StoryV2Slide(
     val subtitle: TextReference?,
     val asset: StoryV2Asset,
     val actions: List<StoryV2Action>? = null,
-    val hapticAtMs: List<Long> = emptyList(),
+    val haptics: List<StoryV2Haptic> = emptyList(),
+)
+
+/** A burst ([pulses] above one) reads as a single texture rather than as separate taps. */
+internal data class StoryV2Haptic(
+    val atMs: Long,
+    val effect: TangemHapticEffect.OneTime,
+    val pulses: Int = 1,
+    val pulseIntervalMs: Long = 0,
 )
 
 /**
