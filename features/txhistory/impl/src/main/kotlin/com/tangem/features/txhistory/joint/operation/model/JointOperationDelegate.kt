@@ -70,7 +70,6 @@ internal class JointOperationDelegate @Inject constructor(
         )
     }
 
-    /** The same request the send flow files for a failed transaction */
     suspend fun openSupport(userWalletId: UserWalletId) {
         val metaInfo = getWalletMetaInfoUseCase(userWalletId).getOrNull() ?: return
 
