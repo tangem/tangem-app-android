@@ -116,12 +116,18 @@ internal object SpendDatasourceModule {
                         .withSubtype(VirtualAccountStatusValueDM.Empty::class.java, "empty")
                         .withSubtype(VirtualAccountStatusValueDM.NotCreated::class.java, "not_created")
                         .withSubtype(VirtualAccountStatusValueDM.UnderReview::class.java, "kyc_status")
-                        .withSubtype(VirtualAccountStatusValueDM.Provisioning::class.java, "provisioning")
+                        .withSubtype(VirtualAccountStatusValueDM.Issuing::class.java, "issuing")
+                        .withSubtype(
+                            VirtualAccountStatusValueDM.VerificationDeclined::class.java,
+                            "verification_declined",
+                        )
+                        .withSubtype(VirtualAccountStatusValueDM.Activating::class.java, "activating")
                         .withSubtype(
                             VirtualAccountStatusValueDM.CountryNotSupported::class.java,
                             "country_not_supported",
                         )
-                        .withSubtype(VirtualAccountStatusValueDM.ActiveAccount::class.java, "active_account"),
+                        .withSubtype(VirtualAccountStatusValueDM.ActiveAccount::class.java, "active_account")
+                        .withSubtype(VirtualAccountStatusValueDM.Deactivated::class.java, "deactivated"),
                 )
         }
     }
