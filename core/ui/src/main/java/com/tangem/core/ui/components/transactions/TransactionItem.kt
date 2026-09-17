@@ -459,13 +459,19 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
 @Composable
 private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, modifier: Modifier = Modifier) {
     val secondary = TangemTheme.colors3.text.secondary
+    val template = stringResourceSafe(R.string.transaction_history_fee_sending_asset, subtitle.symbol)
+    val icon = subtitle.icon
 
     InlineImagesText(
-        template = stringResourceSafe(R.string.transaction_history_fee_sending_asset, subtitle.symbol),
-        icons = listOf {
-            subtitle.icon?.let { iconState ->
+        // An asset with no avatar drops the marker with it: a kept marker still lays out its placeholder, leaving a
+        // blank gap before the ticker.
+        template = if (icon == null) template.withoutInlineImage() else template,
+        icons = if (icon == null) {
+            emptyList()
+        } else {
+            listOf {
                 CurrencyIcon(
-                    state = iconState,
+                    state = icon,
                     shouldDisplayNetwork = false,
                     withFixedSize = false,
                     modifier = Modifier.fillMaxSize(),
@@ -479,6 +485,11 @@ private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, mod
         modifier = modifier,
     )
 }
+
+/** Drops the inline-image marker together with the space the template puts next to it. */
+private fun String.withoutInlineImage(): String = replace("$INLINE_IMAGE_PLACEHOLDER ", "")
+    .replace(" $INLINE_IMAGE_PLACEHOLDER", "")
+    .replace(INLINE_IMAGE_PLACEHOLDER, "")
 
 @Composable
 private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status, modifier: Modifier = Modifier) {
