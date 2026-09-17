@@ -528,7 +528,15 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     override fun onToMainClick() {
-        router.popTo(PolymarketRoute.Main(userWalletId = params.userWalletId))
+        when (params) {
+            is PlacePredictionComponent.Params.Buy -> router.popTo(
+                PolymarketRoute.Main(userWalletId = params.userWalletId),
+            )
+            is PlacePredictionComponent.Params.Sell -> {
+                router.popTo(PlacePredictionRoute.Amount)
+                router.pop()
+            }
+        }
     }
 
     fun isSubmitting(): Boolean = when (uiState.value.submit) {

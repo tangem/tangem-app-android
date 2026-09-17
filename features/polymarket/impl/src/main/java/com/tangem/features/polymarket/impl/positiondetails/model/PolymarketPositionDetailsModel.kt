@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.positiondetails.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positiondetails.PolymarketPositionDetailsComponent
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
@@ -16,6 +18,7 @@ import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +42,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
     private var loadJob: Job? = null
     private var eventJob: Job? = null
     private var position: PolymarketPosition.Open? = null
+    private var hasShownPosition = false
     private var event: PolymarketEvent? = null
 
     val uiState: StateFlow<PolymarketPositionDetailsUM>
@@ -64,18 +68,30 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         event = null
         uiState.update { it.copy(content = Content.Loading) }
         loadJob = modelScope.launch {
-            val result = withContext(dispatchers.default) {
-                val addresses = deriveAddresses.stored(params.userWalletId) ?: return@withContext null
-                repository.getPosition(addresses, params.positionId)
-            }
+            val addresses = withContext(dispatchers.default) { deriveAddresses.stored(params.userWalletId) }
             ensureActive()
-            if (result == null) {
+            if (addresses == null) {
                 showError("Stored addresses unavailable")
-            } else {
-                result.fold(ifLeft = { showError(it.toString()) }, ifRight = ::showPosition)
+                return@launch
+            }
+            repeat(PolymarketConst.POSITION_INDEXING_READS) { read ->
+                val result = withContext(dispatchers.default) { repository.getPosition(addresses, params.positionId) }
+                ensureActive()
+                val loaded = result.getOrElse { error ->
+                    showError(error.toString())
+                    return@launch
+                }
+                if (loaded != null || !isIndexingLag(read)) {
+                    showPosition(loaded)
+                    return@launch
+                }
+                delay(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS)
             }
         }
     }
+
+    private fun isIndexingLag(read: Int): Boolean =
+        hasShownPosition && read < PolymarketConst.POSITION_INDEXING_READS - 1
 
     private fun showPosition(loaded: PolymarketPosition.Open?) {
         if (loaded == null || !loaded.canOpenPositionDetails) {
@@ -83,6 +99,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
             return
         }
         position = loaded
+        hasShownPosition = true
         publishPosition()
         loaded.eventId?.let(::loadEvent)
     }
@@ -110,6 +127,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
             state.copy(
                 content = content.copy(
                     event = content.event?.copy(onClick = loaded.eventId?.let { { openEvent() } }),
+                    onClosePositionClick = { closePosition() }.takeIf { loaded.canClosePosition },
                 ),
             )
         }
@@ -124,6 +142,18 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 marketId = loaded.marketId,
                 assetId = loaded.id.assetId,
+            ),
+        )
+    }
+
+    private fun closePosition() {
+        val loaded = position ?: return
+        val marketId = loaded.marketId ?: return
+        router.push(
+            PolymarketRoute.ClosePosition(
+                userWalletId = params.userWalletId,
+                positionId = loaded.id,
+                marketId = marketId,
             ),
         )
     }
