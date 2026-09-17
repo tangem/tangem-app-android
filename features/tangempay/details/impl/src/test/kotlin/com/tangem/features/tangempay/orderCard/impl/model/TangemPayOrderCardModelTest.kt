@@ -15,7 +15,7 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,7 +23,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -168,17 +167,6 @@ internal class TangemPayOrderCardModelTest {
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
     ).also { model = it }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private fun virtualOffer(): Offer = Offer(
         type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
