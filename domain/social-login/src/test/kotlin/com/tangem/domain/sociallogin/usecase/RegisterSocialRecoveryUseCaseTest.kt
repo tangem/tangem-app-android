@@ -24,7 +24,7 @@ internal class RegisterSocialRecoveryUseCaseTest {
 
     private val useCase = RegisterSocialRecoveryUseCase(socialRecoveryRepository, socialBackupRepository)
 
-    private val idToken = SocialProviderIdToken(value = "id-token")
+    private val idToken = SocialProviderIdToken(value = "id-token", nonce = "nonce")
     private val walletId = UserWalletId(stringValue = "0011")
     private val recoveryKey = RecoveryKey(ByteArray(RecoveryKey.SIZE_BYTES) { 1 })
 
