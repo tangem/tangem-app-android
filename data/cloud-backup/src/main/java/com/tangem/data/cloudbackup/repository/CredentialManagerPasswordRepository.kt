@@ -2,7 +2,12 @@ package com.tangem.data.cloudbackup.repository
 
 import androidx.credentials.CreatePasswordRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetPasswordOption
+import androidx.credentials.PasswordCredential
 import androidx.credentials.exceptions.CreateCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.domain.cloudbackup.repository.BackupPasswordRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -54,6 +59,36 @@ internal class CredentialManagerPasswordRepository(
                 // implementation, which is free to throw something other than a CreateCredentialException.
                 logger.e("Saving the password to the password manager failed", e)
                 false
+            }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun getPassword(): CharArray? {
+        return withContext(dispatchers.main) {
+            val activity = foregroundActivityProvider.foregroundActivity
+            if (activity == null) {
+                logger.e("Cannot read the password: no foreground activity")
+                return@withContext null
+            }
+
+            try {
+                val response = credentialManager.getCredential(
+                    context = activity,
+                    request = GetCredentialRequest(credentialOptions = listOf(GetPasswordOption())),
+                )
+                (response.credential as? PasswordCredential)?.password?.toCharArray()
+            } catch (e: NoCredentialException) {
+                logger.i("The password manager holds no password for the app")
+                null
+            } catch (e: GetCredentialCancellationException) {
+                logger.i("The user dismissed the password picker")
+                null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.e("Reading the password from the password manager failed", e)
+                null
             }
         }
     }
