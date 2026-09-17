@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.visa.model.VirtualAccountActivationData
+import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -24,14 +25,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class DefaultVirtualAccountActivationRepositoryTest {
+internal class DefaultMoneyAccountActivationRepositoryTest {
 
     private val authDataSource: TangemPayAuthDataSource = mockk()
     private val derivationsRepository: DerivationsRepository = mockk(relaxUnitFun = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
-    private val repository = DefaultVirtualAccountActivationRepository(
+    private val repository = DefaultMoneyAccountActivationRepository(
         authDataSource = authDataSource,
         derivationsRepository = derivationsRepository,
         userWalletsListRepository = userWalletsListRepository,
@@ -44,7 +45,11 @@ internal class DefaultVirtualAccountActivationRepositoryTest {
     private val derivedKeys: Map<ByteArrayKey, ExtendedPublicKeysMap> = mapOf(
         ByteArrayKey(byteArrayOf(1, 2, 3)) to ExtendedPublicKeysMap(emptyMap()),
     )
-    private val activationData = VirtualAccountActivationData(address = "0xVA", derivedKeys = derivedKeys)
+    private val activationData = VirtualAccountActivationData(
+        address = "0xVA",
+        signature = "0xSIG",
+        derivedKeys = derivedKeys,
+    )
 
     @BeforeEach
     fun setUp() {
@@ -58,10 +63,22 @@ internal class DefaultVirtualAccountActivationRepositoryTest {
         coEvery { authDataSource.produceVirtualAccountData(userWallet) } returns activationData.right()
 
         // Act
-        repository.activateVirtualAccount(userWalletId)
+        repository.activateMoneyAccount(userWalletId)
 
         // Assert
         coVerify(exactly = 1) { derivationsRepository.storeDerivedKeys(userWalletId, derivedKeys) }
+    }
+
+    @Test
+    fun `GIVEN datasource returns data WHEN activate THEN deposit credentials returned`() = runTest {
+        // Arrange
+        coEvery { authDataSource.produceVirtualAccountData(userWallet) } returns activationData.right()
+
+        // Act
+        val actual = repository.activateMoneyAccount(userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountDepositCredentials(address = "0xVA", signature = "0xSIG"))
     }
 
     @Test
@@ -70,7 +87,7 @@ internal class DefaultVirtualAccountActivationRepositoryTest {
         coEvery { authDataSource.produceVirtualAccountData(userWallet) } returns IllegalStateException("nope").left()
 
         // Act
-        val error = runCatching { repository.activateVirtualAccount(userWalletId) }.exceptionOrNull()
+        val error = runCatching { repository.activateMoneyAccount(userWalletId) }.exceptionOrNull()
 
         // Assert
         assertThat(error).isInstanceOf(IllegalStateException::class.java)

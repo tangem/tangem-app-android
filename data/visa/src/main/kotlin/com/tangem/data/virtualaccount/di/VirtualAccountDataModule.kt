@@ -6,7 +6,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.data.virtualaccount.converter.VirtualAccountStatusValueDMConverter
 import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusFetcher
 import com.tangem.data.virtualaccount.flow.DefaultVirtualAccountStatusProducer
-import com.tangem.data.virtualaccount.repository.DefaultVirtualAccountActivationRepository
+import com.tangem.data.virtualaccount.repository.DefaultMoneyAccountActivationRepository
 import com.tangem.data.virtualaccount.store.VirtualAccountStatusesStore
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
@@ -19,8 +19,8 @@ import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusProducer
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.virtualaccount.repository.VirtualAccountActivationRepository
-import com.tangem.domain.virtualaccount.usecase.ActivateVirtualAccountUseCase
+import com.tangem.domain.virtualaccount.repository.MoneyAccountActivationRepository
+import com.tangem.domain.virtualaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -49,9 +49,9 @@ internal interface VirtualAccountDataModule {
 
     @Binds
     @Singleton
-    fun bindVirtualAccountActivationRepository(
-        impl: DefaultVirtualAccountActivationRepository,
-    ): VirtualAccountActivationRepository
+    fun bindMoneyAccountActivationRepository(
+        impl: DefaultMoneyAccountActivationRepository,
+    ): MoneyAccountActivationRepository
 
     companion object {
 
@@ -93,10 +93,10 @@ internal interface VirtualAccountDataModule {
 
         @Provides
         @Singleton
-        fun provideActivateVirtualAccountUseCase(
-            repository: VirtualAccountActivationRepository,
-        ): ActivateVirtualAccountUseCase {
-            return ActivateVirtualAccountUseCase(repository = repository)
+        fun provideActivateMoneyAccountUseCase(
+            repository: MoneyAccountActivationRepository,
+        ): ActivateMoneyAccountUseCase {
+            return ActivateMoneyAccountUseCase(repository = repository)
         }
 
         @Provides
