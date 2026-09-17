@@ -18,6 +18,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlanState
@@ -52,7 +53,7 @@ import com.tangem.features.tangempay.tariffPlan
 import com.tangem.features.tangempay.tariffPlanState
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -68,7 +69,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -1001,6 +1001,25 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN only a virtual offer WHEN add card clicked THEN the order screen is opened`() = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
+        coEvery { getCustomerOffers.cardIssueOffers(any()) } returns
+            CardIssueOffers(virtual = virtualOffer(), plastic = null).right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onAddCardClick(tariffState = null)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { router.push(TangemPayAccountDetailsInnerRoute.OrderCard()) }
+        verify(exactly = 0) { uiMessageSender.send(any<BottomSheetMessage>()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN only a plastic offer WHEN add card clicked THEN the order screen is opened`() = runTest {
         // Arrange
         every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
@@ -1023,6 +1042,12 @@ internal class TangemPayDetailsModelTest {
         type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
         data = Offer.Data(specificationName = "spec", orderType = OrderType.UNKNOWN),
+    )
+
+    private fun virtualOffer() = Offer(
+        type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
+        fee = Offer.Fee(amount = BigDecimal("5.00"), currency = Currency.getInstance("USD")),
+        data = Offer.Data(specificationName = "spec", orderType = OrderType.CARD_ISSUE_VIRTUAL_RAIN),
     )
 
     private fun createModel(
@@ -1112,7 +1137,7 @@ internal class TangemPayDetailsModelTest {
         every { source } returns statusSource
         every { error } returns accountError
         every { customerId } returns "customer-id"
-        every { depositAddress } returns "address"
+        every { networks } returns listOf(availableNetwork())
         every { this@mockk.virtualAccount } returns virtualAccount
         every { this@mockk.isBankOfframpAvailable } returns isBankOfframpAvailable
         every { cards } returns listOf(tangemPayCard(state = cardState))
@@ -1137,17 +1162,6 @@ internal class TangemPayDetailsModelTest {
         every { account } returns mockk(relaxed = true) {
             every { userWalletId } returns this@TangemPayDetailsModelTest.userWalletId
         }
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     internal data class FreezeCase(
@@ -1284,9 +1298,12 @@ internal class TangemPayDetailsModelTest {
             ),
         )
 
+        private fun availableNetwork(): PaymentNetworkStatus.Available = mockk(relaxed = true)
+
         private fun deactivatedStatus(id: String): PaymentAccountStatusValue.Deactivated = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
             every { customerId } returns id
+            every { networks } returns listOf(availableNetwork())
             every { balance } returns PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal.ZERO,

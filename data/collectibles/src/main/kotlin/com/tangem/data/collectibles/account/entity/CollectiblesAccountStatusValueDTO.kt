@@ -42,8 +42,15 @@ internal sealed interface CollectiblesAccountStatusValueDTO {
     ) : CollectiblesAccountStatusValueDTO
 }
 
-/** What the vault held when it was last read. A `null` amount is impossible: an unread vault has no [balance]. */
+/**
+ * What the vault held when it was last read. A `null` amount is impossible: an unread vault has no [balance].
+ *
+ * Of the token only the mint is kept — the name, the symbol and the decimals are constants of
+ * [com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory]. So a cached amount renders on a cold
+ * start without reading the program config first.
+ */
 @Serializable
 internal data class CollectiblesVaultBalanceDTO(
     @SerialName("usdc_amount") val usdcAmount: SerializedBigDecimal,
+    @SerialName("usdc_mint") val usdcMint: String,
 )

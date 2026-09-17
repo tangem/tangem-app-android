@@ -12,6 +12,7 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.amount.PredictionCollateralAmount
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawError
 import com.tangem.domain.polymarket.model.PredictionWithdrawalBatch
@@ -39,7 +40,7 @@ sealed interface PredictionWithdrawalFailure {
 
     data object NonceUnavailable : PredictionWithdrawalFailure
 
-    data object SigningFailed : PredictionWithdrawalFailure
+    data class SigningFailed(val error: PolymarketSigningError) : PredictionWithdrawalFailure
 
     data object Expired : PredictionWithdrawalFailure
 
@@ -115,7 +116,7 @@ class SubmitPredictionWithdrawalInteractor(
                 deadline = prepared.deadline,
                 calls = listOf(prepared.call),
             ),
-        ).getOrNull() ?: raise(PredictionWithdrawalFailure.SigningFailed)
+        ).getOrElse { raise(PredictionWithdrawalFailure.SigningFailed(it)) }
 
         val batch = PredictionWithdrawalBatch(
             ownerAddress = prepared.ownerAddress,

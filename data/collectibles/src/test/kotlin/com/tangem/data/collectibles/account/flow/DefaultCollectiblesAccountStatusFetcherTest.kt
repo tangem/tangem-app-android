@@ -1,21 +1,28 @@
 package com.tangem.data.collectibles.account.flow
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
 import com.tangem.data.collectibles.account.store.WalletIdWithCollectiblesStatusDTO
+import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
+import com.tangem.domain.collectibles.vault.GachaVaultError
+import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,19 +31,35 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-/**
- * Reading the vault's USDC waits on the blockchain SDK, so every path currently ends without an amount. What the
- * fetcher still has to get right is which of them leaves the cache alone and which records a missing derivation.
- */
 internal class DefaultCollectiblesAccountStatusFetcherTest {
 
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
+    private val gachaVaultRepository: GachaVaultRepository = mockk()
 
     @Test
-    fun `GIVEN a vault that cannot be read yet WHEN invoke THEN the cached amount is kept and marked stale`() =
+    fun `GIVEN the vault answers WHEN invoke THEN the amount is recorded as actual`() = runTest {
+        // Arrange
+        coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
+        coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED.usdcToken) } returns READ.right()
+        val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
+
+        // Act
+        val actual = createFetcher(store).invoke(PARAMS)
+
+        // Assert — the cached token goes with the request: working it out again costs two requests
+        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(
+            CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL, vaultBalance = READ),
+        )
+        coVerify(exactly = 1) { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED.usdcToken) }
+    }
+
+    @Test
+    fun `GIVEN the vault read fails WHEN invoke THEN the cached amount is kept and marked stale`() =
         runTest {
             // Arrange
             coEvery { ownerDeriver.storedOwner(WALLET) } returns OWNER
+            coEvery { gachaVaultRepository.getVaultBalance(USER_WALLET, CACHED.usdcToken) } returns UNREADABLE.left()
             val store = createStore(testScope = this, recorded = ONBOARDED.copy(vaultBalance = CACHED))
 
             // Act
@@ -109,6 +132,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         CollectiblesAccountStatusStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceDataStore = MockStateDataStore<WalletIdWithCollectiblesStatusDTO>(default = emptyMap()),
+            converter = CONVERTER,
             scope = TestAppCoroutineScope(testScope),
         ).apply {
             recorded?.let { store(userWalletId = WALLET, value = it) }
@@ -121,6 +145,7 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
                 every { userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
             },
             collectiblesOwnerDeriver = ownerDeriver,
+            gachaVaultRepository = gachaVaultRepository,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
@@ -140,7 +165,13 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
             every { isLocked } returns true
         }
 
+        val CONVERTER = CollectiblesAccountStatusValueDTOConverter(
+            currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc),
+        )
+
         val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE)
-        val CACHED = CollectiblesVaultBalance(usdcAmount = BigDecimal("9"))
+        val CACHED = MockCollectibles.vaultBalance(amount = BigDecimal("9"))
+        val READ = MockCollectibles.vaultBalance(amount = BigDecimal("12"))
+        val UNREADABLE = CollectiblesAccountError.Vault(error = GachaVaultError.WalletUnavailable)
     }
 }

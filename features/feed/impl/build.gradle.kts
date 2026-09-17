@@ -53,6 +53,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.visa)
     implementation(projects.domain.marketing.models)
     implementation(projects.domain.yieldSupply.models)
     runtimeOnly(projects.domain.manageTokens)
@@ -112,9 +113,6 @@ dependencies {
     implementation(tangemDeps.blockchain)
 
     /** Tests */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
     testImplementation(projects.domain.wallets.models)
 }
