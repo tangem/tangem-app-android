@@ -6,9 +6,6 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 internal class DefaultTangemPayFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TangemPayFeatureToggles {
-    override val isTiersPlusPlanEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16041_VISA_TIERS_PLUS_PLAN)
-
     override val isCashbackEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1192_TANGEM_PAY_CASHBACK_ENABLED)
 
