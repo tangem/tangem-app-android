@@ -53,13 +53,14 @@ internal class JointCosignRequestConverter(
     }
 
     /**
-     * The initiator signs on creation, so their signature is when the operation started; without it the row shows
-     * no time rather than a clock that would move on every refresh
+     * The initiator signs on creation, so their vote doubles as the start time where the backend omits it; without
+     * either the row shows no time rather than a clock that would move on every refresh
      */
     private fun JointOperation.startedAtMillis(): Long? {
-        return signatures
-            .firstOrNull { it.address.equals(initiator, ignoreCase = true) }
-            ?.at
-            ?.let { at -> runCatching { Instant.parse(at).toEpochMilli() }.getOrNull() }
+        val startedAt = createdAt
+            ?: signatures.firstOrNull { it.address.equals(initiator, ignoreCase = true) }?.at
+            ?: return null
+
+        return runCatching { Instant.parse(startedAt).toEpochMilli() }.getOrNull()
     }
 }

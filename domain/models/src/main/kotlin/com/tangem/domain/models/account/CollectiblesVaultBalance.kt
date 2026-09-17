@@ -1,18 +1,21 @@
 package com.tangem.domain.models.account
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 
 /**
- * What the gacha vault holds, as this device last read it — the USDC on the vault's associated token account,
+ * What the gacha vault holds, as this device last read it — the balance of the vault's associated token account,
  * which is what spins are paid from. The SOL on the vault owner key pays rent and fees and is not part of the
  * account's balance.
  *
- * @property usdcAmount   USDC on the vault's associated token account
- * @property usdcFiatRate rate of USDC into the app's currency, `null` until the quote answers
+ * @property usdcToken    the token the vault holds, built from the mint its on-chain config names
+ * @property usdcAmount   the token's amount, already scaled by the mint's decimals
+ * @property usdcFiatRate rate of [usdcToken] into the app's currency, `null` until the quote answers
  */
 @Serializable
 data class CollectiblesVaultBalance(
+    val usdcToken: CryptoCurrency.Token,
     val usdcAmount: SerializedBigDecimal,
     val usdcFiatRate: SerializedBigDecimal? = null,
 ) {

@@ -23,12 +23,11 @@ import com.tangem.features.addressbook.common.AddressMemoValidator
 import com.tangem.features.addressbook.common.SelectNetworksResultHolder
 import com.tangem.features.addressbook.common.SupportedNetworksMatcher
 import com.tangem.features.addressbook.editcontact.ui.state.ValidatedAddress
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -764,17 +763,6 @@ internal class AddAddressModelTest {
             analyticsSender = analyticsSender,
             router = router,
         ).also { model = it }
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private companion object {
