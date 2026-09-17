@@ -223,7 +223,7 @@ private fun SetPasswordScreen(
             isVisible = state.isPasswordVisible,
             onToggleVisibility = state.onToggleVisibility,
             focusRequester = focusRequester,
-            contentType = ContentType.NewPassword,
+            contentType = ContentType.NewPassword.takeIf { state.isPasswordManagerEnabled },
         )
         SpacerH(12.dp)
         StrengthIndicator(strength = state.strength, hint = state.hint)
@@ -277,7 +277,7 @@ private fun ConfirmPasswordScreen(
                 .takeIf { state.isMismatch },
             enabled = !state.isLoading,
             focusRequester = focusRequester,
-            contentType = ContentType.NewPassword,
+            contentType = ContentType.NewPassword.takeIf { state.isPasswordManagerEnabled },
         )
     }
 }
@@ -541,6 +541,7 @@ private fun PreviewSetPassword() {
                 onCloseClick = {},
                 password = "Str0ng!Pass",
                 isPasswordVisible = false,
+                isPasswordManagerEnabled = true,
                 strength = PasswordStrength.STRONG,
                 hint = PasswordStrengthHint.STRONG,
                 onPasswordChange = {},
@@ -565,6 +566,7 @@ private fun PreviewConfirmPassword() {
                 isMismatch = true,
                 isConsentChecked = false,
                 isLoading = false,
+                isPasswordManagerEnabled = true,
                 onPasswordChange = {},
                 onToggleVisibility = {},
                 onConsentChange = {},

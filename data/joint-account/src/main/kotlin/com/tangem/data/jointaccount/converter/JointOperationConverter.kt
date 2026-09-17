@@ -18,11 +18,12 @@ internal class JointOperationConverter @Inject constructor(
         safeTx = safeTxConverter.convert(value.safeTx),
         status = convertStatus(value.status),
         initiator = value.initiator?.lowercase(),
-        signatures = value.signatures.map { signature ->
+        createdAt = value.createdAt,
+        signatures = value.votes.map { vote ->
             JointOperation.MemberSignature(
-                address = signature.address.lowercase(),
-                state = convertSignatureState(signature.state),
-                at = signature.at,
+                address = vote.address.lowercase(),
+                state = convertVote(vote.vote),
+                at = vote.votedAt,
             )
         },
     )
@@ -53,9 +54,9 @@ internal class JointOperationConverter @Inject constructor(
         else -> JointOperation.Status.UNKNOWN
     }
 
-    private fun convertSignatureState(value: String): JointOperation.MemberSignature.State = when (value) {
-        "signed" -> JointOperation.MemberSignature.State.SIGNED
-        "declined" -> JointOperation.MemberSignature.State.DECLINED
+    private fun convertVote(value: String): JointOperation.MemberSignature.State = when (value) {
+        "approve" -> JointOperation.MemberSignature.State.SIGNED
+        "decline" -> JointOperation.MemberSignature.State.DECLINED
         else -> JointOperation.MemberSignature.State.UNKNOWN
     }
 }

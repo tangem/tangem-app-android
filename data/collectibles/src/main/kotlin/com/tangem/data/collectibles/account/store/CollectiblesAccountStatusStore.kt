@@ -33,10 +33,12 @@ internal typealias WalletIdWithCollectiblesStatusDTO = Map<String, CollectiblesA
  *
  * @property runtimeStore         runtime store for fast in-memory access
  * @property persistenceDataStore persistence store for caching across app restarts
+ * @property converter            maps the status half between its domain and storage shapes
  */
 internal class CollectiblesAccountStatusStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithCollectiblesStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithCollectiblesStatusDTO>,
+    private val converter: CollectiblesAccountStatusValueDTOConverter,
     scope: AppCoroutineScope,
 ) {
 
@@ -155,7 +157,6 @@ internal class CollectiblesAccountStatusStore(
     }
 
     private companion object {
-        val converter = CollectiblesAccountStatusValueDTOConverter
         val logger = TangemLogger.withTag("CollectiblesAccountStatusStore")
     }
 }

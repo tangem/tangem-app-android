@@ -36,11 +36,10 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletstart.entity.CreateWalletStartUM
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -639,17 +638,6 @@ internal class CreateWalletStartModelTest {
             analyticsEventHandler = analyticsEventHandler,
             appsFlyerRepository = appsFlyerRepository,
             onboardingV2FeatureToggles = onboardingV2FeatureToggles,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

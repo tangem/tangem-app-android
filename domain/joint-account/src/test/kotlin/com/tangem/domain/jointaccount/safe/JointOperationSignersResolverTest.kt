@@ -43,6 +43,19 @@ internal class JointOperationSignersResolverTest {
     }
 
     @Test
+    fun `GIVEN the initiator has no vote record WHEN signers are resolved THEN they are dated by the creation time`() {
+        // Arrange
+        val operation = operation(signatures = emptyList(), createdAt = "2026-09-08T15:30:00Z")
+
+        // Act
+        val actual = resolver.signers(jointAccount = jointAccount(), operation = operation)
+
+        // Assert
+        assertThat(actual.single { it.member == alice })
+            .isEqualTo(JointOperationSignerState(member = alice, answer = Answer.CREATED, at = "2026-09-08T15:30:00Z"))
+    }
+
+    @Test
     fun `GIVEN an unknown signature state WHEN signers are resolved THEN the member is still waiting`() {
         // Arrange
         val operation = operation(signatures = listOf(signature(address = BOB, state = UNKNOWN, at = null)))
@@ -139,6 +152,7 @@ internal class JointOperationSignersResolverTest {
     private fun operation(
         status: JointOperation.Status = JointOperation.Status.AWAITING_SIGNATURES,
         signatures: List<JointOperation.MemberSignature> = emptyList(),
+        createdAt: String? = null,
     ) = JointOperation(
         operationId = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
         chainId = 137,
@@ -146,6 +160,7 @@ internal class JointOperationSignersResolverTest {
         status = status,
         initiator = ALICE,
         signatures = signatures,
+        createdAt = createdAt,
     )
 
     private fun signature(address: String, state: JointOperation.MemberSignature.State, at: String?) =

@@ -13,14 +13,13 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.api.NFTSendComponent
 import com.tangem.features.send.common.CommonSendRoute
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -122,16 +121,5 @@ internal class NFTSendModelNavigationTest {
             getAccountCurrencyStatusUseCase = mockk(relaxed = true),
             analyticsEventHandler = mockk(relaxed = true),
         ).also { model = it }
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 }

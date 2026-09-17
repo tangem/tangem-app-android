@@ -12,6 +12,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOffersRepository
@@ -25,8 +26,8 @@ import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM.FeeState
 import com.tangem.features.tangempay.orderCard.impl.ui.state.imageUrlFor
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.CountryNames
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,7 +35,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -76,7 +76,7 @@ internal class TangemPayOrderCardTypeModelTest {
         every { featureToggles.isPlasticCardOrderEnabled } returns true
         every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(status)
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            listOf(virtualOffer(), plasticOffer()).right()
+            customerOffers(virtualOffer(), plasticOffer()).right()
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns customerInfo().right()
     }
 
@@ -112,7 +112,7 @@ internal class TangemPayOrderCardTypeModelTest {
     fun `GIVEN whole delivery fee WHEN model created THEN fee shown without fractional digits`() = runTest {
         // Arrange
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal("10.00"))).right()
+            customerOffers(virtualOffer(), plasticOffer(feeAmount = BigDecimal("10.00"))).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -126,7 +126,7 @@ internal class TangemPayOrderCardTypeModelTest {
     fun `GIVEN plastic offer without min eta WHEN model created THEN only max business days carried`() = runTest {
         // Arrange
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            listOf(
+            customerOffers(
                 virtualOffer(),
                 plasticOffer(deliveryEta = Offer.DeliveryEta(minBusinessDays = null, maxBusinessDays = 4)),
             ).right()
@@ -144,7 +144,7 @@ internal class TangemPayOrderCardTypeModelTest {
     fun `GIVEN zero delivery fee WHEN model created THEN free delivery state`() = runTest {
         // Arrange
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal.ZERO)).right()
+            customerOffers(virtualOffer(), plasticOffer(feeAmount = BigDecimal.ZERO)).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -188,7 +188,7 @@ internal class TangemPayOrderCardTypeModelTest {
     fun `GIVEN zero fee and empty balance WHEN model created THEN free delivery wins`() = runTest {
         // Arrange
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            listOf(virtualOffer(), plasticOffer(feeAmount = BigDecimal.ZERO)).right()
+            customerOffers(virtualOffer(), plasticOffer(feeAmount = BigDecimal.ZERO)).right()
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
             customerInfo(availableBalance = BigDecimal.ZERO).right()
 
@@ -233,7 +233,7 @@ internal class TangemPayOrderCardTypeModelTest {
     fun `GIVEN no plastic offer WHEN model created THEN plastic is unavailable with the residence country`() =
         runTest {
             // Arrange
-            coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
+            coEvery { customerOffersRepository.getOffers(userWalletId) } returns customerOffers(virtualOffer()).right()
 
             // Act
             val model = createModel(testScope = this)
@@ -248,10 +248,28 @@ internal class TangemPayOrderCardTypeModelTest {
         }
 
     @Test
+    fun `GIVEN artwork of a skipped plastic offer WHEN model created THEN the plastic page shows it`() = runTest {
+        // Arrange
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns CustomerOffers(
+            orderable = listOf(virtualOffer()),
+            artwork = mapOf(Offer.Type.CARD_ISSUE_PLASTIC_RAIN to PLASTIC_IMAGE_URL),
+        ).right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val state = model.state.value
+        assertThat(state.plastic.offerImageUrl).isEqualTo(PLASTIC_IMAGE_URL)
+        assertThat(state.imageUrlFor(OrderCardType.Plastic)).isEqualTo(PLASTIC_IMAGE_URL)
+    }
+
+    @Test
     fun `GIVEN plastic offer without delivery eta WHEN model created THEN plastic is unavailable`() = runTest {
         // Arrange
         coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-            listOf(virtualOffer(), plasticOffer(deliveryEta = null)).right()
+            customerOffers(virtualOffer(), plasticOffer(deliveryEta = null)).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -281,7 +299,7 @@ internal class TangemPayOrderCardTypeModelTest {
     @Test
     fun `GIVEN unavailable plastic WHEN select plastic THEN selection ignored`() = runTest {
         // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(virtualOffer()).right()
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns customerOffers(virtualOffer()).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -418,7 +436,7 @@ internal class TangemPayOrderCardTypeModelTest {
     @Test
     fun `GIVEN no virtual offer WHEN loaded THEN the virtual tab is hidden`() = runTest {
         // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(plasticOffer()).right()
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns customerOffers(plasticOffer()).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -431,7 +449,7 @@ internal class TangemPayOrderCardTypeModelTest {
     @Test
     fun `GIVEN an empty offer list WHEN loaded THEN it is not an error and plastic is unavailable`() = runTest {
         // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns emptyList<Offer>().right()
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns customerOffers().right()
 
         // Act
         val model = createModel(testScope = this)
@@ -448,7 +466,7 @@ internal class TangemPayOrderCardTypeModelTest {
     @Test
     fun `GIVEN no virtual offer and insufficient balance WHEN loaded THEN not-enough-money event is sent`() = runTest {
         // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns listOf(plasticOffer()).right()
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns customerOffers(plasticOffer()).right()
         coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
             customerInfo(availableBalance = BigDecimal("1.00")).right()
 
@@ -526,17 +544,6 @@ internal class TangemPayOrderCardTypeModelTest {
         featureToggles = featureToggles,
     ).also { model = it }
 
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
-
     private fun virtualOffer() = Offer(
         type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN,
         fee = Offer.Fee(amount = BigDecimal("5.00"), currency = usd),
@@ -563,7 +570,7 @@ internal class TangemPayOrderCardTypeModelTest {
         runTest {
             // Arrange
             coEvery { customerOffersRepository.getOffers(userWalletId) } returns
-                listOf(virtualOffer(), plasticOffer(mainImageUrl = null)).right()
+                customerOffers(virtualOffer(), plasticOffer(mainImageUrl = null)).right()
 
             // Act
             val model = createModel(testScope = this)
@@ -621,3 +628,6 @@ internal class TangemPayOrderCardTypeModelTest {
         email = "j.silverhand@gmail.com",
     )
 }
+
+private fun customerOffers(vararg offers: Offer) =
+    CustomerOffers(orderable = offers.toList(), artwork = emptyMap())

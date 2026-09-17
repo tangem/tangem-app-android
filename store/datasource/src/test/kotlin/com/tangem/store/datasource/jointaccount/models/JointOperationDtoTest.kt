@@ -34,14 +34,16 @@ internal class JointOperationDtoTest {
               },
               "status": "awaiting_signatures",
               "initiator": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
-              "deadline": null,
-              "signatures": [
+              "threshold": 2,
+              "votes": [
                 {
                   "address": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
-                  "state": "signed",
-                  "at": "2026-09-07T10:00:00Z"
+                  "vote": "approve",
+                  "signature": "0x9284",
+                  "votedAt": "2026-09-07T10:00:00Z"
                 }
-              ]
+              ],
+              "createdAt": "2026-09-07T10:00:00Z"
             }
         """.trimIndent()
 
@@ -66,12 +68,12 @@ internal class JointOperationDtoTest {
             ),
             status = "awaiting_signatures",
             initiator = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
-            deadline = null,
-            signatures = listOf(
-                JointOperationDto.SignatureDto(
+            createdAt = "2026-09-07T10:00:00Z",
+            votes = listOf(
+                JointOperationDto.VoteDto(
                     address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
-                    state = "signed",
-                    at = "2026-09-07T10:00:00Z",
+                    vote = "approve",
+                    votedAt = "2026-09-07T10:00:00Z",
                 ),
             ),
         )
@@ -152,6 +154,6 @@ internal class JointOperationDtoTest {
 
         // Assert
         assertThat(actual?.operations).hasSize(1)
-        assertThat(actual?.operations?.single()?.signatures).isEmpty()
+        assertThat(actual?.operations?.single()?.votes).isEmpty()
     }
 }

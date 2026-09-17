@@ -62,7 +62,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNoti
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -72,7 +72,6 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -680,7 +679,7 @@ internal class PlacePredictionModelTest {
         assertThat(submitWhilePosting).isEqualTo(SubmitUM.Posting)
         val result = (model.uiState.value.submit as SubmitUM.Result).result
         assertThat(result).isInstanceOf(PlaceResultUM.Filled::class.java)
-        assertThat((result as PlaceResultUM.Filled).amount).isEqualTo(BigDecimal("10"))
+        assertThat((result as PlaceResultUM.Filled).collateralAmount).isEqualTo(BigDecimal("10"))
         verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
 
         model.onDestroy()
@@ -838,8 +837,8 @@ internal class PlacePredictionModelTest {
             assertThat((model.uiState.value.submit as SubmitUM.Result).result).isEqualTo(
                 PlaceResultUM.Filled(
                     placedAt = (model.uiState.value.submit as SubmitUM.Result).result.placedAt,
-                    amount = BigDecimal("11.60"),
-                    tokensBought = BigDecimal("23.2"),
+                    collateralAmount = BigDecimal("11.60"),
+                    shares = BigDecimal("23.2"),
                 ),
             )
             verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
@@ -1238,17 +1237,6 @@ internal class PlacePredictionModelTest {
 
     private val getCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase = mockk {
         every { this@mockk.invoke() } returns createCollateralCurrency()
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private fun createCollateralCurrency(): CryptoCurrency.Token {

@@ -5,8 +5,9 @@ import com.tangem.data.collectibles.account.entity.CollectiblesAccountStatusValu
 import com.tangem.data.collectibles.account.entity.CollectiblesVaultBalanceDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.collectibles.MockCollectibles
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -14,6 +15,10 @@ import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CollectiblesAccountStatusValueDTOConverterTest {
+
+    private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
+
+    private val converter = CollectiblesAccountStatusValueDTOConverter(currencyFactory = currencyFactory)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -23,7 +28,7 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
         @ProvideTestModels
         fun convert(model: ConvertModel) {
             // Act
-            val actual = CollectiblesAccountStatusValueDTOConverter.convert(model.status)
+            val actual = converter.convert(model.status)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -63,7 +68,7 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
         @ProvideTestModels
         fun convertBack(model: ConvertBackModel) {
             // Act
-            val actual = CollectiblesAccountStatusValueDTOConverter.convertBack(model.stored)
+            val actual = converter.convertBack(model.stored)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -78,7 +83,7 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
                 stored = CollectiblesAccountStatusValueDTO.Onboarded(balance = BALANCE_DTO),
                 expected = CollectiblesAccountStatusValue.Onboarded(
                     source = StatusSource.CACHE,
-                    vaultBalance = CollectiblesVaultBalance(usdcAmount = USDC),
+                    vaultBalance = STORED_BALANCE,
                 ),
             ),
             ConvertBackModel(
@@ -89,7 +94,7 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
                 stored = CollectiblesAccountStatusValueDTO.UpdateRequired(balance = BALANCE_DTO),
                 expected = CollectiblesAccountStatusValue.UpdateRequired(
                     source = StatusSource.CACHE,
-                    vaultBalance = CollectiblesVaultBalance(usdcAmount = USDC),
+                    vaultBalance = STORED_BALANCE,
                 ),
             ),
         )
@@ -107,9 +112,14 @@ internal class CollectiblesAccountStatusValueDTOConverterTest {
 
     private companion object {
         val USDC: BigDecimal = BigDecimal("20")
+        val TOKEN = MockCollectibles.usdc()
 
         // The rate is not part of the file format: it is dropped on the way in and absent on the way out
-        val BALANCE = CollectiblesVaultBalance(usdcAmount = USDC, usdcFiatRate = BigDecimal.ONE)
-        val BALANCE_DTO = CollectiblesVaultBalanceDTO(usdcAmount = USDC)
+        val BALANCE = MockCollectibles.vaultBalance(amount = USDC, fiatRate = BigDecimal.ONE, currency = TOKEN)
+        val STORED_BALANCE = MockCollectibles.vaultBalance(amount = USDC, currency = TOKEN)
+        val BALANCE_DTO = CollectiblesVaultBalanceDTO(
+            usdcAmount = USDC,
+            usdcMint = MockCollectibles.USDC_MINT,
+        )
     }
 }
