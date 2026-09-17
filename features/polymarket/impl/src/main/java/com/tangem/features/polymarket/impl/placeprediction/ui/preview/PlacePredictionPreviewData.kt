@@ -143,6 +143,7 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
 private fun previewSell(): OrderSideUM.Sell = OrderSideUM.Sell(
     available = BigDecimal("51.23"),
     proceeds = SharesProceedsUM.Unavailable,
+    balance = BigDecimal("30000"),
 )
 
 private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.FULL): QuoteUM.Content =
