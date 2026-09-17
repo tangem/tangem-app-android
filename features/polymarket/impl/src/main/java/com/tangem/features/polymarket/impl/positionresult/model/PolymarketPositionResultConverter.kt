@@ -24,7 +24,7 @@ internal class PolymarketPositionResultConverter : Converter<PolymarketPosition.
             else -> error("Position result is unavailable")
         }
         val hasPayout = result != PolymarketPositionResultUM.Result.Lost
-        val showProfit = result == PolymarketPositionResultUM.Result.Won ||
+        val shouldShowProfit = result == PolymarketPositionResultUM.Result.Won ||
             result == PolymarketPositionResultUM.Result.Split && value.currentValue > value.initialValue
 
         return PolymarketPositionResultUM(
@@ -53,7 +53,7 @@ internal class PolymarketPositionResultConverter : Converter<PolymarketPosition.
             } else {
                 null
             },
-            profit = if (showProfit) profit(value) else null,
+            profit = if (shouldShowProfit) profit(value) else null,
             footerNote = if (hasPayout) resourceReference(R.string.prediction_position_result_balance_note) else null,
         )
     }
