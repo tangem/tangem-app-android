@@ -83,9 +83,9 @@ private fun PolymarketWalletBlockUM.Content.toRowUM(): TangemTokenRowUM = Tangem
         ),
     ),
     titleUM = TangemTokenRowUM.TitleUM.Content(text = resourceReference(R.string.prediction_account_title)),
-    // Empty until the positions contract lands: the mock shows a count of open predictions, which
-    // nothing can supply yet
-    subtitleUM = TangemTokenRowUM.SubtitleUM.Empty,
+    subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
+        text = resourceReference(R.string.prediction_account_open_detailed_view),
+    ),
     topEndContentUM = toEndContentUM(),
     bottomEndContentUM = TangemTokenRowUM.EndContentUM.Empty,
     onItemClick = onClick,
