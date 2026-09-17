@@ -37,6 +37,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 chainId = operation.chainId,
                 status = operation.status.toRawString(),
                 initiator = operation.initiator,
+                createdAt = operation.createdAt,
                 signatures = operation.signatures.map { signature ->
                     JointAccountDM.SignatureDM(
                         address = signature.address,
@@ -95,6 +96,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
         ),
         status = dm.status.toOperationStatus(),
         initiator = dm.initiator,
+        createdAt = dm.createdAt,
         signatures = dm.signatures.map { signature ->
             JointOperation.MemberSignature(
                 address = signature.address,
