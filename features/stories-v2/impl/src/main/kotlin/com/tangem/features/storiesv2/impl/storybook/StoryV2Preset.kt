@@ -105,8 +105,8 @@ internal enum class StoryV2Preset(val title: String, val description: String) {
                 },
             )
             HAPTIC -> preview(
-                slides = videoSlides().map {
-                    it.copy(
+                slides = videoSlides().map { slide ->
+                    slide.copy(
                         haptics = listOf(
                             StoryV2Haptic(atMs = 1_000, effect = TangemHapticEffect.OneTime.Tick),
                             StoryV2Haptic(
