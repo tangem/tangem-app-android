@@ -4,7 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.FilteredContent
@@ -33,13 +33,13 @@ internal class PolymarketPositionsLoader @Inject constructor(
     fun createFeed(
         userWalletId: UserWalletId,
         tab: PolymarketPositionsTab,
-        onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
     ): Feed = Feed(userWalletId, tab, onPositionClick)
 
     internal inner class Feed(
         userWalletId: UserWalletId,
         tab: PolymarketPositionsTab,
-        onPositionClick: ((PolymarketPositionId) -> Unit)?,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)?,
     ) {
 
         val state: StateFlow<FilteredContent>
