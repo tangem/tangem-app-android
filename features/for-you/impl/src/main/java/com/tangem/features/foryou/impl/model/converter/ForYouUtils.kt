@@ -32,9 +32,6 @@ internal const val FOR_YOU_TOP_EARN_TOKENS_COUNT = 5
  */
 internal const val TOP_EARN_TOKENS_BATCH_SIZE = 30
 
-/** Divisor converting backend percent values (5.5) to fractions (0.055). */
-internal val PERCENT_BASE = BigDecimal("100")
-
 /**
  * Cross-network grouping key for the portfolio review: the same asset on different networks (e.g. USDC
  * on Solana and Ethereum) shares its `rawCurrencyId`, so they group under a single item. Custom tokens
