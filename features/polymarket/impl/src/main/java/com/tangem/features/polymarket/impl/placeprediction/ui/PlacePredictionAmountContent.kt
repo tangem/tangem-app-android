@@ -43,6 +43,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.components.Predict
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
 import java.math.BigDecimal
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.flowTitle
 
 @Composable
 internal fun PlacePredictionAmountContent(
@@ -56,7 +57,7 @@ internal fun PlacePredictionAmountContent(
         modifier = modifier,
         topBar = {
             TangemTopNavigation(
-                title = resourceReference(R.string.prediction_place_title),
+                title = resourceReference(state.order.flowTitle()),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = intents::onBackClick,
                 onClose = intents::onCloseClick,
@@ -73,7 +74,12 @@ internal fun PlacePredictionAmountContent(
                 TangemButton(
                     modifier = Modifier.fillMaxWidth(),
                     size = TangemButton.Size.X12,
-                    text = resourceReference(R.string.common_next),
+                    text = resourceReference(
+                        when (state.order) {
+                            is OrderSideUM.Buy -> R.string.common_next
+                            is OrderSideUM.Sell -> R.string.prediction_close_button
+                        },
+                    ),
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onNextClick,
                 )
@@ -89,22 +95,7 @@ internal fun PlacePredictionAmountContent(
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
             PredictionMarketBlock(state = state.market)
-            when (val order = state.order) {
-                is OrderSideUM.Buy -> PredictionAmountBlock(
-                    amountValue = state.amountValue,
-                    amountCaption = state.amountCaption,
-                    collateral = state.collateral,
-                    balance = order.balance,
-                    onAmountChange = intents::onAmountChange,
-                    onAddFundsClick = intents::onAddFundsClick,
-                )
-                is OrderSideUM.Sell -> PredictionSharesBlock(
-                    selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                    available = order.available,
-                    proceeds = order.proceeds,
-                    onAmountChange = intents::onAmountChange,
-                )
-            }
+            AmountBlock(state = state, intents = intents)
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
@@ -114,6 +105,26 @@ internal fun PlacePredictionAmountContent(
             }
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
         }
+    }
+}
+
+@Composable
+private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionIntents) {
+    when (val order = state.order) {
+        is OrderSideUM.Buy -> PredictionAmountBlock(
+            amountValue = state.amountValue,
+            amountCaption = state.amountCaption,
+            collateral = state.collateral,
+            balance = order.balance,
+            onAmountChange = intents::onAmountChange,
+            onAddFundsClick = intents::onAddFundsClick,
+        )
+        is OrderSideUM.Sell -> PredictionSharesBlock(
+            selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+            available = order.available,
+            proceeds = order.proceeds,
+            onAmountChange = intents::onAmountChange,
+        )
     }
 }
 
