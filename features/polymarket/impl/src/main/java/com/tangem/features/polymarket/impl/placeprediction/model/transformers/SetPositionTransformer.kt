@@ -9,7 +9,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 import java.time.ZoneId
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 internal class SetPositionTransformer(private val position: PolymarketPosition.Open) : Transformer<PlacePredictionUM> {
 
@@ -33,5 +32,5 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
         ).recomputeGate()
     }
 
-    private fun BigDecimal.toCents(): Int = movePointRight(2).setScale(0, RoundingMode.HALF_UP).toInt()
+    private fun BigDecimal.toCents(): Int = movePointRight(2).toInt()
 }
