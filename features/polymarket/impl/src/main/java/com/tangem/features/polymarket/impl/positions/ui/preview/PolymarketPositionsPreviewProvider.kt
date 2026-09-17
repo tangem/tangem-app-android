@@ -124,19 +124,6 @@ private fun activePositions() = listOf("France", "Argentina", "Uzbekistan").mapI
     )
 }.toImmutableList()
 
-private fun finishedPositions() = listOf(
-    R.string.prediction_positions_won to TangemBadge.Status.Success,
-    R.string.prediction_positions_lost to TangemBadge.Status.Error,
-    R.string.prediction_positions_split to TangemBadge.Status.Neutral,
-    R.string.prediction_positions_closed to TangemBadge.Status.Neutral,
-).mapIndexed { index, (label, status) ->
-    activePositions().first().copy(
-        id = "finished_$index",
-        priceChange = TangemPriceChange.State(
-            value = stringReference("$12.40"),
-            direction = TangemPriceChange.Direction.Up,
-        ),
-        currentValue = null,
-        result = TangemBadgeUM(text = resourceReference(label), status = status, size = TangemBadge.Size.X6),
-    )
+private fun finishedPositions() = finishedPositionCards().mapIndexed { index, case ->
+    case.state.copy(id = "finished_$index")
 }.toImmutableList()
