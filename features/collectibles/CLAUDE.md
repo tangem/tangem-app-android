@@ -201,8 +201,8 @@ table), `CollectiblesDiscoveryModelTest` (fake `BatchFlow` + captured `BatchingC
 **The main screen's balance is real, the collection size is not.** The balance comes from
 `CollectiblesAccountStatusSupplier` + `GetSelectedAppCurrencyUseCase`, mapped by `CollectiblesBalanceConverter`;
 an unread vault shows a dash rather than a zero. The collection widget is still hardcoded (`TODO([REDACTED_TASK_KEY])`).
-The vault's USDC is always zero until the blockchain SDK can read it, so today the fiat figure is the SOL on the
-vault owner key.
+The amount is the vault's USDC, read by listing the token accounts the vault PDA owns and picking the mint the
+program config names; the SOL on the vault owner key is not part of it.
 
 **`actionsFlow` needs `replay = 1`.** The first `Reload` is emitted while pagination is still subscribing;
 a shared flow without a replay cache silently drops what it cannot deliver yet, and the catalogue never
