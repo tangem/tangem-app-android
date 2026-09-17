@@ -21,7 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
-import com.tangem.features.feed.components.v2.blocks.FeedBlockCallbacks
+import com.tangem.features.feed.components.v2.blocks.FeedBlockModalCallbacks
 import com.tangem.features.feed.components.v2.createTestingCoroutineDispatcherProvider
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedTabId
@@ -44,7 +44,7 @@ import java.math.BigDecimal
 internal class EarnBlockModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val callbacks: FeedBlockCallbacks = mockk(relaxed = true)
+    private val callbacks: FeedBlockModalCallbacks = mockk(relaxed = true)
     private val paramsContainer: ParamsContainer = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk()
@@ -75,7 +75,7 @@ internal class EarnBlockModelTest {
         accountsByWallet = MutableStateFlow(linkedMapOf())
         yieldSupplyApy = MutableStateFlow(emptyMap())
         topEarnTokens = MutableStateFlow(null)
-        every { paramsContainer.require<FeedBlockCallbacks>() } returns callbacks
+        every { paramsContainer.require<FeedBlockModalCallbacks>() } returns callbacks
         every { userWalletsListRepository.userWallets } returns wallets
         every { multiAccountStatusListSupplier.invokeAsMap() } returns accountsByWallet
         every { yieldSupplyApyFlowUseCase() } returns yieldSupplyApy
