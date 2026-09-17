@@ -78,13 +78,11 @@ internal class StoriesModel @Inject constructor(
                             StoriesUM.Content(
                                 stories = configs,
                                 onClose = { watchCount ->
-                                    analyticsEventHandler.send(
-                                        StoriesEvents.storyShown(
-                                            storyId = params.storyId,
-                                            source = params.screenSource,
-                                            watchCount = watchCount.toString(),
-                                        ),
-                                    )
+                                    StoriesEvents.storyShown(
+                                        storyId = params.storyId,
+                                        source = params.screenSource,
+                                        watchCount = watchCount.toString(),
+                                    )?.let(analyticsEventHandler::send)
                                     openScreen()
                                 },
                             )
