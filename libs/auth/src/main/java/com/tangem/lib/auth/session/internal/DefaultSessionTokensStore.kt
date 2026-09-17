@@ -36,57 +36,73 @@ internal class DefaultSessionTokensStore(
 
     private val issuedAt = AccessTokenIssuedAt(moshi)
 
-    // Makes the compare-and-write in [save] atomic against a concurrent save/clear. Guards local
-    // storage only — never held across a network call — so it cannot deadlock with the locks the
+    // Serialises every mutation — the compare-and-write in [save], the clearing of a corrupt entry
+    // and [clear] — so none of them can act on a value another one has already replaced. Guards local
+    // storage only, never held across a network call, so it cannot deadlock with the locks the
     // registration paths take.
     private val writeMutex = Mutex()
 
     override suspend fun get(): Option<SessionTokens> = withContext(dispatchers.io) {
         val payload = storage.getAsString(KEY) ?: return@withContext None
-        try {
-            val dto = adapter.fromJson(payload) ?: return@withContext None
-            Some(SessionTokensConverter.convertBack(dto))
-        } catch (e: Exception) {
-            TangemLogger.e("Failed to decode session tokens; clearing storage", e)
-            storage.delete(KEY)
-            None
+        val tokens = decode(payload)
+        if (tokens == null) {
+            dropIfStill(payload)
+            return@withContext None
+        }
+
+        Some(tokens)
+    }
+
+    override suspend fun save(tokens: SessionTokens): SessionTokens = withContext(dispatchers.io) {
+        writeMutex.withLock {
+            // read straight from storage rather than through get(): that one takes the same
+            // non-reentrant mutex to clear a corrupt entry, and a corrupt entry here simply means
+            // there is nothing to compare against
+            val stored = storage.getAsString(KEY)?.let(::decode)
+            if (stored != null && stored.supersedes(tokens)) {
+                // A response that lost the race — e.g. a wallet registration reissuing the session
+                // while a 401 elsewhere already refreshed it. Keeping it would leave the app
+                // authenticating with credentials the service has already replaced.
+                TangemLogger.i("Discarded a superseded session token set")
+                return@withLock stored
+            }
+            storage.store(KEY, adapter.toJson(SessionTokensConverter.convert(tokens)))
+            tokens
         }
     }
 
-    override suspend fun save(tokens: SessionTokens, expected: SessionTokens?): SessionTokens =
-        withContext(dispatchers.io) {
-            writeMutex.withLock {
-                val stored = get().getOrNull()
-                if (stored != null && stored.supersedes(tokens, expected)) {
-                    // A response that lost the race — e.g. a wallet registration reissuing the session
-                    // while a 401 elsewhere already refreshed it. Keeping it would leave the app
-                    // authenticating with credentials the service has already replaced.
-                    TangemLogger.i("Discarded a superseded session token set")
-                    return@withLock stored
-                }
-                storage.store(KEY, adapter.toJson(SessionTokensConverter.convert(tokens)))
-                tokens
-            }
-        }
+    /**
+     * Whether the stored set wins over [incoming], i.e. was issued later.
+     *
+     * Unknown issuance on either side, or the very same second on both, leaves the two
+     * indistinguishable, and [incoming] — the answer that arrived last — is taken. See
+     * [SessionTokensStore.save] for what that costs.
+     */
+    private fun SessionTokens.supersedes(incoming: SessionTokens): Boolean {
+        val storedIssuedAt = issuedAt.of(accessToken) ?: return false
+        val incomingIssuedAt = issuedAt.of(incoming.accessToken) ?: return false
+
+        return incomingIssuedAt < storedIssuedAt
+    }
+
+    private fun decode(payload: String): SessionTokens? = try {
+        adapter.fromJson(payload)?.let(SessionTokensConverter::convertBack)
+    } catch (e: Exception) {
+        TangemLogger.e("Failed to decode session tokens", e)
+        null
+    }
 
     /**
-     * Whether the stored set wins over [incoming].
-     *
-     * `iat` decides whenever it can. It is only read to the second, so two rotations completed within
-     * the same second — exactly what the refresh-vs-registration race produces — look equal; the
-     * caller's [expected] snapshot breaks the tie: a store that has moved since [incoming]'s request
-     * started already holds someone's fresher answer. Without a snapshot there is nothing left to
-     * judge by and [incoming] wins, so an unreadable claim can never strand the app on credentials it
-     * can no longer refresh.
+     * Drops the entry only while it still holds the exact [payload] that failed to decode: a save may
+     * have replaced it with a valid set in the meantime, and deleting that would log the user out.
      */
-    private fun SessionTokens.supersedes(incoming: SessionTokens, expected: SessionTokens?): Boolean {
-        val storedIssuedAt = issuedAt.of(accessToken)
-        val incomingIssuedAt = issuedAt.of(incoming.accessToken)
-        if (storedIssuedAt != null && incomingIssuedAt != null && storedIssuedAt != incomingIssuedAt) {
-            return incomingIssuedAt < storedIssuedAt
+    private suspend fun dropIfStill(payload: String) {
+        writeMutex.withLock {
+            if (storage.getAsString(KEY) == payload) {
+                TangemLogger.e("Clearing the corrupted session tokens entry")
+                storage.delete(KEY)
+            }
         }
-
-        return expected != null && this != expected
     }
 
     override suspend fun clear() {
