@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -22,7 +23,7 @@ internal data class SlippagePickerUM(
         fun empty(): SlippagePickerUM = SlippagePickerUM(value = "", error = null, isConfirmEnabled = false)
 
         fun of(value: String): SlippagePickerUM {
-            val percent = value.toBigDecimalOrNull()
+            val percent = value.parseBigDecimalOrNull()
             val isAccepted = percent != null && percent >= MIN_SLIPPAGE_PERCENT && percent <= MAX_SLIPPAGE_PERCENT
 
             return SlippagePickerUM(
