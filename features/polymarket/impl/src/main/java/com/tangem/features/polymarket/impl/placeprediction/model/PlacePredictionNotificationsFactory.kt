@@ -8,6 +8,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
@@ -34,6 +35,18 @@ internal object PlacePredictionNotificationsFactory {
         }
 
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
+
+        val order = state.order
+        if (order is OrderSideUM.Sell) {
+            when (order.position) {
+                SellPositionUM.NotHeld,
+                SellPositionUM.Unreadable,
+                -> add(PredictionNotificationUM.PositionUnavailable)
+                SellPositionUM.Loading,
+                is SellPositionUM.Held,
+                -> Unit
+            }
+        }
     }.distinct().toImmutableList()
 
     private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {
@@ -82,7 +95,10 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
 
 private fun OrderSideUM.allowsPlacing(entered: BigDecimal?): Boolean = when (this) {
     is OrderSideUM.Buy -> hasSufficientBalance
-    is OrderSideUM.Sell -> entered != null && entered > BigDecimal.ZERO && entered <= available
+    is OrderSideUM.Sell -> position is SellPositionUM.Held &&
+        entered != null &&
+        entered > BigDecimal.ZERO &&
+        entered <= position.available
 }
 
 private fun PlacePredictionUM.pricedBuy(
