@@ -21,7 +21,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -412,17 +411,6 @@ internal class CollectiblesDiscoveryModelTest {
 
     private fun CollectiblesDiscoveryModel.clickReload() {
         (uiState.value.content as CollectiblesDiscoveryUM.ContentUM.Error).onReloadClick()
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private class Fixture(
