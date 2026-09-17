@@ -21,12 +21,17 @@ internal class SetQuoteResultTransformer(
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         if (prevState.submit !is SubmitUM.Idle) return prevState
 
-        return prevState
-            .copy(
-                quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
-                minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
-            )
-            .recomputeGate()
+        val updatedState = prevState.copy(
+            quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
+            minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
+        )
+        val pricedQuote = result.getOrNull()?.takeIf { it.status.isPlaceable }
+
+        return if (pricedQuote != null) {
+            SetOutcomePriceTransformer(price = pricedQuote.averagePrice).transform(updatedState)
+        } else {
+            updatedState.recomputeGate()
+        }
     }
 
     private fun toError(error: PredictionOrderQuoteError): QuoteUM.Error = QuoteUM.Error(
