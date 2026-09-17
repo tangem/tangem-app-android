@@ -436,11 +436,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val multichainNetworkStatuses by lazy {
-            if (tangemPayFeatureToggles.isAccountMultichainEnabled) {
-                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
-            } else {
-                emptyList()
-            }
+            tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
         }
         return when {
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
@@ -622,7 +618,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return PaymentAccountStatusValue.Loaded(
             source = source,
             customerId = customerId,
-            depositAddress = balance?.cryptoBalance?.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             networks = networks,
             fiatRate = fiatRate,
