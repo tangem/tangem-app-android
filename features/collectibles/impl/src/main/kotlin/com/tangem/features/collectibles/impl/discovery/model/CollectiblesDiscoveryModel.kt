@@ -73,6 +73,8 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
         }
     }
 
+    fun onRefresh() = reload()
+
     private fun buildInitialState(): CollectiblesDiscoveryUM {
         return CollectiblesDiscoveryUM(
             tabs = persistentListOf(),
