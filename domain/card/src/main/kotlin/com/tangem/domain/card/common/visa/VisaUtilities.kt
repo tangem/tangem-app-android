@@ -11,6 +11,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
+import java.util.Locale
 
 private const val VISA_BATCH_START = "AE"
 private const val VISA_BATCH_START_2 = "FFFC"
@@ -27,6 +28,10 @@ object VisaUtilities {
 
     fun signWithNonceMessage(nonce: String): String {
         return "Tangem Pay wants to sign in with your account. Nonce: $nonce"
+    }
+
+    fun moneyAccountDepositAddressMessage(depositAddress: String): String {
+        return "Banking account deposit address ${depositAddress.lowercase(Locale.US)}"
     }
 
     fun isVisaCard(card: CardDTO): Boolean {
