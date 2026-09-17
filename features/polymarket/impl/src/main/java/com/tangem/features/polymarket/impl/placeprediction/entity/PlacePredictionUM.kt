@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
@@ -17,7 +18,8 @@ import java.math.BigDecimal
 @Immutable
 internal data class PlacePredictionUM(
     val market: MarketHeaderUM,
-    val payment: PaymentSourceUM,
+    val collateral: CollateralUM,
+    val order: OrderSideUM,
     val amountValue: String,
     val slippage: SlippageUM,
     val quote: QuoteUM,
@@ -34,7 +36,7 @@ internal data class PlacePredictionUM(
 
     companion object {
 
-        fun initial(): PlacePredictionUM = PlacePredictionUM(
+        fun initial(side: PredictionOrderSide): PlacePredictionUM = PlacePredictionUM(
             market = MarketHeaderUM(
                 title = "",
                 imageUrl = null,
@@ -42,12 +44,14 @@ internal data class PlacePredictionUM(
                 outcomePriceCents = null,
                 resolutionDateMillis = null,
             ),
-            payment = PaymentSourceUM(
-                tokenSymbol = "",
-                iconState = null,
-                balance = null,
-                hasSufficientBalance = false,
-            ),
+            collateral = CollateralUM(tokenSymbol = "", iconState = null),
+            order = when (side) {
+                PredictionOrderSide.BUY -> OrderSideUM.Buy(balance = null, hasSufficientBalance = false)
+                PredictionOrderSide.SELL -> OrderSideUM.Sell(
+                    available = BigDecimal.ZERO,
+                    proceeds = SharesProceedsUM.Unavailable,
+                )
+            },
             amountValue = "",
             slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
             quote = QuoteUM.Empty,
@@ -104,12 +108,16 @@ internal enum class PaymentAmountErrorUM(val text: TextReference) {
 }
 
 @Immutable
-internal data class PaymentSourceUM(
-    val tokenSymbol: String,
-    val iconState: CurrencyIconState?,
-    val balance: BigDecimal?,
-    val hasSufficientBalance: Boolean,
-)
+internal data class CollateralUM(val tokenSymbol: String, val iconState: CurrencyIconState?)
+
+@Immutable
+internal sealed interface OrderSideUM {
+
+    data class Buy(val balance: BigDecimal?, val hasSufficientBalance: Boolean) : OrderSideUM
+
+    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
+    data class Sell(val available: BigDecimal, val proceeds: SharesProceedsUM) : OrderSideUM
+}
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
@@ -144,10 +152,14 @@ internal sealed interface QuoteUM {
 
     data object Loading : QuoteUM
 
+    /**
+     * @property expected the leg the user receives at the average price — shares on a buy, collateral on a sell
+     * @property guaranteed the same leg at the worst-case price
+     */
     data class Content(
         val status: PredictionQuoteStatus,
-        val expectedShares: BigDecimal,
-        val guaranteedShares: BigDecimal,
+        val expected: BigDecimal,
+        val guaranteed: BigDecimal,
         val feeTotal: BigDecimal,
         val total: BigDecimal,
         val signable: SignableQuoteUM,
@@ -167,7 +179,7 @@ internal data class SignableQuoteUM(val quote: PredictionOrderQuote, val receive
 internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecimal)
 
 internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
-    ?.let { PayoutUM(expected = it.expectedShares, guaranteed = it.guaranteedShares) }
+    ?.let { PayoutUM(expected = it.expected, guaranteed = it.guaranteed) }
 
 internal fun QuoteUM.isMarketClosed(): Boolean =
     (this as? QuoteUM.Unavailable)?.status == PredictionQuoteStatus.MARKET_CLOSED
