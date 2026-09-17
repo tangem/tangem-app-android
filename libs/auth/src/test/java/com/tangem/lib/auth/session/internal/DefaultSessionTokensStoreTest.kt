@@ -124,39 +124,7 @@ class DefaultSessionTokensStoreTest {
     }
 
     @Test
-    fun `save discards a set from the same second when the store moved meanwhile`() = runTest {
-        val storage = mockk<SecureStorage>(relaxed = true)
-        // iat is only read to the second, so the two rotations are indistinguishable by it
-        storeHolds(storage, jwtIssuedAt(seconds = 1_000, subject = "winner"))
-        val sameSecond = sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 1_000, subject = "loser"))
-        // the caller sent its request while a third, now replaced, set was in effect
-        val sentUnder = sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 900))
-
-        val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
-        val inEffect = store.save(tokens = sameSecond, expected = sentUnder)
-
-        verify(exactly = 0) { storage.store(any<String>(), any<String>()) }
-        assertThat(inEffect.accessToken).isEqualTo(jwtIssuedAt(seconds = 1_000, subject = "winner"))
-    }
-
-    @Test
-    fun `save keeps a set from the same second when the store did not move`() = runTest {
-        val storage = mockk<SecureStorage>(relaxed = true)
-        val stored = jwtIssuedAt(seconds = 1_000, subject = "stored")
-        storeHolds(storage, stored)
-        val captured = slot<String>()
-        every { storage.store(eq("session_tokens"), capture(captured)) } returns Unit
-        val sameSecond = sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 1_000, subject = "incoming"))
-
-        val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
-        val inEffect = store.save(tokens = sameSecond, expected = sampleDomain.copy(accessToken = stored))
-
-        assertThat(adapter.fromJson(captured.captured)?.accessToken).isEqualTo(sameSecond.accessToken)
-        assertThat(inEffect).isEqualTo(sameSecond)
-    }
-
-    @Test
-    fun `save keeps a set issued at the very same instant when there is nothing to compare against`() = runTest {
+    fun `save keeps the last arrival when both sets name the same second`() = runTest {
         val storage = mockk<SecureStorage>(relaxed = true)
         storeHolds(storage, jwtIssuedAt(seconds = 1_000))
         val captured = slot<String>()
@@ -166,7 +134,22 @@ class DefaultSessionTokensStoreTest {
         val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
         store.save(sampleDomain.copy(accessToken = sameInstant))
 
+        // iat cannot separate them and the client has nothing better to go on; see save's contract
         assertThat(adapter.fromJson(captured.captured)?.accessToken).isEqualTo(sameInstant)
+    }
+
+    @Test
+    fun `get does not clear an entry a save has replaced meanwhile`() = runTest {
+        val storage = mockk<SecureStorage>(relaxed = true)
+        val valid = adapter.toJson(sampleDto)
+        // the corrupt blob is read first, then replaced before the cleanup gets to run
+        every { storage.getAsString("session_tokens") } returnsMany listOf("{not json", valid)
+
+        val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
+        val actual = store.get()
+
+        assertThat(actual).isEqualTo(None)
+        verify(exactly = 0) { storage.delete(any()) }
     }
 
     @Test

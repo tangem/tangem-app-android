@@ -63,7 +63,7 @@ class DefaultSessionTokenRefresherTest {
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, deviceRegistrar)
         // the store answers with the set that ends up in effect
-        coEvery { store.save(any(), any()) } answers { firstArg() }
+        coEvery { store.save(any()) } answers { firstArg() }
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -113,7 +113,7 @@ class DefaultSessionTokenRefresherTest {
         assertThat(tokens.accessToken).isEqualTo("new-access")
         assertThat(tokens.refreshToken).isEqualTo("rt-2")
         assertThat(tokens.walletIds).containsExactly("w1", "w2")
-        coVerify { store.save(tokens = tokens, expected = any()) }
+        coVerify { store.save(tokens) }
         coVerify(exactly = 0) { authApi.authenticate(any()) }
     }
 
@@ -138,7 +138,7 @@ class DefaultSessionTokenRefresherTest {
         )
         // another rotation won; the store keeps its own set and reports it back
         val winner = stored.copy(accessToken = "won-the-race", refreshToken = "rt-3")
-        coEvery { store.save(any(), any()) } returns winner
+        coEvery { store.save(any()) } returns winner
 
         val result = refresher.refresh()
 
