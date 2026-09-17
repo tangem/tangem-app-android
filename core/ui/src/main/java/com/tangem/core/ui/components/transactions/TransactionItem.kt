@@ -381,6 +381,7 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.Contact -> ContactSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+        is ContentSubtitle.FeeFor -> FeeForSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
     }
 }
@@ -450,6 +451,45 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
         modifier = modifier,
     )
 }
+
+/**
+ * Fee-only counterparty subtitle: "Send {tokenIcon} {SYMBOL}". Only the ticker is highlighted — the "Send" literal
+ * belongs to the template a translator controls, so its wording and word order stay localizable.
+ */
+@Composable
+private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, modifier: Modifier = Modifier) {
+    val secondary = TangemTheme.colors3.text.secondary
+    val template = stringResourceSafe(R.string.transaction_history_fee_sending_asset, subtitle.symbol)
+    val icon = subtitle.icon
+
+    InlineImagesText(
+        // An asset with no avatar drops the marker with it: a kept marker still lays out its placeholder, leaving a
+        // blank gap before the ticker.
+        template = if (icon == null) template.withoutInlineImage() else template,
+        icons = if (icon == null) {
+            emptyList()
+        } else {
+            listOf {
+                CurrencyIcon(
+                    state = icon,
+                    shouldDisplayNetwork = false,
+                    withFixedSize = false,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        },
+        color = secondary,
+        highlights = listOf(subtitle.symbol),
+        highlightColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary,
+        textStyle = TangemTheme.typography3.caption.medium,
+        modifier = modifier,
+    )
+}
+
+/** Drops the inline-image marker together with the space the template puts next to it. */
+private fun String.withoutInlineImage(): String = replace("$INLINE_IMAGE_PLACEHOLDER ", "")
+    .replace(" $INLINE_IMAGE_PLACEHOLDER", "")
+    .replace(INLINE_IMAGE_PLACEHOLDER, "")
 
 @Composable
 private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status, modifier: Modifier = Modifier) {
