@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -82,7 +84,15 @@ internal class JointOperationModel @Inject constructor(
     private val isBusy: Boolean
         get() = isSigning.value || isRefusing.value
 
-    private val canCreateContact = delegate.canCreateContact(userWalletId = params.userWalletId)
+    private val canCreateContact = operationState.flatMapLatest { state ->
+        if (state == null) return@flatMapLatest flowOf(false)
+
+        delegate.canCreateContact(
+            userWalletId = params.userWalletId,
+            recipient = state.displayed.recipient,
+            network = params.currency.network,
+        )
+    }
 
     private val operationConverter = JointOperationUMConverter(
         currency = params.currency,
