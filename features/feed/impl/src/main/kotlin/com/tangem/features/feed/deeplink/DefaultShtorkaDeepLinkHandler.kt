@@ -2,8 +2,11 @@ package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.utils.popToIfCovered
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.entry.deeplink.ShtorkaDeepLinkHandler
 import com.tangem.features.feed.v2.FeedEntryController
@@ -29,7 +32,13 @@ internal class DefaultShtorkaDeepLinkHandler @AssistedInject constructor(
         if (feedFeatureToggles.isNewShtorkaEnabled) {
             // published before navigating: the hub reads the request when it is built, which on a cold
             // start is a consequence of the navigation below
-            feedEntryController.request(FeedEntryRequest(section = FeedSection.parse(queryParams[SECTION_KEY])))
+            feedEntryController.request(
+                FeedEntryRequest(
+                    section = FeedSection.parse(queryParams[SECTION_KEY]),
+                    categoryId = queryParams[CATEGORY_KEY]?.takeIf(String::isNotBlank),
+                    earnType = PreselectedEarnType.parse(queryParams[TYPE_KEY]),
+                ),
+            )
         } else {
             TangemLogger.i("Shtorka deeplink: the feed hub is disabled, opening the wallet instead")
         }
