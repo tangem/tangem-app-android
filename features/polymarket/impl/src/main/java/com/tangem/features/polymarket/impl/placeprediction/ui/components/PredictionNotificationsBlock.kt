@@ -33,7 +33,7 @@ internal fun PredictionNotificationsBlock(
                 description = notification.description(),
                 variant = notification.variant(),
                 showGlowRing = notification !is PredictionNotificationUM.AwaitingFunds,
-                primaryButton = if (notification is PredictionNotificationUM.QuoteFailed) {
+                primaryButton = if (notification.isRetryable()) {
                     TangemMessageBanner.Button(
                         text = resourceReference(R.string.common_retry),
                         onClick = onRetryClick,
@@ -47,6 +47,9 @@ internal fun PredictionNotificationsBlock(
     }
 }
 
+private fun PredictionNotificationUM.isRetryable(): Boolean =
+    this is PredictionNotificationUM.QuoteFailed || this is PredictionNotificationUM.PositionUnavailable
+
 private fun PredictionNotificationUM.title(): TextReference = when (this) {
     PredictionNotificationUM.AwaitingFunds ->
         resourceReference(R.string.prediction_place_notification_awaiting_funds_title)
@@ -57,7 +60,9 @@ private fun PredictionNotificationUM.title(): TextReference = when (this) {
         resourceReference(R.string.prediction_place_notification_market_closed_title)
     PredictionNotificationUM.RegionRestricted -> resourceReference(R.string.prediction_region_restrictions_title)
     PredictionNotificationUM.QuoteFailed -> resourceReference(R.string.prediction_place_notification_quote_error_title)
-    PredictionNotificationUM.PriceFailed -> resourceReference(R.string.common_something_went_wrong)
+    PredictionNotificationUM.PriceFailed,
+    PredictionNotificationUM.PositionUnavailable,
+    -> resourceReference(R.string.common_something_went_wrong)
 }
 
 private fun PredictionNotificationUM.description(): TextReference? = when (this) {
@@ -72,7 +77,9 @@ private fun PredictionNotificationUM.description(): TextReference? = when (this)
     PredictionNotificationUM.RegionRestricted -> resourceReference(R.string.prediction_region_restrictions_subtitle)
     PredictionNotificationUM.QuoteFailed ->
         resourceReference(R.string.prediction_place_notification_quote_error_description)
-    PredictionNotificationUM.PriceFailed -> null
+    PredictionNotificationUM.PriceFailed,
+    PredictionNotificationUM.PositionUnavailable,
+    -> null
 }
 
 private fun PredictionNotificationUM.variant(): TangemMessageBanner.Variant = when (this) {
@@ -84,6 +91,7 @@ private fun PredictionNotificationUM.variant(): TangemMessageBanner.Variant = wh
     PredictionNotificationUM.RegionRestricted,
     PredictionNotificationUM.QuoteFailed,
     PredictionNotificationUM.PriceFailed,
+    PredictionNotificationUM.PositionUnavailable,
     -> TangemMessageBanner.Variant.Error
 }
 

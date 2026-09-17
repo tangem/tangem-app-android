@@ -13,6 +13,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNoti
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
@@ -318,7 +319,7 @@ internal class PlacePredictionNotificationsFactoryTest {
                 quote = model.quote,
                 minAmount = model.minAmount,
                 order = OrderSideUM.Sell(
-                    available = BigDecimal(model.available),
+                    position = SellPositionUM.Held(available = BigDecimal(model.available)),
                     proceeds = SharesProceedsUM.Unavailable,
                     balance = null,
                 ),
@@ -408,13 +409,34 @@ internal class PlacePredictionNotificationsFactoryTest {
     )
 
     @Test
+    fun `GIVEN an unreadable position WHEN the gate runs THEN the user is told AND the button stays shut`() {
+        // Arrange
+        val state = createState(
+            amountValue = "12.80",
+            quote = createQuote(),
+            order = OrderSideUM.Sell(
+                position = SellPositionUM.Unreadable,
+                proceeds = SharesProceedsUM.Unavailable,
+                balance = null,
+            ),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.PositionUnavailable)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
     fun `GIVEN a sell with no collateral balance WHEN the gate runs THEN no shortfall is claimed`() {
         // Arrange
         val state = createState(
             amountValue = "12.80",
             quote = createQuote(total = BigDecimal("1000")),
             order = OrderSideUM.Sell(
-                available = BigDecimal("51.23"),
+                position = SellPositionUM.Held(available = BigDecimal("51.23")),
                 proceeds = SharesProceedsUM.Unavailable,
                 balance = null,
             ),
