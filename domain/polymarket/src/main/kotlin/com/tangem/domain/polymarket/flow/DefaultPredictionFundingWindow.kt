@@ -33,7 +33,7 @@ class DefaultPredictionFundingWindow(
     }
 
     override fun isOpen(userWalletId: UserWalletId): Flow<Boolean> {
-        return states.map { it.containsKey(userWalletId) }.distinctUntilChanged()
+        return states.map { it[userWalletId] is State.Counting }.distinctUntilChanged()
     }
 
     override suspend fun watch(userWalletId: UserWalletId) {
