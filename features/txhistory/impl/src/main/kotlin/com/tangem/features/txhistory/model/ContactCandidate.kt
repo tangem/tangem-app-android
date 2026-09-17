@@ -66,8 +66,9 @@ internal fun TxInfo.isPlainTransfer(): Boolean = type is TxInfo.TransactionType.
 /**
  * Whether [candidate] is a foreign address that the transaction's wallet has not saved yet. `false` without a
 
+ * Shared with the joint operation sheet, whose recipient comes from the operation payload rather than a [TxHistoryInfo].
  */
-private fun TxHistoryLookupContext.isSavableAsContact(candidate: ContactCandidate): Boolean {
+internal fun TxHistoryLookupContext.isSavableAsContact(candidate: ContactCandidate): Boolean {
     val walletId = viewedWalletId ?: return false
     val owner = resolveOwner(address = candidate.address, networkRawId = candidate.networkId)
     if (owner !is ResolvedOwner.Foreign) return false
