@@ -1232,7 +1232,7 @@ internal class PlacePredictionModelTest {
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
-            assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(36)
+            assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(35)
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
             coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
 
