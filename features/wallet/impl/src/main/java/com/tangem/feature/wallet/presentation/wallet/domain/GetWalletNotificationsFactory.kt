@@ -248,7 +248,13 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             condition = cardTypesResolver != null && isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
         )
 
-        addMissingAddressesNotification(userWallet, derivedKeysWallet, flattenCurrencies, jointAccounts, clickIntents)
+        addMissingAddressesNotification(
+            userWallet = userWallet,
+            derivedKeysWallet = derivedKeysWallet,
+            flattenCurrencies = flattenCurrencies,
+            jointAccounts = jointAccounts,
+            clickIntents = clickIntents,
+        )
     }
 
     private suspend fun MutableList<WalletNotificationUM>.addMissingAddressesNotification(
