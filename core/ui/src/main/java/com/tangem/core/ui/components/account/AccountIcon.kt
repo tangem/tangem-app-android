@@ -55,8 +55,9 @@ enum class AccountIconSize {
  */
 @Composable
 fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
-    AccountResIcon(
+    AccountGlyphIcon(
         imageVector = ImageVector.vectorResource(id = resId),
+        glyphTint = TangemTheme.colors.text.constantWhite,
         color = color,
         size = size,
         modifier = modifier,
@@ -66,8 +67,8 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
 /**
  * Displays a portfolio icon using a design-system [ImageVector].
  *
- * The background color is defined by [color], and the icon tint is constant white.
- * The icon size and container shape are adapted based on the provided [size].
+ * The background color is defined by [color]; the glyph is tinted white at the same 80 % opacity the account
+ * drawables carry in their own paths. The icon size and container shape are adapted based on the provided [size].
  *
  * @param imageVector The vector to display.
  * @param color The background color of the icon container.
@@ -75,6 +76,25 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
  */
 @Composable
 fun AccountResIcon(imageVector: ImageVector, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountGlyphIcon(
+        imageVector = imageVector,
+        glyphTint = TangemTheme.colors.text.constantWhite.copy(alpha = ACCOUNT_GLYPH_ALPHA),
+        color = color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
+private const val ACCOUNT_GLYPH_ALPHA = 0.8f
+
+@Composable
+private fun AccountGlyphIcon(
+    imageVector: ImageVector,
+    glyphTint: Color,
+    color: Color,
+    size: AccountIconSize,
+    modifier: Modifier = Modifier,
+) {
     val boxSize by animateDpAsState(
         targetValue = size.toBoxSize(),
         animationSpec = animation(),
@@ -97,7 +117,7 @@ fun AccountResIcon(imageVector: ImageVector, color: Color, size: AccountIconSize
     ) {
         Icon(
             modifier = Modifier.size(iconSize),
-            tint = TangemTheme.colors.text.constantWhite,
+            tint = glyphTint,
             imageVector = imageVector,
             contentDescription = null,
         )
