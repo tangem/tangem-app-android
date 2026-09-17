@@ -1461,6 +1461,51 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
+        fun `GIVEN an unreadable position WHEN the screen is shown again THEN the position is read again`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition().right()
+
+            // Act
+            model.onScreenShown()
+            runCurrent()
+            model.onScreenHidden()
+
+            // Assert
+            val order = model.uiState.value.order as OrderSideUM.Sell
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(model.uiState.value.notifications)
+                .doesNotContain(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an unreadable position WHEN retry clicked THEN the position is read again`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition().right()
+
+            // Act
+            model.onQuoteRetryClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
+                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the position cannot be read WHEN screen shown THEN no price is polled`() = runTest {
             // Arrange
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
