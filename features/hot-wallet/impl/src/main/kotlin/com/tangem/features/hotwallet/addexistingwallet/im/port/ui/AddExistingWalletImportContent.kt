@@ -134,12 +134,13 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
         )
     }
 
+    val keyboardState = keyboardAsState()
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         // The screen is pushed while the sheet that asked for it is still collapsing, so the request waits for
         // the entrance to settle — the same wait PinTextField and the amount field make.
         delay(timeMillis = FOCUS_REQUEST_DELAY_MS)
-        focusRequester.requestFocus()
+        if (keyboardState.value !is Keyboard.Opened) focusRequester.requestFocus()
     }
 
     Column(
