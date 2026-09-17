@@ -181,7 +181,10 @@ internal class TangemPayOnboardingModelTest {
             // THEN
             verify(exactly = 1) {
                 router.push(
-                    route = AppRoute.TangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT),
+                    route = AppRoute.TangemPayEligibility(
+                        product = TangemPayProduct.PAYMENT_ACCOUNT,
+                        userWalletId = null,
+                    ),
                     onComplete = any(),
                 )
             }
