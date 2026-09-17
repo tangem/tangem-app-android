@@ -20,12 +20,12 @@ import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * Co-signs the operation of a joint account in [Network]: the operation is taken from the store by the id the
@@ -55,7 +55,9 @@ class SignJointOperationUseCase(
     ): Either<JointOperationSignError, Unit> = either {
         val userWalletId = account.accountId.userWalletId
 
-        val jointAccount = findJointAccount(userWalletId = userWalletId, cryptoAccountId = account.accountId.value)
+        val jointAccount = ensureNotNull(supplier.find(accountId = account.accountId)) {
+            JointOperationSignError.OperationNotFound
+        }
         val safeAddress = ensureNotNull(jointAccount.safeAddress) {
             JointOperationSignError.VerificationFailed(
                 reason = JointOperationSignError.VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH,
@@ -206,16 +208,6 @@ class SignJointOperationUseCase(
         ensure(verdict != JointOperationBlockaidGate.Verdict.UNKNOWN) {
             JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict"))
         }
-    }
-
-    private suspend fun Raise<JointOperationSignError>.findJointAccount(
-        userWalletId: UserWalletId,
-        cryptoAccountId: String,
-    ): JointAccount {
-        val accounts = supplier(userWalletId = userWalletId).firstOrNull().orEmpty()
-        val own = accounts.firstOrNull { it.cryptoAccountId.equals(cryptoAccountId, ignoreCase = true) }
-
-        return ensureNotNull(own) { JointOperationSignError.OperationNotFound }
     }
 
     private suspend fun Raise<JointOperationSignError>.refundBounds(
