@@ -1146,6 +1146,10 @@ internal class PlacePredictionModelTest {
     @Test
     fun `GIVEN amount entered and cleared WHEN polling THEN price loop yields to quote loop and resumes`() = runTest {
         // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+            createQuote().copy(status = PredictionQuoteStatus.PARTIAL, averagePrice = BigDecimal("0.64")).right(),
+        )
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScreenShown()
@@ -1153,7 +1157,11 @@ internal class PlacePredictionModelTest {
 
         // Act
         model.onAmountChange(value = "10")
-        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 2)
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(64)
 
         // Assert
         coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
@@ -1161,6 +1169,31 @@ internal class PlacePredictionModelTest {
         model.onAmountChange(value = "")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a priced quote WHEN refresh fails or liquidity is unavailable THEN header keeps the last price`() = runTest {
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+            PredictionOrderQuoteError.Network.left(),
+            createQuote().copy(
+                status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                averagePrice = BigDecimal.ZERO,
+            ).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
 
         model.onDestroy()
     }
