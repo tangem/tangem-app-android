@@ -13,6 +13,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNoti
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
@@ -318,7 +319,7 @@ internal class PlacePredictionNotificationsFactoryTest {
                 quote = model.quote,
                 minAmount = model.minAmount,
                 order = OrderSideUM.Sell(
-                    available = BigDecimal(model.available),
+                    position = SellPositionUM.Held(available = BigDecimal(model.available)),
                     proceeds = SharesProceedsUM.Unavailable,
                     balance = null,
                 ),
@@ -414,10 +415,9 @@ internal class PlacePredictionNotificationsFactoryTest {
             amountValue = "12.80",
             quote = createQuote(),
             order = OrderSideUM.Sell(
-                available = BigDecimal.ZERO,
+                position = SellPositionUM.Unreadable,
                 proceeds = SharesProceedsUM.Unavailable,
                 balance = null,
-                isPositionReadable = false,
             ),
         )
 
@@ -436,7 +436,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             amountValue = "12.80",
             quote = createQuote(total = BigDecimal("1000")),
             order = OrderSideUM.Sell(
-                available = BigDecimal("51.23"),
+                position = SellPositionUM.Held(available = BigDecimal("51.23")),
                 proceeds = SharesProceedsUM.Unavailable,
                 balance = null,
             ),

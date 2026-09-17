@@ -14,6 +14,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
@@ -141,7 +142,7 @@ private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.F
 )
 
 private fun previewSell(): OrderSideUM.Sell = OrderSideUM.Sell(
-    available = BigDecimal("51.23"),
+    position = SellPositionUM.Held(available = BigDecimal("51.23")),
     proceeds = SharesProceedsUM.Unavailable,
     balance = BigDecimal("30000"),
 )
