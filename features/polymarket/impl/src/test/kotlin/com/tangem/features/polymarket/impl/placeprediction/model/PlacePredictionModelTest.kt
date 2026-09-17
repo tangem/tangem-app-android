@@ -1461,6 +1461,30 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
+        fun `GIVEN a priced sell WHEN the position turns out to be gone THEN the stale proceeds go with it`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+                model.onScreenHidden()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+                assertThat((model.uiState.value.order as OrderSideUM.Sell).proceeds)
+                    .isEqualTo(SharesProceedsUM.Unavailable)
+
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN an unreadable position WHEN the screen is shown again THEN the position is read again`() = runTest {
             // Arrange
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
