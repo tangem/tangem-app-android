@@ -25,6 +25,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.StakingRegionUnavailableBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
+import com.tangem.features.jointaccount.slotbusy.JointOperationSlotBusyComponent
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.rating.RatingComponent
@@ -50,6 +51,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     private val manageFundsComponentFactory: ManageFundsComponent.Factory,
+    private val jointOperationSlotBusyComponentFactory: JointOperationSlotBusyComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     private val ratingComponentFactory: RatingComponent.Factory,
     marketingBannerComponentFactory: MarketingBannerComponent.Factory,
@@ -207,6 +209,13 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
         is TokenDetailsBottomSheetConfig.RegionUnavailable -> StakingRegionUnavailableBottomSheetComponent(
             onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.JointOperationSlotBusy -> jointOperationSlotBusyComponentFactory.create(
+            context = childByContext(componentContext),
+            params = JointOperationSlotBusyComponent.Params(
+                networkName = route.networkName,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
         )
     }
 
