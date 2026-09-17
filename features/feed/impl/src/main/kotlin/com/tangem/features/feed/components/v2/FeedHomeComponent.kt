@@ -105,6 +105,7 @@ internal class FeedHomeComponent(
             isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED,
             contentPadding = contentPadding,
             onExpandSheet = onExpandSheet,
+            collapseTopBlocksRequests = model.topBlocksCollapseRequests,
             modifier = modifier,
             topBlocks = { blockModifier -> topBlocksComponent.Content(modifier = blockModifier) },
             tabContent = { tabModifier, tabContentPadding ->
