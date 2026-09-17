@@ -26,8 +26,17 @@ internal data class JointOperationState(
     val initiator: String?,
 ) {
 
-    /** The initiator deletes the operation, every other member declines it */
-    val isInitiator: Boolean = ownAddress != null && ownAddress.equals(initiator, ignoreCase = true)
+    /**
+     * The initiator deletes the operation, every other member declines it. The backend tells them apart by the
+     * caller, so a member whose role this screen cannot tell is offered neither action.
+     */
+    val role: Role = when {
+        ownAddress == null || initiator == null -> Role.UNKNOWN
+        ownAddress.equals(initiator, ignoreCase = true) -> Role.INITIATOR
+        else -> Role.MEMBER
+    }
+
+    enum class Role { INITIATOR, MEMBER, UNKNOWN }
 
     /** The initiator signed on creation, so their answer counts towards the threshold */
     val collected: Int = signers.count { signer ->
