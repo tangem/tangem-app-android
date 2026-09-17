@@ -30,16 +30,12 @@ internal class SetTokenListTransformer(
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
-    private val isAccountMultichainEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
     private val accountIdsWithInvites: Set<String> = emptySet(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
-        TangemPayMainBlockConverter(
-            tangemPayClickIntents = clickIntents,
-            isAccountMultichainEnabled = isAccountMultichainEnabled,
-        )
+        TangemPayMainBlockConverter(tangemPayClickIntents = clickIntents)
     }
 
     private val moneyAccountConverter by lazy {

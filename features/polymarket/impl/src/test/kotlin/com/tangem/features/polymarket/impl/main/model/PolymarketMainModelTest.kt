@@ -22,7 +22,10 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
@@ -675,7 +678,7 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN requisites ready WHEN swap row tapped THEN swap pushed as target with no account flow`() = runTest {
+    fun `GIVEN requisites ready WHEN swap row tapped THEN swap pushed as target in the top-up flow`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -687,7 +690,7 @@ internal class PolymarketMainModelTest {
 
         // Assert
         assertThat(route.captured.fromCurrencyPosition).isEqualTo(AppRoute.Swap.CurrencyPosition.TO)
-        assertThat(route.captured.accountFlow).isNull()
+        assertThat(route.captured.accountFlow).isEqualTo(AppRoute.Swap.AccountFlow.PredictionTopUp)
         assertThat(route.captured.screenSource).isEqualTo(AnalyticsParam.ScreensSources.Predictions.value)
         verifyOrder {
             fundingWindow.arm(USER_WALLET_ID)
@@ -1232,17 +1235,40 @@ internal class PolymarketMainModelTest {
         coEvery { getCategoriesUseCase() } returns categories().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        val click = slot<(PolymarketPositionId) -> Unit>()
+        val click = slot<(PolymarketPosition.Open) -> Unit>()
         model.onResume()
         verify { positionsPreviewLoader.resume(any(), USER_WALLET_ID, capture(click)) }
-        val id = PolymarketPositionId("condition", "asset")
+        val position = createPolymarketPosition()
 
         // Act
-        click.captured(id)
+        click.captured(position)
         model.onPause()
 
         // Assert
-        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(USER_WALLET_ID, id), any()) }
+        verify(exactly = 1) { router.push(PolymarketRoute.PositionDetails(USER_WALLET_ID, position.id), any()) }
+    }
+
+    @Test
+    fun `GIVEN main preview WHEN claimable position tapped THEN result receives wallet and real position`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns categories().right()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val click = slot<(PolymarketPosition.Open) -> Unit>()
+        model.onResume()
+        verify { positionsPreviewLoader.resume(any(), USER_WALLET_ID, capture(click)) }
+        val position = createPolymarketPosition(
+            result = PolymarketPositionResult.SPLIT,
+            resolutionStatus = PolymarketResolutionStatus.RESOLVED,
+        ).copy(isRedeemable = true)
+
+        // Act
+        click.captured(position)
+        model.onPause()
+
+        // Assert
+        verify(exactly = 1) { router.push(PolymarketRoute.PositionResult(USER_WALLET_ID, position), any()) }
+        verify(exactly = 0) { router.push(ofType<PolymarketRoute.PositionDetails>(), any()) }
     }
 
     private fun createModel(testScope: TestScope): PolymarketMainModel {

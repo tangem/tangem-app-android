@@ -15,7 +15,6 @@ import kotlinx.collections.immutable.toPersistentList
 internal class TangemPayAddFundsUMConverter(
     val listener: AddFundsListener,
     val shouldShowBankTransfer: Boolean,
-    val isMultichainEnabled: Boolean,
 ) : Converter<TangemPayTopUpData, TangemPayAddFundsUM> {
 
     override fun convert(value: TangemPayTopUpData): TangemPayAddFundsUM {
@@ -38,13 +37,7 @@ internal class TangemPayAddFundsUMConverter(
                 },
             ),
             title = resourceReference(R.string.tangempay_topup_receive_title),
-            description = resourceReference(
-                if (isMultichainEnabled) {
-                    R.string.tangempay_topup_receive_body_multichain
-                } else {
-                    R.string.tangempay_topup_receive_body
-                },
-            ),
+            description = resourceReference(R.string.tangempay_topup_receive_body_multichain),
             onClick = { listener.onClickReceive(value) },
         )
         val bankTransfer = if (shouldShowBankTransfer) {
@@ -60,14 +53,8 @@ internal class TangemPayAddFundsUMConverter(
         } else {
             null
         }
-        // The multichain design puts Bank transfer first; the legacy sheet keeps it last.
-        val items = if (isMultichainEnabled) {
-            listOfNotNull(bankTransfer, swap, receive)
-        } else {
-            listOfNotNull(swap, receive, bankTransfer)
-        }
         return TangemPayAddFundsUM(
-            items = items.toPersistentList(),
+            items = listOfNotNull(bankTransfer, swap, receive).toPersistentList(),
             dismiss = listener::onDismissAddFunds,
             errorMessage = null,
         )

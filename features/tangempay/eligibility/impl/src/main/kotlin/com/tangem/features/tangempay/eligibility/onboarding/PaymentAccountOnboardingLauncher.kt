@@ -49,10 +49,14 @@ internal class PaymentAccountOnboardingLauncher @Inject constructor(
                     router.pop()
                 } else {
                     createOrderIfNeeded(userWalletId = userWalletId, customerInfo = customerInfo)
-                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId))
+                    openKyc(userWalletId)
                 }
             },
         )
+    }
+
+    fun openKyc(userWalletId: UserWalletId) {
+        router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId))
     }
 
     private suspend fun createOrderIfNeeded(userWalletId: UserWalletId, customerInfo: CustomerInfo) {

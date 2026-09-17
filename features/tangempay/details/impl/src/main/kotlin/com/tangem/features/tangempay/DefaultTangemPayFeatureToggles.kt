@@ -15,9 +15,6 @@ internal class DefaultTangemPayFeatureToggles(
     override val isPlasticCardOrderEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1157_PLASTIC_CARD_ORDER_ENABLED)
 
-    override val isAccountMultichainEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1684_ACCOUNT_MULTICHAIN_ENABLED)
-
     override val isPinBiometryGateEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED)
 
@@ -28,5 +25,5 @@ internal class DefaultTangemPayFeatureToggles(
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1727_CUSTOM_CARDS_COBRAND_ENABLED)
 
     override val isResidencyStepEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_17401_PAY_RESIDENCY_STEP_ENABLED)
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1771_PAY_RESIDENCY_STEP_ENABLED)
 }
