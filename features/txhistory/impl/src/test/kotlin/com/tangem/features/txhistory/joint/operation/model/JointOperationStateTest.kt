@@ -122,22 +122,46 @@ internal class JointOperationStateTest {
         val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), initiator = OWN.uppercase())
 
         // Act
-        val actual = state.isInitiator
+        val actual = state.role
 
         // Assert
-        assertThat(actual).isTrue()
+        assertThat(actual).isEqualTo(JointOperationState.Role.INITIATOR)
     }
 
     @Test
-    fun `GIVEN the owner address is not resolvable WHEN state built THEN this member is not the initiator`() {
+    fun `GIVEN another member created the operation WHEN state built THEN this member is a plain member`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN)), initiator = OTHER)
+
+        // Act
+        val actual = state.role
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationState.Role.MEMBER)
+    }
+
+    @Test
+    fun `GIVEN the owner address is not resolvable WHEN state built THEN the role is unknown`() {
         // Arrange
         val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), ownAddress = null)
 
         // Act
-        val actual = state.isInitiator
+        val actual = state.role
 
         // Assert
-        assertThat(actual).isFalse()
+        assertThat(actual).isEqualTo(JointOperationState.Role.UNKNOWN)
+    }
+
+    @Test
+    fun `GIVEN the backend named no initiator WHEN state built THEN the role is unknown`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), initiator = null)
+
+        // Act
+        val actual = state.role
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationState.Role.UNKNOWN)
     }
 
     @Test
