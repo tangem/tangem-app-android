@@ -322,7 +322,7 @@ internal class PolymarketPositionDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN a shown position WHEN it stays missing THEN the reads stop AND the screen says unavailable`() =
+    fun `GIVEN a shown position WHEN it stays missing THEN the reads stop AND the screen closes`() =
         runModelTest {
             // Arrange
             val model = createModel()
@@ -336,7 +336,8 @@ internal class PolymarketPositionDetailsModelTest {
             advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * PolymarketConst.POSITION_INDEXING_READS + 1)
 
             // Assert
-            assertThat(model.uiState.value.content).isEqualTo(Content.Unavailable)
+            verify(exactly = 1) { router.pop() }
+            assertThat(model.uiState.value.content).isEqualTo(Content.Loading)
             coVerify(exactly = 1 + PolymarketConst.POSITION_INDEXING_READS) {
                 repository.getPosition(addresses, position.id)
             }
