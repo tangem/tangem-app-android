@@ -532,10 +532,7 @@ internal class PlacePredictionModel @Inject constructor(
             is PlacePredictionComponent.Params.Buy -> router.popTo(
                 PolymarketRoute.Main(userWalletId = params.userWalletId),
             )
-            is PlacePredictionComponent.Params.Sell -> {
-                router.popTo(PlacePredictionRoute.Amount)
-                router.pop()
-            }
+            is PlacePredictionComponent.Params.Sell -> router.pop()
         }
     }
 
