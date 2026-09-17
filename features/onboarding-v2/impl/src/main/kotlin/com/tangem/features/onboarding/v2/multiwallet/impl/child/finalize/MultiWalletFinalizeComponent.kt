@@ -43,8 +43,8 @@ internal class MultiWalletFinalizeComponent(
     )
 
     init {
-        params.innerNavigation.update {
-            it.copy(
+        params.innerNavigation.update { navigationState ->
+            navigationState.copy(
                 stackSize = 7,
                 stackMaxSize = 10,
             )
