@@ -27,6 +27,10 @@ inline fun <reified T : Any> RetrofitFactory.build(spec: RetrofitApiSpec): T = c
  * @property shouldUseSessionAuth          whether to install the session auth interceptor/authenticator
  * @property timeouts                      optional client-level timeouts
  * @property shouldSaveLogs                whether to persist network logs
+ * @property isLoggable                    whether request/response bodies may reach the debug loggers
+ *   (Chucker, logcat). `false` keeps them off for this API even when its [ApiConfig] allows logging —
+ *   for bodies that must not be readable anywhere, such as identity tokens. Note that
+ *   [shouldSaveLogs] only governs the exportable log file, not these loggers.
  */
 data class RetrofitApiSpec(
     val apiConfigId: ApiConfig.ID,
@@ -34,6 +38,7 @@ data class RetrofitApiSpec(
     val shouldUseSessionAuth: Boolean,
     val timeouts: Timeouts? = null,
     val shouldSaveLogs: Boolean = true,
+    val isLoggable: Boolean = true,
 )
 
 /** Optional client-level timeouts (seconds); `null` fields keep the client defaults. */

@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.positions.model
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
@@ -29,13 +29,13 @@ internal class PolymarketPositionsLoader @Inject constructor(
     fun createFeed(
         userWalletId: UserWalletId,
         tab: PolymarketPositionsTab,
-        onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
     ): Feed = Feed(userWalletId, tab, onPositionClick)
 
     internal inner class Feed(
         userWalletId: UserWalletId,
         tab: PolymarketPositionsTab,
-        onPositionClick: ((PolymarketPositionId) -> Unit)?,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)?,
     ) {
 
         val state: StateFlow<Content>
@@ -79,7 +79,13 @@ internal class PolymarketPositionsLoader @Inject constructor(
             if (pageError != null) {
                 TangemLogger.e("Failed to load Polymarket positions page: ${pageError.throwable}")
             }
-            if (value.positions.isEmpty()) return Content.Empty
+            if (value.positions.isEmpty()) {
+                return when {
+                    pageError != null -> Content.Error(session::retry)
+                    value.status is PaginationStatus.NextBatchLoading -> Content.Loading
+                    else -> Content.Empty
+                }
+            }
             return Content.Data(
                 positions = withContext(dispatchers.default) {
                     value.positions.map(converter::convert).toImmutableList()

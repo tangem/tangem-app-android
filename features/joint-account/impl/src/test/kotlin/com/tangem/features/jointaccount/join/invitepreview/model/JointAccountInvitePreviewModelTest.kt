@@ -19,7 +19,7 @@ import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInv
 import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
 import com.tangem.features.jointaccount.join.model.JointAccountJoinDraftHolder
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,7 +27,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -155,17 +154,6 @@ internal class JointAccountInvitePreviewModelTest {
         every { walletId } returns id
         every { isLocked } returns locked
         every { name } returns "Wallet ${id.stringValue}"
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private companion object {
