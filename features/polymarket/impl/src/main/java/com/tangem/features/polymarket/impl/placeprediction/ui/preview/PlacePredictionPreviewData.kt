@@ -5,14 +5,16 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
@@ -51,6 +53,15 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
             ),
             previewState(amountValue = "4000", quote = previewQuote(), balance = BigDecimal("10"))
                 .copy(notifications = persistentListOf(PredictionNotificationUM.AwaitingFunds)),
+            previewState(order = previewSell()),
+            previewState(amountValue = "12.80", quote = QuoteUM.Loading, order = previewSell()),
+            previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
+            previewState(
+                amountValue = "3",
+                quote = previewSellQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+                minAmount = BigDecimal("5"),
+                order = previewSell(),
+            ),
         )
 }
 
@@ -97,6 +108,7 @@ private fun previewState(
     balance: BigDecimal = BigDecimal("30000"),
     tradingPermission: TradingPermissionUM = TradingPermissionUM.Allowed,
     minAmount: BigDecimal? = null,
+    order: OrderSideUM = OrderSideUM.Buy(balance = balance, hasSufficientBalance = false),
 ): PlacePredictionUM = PlacePredictionUM(
     market = MarketHeaderUM(
         title = "Will Uzbekistan win the 2026 FIFA World Cup?",
@@ -105,12 +117,8 @@ private fun previewState(
         outcomePriceCents = 85,
         resolutionDateMillis = RESOLUTION_AT,
     ),
-    payment = PaymentSourceUM(
-        tokenSymbol = "USDC",
-        iconState = CurrencyIconState.Empty(),
-        balance = balance,
-        hasSufficientBalance = false,
-    ),
+    collateral = CollateralUM(tokenSymbol = "USDC", iconState = CurrencyIconState.Empty()),
+    order = order,
     amountValue = amountValue,
     slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
     quote = quote,
@@ -125,16 +133,37 @@ private fun previewState(
 
 private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.FULL): QuoteUM.Content = QuoteUM.Content(
     status = status,
-    expectedShares = BigDecimal("4705.88"),
-    guaranteedShares = BigDecimal("4612.54"),
+    expected = BigDecimal("4705.88"),
+    guaranteed = BigDecimal("4612.54"),
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
     signable = SignableQuoteUM(quote = previewSignableQuote(status = status), receivedAtMillis = PLACED_AT),
 )
 
-private fun previewSignableQuote(status: PredictionQuoteStatus): PredictionOrderQuote = PredictionOrderQuote(
+private fun previewSell(): OrderSideUM.Sell = OrderSideUM.Sell(
+    available = BigDecimal("51.23"),
+    proceeds = SharesProceedsUM.Unavailable,
+)
+
+private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.FULL): QuoteUM.Content =
+    QuoteUM.Content(
+        status = status,
+        expected = BigDecimal("43.54"),
+        guaranteed = BigDecimal("43.11"),
+        feeTotal = BigDecimal("0.45"),
+        total = BigDecimal("42.66"),
+        signable = SignableQuoteUM(
+            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL),
+            receivedAtMillis = PLACED_AT,
+        ),
+    )
+
+private fun previewSignableQuote(
+    status: PredictionQuoteStatus,
+    side: PredictionOrderSide = PredictionOrderSide.BUY,
+): PredictionOrderQuote = PredictionOrderQuote(
     status = status,
-    side = PredictionOrderSide.BUY,
+    side = side,
     shares = BigDecimal("4612.54"),
     notional = BigDecimal("4000"),
     expectedExecutionAmount = BigDecimal("4705.88"),
