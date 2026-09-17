@@ -48,7 +48,7 @@ internal data class PlacePredictionUM(
             order = when (side) {
                 PredictionOrderSide.BUY -> OrderSideUM.Buy(balance = null, hasSufficientBalance = false)
                 PredictionOrderSide.SELL -> OrderSideUM.Sell(
-                    available = BigDecimal.ZERO,
+                    position = SellPositionUM.Loading,
                     proceeds = SharesProceedsUM.Unavailable,
                     balance = null,
                 )
@@ -76,6 +76,27 @@ internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
     amountValue.toBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
+
+internal fun PlacePredictionUM.canQuote(): Boolean = when (val order = order) {
+    is OrderSideUM.Buy -> true
+    is OrderSideUM.Sell -> order.position is SellPositionUM.Held
+}
+
+/**
+ * A price is a property of the market, not of the position, so it is still worth polling while the position
+ * is on its way — but not once reading it has failed, since then the screen has nothing to price.
+ */
+internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order) {
+    is OrderSideUM.Buy -> true
+    is OrderSideUM.Sell -> when (order.position) {
+        SellPositionUM.Loading,
+        is SellPositionUM.Held,
+        -> true
+        SellPositionUM.NotHeld,
+        SellPositionUM.Unreadable,
+        -> false
+    }
+}
 
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
     val entered = enteredAmount() ?: return false
@@ -117,13 +138,29 @@ internal sealed interface OrderSideUM {
 
     data class Buy(val balance: BigDecimal?, val hasSufficientBalance: Boolean) : OrderSideUM
 
-    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
     data class Sell(
-        val available: BigDecimal,
+        val position: SellPositionUM,
         val proceeds: SharesProceedsUM,
         val balance: BigDecimal?,
     ) : OrderSideUM
 }
+
+/** What the read of the position behind a sell came back with. */
+@Immutable
+internal sealed interface SellPositionUM {
+
+    data object Loading : SellPositionUM
+
+    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
+    data class Held(val available: BigDecimal) : SellPositionUM
+
+    data object NotHeld : SellPositionUM
+
+    data object Unreadable : SellPositionUM
+}
+
+internal val SellPositionUM.availableOrZero: BigDecimal
+    get() = (this as? SellPositionUM.Held)?.available ?: BigDecimal.ZERO
 
 internal val OrderSideUM.side: PredictionOrderSide
     get() = when (this) {

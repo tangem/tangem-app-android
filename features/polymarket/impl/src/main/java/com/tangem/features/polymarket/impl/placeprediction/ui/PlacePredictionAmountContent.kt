@@ -121,7 +121,7 @@ private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionIntent
         )
         is OrderSideUM.Sell -> PredictionSharesBlock(
             selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-            available = order.available,
+            position = order.position,
             proceeds = order.proceeds,
             onAmountChange = intents::onAmountChange,
         )
