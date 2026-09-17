@@ -131,7 +131,7 @@ data class AmountTextFieldColors(
     val backgroundColor: Color,
 )
 
-private fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
+internal fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
     val decimalSymbol = decimalFormat.decimalFormatSymbols.decimalSeparator
     return if (decimalFormat.isValidSymbols(newValue)) {
         val parsedDecimal = newValue.parseBigDecimalOrNull()
