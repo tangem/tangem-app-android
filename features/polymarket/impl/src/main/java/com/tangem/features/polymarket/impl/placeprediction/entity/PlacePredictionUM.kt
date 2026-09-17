@@ -76,6 +76,8 @@ internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
+internal fun PlacePredictionUM.isPositionReadable(): Boolean = (order as? OrderSideUM.Sell)?.isPositionReadable != false
+
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
     val entered = enteredAmount() ?: return false
     val minAmount = minAmount ?: return false
@@ -115,8 +117,16 @@ internal sealed interface OrderSideUM {
 
     data class Buy(val balance: BigDecimal?, val hasSufficientBalance: Boolean) : OrderSideUM
 
-    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
-    data class Sell(val available: BigDecimal, val proceeds: SharesProceedsUM) : OrderSideUM
+    /**
+     * @property available the held shares the market can accept, truncated onto its 2-decimal grid
+     * @property isPositionReadable false once the position behind the sell could not be read at all, which
+     *  leaves nothing to sell and nothing worth quoting
+     */
+    data class Sell(
+        val available: BigDecimal,
+        val proceeds: SharesProceedsUM,
+        val isPositionReadable: Boolean = true,
+    ) : OrderSideUM
 }
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
