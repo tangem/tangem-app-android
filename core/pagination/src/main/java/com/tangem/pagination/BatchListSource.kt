@@ -85,6 +85,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     private val lastRequestResult = MutableStateFlow<BatchFetchResult<TData>?>(null)
     private var reloadActionJob: Job? = null
     private var loadMoreActionJob: Job? = null
+    private var loadMoreRequestedState: BatchListState<TKey, TData>? = null
 
     init {
         scope.launch {
@@ -112,6 +113,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             is BatchAction.Reload -> {
                 // Stop all tasks
                 loadMoreActionJob?.cancel()
+                loadMoreRequestedState = null
                 reloadActionJob?.cancel()
                 stopAllUpdates()
 
@@ -120,19 +122,27 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                     status = PaginationStatus.InitialLoading,
                 )
 
-                reloadActionJob = scope.launchFetch {
+                reloadActionJob = scope.launchFetch(start = CoroutineStart.LAZY) {
                     reloadTask(action)
                 }
+                reloadActionJob?.start()
             }
             is BatchAction.LoadMore -> {
-                if (loadMoreActionJob?.isActive == true) {
-                    return
+                val currentState = state.value
+                val previousJob = loadMoreActionJob
+                if (previousJob?.isActive == true) {
+                    val isReady = currentState.status is PaginationStatus.Paginating ||
+                        currentState.status is PaginationStatus.EndOfPagination
+                    if (!isReady || currentState === loadMoreRequestedState) return
                 }
 
-                loadMoreActionJob = scope.launchFetch {
+                loadMoreRequestedState = currentState
+                loadMoreActionJob = scope.launchFetch(start = CoroutineStart.LAZY) {
+                    previousJob?.join()
                     reloadActionJob?.join()
                     loadMoreTask(action)
                 }
+                loadMoreActionJob?.start()
             }
             is BatchAction.UpdateBatches -> {
                 if (reloadActionJob?.isActive == true) {
@@ -291,6 +301,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             batchFetcher.fetchNext(action.requestParams, lastResult)
         }.getOrElse { BatchFetchResult.Error(it) }
 
+        currentCoroutineContext().ensureActive()
         lastRequestResult.value = res
 
         state.update { currentState ->
@@ -417,6 +428,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         }
         loadMoreActionJob?.cancel()
         loadMoreActionJob = null
+        loadMoreRequestedState = null
         reloadActionJob?.cancel()
         reloadActionJob = null
         lastRequestResult.value = null
