@@ -62,17 +62,21 @@ internal class SdkTransactionHistoryItemConverter(
         is SdkTransactionHistoryItem.AddressType.Validator -> TxInfo.AddressType.Validator(address)
     }
 
+    /**
+     * The counterparty follows the direction for a contract call too: a token that arrives inside someone else's
+     * contract call (a DEX payout, a withdrawal sent straight to the wallet) has the wallet itself as destination,
+     * and naming it would show the transfer as coming from the user's own account.
+     */
     private fun SdkTransactionHistoryItem.extractInteractionAddressType(): TxInfo.InteractionAddressType? {
         return when (val transactionType = type) {
-            SdkTransactionHistoryItem.TransactionType.Transfer -> if (isOutgoing) {
+            SdkTransactionHistoryItem.TransactionType.Transfer,
+            is SdkTransactionHistoryItem.TransactionType.ContractMethod,
+            is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
+            -> if (isOutgoing) {
                 mapToInteractionAddressType(destinationType = destinationType)
             } else {
                 mapToInteractionAddressType(sourceType = sourceType)
             }
-
-            is SdkTransactionHistoryItem.TransactionType.ContractMethod,
-            is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
-            -> mapToInteractionAddressType(destinationType = destinationType)
 
             is SdkTransactionHistoryItem.TransactionType.SolanaStakingTransactionType.Stake -> {
                 transactionType.validatorAddress?.let {

@@ -107,7 +107,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         onOpenMenu = ::onOpenMenu,
         intents = this,
         isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
-        isMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -256,7 +255,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun openAddFunds() {
         val status = currentStatus.value
         val balance = status.balanceOrNull()
-        if (balance == null || !status.value.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
+        if (balance == null || !status.value.canAddFunds) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
             return
         }
@@ -586,7 +585,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
         val networks = currentStatus.value.networksOrNull().orEmpty()
-        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
+        if (shouldUseChooseNetwork(networks)) {
             bottomSheetNavigation.activate(TangemPayDetailsNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(
