@@ -64,6 +64,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         if (!isResumed) return
         loadJob?.cancel()
         eventJob?.cancel()
+        val shownSize = position?.size
         position = null
         event = null
         uiState.update { it.copy(content = Content.Loading) }
@@ -74,24 +75,28 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
                 showError("Stored addresses unavailable")
                 return@launch
             }
-            repeat(PolymarketConst.POSITION_INDEXING_READS) { read ->
+            for (read in 0 until PolymarketConst.POSITION_INDEXING_READS) {
                 val result = withContext(dispatchers.default) { repository.getPosition(addresses, params.positionId) }
                 ensureActive()
                 val loaded = result.getOrElse { error ->
                     showError(error.toString())
                     return@launch
                 }
-                if (loaded != null || !isIndexingLag(read)) {
-                    showPosition(loaded)
-                    return@launch
+                when {
+                    loaded == null && !hasShownPosition -> {
+                        showPosition(null)
+                        return@launch
+                    }
+                    loaded != null && loaded.size != position?.size -> showPosition(loaded)
                 }
+                val isLastRead = read == PolymarketConst.POSITION_INDEXING_READS - 1
+                val isStillIndexing = !isLastRead && (loaded == null || loaded.size == shownSize)
+                if (!isStillIndexing) break
                 delay(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS)
             }
+            if (position == null) showPosition(null)
         }
     }
-
-    private fun isIndexingLag(read: Int): Boolean =
-        hasShownPosition && read < PolymarketConst.POSITION_INDEXING_READS - 1
 
     private fun showPosition(loaded: PolymarketPosition.Open?) {
         if (loaded == null && hasShownPosition) {
