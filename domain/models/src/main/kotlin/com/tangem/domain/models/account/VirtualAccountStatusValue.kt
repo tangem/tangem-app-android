@@ -7,193 +7,199 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
-/**
- * Represents the various states a virtual account (VA) can have, encapsulating different information based on
- * the state. Mirrors [PaymentAccountStatusValue] but carries VA-specific states (no card-related variants).
- *
- * @property source The source of the status information.
- */
 @Serializable
 sealed class VirtualAccountStatusValue {
+
     abstract val source: StatusSource
 
-    /** The total fiat balance associated with this status. */
+    abstract val balance: Balance?
+
     val totalFiatBalance: TotalFiatBalance
-        get() = when (this) {
-            is Empty,
-            is NotCreated,
-            is UnderReview,
-            is Provisioning,
-            is CountryNotSupported,
-            is Error,
-            -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
-            is Loading -> TotalFiatBalance.Loading
-            is Active -> {
-                val rate = fiatRate ?: return TotalFiatBalance.Failed
-                TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance.multiply(rate), source = source)
-            }
+        get() {
+            if (this is Loading) return TotalFiatBalance.Loading
+
+            val balance = balance ?: return TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
+            val fiatRate = balance.fiatRate ?: return TotalFiatBalance.Failed
+
+            return TotalFiatBalance.Loaded(
+                amount = balance.cryptoAmount.multiply(fiatRate),
+                source = source,
+            )
         }
 
-    /**
-     * Copies the status with a new [source].
-     *
-     * @param source The new source of the status information.
-     */
     fun copySealed(source: StatusSource): VirtualAccountStatusValue {
         return when (this) {
-            is UnderReview -> copy(source = source)
-            is Provisioning -> copy(source = source)
-            is Active -> copy(source = source)
+            is Issuance.Issuing -> copy(source = source)
+            is Issuance.UnderReview -> copy(source = source)
+            is Issuance.VerificationDeclined -> copy(source = source)
+            is Issuance.Activating -> copy(source = source)
+            is Issued.Active -> copy(source = source)
+            is Issued.Deactivated -> copy(source = source)
             is Loading,
             is Empty,
             is NotCreated,
-            is CountryNotSupported,
+            is Issuance.CountryNotSupported,
             is Error,
             -> this
         }
     }
 
-    /** Represents an empty virtual account status when no specific state is available. */
+    fun copySealed(balance: Balance?): VirtualAccountStatusValue {
+        return when (this) {
+            is Issuance.Issuing -> copy(balance = balance)
+            is Issuance.UnderReview -> copy(balance = balance)
+            is Issuance.VerificationDeclined -> copy(balance = balance)
+            is Issuance.Activating -> copy(balance = balance)
+            is Issued.Active -> copy(balance = balance)
+            is Issued.Deactivated -> copy(balance = balance)
+            is Loading,
+            is Empty,
+            is NotCreated,
+            is Issuance.CountryNotSupported,
+            is Error,
+            -> this
+        }
+    }
+
     @Serializable
     data object Empty : VirtualAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
+        override val balance: Balance? = null
     }
 
-    /** Represents the Loading state of a virtual account, typically while fetching its details. */
     @Serializable
     data object Loading : VirtualAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
+        override val balance: Balance? = null
     }
 
-    /** Represents a state where the virtual account has not been created yet. */
     @Serializable
     data object NotCreated : VirtualAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
+        override val balance: Balance? = null
     }
 
-    /**
-     * Represents a state where the virtual account is under review (KYC).
-     *
-     * @property source The source of the status information.
-     * @property kycStatus The current KYC status.
-     * @property customerId The unique identifier of the customer.
-     */
     @Serializable
-    data class UnderReview(
-        override val source: StatusSource,
-        val kycStatus: KycStatus,
-        val customerId: String,
-    ) : VirtualAccountStatusValue()
+    sealed class Issuance : VirtualAccountStatusValue() {
 
-    /**
-     * Represents a state where the virtual account is being provisioned on the backend (e.g. via Rain),
-     * after KYC approval and terms acceptance.
-     *
-     * @property source The source of the status information.
-     */
-    @Serializable
-    data class Provisioning(override val source: StatusSource) : VirtualAccountStatusValue()
+        abstract val customerId: String?
 
-    /** Represents a state where the user's country is not eligible for a virtual account. */
-    @Serializable
-    data object CountryNotSupported : VirtualAccountStatusValue() {
-        override val source: StatusSource = StatusSource.ACTUAL
+        @Serializable
+        data class Issuing(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String?,
+            @SerialName("step") val step: IssuingStep,
+        ) : Issuance()
+
+        @Serializable
+        data class UnderReview(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String,
+            @SerialName("kyc_status") val kycStatus: KycStatus,
+        ) : Issuance()
+
+        @Serializable
+        data class VerificationDeclined(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String,
+        ) : Issuance()
+
+        @Serializable
+        data object CountryNotSupported : Issuance() {
+            override val source: StatusSource = StatusSource.ACTUAL
+            override val balance: Balance? = null
+            override val customerId: String? = null
+        }
+
+        @Serializable
+        data class Activating(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String?,
+        ) : Issuance()
     }
 
-    /**
-     * Represents a state where the virtual account is successfully loaded with complete information.
-     *
-     * @property source The source of the status information.
-     * @property customerId The unique identifier of the customer.
-     * @property currencyCode The code of the currency.
-     * @property depositAddress The on-chain address for deposits, if available.
-     * @property fiatBalance The fiat balance details.
-     * @property cryptoBalance The crypto balance details.
-     * @property availableForWithdrawal The crypto amount currently available for withdrawal/swap.
-     * @property cryptoCurrency The crypto currency held in the account (e.g. USDC).
-     * @property fiatRate Exchange rate of [cryptoCurrency] to the app's selected fiat currency,
-     *                    or `null` if the quote is not yet available. When `null`,
-     *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
-     */
     @Serializable
-    data class Active(
-        override val source: StatusSource,
-        val customerId: String,
-        val currencyCode: String,
-        val depositAddress: String?,
-        val fiatBalance: FiatBalance,
-        val cryptoBalance: CryptoBalance,
-        val availableForWithdrawal: SerializedBigDecimal,
-        val cryptoCurrency: CryptoCurrency.Token,
-        val fiatRate: SerializedBigDecimal?,
-    ) : VirtualAccountStatusValue() {
-        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = buildCryptoCurrencyStatusValue(
-                amount = availableForWithdrawal,
-                fiatAmount = fiatBalance.availableBalance,
-                fiatRate = fiatRate,
-                depositAddress = cryptoBalance.depositAddress,
-            ),
-        )
+    sealed class Issued : VirtualAccountStatusValue() {
+
+        abstract val customerId: String
+        abstract val productInstanceId: String
+
+        @Serializable
+        data class Active(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String,
+            @SerialName("product_instance_id") override val productInstanceId: String,
+        ) : Issued()
+
+        @Serializable
+        data class Deactivated(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("balance") override val balance: Balance?,
+            @SerialName("customer_id") override val customerId: String,
+            @SerialName("product_instance_id") override val productInstanceId: String,
+        ) : Issued()
     }
 
-    /** Represents an error state for the virtual account status. */
     @Serializable
     sealed class Error : VirtualAccountStatusValue() {
-        /** Error state indicating the device is exposed. */
+
         @Serializable
         data object ExposedDevice : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
+            override val balance: Balance? = null
         }
 
-        /** Error state indicating the account is unavailable. */
         @Serializable
         data object Unavailable : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
+            override val balance: Balance? = null
         }
 
-        /** Error state indicating the account data is not synced. */
         @Serializable
         data object NotSynced : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
+            override val balance: Balance? = null
         }
     }
 
-    /**
-     * Represents the fiat balance of the virtual account.
-     *
-     * @property availableBalance The amount of available balance in fiat.
-     * @property currency The currency of the balance.
-     */
-    @Serializable
-    data class FiatBalance(val availableBalance: SerializedBigDecimal, val currency: String)
+    enum class IssuingStep {
+        STARTING,
+        INITIALIZATION,
+        ELIGIBILITY_CHECK,
+        RAIN_APPROVAL,
+        UNKNOWN,
+    }
 
-    /**
-     * Represents the crypto balance of the virtual account.
-     *
-     * @property id The unique identifier of the crypto asset.
-     * @property chainId The identifier of the blockchain network.
-     * @property depositAddress The on-chain address for deposits.
-     * @property tokenContractAddress The contract address of the token.
-     * @property balance The amount of the crypto balance.
-     */
     @Serializable
-    data class CryptoBalance(
-        val id: String,
-        val chainId: Long,
-        val depositAddress: String,
-        val tokenContractAddress: String,
-        val balance: SerializedBigDecimal,
-    )
+    data class Balance(
+        @SerialName("crypto_amount") val cryptoAmount: SerializedBigDecimal,
+        @SerialName("crypto_currency") val cryptoCurrency: CryptoCurrency.Token,
+        @SerialName("deposit_address") val depositAddress: String,
+        @SerialName("currency_code") val currencyCode: String,
+        @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
+    ) {
+        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = buildCryptoCurrencyStatusValue(
+                amount = cryptoAmount,
+                fiatRate = fiatRate,
+                depositAddress = depositAddress,
+            ),
+        )
+    }
 }
 
 private fun buildCryptoCurrencyStatusValue(
     amount: SerializedBigDecimal,
-    fiatAmount: SerializedBigDecimal,
     fiatRate: SerializedBigDecimal?,
     depositAddress: String,
 ): CryptoCurrencyStatus.Value {
@@ -206,7 +212,7 @@ private fun buildCryptoCurrencyStatusValue(
     return if (fiatRate != null) {
         CryptoCurrencyStatus.Loaded(
             amount = amount,
-            fiatAmount = fiatAmount,
+            fiatAmount = amount.multiply(fiatRate),
             fiatRate = fiatRate,
             priceChange = BigDecimal.ZERO,
             networkAddress = networkAddress,
