@@ -124,7 +124,7 @@ class GaslessSendTest : BaseTestCase() {
         val operationAmount = "1.00"
         val gaslessFeeAmount = "0.10"
         val operationTitle = getResourceString(R.string.transaction_history_operation)
-        val gaslessFeeTitle = getResourceString(R.string.gasless_transaction_fee)
+        val gaslessFeeTitle = getResourceString(R.string.common_network_fee_title)
 
         setupHooks().run {
             step("Set WireMock scenario '$USER_TOKENS_API_SCENARIO' to '$scenarioState'") {
