@@ -131,7 +131,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
         animationSpec = animation(),
     )
     val textStyle = when (size) {
-        AccountIconSize.Default -> TangemTheme.typography2.headingSemibold28
+        AccountIconSize.Default -> TangemTheme.typography3.body.medium
         AccountIconSize.Large -> TangemTheme.typography.h1
         AccountIconSize.Medium -> TangemTheme.typography.subtitle1
         AccountIconSize.Small -> TangemTheme.typography.subtitle2
