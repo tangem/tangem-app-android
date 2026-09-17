@@ -1,7 +1,7 @@
 package com.tangem.features.jointaccount.main
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
@@ -50,7 +50,7 @@ sealed interface JointAccountMainUM {
     /** The call-to-action strip under a [WaitingMembers] row */
     data class BannerUM(
         val text: TextReference,
-        @DrawableRes val iconRes: Int,
+        val icon: ImageVector,
         val onClick: () -> Unit,
     )
 
