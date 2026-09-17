@@ -25,6 +25,7 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -81,6 +82,22 @@ internal object JointAccountDomainModule {
         repository: JointAccountRepository,
     ): GetJointAccountInvitePreviewUseCase {
         return GetJointAccountInvitePreviewUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRejectJointOperationUseCase(
+        repository: JointAccountRepository,
+        fetcher: SingleJointAccountListFetcher,
+        supplier: SingleJointAccountListSupplier,
+        networkReader: JointNetworkReader,
+    ): RejectJointOperationUseCase {
+        return RejectJointOperationUseCase(
+            repository = repository,
+            fetcher = fetcher,
+            supplier = supplier,
+            networkReader = networkReader,
+        )
     }
 
     @Provides

@@ -22,11 +22,13 @@ class JointOperationSignersResolver {
                 else -> Answer.WAITING
             }
 
-            JointOperationSignerState(
-                member = member,
-                answer = answer,
-                at = signature?.at?.takeIf { answer != Answer.WAITING },
-            )
+            // The initiator signs by creating the operation, so its creation time is their answer time
+            val at = when (answer) {
+                Answer.CREATED -> signature?.at ?: operation.createdAt
+                Answer.WAITING -> null
+                Answer.SIGNED, Answer.DECLINED -> signature?.at
+            }
+            JointOperationSignerState(member = member, answer = answer, at = at)
         }
     }
 
