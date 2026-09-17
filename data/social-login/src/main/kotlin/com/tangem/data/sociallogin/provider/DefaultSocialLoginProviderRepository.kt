@@ -1,6 +1,8 @@
 package com.tangem.data.sociallogin.provider
 
 import arrow.core.Either
+import arrow.core.getOrElse
+import com.tangem.data.sociallogin.recovery.toDomainError
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialLoginProvider
@@ -24,7 +26,9 @@ internal class DefaultSocialLoginProviderRepository @Inject constructor(
     override suspend fun signIn(provider: SocialLoginProvider): Either<SocialLoginError, SocialProviderIdToken> {
         // not best-effort: the recovery call has to present this exact value, so a token minted without
         // it could only be rejected, and the sign-in prompt would have been shown for nothing
-        val nonce = nonceProvider.getNonce() ?: return Either.Left(SocialLoginError.ServerError())
+        val nonce = nonceProvider.getNonce().getOrElse { error ->
+            return Either.Left(error.toDomainError())
+        }
 
         return when (provider) {
             SocialLoginProvider.Google -> googleIdTokenProvider

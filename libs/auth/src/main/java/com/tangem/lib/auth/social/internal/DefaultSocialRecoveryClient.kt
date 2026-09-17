@@ -17,6 +17,7 @@ import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
+import com.tangem.lib.auth.session.internal.SessionTokenRotationLock
 import com.tangem.lib.auth.session.internal.SessionTokensConverter
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.lib.auth.session.internal.toBase64NoWrap
@@ -51,10 +52,14 @@ internal class DefaultSocialRecoveryClient(
     private val errorConverter: AuthErrorConverter,
     private val sessionTokensStore: SessionTokensStore,
     private val walletRegistrar: WalletRegistrar,
+    private val rotationLock: SessionTokenRotationLock,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SocialRecoveryClient {
 
-    /** Per wallet, so two wallets can still bind in parallel */
+    /**
+     * Per wallet, so two wallets can still bind in parallel — the session token write they share is
+     * serialised by [rotationLock] instead.
+     */
     private val mutexes = ConcurrentHashMap<String, Mutex>()
 
     override suspend fun requestSignInNonce(): Either<SocialRecoveryError, SignInNonce> = withContext(dispatchers.io) {
@@ -132,9 +137,10 @@ internal class DefaultSocialRecoveryClient(
                     is ApiResponse.Error -> raise(response.cause.toDomainError())
                 }
                 // sealing to an algorithm the service did not ask for stores a key it cannot unwrap, and the
-                // binding looks healthy until someone tries to restore from it
+                // binding looks healthy until someone tries to restore from it. A missing `alg` is refused
+                // for the same reason: the one we would assume is exactly what is left unconfirmed.
                 val algorithm = kmsPublicKey.algorithm
-                if (algorithm != null && algorithm != RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM) {
+                if (algorithm != RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM) {
                     TangemLogger.e("Unsupported recovery key algorithm: $algorithm")
                     raise(SocialRecoveryError.Unknown())
                 }
@@ -176,17 +182,21 @@ internal class DefaultSocialRecoveryClient(
                     metadata = signedRequestPayload.deviceMetadata,
                 )
 
-                when (val response = api.registerWalletBinding(request)) {
-                    is ApiResponse.Success -> try {
-                        sessionTokensStore.save(SessionTokensConverter.convertBack(response.data))
-                    } catch (e: Exception) {
-                        // the server rotated the session; keeping the superseded tokens while reporting
-                        // success would break every later authenticated call. Re-registering updates the
-                        // binding rather than creating a second one, so the retry is safe.
-                        TangemLogger.e("Failed to persist the tokens reissued by the social registration", e)
-                        raise(SocialRecoveryError.Unknown(e))
+                // the request and the token write stay under one lock: the reply reissues the session,
+                // and a wallet registration running in parallel writes the same single token set
+                rotationLock.withLock {
+                    when (val response = api.registerWalletBinding(request)) {
+                        is ApiResponse.Success -> try {
+                            sessionTokensStore.save(SessionTokensConverter.convertBack(response.data))
+                        } catch (e: Exception) {
+                            // the server rotated the session; keeping the superseded tokens while reporting
+                            // success would break every later authenticated call. Re-registering updates the
+                            // binding rather than creating a second one, so the retry is safe.
+                            TangemLogger.e("Failed to persist the tokens reissued by the social registration", e)
+                            raise(SocialRecoveryError.Unknown(e))
+                        }
+                        is ApiResponse.Error -> raise(response.cause.toDomainError())
                     }
-                    is ApiResponse.Error -> raise(response.cause.toDomainError())
                 }
             }
         }
