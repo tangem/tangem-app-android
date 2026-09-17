@@ -12,7 +12,7 @@ import com.tangem.domain.wallets.derivations.DerivationsRepository
  * Derives [currencies]' missing network keys together with the wallet's missing joint-account owner keys
  * in a single [DerivationsRepository.derivePublicKeys] call, so a Cold wallet only needs one NFC tap.
  */
-class DeriveMissingKeysUseCase(
+class DeriveCurrencyAndOwnerKeysUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val jointOwnerKeysRepository: JointOwnerKeysRepository,
 ) {
