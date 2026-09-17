@@ -101,8 +101,8 @@ internal class EarnBlockModelTest {
 
     @Test
     fun `GIVEN the catalogue offers a rate WHEN nothing is earning THEN the onboarding pitch names it`() = runTest {
-        // Arrange — the backend reports percent, the card shows it back unrounded
-        topEarnTokens.value = listOf(earnToken(apy = "5.5"), earnToken(apy = "12.64")).right()
+        // Arrange — the catalogue reports a fraction, the card shows the percent it means
+        topEarnTokens.value = listOf(earnToken(apy = "0.055"), earnToken(apy = "0.1264")).right()
 
         // Act
         val model = createModel(testScope = this)
@@ -114,9 +114,9 @@ internal class EarnBlockModelTest {
     }
 
     @Test
-    fun `GIVEN a whole-number catalogue rate WHEN nothing is earning THEN it does not round to zero`() = runTest {
+    fun `GIVEN a catalogue rate WHEN nothing is earning THEN it reaches the pitch unrescaled`() = runTest {
         // Arrange
-        topEarnTokens.value = listOf(earnToken(apy = "8")).right()
+        topEarnTokens.value = listOf(earnToken(apy = "0.08")).right()
 
         // Act
         val model = createModel(testScope = this)
