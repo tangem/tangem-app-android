@@ -38,6 +38,9 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceeds
 import com.tangem.features.polymarket.impl.placeprediction.model.SharesCalculator
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_sign_minus_24
+import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
 
 @Composable
 internal fun PredictionSharesBlock(
@@ -182,14 +185,14 @@ private fun CalculatorRow(selected: BigDecimal, available: BigDecimal, onAmountC
         TangemButton(
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X8,
-            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_minus_24),
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_sign_minus_24),
             isEnabled = isSteppable && selected > BigDecimal.ZERO,
             onClick = { onAmountChange(SharesCalculator.decreased(selected).toPlainString()) },
         )
         TangemButton(
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X8,
-            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_plus_24),
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_sign_plus_24),
             isEnabled = isSteppable && selected < available,
             onClick = { onAmountChange(SharesCalculator.increased(selected, available).toPlainString()) },
         )
