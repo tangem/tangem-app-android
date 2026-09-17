@@ -63,6 +63,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -1228,7 +1229,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.available).isEqualTo(BigDecimal("51.23"))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
@@ -1331,7 +1332,8 @@ internal class PlacePredictionModelTest {
 
                 // Assert
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-                assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal("12.79"))
+                assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
+                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.79")))
                 assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
                 verify { messageSender.send(any()) }
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
@@ -1406,7 +1408,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal.ZERO)
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
             verify { messageSender.send(any()) }
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
@@ -1450,8 +1452,120 @@ internal class PlacePredictionModelTest {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
-            assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal.ZERO)
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced sell WHEN the position turns out to be gone THEN the stale proceeds go with it`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+                model.onScreenHidden()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+                assertThat((model.uiState.value.order as OrderSideUM.Sell).proceeds)
+                    .isEqualTo(SharesProceedsUM.Unavailable)
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an unreadable position WHEN the screen is shown again THEN the position is read again`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition().right()
+
+            // Act
+            model.onScreenShown()
+            runCurrent()
+            model.onScreenHidden()
+
+            // Assert
+            val order = model.uiState.value.order as OrderSideUM.Sell
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(model.uiState.value.notifications)
+                .doesNotContain(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an unreadable position WHEN retry clicked THEN the position is read again`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition().right()
+
+            // Act
+            model.onQuoteRetryClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
+                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the position cannot be read WHEN screen shown THEN no price is polled`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenShown()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no stored addresses WHEN model created THEN the user is told instead of nothing`() = runTest {
+            // Arrange
+            coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns null
+
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onScreenShown()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
 
             model.onDestroy()
         }
