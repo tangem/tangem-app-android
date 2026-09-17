@@ -75,10 +75,10 @@ class AmountVisualTransformation(
         fiatCurrencyCode: String,
         fiatCurrencySymbol: String,
         fiatCurrencySymbolColor: Color,
-        locale: Locale = Locale.getDefault(),
     ): AnnotatedString {
         if (fiatAmount == null) return AnnotatedString(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN)
 
+        val locale = Locale.getDefault()
         val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
         val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
             currency = formatterCurrency
