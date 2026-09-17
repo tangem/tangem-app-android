@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 /** Earn pitch. Always in the row; what it says and where it leads come from [EarnBlockModel]. */
 internal class EarnBlockComponent(
     context: AppComponentContext,
-    callbacks: FeedBlockCallbacks,
+    callbacks: FeedBlockModalCallbacks,
 ) : FeedBlockComponent(context = context, key = KEY) {
 
     private val model: EarnBlockModel = getOrCreateModel(params = callbacks)
