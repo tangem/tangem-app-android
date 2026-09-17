@@ -450,7 +450,7 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN below min order amount WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
+    fun `GIVEN below min order amount WHEN quote loaded THEN the order can still be placed`() = runTest {
         // Arrange
         coEvery { getQuoteUseCase(request = any()) } returns
             createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT).right()
@@ -463,7 +463,7 @@ internal class PlacePredictionModelTest {
 
         // Assert
         assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
-        assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+        assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
 
         model.onDestroy()
     }
@@ -1229,7 +1229,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
@@ -1241,8 +1241,10 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
-        fun `GIVEN sell params WHEN screen shown THEN the live price is the best bid`() = runTest {
+        fun `GIVEN a position too small to quote WHEN screen shown THEN the live price is the best bid`() = runTest {
             // Arrange
+            coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
+                createPosition(size = BigDecimal("0.005")).right()
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
 
@@ -1252,6 +1254,18 @@ internal class PlacePredictionModelTest {
 
             // Assert
             coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.BUY) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a held position WHEN model created THEN the whole position is selected`() = runTest {
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEqualTo("51.234567")
 
             model.onDestroy()
         }
@@ -1333,7 +1347,8 @@ internal class PlacePredictionModelTest {
                 // Assert
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
-                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.79")))
+                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.799000")))
+                assertThat(model.uiState.value.amountValue).isEqualTo("12.80")
                 assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
                 verify { messageSender.send(any()) }
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
@@ -1501,7 +1516,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
             assertThat(model.uiState.value.notifications)
                 .doesNotContain(PredictionNotificationUM.PositionUnavailable)
 
@@ -1524,7 +1539,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
-                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.234567")))
 
             model.onDestroy()
         }

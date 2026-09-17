@@ -15,7 +15,7 @@ internal class SharesCalculatorTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN held shares WHEN available THEN truncated down onto the two-decimal grid`(model: AvailableModel) {
+        fun `GIVEN held shares WHEN available THEN truncated down onto the on-chain grid`(model: AvailableModel) {
             // Arrange
             val held = BigDecimal(model.held)
 
@@ -27,12 +27,13 @@ internal class SharesCalculatorTest {
         }
 
         private fun provideTestModels(): List<AvailableModel> = listOf(
-            AvailableModel(held = "51.234567", expected = "51.23"),
-            AvailableModel(held = "51.239999", expected = "51.23"),
-            AvailableModel(held = "51.23", expected = "51.23"),
-            AvailableModel(held = "51.2", expected = "51.20"),
-            AvailableModel(held = "0.004567", expected = "0.00"),
-            AvailableModel(held = "0", expected = "0.00"),
+            AvailableModel(held = "51.234567", expected = "51.234567"),
+            AvailableModel(held = "51.2345678", expected = "51.234567"),
+            AvailableModel(held = "51.239999", expected = "51.239999"),
+            AvailableModel(held = "51.23", expected = "51.230000"),
+            AvailableModel(held = "51.2", expected = "51.200000"),
+            AvailableModel(held = "0.004567", expected = "0.004567"),
+            AvailableModel(held = "0", expected = "0.000000"),
         )
     }
 
@@ -55,13 +56,14 @@ internal class SharesCalculatorTest {
         }
 
         private fun provideTestModels(): List<FractionModel> = listOf(
-            FractionModel(available = "51.23", percent = 25, expected = "12.80"),
-            FractionModel(available = "51.23", percent = 50, expected = "25.61"),
-            FractionModel(available = "51.23", percent = 75, expected = "38.42"),
-            FractionModel(available = "51.23", percent = 100, expected = "51.23"),
-            FractionModel(available = "1.00", percent = 75, expected = "0.75"),
-            FractionModel(available = "0.50", percent = 25, expected = "0.12"),
-            FractionModel(available = "0.00", percent = 50, expected = "0.00"),
+            FractionModel(available = "51.23", percent = 25, expected = "12.807500"),
+            FractionModel(available = "51.23", percent = 50, expected = "25.615000"),
+            FractionModel(available = "51.23", percent = 75, expected = "38.422500"),
+            FractionModel(available = "51.23", percent = 100, expected = "51.230000"),
+            FractionModel(available = "51.234567", percent = 100, expected = "51.234567"),
+            FractionModel(available = "1.00", percent = 75, expected = "0.750000"),
+            FractionModel(available = "0.50", percent = 25, expected = "0.125000"),
+            FractionModel(available = "0.00", percent = 50, expected = "0.000000"),
         )
     }
 
@@ -84,11 +86,12 @@ internal class SharesCalculatorTest {
         }
 
         private fun provideTestModels(): List<StepUpModel> = listOf(
-            StepUpModel(selected = "0.00", available = "51.23", expected = "1.00"),
-            StepUpModel(selected = "12.80", available = "51.23", expected = "13.80"),
-            StepUpModel(selected = "50.23", available = "51.23", expected = "51.23"),
-            StepUpModel(selected = "51.23", available = "51.23", expected = "51.23"),
-            StepUpModel(selected = "0.00", available = "0.50", expected = "0.50"),
+            StepUpModel(selected = "0.00", available = "51.23", expected = "1.000000"),
+            StepUpModel(selected = "12.80", available = "51.23", expected = "13.800000"),
+            StepUpModel(selected = "50.23", available = "51.23", expected = "51.230000"),
+            StepUpModel(selected = "51.23", available = "51.23", expected = "51.230000"),
+            StepUpModel(selected = "50.234567", available = "51.234567", expected = "51.234567"),
+            StepUpModel(selected = "0.00", available = "0.50", expected = "0.500000"),
         )
     }
 
@@ -107,11 +110,12 @@ internal class SharesCalculatorTest {
         }
 
         private fun provideTestModels(): List<StepDownModel> = listOf(
-            StepDownModel(selected = "51.23", expected = "50.23"),
-            StepDownModel(selected = "13.80", expected = "12.80"),
-            StepDownModel(selected = "1.00", expected = "0.00"),
-            StepDownModel(selected = "0.50", expected = "0.00"),
-            StepDownModel(selected = "0.00", expected = "0.00"),
+            StepDownModel(selected = "51.23", expected = "50.230000"),
+            StepDownModel(selected = "51.234567", expected = "50.234567"),
+            StepDownModel(selected = "13.80", expected = "12.800000"),
+            StepDownModel(selected = "1.00", expected = "0.000000"),
+            StepDownModel(selected = "0.50", expected = "0.000000"),
+            StepDownModel(selected = "0.00", expected = "0.000000"),
         )
     }
 
