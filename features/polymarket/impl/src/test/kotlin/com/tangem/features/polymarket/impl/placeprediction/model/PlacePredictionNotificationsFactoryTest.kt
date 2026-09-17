@@ -3,15 +3,17 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
@@ -20,6 +22,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermiss
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -155,7 +158,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         val actual = state.recomputeGate()
 
         // Assert
-        assertThat(actual.payment.hasSufficientBalance).isFalse()
+        assertThat((actual.order as OrderSideUM.Buy).hasSufficientBalance).isFalse()
         assertThat(actual.amountCaption)
             .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
     }
@@ -229,7 +232,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.amountCaption).isEqualTo(AmountCaptionUM.ToWin(payout = QUOTE_PAYOUT))
-        assertThat(actual.payment.hasSufficientBalance).isFalse()
+        assertThat((actual.order as OrderSideUM.Buy).hasSufficientBalance).isFalse()
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
 
@@ -302,6 +305,129 @@ internal class PlacePredictionNotificationsFactoryTest {
         assertThat(actual.notifications).containsExactly(PredictionNotificationUM.MarketClosed)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Sell {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun gate(model: SellGateModel) {
+            // Arrange
+            val state = createState(
+                amountValue = model.amountValue,
+                quote = model.quote,
+                minAmount = model.minAmount,
+                order = OrderSideUM.Sell(
+                    available = BigDecimal(model.available),
+                    proceeds = SharesProceedsUM.Unavailable,
+                    balance = null,
+                ),
+            )
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabled).isEqualTo(model.expectedButtonEnabled)
+            assertThat((actual.order as OrderSideUM.Sell).proceeds).isEqualTo(model.expectedProceeds)
+            assertThat(actual.amountCaption).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            SellGateModel(
+                amountValue = "12.80",
+                quote = createQuote(),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedButtonEnabled = true,
+            ),
+            SellGateModel(
+                amountValue = "51.23",
+                quote = createQuote(),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedButtonEnabled = true,
+            ),
+            SellGateModel(
+                amountValue = "51.24",
+                quote = createQuote(),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "",
+                quote = QuoteUM.Empty,
+                expectedProceeds = SharesProceedsUM.Unavailable,
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "0",
+                quote = QuoteUM.Empty,
+                expectedProceeds = SharesProceedsUM.Unavailable,
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "12.80",
+                quote = QuoteUM.Loading,
+                expectedProceeds = SharesProceedsUM.Loading,
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "3",
+                quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+                minAmount = BigDecimal("5"),
+                expectedProceeds = SharesProceedsUM.BelowMinimum(minShares = BigDecimal("5")),
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "12.80",
+                quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
+                expectedProceeds = SharesProceedsUM.Unavailable,
+                expectedButtonEnabled = false,
+            ),
+            SellGateModel(
+                amountValue = "12.80",
+                quote = createQuote(status = PredictionQuoteStatus.PARTIAL),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedButtonEnabled = true,
+            ),
+            SellGateModel(
+                amountValue = "12.80",
+                quote = QuoteUM.Error(reason = QuoteErrorUM.Network),
+                expectedProceeds = SharesProceedsUM.Unavailable,
+                expectedButtonEnabled = false,
+            ),
+        )
+    }
+
+    internal data class SellGateModel(
+        val amountValue: String,
+        val quote: QuoteUM,
+        val available: String = "51.23",
+        val minAmount: BigDecimal? = null,
+        val expectedProceeds: SharesProceedsUM,
+        val expectedButtonEnabled: Boolean,
+    )
+
+    @Test
+    fun `GIVEN a sell with no collateral balance WHEN the gate runs THEN no shortfall is claimed`() {
+        // Arrange
+        val state = createState(
+            amountValue = "12.80",
+            quote = createQuote(total = BigDecimal("1000")),
+            order = OrderSideUM.Sell(
+                available = BigDecimal("51.23"),
+                proceeds = SharesProceedsUM.Unavailable,
+                balance = null,
+            ),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.isPrimaryButtonEnabled).isTrue()
+        assertThat(actual.notifications).isEmpty()
+    }
+
     private fun createState(
         quote: QuoteUM = QuoteUM.Empty,
         balance: BigDecimal? = BigDecimal("100"),
@@ -311,6 +437,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         minAmount: BigDecimal? = null,
         priceError: PriceErrorUM? = null,
         isMarketAcceptingOrders: Boolean = true,
+        order: OrderSideUM? = null,
     ): PlacePredictionUM = PlacePredictionUM(
         priceError = priceError,
         market = MarketHeaderUM(
@@ -320,12 +447,8 @@ internal class PlacePredictionNotificationsFactoryTest {
             outcomePriceCents = 42,
             resolutionDateMillis = null,
         ),
-        payment = PaymentSourceUM(
-            tokenSymbol = "USDC",
-            iconState = null,
-            balance = balance,
-            hasSufficientBalance = false,
-        ),
+        collateral = CollateralUM(tokenSymbol = "USDC", iconState = null),
+        order = order ?: OrderSideUM.Buy(balance = balance, hasSufficientBalance = false),
         amountValue = amountValue,
         slippage = SlippageUM(percent = BigDecimal("3"), isDefault = true),
         minAmount = minAmount,
@@ -340,14 +463,14 @@ internal class PlacePredictionNotificationsFactoryTest {
 
     private fun createQuote(
         status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
-        expectedShares: BigDecimal = BigDecimal("23.8"),
-        guaranteedShares: BigDecimal = BigDecimal("23.2"),
+        expected: BigDecimal = BigDecimal("23.8"),
+        guaranteed: BigDecimal = BigDecimal("23.2"),
         feeTotal: BigDecimal = BigDecimal("0.1"),
         total: BigDecimal = BigDecimal("10.1"),
     ): QuoteUM.Content = QuoteUM.Content(
         status = status,
-        expectedShares = expectedShares,
-        guaranteedShares = guaranteedShares,
+        expected = expected,
+        guaranteed = guaranteed,
         feeTotal = feeTotal,
         total = total,
         signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),

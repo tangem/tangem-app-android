@@ -27,6 +27,7 @@ Build test fixtures with **factory functions that default every argument** (`cre
 
 Utilities:
 - `TestCoroutineExt.getEmittedValues(flow)` — collect a `Flow` into a `List` from a `TestScope`.
+- `TestScope.createTestingCoroutineDispatcherProvider()` (and the `TestCoroutineScheduler` overload for tests that build a scheduler without `runTest`) — a `TestingCoroutineDispatcherProvider` wired to one `StandardTestDispatcher` for all five roles. See "Dispatchers" below.
 - `TestFlowProducerTools(scope, dispatcher)` — test double for `FlowProducerTools` that mirrors production `DefaultFlowProducerTools` (retryWhen + fallback + `distinctUntilChanged` + `shareIn`) on a caller-provided test scope/dispatcher, without analytics/logging. Pass `TestScope.backgroundScope` + a dispatcher built from `testScheduler` so the 2s retry delay is virtual-time-controllable. Use it for `FlowProducer` tests instead of mocking `FlowProducerTools`.
 - `@ProvideTestModels` — meta-annotation over JUnit 5 `@MethodSource("provideTestModels")` for parameterized tests.
 - `TruthArrowExt` — `assertEither`, `assertEitherRight`, `assertEitherLeft`, `assertSome`, `assertNone` for Arrow types.
@@ -47,7 +48,7 @@ Never use `Dispatchers.Main`/`IO`/`Default` directly in production code — alwa
 
 In tests, override with `TestingCoroutineDispatcherProvider` (defined in `core/utils/src/main/java/com/tangem/utils/coroutines/CoroutineDispatcherProvider.kt`). By default `main`/`mainImmediate`/`io`/`default` are `Dispatchers.Unconfined`, while `single` is a single-thread `Executors.newFixedThreadPool(1)` dispatcher.
 
-For `Model`-layer tests inside features, construct it with a single `StandardTestDispatcher(testScheduler)` for all five roles (built from the enclosing `TestScope`) so `advanceUntilIdle()` controls execution. See any `features/*/impl` model test for the `TestScope.createTestingCoroutineDispatcherProvider()` helper.
+For `Model`-layer tests inside features, use `TestScope.createTestingCoroutineDispatcherProvider()` from `:test:core` — it gives all five roles a single `StandardTestDispatcher` built from the enclosing scope's scheduler, so `advanceUntilIdle()` controls execution. Never re-declare the helper in a test file.
 
 ## Naming & placement
 

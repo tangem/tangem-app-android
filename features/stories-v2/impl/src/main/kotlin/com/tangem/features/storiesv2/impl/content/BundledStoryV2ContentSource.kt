@@ -42,7 +42,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_1),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_1),
-                    durationMs = SLIDE_1_DURATION_MS,
+                    durationMs = SLIDE_DURATION_MS,
                 ),
             ),
             StoryV2Slide(
@@ -52,7 +52,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_2),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_2),
-                    durationMs = SLIDE_2_DURATION_MS,
+                    durationMs = SLIDE_DURATION_MS,
                 ),
             ),
             StoryV2Slide(
@@ -62,7 +62,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_3),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_3),
-                    durationMs = SLIDE_3_DURATION_MS,
+                    durationMs = SLIDE_DURATION_MS,
                 ),
             ),
             StoryV2Slide(
@@ -72,7 +72,7 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
                 asset = StoryV2Asset.Video(
                     source = StoryV2MediaRef.RawResource(R.raw.stories_onboarding_slide_4),
                     poster = StoryV2MediaRef.DrawableResource(R.drawable.img_stories_onboarding_poster_4),
-                    durationMs = SLIDE_4_DURATION_MS,
+                    durationMs = SLIDE_DURATION_MS,
                 ),
             ),
         ),
@@ -80,19 +80,14 @@ internal class BundledStoryV2ContentSource @Inject constructor() {
 
     private companion object {
         const val ONBOARDING_ID = "onboarding"
-        const val ONBOARDING_VERSION = 1
+        const val ONBOARDING_VERSION = 2
         const val BUY_URL = "https://buy.tangem.com"
 
         /** Resolved by the host: onboarding starts the card scan from here. */
         const val SCAN_WALLET_SCREEN = "scan_wallet"
 
-        // Duration is authoritative for progress: a value that disagrees with the media makes the bar and
-        // the picture disagree too. The designers' masters are cuts of one continuous reel, so clips 1 and 3
-        // carry an outro transition into the next scene; a tappable player can't keep that seamless, so their
-        // tails are trimmed to end on a static frame. Trim the media and this constant together.
-        const val SLIDE_1_DURATION_MS = 8_400L
-        const val SLIDE_2_DURATION_MS = 10_000L
-        const val SLIDE_3_DURATION_MS = 9_000L
-        const val SLIDE_4_DURATION_MS = 10_000L
+        // Authoritative for progress: a value that disagrees with the media makes the bar and the picture
+        // disagree too. The masters are cuts of one continuous reel, every clip exactly this long.
+        const val SLIDE_DURATION_MS = 7_000L
     }
 }
