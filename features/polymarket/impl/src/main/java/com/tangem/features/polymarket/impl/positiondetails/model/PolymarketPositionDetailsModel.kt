@@ -94,6 +94,10 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         hasShownPosition && read < PolymarketConst.POSITION_INDEXING_READS - 1
 
     private fun showPosition(loaded: PolymarketPosition.Open?) {
+        if (loaded == null && hasShownPosition) {
+            router.pop()
+            return
+        }
         if (loaded == null || !loaded.canOpenPositionDetails) {
             uiState.update { it.copy(content = Content.Unavailable) }
             return
