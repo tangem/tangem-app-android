@@ -82,6 +82,22 @@ internal fun PlacePredictionUM.canQuote(): Boolean = when (val order = order) {
     is OrderSideUM.Sell -> order.position is SellPositionUM.Held
 }
 
+/**
+ * A price is a property of the market, not of the position, so it is still worth polling while the position
+ * is on its way — but not once reading it has failed, since then the screen has nothing to price.
+ */
+internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order) {
+    is OrderSideUM.Buy -> true
+    is OrderSideUM.Sell -> when (order.position) {
+        SellPositionUM.Loading,
+        is SellPositionUM.Held,
+        -> true
+        SellPositionUM.NotHeld,
+        SellPositionUM.Unreadable,
+        -> false
+    }
+}
+
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
     val entered = enteredAmount() ?: return false
     val minAmount = minAmount ?: return false

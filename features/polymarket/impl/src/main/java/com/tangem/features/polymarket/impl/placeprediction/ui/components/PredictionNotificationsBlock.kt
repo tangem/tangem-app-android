@@ -33,7 +33,7 @@ internal fun PredictionNotificationsBlock(
                 description = notification.description(),
                 variant = notification.variant(),
                 showGlowRing = notification !is PredictionNotificationUM.AwaitingFunds,
-                primaryButton = if (notification is PredictionNotificationUM.QuoteFailed) {
+                primaryButton = if (notification.isRetryable()) {
                     TangemMessageBanner.Button(
                         text = resourceReference(R.string.common_retry),
                         onClick = onRetryClick,
@@ -46,6 +46,9 @@ internal fun PredictionNotificationsBlock(
         }
     }
 }
+
+private fun PredictionNotificationUM.isRetryable(): Boolean =
+    this is PredictionNotificationUM.QuoteFailed || this is PredictionNotificationUM.PositionUnavailable
 
 private fun PredictionNotificationUM.title(): TextReference = when (this) {
     PredictionNotificationUM.AwaitingFunds ->
