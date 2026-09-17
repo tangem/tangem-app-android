@@ -46,7 +46,7 @@ internal enum class StoryV2EndBehavior {
 
 /**
  * @property actions     `null` inherits the story actions; an empty list hides them on this slide
- * @property hapticAtMs  offsets from the slide start, each strictly below the asset duration
+ * @property haptics    offsets from the slide start, each strictly below the asset duration
  */
 internal data class StoryV2Slide(
     val id: String,
