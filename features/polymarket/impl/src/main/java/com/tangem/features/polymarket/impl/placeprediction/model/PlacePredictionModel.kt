@@ -54,6 +54,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmou
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.ClearPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
@@ -321,7 +322,12 @@ internal class PlacePredictionModel @Inject constructor(
             positionsRepository.getPosition(addresses = addresses, id = positionId)
         }.fold(
             ifLeft = { return SpendingPower.Unknown },
-            ifRight = { it ?: return SpendingPower.Refused(reason = "Position is no longer held") },
+            ifRight = { position ->
+                position ?: run {
+                    uiState.update(ClearPositionTransformer)
+                    return SpendingPower.Refused(reason = "Position is no longer held")
+                }
+            },
         )
 
         uiState.update(SetPositionTransformer(position = position))
