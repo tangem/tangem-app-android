@@ -84,7 +84,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         GateModel(
             quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT),
             expectedNotifications = emptyList(),
-            expectedButtonEnabled = false,
+            expectedButtonEnabled = true,
         ),
         GateModel(
             quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.MARKET_CLOSED),
