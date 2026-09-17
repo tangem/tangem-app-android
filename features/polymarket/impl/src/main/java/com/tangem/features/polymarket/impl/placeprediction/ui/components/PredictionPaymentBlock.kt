@@ -57,7 +57,7 @@ private fun SourceHeader(payment: PaymentSourceUM) {
         ) {
             HeaderText(text = stringResourceSafe(R.string.prediction_place_summary_from))
             AccountResIcon(
-                resId = PredictionAccountIcon.resId,
+                imageVector = PredictionAccountIcon.imageVector,
                 color = PredictionAccountIcon.color,
                 size = AccountIconSize.ExtraSmall,
             )
