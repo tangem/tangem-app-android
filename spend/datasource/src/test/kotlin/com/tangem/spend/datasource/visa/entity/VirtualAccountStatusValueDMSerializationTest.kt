@@ -6,6 +6,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.domain.models.account.VirtualAccountStatusValue
 import com.tangem.spend.datasource.di.SpendDatasourceModule
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -36,56 +37,112 @@ class VirtualAccountStatusValueDMSerializationTest {
         .build()
         .adapter<VirtualAccountStatusValueDM>()
 
+    private val balance = VirtualAccountStatusValueDM.BalanceDM(
+        cryptoAmount = BigDecimal("101.56"),
+        depositAddress = "0xabc",
+        currencyCode = "USD",
+        fiatRate = BigDecimal("0.95"),
+    )
+
     @Test
-    fun `round-trip NotCreated`() {
+    fun `GIVEN NotCreated WHEN round-trip THEN restored`() {
+        // Arrange
         val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.NotCreated()
 
+        // Act
         val restored = adapter.fromJson(adapter.toJson(model))
 
+        // Assert
         Truth.assertThat(restored).isInstanceOf(VirtualAccountStatusValueDM.NotCreated::class.java)
     }
 
     @Test
-    fun `round-trip Provisioning`() {
-        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.Provisioning()
-
-        val restored = adapter.fromJson(adapter.toJson(model))
-
-        Truth.assertThat(restored).isInstanceOf(VirtualAccountStatusValueDM.Provisioning::class.java)
-    }
-
-    @Test
-    fun `round-trip CountryNotSupported`() {
+    fun `GIVEN CountryNotSupported WHEN round-trip THEN restored`() {
+        // Arrange
         val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.CountryNotSupported()
 
+        // Act
         val restored = adapter.fromJson(adapter.toJson(model))
 
+        // Assert
         Truth.assertThat(restored).isInstanceOf(VirtualAccountStatusValueDM.CountryNotSupported::class.java)
     }
 
     @Test
-    fun `round-trip ActiveAccount`() {
-        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.ActiveAccount(
+    fun `GIVEN Issuing WHEN round-trip THEN restored`() {
+        // Arrange
+        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.Issuing(
+            step = VirtualAccountStatusValue.IssuingStep.ELIGIBILITY_CHECK,
             customerId = "cust-1",
-            currencyCode = "USD",
-            depositAddress = "0xabc",
-            fiatBalance = VirtualAccountStatusValueDM.FiatBalanceDM(
-                availableBalance = BigDecimal("101.56"),
-                currency = "USD",
-            ),
-            cryptoBalance = VirtualAccountStatusValueDM.CryptoBalanceDM(
-                id = "usd-coin",
-                chainId = 137L,
-                depositAddress = "0xabc",
-                tokenContractAddress = "0xdef",
-                balance = BigDecimal("101.56"),
-            ),
-            fiatRate = BigDecimal("0.95"),
-            availableForWithdrawal = BigDecimal("100.00"),
+            balance = balance,
         )
 
+        // Act
         val restored = adapter.fromJson(adapter.toJson(model))
 
+        // Assert
+        Truth.assertThat(restored).isEqualTo(model)
+    }
+
+    @Test
+    fun `GIVEN VerificationDeclined WHEN round-trip THEN restored`() {
+        // Arrange
+        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.VerificationDeclined(
+            customerId = "cust-1",
+            balance = null,
+        )
+
+        // Act
+        val restored = adapter.fromJson(adapter.toJson(model))
+
+        // Assert
+        Truth.assertThat(restored).isEqualTo(model)
+    }
+
+    @Test
+    fun `GIVEN Activating WHEN round-trip THEN restored`() {
+        // Arrange
+        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.Activating(
+            customerId = "cust-1",
+            balance = balance,
+        )
+
+        // Act
+        val restored = adapter.fromJson(adapter.toJson(model))
+
+        // Assert
+        Truth.assertThat(restored).isEqualTo(model)
+    }
+
+    @Test
+    fun `GIVEN ActiveAccount WHEN round-trip THEN restored`() {
+        // Arrange
+        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.ActiveAccount(
+            customerId = "cust-1",
+            productInstanceId = "pi-1",
+            balance = balance,
+        )
+
+        // Act
+        val restored = adapter.fromJson(adapter.toJson(model))
+
+        // Assert
+        Truth.assertThat(restored).isEqualTo(model)
+    }
+
+    @Test
+    fun `GIVEN Deactivated WHEN round-trip THEN restored`() {
+        // Arrange
+        val model: VirtualAccountStatusValueDM = VirtualAccountStatusValueDM.Deactivated(
+            customerId = "cust-1",
+            productInstanceId = "pi-1",
+            balance = balance,
+        )
+
+        // Act
+        val restored = adapter.fromJson(adapter.toJson(model))
+
+        // Assert
         Truth.assertThat(restored).isEqualTo(model)
     }
 }

@@ -18,9 +18,13 @@ import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusProducer
 import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
+import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.virtualaccount.repository.VirtualAccountActivationRepository
 import com.tangem.domain.virtualaccount.usecase.ActivateVirtualAccountUseCase
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -105,6 +109,20 @@ internal interface VirtualAccountDataModule {
             userWalletsListRepository: UserWalletsListRepository,
         ): GetMoneyAccountSuitableWalletsUseCase {
             return GetMoneyAccountSuitableWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideGetMoneyAccountBalanceUseCase(
+            tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+            singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+            singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
+        ): GetMoneyAccountBalanceUseCase {
+            return GetMoneyAccountBalanceUseCase(
+                tangemPayCurrencyFactory = tangemPayCurrencyFactory,
+                singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+                singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+            )
         }
 
         @Provides
