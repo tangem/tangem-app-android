@@ -6,6 +6,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.lib.auth.api.AuthApi
+import com.tangem.lib.auth.api.models.request.DeviceMetadata
 import com.tangem.lib.auth.api.models.request.NonceApiRequest
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
@@ -17,7 +18,7 @@ import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
-import com.tangem.lib.auth.session.internal.SessionTokenRotationLock
+import com.tangem.lib.auth.session.internal.WalletRegistrationLocks
 import com.tangem.lib.auth.session.internal.SessionTokensConverter
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.lib.auth.session.internal.toBase64NoWrap
@@ -29,11 +30,9 @@ import com.tangem.lib.auth.social.SocialRecoveryClient
 import com.tangem.lib.auth.social.SocialRecoveryError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * [SocialRecoveryClient] over the Tangem Auth Service.
@@ -52,15 +51,10 @@ internal class DefaultSocialRecoveryClient(
     private val errorConverter: AuthErrorConverter,
     private val sessionTokensStore: SessionTokensStore,
     private val walletRegistrar: WalletRegistrar,
-    private val rotationLock: SessionTokenRotationLock,
+    // shared with the plain wallet registrar, which posts to the same endpoint — see the class doc
+    private val locks: WalletRegistrationLocks,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SocialRecoveryClient {
-
-    /**
-     * Per wallet, so two wallets can still bind in parallel — the session token write they share is
-     * serialised by [rotationLock] instead.
-     */
-    private val mutexes = ConcurrentHashMap<String, Mutex>()
 
     override suspend fun requestSignInNonce(): Either<SocialRecoveryError, SignInNonce> = withContext(dispatchers.io) {
         either {
@@ -86,6 +80,9 @@ internal class DefaultSocialRecoveryClient(
                 // binds to the nonce, like every other attested call — the id token would both miss that
                 // binding and push a multi-kilobyte JWT through Play Integrity as the request hash
                 val attestationToken = attestationProvider.getAttestationTokenOrNull(nonce)
+                // read once: the property re-reads the locale and the time zone on every call, and the
+                // signature has to cover the very metadata the body carries
+                val metadata = signedRequestPayload.deviceMetadata
 
                 val request = WalletRecoverApiRequest(
                     nonce = nonce,
@@ -95,11 +92,12 @@ internal class DefaultSocialRecoveryClient(
                         recoveryEncryptionPublicKey = encryptionPublicKey,
                         providerIdToken = providerIdToken,
                         attestationToken = attestationToken,
+                        metadata = metadata,
                     ),
                     providerIdToken = providerIdToken,
                     attestationToken = attestationToken,
                     appAttestKeyId = null,
-                    metadata = signedRequestPayload.deviceMetadata,
+                    metadata = metadata,
                 )
 
                 val envelope = when (val response = api.recoverWallet(request)) {
@@ -128,7 +126,7 @@ internal class DefaultSocialRecoveryClient(
         // one-time nonce and returns rotated session tokens, so two concurrent attempts for the same
         // wallet would burn two nonces and race to persist the tokens, the loser saving a set the
         // server has already superseded.
-        getMutex(walletId).withLock {
+        locks.forWallet(walletId).withLock {
             either {
                 ensureSession()
 
@@ -184,7 +182,7 @@ internal class DefaultSocialRecoveryClient(
 
                 // the request and the token write stay under one lock: the reply reissues the session,
                 // and a wallet registration running in parallel writes the same single token set
-                rotationLock.withLock {
+                locks.sessionRotation.withLock {
                     when (val response = api.registerWalletBinding(request)) {
                         is ApiResponse.Success -> try {
                             sessionTokensStore.save(SessionTokensConverter.convertBack(response.data))
@@ -243,8 +241,6 @@ internal class DefaultSocialRecoveryClient(
         return decryptNonce(cipheredNonce)
     }
 
-    private fun getMutex(walletId: String): Mutex = mutexes.computeIfAbsent(walletId) { Mutex() }
-
     private suspend fun Raise<SocialRecoveryError>.decryptNonce(cipheredNonce: String): String = try {
         nonceDecryptor.decryptNonce(cipheredNonce)
     } catch (e: Exception) {
@@ -261,8 +257,8 @@ internal class DefaultSocialRecoveryClient(
         recoveryEncryptionPublicKey: String,
         providerIdToken: String,
         attestationToken: String?,
+        metadata: DeviceMetadata,
     ): String {
-        val metadata = signedRequestPayload.deviceMetadata
         val payload = buildString {
             append(nonce).append(':')
             append(recoveryEncryptionPublicKey).append(':')
