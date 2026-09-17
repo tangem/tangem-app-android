@@ -10,7 +10,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.pagination.BatchAction
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.response.TangemPayTransactionResponse
@@ -20,7 +19,6 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -38,13 +36,12 @@ internal class DefaultTangemPayTxHistoryRepositoryTest {
     private val requestPerformer: TangemPayRequestPerformer = mockk()
     private val cacheRegistry: CacheRegistry = mockk()
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore = mockk(relaxed = true)
-    private val featureToggles: TangemPayFeatureToggles = mockk()
 
     private val userWalletId = UserWalletId("011")
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestPerformer, cacheRegistry, txHistoryItemsStore, featureToggles)
+        clearMocks(tangemPayApi, requestPerformer, cacheRegistry, txHistoryItemsStore)
         coEvery {
             requestPerformer.performRequest<Any>(userWalletId = any(), requestBlock = any())
         } coAnswers {
@@ -62,25 +59,8 @@ internal class DefaultTangemPayTxHistoryRepositoryTest {
     }
 
     @Test
-    fun `GIVEN cashback toggle disabled WHEN getTransaction THEN legacy endpoint is called`() = runTest {
+    fun `GIVEN transaction id WHEN getTransaction THEN transactions endpoint is called`() = runTest {
         // Arrange
-        every { featureToggles.isCashbackEnabled } returns false
-        coEvery { tangemPayApi.getTransactionLegacy(any(), any()) } returns
-            ApiResponse.Success(transactionResponse())
-
-        // Act
-        val actual = createRepository().getTransaction(userWalletId, transactionId = TX_ID)
-
-        // Assert
-        assertThat(actual.isRight()).isTrue()
-        coVerify(exactly = 1) { tangemPayApi.getTransactionLegacy(AUTH_HEADER, TX_ID) }
-        coVerify(exactly = 0) { tangemPayApi.getTransaction(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN cashback toggle enabled WHEN getTransaction THEN new endpoint is called`() = runTest {
-        // Arrange
-        every { featureToggles.isCashbackEnabled } returns true
         coEvery { tangemPayApi.getTransaction(any(), any()) } returns
             ApiResponse.Success(transactionResponse())
 
@@ -90,28 +70,11 @@ internal class DefaultTangemPayTxHistoryRepositoryTest {
         // Assert
         assertThat(actual.isRight()).isTrue()
         coVerify(exactly = 1) { tangemPayApi.getTransaction(AUTH_HEADER, TX_ID) }
-        coVerify(exactly = 0) { tangemPayApi.getTransactionLegacy(any(), any()) }
     }
 
     @Test
-    fun `GIVEN cashback toggle disabled WHEN history reloaded THEN legacy endpoint is called`() = runTest {
+    fun `GIVEN history WHEN reloaded THEN transactions endpoint is called`() = runTest {
         // Arrange
-        every { featureToggles.isCashbackEnabled } returns false
-        coEvery { tangemPayApi.getTangemPayTxHistoryLegacy(any(), any(), any()) } returns
-            ApiResponse.Success(historyResponse())
-
-        // Act
-        reloadHistory(createRepository())
-
-        // Assert
-        coVerify(exactly = 1) { tangemPayApi.getTangemPayTxHistoryLegacy(AUTH_HEADER, cursor = null, limit = any()) }
-        coVerify(exactly = 0) { tangemPayApi.getTangemPayTxHistory(any(), any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN cashback toggle enabled WHEN history reloaded THEN new endpoint is called`() = runTest {
-        // Arrange
-        every { featureToggles.isCashbackEnabled } returns true
         coEvery { tangemPayApi.getTangemPayTxHistory(any(), any(), any()) } returns
             ApiResponse.Success(historyResponse())
 
@@ -120,7 +83,6 @@ internal class DefaultTangemPayTxHistoryRepositoryTest {
 
         // Assert
         coVerify(exactly = 1) { tangemPayApi.getTangemPayTxHistory(AUTH_HEADER, cursor = null, limit = any()) }
-        coVerify(exactly = 0) { tangemPayApi.getTangemPayTxHistoryLegacy(any(), any(), any()) }
     }
 
     private fun TestScope.reloadHistory(repository: DefaultTangemPayTxHistoryRepository) {
@@ -146,7 +108,6 @@ internal class DefaultTangemPayTxHistoryRepositoryTest {
             visaApi = tangemPayApi,
             cacheRegistry = cacheRegistry,
             txHistoryItemsStore = txHistoryItemsStore,
-            tangemPayFeatureToggles = featureToggles,
             dispatchers = TestingCoroutineDispatcherProvider(),
             moshi = Moshi.Builder().build(),
         )
