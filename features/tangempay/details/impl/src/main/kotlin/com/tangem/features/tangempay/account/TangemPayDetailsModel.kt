@@ -106,7 +106,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -827,9 +826,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             is PaymentAccountStatusValue.Inactive -> state.tariffPlan
             else -> null
         }
-        val banner = tariffPlan?.let {
-            TangemPayTiersBannerType.fromPlan(tangemPayFeatureToggles.isTiersPlusPlanEnabled, tariffPlan)
-        }
+        val banner = tariffPlan?.let { TangemPayTiersBannerType.fromPlan(it) }
 
         if (banner == shownTiersBanner) return
         shownTiersBanner = banner
