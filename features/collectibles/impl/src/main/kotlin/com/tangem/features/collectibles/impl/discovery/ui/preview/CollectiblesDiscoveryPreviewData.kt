@@ -118,6 +118,8 @@ internal class CollectiblesDiscoveryPreviewComponent(
 
     override fun onLoadMore() { /* no-op */ }
 
+    override fun onRefresh() { /* no-op */ }
+
     override fun LazyListScope.content(uiState: CollectiblesDiscoveryUM, modifier: Modifier) {
         collectiblesDiscoveryList(state = uiState, tabScrollState = tabScrollState)
     }

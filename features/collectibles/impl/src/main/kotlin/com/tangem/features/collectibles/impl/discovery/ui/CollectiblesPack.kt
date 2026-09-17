@@ -82,9 +82,7 @@ private fun PackImage(imageUrl: String, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         SubcomposeAsyncImage(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(30.dp),
+            modifier = Modifier.fillMaxSize(),
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)
                 .crossfade(true)
