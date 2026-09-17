@@ -8,6 +8,8 @@ import com.tangem.features.polymarket.impl.placeprediction.model.SharesCalculato
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 import java.time.ZoneId
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 internal class SetPositionTransformer(private val position: PolymarketPosition.Open) : Transformer<PlacePredictionUM> {
 
@@ -19,7 +21,8 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
                 title = position.title,
                 imageUrl = position.iconUrl,
                 outcomeTitle = position.outcome,
-                outcomePriceCents = prevState.market.outcomePriceCents ?: position.curPrice.movePointRight(2).toInt(),
+                outcomePriceCents = prevState.market.outcomePriceCents ?: position.curPrice.toCents(),
+                entryPriceCents = position.avgPrice.toCents(),
                 resolutionDateMillis = position.endDate
                     ?.atStartOfDay(ZoneId.of(PolymarketConst.EASTERN_TIME_ZONE))
                     ?.toInstant()
@@ -29,4 +32,6 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
             isMarketAcceptingOrders = position.isAcceptingOrders,
         ).recomputeGate()
     }
+
+    private fun BigDecimal.toCents(): Int = movePointRight(2).setScale(0, RoundingMode.HALF_UP).toInt()
 }
