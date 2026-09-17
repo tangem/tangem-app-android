@@ -35,8 +35,10 @@ internal object SocialRecoveryModule {
                 apiConfigId = Auth.ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = true,
-                // the bodies carry the provider id token; the saved logs are exportable by the user
+                // The bodies carry the provider id token, which must not be readable anywhere: not in
+                // the log file the user can export, and not in Chucker/logcat on a LOG_ENABLED build.
                 shouldSaveLogs = false,
+                isLoggable = false,
             ),
         )
     }
