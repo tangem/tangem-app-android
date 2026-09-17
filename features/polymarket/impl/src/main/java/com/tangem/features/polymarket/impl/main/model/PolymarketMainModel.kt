@@ -428,7 +428,7 @@ internal class PolymarketMainModel @Inject constructor(
                 fromCryptoCurrency = collateral,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 screenSource = AnalyticsParam.ScreensSources.Predictions.value,
-                accountFlow = null,
+                accountFlow = AppRoute.Swap.AccountFlow.PredictionTopUp,
             ),
         )
     }
