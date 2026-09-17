@@ -13,7 +13,6 @@ import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.cashback
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.paymentTransaction
@@ -44,14 +43,12 @@ internal class TangemPayTxHistoryDetailsModelTest {
     private val userWalletId = UserWalletId("123")
     private val repository: TangemPayTxHistoryRepository = mockk()
     private val cashbackRepository: CashbackRepository = mockk()
-    private val featureToggles: TangemPayFeatureToggles = mockk()
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(repository, cashbackRepository, featureToggles, balanceHidingSettings)
+        clearMocks(repository, cashbackRepository, balanceHidingSettings)
         every { balanceHidingSettings.isBalanceHidden() } returns flowOf(false)
-        every { featureToggles.isCashbackEnabled } returns true
         coEvery { cashbackRepository.getCashbackDetails(any(), any()) } returns null.right()
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
@@ -246,22 +243,6 @@ internal class TangemPayTxHistoryDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN cashback disabled WHEN model created THEN cashback hidden and not fetched`() = runTest {
-        // Arrange
-        every { featureToggles.isCashbackEnabled } returns false
-        coEvery { repository.getTransaction(any(), any()) } returns spendTransaction().right()
-        val model = createModel(testScope = this, transaction = spendTransaction())
-
-        // Act
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.cashbackDetail).isNull()
-        coVerify(exactly = 0) { cashbackRepository.getCashbackDetails(any(), any()) }
-        model.onDestroy()
-    }
-
-    @Test
     fun `GIVEN non-spend transaction WHEN model created THEN cashback hidden and not fetched`() = runTest {
         // Arrange
         val model = createModel(testScope = this, transaction = paymentTransaction())
@@ -294,7 +275,6 @@ internal class TangemPayTxHistoryDetailsModelTest {
             balanceHidingSettings = balanceHidingSettings,
             tangemPayTxHistoryRepository = repository,
             cashbackRepository = cashbackRepository,
-            featureToggles = featureToggles,
             analytics = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(params),
         )
