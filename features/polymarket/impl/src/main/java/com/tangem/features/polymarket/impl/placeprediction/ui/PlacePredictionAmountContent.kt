@@ -32,14 +32,17 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSharesBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSlippageRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
+import java.math.BigDecimal
 
 @Composable
 internal fun PlacePredictionAmountContent(
@@ -86,13 +89,22 @@ internal fun PlacePredictionAmountContent(
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
             PredictionMarketBlock(state = state.market)
-            PredictionAmountBlock(
-                amountValue = state.amountValue,
-                amountCaption = state.amountCaption,
-                payment = state.payment,
-                onAmountChange = intents::onAmountChange,
-                onAddFundsClick = intents::onAddFundsClick,
-            )
+            when (val order = state.order) {
+                is OrderSideUM.Buy -> PredictionAmountBlock(
+                    amountValue = state.amountValue,
+                    amountCaption = state.amountCaption,
+                    collateral = state.collateral,
+                    balance = order.balance,
+                    onAmountChange = intents::onAmountChange,
+                    onAddFundsClick = intents::onAddFundsClick,
+                )
+                is OrderSideUM.Sell -> PredictionSharesBlock(
+                    selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    available = order.available,
+                    proceeds = order.proceeds,
+                    onAmountChange = intents::onAmountChange,
+                )
+            }
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
