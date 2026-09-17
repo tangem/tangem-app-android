@@ -24,43 +24,65 @@ class DefaultPredictionFundingWindow(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) : PredictionFundingWindow {
 
-    private val states = MutableStateFlow<Map<UserWalletId, Open>>(emptyMap())
+    private val states = MutableStateFlow<Map<UserWalletId, State>>(emptyMap())
 
     override fun open(userWalletId: UserWalletId) {
-        val open = Open(openedAt = currentTimeMillis(), balanceAtOpen = null)
-        states.update { it + (userWalletId to open) }
-        appScope.launch { snapshotBalance(userWalletId = userWalletId, open = open) }
+        val sent = State.Sent(sentAt = currentTimeMillis(), balanceAtOpen = null)
+        states.update { it + (userWalletId to sent) }
+        appScope.launch { snapshotBalance(userWalletId = userWalletId, sent = sent) }
     }
 
     override fun isOpen(userWalletId: UserWalletId): Flow<Boolean> {
-        return states.map { it.containsKey(userWalletId) }.distinctUntilChanged()
+        return states.map { it[userWalletId] is State.Counting }.distinctUntilChanged()
     }
 
     override suspend fun watch(userWalletId: UserWalletId) {
         states.map { it[userWalletId] }
             .distinctUntilChanged()
-            .collectLatest { open ->
-                if (open == null) return@collectLatest
-
-                val remainingMillis = (open.openedAt + config.fundingWindow.inWholeMilliseconds - currentTimeMillis())
-                    .coerceIn(0, config.fundingWindow.inWholeMilliseconds)
-
-                withTimeoutOrNull(remainingMillis) {
-                    awaitBalanceChange(userWalletId = userWalletId, balanceAtOpen = open.balanceAtOpen)
+            .collectLatest { state ->
+                when (state) {
+                    null -> Unit
+                    is State.Sent -> startCountdown(userWalletId = userWalletId, sent = state)
+                    is State.Counting -> closeWhenSettled(userWalletId = userWalletId, counting = state)
                 }
-
-                states.update { if (it[userWalletId] == open) it - userWalletId else it }
             }
     }
 
-    private suspend fun snapshotBalance(userWalletId: UserWalletId, open: Open) {
+    private suspend fun snapshotBalance(userWalletId: UserWalletId, sent: State.Sent) {
         val balance = withTimeoutOrNull(BALANCE_SNAPSHOT_TIMEOUT) {
             activeBalances(userWalletId = userWalletId).first()
         } ?: return
 
         states.update {
-            if (it[userWalletId] == open) it + (userWalletId to open.copy(balanceAtOpen = balance)) else it
+            if (it[userWalletId] == sent) it + (userWalletId to sent.copy(balanceAtOpen = balance)) else it
         }
+    }
+
+    private fun startCountdown(userWalletId: UserWalletId, sent: State.Sent) {
+        val now = currentTimeMillis()
+        val deadline = minOf(
+            now + config.fundingWindow.inWholeMilliseconds,
+            sent.sentAt + config.fundingWindowMaxAge.inWholeMilliseconds,
+        )
+        val counting = State.Counting(deadline = deadline, balanceAtOpen = sent.balanceAtOpen)
+        states.update { current ->
+            when {
+                current[userWalletId] != sent -> current
+                deadline <= now -> current - userWalletId
+                else -> current + (userWalletId to counting)
+            }
+        }
+    }
+
+    private suspend fun closeWhenSettled(userWalletId: UserWalletId, counting: State.Counting) {
+        val remainingMillis = (counting.deadline - currentTimeMillis())
+            .coerceIn(0, config.fundingWindow.inWholeMilliseconds)
+
+        withTimeoutOrNull(remainingMillis) {
+            awaitBalanceChange(userWalletId = userWalletId, balanceAtOpen = counting.balanceAtOpen)
+        }
+
+        states.update { if (it[userWalletId] == counting) it - userWalletId else it }
     }
 
     private suspend fun awaitBalanceChange(userWalletId: UserWalletId, balanceAtOpen: BigDecimal?) {
@@ -76,7 +98,12 @@ class DefaultPredictionFundingWindow(
             .map { it.balance }
     }
 
-    private data class Open(val openedAt: Long, val balanceAtOpen: BigDecimal?)
+    private sealed interface State {
+        val balanceAtOpen: BigDecimal?
+
+        data class Sent(val sentAt: Long, override val balanceAtOpen: BigDecimal?) : State
+        data class Counting(val deadline: Long, override val balanceAtOpen: BigDecimal?) : State
+    }
 
     private companion object {
         val BALANCE_SNAPSHOT_TIMEOUT = 2.seconds
