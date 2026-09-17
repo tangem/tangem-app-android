@@ -320,6 +320,7 @@ internal class PlacePredictionNotificationsFactoryTest {
                 order = OrderSideUM.Sell(
                     available = BigDecimal(model.available),
                     proceeds = SharesProceedsUM.Unavailable,
+                    balance = null,
                 ),
             )
 
@@ -412,7 +413,11 @@ internal class PlacePredictionNotificationsFactoryTest {
         val state = createState(
             amountValue = "12.80",
             quote = createQuote(total = BigDecimal("1000")),
-            order = OrderSideUM.Sell(available = BigDecimal("51.23"), proceeds = SharesProceedsUM.Unavailable),
+            order = OrderSideUM.Sell(
+                available = BigDecimal("51.23"),
+                proceeds = SharesProceedsUM.Unavailable,
+                balance = null,
+            ),
         )
 
         // Act

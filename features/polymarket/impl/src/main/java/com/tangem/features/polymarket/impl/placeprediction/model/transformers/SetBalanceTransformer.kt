@@ -9,8 +9,11 @@ import java.math.BigDecimal
 internal class SetBalanceTransformer(private val balance: BigDecimal?) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
-        val order = prevState.order as? OrderSideUM.Buy ?: return prevState
+        val order = when (val order = prevState.order) {
+            is OrderSideUM.Buy -> order.copy(balance = balance)
+            is OrderSideUM.Sell -> order.copy(balance = balance)
+        }
 
-        return prevState.copy(order = order.copy(balance = balance)).recomputeGate()
+        return prevState.copy(order = order).recomputeGate()
     }
 }
