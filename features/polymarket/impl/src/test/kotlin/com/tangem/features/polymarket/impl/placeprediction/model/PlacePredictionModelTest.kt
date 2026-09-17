@@ -63,6 +63,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionU
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -1228,7 +1229,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
-            assertThat(order.available).isEqualTo(BigDecimal("51.23"))
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
             assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
@@ -1331,7 +1332,8 @@ internal class PlacePredictionModelTest {
 
                 // Assert
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-                assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal("12.79"))
+                assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
+                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.79")))
                 assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
                 verify { messageSender.send(any()) }
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
@@ -1406,7 +1408,7 @@ internal class PlacePredictionModelTest {
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal.ZERO)
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
             verify { messageSender.send(any()) }
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
@@ -1450,7 +1452,7 @@ internal class PlacePredictionModelTest {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
-            assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal.ZERO)
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
             assertThat(model.uiState.value.notifications)
                 .contains(PredictionNotificationUM.PositionUnavailable)
