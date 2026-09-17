@@ -21,6 +21,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -41,6 +42,8 @@ import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesMain
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesPinnedHeader
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesSearchFooter
 import com.tangem.features.collectibles.impl.main.ui.components.MainListKeys
+import com.tangem.features.collectibles.impl.main.ui.components.rememberFillerHeight
+import com.tangem.features.collectibles.impl.main.ui.components.rememberListFill
 import com.tangem.features.collectibles.impl.main.ui.components.rememberRestingFooterHeight
 import com.tangem.features.collectibles.impl.main.ui.preview.CollectiblesMainPreviewData
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
@@ -63,6 +66,11 @@ internal fun CollectiblesMainScreen(
         }
     }
     val listState = if (isSearchActive) searchEntry.listState else mainListState
+    val lead = rememberSearchLead(
+        mainListState = mainListState,
+        searchEntry = searchEntry,
+        isSearchActive = isSearchActive,
+    )
     val tabScrollState = discoveryComponent.tabScrollState
     val focusRequester = remember { FocusRequester() }
     var footerHeight by remember { mutableIntStateOf(0) }
@@ -71,6 +79,19 @@ internal fun CollectiblesMainScreen(
         derivedStateOf { mainListState.isCollectiblesTabBandPinned(headerKey = MainListKeys.HEADER) }
     }
     val shouldShowPinnedTabs = isTabBandPinned && !isSearchActive && hasTabs
+
+    // Measured here rather than inside the list: the list has two call sites (pull to refresh is dropped in
+    // search), and a swap between them would take the frozen filler down with the composition.
+    val fill = rememberListFill(
+        listState = listState,
+        rowCount = (discoveryState.content as? CollectiblesDiscoveryUM.ContentUM.Content)?.rows?.size ?: 0,
+        hasTabs = hasTabs,
+    )
+    val fillerHeight = rememberFillerHeight(
+        fill = fill,
+        isSearchActive = isSearchActive,
+        isEnteringSearch = lead.areShown,
+    )
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -111,10 +132,13 @@ internal fun CollectiblesMainScreen(
             discoveryState = discoveryState,
             listState = listState,
             lead = CollectiblesLeadingBlocks(
-                isHeaderShown = !isSearchActive || searchEntry.isHeaderShown,
-                isTabBandShown = !isSearchActive || searchEntry.isTabBandShown,
+                isHeaderShown = lead.areShown,
+                isTabBandShown = lead.areShown,
                 isTabBandPinned = isTabBandPinned,
+                alpha = lead.alpha,
             ),
+            fillerHeight = fillerHeight,
+            statusHeight = fill.statusHeight,
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding(),
                 bottom = bottomInset,
@@ -132,6 +156,8 @@ private fun RefreshableList(
     discoveryState: CollectiblesDiscoveryUM,
     listState: LazyListState,
     lead: CollectiblesLeadingBlocks,
+    fillerHeight: Dp,
+    statusHeight: Dp,
     contentPadding: PaddingValues,
 ) {
     MaterialBackdrop {
@@ -142,6 +168,8 @@ private fun RefreshableList(
                 discoveryState = discoveryState,
                 listState = listState,
                 lead = lead,
+                fillerHeight = fillerHeight,
+                statusHeight = statusHeight,
                 contentPadding = contentPadding,
             )
         } else {
@@ -155,6 +183,8 @@ private fun RefreshableList(
                     discoveryState = discoveryState,
                     listState = listState,
                     lead = lead,
+                    fillerHeight = fillerHeight,
+                    statusHeight = statusHeight,
                     contentPadding = contentPadding,
                 )
             }
