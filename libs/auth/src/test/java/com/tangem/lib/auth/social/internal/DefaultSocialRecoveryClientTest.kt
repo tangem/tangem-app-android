@@ -19,6 +19,7 @@ import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
+import com.tangem.lib.auth.session.internal.SessionTokenRotationLock
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.lib.auth.social.HpkeRecoveryCipher
 import com.tangem.lib.auth.social.RecoveryKeyRsaCipher
@@ -35,12 +36,17 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigInteger
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
@@ -64,6 +70,7 @@ internal class DefaultSocialRecoveryClientTest {
     private val walletRegistrar: WalletRegistrar = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
+    private val rotationLock = SessionTokenRotationLock()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val kmsKeyPair = KeyPairGenerator.getInstance("RSA")
@@ -80,6 +87,7 @@ internal class DefaultSocialRecoveryClientTest {
         errorConverter = AuthErrorConverter(),
         sessionTokensStore = sessionTokensStore,
         walletRegistrar = walletRegistrar,
+        rotationLock = rotationLock,
         dispatchers = dispatchers,
     )
 
@@ -254,11 +262,15 @@ internal class DefaultSocialRecoveryClientTest {
         coVerify(exactly = 1) { sessionTokensStore.save(any()) }
     }
 
-    @Test
-    fun `GIVEN a KMS key for another algorithm WHEN registerBinding THEN nothing is registered`() = runTest {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = ["RSA-OAEP-512"])
+    fun `GIVEN a KMS key not for the supported algorithm WHEN registerBinding THEN nothing is registered`(
+        algorithm: String?,
+    ) = runTest {
         // Arrange
         stubRegistrationNonce()
-        coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(algorithm = "RSA-OAEP-512")
+        coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(algorithm = algorithm)
 
         // Act
         val result = client.registerBinding(
@@ -271,6 +283,34 @@ internal class DefaultSocialRecoveryClientTest {
         // Assert
         assertThat(result.leftOrNull()).isInstanceOf(SocialRecoveryError.Unknown::class.java)
         coVerify(exactly = 0) { api.registerWalletBinding(any()) }
+    }
+
+    @Test
+    fun `GIVEN another call is rotating the session WHEN registerBinding THEN it waits for that call`() = runTest {
+        // Arrange
+        stubRegistrationNonce()
+        coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM)
+        coEvery { api.registerWalletBinding(any()) } returns tokenSuccess()
+        rotationLock.lock()
+
+        // Act
+        val registration = launch {
+            client.registerBinding(
+                walletId = WALLET_ID,
+                providerIdToken = ID_TOKEN,
+                recoveryKey = ByteArray(size = 32),
+                signer = signer,
+            )
+        }
+        runCurrent()
+
+        // Assert — the wallet registration holding the lock must finish its own token write first
+        coVerify(exactly = 0) { api.registerWalletBinding(any()) }
+
+        rotationLock.unlock()
+        registration.join()
+        coVerify(exactly = 1) { api.registerWalletBinding(any()) }
+        coVerify(exactly = 1) { sessionTokensStore.save(any()) }
     }
 
     @Test
@@ -354,7 +394,7 @@ internal class DefaultSocialRecoveryClientTest {
             doFinal(ciphertext)
         }
 
-    private fun kmsKeySuccess(algorithm: String) = ApiResponse.Success(
+    private fun kmsKeySuccess(algorithm: String?) = ApiResponse.Success(
         data = RecoveryPublicKeyApiResponse(
             modulus = (kmsKeyPair.public as RSAPublicKey).modulus.toBase64Url(),
             exponent = (kmsKeyPair.public as RSAPublicKey).publicExponent.toBase64Url(),
