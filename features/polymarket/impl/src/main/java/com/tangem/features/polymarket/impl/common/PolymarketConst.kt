@@ -12,4 +12,7 @@ internal object PolymarketConst {
     const val EASTERN_TIME_ZONE = "America/New_York"
 
     val SHARES_STEP: BigDecimal = BigDecimal.ONE
+
+    const val POSITION_INDEXING_READS = 5
+    const val POSITION_INDEXING_RETRY_MILLIS = 2_000L
 }
