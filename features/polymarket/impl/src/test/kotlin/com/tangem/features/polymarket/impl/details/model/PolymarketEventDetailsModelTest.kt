@@ -18,12 +18,11 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -175,17 +174,6 @@ internal class PolymarketEventDetailsModelTest {
             getPolymarketEventUseCase = getEventUseCase,
             shareManager = shareManager,
         ).also { model = it }
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private fun createEvent(): PolymarketEvent = PolymarketEvent(

@@ -15,13 +15,12 @@ import com.tangem.features.feed.rwa.categories.components.CategorySelectorCompon
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorSectionUM
 import com.tangem.features.feed.rwa.categories.ui.state.CategorySelectorUM
 import com.tangem.features.feed.rwa.model.UserCountryResolver
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -327,16 +326,6 @@ internal class CategorySelectorModelTest {
             router = router,
             getCoinCategoriesUseCase = getCoinCategoriesUseCase,
             userCountryResolver = userCountryResolver,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
         )
     }
 
