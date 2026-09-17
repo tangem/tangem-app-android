@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.positiondetails.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
@@ -35,10 +36,11 @@ internal data class PolymarketPositionDetailsUM(
         val title: TextReference,
         val iconUrl: String?,
         val pnl: TangemPriceChange.State,
-        val currentValue: TextReference,
+        val currentValue: TextReference?,
         val outcomeLabel: TextReference,
         val outcomeVariant: TangemMessageBubble.Variant,
         val payout: TextReference?,
+        val result: TangemBadgeUM? = null,
     )
 
     @Immutable
