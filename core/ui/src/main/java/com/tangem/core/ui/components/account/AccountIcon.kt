@@ -30,6 +30,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_magic_ball_24
 
 enum class AccountIconSize {
     Default,
@@ -53,6 +55,26 @@ enum class AccountIconSize {
  */
 @Composable
 fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountResIcon(
+        imageVector = ImageVector.vectorResource(id = resId),
+        color = color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Displays a portfolio icon using a design-system [ImageVector].
+ *
+ * The background color is defined by [color], and the icon tint is constant white.
+ * The icon size and container shape are adapted based on the provided [size].
+ *
+ * @param imageVector The vector to display.
+ * @param color The background color of the icon container.
+ * @param size The size of the icon, defined by [AccountIconSize].
+ */
+@Composable
+fun AccountResIcon(imageVector: ImageVector, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
         targetValue = size.toBoxSize(),
         animationSpec = animation(),
@@ -76,7 +98,7 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
         Icon(
             modifier = Modifier.size(iconSize),
             tint = TangemTheme.colors.text.constantWhite,
-            imageVector = ImageVector.vectorResource(id = resId),
+            imageVector = imageVector,
             contentDescription = null,
         )
     }
@@ -177,10 +199,8 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
 /** Art of the Prediction account, shared by the account icon and the wallet row, so both change together. */
 object PredictionAccountIcon {
 
-    // TODO: switch to Icons.ic_magic_ball_24 once account icons accept an ImageVector; the drawable is a
-    //  copy of that DS-Core asset
-    @DrawableRes
-    val resId: Int = R.drawable.ic_magic_ball_24
+    val imageVector: ImageVector
+        get() = Icons.ic_magic_ball_24
     val color: Color
         @Composable get() = TangemTheme.colors3.bg.accent.violet
 }
