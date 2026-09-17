@@ -81,6 +81,7 @@ import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -208,6 +209,7 @@ internal class SwapModel @Inject constructor(
     private val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor,
     private val predictionWithdrawalTracker: PredictionWithdrawalTracker,
+    private val predictionFundingWindow: PredictionFundingWindow,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
@@ -1744,6 +1746,7 @@ internal class SwapModel @Inject constructor(
                             },
                         )
                         sendSwapInProgressEvent()
+                        openPredictionFundingWindow()
 
                         router.replaceAll(SwapRoute.Success)
                     }
@@ -1987,9 +1990,14 @@ internal class SwapModel @Inject constructor(
                         }
                     },
                 )
+                openPredictionFundingWindow()
                 router.replaceAll(SwapRoute.Success)
             },
         )
+    }
+
+    private fun openPredictionFundingWindow() {
+        if (isPredictionTopUpFlow) predictionFundingWindow.open(params.userWalletId)
     }
 
     private fun sendTransferInProgressEvent(isTangemPay: Boolean) {

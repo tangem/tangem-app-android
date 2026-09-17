@@ -202,7 +202,7 @@ private fun PlaceResultUM.title(side: PredictionOrderSide): TextReference = when
             PredictionOrderSide.SELL -> R.string.prediction_close_result_no_fill_title
         },
     )
-    is PlaceResultUM.Submitted -> resourceReference(side.partialTitle())
+    is PlaceResultUM.Submitted -> resourceReference(R.string.prediction_place_result_partial_title)
 }
 
 @StringRes
