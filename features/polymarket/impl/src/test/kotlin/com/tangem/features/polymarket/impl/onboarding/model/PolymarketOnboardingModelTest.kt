@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
+import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.routing.AppRoute
@@ -59,6 +60,7 @@ internal class PolymarketOnboardingModelTest {
     private val runOnboardingUseCase: RunPolymarketOnboardingInteractor = mockk()
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor = mockk()
     private val getStoryContentUseCase: GetStoryContentUseCase = mockk()
+    private val imagePreloader: ImagePreloader = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
@@ -74,6 +76,7 @@ internal class PolymarketOnboardingModelTest {
             runOnboardingUseCase,
             shouldShowStoriesInteractor,
             getStoryContentUseCase,
+            imagePreloader,
             router,
             urlOpener,
             messageSender,
@@ -447,7 +450,7 @@ internal class PolymarketOnboardingModelTest {
 
         // Act
         model.welcome().onActionClick()
-        advanceUntilIdle()
+        runCurrent()
         release.complete(Unit)
         advanceUntilIdle()
 
@@ -542,6 +545,42 @@ internal class PolymarketOnboardingModelTest {
 
         // Assert
         verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the story content never arrives WHEN run reports ready THEN the feed opens without it`() = runTest {
+        // Arrange
+        owesOnboarding()
+        storyIsUnseen()
+        coEvery { getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true) } coAnswers { awaitCancellation() }
+        every { runOnboardingUseCase(userWalletId) } returns flowOf(PolymarketOnboardingProgress.Ready)
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.welcome().onActionClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
+        verify(exactly = 1) { router.replaceAll(PolymarketRoute.Main(userWalletId = userWalletId)) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the story content arrives WHEN model created THEN its slide images are preloaded`() = runTest {
+        // Arrange
+        owesOnboarding()
+        coEvery { getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true) } returns STORY_CONTENT.right()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { imagePreloader.preload("https://host/first.webp") }
+        verify(exactly = 1) { imagePreloader.preload("https://host/second.webp") }
         model.onDestroy()
     }
 
@@ -908,6 +947,7 @@ internal class PolymarketOnboardingModelTest {
         runPolymarketOnboardingInteractor = runOnboardingUseCase,
         shouldShowStoriesInteractor = shouldShowStoriesInteractor,
         getStoryContentUseCase = getStoryContentUseCase,
+        imagePreloader = imagePreloader,
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
     )
 
@@ -917,7 +957,11 @@ internal class PolymarketOnboardingModelTest {
         const val STORY_SOURCE = "Onboarding"
         val STORY_CONTENT = StoryContent(
             imageHost = "https://host/",
-            story = StoryContent.Story(id = STORY_ID, title = null, slides = emptyList()),
+            story = StoryContent.Story(
+                id = STORY_ID,
+                title = null,
+                slides = listOf(StoryContent.StorySlide(id = "first"), StoryContent.StorySlide(id = "second")),
+            ),
         )
     }
 }
