@@ -44,6 +44,7 @@ internal object CollectiblesMainPreviewData {
             onClick = {},
         ),
         menu = menu(isShown = false),
+        isBalanceRefreshing = false,
         onBackClick = {},
     )
 
