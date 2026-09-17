@@ -113,7 +113,7 @@ internal data class PaymentSourceUM(
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
-internal enum class PriceErrorUM { MarketClosed, Unknown }
+internal enum class PriceErrorUM { MarketClosed, EmptyBook, Unknown }
 
 @Immutable
 internal data class SlippageUM(val percent: BigDecimal, val isDefault: Boolean) {
