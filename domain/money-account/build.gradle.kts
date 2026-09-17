@@ -20,6 +20,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.security)
+    implementation(projects.domain.core)
     // endregion
 
     // region Domain
