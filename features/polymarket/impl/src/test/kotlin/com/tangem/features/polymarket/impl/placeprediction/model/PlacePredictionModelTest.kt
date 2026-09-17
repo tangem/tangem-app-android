@@ -1438,22 +1438,6 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
-        fun `GIVEN a sell WHEN to main clicked THEN the flow returns to the position it came from`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this, params = SELL_PARAMS)
-            advanceUntilIdle()
-
-            // Act
-            model.onToMainClick()
-
-            // Assert
-            verify(exactly = 1) { router.pop(onComplete = any()) }
-            verify(exactly = 0) { router.popTo(route = any<PolymarketRoute.Main>(), onComplete = any()) }
-
-            model.onDestroy()
-        }
-
-        @Test
         fun `GIVEN the position cannot be read WHEN model created THEN nothing is sellable`() = runTest {
             // Arrange
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
