@@ -14,7 +14,11 @@ import com.tangem.core.ui.R as CoreUiR
 internal class JointOperationRefusalMessagesTest {
 
     private var confirmed = false
-    private val messages = JointOperationRefusalMessages(onConfirm = { confirmed = true })
+    private var gone = false
+    private val messages = JointOperationRefusalMessages(
+        onConfirm = { confirmed = true },
+        onOperationGone = { gone = true },
+    )
 
     @Test
     fun `GIVEN the initiator WHEN confirmation THEN it asks to delete and the warning button confirms`() {
@@ -46,6 +50,20 @@ internal class JointOperationRefusalMessagesTest {
         assertThat(actual.title).isEqualTo(res(CoreUiR.string.joint_operation_decline_alert_title))
         assertThat(actual.firstAction.title).isEqualTo(res(CoreUiR.string.common_decline))
         assertThat(confirmed).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the threshold was reached meanwhile WHEN the dialog is dismissed THEN the sheet closes`() {
+        // Arrange
+        gone = false
+
+        // Act
+        val actual = requireNotNull(messages.error(JointOperationRejectError.ThresholdReached))
+        actual.onDismissRequest()
+
+        // Assert
+        assertThat(actual.firstAction.title).isEqualTo(res(CoreUiR.string.common_got_it))
+        assertThat(gone).isTrue()
     }
 
     @ParameterizedTest
