@@ -49,7 +49,8 @@ with an error log.
 
 - Cross-module sheets over the feed — no route support; feature-internal bottom sheets keep using
   their own `childSlot`, as everywhere in the app.
-- Deep-link entry (`FeedEntryRoute` → initial feed stack mappers) — not wired; v2 currently opens
-  only inside the wallet shtorka.
+- Deep-link entry to an arbitrary `FeedRoute` — not wired. `tangem://shtorka` opens the hub on a
+  *section* through `FeedEntryController` (`com.tangem.features.feed.v2`); there is still no
+  route → initial feed stack mapper, so a deeplink cannot land on a pushed screen.
 - Remote tab ordering/availability — contributors are static; `FeedTabContributor.isAvailable` is
   read once, synchronously.
