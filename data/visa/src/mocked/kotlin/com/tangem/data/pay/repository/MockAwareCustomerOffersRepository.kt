@@ -6,6 +6,7 @@ import arrow.core.right
 import com.tangem.core.remote.config.ApiEnvironment
 import com.tangem.core.remote.config.managers.ApiConfigsManager
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.deeplinkOffer
@@ -32,18 +33,22 @@ internal class MockAwareCustomerOffersRepository @Inject constructor(
     override suspend fun getOffers(
         userWalletId: UserWalletId,
         deeplinkValue: String?,
-    ): Either<VisaApiError, List<Offer>> {
+    ): Either<VisaApiError, CustomerOffers> {
         if (!isMockMode || deeplinkValue == null) return real.getOffers(userWalletId, deeplinkValue)
 
-        val offers = real.getOffers(userWalletId, deeplinkValue).getOrElse { emptyList() }
-        if (offers.deeplinkOffer() != null) return offers.right()
-        return (offers + mockCampaignOffer(specificationName = offers.virtualOffer()?.data?.specificationName)).right()
+        val offers = real.getOffers(userWalletId, deeplinkValue).getOrElse { CustomerOffers.EMPTY }
+        if (offers.orderable.deeplinkOffer() != null) return offers.right()
+
+        val campaignOffer = mockCampaignOffer(
+            specificationName = offers.orderable.virtualOffer()?.data?.specificationName,
+        )
+        return offers.copy(orderable = offers.orderable + campaignOffer).right()
     }
 
     override suspend fun getProductInstanceOffers(
         userWalletId: UserWalletId,
         productInstanceId: String,
-    ): Either<VisaApiError, List<Offer>> = real.getProductInstanceOffers(userWalletId, productInstanceId)
+    ): Either<VisaApiError, CustomerOffers> = real.getProductInstanceOffers(userWalletId, productInstanceId)
 
     private fun mockCampaignOffer(specificationName: String?): Offer = Offer(
         type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK,
