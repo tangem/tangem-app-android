@@ -7,15 +7,25 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * @property tabs category filter; empty until the categories load, and when they fail.
  * @property search hoisted state of the search field; [TangemSearch.State.isActive] also drives whether
  *   the host lays out its leading blocks at all.
  */
 internal data class CollectiblesDiscoveryUM(
-    val tabs: ImmutableList<TangemTabItemUM>,
+    val tabs: TabsUM,
     val content: ContentUM,
     val search: TangemSearch.State,
 ) {
+
+    @Immutable
+    sealed interface TabsUM {
+
+        data object Loading : TabsUM
+
+        /** The categories could not be read — the band is not laid out and the catalogue stays unfiltered. */
+        data object Hidden : TabsUM
+
+        data class Content(val tabs: ImmutableList<TangemTabItemUM>) : TabsUM
+    }
 
     @Immutable
     sealed interface ContentUM {

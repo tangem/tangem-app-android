@@ -10,6 +10,7 @@ internal data class CollectiblesMainUM(
     val actions: ImmutableList<ActionUM>,
     val collection: CollectionUM?,
     val menu: MenuUM,
+    val isBalanceRefreshing: Boolean,
     val onBackClick: () -> Unit,
 ) {
 
