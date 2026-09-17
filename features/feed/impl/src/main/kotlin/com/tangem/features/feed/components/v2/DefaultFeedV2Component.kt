@@ -37,6 +37,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
@@ -126,19 +127,21 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             label = "feedHeader",
             modifier = modifier,
         ) { headerTarget ->
-            val screen = headerTarget.screen
-            if (screen == null) {
-                FeedSearchBarHeader(
-                    searchBarController = searchBarController,
-                    onExpandSheet = onExpandSheet,
-                    modifier = Modifier,
-                )
-            } else {
-                screen.Header(
-                    sheetExpansion = sheetExpansion,
-                    onExpandSheet = onExpandSheet,
-                    modifier = Modifier,
-                )
+            WithoutMaterialWhileAnimating {
+                val screen = headerTarget.screen
+                if (screen == null) {
+                    FeedSearchBarHeader(
+                        searchBarController = searchBarController,
+                        onExpandSheet = onExpandSheet,
+                        modifier = Modifier,
+                    )
+                } else {
+                    screen.Header(
+                        sheetExpansion = sheetExpansion,
+                        onExpandSheet = onExpandSheet,
+                        modifier = Modifier,
+                    )
+                }
             }
         }
     }

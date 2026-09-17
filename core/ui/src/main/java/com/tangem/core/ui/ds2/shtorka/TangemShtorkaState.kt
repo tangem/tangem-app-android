@@ -14,6 +14,8 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -35,8 +37,9 @@ import kotlin.math.sign
  *   one the finger was released next to — so a flick always lands on the neighbouring detent
  *   instead of flying past it.
  * - Settling animations are interruptible: touching the shtorka mid-flight grabs it in place.
- * - The state is not saved across process death; the shtorka re-opens at [currentDetent] of the
- *   initial composition.
+ * - The resting detent is saved and restored, so a shtorka that leaves the composition (navigating
+ *   to another screen, a configuration change, process death) comes back at the detent it was left
+ *   at rather than at the initial one.
  *
  * Create via [rememberTangemShtorkaState].
  *
@@ -274,10 +277,11 @@ class TangemShtorkaState internal constructor(
 }
 
 /**
- * Create and remember a [TangemShtorkaState].
+ * Create and remember a [TangemShtorkaState], restoring the detent it was last left at.
  *
  * @param detents detents the shtorka can rest at; must be non-empty
- * @param initialDetent the detent the shtorka starts at; must be one of [detents]
+ * @param initialDetent the detent the shtorka starts at when there is nothing to restore; must be
+ *   one of [detents]
  */
 @Composable
 fun rememberTangemShtorkaState(
@@ -286,7 +290,19 @@ fun rememberTangemShtorkaState(
     skippedDetents: Set<TangemShtorka.Detent> = emptySet(),
 ): TangemShtorkaState {
     val scope = rememberCoroutineScope()
-    val state = remember(detents, scope) {
+    val saver = remember(detents, initialDetent, skippedDetents, scope) {
+        Saver<TangemShtorkaState, Int>(
+            save = { it.detents.indexOf(it.currentDetent) },
+            restore = { index ->
+                TangemShtorkaState(
+                    detents = detents,
+                    initialDetent = detents.getOrNull(index)?.takeIf { it !in skippedDetents } ?: initialDetent,
+                    scope = scope,
+                )
+            },
+        )
+    }
+    val state = rememberSaveable(detents, scope, saver = saver) {
         TangemShtorkaState(detents = detents, initialDetent = initialDetent, scope = scope)
     }
 
