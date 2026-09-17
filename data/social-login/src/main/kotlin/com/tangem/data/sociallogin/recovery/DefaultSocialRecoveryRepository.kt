@@ -8,7 +8,6 @@ import com.tangem.domain.sociallogin.models.RecoveryKey
 import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.models.SocialProviderIdToken
 import com.tangem.domain.sociallogin.repository.SocialRecoveryRepository
-import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.WalletSignerProvider
 import com.tangem.lib.auth.social.SocialRecoveryClient
 import com.tangem.lib.auth.social.SocialRecoveryError
@@ -58,18 +57,3 @@ internal class DefaultSocialRecoveryRepository @Inject constructor(
  * registration uses — a hex id would not match the registration the wallet already has.
  */
 private fun UserWalletId.toBackendId(): String = Base64.encodeToString(value, Base64.NO_WRAP)
-
-private fun SocialRecoveryError.toDomainError(): SocialLoginError = when (this) {
-    SocialRecoveryError.BindingNotFound -> SocialLoginError.BindingNotFound
-    SocialRecoveryError.BindingConflict -> SocialLoginError.BindingConflict
-    SocialRecoveryError.NoActiveSession,
-    SocialRecoveryError.DeviceKeyUnavailable,
-    -> SocialLoginError.ServerError()
-    is SocialRecoveryError.SigningFailed -> SocialLoginError.ServerError(cause)
-    is SocialRecoveryError.DecryptionFailed -> SocialLoginError.RecoveryKeyDecryptionFailed(cause)
-    is SocialRecoveryError.Api -> when (error) {
-        AuthError.NetworkError -> SocialLoginError.NetworkError
-        else -> SocialLoginError.ServerError()
-    }
-    is SocialRecoveryError.Unknown -> SocialLoginError.Unknown(cause)
-}

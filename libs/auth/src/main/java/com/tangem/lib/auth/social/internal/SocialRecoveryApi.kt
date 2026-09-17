@@ -77,7 +77,8 @@ internal data class WalletRecoverApiResponse(
 /**
  * @property modulus base64url, unsigned big-endian
  * @property exponent base64url, unsigned big-endian
- * @property algorithm JWA algorithm the key is issued for; only `RSA-OAEP-256` can be honoured here
+ * @property algorithm JWA algorithm the key is issued for; nullable only because the field can be absent
+ * from the response — the client honours `RSA-OAEP-256` and refuses everything else, `null` included
  */
 @JsonClass(generateAdapter = true)
 internal data class RecoveryPublicKeyApiResponse(
