@@ -221,7 +221,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val afterEmptyRoute = AppRoute.Home(launchMode = launchMode)
 
         // The redesign asks where the wallet is registered, so the launch-time ask is dropped and the
-        // push reminder stays enabled until the later first-sign-in flow is answered.
+        // wallet-screen reminder stays armed until that later ask is answered.
         if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
             return afterEmptyRoute
         }
