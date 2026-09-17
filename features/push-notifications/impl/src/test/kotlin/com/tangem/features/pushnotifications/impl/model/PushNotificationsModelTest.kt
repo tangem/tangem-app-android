@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -287,6 +288,35 @@ internal class PushNotificationsModelTest {
         verify(exactly = 0) { appRouter.push(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN root screen WHEN onLaterClick THEN wallet reminder is retired`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Act
+        model.onLaterClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            notificationsRepository.setShouldShowNotifications(
+                key = NotificationId.EnablePushesReminderNotification.key,
+                value = false,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN root screen WHEN the ask is left unanswered THEN wallet reminder stays armed`() = runTest {
+        // Arrange + Act
+        createModel(testScope = this, nextRoute = NEXT_ROUTE)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { notificationsRepository.setShouldShowNotifications(key = any(), value = any()) }
+    }
+
     private fun wallet(id: UserWalletId): UserWallet = mockk { every { walletId } returns id }
 
     @ParameterizedTest
@@ -342,17 +372,6 @@ internal class PushNotificationsModelTest {
             applyPushNotificationFirstActivation = applyPushNotificationFirstActivation,
             markPushNotificationFirstActivationDone = markPushNotificationFirstActivationDone,
             getPushNotificationsDoubleAskVariantUseCase = getDoubleAskVariantUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 

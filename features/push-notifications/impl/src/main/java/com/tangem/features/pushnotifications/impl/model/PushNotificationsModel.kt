@@ -3,6 +3,7 @@ package com.tangem.features.pushnotifications.impl.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
@@ -121,6 +122,12 @@ internal class PushNotificationsModel @Inject constructor(
     private suspend fun proceedAfterLater() {
         neverRequestPermissionUseCase(PUSH_PERMISSION)
         neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+        // The wallet-screen reminder is meant for those who were never asked, and a "Later" leaves no other
+        // trace — the allow paths mark the answer by enabling the subscription.
+        notificationsRepository.setShouldShowNotifications(
+            key = NotificationId.EnablePushesReminderNotification.key,
+            value = false,
+        )
         if (params.isBottomSheet) {
             notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
         } else {
