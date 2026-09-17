@@ -23,8 +23,8 @@ internal class MultiWalletScanPrimaryComponent(
     private val model: MultiWalletScanPrimaryModel = getOrCreateModel(params)
 
     init {
-        params.innerNavigation.update {
-            it.copy(
+        params.innerNavigation.update { navigationState ->
+            navigationState.copy(
                 stackSize = 4,
                 stackMaxSize = 10,
             )
