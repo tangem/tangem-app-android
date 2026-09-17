@@ -47,6 +47,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.jointAccount)
+    implementation(projects.domain.account)
     implementation(projects.domain.blockaid)
     implementation(projects.domain.blockaid.models)
     implementation(projects.domain.common)

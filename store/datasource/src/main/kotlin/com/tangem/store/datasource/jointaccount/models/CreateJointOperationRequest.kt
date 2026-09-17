@@ -8,6 +8,5 @@ data class CreateJointOperationRequest(
     @Json(name = "safeAddress") val safeAddress: String,
     @Json(name = "chainId") val chainId: Long,
     @Json(name = "safeTx") val safeTx: JointOperationDto.SafeTxDto,
-    @Json(name = "deadline") val deadline: String?,
     @Json(name = "signature") val signature: String,
 )

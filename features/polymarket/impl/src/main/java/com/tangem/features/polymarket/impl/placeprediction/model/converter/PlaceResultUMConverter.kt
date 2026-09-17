@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.converter
 
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -26,12 +27,14 @@ internal object PlaceResultUMConverter {
     private const val ZERO_SHARES_REASON = "The exchange matched the order and filled no shares"
 
     /**
+     * @param side the side the order was signed for — it decides which leg of the response is the shares one
      * @param quotedShares the shares leg of the signed quote — the leg a fill is measured against, since the
      *  collateral leg is truncated by the exchange whenever the implied price is not exactly representable
      * @param quotedAmount the collateral leg, shown to the user but never used to decide the fill
      */
     fun convert(
         result: PredictionPlaceOrderResult,
+        side: PredictionOrderSide,
         quotedShares: BigDecimal,
         quotedAmount: BigDecimal,
         placedAt: Long,
@@ -43,29 +46,43 @@ internal object PlaceResultUMConverter {
         }
 
         val isMatched = status.equals(MATCHED_STATUS, ignoreCase = true)
-        val filledShares = result.takingAmount
+        val filledShares = result.sharesLeg(side = side)
 
         if (!isMatched || filledShares == null) return submitted(placedAt = placedAt)
 
         return when {
             filledShares.signum() <= 0 -> PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
             filledShares.compareTo(quotedShares) == 0 -> PlaceOutcome.Reportable(
-                result = PlaceResultUM.Filled(placedAt = placedAt, amount = quotedAmount, tokensBought = filledShares),
+                result = PlaceResultUM.Filled(
+                    placedAt = placedAt,
+                    collateralAmount = quotedAmount,
+                    shares = filledShares,
+                ),
             )
             filledShares > quotedShares -> submitted(placedAt = placedAt)
-            else -> result.makingAmount
+            else -> result.collateralLeg(side = side)
                 ?.let { spent ->
                     PlaceOutcome.Reportable(
                         result = PlaceResultUM.PartiallyFilled(
                             placedAt = placedAt,
-                            filledAmount = spent,
-                            requestedAmount = quotedAmount,
-                            tokensBought = filledShares,
+                            filledCollateral = spent,
+                            requestedCollateral = quotedAmount,
+                            shares = filledShares,
                         ),
                     )
                 }
                 ?: submitted(placedAt = placedAt)
         }
+    }
+
+    private fun PredictionPlaceOrderResult.sharesLeg(side: PredictionOrderSide): BigDecimal? = when (side) {
+        PredictionOrderSide.BUY -> takingAmount
+        PredictionOrderSide.SELL -> makingAmount
+    }
+
+    private fun PredictionPlaceOrderResult.collateralLeg(side: PredictionOrderSide): BigDecimal? = when (side) {
+        PredictionOrderSide.BUY -> makingAmount
+        PredictionOrderSide.SELL -> takingAmount
     }
 
     /**
@@ -83,13 +100,13 @@ internal object PlaceResultUMConverter {
         val executedAmount = (filledShares * price).setScale(FIAT_SCALE, RoundingMode.HALF_UP)
 
         return if (filledShares >= orderedShares) {
-            PlaceResultUM.Filled(placedAt = placedAt, amount = executedAmount, tokensBought = filledShares)
+            PlaceResultUM.Filled(placedAt = placedAt, collateralAmount = executedAmount, shares = filledShares)
         } else {
             PlaceResultUM.PartiallyFilled(
                 placedAt = placedAt,
-                filledAmount = executedAmount,
-                requestedAmount = quotedAmount,
-                tokensBought = filledShares,
+                filledCollateral = executedAmount,
+                requestedCollateral = quotedAmount,
+                shares = filledShares,
             )
         }
     }

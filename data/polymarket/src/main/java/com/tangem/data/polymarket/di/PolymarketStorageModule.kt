@@ -10,8 +10,8 @@ import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
-import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
+import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
