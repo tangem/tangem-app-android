@@ -13,13 +13,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
-import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
-import kotlinx.collections.immutable.ImmutableList
 
 internal object DiscoveryListKeys {
     const val TABS = "tabs"
+    const val SKELETON = "skeleton"
     const val STATUS = "status"
     const val NEXT_PAGE = "next_page"
     const val CONTENT_TYPE_PACK_ROW = "pack_row"
@@ -46,25 +45,31 @@ internal fun LazyListState.isCollectiblesTabBandPinned(headerKey: String): Boole
     return layoutInfo.visibleItemsInfo.none { it.key == headerKey }
 }
 
-private fun LazyListScope.tabBandItem(tabs: ImmutableList<TangemTabItemUM>, scrollState: ScrollState) {
-    if (tabs.isEmpty()) return
+private fun LazyListScope.tabBandItem(tabs: CollectiblesDiscoveryUM.TabsUM, scrollState: ScrollState) {
+    if (tabs is CollectiblesDiscoveryUM.TabsUM.Hidden) return
 
     item(key = DiscoveryListKeys.TABS, contentType = DiscoveryListKeys.TABS) {
         val context = LocalCollectiblesDiscoveryListContext.current
 
         if (!context.isTabBandShown) return@item
 
+        val bandModifier = Modifier.alpha(if (context.isTabBandPinned) 0f else context.leadingBlocksAlpha)
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .zIndex(1f),
         ) {
-            CollectiblesTabBand(
-                tabs = tabs,
-                scrollState = scrollState,
-                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
-                modifier = Modifier.alpha(if (context.isTabBandPinned) 0f else context.leadingBlocksAlpha),
-            )
+            if (tabs is CollectiblesDiscoveryUM.TabsUM.Content) {
+                CollectiblesTabBand(
+                    tabs = tabs.tabs,
+                    scrollState = scrollState,
+                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+                    modifier = bandModifier,
+                )
+            } else {
+                CollectiblesTabBandSkeleton(modifier = bandModifier)
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -75,10 +80,8 @@ private fun LazyListScope.tabBandItem(tabs: ImmutableList<TangemTabItemUM>, scro
 private fun LazyListScope.contentItems(content: CollectiblesDiscoveryUM.ContentUM) {
     when (content) {
         is CollectiblesDiscoveryUM.ContentUM.Loading -> {
-            statusItem {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    TangemLoader(color = TangemTheme.colors3.icon.primary, size = TangemLoaderSize.X32)
-                }
+            item(key = DiscoveryListKeys.SKELETON, contentType = DiscoveryListKeys.SKELETON) {
+                CollectiblesPackGridSkeleton()
             }
         }
         is CollectiblesDiscoveryUM.ContentUM.Content -> {

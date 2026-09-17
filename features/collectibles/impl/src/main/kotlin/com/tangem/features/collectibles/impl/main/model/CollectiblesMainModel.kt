@@ -28,8 +28,6 @@ import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMe
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuConverter
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -73,8 +71,6 @@ internal class CollectiblesMainModel @Inject constructor(
         onItemClick = ::onMenuItemClick,
     )
 
-    private val refreshJob = JobHolder()
-
     val uiState: StateFlow<CollectiblesMainUM>
         field = MutableStateFlow(buildInitialState())
 
@@ -116,17 +112,13 @@ internal class CollectiblesMainModel @Inject constructor(
 
     fun onRefresh() {
         modelScope.launch {
-            setRefreshing(isRefreshing = true)
+            uiState.update { state -> state.copy(isBalanceRefreshing = true) }
 
             collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
                 .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles account balance", error) }
 
-            setRefreshing(isRefreshing = false)
-        }.saveIn(refreshJob)
-    }
-
-    private fun setRefreshing(isRefreshing: Boolean) {
-        uiState.update { state -> state.copy(isBalanceRefreshing = isRefreshing) }
+            uiState.update { state -> state.copy(isBalanceRefreshing = false) }
+        }
     }
 
     private fun onMenuClick() {
