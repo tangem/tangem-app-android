@@ -639,7 +639,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onClickReceive(data: TangemPayTopUpData) {
         bottomSheetNavigation.dismiss()
         val networks = currentStatus.value.networksOrNull().orEmpty()
-        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
+        if (shouldUseChooseNetwork(networks)) {
             bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(
