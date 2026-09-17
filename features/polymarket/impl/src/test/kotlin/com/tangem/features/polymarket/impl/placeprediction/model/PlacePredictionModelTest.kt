@@ -1229,11 +1229,12 @@ internal class PlacePredictionModelTest {
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
             assertThat(order.available).isEqualTo(BigDecimal("51.23"))
+            assertThat(order.balance).isEqualTo(BigDecimal("100"))
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
+            assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(36)
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
             coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
-            coVerify(exactly = 0) { getBalanceInteractor(addresses = any()) }
 
             model.onDestroy()
         }
@@ -1304,7 +1305,7 @@ internal class PlacePredictionModelTest {
 
                 // Assert
                 coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
-                coVerify(exactly = 0) { getBalanceInteractor(addresses = any()) }
+                coVerify(exactly = 1) { getBalanceInteractor(addresses = any()) }
                 assertThat(request.captured.side).isEqualTo(PredictionOrderSide.SELL)
                 assertThat(request.captured.quote).isEqualTo(createSellQuote())
 
