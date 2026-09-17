@@ -39,7 +39,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -236,6 +235,9 @@ internal class SwapModel @Inject constructor(
     private val isPredictionWithdrawFlow: Boolean
         get() = accountFlow is AccountFlow.PredictionWithdraw
 
+    private val isPredictionTopUpFlow: Boolean
+        get() = accountFlow is AccountFlow.PredictionTopUp
+
     val isGaslessWithdrawal: Boolean
         get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
 
@@ -325,6 +327,7 @@ internal class SwapModel @Inject constructor(
     private val isReverseLocked: Boolean
         get() = isAccountFlowActive ||
             isPredictionWithdrawFlow ||
+            isPredictionTopUpFlow ||
             dataState.fromSwapCurrencyStatus?.account is Account.Prediction ||
             isTargetOnlyDestination
 
@@ -353,7 +356,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private var _uiState: SwapStateHolder by mutableStateOf(
-        stateBuilder.createInitialLoadingState().withReverseForcedHiddenInAccountFlow().withAccountFlowPresentation(),
+        stateBuilder.createInitialLoadingState().withAccountFlowPresentation(),
     )
 
     /**
@@ -364,7 +367,7 @@ internal class SwapModel @Inject constructor(
     var uiState: SwapStateHolder
         get() = _uiState
         internal set(value) {
-            _uiState = value.withReverseForcedHiddenInAccountFlow().withAccountFlowPresentation()
+            _uiState = value.withAccountFlowPresentation()
         }
 
     val feeSelectorRepository = FeeSelectorRepository()
@@ -2876,49 +2879,11 @@ internal class SwapModel @Inject constructor(
         return if (resolved.currency.id == currentTo.currency.id) currentTo else currentTo.copy(status = resolved)
     }
 
-    private fun SwapStateHolder.withReverseForcedHiddenInAccountFlow(): SwapStateHolder {
-        return if (isReverseLocked) {
-            copy(changeCardsButtonState = ChangeCardsButtonState.HIDDEN)
-        } else {
-            this
-        }
-    }
-
-    /**
-     * Applied here rather than in [StateBuilder] so every state it produces gets the same treatment. The main
-     * button is deliberately left alone: it keeps its dynamic Transfer/Swap label in account flows too.
-     */
-    private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder {
-        if (!isAccountFlowActive && !isPredictionWithdrawFlow) return this
-        val flow = accountFlow ?: return this
-        val titledState = copy(
-            titleId = when (flow) {
-                is AccountFlow.TopUp -> R.string.tangempay_card_details_add_funds
-                is AccountFlow.Withdraw -> R.string.tangempay_card_details_withdraw
-                is AccountFlow.PredictionWithdraw -> R.string.prediction_main_withdraw
-            },
-        )
-        if (flow is AccountFlow.PredictionWithdraw) {
-            val withdrawState = titledState.copy(swapButton = titledState.swapButton.asWithdrawButton())
-            val sendCard = withdrawState.sendCardData as? SwapCardState.SwapCardData ?: return withdrawState
-            return withdrawState.copy(sendCardData = sendCard.copy(isSelectionLocked = true))
-        }
-        if (!isAccountTopUp) return titledState
-        val receiveCard = titledState.receiveCardData as? SwapCardState.SwapCardData ?: return titledState
-        return titledState.copy(
-            receiveCardData = receiveCard.copy(
-                currencyIconState = CurrencyIconState.PaymentAccount(),
-                fiatSymbolOverride = ACCOUNT_TOP_UP_ABSTRACT_SYMBOL,
-                isSelectionLocked = true,
-            ),
-        )
-    }
-
-    private fun SwapButton.asWithdrawButton(): SwapButton = if (isInProgress) {
-        copy(mode = SwapButton.Mode.TRANSFER_PROGRESSING, title = resourceReference(R.string.common_withdrawing))
-    } else {
-        copy(mode = SwapButton.Mode.TRANSFER, title = resourceReference(R.string.prediction_main_withdraw))
-    }
+    private fun SwapStateHolder.withAccountFlowPresentation(): SwapStateHolder = withAccountFlowPresentation(
+        accountFlow = accountFlow,
+        isAccountSwapFlowEnabled = swapFeatureToggles.isAccountSwapFlowEnabled,
+        isReverseLocked = isReverseLocked,
+    )
 
     fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
         return if (swapFeatureToggles.isAccountSwapFlowEnabled) {
@@ -3559,8 +3524,5 @@ internal class SwapModel @Inject constructor(
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
         const val SWAP_IN_PROGRESS_DELAY = 200L
         const val CHANGELLY_PROVIDER_ID = "changelly"
-
-        /** Abstract currency label for the TO card in an account top-up flow — see [withAccountFlowPresentation]. */
-        const val ACCOUNT_TOP_UP_ABSTRACT_SYMBOL = "USD"
     }
 }
