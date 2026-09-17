@@ -1,21 +1,13 @@
 package com.tangem.data.virtualaccount.converter
 
-import com.tangem.spend.datasource.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.VirtualAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.spend.datasource.visa.entity.VirtualAccountStatusValueDM
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Two-way converter between [VirtualAccountStatusValue] and [VirtualAccountStatusValueDM].
- *
- * [convert] maps domain → data model. Returns null for transient statuses that should not be persisted
- * (Loading, ExposedDevice, Unavailable, NotSynced).
- *
- * [convertBack] maps data model → domain. All restored statuses have [StatusSource.CACHE] as source.
- */
 @Singleton
 internal class VirtualAccountStatusValueDMConverter @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
@@ -25,22 +17,39 @@ internal class VirtualAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is VirtualAccountStatusValue.Empty -> VirtualAccountStatusValueDM.Empty()
             is VirtualAccountStatusValue.NotCreated -> VirtualAccountStatusValueDM.NotCreated()
-            is VirtualAccountStatusValue.UnderReview -> VirtualAccountStatusValueDM.UnderReview(
+            is VirtualAccountStatusValue.Issuance.CountryNotSupported -> {
+                VirtualAccountStatusValueDM.CountryNotSupported()
+            }
+            is VirtualAccountStatusValue.Issuance.Issuing -> VirtualAccountStatusValueDM.Issuing(
+                step = value.step,
+                customerId = value.customerId,
+                balance = value.balance?.toDM(),
+            )
+            is VirtualAccountStatusValue.Issuance.UnderReview -> VirtualAccountStatusValueDM.UnderReview(
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
+                balance = value.balance?.toDM(),
             )
-            is VirtualAccountStatusValue.Provisioning -> VirtualAccountStatusValueDM.Provisioning()
-            is VirtualAccountStatusValue.CountryNotSupported -> VirtualAccountStatusValueDM.CountryNotSupported()
-            is VirtualAccountStatusValue.Active -> VirtualAccountStatusValueDM.ActiveAccount(
+            is VirtualAccountStatusValue.Issuance.VerificationDeclined -> {
+                VirtualAccountStatusValueDM.VerificationDeclined(
+                    customerId = value.customerId,
+                    balance = value.balance?.toDM(),
+                )
+            }
+            is VirtualAccountStatusValue.Issuance.Activating -> VirtualAccountStatusValueDM.Activating(
                 customerId = value.customerId,
-                currencyCode = value.currencyCode,
-                depositAddress = value.depositAddress,
-                fiatBalance = value.fiatBalance.toDM(),
-                cryptoBalance = value.cryptoBalance.toDM(),
-                fiatRate = value.fiatRate,
-                availableForWithdrawal = value.availableForWithdrawal,
+                balance = value.balance?.toDM(),
             )
-            // Transient statuses are not persisted
+            is VirtualAccountStatusValue.Issued.Active -> VirtualAccountStatusValueDM.ActiveAccount(
+                customerId = value.customerId,
+                productInstanceId = value.productInstanceId,
+                balance = value.balance?.toDM(),
+            )
+            is VirtualAccountStatusValue.Issued.Deactivated -> VirtualAccountStatusValueDM.Deactivated(
+                customerId = value.customerId,
+                productInstanceId = value.productInstanceId,
+                balance = value.balance?.toDM(),
+            )
             is VirtualAccountStatusValue.Loading,
             is VirtualAccountStatusValue.Error.ExposedDevice,
             is VirtualAccountStatusValue.Error.Unavailable,
@@ -53,61 +62,65 @@ internal class VirtualAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is VirtualAccountStatusValueDM.Empty -> VirtualAccountStatusValue.Empty
             is VirtualAccountStatusValueDM.NotCreated -> VirtualAccountStatusValue.NotCreated
-            is VirtualAccountStatusValueDM.Provisioning -> VirtualAccountStatusValue.Provisioning(
+            is VirtualAccountStatusValueDM.CountryNotSupported -> VirtualAccountStatusValue.Issuance.CountryNotSupported
+            is VirtualAccountStatusValueDM.Issuing -> VirtualAccountStatusValue.Issuance.Issuing(
                 source = StatusSource.CACHE,
+                balance = value.balance?.toDomain(userWalletId),
+                customerId = value.customerId,
+                step = value.step,
             )
-            is VirtualAccountStatusValueDM.CountryNotSupported -> VirtualAccountStatusValue.CountryNotSupported
-            is VirtualAccountStatusValueDM.UnderReview -> VirtualAccountStatusValue.UnderReview(
+            is VirtualAccountStatusValueDM.UnderReview -> VirtualAccountStatusValue.Issuance.UnderReview(
                 source = StatusSource.CACHE,
+                balance = value.balance?.toDomain(userWalletId),
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
             )
-            is VirtualAccountStatusValueDM.ActiveAccount -> VirtualAccountStatusValue.Active(
+            is VirtualAccountStatusValueDM.VerificationDeclined -> {
+                VirtualAccountStatusValue.Issuance.VerificationDeclined(
+                    source = StatusSource.CACHE,
+                    balance = value.balance?.toDomain(userWalletId),
+                    customerId = value.customerId,
+                )
+            }
+            is VirtualAccountStatusValueDM.Activating -> VirtualAccountStatusValue.Issuance.Activating(
                 source = StatusSource.CACHE,
+                balance = value.balance?.toDomain(userWalletId),
                 customerId = value.customerId,
-                currencyCode = value.currencyCode,
-                depositAddress = value.depositAddress,
-                fiatBalance = value.fiatBalance.toDomain(),
-                cryptoBalance = value.cryptoBalance.toDomain(),
-                availableForWithdrawal = value.availableForWithdrawal,
-                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
-                fiatRate = value.fiatRate,
+            )
+            is VirtualAccountStatusValueDM.ActiveAccount -> VirtualAccountStatusValue.Issued.Active(
+                source = StatusSource.CACHE,
+                balance = value.balance?.toDomain(userWalletId),
+                customerId = value.customerId,
+                productInstanceId = value.productInstanceId,
+            )
+            is VirtualAccountStatusValueDM.Deactivated -> VirtualAccountStatusValue.Issued.Deactivated(
+                source = StatusSource.CACHE,
+                balance = value.balance?.toDomain(userWalletId),
+                customerId = value.customerId,
+                productInstanceId = value.productInstanceId,
             )
             null -> VirtualAccountStatusValue.Error.Unavailable
         }
     }
 
-    private fun VirtualAccountStatusValue.FiatBalance.toDM(): VirtualAccountStatusValueDM.FiatBalanceDM {
-        return VirtualAccountStatusValueDM.FiatBalanceDM(
-            availableBalance = availableBalance,
-            currency = currency,
-        )
-    }
-
-    private fun VirtualAccountStatusValue.CryptoBalance.toDM(): VirtualAccountStatusValueDM.CryptoBalanceDM {
-        return VirtualAccountStatusValueDM.CryptoBalanceDM(
-            id = id,
-            chainId = chainId,
+    private fun VirtualAccountStatusValue.Balance.toDM(): VirtualAccountStatusValueDM.BalanceDM {
+        return VirtualAccountStatusValueDM.BalanceDM(
+            cryptoAmount = cryptoAmount,
             depositAddress = depositAddress,
-            tokenContractAddress = tokenContractAddress,
-            balance = balance,
+            currencyCode = currencyCode,
+            fiatRate = fiatRate,
         )
     }
 
-    private fun VirtualAccountStatusValueDM.FiatBalanceDM.toDomain(): VirtualAccountStatusValue.FiatBalance {
-        return VirtualAccountStatusValue.FiatBalance(
-            availableBalance = availableBalance,
-            currency = currency,
-        )
-    }
-
-    private fun VirtualAccountStatusValueDM.CryptoBalanceDM.toDomain(): VirtualAccountStatusValue.CryptoBalance {
-        return VirtualAccountStatusValue.CryptoBalance(
-            id = id,
-            chainId = chainId,
+    private fun VirtualAccountStatusValueDM.BalanceDM.toDomain(
+        userWalletId: UserWalletId,
+    ): VirtualAccountStatusValue.Balance {
+        return VirtualAccountStatusValue.Balance(
+            cryptoAmount = cryptoAmount,
+            cryptoCurrency = tangemPayCurrencyFactory.createVirtualAccountToken(userWalletId),
             depositAddress = depositAddress,
-            tokenContractAddress = tokenContractAddress,
-            balance = balance,
+            currencyCode = currencyCode,
+            fiatRate = fiatRate,
         )
     }
 }
