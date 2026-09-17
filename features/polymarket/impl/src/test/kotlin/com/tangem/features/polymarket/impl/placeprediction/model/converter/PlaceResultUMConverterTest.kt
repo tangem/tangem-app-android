@@ -10,6 +10,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
@@ -56,7 +57,31 @@ internal class PlaceResultUMConverterTest {
         val actual = convert(result = result(collateral = truncated))
 
         // Assert
-        assertThat(actual).isEqualTo(PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES)))
+        assertThat(actual).isEqualTo(
+            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = truncated)),
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(PredictionOrderSide::class)
+    fun `GIVEN a full fill WHEN converted THEN the actual exchanged amount is shown`(side: PredictionOrderSide) {
+        val amount = BigDecimal("70.25")
+
+        val actual = convert(result = result(side = side, collateral = amount), side = side)
+
+        assertThat(actual).isEqualTo(
+            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = amount)),
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(PredictionOrderSide::class)
+    fun `GIVEN a full fill without its actual amount WHEN converted THEN the outcome stays unconfirmed`(
+        side: PredictionOrderSide,
+    ) {
+        val actual = convert(result = result(side = side, collateral = null), side = side)
+
+        assertThat(actual).isEqualTo(PlaceOutcome.Reportable(PlaceResultUM.Submitted(placedAt = PLACED_AT)))
     }
 
     @Test
@@ -68,7 +93,9 @@ internal class PlaceResultUMConverterTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES)))
+        assertThat(actual).isEqualTo(
+            PlaceOutcome.Reportable(result = filled(shares = QUOTED_SHARES).copy(collateralAmount = BigDecimal.ZERO)),
+        )
     }
 
     internal data class ConvertModel(
