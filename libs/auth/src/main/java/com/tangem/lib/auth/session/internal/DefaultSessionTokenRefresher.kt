@@ -106,9 +106,11 @@ internal class DefaultSessionTokenRefresher(
             TangemLogger.i("Calling /refresh with stored refresh token")
             when (val result = callRefresh(current.refreshToken)) {
                 is RefreshOutcome.Success -> {
-                    store.save(result.tokens)
+                    // the store answers with what is actually in effect: our reply may have lost a race
+                    // with another rotation, and the caller retries its request with what we return
+                    val inEffect = store.save(tokens = result.tokens, expected = current)
                     TangemLogger.i("/refresh succeeded; session tokens persisted")
-                    return result.tokens.right()
+                    return inEffect.right()
                 }
                 // 401: refresh token is invalid/expired/revoked/replayed but the device key is
                 // intact server-side → fall back to /authenticate to mint a new pair.
@@ -130,7 +132,7 @@ internal class DefaultSessionTokenRefresher(
             TangemLogger.i("No valid refresh token in store — proceeding directly to /authenticate")
         }
 
-        return runAuthenticate()
+        return runAuthenticate(current)
     }
 
     private suspend fun callRefresh(refreshToken: String): RefreshOutcome {
@@ -145,7 +147,7 @@ internal class DefaultSessionTokenRefresher(
         }
     }
 
-    private suspend fun runAuthenticate(): Either<SessionRefreshError, SessionTokens> = either {
+    private suspend fun runAuthenticate(current: SessionTokens?): Either<SessionRefreshError, SessionTokens> = either {
         TangemLogger.i("Starting /authenticate")
 
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
@@ -187,9 +189,9 @@ internal class DefaultSessionTokenRefresher(
         when (authResponse) {
             is ApiResponse.Success -> {
                 val tokens = SessionTokensConverter.convertBack(authResponse.data)
-                store.save(tokens)
+                val inEffect = store.save(tokens = tokens, expected = current)
                 TangemLogger.i("/authenticate succeeded; session tokens persisted")
-                tokens
+                inEffect
             }
             is ApiResponse.Error -> handleAuthError(errorConverter.convert(authResponse.cause))
         }
