@@ -26,15 +26,17 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketBalance
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
-import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
+import java.math.BigDecimal
 
 /** What the order is paid from and what it pays out, as read on the summary screen. */
 @Composable
 internal fun PredictionPaymentBlock(
     amountValue: String,
     payout: PayoutUM?,
-    payment: PaymentSourceUM,
+    collateral: CollateralUM,
+    balance: BigDecimal?,
     modifier: Modifier = Modifier,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
@@ -42,14 +44,14 @@ internal fun PredictionPaymentBlock(
             modifier = Modifier.padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 24.dp),
         ) {
-            SourceHeader(payment = payment)
-            AmountRow(amountValue = amountValue, payout = payout, payment = payment)
+            SourceHeader(collateral = collateral, balance = balance)
+            AmountRow(amountValue = amountValue, payout = payout, collateral = collateral)
         }
     }
 }
 
 @Composable
-private fun SourceHeader(payment: PaymentSourceUM) {
+private fun SourceHeader(collateral: CollateralUM, balance: BigDecimal?) {
     Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
@@ -63,12 +65,17 @@ private fun SourceHeader(payment: PaymentSourceUM) {
             )
             HeaderText(text = stringResourceSafe(R.string.prediction_place_summary_account))
         }
-        HeaderText(text = stringResourceSafe(R.string.common_balance, payment.balanceLabel()))
+        HeaderText(
+            text = stringResourceSafe(
+                R.string.common_balance,
+                balance.formatPolymarketBalance(tokenSymbol = collateral.tokenSymbol),
+            ),
+        )
     }
 }
 
 @Composable
-private fun AmountRow(amountValue: String, payout: PayoutUM?, payment: PaymentSourceUM) {
+private fun AmountRow(amountValue: String, payout: PayoutUM?, collateral: CollateralUM) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -97,7 +104,7 @@ private fun AmountRow(amountValue: String, payout: PayoutUM?, payment: PaymentSo
                 )
             }
         }
-        payment.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
+        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
     }
 }
 
@@ -109,5 +116,3 @@ private fun HeaderText(text: String) {
         color = TangemTheme.colors3.text.secondary,
     )
 }
-
-private fun PaymentSourceUM.balanceLabel(): String = balance.formatPolymarketBalance(tokenSymbol = tokenSymbol)

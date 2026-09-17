@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 import arrow.core.Either
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
@@ -50,8 +51,11 @@ internal class SetQuoteResultTransformer(
         PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT,
         -> QuoteUM.Content(
             status = quote.status,
-            expectedShares = quote.expectedExecutionAmount,
-            guaranteedShares = quote.shares,
+            expected = quote.expectedExecutionAmount,
+            guaranteed = when (quote.side) {
+                PredictionOrderSide.BUY -> quote.shares
+                PredictionOrderSide.SELL -> quote.notional
+            },
             feeTotal = quote.fees.total,
             total = quote.total,
             signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis),
