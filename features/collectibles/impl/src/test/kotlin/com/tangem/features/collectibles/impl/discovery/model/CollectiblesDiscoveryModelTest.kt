@@ -98,7 +98,7 @@ internal class CollectiblesDiscoveryModelTest {
         }
 
     @Test
-    fun `GIVEN categories fail WHEN model created THEN tabs stay empty and the catalogue is still requested`() =
+    fun `GIVEN categories fail WHEN model created THEN tabs are hidden and the catalogue is still requested`() =
         runTest {
             // Arrange
             coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
@@ -107,7 +107,7 @@ internal class CollectiblesDiscoveryModelTest {
             val fixture = startModel()
 
             // Assert
-            assertThat(fixture.model.uiState.value.tabs).isEmpty()
+            assertThat(fixture.model.uiState.value.tabs).isEqualTo(CollectiblesDiscoveryUM.TabsUM.Hidden)
             assertThat(fixture.actions).containsExactly(reload())
         }
 
@@ -399,15 +399,18 @@ internal class CollectiblesDiscoveryModelTest {
         ),
     )
 
-    private fun CollectiblesDiscoveryModel.tabIds(): List<String> = uiState.value.tabs.map { it.id }
+    private fun CollectiblesDiscoveryModel.tabItems(): List<TangemTabItemUM> =
+        (uiState.value.tabs as CollectiblesDiscoveryUM.TabsUM.Content).tabs
 
-    private fun CollectiblesDiscoveryModel.selectedTabIds(): List<String> = uiState.value.tabs
+    private fun CollectiblesDiscoveryModel.tabIds(): List<String> = tabItems().map { it.id }
+
+    private fun CollectiblesDiscoveryModel.selectedTabIds(): List<String> = tabItems()
         .filterIsInstance<TangemTabItemUM.Content>()
         .filter { it.isSelected }
         .map { it.id }
 
     private fun CollectiblesDiscoveryModel.clickTab(id: String) {
-        uiState.value.tabs.filterIsInstance<TangemTabItemUM.Content>().single { it.id == id }.onClick()
+        tabItems().filterIsInstance<TangemTabItemUM.Content>().single { it.id == id }.onClick()
     }
 
     private fun CollectiblesDiscoveryModel.clickReload() {
