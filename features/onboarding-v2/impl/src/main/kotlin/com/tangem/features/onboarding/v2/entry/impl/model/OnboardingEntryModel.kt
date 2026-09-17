@@ -181,8 +181,8 @@ internal class OnboardingEntryModel @Inject constructor(
     private suspend fun navigateToPushNotificationsOrDone(doneMode: OnboardingDoneComponent.Mode) {
         // A failing read must not strand the viewer on the previous step, so the flow finishes instead.
         val shouldAsk = runSuspendCatching { shouldAskPermissionUseCase(PUSH_PERMISSION) }
-            .getOrElse {
-                TangemLogger.e("Unable to read the push permission preference", it)
+            .getOrElse { error ->
+                TangemLogger.e("Unable to read the push permission preference", error)
                 false
             }
         if (shouldAsk) {
