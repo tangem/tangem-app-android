@@ -72,6 +72,6 @@ internal class FeedTopBlocksComponent(
     }
 
     data class Params(
-        val callbacks: FeedBlockCallbacks,
+        val callbacks: FeedBlockModalCallbacks,
     )
 }
