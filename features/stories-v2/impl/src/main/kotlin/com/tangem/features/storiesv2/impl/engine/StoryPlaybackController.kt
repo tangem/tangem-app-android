@@ -14,6 +14,7 @@ import com.tangem.features.storiesv2.impl.analytics.StoryV2FallbackReason
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
+import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.features.storiesv2.impl.content.StoryV2EndBehavior
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,7 @@ internal class StoryPlaybackController(
     private val composition: StoryV2Composition,
     private val source: StoryV2Source,
     private val analytics: AnalyticsEventHandler,
-    private val onHaptic: () -> Unit,
+    private val onHaptic: (StoryV2Haptic) -> Unit,
     private val onAction: (StoriesV2PendingAction) -> Unit,
     private val onResult: (StoriesV2Result) -> Unit,
 ) {
@@ -368,12 +369,12 @@ internal class StoryPlaybackController(
     }
 
     private fun fireHapticsUpTo(positionMs: Long) {
-        val markers = currentSlide.hapticAtMs
+        val markers = currentSlide.haptics
         if (isRepeatAutoView || firedHapticCount >= markers.size) return
 
-        while (firedHapticCount < markers.size && markers[firedHapticCount] <= positionMs) {
+        while (firedHapticCount < markers.size && markers[firedHapticCount].atMs <= positionMs) {
+            onHaptic(markers[firedHapticCount])
             firedHapticCount++
-            onHaptic()
         }
     }
 
