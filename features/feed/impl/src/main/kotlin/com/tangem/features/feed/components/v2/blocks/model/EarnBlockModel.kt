@@ -65,7 +65,9 @@ internal class EarnBlockModel @Inject constructor(
             stakingAvailability = stakingAvailabilityOf(currenciesByWallet),
             catalogueApy = topEarnTokens?.getOrNull()?.bestApy(),
         ).convert(currenciesByWallet.values.flatten())
-    }.stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = EarnBlockUM())
+    }
+        .flowOn(dispatchers.default)
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = EarnBlockUM())
 
     fun onClick() {
         when (state.value.target) {
@@ -86,18 +88,11 @@ internal class EarnBlockModel @Inject constructor(
         .associate { it.key to it.value }
 
     /**
-     * Best rate the Earn catalogue offers, as a fraction; the backend reports the rates in percent.
-     * Shifting the point is exact, so the rate is rounded only by the app-wide percent format.
+     * Best rate the Earn catalogue offers. Unlike the yield-supply rates, the catalogue reports a
+     * fraction already (`0.0384` is 3.84%), so it reaches the percent format untouched.
      */
     private fun List<EarnTokenWithCurrency>.bestApy(): BigDecimal? = mapNotNull {
         it.earnToken.apy.toBigDecimalOrNull()
     }
         .maxOrNull()
-        ?.movePointLeft(PERCENT_POINT_SHIFT)
-
-    private companion object {
-
-        /** Decimal places between a backend percent (5.5) and the fraction it means (0.055). */
-        const val PERCENT_POINT_SHIFT = 2
-    }
 }
