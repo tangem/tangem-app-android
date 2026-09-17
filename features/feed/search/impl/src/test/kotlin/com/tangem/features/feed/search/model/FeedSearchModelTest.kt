@@ -16,14 +16,13 @@ import com.tangem.features.feed.search.FeedSearchBarController
 import com.tangem.features.feed.search.FeedSearchBarUM
 import com.tangem.features.feed.search.model.analytics.FeedSearchAnalyticsEvent
 import com.tangem.features.feed.search.ui.state.RecentUM
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -273,17 +272,6 @@ internal class FeedSearchModelTest {
             getRecentFeedSearchItemsUseCase = getRecentFeedSearchItemsUseCase,
             getRecentFeedSearchQueriesUseCase = getRecentFeedSearchQueriesUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 

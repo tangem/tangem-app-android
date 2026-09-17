@@ -1,9 +1,8 @@
 package com.tangem.domain.jointaccount.usecase
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.right
+import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
@@ -18,11 +17,11 @@ import com.tangem.domain.jointaccount.model.JointAccountSignInput
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.supplier.findByMember
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class JoinJointAccountUseCase(
@@ -90,7 +89,9 @@ class JoinJointAccountUseCase(
             JointAccountJoinResult.Conflict -> {
                 refresh.mapLeft(JointAccountFlowError::Failed).bind()
 
-                findOwnAccount(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress).bind()
+                val own = supplier.findByMember(userWalletId = userWalletId, ownerAddress = signResult.ownerAddress)
+
+                ensureNotNull(own) { JointAccountJoinError.InvalidInvite }
             }
         }
     }
@@ -131,18 +132,6 @@ class JoinJointAccountUseCase(
         accountListFetcher(params = SingleAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
             TangemLogger.e("Failed to refetch the account list of $userWalletId after joint account joining", it)
         }
-    }
-
-    private suspend fun findOwnAccount(
-        userWalletId: UserWalletId,
-        ownerAddress: String,
-    ): Either<JointAccountJoinError, JointAccount> {
-        val accounts = supplier(userWalletId = userWalletId).firstOrNull().orEmpty()
-        val own = accounts.firstOrNull { account ->
-            account.members.any { member -> member.address.equals(ownerAddress, ignoreCase = true) }
-        }
-
-        return own?.right() ?: JointAccountJoinError.InvalidInvite.left()
     }
 
     private fun toJoinError(cause: Throwable): JointAccountJoinError = when (cause) {

@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.*
 import com.tangem.features.feed.ui.v2.FeedTopBlocksContent
@@ -32,14 +33,27 @@ import kotlinx.coroutines.flow.stateIn
 @Stable
 internal class FeedTopBlocksComponent(
     context: AppComponentContext,
+    params: Params,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
 
     private val blocks: List<FeedBlock> = listOf(
         ForYouBlockComponent(context = child(key = ForYouBlockComponent.KEY)),
+        AddAccountBlockComponent(
+            context = child(key = AddAccountBlockComponent.KEY),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+            addAccountTypeComponentFactory = addAccountTypeComponentFactory,
+        ),
+        TangemPayBlockComponent(context = child(key = TangemPayBlockComponent.KEY)),
+        EarnBlockComponent(context = child(key = EarnBlockComponent.KEY), callbacks = params.callbacks),
         PredictionsBlockComponent(context = child(key = PredictionsBlockComponent.KEY)),
         CollectiblesBlockComponent(
             context = child(key = CollectiblesBlockComponent.KEY),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        ),
+        ReferralBlockComponent(
+            context = child(key = ReferralBlockComponent.KEY),
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         ),
     )
@@ -60,4 +74,8 @@ internal class FeedTopBlocksComponent(
         // sheet is up should not yank the sheet away from under the user.
         blocks.forEach { block -> key(block.key) { block.Overlay() } }
     }
+
+    data class Params(
+        val callbacks: FeedBlockModalCallbacks,
+    )
 }

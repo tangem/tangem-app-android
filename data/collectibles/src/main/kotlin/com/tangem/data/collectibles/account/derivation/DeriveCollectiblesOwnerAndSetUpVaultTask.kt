@@ -17,6 +17,7 @@ import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -30,18 +31,30 @@ internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
     private val userWallet: UserWallet.Cold,
     private val seedKey: ByteArray,
     private val derivationsRepository: DerivationsRepository,
-    private val setUpVault: suspend (session: CardSession) -> CompletionResult<Unit>,
+    private val scope: CoroutineScope,
+    private val setUpVault: suspend (session: CardSession, callback: CompletionCallback<Unit>) -> Unit,
 ) : CardSessionRunnable<Unit> {
 
     private val path = DerivationPath(rawPath = COLLECTIBLES_OWNER_DERIVATION_PATH)
 
     override fun run(session: CardSession, callback: CompletionCallback<Unit>) {
-        session.scope.launch {
-            callback(deriveAndSetUpVault(session))
+        scope.launch { deriveAndSetUpVault(session, callback) }
+    }
+
+    private suspend fun deriveAndSetUpVault(session: CardSession, callback: CompletionCallback<Unit>) {
+        val derivation = runSuspendCatching { deriveAndStoreOwner(session) }
+            .getOrElse { error ->
+                TangemLogger.e("Collectibles vault: the owner derivation threw", error)
+                CompletionResult.Failure(GachaVaultError.Unexpected(cause = error).tangemError)
+            }
+
+        when (derivation) {
+            is CompletionResult.Failure -> callback(CompletionResult.Failure(derivation.error))
+            is CompletionResult.Success -> setUpVault(session, callback)
         }
     }
 
-    private suspend fun deriveAndSetUpVault(session: CardSession): CompletionResult<Unit> = runSuspendCatching {
+    private suspend fun deriveAndStoreOwner(session: CardSession): CompletionResult<Unit> {
         val owner = when (val result = deriveOwner(session)) {
             is CompletionResult.Failure -> return CompletionResult.Failure(result.error)
             is CompletionResult.Success -> result.data
@@ -52,10 +65,7 @@ internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
             derivedKeys = mapOf(ByteArrayKey(seedKey) to ExtendedPublicKeysMap(mapOf(path to owner))),
         )
 
-        setUpVault(session)
-    }.getOrElse { error ->
-        TangemLogger.e("Collectibles vault: the one-tap set-up threw", error)
-        CompletionResult.Failure(GachaVaultError.Unexpected(cause = error).tangemError)
+        return CompletionResult.Success(Unit)
     }
 
     private suspend fun deriveOwner(session: CardSession): CompletionResult<ExtendedPublicKey> {

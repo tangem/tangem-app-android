@@ -5,6 +5,8 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.PolymarketWithdrawRepository
+import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
@@ -15,6 +17,8 @@ import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
+import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
@@ -30,6 +34,7 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -272,5 +277,31 @@ internal object PolymarketDomainModule {
     ): GetPredictionWithdrawDestinationsUseCase = GetPredictionWithdrawDestinationsUseCase(
         bridgeRepository = bridgeRepository,
         collateralCurrencyFactory = collateralCurrencyFactory,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetPredictionWithdrawalStateUseCase(
+        withdrawRepository: PolymarketWithdrawRepository,
+    ): GetPredictionWithdrawalStateUseCase = GetPredictionWithdrawalStateUseCase(
+        repository = withdrawRepository,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSubmitPredictionWithdrawalInteractor(
+        bridgeRepository: PolymarketBridgeRepository,
+        withdrawRepository: PolymarketWithdrawRepository,
+        polymarketRepository: PolymarketRepository,
+        signer: PolymarketTypedDataSigner,
+        store: PredictionWithdrawalStore,
+        codec: PredictionTransferCallCodec,
+    ): SubmitPredictionWithdrawalInteractor = SubmitPredictionWithdrawalInteractor(
+        bridgeRepository = bridgeRepository,
+        withdrawRepository = withdrawRepository,
+        polymarketRepository = polymarketRepository,
+        signer = signer,
+        store = store,
+        codec = codec,
     )
 }
