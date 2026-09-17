@@ -59,7 +59,7 @@ private fun SourceHeader(collateral: CollateralUM, balance: BigDecimal?) {
         ) {
             HeaderText(text = stringResourceSafe(R.string.prediction_place_summary_from))
             AccountResIcon(
-                resId = PredictionAccountIcon.resId,
+                imageVector = PredictionAccountIcon.imageVector,
                 color = PredictionAccountIcon.color,
                 size = AccountIconSize.ExtraSmall,
             )
