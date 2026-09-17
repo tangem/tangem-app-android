@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
@@ -17,11 +18,13 @@ import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.positiondetails.PolymarketPositionDetailsComponent
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Content
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,6 +45,7 @@ import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -259,6 +263,86 @@ internal class PolymarketPositionDetailsModelTest {
     }
 
     @Test
+    fun `GIVEN a sellable position WHEN close tapped THEN the close-position route carries wallet, position and market`() =
+        runModelTest {
+            // Arrange
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            requireNotNull(model.data().onClosePositionClick).invoke()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(PolymarketRoute.ClosePosition(wallet, position.id, "market"), any())
+            }
+        }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a position that cannot be sold WHEN opened THEN close is not offered`(model: UnsellableModel) =
+        runModelTest {
+            // Arrange
+            coEvery { repository.getPosition(addresses, position.id) } returns model.position.right()
+            val details = createModel()
+
+            // Act
+            details.onResume()
+            runCurrent()
+
+            // Assert
+            assertThat(details.data().onClosePositionClick).isNull()
+        }
+
+    @Test
+    fun `GIVEN a shown position WHEN it is briefly missing after a sell THEN the read is repeated before giving up`() =
+        runModelTest {
+            // Arrange
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+            coEvery { repository.getPosition(addresses, position.id) } returnsMany listOf(
+                null.right(),
+                null.right(),
+                position.copy(size = BigDecimal("10")).right(),
+            )
+            model.onPause()
+
+            // Act
+            model.onResume()
+            runCurrent()
+            val whileIndexing = model.uiState.value.content
+            advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * 2 + 1)
+
+            // Assert
+            assertThat(whileIndexing).isEqualTo(Content.Loading)
+            assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
+            coVerify(exactly = 4) { repository.getPosition(addresses, position.id) }
+        }
+
+    @Test
+    fun `GIVEN a shown position WHEN it stays missing THEN the reads stop AND the screen says unavailable`() =
+        runModelTest {
+            // Arrange
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+            coEvery { repository.getPosition(addresses, position.id) } returns null.right()
+            model.onPause()
+
+            // Act
+            model.onResume()
+            advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * PolymarketConst.POSITION_INDEXING_READS + 1)
+
+            // Assert
+            assertThat(model.uiState.value.content).isEqualTo(Content.Unavailable)
+            coVerify(exactly = 1 + PolymarketConst.POSITION_INDEXING_READS) {
+                repository.getPosition(addresses, position.id)
+            }
+        }
+
+    @Test
     fun `GIVEN two wallets WHEN details load THEN requests and values stay isolated`() = runModelTest {
         // Arrange
         val otherWallet = UserWalletId("033")
@@ -320,4 +404,16 @@ internal class PolymarketPositionDetailsModelTest {
         displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
         markets = emptyList(),
     )
+
+    internal data class UnsellableModel(val position: PolymarketPosition.Open)
+
+    private companion object {
+
+        @JvmStatic
+        fun provideTestModels() = listOf(
+            UnsellableModel(position = createPolymarketPosition().copy(marketId = null)),
+            UnsellableModel(position = createPolymarketPosition().copy(isAcceptingOrders = false)),
+            UnsellableModel(position = createPolymarketPosition().copy(size = BigDecimal.ZERO)),
+        )
+    }
 }
