@@ -4,12 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.collectibles.models.CollectiblesVault
+import com.tangem.blockchain.collectibles.models.CollectiblesVaultUsdc
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
@@ -20,6 +22,7 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.vault.GachaVaultError
@@ -34,6 +37,7 @@ import com.tangem.domain.wallets.config.curvesConfig
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -58,6 +62,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 internal class DefaultGachaVaultRepositoryTest {
 
@@ -69,6 +74,8 @@ internal class DefaultGachaVaultRepositoryTest {
     private val tangemSdkManager: TangemSdkManager = mockk()
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory = mockk()
 
+    private val currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc)
+
     private val walletManager: WalletManager = mockk()
     private val signer: TangemHotWalletSigner = mockk()
     private val network: Network = mockk(relaxed = true)
@@ -79,6 +86,7 @@ internal class DefaultGachaVaultRepositoryTest {
     private val repository = DefaultGachaVaultRepository(
         walletManagersFacade = walletManagersFacade,
         networkProvider = networkProvider,
+        currencyFactory = currencyFactory,
         ownerDeriver = ownerDeriver,
         derivationsRepository = derivationsRepository,
         cardSdkConfigRepository = cardSdkConfigRepository,
@@ -407,9 +415,132 @@ internal class DefaultGachaVaultRepositoryTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetVaultBalance {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(walletManagersFacade, networkProvider, walletManager)
+            coEvery { networkProvider.create(userWallet) } returns network.right()
+            coEvery { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) } returns walletManager
+            coEvery { walletManager.getCollectiblesVaultAddress() } returns Result.Success(VAULT_ADDRESS)
+            coEvery { walletManager.getCollectiblesVaultUsdc() } returns Result.Success(
+                CollectiblesVaultUsdc(address = VAULT_USDC_ADDRESS, mint = MINT),
+            )
+        }
+
+        @Test
+        fun `GIVEN the vault holds the token WHEN getVaultBalance THEN its amount is returned`() = runTest {
+            // Arrange
+            stubTokenBalances(tokenBalance(mint = MINT, amount = BigDecimal("12.5")))
+
+            // Act
+            val actual = repository.getVaultBalance(userWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                MockCollectibles.vaultBalance(amount = BigDecimal("12.5"), currency = expectedCurrency()).right(),
+            )
+        }
+
+        /** The provider lists only accounts holding something, and the vault's own account always exists. */
+        @Test
+        fun `GIVEN no entry for the mint WHEN getVaultBalance THEN the amount is an honest zero`() = runTest {
+            // Arrange
+            stubTokenBalances(tokenBalance(mint = OTHER_MINT, amount = BigDecimal.TEN))
+
+            // Act
+            val actual = repository.getVaultBalance(userWallet)
+
+            // Assert
+            assertThat(actual.getOrNull()?.usdcAmount).isEqualTo(BigDecimal.ZERO)
+        }
+
+        /** The token accounts belong to the vault PDA, not to the address the vault's USDC sits at. */
+        @Test
+        fun `GIVEN a vault WHEN getVaultBalance THEN the balances are read by the vault address`() = runTest {
+            // Arrange
+            stubTokenBalances()
+
+            // Act
+            repository.getVaultBalance(userWallet)
+
+            // Assert
+            coVerify(exactly = 1) {
+                walletManagersFacade.getTokenBalances(
+                    userWalletId = WALLET_ID,
+                    network = network,
+                    address = VAULT_ADDRESS,
+                )
+            }
+        }
+
+        /** Working the token out costs a request, and nothing about it can change while the program is deployed. */
+        @Test
+        fun `GIVEN the token is already known WHEN getVaultBalance THEN the program is not asked for it again`() =
+            runTest {
+                // Arrange
+                val known = MockCollectibles.usdc(mint = MINT)
+                stubTokenBalances(tokenBalance(mint = MINT, amount = BigDecimal.ONE))
+
+                // Act
+                val actual = repository.getVaultBalance(userWallet, cachedToken = known)
+
+                // Assert
+                assertThat(actual.getOrNull()?.usdcToken).isEqualTo(known)
+                coVerify(exactly = 0) { walletManager.getCollectiblesVaultUsdc() }
+            }
+
+        @Test
+        fun `GIVEN the config cannot be read WHEN getVaultBalance THEN nothing is read by address`() = runTest {
+            // Arrange
+            coEvery { walletManager.getCollectiblesVaultUsdc() } returns
+                Result.Failure(BlockchainSdkError.CustomError("no config"))
+
+            // Act
+            val actual = repository.getVaultBalance(userWallet)
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) { walletManagersFacade.getTokenBalances(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN the owner key is not derived WHEN getVaultBalance THEN no manager is built`() = runTest {
+            // Arrange
+            coEvery { networkProvider.create(userWallet) } returns GachaVaultError.WalletUnavailable.left()
+
+            // Act
+            val actual = repository.getVaultBalance(userWallet)
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+            coVerify(exactly = 0) { walletManagersFacade.getOrCreateWalletManager(WALLET_ID, network) }
+        }
+
+        private fun expectedCurrency() = MockCollectibles.usdc(mint = MINT)
+
+        private fun stubTokenBalances(vararg balances: TokenBalance) {
+            coEvery { walletManagersFacade.getTokenBalances(WALLET_ID, network, VAULT_ADDRESS) } returns
+                balances.toList()
+        }
+
+        private fun tokenBalance(mint: String, amount: BigDecimal) = TokenBalance(
+            contractAddress = mint,
+            amount = amount,
+            isNativeToken = false,
+        )
+    }
+
     private companion object {
 
         val WALLET_ID = UserWalletId("011977")
+
+        const val VAULT_ADDRESS = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+        const val VAULT_USDC_ADDRESS = "9vJc1bnfHRLbGeDdQCrmJFAsEtR9SEbNJVi8QeHfAo8f"
+        const val MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+        const val OTHER_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 
         val DELEGATE = HotDelegatePublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
         val OTHER_DELEGATE = HotDelegatePublicKey("A4ahkivAG4NoZAE8Sy4qv8nn2DU9yoXRQcttuCeGtTJv")
