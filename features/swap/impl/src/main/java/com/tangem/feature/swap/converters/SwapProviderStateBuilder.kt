@@ -62,9 +62,13 @@ internal object SwapProviderStateBuilder {
             subtitle = buildSelectableSubtitle(state.toTokenInfo),
             additionalBadge = additionalBadge,
             selectionType = selectionType,
-            percentLowerThenBest = pricesLowerBest[provider.providerId]
-                ?.let(PercentDifference::Value)
-                ?: PercentDifference.Value(0f),
+            percentLowerThenBest = if (state.isRestricted) {
+                PercentDifference.Empty
+            } else {
+                pricesLowerBest[provider.providerId]
+                    ?.let(PercentDifference::Value)
+                    ?: PercentDifference.Value(0f)
+            },
             approvalSettings = when (state.permissionState) {
                 is PermissionDataState.PermissionSettings -> ProviderState.ApprovalSettings.Content(
                     onApprovalSelectClick = { onApprovalSelectClick(provider) },
