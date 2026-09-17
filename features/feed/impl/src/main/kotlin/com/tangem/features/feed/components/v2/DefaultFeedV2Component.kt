@@ -233,7 +233,13 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private fun onEntryRequested(request: FeedEntryRequest) {
         feedRouter.popTo(FeedHomeRoute)
 
-        request.resolveTab(tabs = tabSet.tabs)?.let(requestedTab::tryEmit)
+        val tab = request.resolveTab(tabs = tabSet.tabs)
+
+        // the request fell back to another section, and the filter addressed to the asked-for one would
+        // otherwise stay parked with no tab ever coming to clear it
+        if (tab != request.section?.tabId) feedEntryController.consumeFilter()
+
+        tab?.let(requestedTab::tryEmit)
         expandSheetRequests.trySend(element = Unit)
         feedEntryController.consumeEntry()
     }
