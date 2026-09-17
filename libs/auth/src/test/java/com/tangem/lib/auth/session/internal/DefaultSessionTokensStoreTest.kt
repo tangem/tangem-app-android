@@ -124,7 +124,39 @@ class DefaultSessionTokensStoreTest {
     }
 
     @Test
-    fun `save keeps a set issued at the very same instant`() = runTest {
+    fun `save discards a set from the same second when the store moved meanwhile`() = runTest {
+        val storage = mockk<SecureStorage>(relaxed = true)
+        // iat is only read to the second, so the two rotations are indistinguishable by it
+        storeHolds(storage, jwtIssuedAt(seconds = 1_000, subject = "winner"))
+        val sameSecond = sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 1_000, subject = "loser"))
+        // the caller sent its request while a third, now replaced, set was in effect
+        val sentUnder = sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 900))
+
+        val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
+        val inEffect = store.save(tokens = sameSecond, expected = sentUnder)
+
+        verify(exactly = 0) { storage.store(any<String>(), any<String>()) }
+        assertThat(inEffect.accessToken).isEqualTo(jwtIssuedAt(seconds = 1_000, subject = "winner"))
+    }
+
+    @Test
+    fun `save keeps a set from the same second when the store did not move`() = runTest {
+        val storage = mockk<SecureStorage>(relaxed = true)
+        val stored = jwtIssuedAt(seconds = 1_000, subject = "stored")
+        storeHolds(storage, stored)
+        val captured = slot<String>()
+        every { storage.store(eq("session_tokens"), capture(captured)) } returns Unit
+        val sameSecond = sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 1_000, subject = "incoming"))
+
+        val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
+        val inEffect = store.save(tokens = sameSecond, expected = sampleDomain.copy(accessToken = stored))
+
+        assertThat(adapter.fromJson(captured.captured)?.accessToken).isEqualTo(sameSecond.accessToken)
+        assertThat(inEffect).isEqualTo(sameSecond)
+    }
+
+    @Test
+    fun `save keeps a set issued at the very same instant when there is nothing to compare against`() = runTest {
         val storage = mockk<SecureStorage>(relaxed = true)
         storeHolds(storage, jwtIssuedAt(seconds = 1_000))
         val captured = slot<String>()
@@ -135,6 +167,19 @@ class DefaultSessionTokensStoreTest {
         store.save(sampleDomain.copy(accessToken = sameInstant))
 
         assertThat(adapter.fromJson(captured.captured)?.accessToken).isEqualTo(sameInstant)
+    }
+
+    @Test
+    fun `save returns the surviving set when the incoming one is discarded`() = runTest {
+        val storage = mockk<SecureStorage>(relaxed = true)
+        val stored = jwtIssuedAt(seconds = 2_000)
+        storeHolds(storage, stored)
+
+        val store = DefaultSessionTokensStore(storage, moshi, dispatchers)
+        val inEffect = store.save(sampleDomain.copy(accessToken = jwtIssuedAt(seconds = 1_000)))
+
+        // callers retry with what they get back, so it must be the set the store actually holds
+        assertThat(inEffect.accessToken).isEqualTo(stored)
     }
 
     @Test

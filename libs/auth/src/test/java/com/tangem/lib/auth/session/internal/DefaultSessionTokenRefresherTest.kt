@@ -62,6 +62,8 @@ class DefaultSessionTokenRefresherTest {
     @BeforeEach
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, deviceRegistrar)
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any(), any()) } answers { firstArg() }
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
             java.util.Base64.getEncoder().encodeToString(firstArg())
@@ -111,8 +113,37 @@ class DefaultSessionTokenRefresherTest {
         assertThat(tokens.accessToken).isEqualTo("new-access")
         assertThat(tokens.refreshToken).isEqualTo("rt-2")
         assertThat(tokens.walletIds).containsExactly("w1", "w2")
-        coVerify { store.save(tokens) }
+        coVerify { store.save(tokens = tokens, expected = any()) }
         coVerify(exactly = 0) { authApi.authenticate(any()) }
+    }
+
+    @Test
+    fun `refresh returns the tokens the store kept, not the ones it was given`() = runTest {
+        val stored = SessionTokens(
+            accessToken = "old-access",
+            accessTokenExpiresAt = fixedClock.now().plus(60),
+            refreshToken = "rt-1",
+            refreshTokenExpiresAt = fixedClock.now().plus(3600),
+            walletIds = listOf("w1"),
+        )
+        coEvery { store.get() } returns Some(stored)
+        coEvery { authApi.refresh(RefreshApiRequest("rt-1")) } returns ApiResponse.Success(
+            data = TokenApiResponse(
+                accessToken = "lost-the-race",
+                accessTokenExpiresAt = "2024-01-01T00:00:00Z",
+                refreshToken = "rt-2",
+                refreshTokenExpiresAt = "2024-02-01T00:00:00Z",
+                walletIds = listOf("w1"),
+            ),
+        )
+        // another rotation won; the store keeps its own set and reports it back
+        val winner = stored.copy(accessToken = "won-the-race", refreshToken = "rt-3")
+        coEvery { store.save(any(), any()) } returns winner
+
+        val result = refresher.refresh()
+
+        // the authenticator retries the original request with this, so a superseded token here 401s again
+        assertThat(result.getOrNull()).isEqualTo(winner)
     }
 
     @Test

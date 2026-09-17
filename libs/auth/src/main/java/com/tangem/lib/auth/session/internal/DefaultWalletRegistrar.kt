@@ -24,6 +24,7 @@ import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSigner
+import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -67,7 +68,12 @@ internal class DefaultWalletRegistrar(
                     val nonce = fetchNonce()
                     val prepared = assemble(walletId, nonce, signer)
                     rotationLock.withLock {
-                        handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
+                        val expected = currentSession()
+                        handleRegisterResponse(
+                            walletId = prepared.walletId,
+                            response = authApi.registerWallet(prepared.request),
+                            expected = expected,
+                        )
                     }
                 }
             }
@@ -109,7 +115,14 @@ internal class DefaultWalletRegistrar(
         withContext(dispatchers.io) {
             getMutex(prepared.walletId).withLock {
                 rotationLock.withLock {
-                    either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
+                    either {
+                        val expected = currentSession()
+                        handleRegisterResponse(
+                            walletId = prepared.walletId,
+                            response = authApi.registerWallet(prepared.request),
+                            expected = expected,
+                        )
+                    }
                 }
             }
         }
@@ -125,6 +138,7 @@ internal class DefaultWalletRegistrar(
 
     private suspend fun Raise<WalletRegistrationError>.unregisterWallet(walletId: String) {
         val request = WalletUnregisterRequest(walletId = walletId)
+        val expected = currentSession()
         when (val response = authApi.unregisterWallet(request)) {
             is ApiResponse.Success -> {
                 try {
@@ -132,7 +146,7 @@ internal class DefaultWalletRegistrar(
                     // convert, persist and drop the local marker in one catch so this
                     // method stays total — every failure becomes a typed Left, never a throw.
                     val tokens = SessionTokensConverter.convertBack(response.data)
-                    store.save(tokens)
+                    store.save(tokens = tokens, expected = expected)
                     markUnregistered(walletId)
                 } catch (e: Exception) {
                     TangemLogger.e("Failed to persist wallet-unregister tokens / marker", e)
@@ -162,6 +176,15 @@ internal class DefaultWalletRegistrar(
     }
 
     private fun getMutex(walletId: String): Mutex = mutexes.computeIfAbsent(walletId) { Mutex() }
+
+    /**
+     * The session as it stands right before a token-rotating request goes out, handed to
+     * [SessionTokensStore.save] so a reply that lost a race to a refresh cannot overwrite it.
+     * Best-effort: an unreadable store simply leaves the write unconditional.
+     */
+    private suspend fun currentSession(): SessionTokens? = runSuspendCatching { store.get().getOrNull() }
+        .onFailure { TangemLogger.e("Failed to read the session before a token-rotating call", it) }
+        .getOrNull()
 
     private suspend fun Raise<WalletRegistrationError>.isAlreadyRegistered(walletId: String): Boolean {
         val isRegistered = try {
@@ -262,6 +285,7 @@ internal class DefaultWalletRegistrar(
     private suspend fun Raise<WalletRegistrationError>.handleRegisterResponse(
         walletId: String,
         response: ApiResponse<TokenApiResponse>,
+        expected: SessionTokens?,
     ) {
         when (response) {
             is ApiResponse.Success -> {
@@ -269,7 +293,7 @@ internal class DefaultWalletRegistrar(
                 try {
                     // Keep both writes inside one catch — if the marker write fails, the wallet
                     // stays unregistered locally and the next attempt retries cleanly.
-                    store.save(tokens)
+                    store.save(tokens = tokens, expected = expected)
                     markRegistered(walletId)
                 } catch (e: Exception) {
                     TangemLogger.e("Failed to persist wallet-registration tokens / marker", e)

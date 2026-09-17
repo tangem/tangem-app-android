@@ -53,31 +53,40 @@ internal class DefaultSessionTokensStore(
         }
     }
 
-    override suspend fun save(tokens: SessionTokens) {
+    override suspend fun save(tokens: SessionTokens, expected: SessionTokens?): SessionTokens =
         withContext(dispatchers.io) {
             writeMutex.withLock {
-                if (isSuperseded(tokens)) {
+                val stored = get().getOrNull()
+                if (stored != null && stored.supersedes(tokens, expected)) {
                     // A response that lost the race — e.g. a wallet registration reissuing the session
                     // while a 401 elsewhere already refreshed it. Keeping it would leave the app
                     // authenticating with credentials the service has already replaced.
-                    TangemLogger.i("Discarded a session token set issued before the stored one")
-                    return@withLock
+                    TangemLogger.i("Discarded a superseded session token set")
+                    return@withLock stored
                 }
                 storage.store(KEY, adapter.toJson(SessionTokensConverter.convert(tokens)))
+                tokens
             }
         }
-    }
 
     /**
-     * Unknown issuance on either side means the two cannot be ordered — the incoming set is then kept,
-     * so an unreadable claim can never strand the app on credentials it can no longer refresh.
+     * Whether the stored set wins over [incoming].
+     *
+     * `iat` decides whenever it can. It is only read to the second, so two rotations completed within
+     * the same second — exactly what the refresh-vs-registration race produces — look equal; the
+     * caller's [expected] snapshot breaks the tie: a store that has moved since [incoming]'s request
+     * started already holds someone's fresher answer. Without a snapshot there is nothing left to
+     * judge by and [incoming] wins, so an unreadable claim can never strand the app on credentials it
+     * can no longer refresh.
      */
-    private suspend fun isSuperseded(incoming: SessionTokens): Boolean {
-        val stored = get().getOrNull() ?: return false
-        val storedIssuedAt = issuedAt.of(stored.accessToken) ?: return false
-        val incomingIssuedAt = issuedAt.of(incoming.accessToken) ?: return false
+    private fun SessionTokens.supersedes(incoming: SessionTokens, expected: SessionTokens?): Boolean {
+        val storedIssuedAt = issuedAt.of(accessToken)
+        val incomingIssuedAt = issuedAt.of(incoming.accessToken)
+        if (storedIssuedAt != null && incomingIssuedAt != null && storedIssuedAt != incomingIssuedAt) {
+            return incomingIssuedAt < storedIssuedAt
+        }
 
-        return incomingIssuedAt < storedIssuedAt
+        return expected != null && this != expected
     }
 
     override suspend fun clear() {

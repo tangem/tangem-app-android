@@ -93,6 +93,8 @@ class DefaultWalletRegistrarTest {
     @BeforeEach
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any(), any()) } answers { firstArg() }
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
@@ -134,7 +136,7 @@ class DefaultWalletRegistrarTest {
 
         assertThat(result.isRight()).isTrue()
         coVerify { authApi.requestWalletNonce(any()) }
-        coVerify { store.save(any()) }
+        coVerify { store.save(any(), any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
         val request = slot.captured
         assertThat(request.walletId).isEqualTo(WALLET_ID)
@@ -163,7 +165,7 @@ class DefaultWalletRegistrarTest {
         rotationLock.unlock()
         registration.join()
         coVerify(exactly = 1) { authApi.registerWallet(any()) }
-        coVerify(exactly = 1) { store.save(any()) }
+        coVerify(exactly = 1) { store.save(any(), any()) }
     }
 
     @Test
@@ -217,7 +219,7 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
         coVerify(exactly = 0) { authApi.registerWallet(any()) }
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
     }
 
     @Test
@@ -290,7 +292,7 @@ class DefaultWalletRegistrarTest {
         val result = registrar.register(WALLET_ID, mobileSigner)
 
         assertThat(result.leftOrNull()).isInstanceOf(WalletRegistrationError.Api::class.java)
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
         assertThat(registeredIds()).doesNotContain(WALLET_ID)
     }
 
@@ -310,14 +312,14 @@ class DefaultWalletRegistrarTest {
 
         assertThat(result.isRight()).isTrue()
         assertThat(registeredIds()).contains(WALLET_ID)
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
     }
 
     @Test
     fun `register returns PersistenceFailed when SessionTokensStore_save throws`() = runTest {
         stubHappyPath()
         coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
-        coEvery { store.save(any()) } throws IllegalStateException("DataStore I/O")
+        coEvery { store.save(any(), any()) } throws IllegalStateException("DataStore I/O")
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
@@ -346,7 +348,7 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         assertThat(result.getOrNull()).isNotNull()
         coVerify(exactly = 0) { authApi.registerWallet(any()) }
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
         assertThat(registeredIds()).doesNotContain(WALLET_ID)
     }
 
@@ -360,7 +362,7 @@ class DefaultWalletRegistrarTest {
         val result = registrar.submit(prepared)
 
         assertThat(result.isRight()).isTrue()
-        coVerify { store.save(any()) }
+        coVerify { store.save(any(), any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
 
@@ -382,7 +384,7 @@ class DefaultWalletRegistrarTest {
 
         assertThat(result.isRight()).isTrue()
         assertThat(registeredIds()).contains(WALLET_ID)
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
     }
 
     @Test
@@ -437,7 +439,7 @@ class DefaultWalletRegistrarTest {
         assertThat(result.isRight()).isTrue()
         assertThat(request.captured.walletId).isEqualTo(WALLET_ID)
         // The rotated tokens actually persisted reflect the updated bound-wallet set.
-        coVerify { store.save(capture(saved)) }
+        coVerify { store.save(tokens = capture(saved), expected = any()) }
         assertThat(saved.captured.accessToken).isEqualTo("rotated-access")
         assertThat(saved.captured.walletIds).containsExactly(OTHER_WALLET_ID)
         assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
@@ -462,7 +464,7 @@ class DefaultWalletRegistrarTest {
         // Already not registered server-side — desired end state reached, marker cleared, no tokens.
         assertThat(result.isRight()).isTrue()
         assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
     }
 
     @Test
@@ -480,7 +482,7 @@ class DefaultWalletRegistrarTest {
         val result = registrar.unregister(WALLET_ID)
 
         assertThat(result.leftOrNull()).isInstanceOf(WalletRegistrationError.Api::class.java)
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
 
@@ -497,7 +499,7 @@ class DefaultWalletRegistrarTest {
         assertThat(result.leftOrNull()).isEqualTo(WalletRegistrationError.NoActiveSession)
         coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
         coVerify(exactly = 0) { authApi.registerWallet(any()) }
-        coVerify(exactly = 0) { store.save(any()) }
+        coVerify(exactly = 0) { store.save(any(), any()) }
         assertThat(registeredIds()).doesNotContain(WALLET_ID)
     }
 
