@@ -60,10 +60,6 @@
         "version": "undefined"
     },
     {
-        "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
-        "version": "6.1"
-    },
-    {
         "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
         "version": "6.2"
     },

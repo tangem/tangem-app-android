@@ -46,7 +46,6 @@ internal class TangemPayDetailsStateFactoryTest {
         onBack = {},
         onOpenMenu = {},
         intents = intents,
-        isTiersPlusPlanEnabled = true,
     )
 
     @BeforeEach
