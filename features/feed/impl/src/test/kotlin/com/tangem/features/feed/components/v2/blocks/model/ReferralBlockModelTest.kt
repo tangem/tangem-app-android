@@ -266,6 +266,92 @@ internal class ReferralBlockModelTest {
     }
 
     @Test
+    fun `GIVEN the referral was opened for the only wallet WHEN it joined THEN the invitation hides on return`() =
+        runTest {
+            // Arrange
+            wallets.value = listOf(hotWallet(walletAId))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onClick()
+            advanceUntilIdle()
+            coEvery { referralRepository.getReferralStatus(walletAId.stringValue) } returns
+                referralStatus(isActive = true)
+
+            // Act
+            model.onResume()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.isVisible.value).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the referral was opened WHEN the wallet did not join THEN the invitation stays on return`() = runTest {
+        // Arrange
+        wallets.value = listOf(hotWallet(walletAId))
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isVisible.value).isTrue()
+        coVerify(exactly = 2) { referralRepository.getReferralStatus(walletAId.stringValue) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN one of two wallets joined WHEN returning THEN only that wallet leaves the invitable set`() = runTest {
+        // Arrange
+        wallets.value = listOf(hotWallet(walletAId), hotWallet(walletBId))
+        val model = createModel(testScope = this)
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        advanceUntilIdle()
+        model.onClick()
+        selection.value = hotWallet(walletAId) to accountStatus
+        advanceUntilIdle()
+        coEvery { referralRepository.getReferralStatus(walletAId.stringValue) } returns
+            referralStatus(isActive = true)
+
+        // Act — back from A's referral screen, B is still worth inviting, so the card opens straight for it
+        model.onResume()
+        advanceUntilIdle()
+        model.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isVisible.value).isTrue()
+        verify(exactly = 1) {
+            router.push(route = AppRoute.ReferralProgram(userWalletId = walletBId), onComplete = any())
+        }
+        assertThat(openedSheets)
+            .containsExactly(ReferralBlockComponent.WalletSelectorConfig, null)
+            .inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the card was never tapped WHEN the feed resumes THEN no status is requested again`() = runTest {
+        // Arrange
+        wallets.value = listOf(hotWallet(walletAId))
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onResume()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { referralRepository.getReferralStatus(walletAId.stringValue) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN no invitable wallet WHEN the block is tapped THEN nothing opens`() = runTest {
         // Arrange
         wallets.value = listOf(hotWallet(walletAId))
