@@ -105,7 +105,7 @@ internal class DefaultSocialRecoveryClientTest {
     fun setup() {
         clearMocks(api, authApi, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokensStore)
         // the store answers with the set that ends up in effect
-        coEvery { sessionTokensStore.save(any(), any()) } answers { firstArg() }
+        coEvery { sessionTokensStore.save(any()) } answers { firstArg() }
         mockkAndroidBase64()
         coEvery { deviceKeyManager.getPublicKeyEncoded() } returns Some(ByteArray(size = 65))
         coEvery { deviceKeyManager.signDer(any()) } returns ByteArray(size = 70) { 9 }
@@ -261,7 +261,7 @@ internal class DefaultSocialRecoveryClientTest {
         assertThat(request.captured.nonce).isEqualTo(NONCE)
         val sealed = JavaBase64.getDecoder().decode(request.captured.encryptedRecoveryKey)
         assertThat(decryptWithKms(sealed)).isEqualTo(recoveryKey)
-        coVerify(exactly = 1) { sessionTokensStore.save(any(), any()) }
+        coVerify(exactly = 1) { sessionTokensStore.save(any()) }
     }
 
     @ParameterizedTest
@@ -312,7 +312,7 @@ internal class DefaultSocialRecoveryClientTest {
         rotationLock.unlock()
         registration.join()
         coVerify(exactly = 1) { api.registerWalletBinding(any()) }
-        coVerify(exactly = 1) { sessionTokensStore.save(any(), any()) }
+        coVerify(exactly = 1) { sessionTokensStore.save(any()) }
     }
 
     @Test
@@ -321,7 +321,7 @@ internal class DefaultSocialRecoveryClientTest {
         stubRegistrationNonce()
         coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM)
         coEvery { api.registerWalletBinding(any()) } returns tokenSuccess()
-        coEvery { sessionTokensStore.save(any(), any()) } throws IllegalStateException("storage is full")
+        coEvery { sessionTokensStore.save(any()) } throws IllegalStateException("storage is full")
 
         // Act
         val result = client.registerBinding(
