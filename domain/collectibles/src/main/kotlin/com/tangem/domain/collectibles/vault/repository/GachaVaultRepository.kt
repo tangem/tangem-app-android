@@ -4,6 +4,8 @@ import arrow.core.Either
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
+import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 
 /**
@@ -38,6 +40,19 @@ interface GachaVaultRepository {
         hotDelegate: HotDelegatePublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit>
+
+    /**
+     * What the vault holds. Read among the token balances of the vault address — the vault account itself
+
+     * with the vault.
+     *
+     * @param cachedToken the token a previous read answered with. Working it out costs a request for the
+     * program config, and the mint cannot change while the program is deployed.
+     */
+    suspend fun getVaultBalance(
+        userWallet: UserWallet,
+        cachedToken: CryptoCurrency.Token? = null,
+    ): Either<CollectiblesAccountError, CollectiblesVaultBalance>
 
     /**
      * Closes the vault and returns its rent. Refused only while a buyback delegate is live (6014 `VaultNotClean`);
