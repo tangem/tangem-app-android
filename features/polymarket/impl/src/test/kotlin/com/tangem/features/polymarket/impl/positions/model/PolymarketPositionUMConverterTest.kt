@@ -7,7 +7,7 @@ import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import org.junit.jupiter.api.Test
@@ -87,7 +87,7 @@ internal class PolymarketPositionUMConverterTest {
     @EnumSource(PolymarketResolutionStatus::class)
     fun `GIVEN resolution state WHEN card tapped THEN only unresolved positions open details`(status: PolymarketResolutionStatus) {
         // Arrange
-        val onClick: (PolymarketPositionId) -> Unit = mockk(relaxed = true)
+        val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
         val position = createPolymarketPosition(resolutionStatus = status)
 
         // Act
@@ -95,13 +95,13 @@ internal class PolymarketPositionUMConverterTest {
         card.onClick?.invoke()
 
         // Assert
-        verify(exactly = if (status == PolymarketResolutionStatus.RESOLVED) 0 else 1) { onClick(position.id) }
+        verify(exactly = if (status == PolymarketResolutionStatus.RESOLVED) 0 else 1) { onClick(position) }
     }
 
     @Test
     fun `GIVEN finished history WHEN converted with callback THEN has no details action`() {
         // Arrange
-        val onClick: (PolymarketPositionId) -> Unit = mockk(relaxed = true)
+        val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
 
         // Act
         val card = PolymarketPositionUMConverter(onClick).convert(createClosedPolymarketPosition())
@@ -111,4 +111,20 @@ internal class PolymarketPositionUMConverterTest {
     }
 
     data class ResultModel(val result: PolymarketPositionResult, val text: String, val status: TangemBadge.Status)
+
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionResult::class)
+    fun `GIVEN redeemable position WHEN card tapped THEN passes known result and real data`(result: PolymarketPositionResult) {
+        // Arrange
+        val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
+        val position = createPolymarketPosition(result = result, resolutionStatus = PolymarketResolutionStatus.RESOLVED)
+            .copy(isRedeemable = true)
+
+        // Act
+        val card = PolymarketPositionUMConverter(onClick).convert(position)
+        card.onClick?.invoke()
+
+        // Assert
+        verify(exactly = if (result == PolymarketPositionResult.UNKNOWN) 0 else 1) { onClick(position) }
+    }
 }

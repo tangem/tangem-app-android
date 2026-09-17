@@ -11,6 +11,7 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.ShtorkaDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
@@ -128,6 +129,10 @@ internal class DeepLinkFactoryTest {
         every { create(any(), any()) } returns mockk()
     }
 
+    private val shtorkaDeepLinkFactory = mockk<ShtorkaDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val campaignsDeepLinkHandlerFactory = mockk<CampaignsDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
@@ -177,6 +182,7 @@ internal class DeepLinkFactoryTest {
         newsDeepLink = newsDeepLinkFactory,
         earnDeepLink = earnDeepLinkFactory,
         yieldDeepLink = yieldDeepLinkFactory,
+        shtorkaDeepLink = shtorkaDeepLinkFactory,
         surveyDeepLink = surveyDeepLinkFactory,
         promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
         jointAccountDeepLink = jointAccountDeepLinkFactory,
@@ -571,6 +577,25 @@ internal class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { yieldDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+    }
+
+    @Test
+    fun `GIVEN a shtorka deeplink WHEN handled THEN the shtorka handler gets its params`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "shtorka"
+        every { mockedUri.query } returns "section=earn&type=staking"
+        every { mockedUri.queryParameterNames } returns setOf("section", "type")
+        every { mockedUri.getQueryParameter("section") } returns "earn"
+        every { mockedUri.getQueryParameter("type") } returns "staking"
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        // Act
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify { shtorkaDeepLinkFactory.create(eq(mapOf("section" to "earn", "type" to "staking"))) }
     }
 
     @Test
