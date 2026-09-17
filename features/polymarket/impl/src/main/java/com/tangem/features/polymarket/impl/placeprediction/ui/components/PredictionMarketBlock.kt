@@ -36,7 +36,11 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
                 )
                 TangemBadge(
                     text = stringReference(state.outcomeLabel()),
-                    status = TangemBadge.Status.Error,
+                    status = when {
+                        state.outcomeTitle.equals("Yes", ignoreCase = true) -> TangemBadge.Status.Info
+                        state.outcomeTitle.equals("No", ignoreCase = true) -> TangemBadge.Status.Error
+                        else -> TangemBadge.Status.Neutral
+                    },
                     size = TangemBadge.Size.X4,
                 )
             }
