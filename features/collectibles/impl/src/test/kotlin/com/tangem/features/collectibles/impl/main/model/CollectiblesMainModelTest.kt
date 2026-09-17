@@ -11,6 +11,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectiblesVaultTopUpAddressUseCase
@@ -55,6 +56,7 @@ internal class CollectiblesMainModelTest {
     private val getTopUpAddressUseCase: GetCollectiblesVaultTopUpAddressUseCase = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxUnitFun = true)
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
 
     private val coldWallet = MockUserWalletFactory.create()
@@ -75,6 +77,7 @@ internal class CollectiblesMainModelTest {
             getTopUpAddressUseCase,
             clipboardManager,
             accountStatusSupplier,
+            accountStatusFetcher,
             getSelectedAppCurrencyUseCase,
         )
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
@@ -82,6 +85,7 @@ internal class CollectiblesMainModelTest {
         every { userWalletsListRepository.userWallets } returns walletsFlow
         every { accountStatusSupplier(coldWallet.walletId) } returns statusFlow
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
+        coEvery { accountStatusFetcher(any()) } returns Unit.right()
     }
 
     @Nested
@@ -306,6 +310,7 @@ internal class CollectiblesMainModelTest {
             getCollectiblesVaultTopUpAddressUseCase = getTopUpAddressUseCase,
             clipboardManager = clipboardManager,
             collectiblesAccountStatusSupplier = accountStatusSupplier,
+            collectiblesAccountStatusFetcher = accountStatusFetcher,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
