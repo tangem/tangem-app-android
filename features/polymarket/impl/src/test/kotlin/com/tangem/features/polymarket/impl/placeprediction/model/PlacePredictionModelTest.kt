@@ -1405,6 +1405,8 @@ internal class PlacePredictionModelTest {
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal.ZERO)
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
             verify { messageSender.send(any()) }
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
 
