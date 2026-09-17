@@ -61,6 +61,9 @@ internal class DefaultCardSdkProvider @Inject constructor(
     override val sdk: TangemSdk
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
 
+    override val sdkOrNull: TangemSdk?
+        get() = holder?.sdk
+
     init {
         val mutableManager = apiConfigsManager as? MutableApiConfigsManager
 

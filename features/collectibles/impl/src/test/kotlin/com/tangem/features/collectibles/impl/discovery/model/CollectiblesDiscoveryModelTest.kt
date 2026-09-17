@@ -21,7 +21,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -98,7 +97,7 @@ internal class CollectiblesDiscoveryModelTest {
         }
 
     @Test
-    fun `GIVEN categories fail WHEN model created THEN tabs stay empty and the catalogue is still requested`() =
+    fun `GIVEN categories fail WHEN model created THEN tabs are hidden and the catalogue is still requested`() =
         runTest {
             // Arrange
             coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
@@ -107,7 +106,7 @@ internal class CollectiblesDiscoveryModelTest {
             val fixture = startModel()
 
             // Assert
-            assertThat(fixture.model.uiState.value.tabs).isEmpty()
+            assertThat(fixture.model.uiState.value.tabs).isEqualTo(CollectiblesDiscoveryUM.TabsUM.Hidden)
             assertThat(fixture.actions).containsExactly(reload())
         }
 
@@ -399,30 +398,22 @@ internal class CollectiblesDiscoveryModelTest {
         ),
     )
 
-    private fun CollectiblesDiscoveryModel.tabIds(): List<String> = uiState.value.tabs.map { it.id }
+    private fun CollectiblesDiscoveryModel.tabItems(): List<TangemTabItemUM> =
+        (uiState.value.tabs as CollectiblesDiscoveryUM.TabsUM.Content).tabs
 
-    private fun CollectiblesDiscoveryModel.selectedTabIds(): List<String> = uiState.value.tabs
+    private fun CollectiblesDiscoveryModel.tabIds(): List<String> = tabItems().map { it.id }
+
+    private fun CollectiblesDiscoveryModel.selectedTabIds(): List<String> = tabItems()
         .filterIsInstance<TangemTabItemUM.Content>()
         .filter { it.isSelected }
         .map { it.id }
 
     private fun CollectiblesDiscoveryModel.clickTab(id: String) {
-        uiState.value.tabs.filterIsInstance<TangemTabItemUM.Content>().single { it.id == id }.onClick()
+        tabItems().filterIsInstance<TangemTabItemUM.Content>().single { it.id == id }.onClick()
     }
 
     private fun CollectiblesDiscoveryModel.clickReload() {
         (uiState.value.content as CollectiblesDiscoveryUM.ContentUM.Error).onReloadClick()
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private class Fixture(

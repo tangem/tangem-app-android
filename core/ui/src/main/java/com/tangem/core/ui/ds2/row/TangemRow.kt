@@ -165,7 +165,7 @@ fun TangemRow(
                 SideSlot(slot = endSlot, position = SideSlotPosition.End)
             }
             if (extraBottomSlot != null) {
-                SpacerH(8.dp)
+                SpacerH(12.dp)
                 extraBottomSlot()
             }
         }

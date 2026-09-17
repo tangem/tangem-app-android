@@ -6,17 +6,20 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.collectibles.DefaultCollectiblesRepository
 import com.tangem.data.collectibles.account.DefaultCollectiblesAccountRepository
+import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountStatusValueDTO
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerDeriver
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusFetcher
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusProducer
+import com.tangem.data.collectibles.vault.DefaultCollectiblesVaultCurrencyFactory
 import com.tangem.data.collectibles.vault.DefaultGachaVaultRepository
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
@@ -60,6 +63,12 @@ internal interface CollectiblesDataModule {
 
     @Binds
     @Singleton
+    fun bindCollectiblesVaultCurrencyFactory(
+        impl: DefaultCollectiblesVaultCurrencyFactory,
+    ): CollectiblesVaultCurrencyFactory
+
+    @Binds
+    @Singleton
     fun bindCollectiblesAccountStatusProducerFactory(
         impl: DefaultCollectiblesAccountStatusProducer.Factory,
     ): CollectiblesAccountStatusProducer.Factory
@@ -78,6 +87,7 @@ internal interface CollectiblesDataModule {
             @ApplicationContext context: Context,
             scope: AppCoroutineScope,
             dataStoreFactory: AppDataStoreFactory,
+            converter: CollectiblesAccountStatusValueDTOConverter,
         ): CollectiblesAccountStatusStore {
             return CollectiblesAccountStatusStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -93,6 +103,7 @@ internal interface CollectiblesDataModule {
                     produceFile = { context.dataStoreFile(fileName = "collectibles_account_statuses") },
                     scope = scope,
                 ),
+                converter = converter,
                 scope = scope,
             )
         }

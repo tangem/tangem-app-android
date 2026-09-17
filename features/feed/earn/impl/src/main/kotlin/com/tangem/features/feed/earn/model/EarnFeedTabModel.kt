@@ -14,6 +14,7 @@ import com.tangem.domain.earn.model.EarnFilterNetwork
 import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.usecase.*
 import com.tangem.domain.models.earn.EarnNetworks
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.earn.components.EarnBottomSheetRoute
 import com.tangem.features.feed.earn.components.EarnNetworkFilterComponent
@@ -27,6 +28,9 @@ import com.tangem.features.feed.earn.model.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.earn.model.statemanager.EarnListStateManager
 import com.tangem.features.feed.earn.ui.state.EarnBestOpportunitiesUM
 import com.tangem.features.feed.earn.ui.state.EarnFeedTabUM
+import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
@@ -49,6 +53,7 @@ internal class EarnFeedTabModel @Inject constructor(
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val feedEntryController: FeedEntryController,
 ) : Model() {
 
     private val earnNetworks = MutableStateFlow<EarnNetworks?>(null)
@@ -105,6 +110,35 @@ internal class EarnFeedTabModel @Inject constructor(
         subscribeOnNetworks()
         subscribeOnBatchFlow()
         subscribeToMostlyUsed()
+        subscribeOnDeeplinkFilter()
+    }
+
+    private fun subscribeOnDeeplinkFilter() {
+        modelScope.launch(dispatchers.default) {
+            feedEntryController.pendingFilter
+                .filterNotNull()
+                .filter { it.tabId == FeedTabId.Earn }
+                .collect(::applyDeeplinkFilter)
+        }
+    }
+
+    /**
+     * The stored filter has to arrive before the type is written: [currentFilter] falls back to
+     * [DEFAULT_FILTER] until it does, so a deeplink landing during a cold start would reset the
+     * network the user had chosen.
+     */
+    private suspend fun applyDeeplinkFilter(filter: FeedEntryFilter) {
+        feedEntryController.consumeFilter()
+
+        val type = filter.earnType ?: return
+        val stored = appliedFilter.filterNotNull().first()
+
+        setEarnFilterUseCase(stored.copy(earnFilterType = type.toEarnFilterType()))
+    }
+
+    private fun PreselectedEarnType.toEarnFilterType(): EarnFilterType = when (this) {
+        PreselectedEarnType.Staking -> EarnFilterType.STAKING
+        PreselectedEarnType.Yield -> EarnFilterType.YIELD
     }
 
     private fun subscribeOnBatchFlow() {

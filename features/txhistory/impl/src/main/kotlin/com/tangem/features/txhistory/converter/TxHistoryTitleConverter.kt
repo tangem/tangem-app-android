@@ -67,7 +67,9 @@ internal class TxHistoryTitleConverter {
         is TransactionType.YieldSupply.ReactivateToken ->
             resourceReference(R.string.yield_module_transaction_reactivate)
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
-        is TransactionType.GaslessFee -> resourceReference(R.string.gasless_transaction_fee)
+        is TransactionType.GaslessFee,
+        is TransactionType.NetworkFee,
+        -> resourceReference(R.string.common_network_fee_title)
         // endregion
     }
 

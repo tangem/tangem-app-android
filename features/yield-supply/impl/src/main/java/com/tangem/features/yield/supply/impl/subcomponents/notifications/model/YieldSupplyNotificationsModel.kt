@@ -7,10 +7,12 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalance
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addHighFeeNotificationIfNoOther
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
@@ -82,7 +84,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                     )
                 }
 
-                sendAnalytics(notifications, cryptoCurrencyStatus.currency)
+                sendAnalytics(notifications, cryptoCurrencyStatus)
 
                 uiState.update { notifications.toPersistentList() }
 
@@ -92,12 +94,14 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
             }.launchIn(modelScope)
     }
 
-    private fun sendAnalytics(notifications: List<NotificationUM>, currency: CryptoCurrency) {
+    private fun sendAnalytics(notifications: List<NotificationUM>, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val currency = cryptoCurrencyStatus.currency
         if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
             analyticsEventHandler.send(
                 YieldSupplyAnalytics.NoticeNotEnoughFee(
                     token = currency.symbol,
                     blockchain = currency.network.name,
+                    balance = AnalyticsParam.TokenBalanceState.fromAmount(cryptoCurrencyStatus.value.amount),
                 ),
             )
         }

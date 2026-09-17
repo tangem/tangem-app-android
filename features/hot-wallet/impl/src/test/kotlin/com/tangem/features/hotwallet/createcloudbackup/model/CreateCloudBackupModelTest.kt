@@ -34,11 +34,12 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.CreateCloudBackupComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.SeedPhrasePrivateInfo
 import com.tangem.hot.sdk.model.UnlockHotWallet
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -49,7 +50,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -72,6 +72,9 @@ internal class CreateCloudBackupModelTest {
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val cloudBackupRepository: CloudBackupRepository = mockk()
     private val saveBackupPasswordUseCase: SaveBackupPasswordUseCase = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk {
+        every { isPasswordManagerEnabled } returns true
+    }
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -169,6 +172,24 @@ internal class CreateCloudBackupModelTest {
         // Assert
         assertThat(usernames).containsExactly("My Wallet (1)")
         assertThat(passwords).containsExactly(STRONG_PASSWORD)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the password manager is off WHEN confirm clicked THEN the password is never offered`() = runTest {
+        // Arrange
+        every { hotWalletFeatureToggles.isPasswordManagerEnabled } returns false
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(CreateCloudBackupUM.Completed::class.java)
+        coVerify(exactly = 0) { saveBackupPasswordUseCase(any(), any()) }
         model.onDestroy()
     }
 
@@ -750,17 +771,7 @@ internal class CreateCloudBackupModelTest {
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
             cloudBackupRepository = cloudBackupRepository,
             saveBackupPasswordUseCase = saveBackupPasswordUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 
