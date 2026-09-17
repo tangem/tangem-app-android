@@ -37,8 +37,11 @@ internal class DefaultSocialRecoveryRepository @Inject constructor(
         recoveryKey: RecoveryKey,
     ): Either<SocialLoginError, Unit> {
         val backendWalletId = walletId.toBackendId()
+        // Nothing reached the backend: the wallet is not a hot one, or the list it lives in is not
+        // loaded yet. Reporting a server error would send the user retrying against a server that was
+        // never asked.
         val signer = walletSignerProvider.signerFor(backendWalletId)
-            ?: return Either.Left(SocialLoginError.ServerError())
+            ?: return Either.Left(SocialLoginError.Unknown())
 
         return client.registerBinding(
             walletId = backendWalletId,

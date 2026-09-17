@@ -67,7 +67,7 @@ class DefaultWalletRegistrarTest {
         preferencesDataStore = preferencesDataStore,
     )
 
-    private lateinit var rotationLock: SessionTokenRotationLock
+    private lateinit var locks: WalletRegistrationLocks
     private lateinit var registrar: DefaultWalletRegistrar
 
     private val mobileSigner = WalletSigner {
@@ -107,7 +107,7 @@ class DefaultWalletRegistrarTest {
         // Default to an active session so the happy-path tests reach the nonce/register flow;
         // the no-session tests override this with None.
         coEvery { store.get() } returns Some(sessionTokens())
-        rotationLock = SessionTokenRotationLock()
+        locks = WalletRegistrationLocks()
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
@@ -118,7 +118,7 @@ class DefaultWalletRegistrarTest {
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             nonceRequestPerformanceTracker = { it() },
-            rotationLock = rotationLock,
+            locks = locks,
             dispatchers = dispatchers,
         )
     }
@@ -153,7 +153,7 @@ class DefaultWalletRegistrarTest {
         stubHappyPath()
         coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
         // stands for a social binding (or another wallet's registration) already reissuing the session
-        rotationLock.lock()
+        locks.sessionRotation.lock()
 
         val registration = launch { registrar.register(WALLET_ID, mobileSigner) }
         runCurrent()
@@ -162,7 +162,7 @@ class DefaultWalletRegistrarTest {
         coVerify { authApi.requestWalletNonce(any()) }
         coVerify(exactly = 0) { authApi.registerWallet(any()) }
 
-        rotationLock.unlock()
+        locks.sessionRotation.unlock()
         registration.join()
         coVerify(exactly = 1) { authApi.registerWallet(any()) }
         coVerify(exactly = 1) { store.save(any()) }

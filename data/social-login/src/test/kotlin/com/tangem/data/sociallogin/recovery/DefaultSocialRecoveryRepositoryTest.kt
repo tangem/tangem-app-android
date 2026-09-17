@@ -115,8 +115,8 @@ internal class DefaultSocialRecoveryRepositoryTest {
             recoveryKey = RECOVERY_KEY,
         )
 
-        // Assert
-        assertThat(actual).isEqualTo(SocialLoginError.ServerError().left())
+        // Assert — a local shortfall, not a rejection by a backend that was never called
+        assertThat(actual).isEqualTo(SocialLoginError.Unknown().left())
         coVerify(exactly = 0) { client.registerBinding(any(), any(), any(), any()) }
     }
 

@@ -19,7 +19,7 @@ import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
-import com.tangem.lib.auth.session.internal.SessionTokenRotationLock
+import com.tangem.lib.auth.session.internal.WalletRegistrationLocks
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.lib.auth.social.HpkeRecoveryCipher
 import com.tangem.lib.auth.social.RecoveryKeyRsaCipher
@@ -70,7 +70,7 @@ internal class DefaultSocialRecoveryClientTest {
     private val walletRegistrar: WalletRegistrar = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
-    private val rotationLock = SessionTokenRotationLock()
+    private val locks = WalletRegistrationLocks()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val kmsKeyPair = KeyPairGenerator.getInstance("RSA")
@@ -87,7 +87,7 @@ internal class DefaultSocialRecoveryClientTest {
         errorConverter = AuthErrorConverter(),
         sessionTokensStore = sessionTokensStore,
         walletRegistrar = walletRegistrar,
-        rotationLock = rotationLock,
+        locks = locks,
         dispatchers = dispatchers,
     )
 
@@ -293,7 +293,7 @@ internal class DefaultSocialRecoveryClientTest {
         stubRegistrationNonce()
         coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM)
         coEvery { api.registerWalletBinding(any()) } returns tokenSuccess()
-        rotationLock.lock()
+        locks.sessionRotation.lock()
 
         // Act
         val registration = launch {
@@ -309,10 +309,37 @@ internal class DefaultSocialRecoveryClientTest {
         // Assert — the wallet registration holding the lock must finish its own token write first
         coVerify(exactly = 0) { api.registerWalletBinding(any()) }
 
-        rotationLock.unlock()
+        locks.sessionRotation.unlock()
         registration.join()
         coVerify(exactly = 1) { api.registerWalletBinding(any()) }
         coVerify(exactly = 1) { sessionTokensStore.save(any()) }
+    }
+
+    @Test
+    fun `GIVEN the wallet is being registered WHEN registerBinding THEN no second nonce is requested`() = runTest {
+        // Arrange — the plain registrar holds the per-wallet lock for this very wallet
+        stubRegistrationNonce()
+        coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM)
+        coEvery { api.registerWalletBinding(any()) } returns tokenSuccess()
+        locks.forWallet(WALLET_ID).lock()
+
+        // Act
+        val binding = launch {
+            client.registerBinding(
+                walletId = WALLET_ID,
+                providerIdToken = ID_TOKEN,
+                recoveryKey = ByteArray(size = 32),
+                signer = signer,
+            )
+        }
+        runCurrent()
+
+        // Assert — both callers post to /wallet/register, so the wallet nonce must not be consumed twice
+        coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
+
+        locks.forWallet(WALLET_ID).unlock()
+        binding.join()
+        coVerify(exactly = 1) { authApi.requestWalletNonce(any()) }
     }
 
     @Test
