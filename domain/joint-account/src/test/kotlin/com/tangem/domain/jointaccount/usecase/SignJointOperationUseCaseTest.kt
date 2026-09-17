@@ -220,7 +220,7 @@ internal class SignJointOperationUseCaseTest {
         }
 
     @Test
-    fun `GIVEN blockaid could not validate WHEN invoke THEN signing proceeds`() = runTest {
+    fun `GIVEN blockaid could not validate WHEN invoke THEN nothing is signed`() = runTest {
         // Arrange
         coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.UNKNOWN
@@ -229,7 +229,8 @@ internal class SignJointOperationUseCaseTest {
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
 
     @Test

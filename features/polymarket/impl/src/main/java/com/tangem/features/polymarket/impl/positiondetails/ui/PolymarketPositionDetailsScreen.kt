@@ -7,17 +7,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -26,6 +31,8 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
+import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -47,13 +54,23 @@ import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPo
 
 @Composable
 internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM, modifier: Modifier = Modifier) {
+    var footerHeight by remember { mutableIntStateOf(0) }
     ProvideHaze {
         TangemTopBarScaffold(
             modifier = modifier,
             topBar = { TangemTopNavigation(endButton = { TangemButton.Close(onClick = state.onCloseClick) }) },
+            overlay = {
+                if (state.content is Content.Data) {
+                    PositionDetailsFooter(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .onSizeChanged { size -> footerHeight = size.height },
+                    )
+                }
+            },
         ) { contentPadding ->
             when (val content = state.content) {
-                is Content.Data -> PositionDetailsContent(content, contentPadding)
+                is Content.Data -> PositionDetailsContent(content, contentPadding, footerHeight)
                 else -> Box(
                     modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center,
@@ -79,11 +96,12 @@ internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM,
 }
 
 @Composable
-private fun PositionDetailsContent(state: Content.Data, contentPadding: PaddingValues) {
+private fun PositionDetailsContent(state: Content.Data, contentPadding: PaddingValues, footerHeight: Int) {
     var explanation by rememberSaveable { mutableStateOf<Pnl?>(null) }
+    val bottomPadding = with(LocalDensity.current) { footerHeight.toDp() } + 16.dp
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(contentPadding).padding(horizontal = 16.dp).padding(bottom = 16.dp),
+            .padding(contentPadding).padding(horizontal = 16.dp).padding(bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PolymarketPositionSummary(state.summary, modifier = Modifier.padding(bottom = 20.dp))
@@ -93,6 +111,29 @@ private fun PositionDetailsContent(state: Content.Data, contentPadding: PaddingV
         PositionInformation(state.information)
     }
     PolymarketPositionPnlSheet(pnl = explanation, onDismiss = { explanation = null })
+}
+
+@Composable
+private fun PositionDetailsFooter(modifier: Modifier = Modifier) {
+    TangemFooter(modifier = modifier) {
+        TangemButtonGroup(
+            modifier = Modifier.fillMaxWidth(),
+            orientation = TangemButtonGroup.Orientation.Horizontal,
+        ) {
+            TangemButton(
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_close),
+                onClick = {},
+            )
+            TangemButton(
+                variant = TangemButton.Variant.Primary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.common_buy),
+                onClick = {},
+            )
+        }
+    }
 }
 
 @Composable

@@ -3,17 +3,19 @@ package com.tangem.data.collectibles.account.flow
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -176,6 +178,9 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
     private fun createStore(testScope: TestScope) = CollectiblesAccountStatusStore(
         runtimeStore = RuntimeSharedStore(),
         persistenceDataStore = MockStateDataStore(default = emptyMap()),
+        converter = CollectiblesAccountStatusValueDTOConverter(
+            currencyFactory = CollectiblesVaultCurrencyFactory(MockCollectibles::usdc),
+        ),
         scope = TestAppCoroutineScope(testScope),
     )
 
@@ -194,6 +199,6 @@ internal class DefaultCollectiblesAccountStatusProducerTest {
         val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE)
         val UPDATE_REQUIRED = CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.CACHE)
 
-        val BALANCE = CollectiblesVaultBalance(usdcAmount = BigDecimal("2"))
+        val BALANCE = MockCollectibles.vaultBalance(amount = BigDecimal("2"))
     }
 }

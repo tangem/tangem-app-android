@@ -3,7 +3,7 @@ package com.tangem.domain.account.status.usecase
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.isCreated
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
@@ -69,7 +69,7 @@ class IsAccountsModeEnabledUseCase(
                         .onEach { status ->
                             TangemLogger.i("$TAG: paymentStatus for $walletId = ${status.value::class.simpleName}")
                         }
-                        .map { it.value.isActivePayment() }
+                        .map { it.value.isCreated }
                         .onStart {
                             TangemLogger.i("$TAG: paymentAccountStatusSupplier onStart for $walletId")
                             emit(false)
@@ -100,23 +100,6 @@ class IsAccountsModeEnabledUseCase(
 
     private fun AccountList.hasMultipleCryptoPortfolios(): Boolean =
         accounts.filterIsInstance<Account.CryptoPortfolio>().size > 1
-
-    private fun PaymentAccountStatusValue.isActivePayment(): Boolean {
-        return when (this) {
-            is PaymentAccountStatusValue.Empty,
-            is PaymentAccountStatusValue.NotCreated,
-            -> false
-            is PaymentAccountStatusValue.Error,
-            is PaymentAccountStatusValue.IssuingCard,
-            is PaymentAccountStatusValue.AwaitingPlanSelection,
-            is PaymentAccountStatusValue.Inactive,
-            is PaymentAccountStatusValue.Loaded,
-            is PaymentAccountStatusValue.Loading,
-            is PaymentAccountStatusValue.UnderReview,
-            is PaymentAccountStatusValue.Deactivated,
-            -> true
-        }
-    }
 
     private companion object {
         const val TAG = "IsAccountsModeEnabledUseCase"
