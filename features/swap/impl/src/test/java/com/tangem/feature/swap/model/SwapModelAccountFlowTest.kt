@@ -1051,6 +1051,39 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction top-up WHEN the destination is unresolved THEN the empty receive card is still locked`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubUnresolvedDestination()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.receiveCardData as SwapCardState.Empty).isSelectionLocked).isTrue()
+            assertThat((model.uiState.sendCardData as SwapCardState.SwapCardData).isSelectionLocked).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN an account top-up WHEN the destination is unresolved THEN the empty receive card is still locked`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubUnresolvedDestination()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.TopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.receiveCardData as SwapCardState.Empty).isSelectionLocked).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a prediction top-up WHEN reverse is clicked THEN the pair does not flip`() = runTest {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -1777,6 +1810,21 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             )
         } returns (collateral to destination)
         return collateral to destination
+    }
+
+    private fun stubUnresolvedDestination(): SwapCurrencyStatus {
+        val from = buildSwapCurrencyStatus(accountFlowUserWallet())
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to null)
+        return from
     }
 
     private fun stubResolvedTopUpPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
