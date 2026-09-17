@@ -2,7 +2,6 @@ package com.tangem.features.jointaccount.creation.promo.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,7 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -43,10 +41,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 private const val HERO_ASPECT_RATIO = 402f / 568f
-private const val HERO_TINT_START = 0.5f
-private const val HERO_TINT_MIDDLE = 0.75f
-private const val HERO_TINT_END = 0.9f
-private const val HERO_TINT_MIDDLE_ALPHA = 0.5f
 
 @Composable
 internal fun JointAccountPromoScreen(state: JointAccountPromoUM, modifier: Modifier = Modifier) {
@@ -54,7 +48,10 @@ internal fun JointAccountPromoScreen(state: JointAccountPromoUM, modifier: Modif
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
-            TangemTopNavigation(endButton = { TangemButton.Close(onClick = state.onCloseClick) })
+            TangemTopNavigation(
+                endButton = { TangemButton.Close(onClick = state.onCloseClick) },
+                fadeEnabled = false,
+            )
         },
     ) { contentPadding ->
         Content(state = state, contentPadding = contentPadding)
@@ -90,23 +87,6 @@ private fun Hero(state: JointAccountPromoUM, modifier: Modifier = Modifier) {
             contentScale = ContentScale.Crop,
             alignment = Alignment.TopCenter,
             modifier = Modifier.fillMaxSize(),
-        )
-
-        val background = TangemTheme.colors3.bg.primary
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0f to background.copy(alpha = 0f),
-                            HERO_TINT_START to background.copy(alpha = 0f),
-                            HERO_TINT_MIDDLE to background.copy(alpha = HERO_TINT_MIDDLE_ALPHA),
-                            HERO_TINT_END to background,
-                            1f to background,
-                        ),
-                    ),
-                ),
         )
 
         Column(
