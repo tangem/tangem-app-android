@@ -2,7 +2,10 @@ package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryRequest
@@ -56,6 +59,50 @@ internal class DefaultShtorkaDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = null)) }
+    }
+
+    @Test
+    fun `GIVEN category WHEN handled THEN it is forwarded unvalidated for the tab to resolve`() {
+        // Act
+        createHandler(queryParams = mapOf(SECTION_KEY to "crypto", CATEGORY_KEY to "layer-1"))
+
+        // Assert
+        verify(exactly = 1) {
+            feedEntryController.request(
+                FeedEntryRequest(section = FeedSection.Crypto, categoryId = "layer-1"),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN blank category WHEN handled THEN no category is requested`() {
+        // Act
+        createHandler(queryParams = mapOf(SECTION_KEY to "crypto", CATEGORY_KEY to " "))
+
+        // Assert
+        verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Crypto)) }
+    }
+
+    @Test
+    fun `GIVEN earn section and staking type WHEN handled THEN requests that earn type`() {
+        // Act
+        createHandler(queryParams = mapOf(SECTION_KEY to "earn", TYPE_KEY to "staking"))
+
+        // Assert
+        verify(exactly = 1) {
+            feedEntryController.request(
+                FeedEntryRequest(section = FeedSection.Earn, earnType = PreselectedEarnType.Staking),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN a type the app has no filter for WHEN handled THEN the section opens unfiltered`() {
+        // Act
+        createHandler(queryParams = mapOf(SECTION_KEY to "earn", TYPE_KEY to "embedded_yield"))
+
+        // Assert
+        verify(exactly = 1) { feedEntryController.request(FeedEntryRequest(section = FeedSection.Earn)) }
     }
 
     @Test
