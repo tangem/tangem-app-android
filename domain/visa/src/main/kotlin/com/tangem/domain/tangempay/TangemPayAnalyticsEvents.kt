@@ -647,4 +647,84 @@ sealed class TangemPayAnalyticsEvents(
             event = "Cashback Button Error State Showed",
         )
     }
+
+    object Eligibility {
+
+        private const val CATEGORY = "VA Onboarding"
+
+        class CountrySelectScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Country Select Screen Opened",
+        )
+
+        data class CountrySelected(
+            val country: String,
+            val isSuggested: Boolean,
+        ) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Country Selected",
+            params = mapOf(
+                "country" to country,
+                "if_suggested" to isSuggested.toYesNo(),
+            ),
+        )
+
+        class StateScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA State Screen Opened",
+        )
+
+        data class StateSelected(
+            val state: String,
+            val isSuggested: Boolean,
+        ) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA State Selected",
+            params = mapOf(
+                "state" to state,
+                "if_suggested" to isSuggested.toYesNo(),
+            ),
+        )
+
+        data class EligibilityCheckResult(
+            val isEligible: Boolean,
+            val country: String,
+            val state: String?,
+        ) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Eligibility Check Result",
+            params = buildMap {
+                put("result", if (isEligible) "eligible" else "not_eligible")
+                put("country", country)
+                if (state != null) put("state", state)
+            },
+        )
+
+        class RegionNotAvailableScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Region Not Available Screen Opened",
+        )
+
+        class RegionNotAvailableSelectAnotherTapped : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Region Not Available Select Another Tapped",
+        )
+
+        class RegionNotAvailableJoinWaitlistTapped : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Region Not Available Join Waitlist Tapped",
+        )
+
+        class WaitlistScreenOpened : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Waitlist Screen Opened",
+        )
+
+        class WaitlistSaved : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "VA Waitlist Saved",
+        )
+    }
 }
+
+private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"

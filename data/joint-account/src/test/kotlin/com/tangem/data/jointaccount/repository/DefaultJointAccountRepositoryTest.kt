@@ -1,6 +1,7 @@
 package com.tangem.data.jointaccount.repository
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
@@ -25,9 +26,12 @@ import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountReque
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.RejectJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
+import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
@@ -179,7 +183,7 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN server error WHEN create THEN it is thrown`() = runTest {
         // Arrange
-        val response = errorResponse(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
+        val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
         coEvery { jointAccountApi.createJointAccount(any(), any()) } returns response
 
         // Act
@@ -233,7 +237,7 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN server error WHEN join THEN it is thrown`() = runTest {
         // Arrange
-        val response = errorResponse(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
+        val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
         coEvery { jointAccountApi.joinJointAccount(any(), any()) } returns response
 
         // Act
@@ -303,7 +307,7 @@ internal class DefaultJointAccountRepositoryTest {
     @Test
     fun `GIVEN server error WHEN activate THEN Left without a retry`() = runTest {
         // Arrange
-        val response = errorResponse(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
+        val response = errorResponse<JointAccountDto>(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR)
         coEvery { jointAccountApi.activateJointAccount(any(), any()) } returns response
 
         // Act
@@ -472,7 +476,6 @@ internal class DefaultJointAccountRepositoryTest {
                 safeAddress = SAFE_ADDRESS,
                 chainId = CHAIN_ID,
                 safeTx = SafeTxConverter().convertBack(safeTx),
-                deadline = null,
                 signature = SIGNATURE,
             ),
         )
@@ -535,8 +538,8 @@ internal class DefaultJointAccountRepositoryTest {
         safeTx = SafeTxConverter().convertBack(createSafeTx()),
         status = "awaiting_signatures",
         initiator = null,
-        deadline = null,
-        signatures = emptyList(),
+        createdAt = null,
+        votes = emptyList(),
     )
 
     private fun operationErrorResponse(
@@ -575,10 +578,58 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun errorResponse(code: ApiResponseError.HttpException.Code): ApiResponse<JointAccountDto> {
+    @Test
+    fun `GIVEN payload WHEN reject THEN the refused operation is sent verbatim`() = runTest {
+        // Arrange
+        val bodySlot = slot<RejectJointOperationRequest>()
+        val safeTx = createSafeTx()
+        coEvery {
+            jointAccountApi.rejectJointOperation(
+                walletId = WALLET_ID.stringValue,
+                operationId = OPERATION_ID,
+                body = capture(bodySlot),
+            )
+        } returns ApiResponse.Success(Unit)
+
+        // Act
+        val actual = repository.rejectOperation(
+            userWalletId = WALLET_ID,
+            payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = safeTx),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(bodySlot.captured).isEqualTo(
+            RejectJointOperationRequest(
+                payload = RejectJointOperationRequest.Payload(
+                    operationId = OPERATION_ID,
+                    safeTx = SafeTxConverter().convertBack(safeTx),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN the threshold was reached first WHEN reject THEN ThresholdReached`() = runTest {
+        // Arrange
+        coEvery { jointAccountApi.rejectJointOperation(any(), any(), any()) } returns
+            errorResponse(ApiResponseError.HttpException.Code.CONFLICT)
+
+        // Act
+        val actual = repository.rejectOperation(
+            userWalletId = WALLET_ID,
+            payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = createSafeTx()),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationRejectError.ThresholdReached.left())
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> errorResponse(code: ApiResponseError.HttpException.Code): ApiResponse<T> {
         val cause = ApiResponseError.HttpException(code = code, message = null, errorBody = null)
 
-        return ApiResponse.Error(cause = cause) as ApiResponse<JointAccountDto>
+        return ApiResponse.Error(cause = cause) as ApiResponse<T>
     }
 
     private fun createAccountsResponse(totalJointAccounts: Int?): GetWalletAccountsResponse {
@@ -602,6 +653,7 @@ internal class DefaultJointAccountRepositoryTest {
         const val OWNER_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
         const val SIGNATURE = "0xdeadbeef"
+        const val OPERATION_ID = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708"
         const val CHAIN_ID = 137L
         const val INVITE_A = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
         const val INVITE_B = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"

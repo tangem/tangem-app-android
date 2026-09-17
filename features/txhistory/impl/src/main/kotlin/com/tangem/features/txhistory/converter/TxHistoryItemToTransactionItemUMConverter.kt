@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -15,6 +16,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
@@ -52,10 +54,12 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private val currency: CryptoCurrency,
     private val txHistoryUiActions: TxHistoryUiActions,
     private val lookupContext: TxHistoryLookupContext? = null,
+    private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TxInfo, TransactionItemUM> {
 
     private val titleConverter = TxHistoryTitleConverter()
     private val pillConverter = TxHistoryStatusPillConverter(currency, txHistoryUiActions)
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: TxInfo): TransactionItemUM {
@@ -83,7 +87,9 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.YieldSupply.InitializeToken -> yieldInitializeTokenContent(value, uiStatus, type)
             is TransactionType.YieldSupply.ReactivateToken -> yieldReactivateTokenContent(value, uiStatus, type)
             is TransactionType.UnknownOperation -> unknownOperationContent(value, uiStatus)
-            is TransactionType.GaslessFee -> gaslessFeeContent(value, uiStatus)
+            is TransactionType.GaslessFee,
+            is TransactionType.NetworkFee,
+            -> feeContent(value, uiStatus)
             // endregion
         }
     }
@@ -246,14 +252,27 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         subtitle = tx.operationCounterpartySubtitle(),
     )
 
-    private fun gaslessFeeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
+    /** A row that is nothing but a network fee — the gasless fee leg, or a token transfer in the coin history. */
+    private fun feeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
         buildContent(
             tx = tx,
             uiStatus = uiStatus,
             title = titleConverter.convert(tx),
-            icon = tx.directionalIcon(),
-            subtitle = tx.extractAddressSubtitle(),
+            icon = TxIcon.Vector(Icons.ic_percent_20),
+            subtitle = tx.feeSubtitle(),
         )
+
+    /** What the fee was paid for; a gasless leg or an untracked token has nothing to name and says so instead. */
+    private fun TxInfo.feeSubtitle(): ContentSubtitle {
+        val networkFee = type as? TransactionType.NetworkFee
+        val symbol = networkFee?.amount?.currencySymbol?.ifBlank { null }
+            ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_sending))
+
+        return ContentSubtitle.FeeFor(
+            symbol = symbol,
+            icon = networkFee.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+        )
+    }
 
     private fun buildContent(
         tx: TxInfo,
@@ -279,13 +298,15 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 // region Content building helpers
 
 private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
+    // A network-fee transaction moved no coin of its own, so the row shows the fee instead of its own amount.
+    val value = if (type is TransactionType.NetworkFee) fee?.value ?: amount else amount
     val prefix = when {
         status is TxInfo.TransactionStatus.Failed -> ""
-        amount.isZero() -> ""
+        value.isZero() -> ""
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
     }
-    return prefix + amount.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
+    return prefix + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
 }
 
 // endregion

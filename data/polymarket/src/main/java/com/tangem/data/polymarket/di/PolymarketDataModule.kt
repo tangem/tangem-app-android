@@ -13,7 +13,6 @@ import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
@@ -21,6 +20,7 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
+import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
@@ -30,10 +30,12 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
+import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawalTrackingConfig
-import com.tangem.domain.swap.SwapTransactionRepository
+import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -142,18 +144,30 @@ internal interface PolymarketDataModule {
 
         @Provides
         @Singleton
-        fun providePredictionFundingWindow(
-            userWalletsListRepository: UserWalletsListRepository,
-            swapTransactionRepository: SwapTransactionRepository,
-            predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-            collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
-            config: PredictionBalancePollingConfig,
-        ): PredictionFundingWindow = DefaultPredictionFundingWindow(
-            userWalletsListRepository = userWalletsListRepository,
-            swapTransactionRepository = swapTransactionRepository,
-            predictionAccountStatusSupplier = predictionAccountStatusSupplier,
-            collateralCurrencyFactory = collateralCurrencyFactory,
+        fun providePredictionWithdrawalTracker(
+            store: PredictionWithdrawalStore,
+            submitInteractor: SubmitPredictionWithdrawalInteractor,
+            getState: GetPredictionWithdrawalStateUseCase,
+            config: PredictionWithdrawalTrackingConfig,
+            appScope: AppCoroutineScope,
+        ): PredictionWithdrawalTracker = PredictionWithdrawalTracker(
+            store = store,
+            submitInteractor = submitInteractor,
+            getState = getState,
             config = config,
+            appScope = appScope,
+        )
+
+        @Provides
+        @Singleton
+        fun providePredictionFundingWindow(
+            predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
+            config: PredictionBalancePollingConfig,
+            appScope: AppCoroutineScope,
+        ): PredictionFundingWindow = DefaultPredictionFundingWindow(
+            predictionAccountStatusSupplier = predictionAccountStatusSupplier,
+            config = config,
+            appScope = appScope,
         )
     }
 }
