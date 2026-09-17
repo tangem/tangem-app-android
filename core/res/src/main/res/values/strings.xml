@@ -1663,6 +1663,9 @@
   <string name="prediction_add_funds_swap_subtitle">Use crypto in your Tangem wallet to top up your Polymarket account</string>
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
+  <string name="prediction_close_min_shares_error">At least %s tokens</string>
+  <string name="prediction_close_selling_of">Selling %1$s of %2$s predict tokens</string>
+  <string name="prediction_close_you_will_receive">You will receive</string>
   <string name="prediction_details_24h_change">24h change:</string>
   <string name="prediction_details_closed_markets">Closed Markets</string>
   <string name="prediction_details_market_opened">Market Opened</string>
