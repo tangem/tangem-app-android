@@ -142,8 +142,8 @@ internal class IntroductionCardScanner @Inject constructor(
     private suspend fun openWalletOrAskForPush() {
         // The wallet is saved by now, so a failing read opens it rather than stranding the viewer.
         val shouldAsk = runSuspendCatching { shouldAskPermissionUseCase(PUSH_PERMISSION) }
-            .getOrElse {
-                TangemLogger.e("Unable to read the push permission preference", it)
+            .getOrElse { error ->
+                TangemLogger.e("Unable to read the push permission preference", error)
                 false
             }
         val route = if (shouldAsk) {
