@@ -1,0 +1,48 @@
+package com.tangem.features.polymarket.impl.positionresult
+
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
+import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
+
+/** Temporary screen data shared by the model and previews until position results are available. */
+internal object PolymarketPositionResultStubData {
+
+    val won = PolymarketPositionResultUM(
+        market = MarketHeaderUM(
+            title = "Will Uzbekistan win the 2026 FIFA World Cup?",
+            imageUrl = null,
+            outcomeTitle = "No",
+            outcomePriceCents = 85,
+            resolutionDateMillis = null,
+        ),
+        result = PolymarketPositionResultUM.Result.Won,
+        title = stringReference("You Won $4400.10"),
+        resolvedAt = stringReference("2 May 2024 at 9:41"),
+        invested = PolymarketPositionResultUM.Metric(
+            title = resourceReference(R.string.prediction_positions_invested),
+            value = stringReference("$500"),
+        ),
+        profit = PolymarketPositionResultUM.Metric(
+            title = stringReference("Profit"),
+            value = stringReference("▲ $245.00 (2.08%)"),
+        ),
+        footerNote = resourceReference(R.string.prediction_position_result_balance_note),
+    )
+
+    val lost = won.copy(
+        result = PolymarketPositionResultUM.Result.Lost,
+        title = stringReference("Loss $4400.10"),
+        invested = null,
+        profit = null,
+        footerNote = null,
+    )
+
+    val splitWithProfit = won.copy(
+        result = PolymarketPositionResultUM.Result.Split,
+        title = stringReference("Split $4400.10"),
+    )
+
+    val splitWithoutProfit = splitWithProfit.copy(profit = null)
+}
