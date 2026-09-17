@@ -7,7 +7,6 @@ import com.tangem.features.tangempay.spendTransaction
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -33,33 +32,15 @@ internal class TangemPayTxHistoryItemsConverterTest {
 
     @ParameterizedTest
     @MethodSource("provideTestModels")
-    fun `GIVEN spend cashback WHEN convert with feature enabled THEN badge matches expected`(model: CashbackModel) {
+    fun `GIVEN spend cashback WHEN convert THEN badge matches expected`(model: CashbackModel) {
         // Arrange
-        val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions, isCashbackEnabled = true)
+        val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions)
 
         // Act
         val result = converter.convert(spendTransaction(cashback = model.cashback))
 
         // Assert
         assertThat((result as TangemPayTransactionState.Content.Spend).cashback).isEqualTo(model.expected)
-    }
-
-    @Test
-    fun `GIVEN cashback present WHEN feature disabled THEN badge is null`() {
-        // Arrange
-        val converter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = uiActions, isCashbackEnabled = false)
-        val spend = spendTransaction(
-            cashback = cashback(
-                status = TangemPayTxHistoryItem.Cashback.Status.CONFIRMED,
-                amount = BigDecimal("5.00"),
-            ),
-        )
-
-        // Act
-        val result = converter.convert(spend)
-
-        // Assert
-        assertThat((result as TangemPayTransactionState.Content.Spend).cashback).isNull()
     }
 
     data class CashbackModel(
