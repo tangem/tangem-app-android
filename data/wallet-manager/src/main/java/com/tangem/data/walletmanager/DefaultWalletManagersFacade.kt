@@ -21,6 +21,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchain.transactionhistory.TransactionHistoryProvider
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
@@ -1016,6 +1017,19 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             }
             ?.value?.value
             ?: BigDecimal.ZERO
+    }
+
+    override suspend fun getTokenBalances(
+        userWalletId: UserWalletId,
+        network: Network,
+        address: String,
+    ): List<TokenBalance> {
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+                ?: return@withContext emptyList()
+
+            walletManager.getTokenBalances(walletAddress = address)
+        }
     }
 
     override suspend fun getAssetRequirements(

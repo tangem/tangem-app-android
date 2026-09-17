@@ -91,6 +91,23 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val accountClosedBannerTitle: KNode =
+        bannerTitle(CoreResR.string.tangempay_account_deactivated_message_title)
+
+    // The confirmation dialog and the more-actions menu carry the same label, but neither is on screen
+    // while this banner button is the one being clicked.
+    val removeAccountBannerButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_remove_account)))
+        useUnmergedTree = true
+    }
+
+    val removeAccountMenuItem: KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_remove_account)))
+        useUnmergedTree = true
+    }
+
     val sessionExpiredBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_sync_needed_title)
 
     val sessionExpiredBannerMessage: KNode = bannerMessage(CoreResR.string.tangempay_sync_needed_body)

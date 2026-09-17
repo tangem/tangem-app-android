@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
@@ -212,11 +213,16 @@ sealed class SwapEvents(
         ),
     )
 
-    class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
+    class NoticeNotEnoughFee(
+        val token: String,
+        val blockchain: String,
+        val balance: AnalyticsParam.TokenBalanceState,
+    ) : SwapEvents(
         event = "Notice - Not Enough Fee",
         params = mapOf(
             "Token" to token,
             "Blockchain" to blockchain,
+            BALANCE to balance.value,
         ),
     )
 
@@ -251,6 +257,21 @@ sealed class SwapEvents(
             "Send Blockchain" to sendBlockchain,
             "Receive Blockchain" to receiveBlockchain,
             PROVIDER to providerName,
+        ),
+    )
+
+    class NoticeGeoRestriction(
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+    ) : SwapEvents(
+        event = "Notice - Geo Restriction",
+        params = mapOf(
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            SEND_BLOCKCHAIN to sendBlockchain,
+            RECEIVE_BLOCKCHAIN to receiveBlockchain,
         ),
     )
 

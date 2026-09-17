@@ -36,13 +36,18 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
     override suspend fun send(
         transactionData: TransactionData,
         signer: TransactionSigner,
+        onSigned: () -> Unit,
     ): Result<TransactionSendResult> {
         val signerResponse = signer.sign(
             hash = getDataToSign(),
             publicKey = walletManager.wallet.publicKey,
         )
         return when (signerResponse) {
-            is CompletionResult.Success -> Result.Failure(Exception(ID).toBlockchainSdkError())
+            is CompletionResult.Success -> {
+                onSigned()
+
+                Result.Failure(Exception(ID).toBlockchainSdkError())
+            }
             is CompletionResult.Failure -> Result.fromTangemSdkError(signerResponse.error)
         }
     }

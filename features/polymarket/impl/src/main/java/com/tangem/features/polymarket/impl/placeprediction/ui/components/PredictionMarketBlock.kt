@@ -36,7 +36,11 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
                 )
                 TangemBadge(
                     text = stringReference(state.outcomeLabel()),
-                    status = TangemBadge.Status.Error,
+                    status = when {
+                        state.outcomeTitle.equals("Yes", ignoreCase = true) -> TangemBadge.Status.Info
+                        state.outcomeTitle.equals("No", ignoreCase = true) -> TangemBadge.Status.Error
+                        else -> TangemBadge.Status.Neutral
+                    },
                     size = TangemBadge.Size.X4,
                 )
             }
@@ -44,8 +48,15 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
     )
 }
 
-private fun MarketHeaderUM.outcomeLabel(): String = when {
-    isPriceUnavailable -> "$outcomeTitle $DASH_SIGN"
-    outcomePriceCents != null -> "$outcomeTitle $outcomePriceCents${PolymarketConst.CENT_SIGN}"
-    else -> outcomeTitle
+private fun MarketHeaderUM.outcomeLabel(): String {
+    val livePrice = when {
+        isPriceUnavailable -> DASH_SIGN
+        outcomePriceCents != null -> "$outcomePriceCents${PolymarketConst.CENT_SIGN}"
+        else -> return outcomeTitle
+    }
+    val entryPrice = entryPriceCents?.let { "$it${PolymarketConst.CENT_SIGN} $PRICE_ARROW " }.orEmpty()
+
+    return "$outcomeTitle $entryPrice$livePrice"
 }
+
+private const val PRICE_ARROW = "→"

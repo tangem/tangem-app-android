@@ -1,32 +1,16 @@
 package com.tangem.domain.polymarket.session
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketPositionId
-import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
-import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.pagination.BatchFetchResult
-import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.PaginationStatus
-import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
-import com.tangem.pagination.toBatchFlow
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -35,14 +19,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class PolymarketPositionsSessionTest {
-
-    private val repository: PolymarketPositionsRepository = mockk()
-    private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
-    private val wallet = UserWalletId("011")
-    private val addresses: PolymarketAddresses = mockk()
-    private val requests = mutableListOf<Pair<PolymarketPositionsListConfig, Int>>()
-    private var fetch: suspend (Int) -> BatchFetchResult<List<PolymarketPosition>> = { page() }
+internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBase() {
 
     @Test
     fun `GIVEN overlapping pages WHEN loading more THEN preserves order and advances by source pages`() = runTest {
@@ -216,43 +193,6 @@ internal class PolymarketPositionsSessionTest {
         assertThat(requests.map { it.second })
             .containsExactlyElementsIn(if (hasLoadedPage) listOf(0, 30, 0) else listOf(0, 0)).inOrder()
     }
-
-    private fun TestScope.createFactory(): CreatePolymarketPositionsSessionUseCase {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        coEvery { deriveAddresses.stored(wallet) } returns addresses
-        every { repository.getPositionsBatchFlow(any(), any()) } answers {
-            val context = firstArg<PolymarketPositionsBatchingContext>()
-            val size = secondArg<Int>()
-            BatchListSource(
-                fetchDispatcher = dispatcher,
-                context = context,
-                generateNewKey = { keys -> keys.size },
-                batchFetcher = LimitOffsetBatchFetcher<PolymarketPositionsListConfig, List<PolymarketPosition>>(
-                    prefetchDistance = size,
-                    batchSize = size,
-                    subFetcher = { request, _, _ ->
-                        requests += request.params to request.offset
-                        fetch(request.offset)
-                    },
-                ),
-            ).toBatchFlow()
-        }
-        return CreatePolymarketPositionsSessionUseCase(
-            repository,
-            deriveAddresses,
-            TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
-        )
-    }
-
-    private fun position(assetId: String = "asset", conditionId: String = "condition"): PolymarketPosition =
-        mockk<PolymarketPosition.Open> {
-            every { id } returns PolymarketPositionId(conditionId, assetId)
-        }
-
-    private fun page(
-        positions: List<PolymarketPosition> = listOf(position()),
-        last: Boolean = true,
-    ): BatchFetchResult<List<PolymarketPosition>> = BatchFetchResult.Success(positions, positions.isEmpty(), last)
 
     private companion object {
         @JvmStatic
