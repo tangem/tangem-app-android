@@ -220,13 +220,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         // once we settle on an idle screen — not resolved here.
         val afterEmptyRoute = AppRoute.Home(launchMode = launchMode)
 
-        // The redesign asks where the wallet is registered, so the launch-time ask is dropped — but the
-        // never-flags stay unwritten, since that later ask reads them. The card would land as a second ask.
+        // The redesign asks where the wallet is registered, so the launch-time ask is dropped and the
+        // push reminder stays enabled until the later first-sign-in flow is answered.
         if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
-            notificationsRepository.setShouldShowNotifications(
-                key = NotificationId.EnablePushesReminderNotification.key,
-                value = false,
-            )
             return afterEmptyRoute
         }
 
