@@ -129,12 +129,10 @@ internal class PlacePredictionModel @Inject constructor(
     init {
         uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
         when (val params = params) {
-            is PlacePredictionComponent.Params.Buy -> {
-                loadMarket(params = params)
-                loadBalance()
-            }
+            is PlacePredictionComponent.Params.Buy -> loadMarket(params = params)
             is PlacePredictionComponent.Params.Sell -> loadPosition(params = params)
         }
+        loadBalance()
         loadTradingAllowance()
     }
 

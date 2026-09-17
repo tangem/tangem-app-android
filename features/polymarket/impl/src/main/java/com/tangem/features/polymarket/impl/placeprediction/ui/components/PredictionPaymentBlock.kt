@@ -28,7 +28,10 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
-import java.math.BigDecimal
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.balance
+import com.tangem.features.polymarket.impl.common.formatPolymarketShares
+import com.tangem.utils.StringsSigns.DASH_SIGN
 
 /** What the order is paid from and what it pays out, as read on the summary screen. */
 @Composable
@@ -36,7 +39,7 @@ internal fun PredictionPaymentBlock(
     amountValue: String,
     payout: PayoutUM?,
     collateral: CollateralUM,
-    balance: BigDecimal?,
+    order: OrderSideUM,
     modifier: Modifier = Modifier,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
@@ -44,20 +47,34 @@ internal fun PredictionPaymentBlock(
             modifier = Modifier.padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(space = 24.dp),
         ) {
-            SourceHeader(collateral = collateral, balance = balance)
-            AmountRow(amountValue = amountValue, payout = payout, collateral = collateral)
+            SourceHeader(collateral = collateral, order = order)
+            when (order) {
+                is OrderSideUM.Buy -> BuyAmountRow(amountValue = amountValue, payout = payout, collateral = collateral)
+                is OrderSideUM.Sell -> SellAmountRow(
+                    amountValue = amountValue,
+                    payout = payout,
+                    collateral = collateral,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun SourceHeader(collateral: CollateralUM, balance: BigDecimal?) {
+private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
     Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            HeaderText(text = stringResourceSafe(R.string.prediction_place_summary_from))
+            HeaderText(
+                text = stringResourceSafe(
+                    when (order) {
+                        is OrderSideUM.Buy -> R.string.prediction_place_summary_from
+                        is OrderSideUM.Sell -> R.string.prediction_close_summary_to
+                    },
+                ),
+            )
             AccountResIcon(
                 imageVector = PredictionAccountIcon.imageVector,
                 color = PredictionAccountIcon.color,
@@ -68,14 +85,14 @@ private fun SourceHeader(collateral: CollateralUM, balance: BigDecimal?) {
         HeaderText(
             text = stringResourceSafe(
                 R.string.common_balance,
-                balance.formatPolymarketBalance(tokenSymbol = collateral.tokenSymbol),
+                order.balance.formatPolymarketBalance(tokenSymbol = collateral.tokenSymbol),
             ),
         )
     }
 }
 
 @Composable
-private fun AmountRow(amountValue: String, payout: PayoutUM?, collateral: CollateralUM) {
+private fun BuyAmountRow(amountValue: String, payout: PayoutUM?, collateral: CollateralUM) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -103,6 +120,35 @@ private fun AmountRow(amountValue: String, payout: PayoutUM?, collateral: Collat
                     size = TangemBadge.Size.X4,
                 )
             }
+        }
+        collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
+    }
+}
+
+@Composable
+private fun SellAmountRow(amountValue: String, payout: PayoutUM?, collateral: CollateralUM) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(weight = 1f),
+            verticalArrangement = Arrangement.spacedBy(space = 4.dp),
+        ) {
+            Text(
+                text = payout?.expected?.formatPolymarketMoney() ?: DASH_SIGN,
+                style = TangemTheme.typography3.heading.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+            Text(
+                text = stringResourceSafe(
+                    R.string.prediction_close_selling_tokens,
+                    amountValue.parseToBigDecimal(PolymarketConst.SHARES_DECIMALS).formatPolymarketShares(),
+                ),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
         }
         collateral.iconState?.let { CurrencyIcon(state = it, shouldDisplayNetwork = false) }
     }
