@@ -7,10 +7,10 @@ import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
+import com.tangem.domain.polymarket.converter.PolymarketPositionStatusConverter
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
-import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.model.PolymarketPositionStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
@@ -52,13 +52,12 @@ internal class PolymarketPositionUMConverter(
     )
 
     private fun convertClosed(value: PolymarketPosition.Closed): PolymarketPositionUM {
-        val (label, status) = when (value.status) {
-            PolymarketClosedPositionStatus.CLOSED -> R.string.prediction_positions_closed to TangemBadge.Status.Neutral
-            PolymarketClosedPositionStatus.WON -> R.string.prediction_positions_won to TangemBadge.Status.Success
-            PolymarketClosedPositionStatus.LOST -> R.string.prediction_positions_lost to TangemBadge.Status.Error
-            PolymarketClosedPositionStatus.SPLIT -> R.string.prediction_positions_split to TangemBadge.Status.Neutral
-            PolymarketClosedPositionStatus.UNKNOWN ->
-                R.string.prediction_positions_unknown to TangemBadge.Status.Neutral
+        val (label, status) = when (PolymarketPositionStatusConverter.convert(value)) {
+            PolymarketPositionStatus.CLOSED -> R.string.prediction_positions_closed to TangemBadge.Status.Neutral
+            PolymarketPositionStatus.WON -> R.string.prediction_positions_won to TangemBadge.Status.Success
+            PolymarketPositionStatus.LOST -> R.string.prediction_positions_lost to TangemBadge.Status.Error
+            PolymarketPositionStatus.SPLIT -> R.string.prediction_positions_split to TangemBadge.Status.Neutral
+            else -> R.string.prediction_positions_unknown to TangemBadge.Status.Neutral
         }
         return PolymarketPositionUM(
             id = "${value.id.conditionId}:${value.id.assetId}",
@@ -84,13 +83,14 @@ internal class PolymarketPositionUMConverter(
     }
 
     private fun resultBadge(value: PolymarketPosition.Open): TangemBadgeUM? {
-        val (text, status) = when (value.result) {
-            PolymarketPositionResult.WON ->
+        if (value.result == null) return null
+        val (text, status) = when (PolymarketPositionStatusConverter.convert(value)) {
+            PolymarketPositionStatus.WON ->
                 "Won ${value.currentValue.formatPolymarketMoney()}" to TangemBadge.Status.Success
-            PolymarketPositionResult.LOST -> "Lost" to TangemBadge.Status.Error
-            PolymarketPositionResult.SPLIT -> "Split" to TangemBadge.Status.Neutral
-            PolymarketPositionResult.UNKNOWN -> "Unknown" to TangemBadge.Status.Neutral
-            null -> return null
+            PolymarketPositionStatus.LOST -> "Lost" to TangemBadge.Status.Error
+            PolymarketPositionStatus.SPLIT -> "Split" to TangemBadge.Status.Neutral
+            PolymarketPositionStatus.UNKNOWN -> "Unknown" to TangemBadge.Status.Neutral
+            else -> return null
         }
         return TangemBadgeUM(
             text = stringReference(text),
