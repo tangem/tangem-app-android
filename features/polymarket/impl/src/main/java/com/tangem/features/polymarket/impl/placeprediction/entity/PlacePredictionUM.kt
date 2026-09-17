@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
@@ -68,7 +69,7 @@ internal data class PlacePredictionUM(
  * becomes zero there and comes back as a `400` rather than a quote.
  */
 internal fun PlacePredictionUM.enteredAmount(): BigDecimal? =
-    amountValue.toBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
+    amountValue.parseBigDecimalOrNull()?.takeIf { it >= MIN_QUOTABLE_AMOUNT }
 
 private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 

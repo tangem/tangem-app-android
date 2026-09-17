@@ -22,7 +22,7 @@ const val DECIMAL_SEPARATOR_LIMIT = 1
  * whenever the system language is not among the app's supported ones: the field then stores "0.00000712"
  * while the parser treats the point as a grouping separator and reads 712.
  */
-fun createAmountDecimalFormat(): DecimalFormat = DecimalFormat().apply {
+internal fun createAmountDecimalFormat(): DecimalFormat = DecimalFormat().apply {
     decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
     isParseBigDecimal = true
 }
@@ -127,9 +127,7 @@ fun DecimalFormat.checkGroupingSeparator(text: String): Boolean {
 }
 
 fun String.parseToBigDecimal(decimals: Int): BigDecimal {
-    val decimalFormat = DecimalFormat().apply {
-        decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
-        isParseBigDecimal = true
+    val decimalFormat = createAmountDecimalFormat().apply {
         maximumFractionDigits = decimals
         minimumFractionDigits = decimals
     }
@@ -141,9 +139,7 @@ fun String.parseToBigDecimal(decimals: Int): BigDecimal {
 }
 
 fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = RoundingMode.HALF_UP): String {
-    val decimalFormat = DecimalFormat().apply {
-        decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault())
-        isParseBigDecimal = true
+    val decimalFormat = createAmountDecimalFormat().apply {
         isGroupingUsed = false
         maximumFractionDigits = decimals
         minimumFractionDigits = 0
