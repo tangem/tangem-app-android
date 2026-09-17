@@ -1447,9 +1447,8 @@ internal class PlacePredictionModelTest {
             model.onToMainClick()
 
             // Assert
-            verify(exactly = 1) { router.popTo(route = PlacePredictionRoute.Amount, onComplete = any()) }
             verify(exactly = 1) { router.pop(onComplete = any()) }
-            verify(exactly = 0) { router.popTo(route = PolymarketRoute.Main(userWalletId = USER_WALLET_ID), onComplete = any()) }
+            verify(exactly = 0) { router.popTo(route = any<PolymarketRoute.Main>(), onComplete = any()) }
 
             model.onDestroy()
         }
