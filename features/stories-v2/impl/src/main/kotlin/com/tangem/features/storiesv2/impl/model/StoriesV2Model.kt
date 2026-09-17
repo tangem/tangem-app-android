@@ -47,6 +47,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,6 +99,8 @@ internal class StoriesV2Model @Inject constructor(
     private var elapsedRemainderNanos = 0L
 
     private var appliedPlayToken = NO_TOKEN
+    private val hapticBurstJobHolder = JobHolder()
+
     private var appliedRenderMode = SlideRenderMode.ASSET
 
     init {
@@ -205,16 +209,18 @@ internal class StoriesV2Model @Inject constructor(
             .launchIn(modelScope)
     }
 
-    /** Decodes on IO; the snapshot state map is only touched from the model's main-immediate dispatcher. */
+    /** A burst outlives the moment it started in, so every pulse re-checks that the story is still playing. */
     private fun playHaptic(haptic: StoryV2Haptic) {
         modelScope.launch {
             repeat(haptic.pulses) { pulse ->
                 if (pulse > 0) delay(haptic.pulseIntervalMs)
+                if (controller?.state?.value?.isRunning != true) return@launch
                 hapticManager.performOneTime(haptic.effect)
             }
-        }
+        }.saveIn(hapticBurstJobHolder)
     }
 
+    /** Decodes on IO; the snapshot state map is only touched from the model's main-immediate dispatcher. */
     private fun prefetchPosters(composition: StoryV2Composition) {
         modelScope.launch {
             val ids = composition.slides
