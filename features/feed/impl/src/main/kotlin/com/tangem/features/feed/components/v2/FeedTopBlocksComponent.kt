@@ -52,6 +52,10 @@ internal class FeedTopBlocksComponent(
             context = child(key = CollectiblesBlockComponent.KEY),
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         ),
+        ReferralBlockComponent(
+            context = child(key = ReferralBlockComponent.KEY),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        ),
     )
 
     private val visibleBlocks: StateFlow<ImmutableList<FeedBlock>> = combine(
