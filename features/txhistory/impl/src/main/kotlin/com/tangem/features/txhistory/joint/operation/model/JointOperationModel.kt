@@ -17,6 +17,7 @@ import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMC
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.features.txhistory.joint.operation.signers.converter.JointOperationSignersUMConverter
 import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
+import com.tangem.features.txhistory.joint.operation.model.JointOperationState.Role
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,7 +93,10 @@ internal class JointOperationModel @Inject constructor(
         onRefuseClick = ::onRefuseClick,
     )
 
-    private val refusalMessages = JointOperationRefusalMessages(onConfirm = ::refuse)
+    private val refusalMessages = JointOperationRefusalMessages(
+        onConfirm = ::refuse,
+        onOperationGone = params.onDismiss,
+    )
 
     private val signersConverter = JointOperationSignersUMConverter()
 
@@ -155,9 +159,9 @@ internal class JointOperationModel @Inject constructor(
 
     fun onRefuseClick() {
         val operation = currentState ?: return
-        if (isBusy) return
+        if (isBusy || operation.role == Role.UNKNOWN) return
 
-        uiMessageSender.send(refusalMessages.confirmation(isInitiator = operation.isInitiator))
+        uiMessageSender.send(refusalMessages.confirmation(isInitiator = operation.role == Role.INITIATOR))
     }
 
     fun onCreateContactClick() {
@@ -205,7 +209,11 @@ internal class JointOperationModel @Inject constructor(
     }
 
     private fun onRefused(operation: JointOperationState) {
-        if (operation.isInitiator) isGoneLocally.value = true else localAnswer.value = Answer.DECLINED
+        when (operation.role) {
+            Role.INITIATOR -> isGoneLocally.value = true
+            Role.MEMBER -> localAnswer.value = Answer.DECLINED
+            Role.UNKNOWN -> Unit
+        }
     }
 
     private fun showSignError(error: JointOperationSignError) {
