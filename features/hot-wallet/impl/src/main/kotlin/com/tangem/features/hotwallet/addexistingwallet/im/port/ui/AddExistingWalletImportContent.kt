@@ -14,11 +14,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,6 +48,7 @@ import com.tangem.core.ui.test.ImportWalletScreenTestTags
 import com.tangem.features.hotwallet.addexistingwallet.im.port.ui.utils.InvalidWordsColorTransformation
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +134,14 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
         )
     }
 
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        // The screen is pushed while the sheet that asked for it is still collapsing, so the request waits for
+        // the entrance to settle — the same wait PinTextField and the amount field make.
+        delay(timeMillis = FOCUS_REQUEST_DELAY_MS)
+        focusRequester.requestFocus()
+    }
+
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -137,6 +149,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
             modifier = Modifier
                 .fillMaxWidth()
                 .height(TangemTheme.dimens.size142)
+                .focusRequester(focusRequester)
                 .testTag(ImportWalletScreenTestTags.PHRASE_TEXT_FIELD),
             value = state.words,
             onValueChange = state.wordsChange,
@@ -211,6 +224,8 @@ private fun SuggestionButton(text: String, onClick: () -> Unit, modifier: Modifi
         textColor = TangemTheme.colors.text.primary2,
     )
 }
+
+private const val FOCUS_REQUEST_DELAY_MS = 200L
 
 private fun Modifier.rowPadding(index: Int, rowSize: Int, outSide: Dp, inSide: Dp): Modifier = when (index) {
     0 -> this.padding(start = outSide, end = inSide)
