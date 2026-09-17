@@ -69,7 +69,7 @@ fun TangemButtonStack(
                 TangemButtonStack.Variant.Material -> TangemSurface(isMaterial = true, shape = CircleShape) {
                     entries(Modifier.padding(all = 4.dp))
                 }
-                TangemButtonStack.Variant.Ghost -> entries(Modifier)
+                TangemButtonStack.Variant.Ghost -> entries(Modifier.padding(4.dp))
             }
         }
     }
