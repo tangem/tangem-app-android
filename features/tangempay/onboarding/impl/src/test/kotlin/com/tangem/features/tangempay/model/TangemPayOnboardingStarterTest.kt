@@ -12,6 +12,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
@@ -85,6 +86,7 @@ internal class TangemPayOnboardingStarterTest {
         exitCount = 0
         requestedWalletsIds = null
         every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
+        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns Unit.right()
         coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.PENDING).right()
     }
@@ -360,6 +362,77 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(loadingChanges).containsExactly(false)
                 verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
             }
+    }
+
+    @Nested
+    inner class ResidencyStep {
+
+        @Test
+        fun `GIVEN residency step enabled WHEN startOnboarding THEN residency opened instead of KYC`() = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+
+            // Act
+            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
+
+            // Assert
+            verify(exactly = 1) {
+                router.replaceAll(
+                    AppRoute.Wallet,
+                    AppRoute.TangemPayEligibility(
+                        product = TangemPayProduct.PAYMENT_ACCOUNT,
+                        userWalletId = USER_WALLET_ID,
+                    ),
+                    onComplete = any(),
+                )
+            }
+            verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any()) }
+        }
+
+        @Test
+        fun `GIVEN residency step enabled and campaign WHEN startOnboarding THEN order created before residency`() =
+            runTest {
+                // Arrange
+                every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+                coEvery {
+                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
+                } returns campaignOffer().right()
+                coEvery {
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                } returns ORDER_ID.right()
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                coVerify(exactly = 1) {
+                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_KEY, SPECIFICATION_NAME, ORDER_TYPE)
+                }
+                verify(exactly = 1) {
+                    router.replaceAll(
+                        AppRoute.Wallet,
+                        AppRoute.TangemPayEligibility(
+                            product = TangemPayProduct.PAYMENT_ACCOUNT,
+                            userWalletId = USER_WALLET_ID,
+                        ),
+                        onComplete = any(),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN residency step enabled WHEN openKyc THEN KYC opened directly`() = runTest {
+            // Arrange
+            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
+
+            // Act
+            starter.openKyc(USER_WALLET_ID)
+
+            // Assert
+            verify(exactly = 1) {
+                router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
+            }
+        }
     }
 
     private fun customerInfo(kycStatus: KycStatus) = CustomerInfo(
