@@ -45,10 +45,12 @@ internal sealed class StoriesEvents(
 
     companion object {
 
-        fun storyShown(storyId: String, source: String, watchCount: String): StoriesEvents = when (storyId) {
-            StoryContentIds.STORY_POLYMARKET_ONBOARDING.id -> PolymarketOnboarding(source, watchCount)
-            StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id -> YieldPromo(source, watchCount)
-            else -> SwapStories(source, watchCount)
-        }
+        fun storyShown(storyId: String, source: String, watchCount: String): StoriesEvents? =
+            when (StoryContentIds.entries.firstOrNull { it.id == storyId }) {
+                StoryContentIds.STORY_POLYMARKET_ONBOARDING -> PolymarketOnboarding(source, watchCount)
+                StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO -> YieldPromo(source, watchCount)
+                StoryContentIds.STORY_FIRST_TIME_SWAP -> SwapStories(source, watchCount)
+                null -> null
+            }
     }
 }
