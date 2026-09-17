@@ -2,7 +2,9 @@ package com.tangem.features.collectibles.impl.main
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -32,12 +34,22 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
         val discoveryState by discoveryComponent.uiState.collectAsStateWithLifecycle()
 
+        val pullToRefresh = remember(state.isBalanceRefreshing) {
+            PullToRefreshConfig(isRefreshing = state.isBalanceRefreshing, onRefresh = { onRefresh() })
+        }
+
         CollectiblesMainScreen(
             state = state,
+            pullToRefresh = pullToRefresh,
             discoveryComponent = discoveryComponent,
             discoveryState = discoveryState,
             modifier = modifier,
         )
+    }
+
+    private fun onRefresh() {
+        model.onRefresh()
+        discoveryComponent.onRefresh()
     }
 
     data class Params(val userWalletId: UserWalletId)
