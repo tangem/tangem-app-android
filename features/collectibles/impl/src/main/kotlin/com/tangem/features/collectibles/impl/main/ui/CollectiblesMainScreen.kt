@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,6 +22,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -46,6 +49,7 @@ import dev.chrisbanes.haze.rememberHazeState
 @Composable
 internal fun CollectiblesMainScreen(
     state: CollectiblesMainUM,
+    pullToRefresh: PullToRefreshConfig,
     discoveryComponent: CollectiblesDiscoveryComponent,
     discoveryState: CollectiblesDiscoveryUM,
     modifier: Modifier = Modifier,
@@ -78,7 +82,7 @@ internal fun CollectiblesMainScreen(
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 fadeEnabled = false,
                 onBack = state.onBackClick,
-                endButtonsGroup = { CollectiblesMainMenu(menu = state.menu) },
+                endButton = { CollectiblesMainMenu(menu = state.menu) },
             )
         },
         overlay = { contentPadding ->
@@ -100,22 +104,60 @@ internal fun CollectiblesMainScreen(
         val footerInset = if (isSearchActive) footerHeight else restingFooterHeight
         val bottomInset = with(LocalDensity.current) { footerInset.toDp() } + 12.dp
 
-        MaterialBackdrop {
+        RefreshableList(
+            state = state,
+            pullToRefresh = pullToRefresh,
+            discoveryComponent = discoveryComponent,
+            discoveryState = discoveryState,
+            listState = listState,
+            lead = CollectiblesLeadingBlocks(
+                isHeaderShown = !isSearchActive || searchEntry.isHeaderShown,
+                isTabBandShown = !isSearchActive || searchEntry.isTabBandShown,
+                isTabBandPinned = isTabBandPinned,
+            ),
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                bottom = bottomInset,
+            ),
+        )
+    }
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun RefreshableList(
+    state: CollectiblesMainUM,
+    pullToRefresh: PullToRefreshConfig,
+    discoveryComponent: CollectiblesDiscoveryComponent,
+    discoveryState: CollectiblesDiscoveryUM,
+    listState: LazyListState,
+    lead: CollectiblesLeadingBlocks,
+    contentPadding: PaddingValues,
+) {
+    MaterialBackdrop {
+        if (discoveryState.search.isActive) {
             CollectiblesMainList(
                 state = state,
                 discoveryComponent = discoveryComponent,
                 discoveryState = discoveryState,
                 listState = listState,
-                lead = CollectiblesLeadingBlocks(
-                    isHeaderShown = !isSearchActive || searchEntry.isHeaderShown,
-                    isTabBandShown = !isSearchActive || searchEntry.isTabBandShown,
-                    isTabBandPinned = isTabBandPinned,
-                ),
-                contentPadding = PaddingValues(
-                    top = contentPadding.calculateTopPadding(),
-                    bottom = bottomInset,
-                ),
+                lead = lead,
+                contentPadding = contentPadding,
             )
+        } else {
+            TangemPullToRefreshSlidingContainer(
+                config = pullToRefresh,
+                indicatorOffset = contentPadding.calculateTopPadding(),
+            ) {
+                CollectiblesMainList(
+                    state = state,
+                    discoveryComponent = discoveryComponent,
+                    discoveryState = discoveryState,
+                    listState = listState,
+                    lead = lead,
+                    contentPadding = contentPadding,
+                )
+            }
         }
     }
 }
@@ -204,6 +246,7 @@ private fun PreviewScreen(
 ) {
     CollectiblesMainScreen(
         state = state,
+        pullToRefresh = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         discoveryComponent = remember { CollectiblesDiscoveryPreviewComponent(um = discoveryState) },
         discoveryState = discoveryState,
     )

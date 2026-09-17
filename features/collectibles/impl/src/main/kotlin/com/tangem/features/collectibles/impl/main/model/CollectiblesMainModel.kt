@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectiblesVaultTopUpAddressUseCase
@@ -27,6 +28,8 @@ import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMe
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuConverter
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +55,7 @@ internal class CollectiblesMainModel @Inject constructor(
     private val getCollectiblesVaultTopUpAddressUseCase: GetCollectiblesVaultTopUpAddressUseCase,
     private val clipboardManager: ClipboardManager,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -68,6 +72,8 @@ internal class CollectiblesMainModel @Inject constructor(
         onDismiss = ::onMenuDismiss,
         onItemClick = ::onMenuItemClick,
     )
+
+    private val refreshJob = JobHolder()
 
     val uiState: StateFlow<CollectiblesMainUM>
         field = MutableStateFlow(buildInitialState())
@@ -103,8 +109,24 @@ internal class CollectiblesMainModel @Inject constructor(
                 onClick = ::onCollectionClick,
             ),
             menu = menuConverter.convert(Unit),
+            isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
         )
+    }
+
+    fun onRefresh() {
+        modelScope.launch {
+            setRefreshing(isRefreshing = true)
+
+            collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+                .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles account balance", error) }
+
+            setRefreshing(isRefreshing = false)
+        }.saveIn(refreshJob)
+    }
+
+    private fun setRefreshing(isRefreshing: Boolean) {
+        uiState.update { state -> state.copy(isBalanceRefreshing = isRefreshing) }
     }
 
     private fun onMenuClick() {
