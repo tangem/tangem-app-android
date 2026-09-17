@@ -48,7 +48,7 @@ internal interface FeedBlock : ComposableContentComponent {
 }
 
 /** What a block can ask of the feed host — anything it can't reach through the router. */
-internal interface FeedBlockCallbacks {
+internal interface FeedBlockModalCallbacks {
 
     /** Brings one of the feed's own tabs to front; tabs are pages of the host's pager, not routes. */
     fun onOpenTab(tab: FeedTabId)
