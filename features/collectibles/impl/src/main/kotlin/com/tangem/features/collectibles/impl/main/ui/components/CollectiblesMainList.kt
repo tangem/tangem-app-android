@@ -25,8 +25,7 @@ internal object MainListKeys {
 }
 
 internal data class CollectiblesLeadingBlocks(
-    val isHeaderShown: Boolean,
-    val isTabBandShown: Boolean,
+    val areShown: Boolean,
     val isTabBandPinned: Boolean,
     val alpha: Float,
 )
@@ -51,7 +50,7 @@ internal fun CollectiblesMainList(
 
     val discoveryListContext = CollectiblesDiscoveryListContext(
         isTabBandPinned = lead.isTabBandPinned,
-        isTabBandShown = lead.isTabBandShown,
+        isTabBandShown = lead.areShown,
         leadingBlocksAlpha = lead.alpha,
         statusHeight = statusHeight,
     )
@@ -62,7 +61,7 @@ internal fun CollectiblesMainList(
             state = listState,
             contentPadding = contentPadding,
         ) {
-            headerItem(state = state, isHeaderShown = lead.isHeaderShown, alpha = lead.alpha)
+            headerItem(state = state, isHeaderShown = lead.areShown, alpha = lead.alpha)
 
             with(discoveryComponent) { content(uiState = discoveryState, modifier = Modifier) }
 
