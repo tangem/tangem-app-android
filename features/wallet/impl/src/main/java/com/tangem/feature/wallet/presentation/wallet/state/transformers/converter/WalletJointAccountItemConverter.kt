@@ -2,15 +2,18 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.core.ui.ds2.util.TangemPriceChange
+import com.tangem.core.ui.ds2.util.TangemPriceChange.Direction.Neutral
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.ds2.util.TangemPriceChange
-import com.tangem.core.ui.ds2.util.TangemPriceChange.Direction.Neutral
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_clock_16
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -76,7 +79,7 @@ internal class WalletJointAccountItemConverter(
 
         return JointAccountMainUM.BannerUM(
             text = resourceReference(id = R.string.joint_account_invite_members_to_join),
-            iconRes = R.drawable.ic_group_24,
+            icon = Icons.ic_user_plus_16,
             onClick = { onAccountClick(userWalletId, account.accountId.value) },
         )
     }
@@ -86,7 +89,7 @@ internal class WalletJointAccountItemConverter(
 
         return JointAccountMainUM.BannerUM(
             text = resourceReference(id = R.string.joint_account_activation_account_button_title),
-            iconRes = R.drawable.ic_circle_clock_24,
+            icon = Icons.ic_clock_16,
             onClick = { onAccountClick(userWalletId, account.accountId.value) },
         )
     }
