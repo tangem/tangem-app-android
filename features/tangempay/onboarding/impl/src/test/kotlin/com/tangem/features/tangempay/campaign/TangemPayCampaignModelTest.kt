@@ -22,6 +22,7 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.model.TangemPayCampaignResolution
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
@@ -54,6 +55,7 @@ internal class TangemPayCampaignModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val eligibilityManager: TangemPayEligibilityManager = mockk()
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase = mockk()
+    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val onboardingStarter: TangemPayOnboardingStarter = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
@@ -67,12 +69,14 @@ internal class TangemPayCampaignModelTest {
             userWalletsListRepository,
             eligibilityManager,
             resolveTangemPayCampaignUseCase,
+            produceTangemPayInitialDataUseCase,
             clearAppsFlyerDeeplinkUseCase,
             onboardingStarter,
             analytics,
         )
         givenResolution(TangemPayCampaignResolution.Landing(CAMPAIGN))
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        coEvery { produceTangemPayInitialDataUseCase(any()) } returns Unit.right()
     }
 
     @Nested
@@ -217,6 +221,97 @@ internal class TangemPayCampaignModelTest {
             // Assert
             assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Landing::class.java)
             coVerify(exactly = 2) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN session expired WHEN model created THEN session renewed AND campaign resolved again`() = runTest {
+            // Arrange
+            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returnsMany listOf(
+                TangemPayCampaignResolution.SessionExpired(WALLET_ID).right(),
+                TangemPayCampaignResolution.Landing(CAMPAIGN).right(),
+            )
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Landing::class.java)
+            coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
+            coVerify(exactly = 2) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two expired sessions WHEN model created THEN both renewed AND campaign resolved`() = runTest {
+            // Arrange
+            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returnsMany listOf(
+                TangemPayCampaignResolution.SessionExpired(WALLET_ID).right(),
+                TangemPayCampaignResolution.SessionExpired(OTHER_WALLET_ID).right(),
+                TangemPayCampaignResolution.Landing(CAMPAIGN).right(),
+            )
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Landing::class.java)
+            coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
+            coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(OTHER_WALLET_ID) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN session renewal fails WHEN model created THEN error state AND campaign not resolved again`() =
+            runTest {
+                // Arrange
+                givenResolution(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+                coEvery { produceTangemPayInitialDataUseCase(WALLET_ID) } returns IllegalStateException().left()
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
+                coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
+                coVerify(exactly = 1) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN session still expired after renewal WHEN model created THEN error state AND no second renewal`() =
+            runTest {
+                // Arrange
+                givenResolution(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
+                coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
+                coVerify(exactly = 2) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN renewal exhausted WHEN retry THEN the session is renewed again`() = runTest {
+            // Arrange
+            givenResolution(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as TangemPayCampaignUM.Error).onRetry()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
+            coVerify(exactly = 2) { produceTangemPayInitialDataUseCase(WALLET_ID) }
             model.onDestroy()
         }
     }
@@ -577,6 +672,7 @@ internal class TangemPayCampaignModelTest {
             userWalletsListRepository = userWalletsListRepository,
             eligibilityManager = eligibilityManager,
             resolveTangemPayCampaignUseCase = resolveTangemPayCampaignUseCase,
+            produceTangemPayInitialDataUseCase = produceTangemPayInitialDataUseCase,
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             onboardingStarter = onboardingStarter,
             analytics = analytics,
@@ -588,6 +684,7 @@ internal class TangemPayCampaignModelTest {
         const val CARD_ART_URL = "https://example.com/oxford.png"
         const val OFFER_ART_URL = "https://example.com/oxford-offer.png"
         val WALLET_ID = UserWalletId("011")
+        val OTHER_WALLET_ID = UserWalletId("012")
         val CAMPAIGN = TangemPayCampaign(cardArtUrl = CARD_ART_URL)
         val UNIVERSAL_ERROR = object : UniversalError {
             override val errorCode: Int = 0

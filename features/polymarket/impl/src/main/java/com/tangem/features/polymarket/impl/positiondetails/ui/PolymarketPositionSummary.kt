@@ -39,12 +39,14 @@ internal fun PolymarketPositionSummary(state: Summary, modifier: Modifier = Modi
     ) {
         PolymarketCardIcon(iconUrl = state.iconUrl, modifier = Modifier.padding(bottom = 16.dp).size(72.dp))
         PositionPnl(state.pnl)
-        Text(
-            text = state.currentValue.resolveReference(),
-            style = TangemTheme.typography3.heading.small,
-            color = TangemTheme.colors3.text.primary,
-            textAlign = TextAlign.Center,
-        )
+        state.currentValue?.let { currentValue ->
+            Text(
+                text = currentValue.resolveReference(),
+                style = TangemTheme.typography3.heading.small,
+                color = TangemTheme.colors3.text.primary,
+                textAlign = TextAlign.Center,
+            )
+        }
         Text(
             text = state.title.resolveReference(),
             style = TangemTheme.typography3.body.medium,
@@ -66,6 +68,16 @@ internal fun PolymarketPositionSummary(state: Summary, modifier: Modifier = Modi
                     text = resourceReference(R.string.prediction_positions_payout, wrappedList(payout)),
                     status = TangemBadge.Status.Warning,
                     size = TangemBadge.Size.X6,
+                )
+            }
+            state.result?.let { result ->
+                TangemBadge(
+                    modifier = Modifier.alignBy(FirstBaseline),
+                    text = result.text,
+                    variant = result.variant,
+                    status = result.status,
+                    size = result.size,
+                    iconStart = result.iconStart,
                 )
             }
         }

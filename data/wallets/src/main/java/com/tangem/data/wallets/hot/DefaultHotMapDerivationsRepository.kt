@@ -69,6 +69,13 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         derivePublicKeys(userWallet, derivations).first
     }
 
+    override suspend fun findMissingDerivations(
+        userWallet: UserWallet.Hot,
+        currencies: List<CryptoCurrency>,
+    ): Map<ByteArrayKey, List<DerivationPath>> {
+        return MissedDerivationsFinder(userWallet, isDynamicAddressesEnabled = true).find(currencies)
+    }
+
     override suspend fun derivePublicKeys(
         userWallet: UserWallet.Hot,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
