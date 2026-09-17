@@ -462,7 +462,7 @@
   <string name="common_no_results">Нет результатов</string>
   <string name="common_none">Нет</string>
   <string name="common_not_added">Не добавлено</string>
-  <string name="common_not_available">Не доступно</string>
+  <string name="common_not_available">Недоступно</string>
   <string name="common_not_now">Не сейчас</string>
   <string name="common_now">Сейчас</string>
   <string name="common_ok">OK</string>
