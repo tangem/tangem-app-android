@@ -163,9 +163,11 @@ internal interface PolymarketDataModule {
         fun providePredictionFundingWindow(
             predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
             config: PredictionBalancePollingConfig,
+            appScope: AppCoroutineScope,
         ): PredictionFundingWindow = DefaultPredictionFundingWindow(
             predictionAccountStatusSupplier = predictionAccountStatusSupplier,
             config = config,
+            appScope = appScope,
         )
     }
 }
