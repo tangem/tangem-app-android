@@ -9,6 +9,7 @@ import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.RejectJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -109,4 +110,11 @@ interface JointAccountApi {
         @Path("operationId") operationId: String,
         @Body body: SignJointOperationRequest,
     ): ApiResponse<JointOperationDto>
+
+    @POST("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}/reject")
+    suspend fun rejectJointOperation(
+        @Path("walletId") walletId: String,
+        @Path("operationId") operationId: String,
+        @Body body: RejectJointOperationRequest,
+    ): ApiResponse<Unit>
 }
