@@ -7,6 +7,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -44,12 +45,14 @@ import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.models.ChangeCardsButtonState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.transfer.SwapTransferNotificationsFactory
@@ -1120,6 +1123,22 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     }
 
     @Test
+    fun `GIVEN a prediction top-up WHEN the swap is sent THEN the funding window opens`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createTopUpSwapModel(accountFlow = AccountFlow.PredictionTopUp)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { predictionFundingWindow.open(userWalletId) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
@@ -1889,6 +1908,42 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
         return model
     }
+
+    private fun TestScope.createTopUpSwapModel(accountFlow: AccountFlow?): SwapModel {
+        stubResolvedTopUpPair()
+        val provider = swapProvider(id = "changelly", type = ExchangeProviderType.CEX)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
+        coEvery { swapInteractor.getUnfulfilledReceiveRequirement(any()) } returns null
+        coEvery {
+            swapInteractor.onSwap(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns SwapTransactionState.TxSent(txHash = TRANSFER_TX_HASH, timestamp = 0L)
+        every { getExplorerTransactionUrlUseCase(txHash = any(), currency = any()) } returns EXPLORER_URL.right()
+
+        val model = createModel(accountFlow = accountFlow, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.dataState = model.dataState.copy(
+            amount = "5",
+            selectedProvider = provider,
+            lastLoadedSwapStates = mapOf(provider to quotesLoadedState(provider)),
+        )
+        model.uiState = model.uiState.copy(providerState = providerContentState(provider))
+        model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
+            every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+        }
+        return model
+    }
+
+    private fun providerContentState(provider: SwapProvider) = ProviderState.Content(
+        id = provider.providerId,
+        name = provider.name,
+        type = provider.type.providerName,
+        iconUrl = "",
+        subtitle = stringReference(""),
+        selectionType = ProviderState.SelectionType.CLICK,
+        additionalBadge = ProviderState.AdditionalBadge.Empty,
+        namePrefix = ProviderState.PrefixType.NONE,
+        onProviderClick = {},
+    )
 
     private fun stubResolvedTopUpPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
         val wallet = accountFlowUserWallet()
