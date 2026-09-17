@@ -15,9 +15,6 @@ internal class DefaultTangemPayFeatureToggles(
     override val isPlasticCardOrderEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1157_PLASTIC_CARD_ORDER_ENABLED)
 
-    override val isPinBiometryGateEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED)
-
     override val isBankOfframpEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16842_TANGEM_PAY_BANK_OFFRAMP_ENABLED)
 
