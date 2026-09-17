@@ -61,11 +61,11 @@ internal object CardDomainModule {
 
     @Provides
     @Singleton
-    fun provideDeriveMissingKeysUseCase(
+    fun provideDeriveCurrencyAndOwnerKeysUseCase(
         derivationsRepository: DerivationsRepository,
         jointOwnerKeysRepository: JointOwnerKeysRepository,
-    ): DeriveMissingKeysUseCase {
-        return DeriveMissingKeysUseCase(
+    ): DeriveCurrencyAndOwnerKeysUseCase {
+        return DeriveCurrencyAndOwnerKeysUseCase(
             derivationsRepository = derivationsRepository,
             jointOwnerKeysRepository = jointOwnerKeysRepository,
         )

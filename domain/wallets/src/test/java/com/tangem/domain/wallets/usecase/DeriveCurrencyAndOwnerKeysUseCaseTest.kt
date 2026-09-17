@@ -18,12 +18,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DeriveMissingKeysUseCaseTest {
+internal class DeriveCurrencyAndOwnerKeysUseCaseTest {
 
     private val derivationsRepository: DerivationsRepository = mockk()
     private val jointOwnerKeysRepository: JointOwnerKeysRepository = mockk()
 
-    private val useCase = DeriveMissingKeysUseCase(
+    private val useCase = DeriveCurrencyAndOwnerKeysUseCase(
         derivationsRepository = derivationsRepository,
         jointOwnerKeysRepository = jointOwnerKeysRepository,
     )

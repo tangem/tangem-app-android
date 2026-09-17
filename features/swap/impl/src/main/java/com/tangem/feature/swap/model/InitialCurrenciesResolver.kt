@@ -81,7 +81,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
-     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral.
+     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.PredictionTopUp]:
+     *  none — the prediction account is target-only, so FROM is already auto-filled from the portfolio.
      * @return pair of (from, to) [SwapCurrencyStatus]; either or both may be null
      */
     suspend operator fun invoke(
@@ -226,6 +227,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
         )
         is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw ->
             mostFundedAccountCurrency(accountFlowAccounts) ?: from
+        is AccountFlow.PredictionTopUp -> from
         null -> from
     }
 
@@ -324,8 +326,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
     /**
      * Every currency the payment account is issued on — the same set the token selector lists — or, while the
-     * account flow is off, only the account's legacy currency, which is what the pre-multichain screens resolve
-     * against. The issued set collapses to that same legacy currency when the account has no issued networks.
+     * account flow is off, only the first of them, because the pre-multichain screens resolve against a single
+     * account currency.
      */
     private fun getPaymentAccountCurrencies(
         accountStatus: AccountStatus.Payment,
@@ -339,10 +341,10 @@ internal class InitialCurrenciesResolver @Inject constructor(
     }
 
     private fun PaymentAccountStatusValue.Loaded.currencies(isAccountFlowEnabled: Boolean) =
-        if (isAccountFlowEnabled) cryptoCurrencyStatuses else listOfNotNull(cryptoCurrencyStatus)
+        if (isAccountFlowEnabled) cryptoCurrencyStatuses else cryptoCurrencyStatuses.take(1)
 
     private fun PaymentAccountStatusValue.Deactivated.currencies(isAccountFlowEnabled: Boolean) =
-        if (isAccountFlowEnabled) cryptoCurrencyStatuses else listOfNotNull(cryptoCurrencyStatus)
+        if (isAccountFlowEnabled) cryptoCurrencyStatuses else cryptoCurrencyStatuses.take(1)
 
     /**
      * Places the [selectedSwapCurrencyStatus] into the FROM or TO slot based on [swapCurrencyPosition].
