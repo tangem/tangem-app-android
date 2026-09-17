@@ -24,6 +24,7 @@ import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCas
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
+import com.tangem.domain.jointaccount.usecase.IsJointOperationSlotBusyUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
@@ -193,6 +194,15 @@ internal object JointAccountDomainModule {
             ownerAddressResolver = ownerAddressResolver,
             networkReader = networkReader,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsJointOperationSlotBusyUseCase(
+        supplier: SingleJointAccountListSupplier,
+        networkReader: JointNetworkReader,
+    ): IsJointOperationSlotBusyUseCase {
+        return IsJointOperationSlotBusyUseCase(supplier = supplier, networkReader = networkReader)
     }
 
     @Provides
