@@ -29,7 +29,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.positionresult.ui.preview.PolymarketPositionResultPreviewProvider
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
@@ -39,11 +38,7 @@ import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPos
  * same status-screen structure as the order result.
  */
 @Composable
-internal fun PolymarketPositionResultScreen(
-    state: PolymarketPositionResultUM,
-    market: MarketHeaderUM,
-    modifier: Modifier = Modifier,
-) {
+internal fun PolymarketPositionResultScreen(state: PolymarketPositionResultUM, modifier: Modifier = Modifier) {
     TangemStatusScreen(
         modifier = modifier,
         variant = state.result.variant(),
@@ -51,7 +46,7 @@ internal fun PolymarketPositionResultScreen(
         description = state.resolvedAt,
         asset = { ResultIcon(state.result) },
         details = {
-            PredictionMarketBlock(state = market)
+            PredictionMarketBlock(state = state.market)
             ResultRows(state = state)
         },
         footer = { ResultFooter(note = state.footerNote) },
@@ -157,15 +152,6 @@ private fun PolymarketPositionResultScreenPreview(
     @PreviewParameter(PolymarketPositionResultPreviewProvider::class) state: PolymarketPositionResultUM,
 ) {
     TangemThemePreviewRedesign(alwaysShowBottomSheets = false) {
-        PolymarketPositionResultScreen(
-            state = state,
-            market = MarketHeaderUM(
-                title = "Will Uzbekistan win the 2026 FIFA World Cup?",
-                imageUrl = null,
-                outcomeTitle = "No",
-                outcomePriceCents = 85,
-                resolutionDateMillis = null,
-            ),
-        )
+        PolymarketPositionResultScreen(state = state)
     }
 }
