@@ -36,8 +36,9 @@ internal data class WalletInfo(val name: String, val deviceIconUM: DeviceIconUM)
 /**
  * Flattens every account of every wallet into `address -> account` maps keyed by [Network.RawID] (a swap's two legs can
  * sit on different networks). Used to decide whether a transfer counterparty is one of the user's own accounts/wallets.
- * Crypto-portfolio accounts contribute each currency's address; a Payment (Tangem Pay) account contributes its deposit
- * address, so a transfer to the user's own Tangem Pay account resolves as own — not as an external address.
+ * Crypto-portfolio accounts contribute each currency's address; a Payment (Tangem Pay) account contributes the address
+ * of every network it is issued on, so a transfer to the user's own Tangem Pay account resolves as own — not as an
+ * external address.
  */
 internal fun buildOwnAccountAddressMapAllNetworks(
     lists: List<AccountStatusList>,
@@ -52,9 +53,9 @@ internal fun buildOwnAccountAddressMapAllNetworks(
                     map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
                 }
                 is AccountStatus.Payment -> {
-                    val currencyStatus = (status.value as? PaymentAccountStatusValue.Loaded)?.cryptoCurrencyStatus
-                    val address = currencyStatus?.value?.networkAddress?.defaultAddress?.value
-                    if (currencyStatus != null && address != null) {
+                    val statuses = (status.value as? PaymentAccountStatusValue.Loaded)?.cryptoCurrencyStatuses
+                    statuses.orEmpty().forEach { currencyStatus ->
+                        val address = currencyStatus.value.networkAddress?.defaultAddress?.value ?: return@forEach
                         val rawId = currencyStatus.currency.network.id.rawId
                         map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
                     }

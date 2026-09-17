@@ -5,8 +5,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
+import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
+import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM
@@ -114,7 +116,12 @@ internal class PolymarketPositionsModel @Inject constructor(
             .saveIn(observation)
     }
 
-    private fun openPosition(id: PolymarketPositionId) {
-        router.push(PolymarketRoute.PositionDetails(params.userWalletId, id))
+    private fun openPosition(position: PolymarketPosition.Open) {
+        when {
+            position.canOpenPositionResult -> router.push(PolymarketRoute.PositionResult(params.userWalletId, position))
+            position.canOpenPositionDetails -> router.push(
+                PolymarketRoute.PositionDetails(params.userWalletId, position.id),
+            )
+        }
     }
 }
