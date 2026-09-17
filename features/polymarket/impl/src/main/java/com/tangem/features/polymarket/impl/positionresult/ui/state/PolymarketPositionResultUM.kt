@@ -10,7 +10,7 @@ internal data class PolymarketPositionResultUM(
     val market: MarketHeaderUM,
     val result: Result,
     val title: TextReference,
-    val resolvedAt: TextReference,
+    val resolvedAt: TextReference?,
     val invested: Metric?,
     val profit: Metric?,
     val footerNote: TextReference?,
