@@ -607,8 +607,6 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     private fun loadPosition(params: PlacePredictionComponent.Params.Sell) {
-        if (positionJobHolder.isActive) return
-
         modelScope.launch {
             val addresses = withContext(dispatchers.default) {
                 derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
