@@ -59,6 +59,32 @@ internal class PolymarketPositionsLoaderTest {
     }
 
     @Test
+    fun `GIVEN empty intermediate page WHEN continuation fails THEN shows loading and a retryable error`() = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+        val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
+        fetch = { _, offset ->
+            if (offset == 0) BatchFetchResult.Success(emptyList(), empty = true, last = false) else response.await()
+        }
+
+        // Act
+        feed.resume(backgroundScope)
+        runCurrent()
+        val loading = feed.state.value
+        response.complete(error())
+        runCurrent()
+        val failed = feed.state.value as Content.Error
+        fetch = { _, _ -> page("one") }
+        failed.onRetry()
+        runCurrent()
+
+        // Assert
+        assertThat(loading).isEqualTo(Content.Loading)
+        assertThat(ids(feed)).containsExactly("condition:one")
+        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+    }
+
+    @Test
     fun `GIVEN failed next page WHEN retry tapped THEN retries same offset and stops at the end`() = runTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)

@@ -69,7 +69,7 @@ fun TangemButtonStack(
                 TangemButtonStack.Variant.Material -> TangemSurface(isMaterial = true, shape = CircleShape) {
                     entries(Modifier.padding(all = 4.dp))
                 }
-                TangemButtonStack.Variant.Ghost -> entries(Modifier)
+                TangemButtonStack.Variant.Ghost -> entries(Modifier.padding(4.dp))
             }
         }
     }
@@ -81,8 +81,8 @@ object TangemButtonStack {
      * Container style behind the entries.
      *
      * - [Material] — the design default: a translucent material pill with a full corner radius.
-     * - [Ghost] — no container at all: the entries alone, without the pill or its padding. For
-     *   surfaces that already separate the actions from the content behind them.
+     * - [Ghost] — no container at all: the entries alone, without the pill. For surfaces that
+     *   already separate the actions from the content behind them.
      */
     enum class Variant {
         Material,
