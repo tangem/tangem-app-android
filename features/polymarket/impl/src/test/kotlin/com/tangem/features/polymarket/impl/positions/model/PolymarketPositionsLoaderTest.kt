@@ -5,6 +5,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
@@ -59,6 +61,96 @@ internal class PolymarketPositionsLoaderTest {
     }
 
     @Test
+    fun `GIVEN cached list WHEN filter changes and resets before recalculation THEN restores content without loading forever`() = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+        feed.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        feed.selectFilter(PolymarketPositionsFilter.WON)
+        feed.selectFilter(PolymarketPositionsFilter.ALL)
+        runCurrent()
+
+        // Assert
+        assertThat(ids(feed)).containsExactly("condition:one")
+        assertThat(requests.map { it.second }).containsExactly(0)
+    }
+
+    @Test
+    fun `GIVEN unmatched first page WHEN Won is selected THEN waits for matches and clearing reuses all cached rows`() = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+        val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
+        fetch = { _, offset -> if (offset == 0) page("active", last = false) else response.await() }
+        feed.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        feed.selectFilter(PolymarketPositionsFilter.WON)
+        runCurrent()
+        val loading = feed.state.value.content
+        response.complete(
+            BatchFetchResult.Success(
+                listOf(createPolymarketPosition(assetId = "won", result = PolymarketPositionResult.WON)),
+                empty = false,
+                last = true,
+            ),
+        )
+        runCurrent()
+        val matched = ids(feed)
+        feed.selectFilter(PolymarketPositionsFilter.ALL)
+        runCurrent()
+
+        // Assert
+        assertThat(loading).isEqualTo(Content.Loading)
+        assertThat(matched).containsExactly("condition:won")
+        assertThat(ids(feed)).containsExactly("condition:active", "condition:won").inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+    }
+
+    @Test
+    fun `GIVEN no matching rows WHEN source ends THEN shows empty and clearing restores cached positions`() = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+        feed.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        feed.selectFilter(PolymarketPositionsFilter.LOST)
+        runCurrent()
+        val filtered = feed.state.value.content
+        feed.selectFilter(PolymarketPositionsFilter.ALL)
+        runCurrent()
+
+        // Assert
+        assertThat(filtered).isEqualTo(Content.Empty)
+        assertThat(ids(feed)).containsExactly("condition:one")
+        assertThat(requests.map { it.second }).containsExactly(0)
+    }
+
+    @Test
+    fun `GIVEN filtered continuation fails without matches WHEN retried THEN keeps the filter and retry offset`() = runTest {
+        // Arrange
+        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+        fetch = { _, offset -> if (offset == 0) page("active", last = false) else error() }
+        feed.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        feed.selectFilter(PolymarketPositionsFilter.WON)
+        runCurrent()
+        val failed = feed.state.value.content as Content.Error
+        fetch = { _, _ -> page("another active") }
+        failed.onRetry()
+        runCurrent()
+
+        // Assert
+        assertThat(feed.state.value.content).isEqualTo(Content.Empty)
+        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+    }
+
+    @Test
     fun `GIVEN empty intermediate page WHEN continuation fails THEN shows loading and a retryable error`() = runTest {
         // Arrange
         val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
@@ -70,10 +162,10 @@ internal class PolymarketPositionsLoaderTest {
         // Act
         feed.resume(backgroundScope)
         runCurrent()
-        val loading = feed.state.value
+        val loading = feed.state.value.content
         response.complete(error())
         runCurrent()
-        val failed = feed.state.value as Content.Error
+        val failed = feed.state.value.content as Content.Error
         fetch = { _, _ -> page("one") }
         failed.onRetry()
         runCurrent()
@@ -122,7 +214,7 @@ internal class PolymarketPositionsLoaderTest {
         runCurrent()
 
         // Assert
-        assertThat(feed.state.value).isSameInstanceAs(initial)
+        assertThat(feed.state.value.content).isSameInstanceAs(initial)
         assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
     }
 
@@ -236,7 +328,7 @@ internal class PolymarketPositionsLoaderTest {
 
         // Assert
         assertThat(ids(current)).containsExactly("condition:new")
-        assertThat(previous.state.value).isEqualTo(Content.Loading)
+        assertThat(previous.state.value.content).isEqualTo(Content.Loading)
     }
 
     @Test
@@ -246,7 +338,7 @@ internal class PolymarketPositionsLoaderTest {
         coEvery { deriveAddresses.stored(wallet) } returns null
         feed.resume(backgroundScope)
         runCurrent()
-        val failed = feed.state.value as Content.Error
+        val failed = feed.state.value.content as Content.Error
 
         // Act
         coEvery { deriveAddresses.stored(wallet) } returns addresses
@@ -325,7 +417,7 @@ internal class PolymarketPositionsLoaderTest {
 
     private fun error() = BatchFetchResult.Error(IllegalStateException("Offline"))
 
-    private fun data(feed: PolymarketPositionsLoader.Feed) = feed.state.value as Content.Data
+    private fun data(feed: PolymarketPositionsLoader.Feed) = feed.state.value.content as Content.Data
 
     private fun ids(feed: PolymarketPositionsLoader.Feed) = data(feed).positions.map { it.id }
 }

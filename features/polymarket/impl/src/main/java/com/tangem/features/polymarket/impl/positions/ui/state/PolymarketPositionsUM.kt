@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.positions.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -9,9 +10,17 @@ internal data class PolymarketPositionsUM(
     val content: Content,
     val onTabSelect: (Tab) -> Unit,
     val onBackClick: () -> Unit,
+    val selectedFilter: PolymarketPositionsFilter = PolymarketPositionsFilter.ALL,
+    val onFilterSelect: (PolymarketPositionsFilter) -> Unit = {},
 ) {
 
     enum class Tab { Active, Finished }
+
+    @Immutable
+    data class FilteredContent(
+        val filter: PolymarketPositionsFilter = PolymarketPositionsFilter.ALL,
+        val content: Content = Content.Loading,
+    )
 
     @Immutable
     sealed interface Content {
