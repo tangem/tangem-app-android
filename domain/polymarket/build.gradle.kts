@@ -13,7 +13,6 @@ dependencies {
     // region Other libraries
     api(deps.arrow.core)
     api(deps.kotlin.coroutines)
-    implementation(deps.kotlin.serialization.core)
     // endregion
 
     // region Core
