@@ -56,7 +56,12 @@ internal fun PlacePredictionSummaryContent(
         modifier = modifier,
         topBar = {
             TangemTopNavigation(
-                title = resourceReference(R.string.prediction_place_summary_title),
+                title = resourceReference(
+                    when (state.order) {
+                        is OrderSideUM.Buy -> R.string.prediction_place_summary_title
+                        is OrderSideUM.Sell -> R.string.prediction_close_title
+                    },
+                ),
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onBack = intents::onBackClick,
                 onClose = intents::onCloseClick,
@@ -78,7 +83,12 @@ internal fun PlacePredictionSummaryContent(
                     size = TangemButton.Size.X12,
                     isLoading = state.submit !is SubmitUM.Idle,
                     iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
-                    text = resourceReference(R.string.prediction_place_button),
+                    text = resourceReference(
+                        when (state.order) {
+                            is OrderSideUM.Buy -> R.string.prediction_place_button
+                            is OrderSideUM.Sell -> R.string.prediction_close_button
+                        },
+                    ),
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onPlaceClick,
                 )
@@ -96,7 +106,7 @@ internal fun PlacePredictionSummaryContent(
                 amountValue = state.amountValue,
                 payout = state.quote.payout(),
                 collateral = state.collateral,
-                balance = (state.order as? OrderSideUM.Buy)?.balance,
+                order = state.order,
             )
             PredictionMarketBlock(state = state.market)
             PredictionDetailsBlock(state = state)
