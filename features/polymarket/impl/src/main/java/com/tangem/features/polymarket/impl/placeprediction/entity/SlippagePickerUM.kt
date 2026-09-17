@@ -38,7 +38,7 @@ internal data class SlippagePickerUM(
     }
 }
 
-internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("0.25")
+internal val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("3")
 internal val MIN_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("0.1")
 internal val MAX_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("30")
 
@@ -47,16 +47,16 @@ internal const val SLIPPAGE_DECIMALS = 2
 @Immutable
 internal data class SlippagePresetUM(val percent: BigDecimal, val role: Role) {
 
-    enum class Role { Default, Plain, Max }
+    enum class Role { Default, Plain }
 }
 
 internal val SLIPPAGE_PRESETS: ImmutableList<SlippagePresetUM> = persistentListOf(
-    SlippagePresetUM(percent = DEFAULT_SLIPPAGE_PERCENT, role = SlippagePresetUM.Role.Default),
     SlippagePresetUM(percent = BigDecimal("0.1"), role = SlippagePresetUM.Role.Plain),
+    SlippagePresetUM(percent = BigDecimal("0.25"), role = SlippagePresetUM.Role.Plain),
     SlippagePresetUM(percent = BigDecimal("0.5"), role = SlippagePresetUM.Role.Plain),
     SlippagePresetUM(percent = BigDecimal("1"), role = SlippagePresetUM.Role.Plain),
     SlippagePresetUM(percent = BigDecimal("2"), role = SlippagePresetUM.Role.Plain),
-    SlippagePresetUM(percent = BigDecimal("3"), role = SlippagePresetUM.Role.Max),
+    SlippagePresetUM(percent = DEFAULT_SLIPPAGE_PERCENT, role = SlippagePresetUM.Role.Default),
 )
 
 internal fun SlippagePresetUM.label(): TextReference = when (role) {
@@ -65,8 +65,4 @@ internal fun SlippagePresetUM.label(): TextReference = when (role) {
         formatArgs = wrappedList(percent.formatSlippagePercent()),
     )
     SlippagePresetUM.Role.Plain -> stringReference(percent.formatSlippagePercent())
-    SlippagePresetUM.Role.Max -> resourceReference(
-        id = R.string.prediction_place_slippage_max,
-        formatArgs = wrappedList(percent.formatSlippagePercent()),
-    )
 }
