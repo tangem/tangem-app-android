@@ -25,8 +25,8 @@ class Wallet1ChooseOptionComponent(
     private val model: Wallet1ChooseOptionModel = getOrCreateModel(params)
 
     init {
-        params.innerNavigation.update {
-            it.copy(
+        params.innerNavigation.update { navigationState ->
+            navigationState.copy(
                 stackSize = 3,
                 stackMaxSize = 10,
             )
