@@ -70,7 +70,7 @@ class DefaultDeviceRegistrarTest {
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokenRefresher)
         // the store answers with the set that ends up in effect
-        coEvery { store.save(any(), any()) } answers { firstArg() }
+        coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
@@ -114,7 +114,7 @@ class DefaultDeviceRegistrarTest {
         assertThat(result.isRight()).isTrue()
         coVerify { authApi.requestDeviceNonce(any()) }
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
-        coVerify { store.save(any(), any()) }
+        coVerify { store.save(any()) }
         coVerify { sessionTokenRefresher.ensureSession() }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
@@ -130,7 +130,7 @@ class DefaultDeviceRegistrarTest {
         assertThat(result.isRight()).isTrue()
         coVerify(exactly = 0) { authApi.requestDeviceNonce(any()) }
         coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
-        coVerify(exactly = 0) { store.save(any(), any()) }
+        coVerify(exactly = 0) { store.save(any()) }
         coVerify(exactly = 1) { sessionTokenRefresher.ensureSession() }
     }
 
@@ -249,7 +249,7 @@ class DefaultDeviceRegistrarTest {
         val result = registrar.register()
 
         assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.Api::class.java)
-        coVerify(exactly = 0) { store.save(any(), any()) }
+        coVerify(exactly = 0) { store.save(any()) }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isNull()
     }
 
@@ -275,13 +275,13 @@ class DefaultDeviceRegistrarTest {
         // Device is already registered server-side — no error, flag set, but no tokens minted here.
         assertThat(result.isRight()).isTrue()
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
-        coVerify(exactly = 0) { store.save(any(), any()) }
+        coVerify(exactly = 0) { store.save(any()) }
     }
 
     @Test
     fun `register returns PersistenceFailed when SessionTokensStore_save throws`() = runTest {
         stubHappyPath()
-        coEvery { store.save(any(), any()) } throws IllegalStateException("DataStore I/O")
+        coEvery { store.save(any()) } throws IllegalStateException("DataStore I/O")
 
         val result = registrar.register()
 
@@ -345,7 +345,7 @@ class DefaultDeviceRegistrarTest {
         // Assert — it did NOT short-circuit on the flag; it hit the network and re-persisted.
         assertThat(result.isRight()).isTrue()
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
-        coVerify { store.save(any(), any()) }
+        coVerify { store.save(any()) }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
     }
 

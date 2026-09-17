@@ -108,7 +108,7 @@ internal class DefaultSessionTokenRefresher(
                 is RefreshOutcome.Success -> {
                     // the store answers with what is actually in effect: our reply may have lost a race
                     // with another rotation, and the caller retries its request with what we return
-                    val inEffect = store.save(tokens = result.tokens, expected = current)
+                    val inEffect = store.save(result.tokens)
                     TangemLogger.i("/refresh succeeded; session tokens persisted")
                     return inEffect.right()
                 }
@@ -132,7 +132,7 @@ internal class DefaultSessionTokenRefresher(
             TangemLogger.i("No valid refresh token in store — proceeding directly to /authenticate")
         }
 
-        return runAuthenticate(current)
+        return runAuthenticate()
     }
 
     private suspend fun callRefresh(refreshToken: String): RefreshOutcome {
@@ -147,7 +147,7 @@ internal class DefaultSessionTokenRefresher(
         }
     }
 
-    private suspend fun runAuthenticate(current: SessionTokens?): Either<SessionRefreshError, SessionTokens> = either {
+    private suspend fun runAuthenticate(): Either<SessionRefreshError, SessionTokens> = either {
         TangemLogger.i("Starting /authenticate")
 
         val devicePublicKey = deviceKeyManager.getPublicKeyEncoded().getOrNull()
@@ -189,7 +189,7 @@ internal class DefaultSessionTokenRefresher(
         when (authResponse) {
             is ApiResponse.Success -> {
                 val tokens = SessionTokensConverter.convertBack(authResponse.data)
-                val inEffect = store.save(tokens = tokens, expected = current)
+                val inEffect = store.save(tokens)
                 TangemLogger.i("/authenticate succeeded; session tokens persisted")
                 inEffect
             }
