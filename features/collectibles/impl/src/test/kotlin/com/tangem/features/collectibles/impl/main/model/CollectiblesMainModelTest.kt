@@ -7,11 +7,13 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
+import com.tangem.domain.collectibles.usecase.GetCollectiblesVaultTopUpAddressUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -50,6 +52,8 @@ internal class CollectiblesMainModelTest {
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase = mockk()
+    private val getTopUpAddressUseCase: GetCollectiblesVaultTopUpAddressUseCase = mockk()
+    private val clipboardManager: ClipboardManager = mockk(relaxUnitFun = true)
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
 
@@ -68,6 +72,8 @@ internal class CollectiblesMainModelTest {
             messageSender,
             userWalletsListRepository,
             closeCollectiblesVaultUseCase,
+            getTopUpAddressUseCase,
+            clipboardManager,
             accountStatusSupplier,
             getSelectedAppCurrencyUseCase,
         )
@@ -175,6 +181,46 @@ internal class CollectiblesMainModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CopyTopUpAddress {
+
+        @Test
+        fun `GIVEN the address is read WHEN copy clicked THEN it is put on the clipboard`() = runTest {
+            // Arrange
+            coEvery { getTopUpAddressUseCase(coldWallet) } returns TOP_UP_ADDRESS.right()
+            val model = createModel(testScope = this)
+            model.uiState.value.menu.onMenuClick()
+
+            // Act
+            model.uiState.value.menu.items.single { it.id == "copy_top_up_address" }.onClick()
+            advanceUntilIdle()
+
+            // Assert — the address is public, so it is not a sensitive copy
+            verify(exactly = 1) { clipboardManager.setText(text = TOP_UP_ADDRESS, isSensitive = false, label = any()) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            assertThat(model.uiState.value.menu.isShown).isFalse()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the address cannot be read WHEN copy clicked THEN nothing is copied`() = runTest {
+            // Arrange
+            coEvery { getTopUpAddressUseCase(coldWallet) } returns
+                CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
+            val model = createModel(testScope = this)
+
+            // Act
+            model.uiState.value.menu.items.single { it.id == "copy_top_up_address" }.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { clipboardManager.setText(any(), any(), any()) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class CloseAccount {
 
         @Test
@@ -257,6 +303,8 @@ internal class CollectiblesMainModelTest {
             messageSender = messageSender,
             userWalletsListRepository = userWalletsListRepository,
             closeCollectiblesVaultUseCase = closeCollectiblesVaultUseCase,
+            getCollectiblesVaultTopUpAddressUseCase = getTopUpAddressUseCase,
+            clipboardManager = clipboardManager,
             collectiblesAccountStatusSupplier = accountStatusSupplier,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
@@ -264,6 +312,8 @@ internal class CollectiblesMainModelTest {
     }
 
     private companion object {
+
+        const val TOP_UP_ADDRESS = "9vJc1bnfHRLbGeDdQCrmJFAsEtR9SEbNJVi8QeHfAo8f"
 
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,
