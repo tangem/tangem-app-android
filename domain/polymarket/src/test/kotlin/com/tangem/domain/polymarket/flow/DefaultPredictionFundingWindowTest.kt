@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal class DefaultPredictionFundingWindowTest {
@@ -105,7 +106,7 @@ internal class DefaultPredictionFundingWindowTest {
             assertThat(awaitItem()).isTrue()
 
             // Act
-            advanceTimeBy(30.seconds.inWholeMilliseconds + 1)
+            advanceTimeBy(2.minutes.inWholeMilliseconds + 1)
 
             // Assert
             assertThat(awaitItem()).isFalse()
@@ -125,7 +126,7 @@ internal class DefaultPredictionFundingWindowTest {
             assertThat(awaitItem()).isTrue()
 
             // Act
-            advanceTimeBy(30.seconds.inWholeMilliseconds + 1)
+            advanceTimeBy(2.minutes.inWholeMilliseconds + 1)
 
             // Assert
             assertThat(awaitItem()).isFalse()
@@ -134,18 +135,21 @@ internal class DefaultPredictionFundingWindowTest {
     }
 
     @Test
-    fun `GIVEN a window opened while nobody watched WHEN watching starts late THEN only the remainder is left`() =
+    fun `GIVEN a window opened while nobody watched WHEN watching starts late THEN the full window is still left`() =
         runTest {
             // Arrange
             val window = createWindow()
             window.open(WALLET_ID)
-            now += 20.seconds.inWholeMilliseconds
+            now += 5.minutes.inWholeMilliseconds
 
             // Act
             val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
             window.isOpen(WALLET_ID).test {
                 assertThat(awaitItem()).isTrue()
-                advanceTimeBy(10.seconds.inWholeMilliseconds + 1)
+                advanceTimeBy(2.minutes.inWholeMilliseconds - 1)
+                expectNoEvents()
+                advanceTimeBy(2)
 
                 // Assert
                 assertThat(awaitItem()).isFalse()
@@ -154,19 +158,20 @@ internal class DefaultPredictionFundingWindowTest {
         }
 
     @Test
-    fun `GIVEN a window whose deadline already passed WHEN watching starts THEN it closes at once`() = runTest {
+    fun `GIVEN a top-up sent longer ago than the max age WHEN watching starts THEN the window never opens`() = runTest {
         // Arrange
         val window = createWindow()
         window.open(WALLET_ID)
-        now += 30.seconds.inWholeMilliseconds + 1
+        now += 10.minutes.inWholeMilliseconds + 1
 
         // Act
         val watching = launch { window.watch(WALLET_ID) }
-        window.isOpen(WALLET_ID).test {
-            assertThat(awaitItem()).isTrue()
+        runCurrent()
 
-            // Assert
+        // Assert
+        window.isOpen(WALLET_ID).test {
             assertThat(awaitItem()).isFalse()
+            expectNoEvents()
         }
         watching.cancel()
     }
@@ -181,11 +186,12 @@ internal class DefaultPredictionFundingWindowTest {
 
         // Act
         val watching = launch { window.watch(WALLET_ID) }
-        window.isOpen(WALLET_ID).test {
-            assertThat(awaitItem()).isTrue()
+        runCurrent()
 
-            // Assert
+        // Assert
+        window.isOpen(WALLET_ID).test {
             assertThat(awaitItem()).isFalse()
+            expectNoEvents()
         }
         watching.cancel()
     }
@@ -198,6 +204,7 @@ internal class DefaultPredictionFundingWindowTest {
             status.value = PredictionAccountStatusValue.Loading
             window.open(WALLET_ID)
             val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
             window.isOpen(WALLET_ID).test {
                 assertThat(awaitItem()).isTrue()
                 status.value = createActive(BigDecimal("1.00"))
@@ -223,14 +230,81 @@ internal class DefaultPredictionFundingWindowTest {
 
             // Act
             val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
             window.isOpen(WALLET_ID).test {
                 assertThat(awaitItem()).isTrue()
-                advanceTimeBy(30.seconds.inWholeMilliseconds + 1)
+                advanceTimeBy(2.minutes.inWholeMilliseconds + 1)
 
                 // Assert
                 assertThat(awaitItem()).isFalse()
             }
             watching.cancel()
+        }
+
+    @Test
+    fun `GIVEN the max age is nearer than the window WHEN watching starts THEN the max age wins`() = runTest {
+        // Arrange
+        val window = createWindow()
+        window.open(WALLET_ID)
+        now += 9.minutes.inWholeMilliseconds
+
+        // Act
+        val watching = launch { window.watch(WALLET_ID) }
+        runCurrent()
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isTrue()
+            advanceTimeBy(1.minutes.inWholeMilliseconds + 1)
+
+            // Assert
+            assertThat(awaitItem()).isFalse()
+        }
+        watching.cancel()
+    }
+
+    @Test
+    fun `GIVEN an open window WHEN the screen is left and re-entered THEN the deadline is not restarted`() = runTest {
+        // Arrange
+        val window = createWindow()
+        window.open(WALLET_ID)
+        val firstWatch = launch { window.watch(WALLET_ID) }
+        runCurrent()
+        advanceTimeBy(90.seconds.inWholeMilliseconds)
+        firstWatch.cancel()
+        now += 90.seconds.inWholeMilliseconds
+
+        // Act
+        val secondWatch = launch { window.watch(WALLET_ID) }
+        window.isOpen(WALLET_ID).test {
+            assertThat(awaitItem()).isTrue()
+            advanceTimeBy(30.seconds.inWholeMilliseconds + 1)
+
+            // Assert
+            assertThat(awaitItem()).isFalse()
+        }
+        secondWatch.cancel()
+    }
+
+    @Test
+    fun `GIVEN an open window WHEN the balance changes while the screen is left THEN it closes on re-entry`() =
+        runTest {
+            // Arrange
+            val window = createWindow()
+            window.open(WALLET_ID)
+            val firstWatch = launch { window.watch(WALLET_ID) }
+            runCurrent()
+            firstWatch.cancel()
+            status.value = createActive(BigDecimal("4.00"))
+
+            // Act
+            val secondWatch = launch { window.watch(WALLET_ID) }
+            runCurrent()
+
+            // Assert
+            window.isOpen(WALLET_ID).test {
+                assertThat(awaitItem()).isFalse()
+                expectNoEvents()
+            }
+            secondWatch.cancel()
         }
 
     @Test
@@ -252,7 +326,7 @@ internal class DefaultPredictionFundingWindowTest {
 
     private fun TestScope.createWindow() = DefaultPredictionFundingWindow(
         predictionAccountStatusSupplier = statusSupplier,
-        config = PredictionBalancePollingConfig(fundingWindow = 30.seconds),
+        config = PredictionBalancePollingConfig(fundingWindow = 2.minutes, fundingWindowMaxAge = 10.minutes),
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
         currentTimeMillis = { now },
     )
