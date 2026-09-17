@@ -81,7 +81,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
      *  underlying currencies ([AccountUnderlyingCurrencies]), if it has a balance — this turns the operation
      *  into a same-wallet transfer; (b) otherwise the regular most-funded wallet token; (c) otherwise `null`
      *  (falls through to "Choose token"). For [AccountFlow.Withdraw]: the account's most-funded token. For
-     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral.
+     *  [AccountFlow.PredictionWithdraw]: the prediction account's collateral. For [AccountFlow.PredictionTopUp]:
+     *  none — the prediction account is target-only, so FROM is already auto-filled from the portfolio.
      * @return pair of (from, to) [SwapCurrencyStatus]; either or both may be null
      */
     suspend operator fun invoke(
@@ -226,6 +227,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
         )
         is AccountFlow.Withdraw, is AccountFlow.PredictionWithdraw ->
             mostFundedAccountCurrency(accountFlowAccounts) ?: from
+        is AccountFlow.PredictionTopUp -> from
         null -> from
     }
 
