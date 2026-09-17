@@ -2,11 +2,13 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
@@ -26,7 +28,9 @@ internal object PlacePredictionNotificationsFactory {
         when (state.priceError) {
             PriceErrorUM.MarketClosed -> add(PredictionNotificationUM.MarketClosed)
             PriceErrorUM.Unknown -> add(PredictionNotificationUM.PriceFailed)
-            null -> Unit
+            PriceErrorUM.EmptyBook,
+            null,
+            -> Unit
         }
 
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
@@ -56,20 +60,12 @@ internal object PlacePredictionNotificationsFactory {
  */
 internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
     val entered = enteredAmount()
-    val required = (quote as? QuoteUM.Content)?.total ?: entered
-    val balance = payment.balance
-    val hasSufficientBalance = required != null && balance != null && balance >= required
     val isBelowMinAmount = isBelowMinAmount()
 
-    val priced = copy(
-        payment = payment.copy(hasSufficientBalance = hasSufficientBalance),
-        amountCaption = amountCaption(
-            entered = entered,
-            required = required,
-            balance = balance,
-            isBelowMinAmount = isBelowMinAmount,
-        ),
-    )
+    val priced = when (val order = order) {
+        is OrderSideUM.Buy -> pricedBuy(order = order, entered = entered, isBelowMinAmount = isBelowMinAmount)
+        is OrderSideUM.Sell -> pricedSell(order = order, isBelowMinAmount = isBelowMinAmount)
+    }
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
     return priced.copy(
@@ -79,12 +75,53 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
             quote.status.isPlaceable &&
             !isBelowMinAmount &&
             submit is SubmitUM.Idle &&
-            hasSufficientBalance &&
-            tradingPermission == TradingPermissionUM.Allowed,
+            tradingPermission == TradingPermissionUM.Allowed &&
+            priced.order.allowsPlacing(entered = entered),
     )
 }
 
-private fun PlacePredictionUM.amountCaption(
+private fun OrderSideUM.allowsPlacing(entered: BigDecimal?): Boolean = when (this) {
+    is OrderSideUM.Buy -> hasSufficientBalance
+    is OrderSideUM.Sell -> entered != null && entered > BigDecimal.ZERO && entered <= available
+}
+
+private fun PlacePredictionUM.pricedBuy(
+    order: OrderSideUM.Buy,
+    entered: BigDecimal?,
+    isBelowMinAmount: Boolean,
+): PlacePredictionUM {
+    val required = (quote as? QuoteUM.Content)?.total ?: entered
+    val balance = order.balance
+    val hasSufficientBalance = required != null && balance != null && balance >= required
+
+    return copy(
+        order = order.copy(hasSufficientBalance = hasSufficientBalance),
+        amountCaption = buyCaption(
+            entered = entered,
+            required = required,
+            balance = balance,
+            isBelowMinAmount = isBelowMinAmount,
+        ),
+    )
+}
+
+private fun PlacePredictionUM.pricedSell(order: OrderSideUM.Sell, isBelowMinAmount: Boolean): PlacePredictionUM = copy(
+    order = order.copy(proceeds = sharesProceeds(isBelowMinAmount = isBelowMinAmount)),
+    amountCaption = null,
+)
+
+private fun PlacePredictionUM.sharesProceeds(isBelowMinAmount: Boolean): SharesProceedsUM {
+    val minAmount = minAmount
+
+    return when {
+        isBelowMinAmount && minAmount != null -> SharesProceedsUM.BelowMinimum(minShares = minAmount)
+        quote is QuoteUM.Loading -> SharesProceedsUM.Loading
+        quote is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected, guaranteed = quote.guaranteed)
+        else -> SharesProceedsUM.Unavailable
+    }
+}
+
+private fun PlacePredictionUM.buyCaption(
     entered: BigDecimal?,
     required: BigDecimal?,
     balance: BigDecimal?,

@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionTransferCall
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawError
@@ -305,6 +306,24 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         assertThat(actual).isEqualTo(PredictionWithdrawalFailure.PersistenceFailed(cause).left())
         coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
     }
+
+    @Test
+    fun `GIVEN the card tap is cancelled WHEN confirmed THEN SigningFailed carries the cause and nothing is stored`() =
+        runTest {
+            // Arrange
+            val prepared = interactor.prepare(params()).getOrNull()!!
+            coEvery { signer.signWithdrawal(any(), any()) } returns PolymarketSigningError.UserCancelled.left()
+
+            // Act
+            val actual = interactor.confirm(prepared)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PredictionWithdrawalFailure.SigningFailed(PolymarketSigningError.UserCancelled).left(),
+            )
+            coVerify(exactly = 0) { store.save(any(), any()) }
+            coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
+        }
 
     @Test
     fun `GIVEN the post-202 save throws WHEN confirmed THEN the receipt is still returned`() = runTest {

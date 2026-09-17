@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardIntent
 import com.tangem.features.tangempay.orderCard.impl.model.TangemPayOrderCardSuccessModel
 import com.tangem.features.tangempay.orderCard.impl.ui.TangemPayOrderCardSuccessScreen
 
@@ -22,13 +23,14 @@ internal class TangemPayOrderCardSuccessComponent(
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = state.onShowCardClick)
+        BackHandler(onBack = state.onFinishClick)
         TangemPayOrderCardSuccessScreen(state = state, modifier = modifier)
     }
 
     data class Params(
         val deliveryEtaMaxBusinessDays: Int,
         val email: String,
-        val onShowCard: () -> Unit,
+        val intent: TangemPayOrderCardIntent,
+        val onFinish: () -> Unit,
     )
 }

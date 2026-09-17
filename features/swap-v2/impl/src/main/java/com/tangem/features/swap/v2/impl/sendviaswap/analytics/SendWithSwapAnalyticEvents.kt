@@ -226,6 +226,23 @@ internal sealed class SendWithSwapAnalyticEvents(
         ),
     )
 
+    class NoticeGeoRestriction(
+        val direction: String,
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Notice - Geo Restriction",
+        params = mapOf(
+            "Direction" to direction,
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            SEND_BLOCKCHAIN to sendBlockchain,
+            RECEIVE_BLOCKCHAIN to receiveBlockchain,
+        ),
+    )
+
     enum class RateType {
         Float,
         Fixed,

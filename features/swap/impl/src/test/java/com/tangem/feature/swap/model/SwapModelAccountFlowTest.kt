@@ -2,11 +2,15 @@ package com.tangem.feature.swap.model
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.StatusSource
@@ -18,23 +22,41 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
+import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
+import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketBridgeError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
+import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
+import com.tangem.domain.polymarket.model.PreparedPredictionWithdrawal
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.feature.swap.buildSwapCurrencyStatus
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
+import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.models.ChangeCardsButtonState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardState
+import com.tangem.feature.swap.models.SwapStateHolder
+import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.router.SwapRoute
+import com.tangem.feature.swap.ui.transfer.SwapTransferNotificationsFactory
+import com.tangem.feature.swap.ui.transfer.SwapTransferStateBuilder
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooserBlock
 import com.tangem.features.commonfeatures.api.choosetoken.PaymentAccountTokens
@@ -42,12 +64,18 @@ import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.flow.flowOf
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -88,6 +116,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         coEvery {
             swapInteractor.getPair(fromSwapCurrencyStatus = any(), toSwapCurrencyStatus = any(), filterProviderTypes = any())
         } returns Either.Left(ExpressError.UnknownError)
+        coEvery {
+            getMinimumTransactionAmountSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+        } returns Either.Right(null)
     }
 
     @Test
@@ -937,6 +968,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
             stubResolvedPredictionPair()
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
 
             // Act
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
@@ -955,7 +988,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         runTest {
             // Arrange
             every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
-            stubResolvedPredictionPair()
+            stubResolvedPredictionPair(destination = polygonUsdcDestination())
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
 
             // Act
             val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
@@ -966,6 +1001,158 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             assertThat((model.uiState.sendCardData as SwapCardState.SwapCardData).isSelectionLocked).isTrue()
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card is locked and the title is Add funds`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            val receiveCard = model.uiState.receiveCardData as SwapCardState.SwapCardData
+            assertThat(receiveCard.isSelectionLocked).isTrue()
+            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
+            assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the account swap toggle is off WHEN a prediction top-up is built THEN the top-up presentation holds`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns false
+            stubResolvedTopUpPair()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.titleId).isEqualTo(R.string.common_add_funds)
+            assertThat((model.uiState.receiveCardData as SwapCardState.SwapCardData).isSelectionLocked).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the state is built THEN the send card stays selectable`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedTopUpPair()
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+        advanceUntilIdle()
+
+        // Assert
+        val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+        assertThat(sendCard.isSelectionLocked).isFalse()
+        assertThat(sendCard.currencyIconState).isNotInstanceOf(CurrencyIconState.PaymentAccount::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the destination is unresolved THEN the empty receive card is still locked`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubUnresolvedDestination()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.receiveCardData as SwapCardState.Empty).isSelectionLocked).isTrue()
+            assertThat((model.uiState.sendCardData as SwapCardState.SwapCardData).isSelectionLocked).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN an account top-up WHEN the destination is unresolved THEN the empty receive card is still locked`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubUnresolvedDestination()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.TopUp)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.receiveCardData as SwapCardState.Empty).isSelectionLocked).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN reverse is clicked THEN the pair does not flip`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val (from, collateral) = stubResolvedTopUpPair()
+        val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.onChangeCardsClicked()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.dataState.fromSwapCurrencyStatus).isSameInstanceAs(from)
+        assertThat(model.dataState.toSwapCurrencyStatus).isSameInstanceAs(collateral)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the transfer is sent THEN the funding window opens`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createTopUpTransferModel(accountFlow = AccountFlow.PredictionTopUp)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { predictionFundingWindow.open(userWalletId) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a prediction top-up WHEN the swap is sent THEN the funding window opens`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createTopUpSwapModel(accountFlow = AccountFlow.PredictionTopUp)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { predictionFundingWindow.open(userWalletId) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no account flow WHEN the same transfer is sent THEN no funding window opens`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val model = createTopUpTransferModel(accountFlow = null)
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { predictionFundingWindow.open(any()) }
+        verify { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN a prediction withdraw WHEN to selector settings THEN the chooser offers USDC on Polygon to add, hides payment tokens and joint accounts`() =
@@ -1019,6 +1206,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair()
+        stubTransferState()
+        stubTransferStateBuilderPassthrough()
 
         // Act
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
@@ -1035,6 +1224,8 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         // Arrange
         every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
         stubResolvedPredictionPair()
+        stubTransferState()
+        stubTransferStateBuilderPassthrough()
         val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
         advanceUntilIdle()
 
@@ -1082,6 +1273,546 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN a prediction withdraw WHEN a destination is picked THEN the transfer path is taken and no provider is requested`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair()
+            every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
+            val transferState = stubTransferState()
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.dataState.currentTransferState).isSameInstanceAs(transferState)
+            coVerify(exactly = 0) {
+                swapInteractor.getPair(
+                    fromSwapCurrencyStatus = any(),
+                    toSwapCurrencyStatus = any(),
+                    filterProviderTypes = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the amount is entered THEN no network fee is requested, none is shown and the button needs none`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair()
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+
+            // Act
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { feeSelectorReloadTrigger.triggerUpdate(any()) }
+            verify {
+                swapTransferStateBuilder.updateTransferButtonEnableState(
+                    dataState = any(),
+                    transferState = any(),
+                    actions = any(),
+                    uiStateHolder = any(),
+                    feePaidCryptoCurrencyStatus = any(),
+                    fee = null,
+                    isTangemPayWithdrawal = true,
+                    feeSelectorUM = null,
+                    isHighNetworkFee = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the transfer state is built THEN the fee selector state is withheld from the builder`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair()
+            stubTransferState()
+            stubTransferStateBuilderPassthrough()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+
+            // Act
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Assert
+            verify {
+                swapTransferStateBuilder.createTransferState(
+                    actions = any(),
+                    transferState = any(),
+                    uiStateHolder = any(),
+                    feePaidCryptoCurrencyStatus = any(),
+                    feeSelectorUM = null,
+                    isHighNetworkFee = any(),
+                )
+            }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN confirmed THEN it is signed at once, tracked and the transfer success screen opens`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair(destination = polygonUsdcDestination())
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            every { swapTransferStateBuilder.createPredictionWithdrawalSentState(any(), any()) } answers { firstArg() }
+            val prepared = preparedWithdrawal()
+            val receipt: PredictionWithdrawalReceipt = mockk()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns prepared.right()
+            coEvery { submitPredictionWithdrawalInteractor.confirm(prepared) } returns receipt.right()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerifyOrder {
+                submitPredictionWithdrawalInteractor.prepare(any())
+                submitPredictionWithdrawalInteractor.confirm(prepared)
+                predictionWithdrawalTracker.track(userWalletId)
+            }
+            verify { swapTransferStateBuilder.createPredictionWithdrawalSentState(any(), any()) }
+            verify { router.replaceAll(SwapRoute.Success) }
+            verify(exactly = 0) { messageSender.send(any()) }
+            assertThat(model.uiState.bottomSheetConfig).isNull()
+            coVerify(exactly = 0) { swapTransferInteractor.withdrawTangemPay(any(), any(), any(), any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the destinations are not loaded yet WHEN confirmed THEN they are fetched on demand and the withdrawal is submitted`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val destination = polygonUsdcDestination()
+            stubResolvedPredictionPair(destination = destination)
+            val withdrawDestination = PredictionWithdrawDestination(
+                currencyId = destination.currency.id,
+                chainId = POLYGON_CHAIN_ID,
+                tokenAddress = USDC_CONTRACT_ADDRESS.lowercase(),
+            )
+            coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returnsMany listOf(
+                PolymarketBridgeError.Network.left(),
+                mapOf(destination.currency.id to withdrawDestination).right(),
+            )
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            val params = slot<SubmitPredictionWithdrawalInteractor.Params>()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(capture(params)) } returns
+                PredictionWithdrawalFailure.NothingToResend.left()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 2) { getPredictionWithdrawDestinationsUseCase(any()) }
+            assertThat(params.captured.toChainId).isEqualTo(POLYGON_CHAIN_ID)
+            assertThat(params.captured.toTokenAddress).isEqualTo(USDC_CONTRACT_ADDRESS.lowercase())
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN confirmed THEN the recipient is the user's address on the destination network`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair(destination = polygonUsdcDestination())
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            val params = slot<SubmitPredictionWithdrawalInteractor.Params>()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(capture(params)) } returns
+                mockk<PreparedPredictionWithdrawal>().right()
+            coEvery { submitPredictionWithdrawalInteractor.confirm(any()) } returns
+                mockk<PredictionWithdrawalReceipt>().right()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(params.captured).isEqualTo(
+                SubmitPredictionWithdrawalInteractor.Params(
+                    userWalletId = userWalletId,
+                    walletId = userWalletId.stringValue,
+                    ownerAddress = OWNER_ADDRESS,
+                    depositWalletAddress = DEPOSIT_WALLET_ADDRESS,
+                    amount = BigDecimal("5"),
+                    toChainId = "137",
+                    toTokenAddress = USDC_CONTRACT_ADDRESS.lowercase(),
+                    recipientAddress = RECIPIENT_ADDRESS,
+                ),
+            )
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a native destination WHEN confirmed THEN the bridge's own chain and asset are sent back`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            val destination = polygonCoinDestination()
+            stubResolvedPredictionPair(
+                destination = destination,
+                withdrawDestination = PredictionWithdrawDestination(
+                    currencyId = destination.currency.id,
+                    chainId = POLYGON_CHAIN_ID,
+                    tokenAddress = NATIVE_ASSET_ADDRESS,
+                ),
+            )
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            val params = slot<SubmitPredictionWithdrawalInteractor.Params>()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(capture(params)) } returns
+                mockk<PreparedPredictionWithdrawal>().right()
+            coEvery { submitPredictionWithdrawalInteractor.confirm(any()) } returns
+                mockk<PredictionWithdrawalReceipt>().right()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(params.captured.toChainId).isEqualTo(POLYGON_CHAIN_ID)
+            assertThat(params.captured.toTokenAddress).isEqualTo(NATIVE_ASSET_ADDRESS)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a prediction withdraw WHEN the interactor fails THEN an alert is shown and nothing is tracked`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedPredictionPair(destination = polygonUsdcDestination())
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        stubStoredPolymarketAddresses()
+        coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+            PredictionWithdrawalFailure.AddressUnavailable.left()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.enterAmount("5")
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
+        verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
+        verify(exactly = 1) { messageSender.send(any()) }
+        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a withdrawal already in flight WHEN confirmed THEN it is tracked, an alert is shown and the screen stays`() =
+        runTest {
+            // Arrange
+            every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+            stubResolvedPredictionPair(destination = polygonUsdcDestination())
+            stubTransferState(sendingAmount = BigDecimal("5"))
+            stubTransferStateBuilderPassthrough()
+            stubStoredPolymarketAddresses()
+            coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+                PredictionWithdrawalFailure.AlreadyInFlight.left()
+            val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+            advanceUntilIdle()
+            model.enterAmount("5")
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.swapButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { predictionWithdrawalTracker.track(userWalletId) }
+            coVerify(exactly = 0) { submitPredictionWithdrawalInteractor.confirm(any()) }
+            val alert = slot<DialogMessage>()
+            verify(exactly = 1) { messageSender.send(capture(alert)) }
+            assertThat(alert.captured.message).isEqualTo(resourceReference(R.string.prediction_withdraw_in_progress_message))
+            verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the card tap is cancelled WHEN confirmed THEN no alert is shown`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedPredictionPair(destination = polygonUsdcDestination())
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        stubStoredPolymarketAddresses()
+        coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+            mockk<PreparedPredictionWithdrawal>().right()
+        coEvery { submitPredictionWithdrawalInteractor.confirm(any()) } returns
+            PredictionWithdrawalFailure.SigningFailed(PolymarketSigningError.UserCancelled).left()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.enterAmount("5")
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { messageSender.send(any()) }
+        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the card signing fails WHEN confirmed THEN an alert is shown`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        stubResolvedPredictionPair(destination = polygonUsdcDestination())
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        stubStoredPolymarketAddresses()
+        coEvery { submitPredictionWithdrawalInteractor.prepare(any()) } returns
+            mockk<PreparedPredictionWithdrawal>().right()
+        coEvery { submitPredictionWithdrawalInteractor.confirm(any()) } returns
+            PredictionWithdrawalFailure.SigningFailed(PolymarketSigningError.CardError).left()
+        val model = createModel(accountFlow = AccountFlow.PredictionWithdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.enterAmount("5")
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { messageSender.send(any()) }
+        verify(exactly = 0) { predictionWithdrawalTracker.track(any()) }
+        verify(exactly = 0) { router.replaceAll(SwapRoute.Success) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN an amount above the collateral balance WHEN entered THEN the primary button is disabled`() = runTest {
+        // Arrange
+        every { swapFeatureToggles.isAccountSwapFlowEnabled } returns true
+        val (collateral, destination) = stubResolvedPredictionPair()
+        val aboveBalance = requireNotNull(collateral.status.value.amount) + BigDecimal.ONE
+        coEvery {
+            swapTransferInteractor.updateTransfer(
+                fromSwapCurrencyStatus = collateral,
+                toSwapCurrencyStatus = destination,
+                fromTokenAmount = aboveBalance.toPlainString(),
+                feePaidCurrencyStatus = any(),
+                fee = null,
+            )
+        } returns transferState(from = collateral, to = destination, amount = aboveBalance, isInsufficientBalance = true)
+        val model = createModel(
+            accountFlow = AccountFlow.PredictionWithdraw,
+            dispatchers = deferredDispatchers(),
+            swapTransferStateBuilder = realSwapTransferStateBuilder(),
+        )
+        advanceUntilIdle()
+
+        // Act
+        model.enterAmount(aboveBalance.toPlainString())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.isInsufficientFunds).isTrue()
+        model.onDestroy()
+    }
+
+    private fun realSwapTransferStateBuilder(): SwapTransferStateBuilder {
+        val notificationsFactory: SwapTransferNotificationsFactory = mockk {
+            every { getNotifications(any(), any(), any(), any(), any()) } returns persistentListOf()
+        }
+        val isFeeApproximateUseCase: IsFeeApproximateUseCase = mockk {
+            every { invoke(networkId = any(), amountType = any()) } returns false
+        }
+        return SwapTransferStateBuilder(
+            notificationsFactory = notificationsFactory,
+            isFeeApproximateUseCase = isFeeApproximateUseCase,
+        )
+    }
+
+    private fun transferState(
+        from: SwapCurrencyStatus,
+        to: SwapCurrencyStatus,
+        amount: BigDecimal,
+        isInsufficientBalance: Boolean,
+    ): SwapState.Transfer = SwapState.Transfer(
+        userWallet = from.userWallet,
+        fromTokenInfo = TokenSwapInfo(
+            tokenAmount = SwapAmount(value = amount, decimals = from.currency.decimals),
+            amountFiat = BigDecimal.ZERO,
+            swapCurrencyStatus = from,
+        ),
+        toTokenInfo = TokenSwapInfo(
+            tokenAmount = SwapAmount(value = amount, decimals = to.currency.decimals),
+            amountFiat = BigDecimal.ZERO,
+            swapCurrencyStatus = to,
+        ),
+        cryptoCurrencyWarning = null,
+        isInsufficientBalance = isInsufficientBalance,
+        appCurrency = AppCurrency.Default,
+        isBalanceHidden = false,
+        isAccountsMode = false,
+        isFeeCoverage = false,
+        sendingAmount = amount,
+        tronFeeNotificationShowCount = 0,
+        isAmountSubtractAvailable = false,
+    )
+
+    private fun TestScope.deferredDispatchers(): TestingCoroutineDispatcherProvider {
+        val deferred = StandardTestDispatcher(testScheduler)
+        return TestingCoroutineDispatcherProvider(
+            main = deferred,
+            mainImmediate = deferred,
+            io = deferred,
+            default = deferred,
+        )
+    }
+
+    private fun SwapModel.enterAmount(value: String) {
+        val sendCard = uiState.sendCardData as SwapCardState.SwapCardData
+        requireNotNull(sendCard.amountField).onValueChange(value)
+    }
+
+    private fun stubTransferState(sendingAmount: BigDecimal = BigDecimal.ZERO): SwapState.Transfer {
+        val transferState: SwapState.Transfer = mockk(relaxed = true) {
+            every { this@mockk.sendingAmount } returns sendingAmount
+        }
+        coEvery {
+            swapTransferInteractor.updateTransfer(
+                fromSwapCurrencyStatus = any(),
+                toSwapCurrencyStatus = any(),
+                fromTokenAmount = any(),
+                feePaidCurrencyStatus = any(),
+                fee = any(),
+            )
+        } returns transferState
+        return transferState
+    }
+
+    private fun stubTransferStateBuilderPassthrough() {
+        every {
+            swapTransferStateBuilder.createTransferState(any(), any(), any(), any(), any(), any())
+        } answers {
+            arg<SwapStateHolder>(2).copy(
+                swapButton = SwapButton(
+                    walletInteractionIcon = null,
+                    isEnabled = false,
+                    mode = SwapButton.Mode.TRANSFER,
+                    onClick = arg<UiActions>(0).onTransferClick,
+                ),
+            )
+        }
+        every {
+            swapTransferStateBuilder.updateTransferButtonEnableState(
+                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        } answers { arg<SwapStateHolder>(3) }
+        every { swapTransferStateBuilder.updateTransferTitle(any()) } answers { firstArg() }
+        every { swapTransferStateBuilder.createTransferInProgressState(any()) } answers { firstArg() }
+    }
+
+    private fun preparedWithdrawal(): PreparedPredictionWithdrawal = mockk()
+
+    private fun stubStoredPolymarketAddresses() {
+        val addresses: PolymarketAddresses = mockk {
+            every { ownerAddress } returns OWNER_ADDRESS
+            every { depositWalletAddress } returns DEPOSIT_WALLET_ADDRESS
+        }
+        coEvery { derivePolymarketAddressesUseCase.stored(userWalletId) } returns addresses
+    }
+
+    private fun polygonUsdcDestination(): SwapCurrencyStatus {
+        val usdc: CryptoCurrency.Token = mockk(relaxed = true) {
+            every { symbol } returns "USDC"
+            every { decimals } returns 6
+            every { contractAddress } returns USDC_CONTRACT_ADDRESS
+            every { network } returns mockk(relaxed = true) {
+                every { id } returns mockk(relaxed = true)
+                every { name } returns "Polygon"
+                every { rawId } returns "polygon-pos"
+            }
+        }
+        val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
+            every { amount } returns BigDecimal("10")
+            every { fiatRate } returns BigDecimal.ONE
+            every { networkAddress } returns NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(
+                    type = NetworkAddress.Address.Type.Primary,
+                    value = RECIPIENT_ADDRESS,
+                ),
+            )
+        }
+        return SwapCurrencyStatus(
+            userWallet = accountFlowUserWallet(),
+            status = CryptoCurrencyStatus(currency = usdc, value = statusValue),
+            account = Account.Personal.createMainAccount(userWalletId),
+        )
+    }
+
+    private fun polygonCoinDestination(): SwapCurrencyStatus {
+        val pol: CryptoCurrency.Coin = mockk(relaxed = true) {
+            every { symbol } returns "POL"
+            every { decimals } returns 18
+            every { network } returns mockk(relaxed = true) {
+                every { id } returns mockk(relaxed = true)
+                every { name } returns "Polygon"
+                every { rawId } returns "polygon-pos"
+            }
+        }
+        val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
+            every { amount } returns BigDecimal("10")
+            every { fiatRate } returns BigDecimal.ONE
+            every { networkAddress } returns NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(
+                    type = NetworkAddress.Address.Type.Primary,
+                    value = RECIPIENT_ADDRESS,
+                ),
+            )
+        }
+        return SwapCurrencyStatus(
+            userWallet = accountFlowUserWallet(),
+            status = CryptoCurrencyStatus(currency = pol, value = statusValue),
+            account = Account.Personal.createMainAccount(userWalletId),
+        )
+    }
+
     private fun accountStatusList(accountStatuses: List<AccountStatus>) = AccountStatusList(
         userWalletId = userWalletId,
         accountStatuses = accountStatuses,
@@ -1107,10 +1838,20 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         )
     }
 
-    private fun stubResolvedPredictionPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
+    private fun stubResolvedPredictionPair(
+        destination: SwapCurrencyStatus = buildSwapCurrencyStatus(accountFlowUserWallet()),
+        withdrawDestination: PredictionWithdrawDestination = PredictionWithdrawDestination(
+            currencyId = destination.currency.id,
+            chainId = POLYGON_CHAIN_ID,
+            tokenAddress = USDC_CONTRACT_ADDRESS.lowercase(),
+        ),
+    ): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
         val wallet = accountFlowUserWallet()
         val collateral = buildSwapCurrencyStatus(wallet).copy(account = Account.Prediction(userWalletId))
-        val destination = buildSwapCurrencyStatus(wallet)
+        every { multiAccountStatusListSupplier() } returns
+            flowOf(listOf(accountStatusList(listOf(personalAccountStatus(listOf(destination.status))))))
+        coEvery { getPredictionWithdrawDestinationsUseCase(any()) } returns
+            mapOf(destination.currency.id to withdrawDestination).right()
         coEvery {
             initialCurrenciesResolver.invoke(
                 userWalletId = any(),
@@ -1122,6 +1863,103 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             )
         } returns (collateral to destination)
         return collateral to destination
+    }
+
+    private fun stubUnresolvedDestination(): SwapCurrencyStatus {
+        val from = buildSwapCurrencyStatus(accountFlowUserWallet())
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to null)
+        return from
+    }
+
+    private fun TestScope.createTopUpTransferModel(accountFlow: AccountFlow?): SwapModel {
+        val from = swapCurrencyStatus()
+        val collateral = swapCurrencyStatus(account = Account.Prediction(userWalletId))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to collateral)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        stubTransferState(sendingAmount = BigDecimal("5"))
+        stubTransferStateBuilderPassthrough()
+        coEvery {
+            swapTransferInteractor.sendTransfer(any(), any(), any(), any(), any())
+        } returns TRANSFER_TX_HASH.right()
+        every { getExplorerTransactionUrlUseCase(txHash = any(), currency = any()) } returns EXPLORER_URL.right()
+
+        val model = createModel(accountFlow = accountFlow, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
+            every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+        }
+        return model
+    }
+
+    private fun TestScope.createTopUpSwapModel(accountFlow: AccountFlow?): SwapModel {
+        stubResolvedTopUpPair()
+        val provider = swapProvider(id = "changelly", type = ExchangeProviderType.CEX)
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
+        coEvery { swapInteractor.getUnfulfilledReceiveRequirement(any()) } returns null
+        coEvery {
+            swapInteractor.onSwap(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns SwapTransactionState.TxSent(txHash = TRANSFER_TX_HASH, timestamp = 0L)
+        every { getExplorerTransactionUrlUseCase(txHash = any(), currency = any()) } returns EXPLORER_URL.right()
+
+        val model = createModel(accountFlow = accountFlow, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.dataState = model.dataState.copy(
+            amount = "5",
+            selectedProvider = provider,
+            lastLoadedSwapStates = mapOf(provider to quotesLoadedState(provider)),
+        )
+        model.uiState = model.uiState.copy(providerState = providerContentState(provider))
+        model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
+            every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
+        }
+        return model
+    }
+
+    private fun providerContentState(provider: SwapProvider) = ProviderState.Content(
+        id = provider.providerId,
+        name = provider.name,
+        type = provider.type.providerName,
+        iconUrl = "",
+        subtitle = stringReference(""),
+        selectionType = ProviderState.SelectionType.CLICK,
+        additionalBadge = ProviderState.AdditionalBadge.Empty,
+        namePrefix = ProviderState.PrefixType.NONE,
+        onProviderClick = {},
+    )
+
+    private fun stubResolvedTopUpPair(): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
+        val wallet = accountFlowUserWallet()
+        val from = buildSwapCurrencyStatus(wallet)
+        val collateral = buildSwapCurrencyStatus(wallet).copy(account = Account.Prediction(userWalletId))
+        coEvery {
+            initialCurrenciesResolver.invoke(
+                userWalletId = any(),
+                initialCryptoCurrency = any(),
+                swapCurrencyPosition = any(),
+                accountFlow = any(),
+                initialToCryptoCurrency = any(),
+                isAccountFlowEnabled = any(),
+            )
+        } returns (from to collateral)
+        return from to collateral
     }
 
     // -------------------------------------------------------------------------
@@ -1291,5 +2129,16 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         val method = SwapModel::class.java.declaredMethods.first { it.name == "filterTangemPayProviders" }
             .apply { isAccessible = true }
         return method.invoke(model, pairs, fromSwapCurrencyStatus, toSwapCurrencyStatus) as List<SwapPairLeast>
+    }
+
+    private companion object {
+        const val OWNER_ADDRESS = "0xOwner"
+        const val DEPOSIT_WALLET_ADDRESS = "0xDepositWallet"
+        const val USDC_CONTRACT_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        const val POLYGON_CHAIN_ID = "137"
+        const val NATIVE_ASSET_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+        const val RECIPIENT_ADDRESS = "0xRecipientOnPolygon"
+        const val TRANSFER_TX_HASH = "0xTransferHash"
+        const val EXPLORER_URL = "https://polygonscan.com/tx/0xTransferHash"
     }
 }

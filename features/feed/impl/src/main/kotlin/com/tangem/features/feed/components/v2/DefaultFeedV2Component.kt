@@ -13,8 +13,10 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
@@ -39,17 +41,27 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
+import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.FeedScreenFactory
+import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.nav.FeedTabSet
 import com.tangem.features.feed.ui.v2.FeedSearchBarHeader
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.features.feed.v2.FeedV2Component
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Provider
 
@@ -61,13 +73,35 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val screenFactories: Map<Class<*>, @JvmSuppressWildcards Provider<FeedScreenFactory>>,
     private val searchBarController: DefaultFeedSearchBarController,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val feedEntryController: FeedEntryController,
+    private val tabSet: FeedTabSet,
 ) : FeedV2Component, AppComponentContext by context {
 
     override val isSheetBlurEnabled: StateFlow<Boolean>
         field = MutableStateFlow(true)
 
     private val stackNavigation = StackNavigation<FeedRoute>()
+
+    /**
+     * Declared above [stack]: the child collecting it is built while [stack] initialises, so a later
+     * declaration would not exist yet there.
+     *
+     * Replaying, because the request normally precedes that child; a flow rather than a state, because
+     * the same section may be asked for twice with the user having switched tab in between, and a
+     * conflated state would not re-emit it.
+     */
+    private val requestedTab = MutableSharedFlow<FeedTabId>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /**
+     * Drained by [Content], the only place the host's `onExpandSheet` lambda is reachable from.
+     *
+     * A conflated channel rather than a flow: the sheet must rise once per request, and [Content]
+     * leaves composition whenever a screen is pushed over the wallet, so a replaying flow would
+     * re-open the sheet on every return to it.
+     */
+    private val expandSheetRequests = Channel<Unit>(capacity = Channel.CONFLATED)
 
     private val feedRouter = FeedRouter(
         stackNavigation = stackNavigation,
@@ -90,6 +124,9 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     init {
         componentScope.launch {
             searchBarController.activationRequests.collect(::onSearchActivationRequest)
+        }
+        componentScope.launch {
+            feedEntryController.pendingEntry.filterNotNull().collect(::onEntryRequested)
         }
         stack.subscribe(lifecycle) { stackState ->
             // presence on the stack, not "is active": tapping a search result pushes a screen on top of
@@ -149,6 +186,11 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
         modifier: Modifier,
     ) {
         val stackState by stack.subscribeAsState()
+        val expandSheet by rememberUpdatedState(onExpandSheet)
+
+        LaunchedEffect(Unit) {
+            expandSheetRequests.receiveAsFlow().collect { expandSheet() }
+        }
 
         BackHandler(
             enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
@@ -178,12 +220,28 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
             is FeedHomeRoute -> FeedHomeComponent(
                 context = childContext,
                 portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+                addAccountTypeComponentFactory = addAccountTypeComponentFactory,
                 analyticsEventHandler = analyticsEventHandler,
+                requestedTab = requestedTab,
             )
             else -> requireNotNull(screenFactories[route.javaClass]) { "No feed screen registered for $route" }
                 .get()
                 .create(context = childContext, route = route)
         }
+    }
+
+    private fun onEntryRequested(request: FeedEntryRequest) {
+        feedRouter.popTo(FeedHomeRoute)
+
+        val tab = request.resolveTab(tabs = tabSet.tabs)
+
+        // the request fell back to another section, and the filter addressed to the asked-for one would
+        // otherwise stay parked with no tab ever coming to clear it
+        if (tab != request.section?.tabId) feedEntryController.consumeFilter()
+
+        tab?.let(requestedTab::tryEmit)
+        expandSheetRequests.trySend(element = Unit)
+        feedEntryController.consumeEntry()
     }
 
     private fun onSearchActivationRequest(isActive: Boolean) {

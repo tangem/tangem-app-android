@@ -60,10 +60,6 @@
         "version": "undefined"
     },
     {
-        "name": "AND_16041_VISA_TIERS_PLUS_PLAN",
-        "version": "6.1"
-    },
-    {
         "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
         "version": "6.2"
     },
@@ -84,20 +80,12 @@
         "version": "6.2"
     },
     {
-        "name": "TWI_1192_TANGEM_PAY_CASHBACK_ENABLED",
-        "version": "6.3.1"
-    },
-    {
         "name": "AND_16204_POLYMARKET_ENABLED",
         "version": "undefined"
     },
     {
         "name": "TWI_1157_PLASTIC_CARD_ORDER_ENABLED",
         "version": "6.4"
-    },
-    {
-        "name": "TWI_1684_ACCOUNT_MULTICHAIN_ENABLED",
-        "version": "6.3"
     },
     {
         "name": "AND_16357_CHOOSE_TOKEN_PULSE_ANIMATION",
@@ -120,8 +108,8 @@
         "version": "6.3"
     },
     {
-        "name": "AND_15130_PAY_PIN_BIOMETRY_GATE_ENABLED",
-        "version": "6.2"
+        "name": "TWI_1766_PASSWORD_MANAGER_ENABLED",
+        "version": "6.4"
     },
     {
         "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
@@ -172,7 +160,7 @@
         "version": "6.4"
     },
     {
-        "name": "AND_17401_PAY_RESIDENCY_STEP_ENABLED",
+        "name": "TWI_1771_PAY_RESIDENCY_STEP_ENABLED",
         "version": "undefined"
     },
     {

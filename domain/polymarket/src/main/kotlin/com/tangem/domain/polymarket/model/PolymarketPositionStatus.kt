@@ -1,5 +1,8 @@
 package com.tangem.domain.polymarket.model
 
+/** Shared classification for position cards and local filters. */
+enum class PolymarketPositionStatus { ACTIVE, WON, LOST, DISPUTED, PENDING, SPLIT, CLOSED, UNKNOWN }
+
 /** Market resolution, independent of the held outcome, scheduled end date and claimability. */
 enum class PolymarketResolutionStatus {
     OPEN,

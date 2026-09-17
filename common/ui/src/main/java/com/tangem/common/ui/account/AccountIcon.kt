@@ -75,7 +75,7 @@ fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize,
             modifier = modifier,
         )
         is AccountIconUM.Prediction -> AccountResIcon(
-            resId = PredictionAccountIcon.resId,
+            imageVector = PredictionAccountIcon.imageVector,
             color = PredictionAccountIcon.color,
             size = size,
             modifier = modifier,

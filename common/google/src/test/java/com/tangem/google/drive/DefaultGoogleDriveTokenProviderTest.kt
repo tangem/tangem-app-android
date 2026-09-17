@@ -84,6 +84,47 @@ internal class DefaultGoogleDriveTokenProviderTest {
     }
 
     @Test
+    fun `GIVEN the default provider WHEN getAccessToken THEN only the drive file scope is asked for`() = runTest {
+        // Arrange
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+
+        // Act
+        provider.getAccessToken()
+
+        // Assert
+        coVerify(exactly = 1) {
+            authorizer.authorize(
+                scopes = listOf(DefaultGoogleDriveTokenProvider.DRIVE_FILE_SCOPE),
+                interactive = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the hidden folder provider WHEN getAccessToken THEN only the appdata scope is asked for`() = runTest {
+        // Arrange — the scope is the whole permission boundary of the hidden folder, so it is pinned here
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        val appDataProvider = DefaultGoogleDriveTokenProvider(
+            authorizer = authorizer,
+            api = api,
+            context = context,
+            networkConnectionManager = networkConnectionManager,
+            scopes = listOf(DefaultGoogleDriveTokenProvider.DRIVE_APP_DATA_SCOPE),
+        )
+
+        // Act
+        appDataProvider.getAccessToken()
+
+        // Assert
+        coVerify(exactly = 1) {
+            authorizer.authorize(
+                scopes = listOf(DefaultGoogleDriveTokenProvider.DRIVE_APP_DATA_SCOPE),
+                interactive = any(),
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN cached token AND device offline WHEN getAccessToken THEN cached token returned`() = runTest {
         // Arrange
         coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()

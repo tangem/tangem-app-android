@@ -179,6 +179,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
+    private var sentGeoRestrictionProviders: Set<String> = emptySet()
 
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
@@ -404,7 +405,13 @@ internal class OnrampMainComponentModel @Inject constructor(
             stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
     }
 
+    /**
+     * Every re-subscription follows a teardown of the current screen state — a refresh, or the residency
+     * sheet being dismissed — so the restriction notice is gone by the time quotes arrive again and the
+     * next one is a new appearance rather than a repeat of the reported one.
+     */
     private fun subscribeToQuotesUpdate() {
+        sentGeoRestrictionProviders = emptySet()
         getOnrampQuotesUseCase.invoke()
             .conflate()
             .onEach { maybeQuotes ->
@@ -418,6 +425,10 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
         sendOnrampQuotesErrorAnalytic(quotes)
+        val hasAvailableOffer = quotes.any { it is OnrampQuote.Data && !it.isRestricted }
+        val isRegionRestricted = !hasAvailableOffer && quotes.any(OnrampQuote::isRestricted)
+        sendGeoRestrictionAnalytic(if (isRegionRestricted) quotes else emptyList())
+
         when {
             quotes.isEmpty() -> {
                 state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
@@ -425,8 +436,8 @@ internal class OnrampMainComponentModel @Inject constructor(
             quotes.all { it is OnrampQuote.AmountError } -> {
                 state.update { amountStateFactory.getSecondaryFieldAmountErrorState(quotes) }
             }
-            quotes.none { it is OnrampQuote.Data && !it.isRestricted } -> {
-                if (quotes.any(OnrampQuote::isRestricted)) {
+            !hasAvailableOffer -> {
+                if (isRegionRestricted) {
                     state.update { amountStateFactory.getSecondaryFieldRestrictedErrorState() }
                 } else {
                     state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
@@ -520,6 +531,23 @@ internal class OnrampMainComponentModel @Inject constructor(
         val rawCurrencyId = params.cryptoCurrency.id.rawCurrencyId ?: return null
         val rate = getCurrencyUSDQuoteUseCase(rawCurrencyId) ?: return null
         return amount * rate
+    }
+
+    /** Reports every newly restricted provider once; an empty [quotes] re-arms the guard. */
+    private fun sendGeoRestrictionAnalytic(quotes: List<OnrampQuote>) {
+        val restrictedProviders = quotes.filter(OnrampQuote::isRestricted)
+            .map { it.provider.info.name }
+            .toSet()
+
+        (restrictedProviders - sentGeoRestrictionProviders).forEach { providerName ->
+            analyticsEventHandler.send(
+                OnrampAnalyticsEvent.NoticeGeoRestriction(
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                    providerName = providerName,
+                ),
+            )
+        }
+        sentGeoRestrictionProviders = restrictedProviders
     }
 
     private fun sendOnrampQuotesErrorAnalytic(quotes: List<OnrampQuote>) {

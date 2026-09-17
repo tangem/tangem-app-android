@@ -155,11 +155,7 @@ internal class ChooseTokenListItemConverter(
             is PaymentAccountTokens.IssuedTokens -> issuedCurrencies()
         }
 
-    private fun AccountStatus.Payment.accountCurrencyOrNull(): CryptoCurrencyStatus? = when (val status = value) {
-        is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
-        is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
-        else -> null
-    }
+    private fun AccountStatus.Payment.accountCurrencyOrNull(): CryptoCurrencyStatus? = issuedCurrencies().firstOrNull()
 
     private fun AccountStatus.Payment.issuedCurrencies(): List<CryptoCurrencyStatus> = when (val status = value) {
         is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatuses

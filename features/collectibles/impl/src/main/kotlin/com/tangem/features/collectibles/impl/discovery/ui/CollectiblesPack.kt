@@ -30,7 +30,7 @@ import com.tangem.core.ui.res.generated.icons.ic_error_20_filled
 import com.tangem.features.collectibles.impl.discovery.ui.preview.CollectiblesDiscoveryPreviewData
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 
-private const val PACK_CARD_ASPECT_RATIO = 180f / 228f
+internal const val PACK_CARD_ASPECT_RATIO = 180f / 228f
 
 @Composable
 internal fun CollectiblesPackCard(state: CollectiblesDiscoveryUM.PackUM, modifier: Modifier = Modifier) {
@@ -82,14 +82,11 @@ private fun PackImage(imageUrl: String, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         SubcomposeAsyncImage(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(30.dp),
+            modifier = Modifier.fillMaxSize(),
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)
                 .crossfade(true)
                 .build(),
-            loading = { PackImagePlaceholder() },
             error = { PackImagePlaceholder() },
             contentScale = ContentScale.Fit,
             contentDescription = null,

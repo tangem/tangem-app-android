@@ -51,6 +51,8 @@ dependencies {
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
@@ -87,9 +89,5 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.kotlin.coroutines)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
     testImplementation(tangemDeps.blockchain)
 }

@@ -10,13 +10,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.fade.TangemFade
-import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.features.collectibles.impl.discovery.ui.CollectiblesTabBand
-import kotlinx.collections.immutable.ImmutableList
+import com.tangem.features.collectibles.impl.discovery.ui.CollectiblesTabBandSkeleton
+import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 
 @Composable
 internal fun CollectiblesPinnedHeader(
-    tabs: ImmutableList<TangemTabItemUM>,
+    tabs: CollectiblesDiscoveryUM.TabsUM,
     scrollState: ScrollState,
     topPadding: Dp,
     isPinned: Boolean,
@@ -34,20 +34,20 @@ internal fun CollectiblesPinnedHeader(
             blur = true,
             modifier = Modifier.height(frostHeight),
         )
-        CollectiblesTabBand(
-            tabs = tabs,
-            scrollState = scrollState,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = topPadding)
-                .then(
-                    if (isPinned) {
-                        Modifier.alpha(1f)
-                    } else {
-                        Modifier.alpha(0f)
-                    },
-                ),
-        )
+        val bandModifier = Modifier
+            .fillMaxWidth()
+            .padding(top = topPadding)
+            .alpha(if (isPinned) 1f else 0f)
+
+        when (tabs) {
+            is CollectiblesDiscoveryUM.TabsUM.Content -> CollectiblesTabBand(
+                tabs = tabs.tabs,
+                scrollState = scrollState,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                modifier = bandModifier,
+            )
+            CollectiblesDiscoveryUM.TabsUM.Loading -> CollectiblesTabBandSkeleton(modifier = bandModifier)
+            CollectiblesDiscoveryUM.TabsUM.Hidden -> Unit
+        }
     }
 }

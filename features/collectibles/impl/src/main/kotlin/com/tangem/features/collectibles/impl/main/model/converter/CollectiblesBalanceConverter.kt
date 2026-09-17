@@ -10,6 +10,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 
 /** A vault that has not been read yet shows a dash: a zero would claim it is empty. */
@@ -34,17 +35,12 @@ internal class CollectiblesBalanceConverter :
                 },
             ),
             crypto = stringReference(
-                value.status.balance?.usdcAmount.format {
-                    crypto(symbol = USDC_SYMBOL, decimals = USDC_DECIMALS)
-                },
+                value.status.balance?.let { balance ->
+                    balance.usdcAmount.format { crypto(cryptoCurrency = balance.usdcToken) }
+                } ?: DASH_SIGN,
             ),
         )
     }
 
     data class Input(val status: CollectiblesAccountStatusValue, val appCurrency: AppCurrency)
-
-    private companion object {
-        const val USDC_SYMBOL = "USDC"
-        const val USDC_DECIMALS = 2
-    }
 }

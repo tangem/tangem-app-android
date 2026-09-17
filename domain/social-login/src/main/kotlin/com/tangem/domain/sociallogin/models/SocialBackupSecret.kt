@@ -1,23 +1,20 @@
 package com.tangem.domain.sociallogin.models
 
 /**
- * The wallet secret carried by a social backup — the plaintext that is encrypted into
- * `social-backup.json` and recovered from it. Used both as the input to a backup write and the output
- * of a restore.
+ * The plaintext encrypted into `social-backup.json`.
  *
- * The BIP39 passphrase itself is never backed up (CPR-04); only the fact that the wallet needs one
+ * The BIP39 passphrase itself is never backed up; only the fact that the wallet needs one travels
 
- * carried for forward compatibility of the file format (section 4.2).
+ * for forward compatibility of the format.
  *
- * @property mnemonic             space-separated BIP39 words, held as a [CharArray] so it can be wiped
-
+ * @property mnemonic space-separated BIP39 words, held as a [CharArray] so it can be wiped
  */
 class SocialBackupSecret(
     val mnemonic: CharArray,
     val isPassphraseRequired: Boolean,
 ) {
 
-    /** Blanks the mnemonic — call it as soon as the secret has been encrypted or imported. */
+    /** Call as soon as the secret has been encrypted or imported */
     fun wipe() {
         mnemonic.fill(' ')
     }

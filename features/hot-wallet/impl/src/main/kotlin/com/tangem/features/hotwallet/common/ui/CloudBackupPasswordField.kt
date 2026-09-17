@@ -68,10 +68,9 @@ private val EYE_ICON_SIZE = 20.dp
  * Masked password input with an eye toggle, shared by the create- and restore-cloud-backup flows.
  * Holds no state of its own — the caller owns the [value] and visibility, so nothing secret lingers here.
  *
- * Autofill is opt-in through [contentType]: [ContentType.NewPassword] makes the platform password
- * manager offer a generated password, [ContentType.Password] fills the stored one on restore. The cloud
- * backup password is the only secret in the app that wants that — without an explicit content type the
- * field suppresses autofill, so reusing it for a passphrase keeps the secret away from the heuristics.
+ * Autofill is opt-in through [contentType] and without one the field suppresses it, so reusing the field
+ * for a passphrase keeps that secret away from the heuristics. Reading a stored password back does not go
+ * through here — the restore screen asks the password manager itself.
  */
 @Suppress("LongParameterList")
 @Composable
