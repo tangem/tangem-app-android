@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.SharesCalculator
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
@@ -27,7 +28,9 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
                     ?.toInstant()
                     ?.toEpochMilli(),
             ),
-            order = order.copy(available = SharesCalculator.available(held = position.size)),
+            order = order.copy(
+                position = SellPositionUM.Held(available = SharesCalculator.available(held = position.size)),
+            ),
             isMarketAcceptingOrders = position.isAcceptingOrders,
         ).recomputeGate()
     }

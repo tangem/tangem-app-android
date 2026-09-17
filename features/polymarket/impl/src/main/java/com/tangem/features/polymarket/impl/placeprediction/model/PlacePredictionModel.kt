@@ -47,22 +47,22 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
-import com.tangem.features.polymarket.impl.placeprediction.entity.isPositionReadable
+import com.tangem.features.polymarket.impl.placeprediction.entity.canQuote
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.ClearPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetOutcomePriceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionUnreadableTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
@@ -324,7 +324,7 @@ internal class PlacePredictionModel @Inject constructor(
             ifLeft = { return SpendingPower.Unknown },
             ifRight = { position ->
                 position ?: run {
-                    uiState.update(ClearPositionTransformer)
+                    uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.NotHeld))
                     return SpendingPower.Refused(reason = "Position is no longer held")
                 }
             },
@@ -588,7 +588,7 @@ internal class PlacePredictionModel @Inject constructor(
             }
             if (addresses == null) {
                 logger.e("No stored addresses; the screen keeps nothing sellable")
-                uiState.update(SetPositionUnreadableTransformer)
+                uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.Unreadable))
                 return@launch
             }
 
@@ -597,13 +597,13 @@ internal class PlacePredictionModel @Inject constructor(
             }.fold(
                 ifLeft = { error ->
                     logger.e("Position could not be read, the screen keeps nothing sellable: $error")
-                    uiState.update(SetPositionUnreadableTransformer)
+                    uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.Unreadable))
                     return@launch
                 },
                 ifRight = { position ->
                     position ?: run {
                         logger.e("Position is not held or not indexed yet; the screen keeps nothing sellable")
-                        uiState.update(SetPositionUnreadableTransformer)
+                        uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.NotHeld))
                         return@launch
                     }
                 },
@@ -621,7 +621,7 @@ internal class PlacePredictionModel @Inject constructor(
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.isPositionReadable()) return
+        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canQuote()) return
 
         if (uiState.value.enteredAmount() == null) {
             startPriceLoop()

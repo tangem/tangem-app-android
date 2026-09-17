@@ -34,6 +34,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.availableOrZero
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
@@ -121,7 +122,7 @@ private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionIntent
         )
         is OrderSideUM.Sell -> PredictionSharesBlock(
             selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-            available = order.available,
+            available = order.position.availableOrZero,
             proceeds = order.proceeds,
             onAmountChange = intents::onAmountChange,
         )
