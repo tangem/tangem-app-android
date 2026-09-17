@@ -49,6 +49,6 @@ internal class StoriesEventsTest {
 
         // Assert
         assertThat(actual).isEqualTo(StoriesEvents.SwapStories(source = "Main", watchCount = "1"))
-        assertThat(actual.event).isEqualTo("Swap Stories")
+        assertThat(actual.event).isEqualTo("Swap Story")
     }
 }
