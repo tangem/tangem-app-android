@@ -178,9 +178,13 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     // Not short-circuited in MOCK env: the account removal is only observable through what this call does —
     // the pay-enabled request against WireMock, clearing the wallet's Tangem Pay data and storing the empty
-    // payment-account status that hides the block.
+    // payment-account status that hides the block. The synthetic order ids are part of that data, so they go
+    // with it — otherwise a later refresh would keep replaying the removed account's enrollment.
     override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> =
-        real.disableTangemPay(userWalletId)
+        real.disableTangemPay(userWalletId).onRight {
+            mockOrderIds.remove(userWalletId)
+            mockVaOrderIds.remove(userWalletId)
+        }
 
     // Follows the flag the customer-state mock writes (FORMER / all product instances DEACTIVATED), so a
     // removed account stays hidden across a restart instead of reappearing.
