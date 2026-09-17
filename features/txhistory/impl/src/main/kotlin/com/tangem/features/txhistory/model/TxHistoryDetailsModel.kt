@@ -38,6 +38,7 @@ import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
@@ -58,7 +59,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -88,6 +91,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     private val router: Router,
     isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -123,8 +127,8 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val refundCurrency = MutableStateFlow<CryptoCurrency?>(null)
 
     /**
-     * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap — the card is
-     * shown for any swap status, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
+     * Provider-rating (CSAT) card slot. Activated once the viewed tx turns out to be an express swap that reached a
+     * terminal state, mirroring the legacy express-status sheet. Stays dismissed for onramp / on-chain txs.
      */
     val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
 
@@ -148,16 +152,23 @@ internal class TxHistoryDetailsModel @Inject constructor(
         }
     }
 
+    private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
+        emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
+    }
+        .onStart { emit(emptySet()) }
+        .flowOn(dispatchers.io)
+
     /**
-     * The owner/contact lookup paired with whether saving a contact is possible at all: an address book whose stored
-     * contract version is newer than this build's cannot be written to, so "Add contact" must not be offered — the
-     * editor would only show its incompatible screen. Combined here rather than in the [uiState] `combine` below,
-     * which is already at the five-source overload.
+     * The owner/contact lookup, whether saving a contact is possible at all (an address book stored by a newer build
+     * cannot be written to, so "Add contact" must not be offered), and the wallet's cached tokens. Combined here
+     * rather than in the [uiState] `combine` below, which is already at the five-source overload.
      */
-    private val lookupWithAddressBook: Flow<Pair<TxHistoryLookupContext, Boolean>> = combine(
-        flow = ownerLookupProducer(params.userWalletId),
-        flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
-    ) { lookup, isCompatible -> lookup to isCompatible }
+    private val lookupWithAddressBook: Flow<Triple<TxHistoryLookupContext, Boolean, Set<CryptoCurrency.Token>>> =
+        combine(
+            flow = ownerLookupProducer(params.userWalletId),
+            flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
+            flow3 = networkTokensFlow,
+        ) { lookup, isCompatible, tokens -> Triple(lookup, isCompatible, tokens) }
 
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
@@ -165,7 +176,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
         flow5 = balanceHidingSettings.isBalanceHidden(),
-    ) { txInfo, (lookup, isAddressBookCompatible), stakingTargets, refundToken, isBalanceHidden ->
+    ) { txInfo, (lookup, isAddressBookCompatible, networkTokens), stakingTargets, refundToken, isBalanceHidden ->
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops "Transaction ID".
@@ -195,6 +206,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
             isBalanceHidden = isBalanceHidden,
             onOpenValidator = urlOpener::openUrl,
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
+            networkTokens = networkTokens,
         ).convert(txInfo)
     }
         .flowOn(dispatchers.default)
@@ -217,17 +229,22 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * Activates the rating slot for an express swap. The rating key is the provider-side deal id when present, the
      * express id otherwise — same as the legacy surface, so ratings stay shared between the old and new UI.
 
+     *
+     * Only a completed deal gets the widget: the survey vendor caps API calls per day and a swap in flight
+     * is re-opened many times while the user watches its status. The flow keeps collecting, so the slot
+     * still appears by itself once a deal watched from this screen completes.
      */
     fun activateRatingForSwap() {
         if (isRatingActivationStarted) return
         isRatingActivationStarted = true
         txHistoryInfo
-            .mapNotNull { (it as? ExpressTx.Swap)?.tx }
-            .map { tx ->
+            .mapNotNull { it as? ExpressTx.Swap }
+            .filter { swap -> swap.tx.status.isRateable }
+            .map { swap ->
                 RatingKey(
-                    txExternalId = tx.externalTxId ?: tx.txId,
-                    providerName = tx.provider?.name.orEmpty(),
-                    txExternalUrl = tx.externalTxUrl.orEmpty(),
+                    txExternalId = swap.externalTxId ?: swap.txId,
+                    providerName = swap.provider?.name.orEmpty(),
+                    txExternalUrl = swap.externalTxUrl.orEmpty(),
                 )
             }
             .distinctUntilChanged()

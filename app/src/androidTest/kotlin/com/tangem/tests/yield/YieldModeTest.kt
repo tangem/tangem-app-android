@@ -7,6 +7,7 @@ import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.extensions.pullToRefresh
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreenWithExistingHotWallet
@@ -45,7 +46,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldNotActiveState = "NotActive"
         val yieldActiveState = "Active"
 
-        setupHooks().run {
+        setupYieldHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -80,9 +81,14 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyPromoScreen { continueButton.clickWithAssertion() }
             }
             step("Hold 'Start earning' button to confirm activation") {
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
+                // assertIsNotDisplayed also passes for a node that has not rendered yet.
+                awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStartEarningScreen {
-                        startEarningButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        if (startEarningButton.isDisplayedSafely()) {
+                            startEarningButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        }
                         startEarningButton.assertIsNotDisplayed()
                     }
                 }
@@ -117,7 +123,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldNotActiveState = "NotActive"
         val yieldActiveState = "Active"
 
-        setupHooks().run {
+        setupYieldHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -152,9 +158,14 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyPromoScreen { continueButton.clickWithAssertion() }
             }
             step("Hold 'Start earning' button to confirm activation") {
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
+                // assertIsNotDisplayed also passes for a node that has not rendered yet.
+                awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStartEarningScreen {
-                        startEarningButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        if (startEarningButton.isDisplayedSafely()) {
+                            startEarningButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        }
                         startEarningButton.assertIsNotDisplayed()
                     }
                 }
@@ -204,7 +215,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldScenario = "yield_supply_status"
         val yieldTopUpState = "TopUp"
 
-        setupHooks().run {
+        setupYieldHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -266,7 +277,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldApproveNeededState = "Active"
         val yieldApproveGrantedState = "ApproveGranted"
 
-        setupHooks().run {
+        setupYieldHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -306,9 +317,14 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyActiveScreen { approveButton.clickWithAssertion() }
             }
             step("Hold 'Confirm' button to confirm approval") {
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
+                // assertIsNotDisplayed also passes for a node that has not rendered yet.
+                awaitSuccess { onYieldSupplyApproveScreen { confirmButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyApproveScreen {
-                        confirmButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        if (confirmButton.isDisplayedSafely()) {
+                            confirmButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        }
                         confirmButton.assertIsNotDisplayed()
                     }
                 }
@@ -344,7 +360,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldNotActiveState = "NotActive"
         val yieldActiveState = "Active"
 
-        setupHooks().run {
+        setupYieldHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -379,9 +395,14 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyPromoScreen { continueButton.clickWithAssertion() }
             }
             step("Hold 'Start earning' button to confirm activation") {
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
+                // assertIsNotDisplayed also passes for a node that has not rendered yet.
+                awaitSuccess { onYieldSupplyStartEarningScreen { startEarningButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStartEarningScreen {
-                        startEarningButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        if (startEarningButton.isDisplayedSafely()) {
+                            startEarningButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        }
                         startEarningButton.assertIsNotDisplayed()
                     }
                 }
@@ -441,7 +462,7 @@ class YieldModeTest : BaseTestCase() {
         val yieldActiveState = "Active"
         val yieldExitedState = "Exited"
 
-        setupHooks().run {
+        setupYieldHooks().run {
 
             step("Set WireMock scenario: '$portfolioScenario' to state: '$portfolioState'") {
                 setWireMockScenarioState(scenarioName = portfolioScenario, state = portfolioState)
@@ -476,9 +497,14 @@ class YieldModeTest : BaseTestCase() {
                 onYieldSupplyActiveScreen { stopEarningButton.clickWithAssertion() }
             }
             step("Hold 'Confirm' button to confirm exit") {
+                // An enabled-state flip mid-gesture restarts pointerInput and swallows the hold.
+                // assertIsNotDisplayed also passes for a node that has not rendered yet.
+                awaitSuccess { onYieldSupplyStopEarningScreen { confirmButton.assertIsDisplayed() } }
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onYieldSupplyStopEarningScreen {
-                        confirmButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        if (confirmButton.isDisplayedSafely()) {
+                            confirmButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+                        }
                         confirmButton.assertIsNotDisplayed()
                     }
                 }
@@ -507,5 +533,23 @@ class YieldModeTest : BaseTestCase() {
                 }
             }
         }
+    }
+
+    /**
+     * Activation silently no-ops on the zero address, and the SDK only trusts the resolved one when two providers
+     * agree (MIN_CONFIRMATIONS) — hence the provider pair, set before launch since networks_providers is read there.
+     */
+    private fun setupYieldHooks() = setupHooks(
+        additionalBeforeAppLaunchSection = {
+            check(setWireMockScenarioState(NETWORKS_PROVIDERS_SCENARIO, ETHEREUM_PROVIDER_PAIR_STATE)) {
+                "Failed to set '$NETWORKS_PROVIDERS_SCENARIO' to '$ETHEREUM_PROVIDER_PAIR_STATE' — Ethereum " +
+                    "would then have a single provider and yield activation would silently do nothing."
+            }
+        },
+    )
+
+    private companion object {
+        const val NETWORKS_PROVIDERS_SCENARIO = "networks_providers"
+        const val ETHEREUM_PROVIDER_PAIR_STATE = "EthereumProviderPair"
     }
 }
