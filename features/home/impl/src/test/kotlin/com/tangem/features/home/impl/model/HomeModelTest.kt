@@ -24,12 +24,11 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.api.HomeFeatureToggles
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -264,17 +263,6 @@ internal class HomeModelTest {
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             homeFeatureToggles = homeFeatureToggles,
             uiMessageSender = uiMessageSender,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

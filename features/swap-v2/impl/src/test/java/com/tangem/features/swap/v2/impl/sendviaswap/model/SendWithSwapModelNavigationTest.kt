@@ -11,13 +11,12 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.entry.SendEntryRoute
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -122,17 +121,6 @@ internal class SendWithSwapModelNavigationTest {
             isAccountsModeEnabledUseCase = mockk(relaxed = true),
             swapAlertFactory = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(value = params),
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }
