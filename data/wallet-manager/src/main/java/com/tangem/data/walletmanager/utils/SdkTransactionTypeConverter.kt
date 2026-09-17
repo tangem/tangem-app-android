@@ -1,6 +1,8 @@
 package com.tangem.data.walletmanager.utils
 
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
+import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
+import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
@@ -17,12 +19,16 @@ import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal class SdkTransactionTypeConverter(
-    private val smartContractMethods: Map<String, SmartContractMethod>,
+    smartContractMethods: Map<String, SmartContractMethod>,
     private val yieldSupplyAddresses: Set<String>,
     gaslessFeeAddresses: Set<String>,
     private val currency: CryptoCurrency,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
+
+    /** The SDK reports a selector prefixed or bare depending on the source; the asset is keyed prefixed. */
+    private val smartContractMethods: Map<String, SmartContractMethod> =
+        smartContractMethods.mapKeys { (selector, _) -> selector.toSelectorKey() }
 
     private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
 
@@ -33,7 +39,7 @@ internal class SdkTransactionTypeConverter(
         return when (type) {
             is TransactionType.ContractMethod -> {
                 getTransactionType(
-                    methodName = smartContractMethods[type.id]?.name,
+                    methodName = smartContractMethods[type.id.toSelectorKey()]?.name,
                     callData = type.callData,
                     destination = destination,
                     source = source,
@@ -85,7 +91,7 @@ internal class SdkTransactionTypeConverter(
         source: TransactionHistoryItem.SourceType,
     ): TxInfo.TransactionType {
         return when (methodName) {
-            "transfer" -> TxInfo.TransactionType.Transfer
+            "transfer" -> decodeTokenTransfer(callData, destination) ?: TxInfo.TransactionType.Transfer
             "approve" -> decodeApprove(callData, destination)
             "swap" -> TxInfo.TransactionType.Swap
             "buyVoucher",
@@ -164,38 +170,57 @@ internal class SdkTransactionTypeConverter(
     }
 
     /**
-     * The SDK decodes the allowance as a raw `uint256` in the token's smallest units (`null` for an unlimited one) and
-     * knows nothing about the token itself (`Blockchain.Unknown`: empty symbol, zero decimals). ERC-20 `approve` is
-     * always sent to the token contract, so the tx destination identifies the approved token among the wallet's
-     * [networkTokens]; the viewed [currency] is the fallback for a contract the wallet does not track.
+     * A token transfer reaches the coin history only because the wallet paid the gas for it, so it is reported as the
+     * fee it cost. In the token's own history the same transaction *is* the transfer and stays one (`null` here).
+     */
+    private fun decodeTokenTransfer(
+        callData: String?,
+        destination: TransactionHistoryItem.DestinationType,
+    ): TxInfo.TransactionType.NetworkFee? {
+        if (currency !is CryptoCurrency.Coin) return null
+        val data = callData ?: return null
+        val transfer = TransferERC20TokenCallData(data) ?: return null
+        return TxInfo.TransactionType.NetworkFee(
+            amount = destination.resolveToken()?.toSdkAmount(rawValue = transfer.amount.value),
+            address = transfer.destination,
+        )
+    }
+
+    /**
+     * The SDK decodes the allowance raw, in the token's smallest units (`null` for an unlimited one), and knows
+     * nothing about the token itself. The viewed [currency] is the fallback for a token the wallet does not track.
      */
     private fun toAllowance(rawAllowance: BigDecimal?, destination: TransactionHistoryItem.DestinationType): SdkAmount {
-        val contractAddress = (destination as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
-        val token = contractAddress?.let { address ->
-            networkTokens.find { it.contractAddress.equals(address, ignoreCase = true) }
-        }
-        return if (token != null) {
-            SdkAmount(
-                currencySymbol = token.symbol,
-                value = rawAllowance?.movePointLeft(token.decimals),
-                decimals = token.decimals,
-                type = SdkAmountType.Token(contractAddress = token.contractAddress, id = token.id.rawCurrencyId?.value),
-            )
-        } else {
-            SdkAmount(
-                currencySymbol = currency.symbol,
-                value = rawAllowance?.movePointLeft(currency.decimals),
-                decimals = currency.decimals,
-                type = when (currency) {
-                    is CryptoCurrency.Coin -> SdkAmountType.Coin
-                    is CryptoCurrency.Token -> SdkAmountType.Token(
-                        contractAddress = currency.contractAddress,
-                        id = currency.id.rawCurrencyId?.value,
-                    )
-                },
-            )
-        }
+        val token = destination.resolveToken() ?: return SdkAmount(
+            currencySymbol = currency.symbol,
+            value = rawAllowance?.movePointLeft(currency.decimals),
+            decimals = currency.decimals,
+            type = when (currency) {
+                is CryptoCurrency.Coin -> SdkAmountType.Coin
+                is CryptoCurrency.Token -> SdkAmountType.Token(
+                    contractAddress = currency.contractAddress,
+                    id = currency.id.rawCurrencyId?.value,
+                )
+            },
+        )
+        return token.toSdkAmount(rawValue = rawAllowance)
     }
+
+    /** A token call is sent to the token's own contract, so the destination identifies it among [networkTokens]. */
+    private fun TransactionHistoryItem.DestinationType.resolveToken(): CryptoCurrency.Token? {
+        val contractAddress = (this as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address
+            ?: return null
+        return networkTokens.find { it.contractAddress.equals(contractAddress, ignoreCase = true) }
+    }
+
+    private fun CryptoCurrency.Token.toSdkAmount(rawValue: BigDecimal?): SdkAmount = SdkAmount(
+        currencySymbol = symbol,
+        value = rawValue?.movePointLeft(decimals),
+        decimals = decimals,
+        type = SdkAmountType.Token(contractAddress = contractAddress, id = id.rawCurrencyId?.value),
+    )
+
+    private fun String.toSelectorKey(): String = lowercase().formatHex()
 
     private fun getTypeForGaslessMethod(destination: TransactionHistoryItem.DestinationType): TxInfo.TransactionType {
         return when (destination) {
