@@ -12,6 +12,7 @@ import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.AuthError
+import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
@@ -185,9 +186,13 @@ internal class DefaultSocialRecoveryClient(
                 // the request and the token write stay under one lock: the reply reissues the session,
                 // and a wallet registration running in parallel writes the same single token set
                 rotationLock.withLock {
+                    val expected = currentSession()
                     when (val response = api.registerWalletBinding(request)) {
                         is ApiResponse.Success -> try {
-                            sessionTokensStore.save(SessionTokensConverter.convertBack(response.data))
+                            sessionTokensStore.save(
+                                tokens = SessionTokensConverter.convertBack(response.data),
+                                expected = expected,
+                            )
                         } catch (e: Exception) {
                             // the server rotated the session; keeping the superseded tokens while reporting
                             // success would break every later authenticated call. Re-registering updates the
@@ -309,6 +314,18 @@ internal class DefaultSocialRecoveryClient(
             raise(SocialRecoveryError.Unknown(e))
         }
         if (!hasSession) raise(SocialRecoveryError.NoActiveSession)
+    }
+
+    /**
+     * The session as it stands right before the binding call, handed to [SessionTokensStore.save] so a
+     * reply that lost a race to a refresh cannot overwrite it. Best-effort: an unreadable store simply
+     * leaves the write unconditional.
+     */
+    private suspend fun currentSession(): SessionTokens? = try {
+        sessionTokensStore.get().getOrNull()
+    } catch (e: Exception) {
+        TangemLogger.e("Failed to read the session before the social registration", e)
+        null
     }
 
     /** A 409 can only mean the one-to-one rule was broken — re-binding the same pair is allowed */
