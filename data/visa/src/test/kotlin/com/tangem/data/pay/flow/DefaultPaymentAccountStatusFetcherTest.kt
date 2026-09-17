@@ -253,8 +253,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         clearMocks(paymentAccountStatusesStore, answers = false)
         // Tiers off by default — legacy auto-order-creation behavior. Individual tests override.
         every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
-        // Multichain off by default — legacy single-chain behavior. Individual tests override.
-        every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
+        every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
     }
 
     /**
@@ -320,7 +319,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = "cust_1",
-            depositAddress = "0xdeposit",
             balance = PaymentAccountStatusValue.Balance(
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal.TEN,
@@ -1572,23 +1570,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         )
 
         @Test
-        fun `GIVEN multichain toggle OFF WHEN map loaded THEN networks empty`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(networks = listOf(network))
-            stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns false
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert — toggle gates population even though customerInfo carries a network
-            val loaded = storedStatuses.lastLoaded()
-            assertThat(loaded.networks).isEmpty()
-        }
-
-        @Test
-        fun `GIVEN multichain toggle ON WHEN map loaded THEN networks populated from factory`() = runTest {
+        fun `GIVEN customer networks WHEN map loaded THEN networks populated from factory`() = runTest {
             // Arrange
             val networkStatus = PaymentNetworkStatus.Available(
                 network = mockk(),
@@ -1598,7 +1580,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             )
             val customerInfo = buildCustomerInfo(networks = listOf(network))
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isAccountMultichainEnabled } returns true
             every {
                 tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any())
             } returns listOf(networkStatus)
@@ -1641,7 +1622,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.balance).isNull()
-                assertThat(loaded.depositAddress).isNull()
                 assertThat(loaded.source).isEqualTo(StatusSource.ACTUAL)
                 assertThat(loaded.cards.map { it.id }).containsExactly("card_1")
                 assertThat(loaded.cards.single().cardStatus).isEqualTo(TangemPayCard.Status.ACTIVE)

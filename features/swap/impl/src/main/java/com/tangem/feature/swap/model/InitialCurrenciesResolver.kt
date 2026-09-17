@@ -326,8 +326,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
     /**
      * Every currency the payment account is issued on — the same set the token selector lists — or, while the
-     * account flow is off, only the account's legacy currency, which is what the pre-multichain screens resolve
-     * against. The issued set collapses to that same legacy currency when the account has no issued networks.
+     * account flow is off, only the first of them, because the pre-multichain screens resolve against a single
+     * account currency.
      */
     private fun getPaymentAccountCurrencies(
         accountStatus: AccountStatus.Payment,
@@ -341,10 +341,10 @@ internal class InitialCurrenciesResolver @Inject constructor(
     }
 
     private fun PaymentAccountStatusValue.Loaded.currencies(isAccountFlowEnabled: Boolean) =
-        if (isAccountFlowEnabled) cryptoCurrencyStatuses else listOfNotNull(cryptoCurrencyStatus)
+        if (isAccountFlowEnabled) cryptoCurrencyStatuses else cryptoCurrencyStatuses.take(1)
 
     private fun PaymentAccountStatusValue.Deactivated.currencies(isAccountFlowEnabled: Boolean) =
-        if (isAccountFlowEnabled) cryptoCurrencyStatuses else listOfNotNull(cryptoCurrencyStatus)
+        if (isAccountFlowEnabled) cryptoCurrencyStatuses else cryptoCurrencyStatuses.take(1)
 
     /**
      * Places the [selectedSwapCurrencyStatus] into the FROM or TO slot based on [swapCurrencyPosition].
