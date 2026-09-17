@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
+import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
@@ -36,7 +37,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Model of the entry gate. The wallet is already settled by `PolymarketEntryModel`.
@@ -59,6 +62,7 @@ internal class PolymarketOnboardingModel @Inject constructor(
     private val runPolymarketOnboardingInteractor: RunPolymarketOnboardingInteractor,
     private val shouldShowStoriesInteractor: ShouldShowStoriesInteractor,
     private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val imagePreloader: ImagePreloader,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -240,20 +244,25 @@ internal class PolymarketOnboardingModel @Inject constructor(
         storyContentPrefetch = modelScope.async { fetchStoryContent() }
     }
 
-    private suspend fun isStoryAvailable(): Boolean {
+    private suspend fun isStoryAvailable(): Boolean = withTimeoutOrNull(STORY_AVAILABILITY_TIMEOUT) {
         val isPrefetched = storyContentPrefetch?.await() == true
 
         if (!isPrefetched) fetchStoryContent()
 
-        return shouldShowStoriesInteractor.invokeSync(STORY_ID)
-    }
+        shouldShowStoriesInteractor.invokeSync(STORY_ID)
+    } == true
 
     private suspend fun fetchStoryContent(): Boolean {
-        return getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true).getOrNull() != null
+        val story = getStoryContentUseCase.invokeSync(id = STORY_ID, refresh = true).getOrNull() ?: return false
+
+        story.getImageUrls().forEach(imagePreloader::preload)
+
+        return true
     }
 
     private companion object {
         val STORY_ID = StoryContentIds.STORY_POLYMARKET_ONBOARDING.id
         val STORY_SOURCE = AnalyticsParam.ScreensSources.Onboarding.value
+        val STORY_AVAILABILITY_TIMEOUT = 1.seconds
     }
 }
