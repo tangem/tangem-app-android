@@ -47,20 +47,24 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
+import com.tangem.features.polymarket.impl.placeprediction.entity.canQuote
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.ClearPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetOutcomePriceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
@@ -118,6 +122,8 @@ internal class PlacePredictionModel @Inject constructor(
 
     private val tradingAllowanceJobHolder = JobHolder()
 
+    private val positionJobHolder = JobHolder()
+
     private var isMarketLive = false
 
     private var isNegRiskMarket: Boolean? = null
@@ -164,6 +170,8 @@ internal class PlacePredictionModel @Inject constructor(
     fun onScreenShown() {
         isScreenShown = true
         if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
+        if (reloadPositionIfLost()) return
+
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -203,6 +211,8 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     override fun onQuoteRetryClick() {
+        if (reloadPositionIfLost()) return
+
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -322,7 +332,7 @@ internal class PlacePredictionModel @Inject constructor(
             ifLeft = { return SpendingPower.Unknown },
             ifRight = { position ->
                 position ?: run {
-                    uiState.update(ClearPositionTransformer)
+                    uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.NotHeld))
                     return SpendingPower.Refused(reason = "Position is no longer held")
                 }
             },
@@ -579,6 +589,23 @@ internal class PlacePredictionModel @Inject constructor(
         }
     }
 
+    /** @return whether a fresh read was started, in which case it — not the caller — restarts the loop. */
+    private fun reloadPositionIfLost(): Boolean {
+        val params = params as? PlacePredictionComponent.Params.Sell ?: return false
+        val position = (uiState.value.order as? OrderSideUM.Sell)?.position ?: return false
+
+        if (position is SellPositionUM.Loading || position is SellPositionUM.Held) return false
+
+        uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.Loading))
+        loadPosition(params = params)
+        return true
+    }
+
+    private fun failPosition(position: SellPositionUM) {
+        uiState.update(SetSellPositionStateTransformer(position = position))
+        restartQuoteLoop(withDebounce = false)
+    }
+
     private fun loadPosition(params: PlacePredictionComponent.Params.Sell) {
         modelScope.launch {
             val addresses = withContext(dispatchers.default) {
@@ -586,6 +613,7 @@ internal class PlacePredictionModel @Inject constructor(
             }
             if (addresses == null) {
                 logger.e("No stored addresses; the screen keeps nothing sellable")
+                failPosition(position = SellPositionUM.Unreadable)
                 return@launch
             }
 
@@ -594,11 +622,13 @@ internal class PlacePredictionModel @Inject constructor(
             }.fold(
                 ifLeft = { error ->
                     logger.e("Position could not be read, the screen keeps nothing sellable: $error")
+                    failPosition(position = SellPositionUM.Unreadable)
                     return@launch
                 },
                 ifRight = { position ->
                     position ?: run {
                         logger.e("Position is not held or not indexed yet; the screen keeps nothing sellable")
+                        failPosition(position = SellPositionUM.NotHeld)
                         return@launch
                     }
                 },
@@ -610,20 +640,20 @@ internal class PlacePredictionModel @Inject constructor(
             uiState.update(SetPositionTransformer(position = position))
 
             if (isScreenShown) restartQuoteLoop(withDebounce = false)
-        }
+        }.saveIn(positionJobHolder)
     }
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!uiState.value.isMarketAcceptingOrders) return
+        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         if (uiState.value.enteredAmount() == null) {
             startPriceLoop()
             return
         }
 
-        if (uiState.value.isBelowMinAmount()) return
+        if (!uiState.value.canQuote() || uiState.value.isBelowMinAmount()) return
 
         modelScope.launch {
             if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
