@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
 import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.positiondetails.model.PolymarketFinishedPositionConverter
 import com.tangem.features.polymarket.impl.positions.PolymarketPositionsComponent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Tab
@@ -33,6 +34,7 @@ internal class PolymarketPositionsModel @Inject constructor(
 
     private val params = paramsContainer.require<PolymarketPositionsComponent.Params>()
     private val observation = JobHolder()
+    private val finishedPositionConverter = PolymarketFinishedPositionConverter()
     private var isResumed = false
 
     val uiState: StateFlow<PolymarketPositionsUM>
@@ -44,7 +46,8 @@ internal class PolymarketPositionsModel @Inject constructor(
                 },
                 content = PolymarketPositionsUM.Content.Loading,
                 onTabSelect = ::selectTab,
-                onBackClick = { router.pop() },
+                onBackClick = ::onBack,
+                onFinishedPositionDismiss = ::dismissFinishedPosition,
                 onFilterSelect = ::selectFilter,
             ),
         )
@@ -75,6 +78,7 @@ internal class PolymarketPositionsModel @Inject constructor(
                 selectedTab = tab,
                 selectedFilter = PolymarketPositionsFilter.ALL,
                 content = feed.state.value.content,
+                finishedPosition = null,
             )
         }
         observeTab()
@@ -95,6 +99,7 @@ internal class PolymarketPositionsModel @Inject constructor(
             Tab.Finished -> PolymarketPositionsTab.FINISHED
         },
         onPositionClick = if (tab == Tab.Active) ::openPosition else null,
+        onClosedPositionClick = if (tab == Tab.Finished) ::openFinishedPosition else null,
     )
 
     private fun observeTab() {
@@ -123,5 +128,18 @@ internal class PolymarketPositionsModel @Inject constructor(
                 PolymarketRoute.PositionDetails(params.userWalletId, position.id),
             )
         }
+    }
+
+    private fun openFinishedPosition(position: PolymarketPosition.Closed) {
+        if (uiState.value.selectedTab != Tab.Finished) return
+        uiState.update { it.copy(finishedPosition = finishedPositionConverter.convert(position)) }
+    }
+
+    private fun dismissFinishedPosition() {
+        uiState.update { it.copy(finishedPosition = null) }
+    }
+
+    private fun onBack() {
+        if (uiState.value.finishedPosition != null) dismissFinishedPosition() else router.pop()
     }
 }
