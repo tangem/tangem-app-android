@@ -47,6 +47,13 @@ internal class FeedHomeModel @Inject constructor(
         override fun onOpenTab(tab: FeedTabId) = openTabFromBlock(tab = tab)
     }
 
+    /** Silent on purpose: [selectTab] reports a section the *user* switched to. */
+    fun selectSection(id: FeedTabId) {
+        val index = contributors.indexOfFirst { it.id == id }.takeIf { it >= 0 } ?: return
+
+        pagesNavigation.select(index = index)
+    }
+
     fun selectTab(index: Int) {
         pagesNavigation.select(
             index = index,
@@ -64,8 +71,7 @@ internal class FeedHomeModel @Inject constructor(
 
     /** No-op for a tab this feed doesn't contribute — the block's entry point simply leads nowhere. */
     private fun openTabFromBlock(tab: FeedTabId) {
-        val index = contributors.indexOfFirst { it.id == tab }
-        if (index < 0) return
+        val index = contributors.indexOfFirst { it.id == tab }.takeIf { it >= 0 } ?: return
 
         selectTab(index = index)
         // the card that was tapped steps out of the way, leaving the tab it opened in full view
