@@ -11,6 +11,8 @@ import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -32,6 +34,13 @@ internal class DefaultSessionTokensStore(
         moshi.adapter(TokenApiResponse::class.java)
     }
 
+    private val issuedAt = AccessTokenIssuedAt(moshi)
+
+    // Makes the compare-and-write in [save] atomic against a concurrent save/clear. Guards local
+    // storage only — never held across a network call — so it cannot deadlock with the locks the
+    // registration paths take.
+    private val writeMutex = Mutex()
+
     override suspend fun get(): Option<SessionTokens> = withContext(dispatchers.io) {
         val payload = storage.getAsString(KEY) ?: return@withContext None
         try {
@@ -46,13 +55,36 @@ internal class DefaultSessionTokensStore(
 
     override suspend fun save(tokens: SessionTokens) {
         withContext(dispatchers.io) {
-            storage.store(KEY, adapter.toJson(SessionTokensConverter.convert(tokens)))
+            writeMutex.withLock {
+                if (isSuperseded(tokens)) {
+                    // A response that lost the race — e.g. a wallet registration reissuing the session
+                    // while a 401 elsewhere already refreshed it. Keeping it would leave the app
+                    // authenticating with credentials the service has already replaced.
+                    TangemLogger.i("Discarded a session token set issued before the stored one")
+                    return@withLock
+                }
+                storage.store(KEY, adapter.toJson(SessionTokensConverter.convert(tokens)))
+            }
         }
+    }
+
+    /**
+     * Unknown issuance on either side means the two cannot be ordered — the incoming set is then kept,
+     * so an unreadable claim can never strand the app on credentials it can no longer refresh.
+     */
+    private suspend fun isSuperseded(incoming: SessionTokens): Boolean {
+        val stored = get().getOrNull() ?: return false
+        val storedIssuedAt = issuedAt.of(stored.accessToken) ?: return false
+        val incomingIssuedAt = issuedAt.of(incoming.accessToken) ?: return false
+
+        return incomingIssuedAt < storedIssuedAt
     }
 
     override suspend fun clear() {
         withContext(dispatchers.io) {
-            storage.delete(KEY)
+            writeMutex.withLock {
+                storage.delete(KEY)
+            }
         }
     }
 
