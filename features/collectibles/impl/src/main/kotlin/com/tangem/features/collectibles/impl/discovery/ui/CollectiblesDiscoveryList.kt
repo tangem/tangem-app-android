@@ -15,7 +15,6 @@ import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.collectibles.impl.common.ui.FoldingBlock
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -31,7 +30,7 @@ internal object DiscoveryListKeys {
  * Frame-scoped rendering inputs come from [LocalCollectiblesDiscoveryListContext], provided by the host.
  */
 internal fun LazyListScope.collectiblesDiscoveryList(state: CollectiblesDiscoveryUM, tabScrollState: ScrollState) {
-    tabBandItem(tabs = state.tabs, scrollState = tabScrollState, isFolding = state.search.isActive)
+    tabBandItem(tabs = state.tabs, scrollState = tabScrollState)
     contentItems(content = state.content)
 }
 
@@ -47,11 +46,7 @@ internal fun LazyListState.isCollectiblesTabBandPinned(headerKey: String): Boole
     return layoutInfo.visibleItemsInfo.none { it.key == headerKey }
 }
 
-private fun LazyListScope.tabBandItem(
-    tabs: ImmutableList<TangemTabItemUM>,
-    scrollState: ScrollState,
-    isFolding: Boolean,
-) {
+private fun LazyListScope.tabBandItem(tabs: ImmutableList<TangemTabItemUM>, scrollState: ScrollState) {
     if (tabs.isEmpty()) return
 
     item(key = DiscoveryListKeys.TABS, contentType = DiscoveryListKeys.TABS) {
@@ -64,18 +59,12 @@ private fun LazyListScope.tabBandItem(
                 .fillMaxWidth()
                 .zIndex(1f),
         ) {
-            FoldingBlock(isFolding = isFolding) {
-                CollectiblesTabBand(
-                    tabs = tabs,
-                    scrollState = scrollState,
-                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
-                    modifier = if (context.isTabBandPinned) {
-                        Modifier.alpha(0f)
-                    } else {
-                        Modifier.alpha(1f)
-                    },
-                )
-            }
+            CollectiblesTabBand(
+                tabs = tabs,
+                scrollState = scrollState,
+                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+                modifier = Modifier.alpha(if (context.isTabBandPinned) 0f else context.leadingBlocksAlpha),
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
         }
