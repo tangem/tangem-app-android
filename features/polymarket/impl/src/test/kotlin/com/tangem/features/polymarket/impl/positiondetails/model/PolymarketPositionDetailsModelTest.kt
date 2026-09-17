@@ -322,6 +322,50 @@ internal class PolymarketPositionDetailsModelTest {
         }
 
     @Test
+    fun `GIVEN a shown position WHEN it comes back unchanged THEN it is shown at once AND re-read until it changes`() =
+        runModelTest {
+            // Arrange
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+            coEvery { repository.getPosition(addresses, position.id) } returnsMany listOf(
+                position.right(),
+                position.right(),
+                position.copy(size = BigDecimal("10")).right(),
+            )
+            model.onPause()
+
+            // Act
+            model.onResume()
+            runCurrent()
+            val atOnce = model.data().metrics.quantity
+            advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * 2 + 1)
+
+            // Assert
+            assertThat(atOnce).isEqualTo(stringReference("28.09"))
+            assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
+            coVerify(exactly = 4) { repository.getPosition(addresses, position.id) }
+        }
+
+    @Test
+    fun `GIVEN a shown position WHEN it comes back changed THEN no further reads are made`() = runModelTest {
+        // Arrange
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        coEvery { repository.getPosition(addresses, position.id) } returns position.copy(size = BigDecimal("10")).right()
+        model.onPause()
+
+        // Act
+        model.onResume()
+        advanceTimeBy(PolymarketConst.POSITION_INDEXING_RETRY_MILLIS * PolymarketConst.POSITION_INDEXING_READS + 1)
+
+        // Assert
+        assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
+        coVerify(exactly = 2) { repository.getPosition(addresses, position.id) }
+    }
+
+    @Test
     fun `GIVEN a shown position WHEN it stays missing THEN the reads stop AND the screen closes`() =
         runModelTest {
             // Arrange
