@@ -22,19 +22,15 @@ internal class CollectiblesVaultBalanceTest {
     internal data class FiatAmountModel(val balance: CollectiblesVaultBalance, val expected: BigDecimal?)
 
     private fun provideTestModels() = listOf(
-        FiatAmountModel(balance = balance(usdc = "10", usdcRate = "1"), expected = BigDecimal("10")),
+        FiatAmountModel(balance = vaultBalance(amount = "10", rate = "1"), expected = BigDecimal("10")),
         // An empty vault needs no quote at all: requiring one would blank the wallet total over a rate that
         // could not change the answer
-        FiatAmountModel(balance = balance(usdc = "0", usdcRate = null), expected = BigDecimal.ZERO),
+        FiatAmountModel(balance = vaultBalance(amount = "0", rate = null), expected = BigDecimal.ZERO),
         // A vault that holds something and cannot be priced is unpriceable
-        FiatAmountModel(balance = balance(usdc = "10", usdcRate = null), expected = null),
+        FiatAmountModel(balance = vaultBalance(amount = "10", rate = null), expected = null),
     )
 
     private companion object {
 
-        fun balance(usdc: String, usdcRate: String?) = CollectiblesVaultBalance(
-            usdcAmount = BigDecimal(usdc),
-            usdcFiatRate = usdcRate?.let(::BigDecimal),
-        )
     }
 }

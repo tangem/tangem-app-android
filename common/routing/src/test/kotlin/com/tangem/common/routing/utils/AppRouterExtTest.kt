@@ -74,6 +74,45 @@ internal class AppRouterExtTest {
     }
 
     @Test
+    fun `GIVEN covered route WHEN popToIfCovered THEN popped back to it`() {
+        // Arrange
+        val router = FakeAppRouter(wallet, tetherDetails, send)
+
+        // Act
+        router.popToIfCovered(wallet)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet)
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN route is the current one WHEN popToIfCovered THEN stack is unchanged without error`() {
+        // Arrange
+        val router = FakeAppRouter(wallet)
+
+        // Act
+        router.popToIfCovered(wallet)
+
+        // Assert
+        assertThat(router.stack).containsExactly(wallet)
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN route is not in stack WHEN popToIfCovered THEN stack is unchanged without error`() {
+        // Arrange - a cold start: the route is where the app is heading, not where it has been
+        val router = FakeAppRouter(tetherDetails)
+
+        // Act
+        router.popToIfCovered(wallet)
+
+        // Assert
+        assertThat(router.stack).containsExactly(tetherDetails)
+        assertThat(router.errors).isEmpty()
+    }
+
+    @Test
     fun `GIVEN route of the same class on top WHEN pushOrReplaceCurrent THEN current route replaced`() {
         // Arrange
         val router = FakeAppRouter(wallet, tetherDetails)
