@@ -15,7 +15,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.features.storiesv2.StoriesV2Component
 import com.tangem.features.storiesv2.StoriesV2Result
@@ -25,6 +24,7 @@ import com.tangem.features.storiesv2.impl.analytics.StoryV2ErrorStage
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
+import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Slide
@@ -47,6 +47,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -96,6 +99,8 @@ internal class StoriesV2Model @Inject constructor(
     private var elapsedRemainderNanos = 0L
 
     private var appliedPlayToken = NO_TOKEN
+    private val hapticBurstJobHolder = JobHolder()
+
     private var appliedRenderMode = SlideRenderMode.ASSET
 
     init {
@@ -184,7 +189,7 @@ internal class StoriesV2Model @Inject constructor(
             composition = composition,
             source = params.source,
             analytics = analytics,
-            onHaptic = { hapticManager.performOneTime(TangemHapticEffect.OneTime.HeavyClick) },
+            onHaptic = ::playHaptic,
             onAction = params.onAction,
             onResult = params.onResult,
         )
@@ -202,6 +207,17 @@ internal class StoriesV2Model @Inject constructor(
         controller.state
             .onEach(::applyState)
             .launchIn(modelScope)
+    }
+
+    /** A burst outlives the moment it started in, so every pulse re-checks that the story is still playing. */
+    private fun playHaptic(haptic: StoryV2Haptic) {
+        modelScope.launch {
+            repeat(haptic.pulses) { pulse ->
+                if (pulse > 0) delay(haptic.pulseIntervalMs)
+                if (controller?.state?.value?.isRunning != true) return@launch
+                hapticManager.performOneTime(haptic.effect)
+            }
+        }.saveIn(hapticBurstJobHolder)
     }
 
     /** Decodes on IO; the snapshot state map is only touched from the model's main-immediate dispatcher. */
