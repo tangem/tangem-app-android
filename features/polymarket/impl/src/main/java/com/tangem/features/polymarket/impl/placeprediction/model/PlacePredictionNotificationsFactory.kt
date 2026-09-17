@@ -34,6 +34,11 @@ internal object PlacePredictionNotificationsFactory {
         }
 
         if (state.tradingPermission == TradingPermissionUM.Restricted) add(PredictionNotificationUM.RegionRestricted)
+
+        val order = state.order
+        if (order is OrderSideUM.Sell && !order.isPositionReadable) {
+            add(PredictionNotificationUM.PositionUnavailable)
+        }
     }.distinct().toImmutableList()
 
     private fun QuoteUM.notifications(): List<PredictionNotificationUM> = when (this) {

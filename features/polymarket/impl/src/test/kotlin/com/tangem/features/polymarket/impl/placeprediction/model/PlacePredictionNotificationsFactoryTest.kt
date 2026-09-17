@@ -407,6 +407,27 @@ internal class PlacePredictionNotificationsFactoryTest {
     )
 
     @Test
+    fun `GIVEN an unreadable position WHEN the gate runs THEN the user is told AND the button stays shut`() {
+        // Arrange
+        val state = createState(
+            amountValue = "12.80",
+            quote = createQuote(),
+            order = OrderSideUM.Sell(
+                available = BigDecimal.ZERO,
+                proceeds = SharesProceedsUM.Unavailable,
+                isPositionReadable = false,
+            ),
+        )
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.notifications).containsExactly(PredictionNotificationUM.PositionUnavailable)
+        assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
     fun `GIVEN a sell with no collateral balance WHEN the gate runs THEN no shortfall is claimed`() {
         // Arrange
         val state = createState(

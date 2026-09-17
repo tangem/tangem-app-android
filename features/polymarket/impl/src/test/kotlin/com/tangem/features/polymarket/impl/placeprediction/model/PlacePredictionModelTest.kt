@@ -1451,6 +1451,49 @@ internal class PlacePredictionModelTest {
             // Assert
             assertThat((model.uiState.value.order as OrderSideUM.Sell).available).isEqualTo(BigDecimal.ZERO)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the position cannot be read WHEN screen shown THEN no price is polled`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenShown()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no stored addresses WHEN model created THEN the user is told instead of nothing`() = runTest {
+            // Arrange
+            coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns null
+
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onScreenShown()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
 
             model.onDestroy()
         }
