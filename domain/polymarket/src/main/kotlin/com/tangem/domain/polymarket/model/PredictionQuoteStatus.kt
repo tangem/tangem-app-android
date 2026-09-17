@@ -9,5 +9,5 @@ enum class PredictionQuoteStatus {
     MARKET_CLOSED,
     ;
 
-    val isPlaceable: Boolean get() = this == FULL || this == PARTIAL
+    val isPlaceable: Boolean get() = this == FULL || this == PARTIAL || this == BELOW_MIN_ORDER_AMOUNT
 }
