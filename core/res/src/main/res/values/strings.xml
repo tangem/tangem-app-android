@@ -1134,6 +1134,8 @@
   <string name="joint_account_send_not_activated_title">Account not activated</string>
   <string name="joint_account_send_operation_in_progress_subtitle">Wait for it to be executed or reject it. Your operation was not created and no funds were spent</string>
   <string name="joint_account_send_operation_in_progress_title">An operation is already in progress</string>
+  <string name="joint_account_send_pending_network_subtitle">Sending on %1$s network is unavailable until it\'s confirmed</string>
+  <string name="joint_account_send_pending_network_title">Pending transaction on %1$s network</string>
   <string name="joint_account_send_sends_automatically">Sends automatically once collected</string>
   <string name="joint_account_send_signatures_required">%1$s of %2$s signatures required</string>
   <string name="joint_account_send_slot_busy_subtitle">This network already has an operation collecting signatures. Wait for it to finish before creating a new one.</string>
