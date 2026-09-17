@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.*
 internal class TangemPayTxHistoryUiManager(
     private val state: MutableStateFlow<TangemPayTxHistoryState>,
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
-    isCashbackEnabled: Boolean,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -30,10 +29,7 @@ internal class TangemPayTxHistoryUiManager(
         }
         .distinctUntilChanged()
 
-    private val txHistoryItemConverter = TangemPayTxHistoryItemsConverter(
-        txHistoryUiActions = txHistoryUiActions,
-        isCashbackEnabled = isCashbackEnabled,
-    )
+    private val txHistoryItemConverter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = txHistoryUiActions)
 
     fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, List<TangemPayTxHistoryItem>>>,

@@ -288,7 +288,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun fetchCashbackBlock() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
+        if (cashbackBlockJobHolder.isActive) return
         // A closed account shows only the deactivation notice — no cashback UI on top of it ([REDACTED_TASK_KEY])
         if (currentStatus.value.value is PaymentAccountStatusValue.Deactivated) return
         modelScope.launch {
@@ -684,7 +684,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openCashback() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled) return
         currentStatus.value.ifLoadedOrNull { router.push(TangemPayAccountDetailsInnerRoute.Cashback) }
     }
 
