@@ -16,6 +16,7 @@ import com.tangem.utils.converter.Converter
 
 internal class PolymarketPositionUMConverter(
     private val onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
+    private val onClosedPositionClick: ((PolymarketPosition.Closed) -> Unit)? = null,
 ) : Converter<PolymarketPosition, PolymarketPositionUM> {
 
     private val badgeConverter = PolymarketPositionBadgeConverter()
@@ -75,6 +76,7 @@ internal class PolymarketPositionUMConverter(
             priceChange = null,
             currentValue = null,
             result = badgeConverter.convert(value),
+            onClick = onClosedPositionClick?.let { { it(value) } },
         )
     }
 }
