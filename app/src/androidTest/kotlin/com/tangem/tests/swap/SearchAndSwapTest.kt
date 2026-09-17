@@ -18,7 +18,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -27,7 +26,6 @@ class SearchAndSwapTest : BaseTestCase() {
     private val allFilterLabel = getResourceString(R.string.common_all)
     private val hideZeroBalanceLabel = getResourceString(R.string.swap_token_selector_filter_hide_zero_balance)
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8520")
     @DisplayName("Search and Swap: add token without derivation")
     @Test
@@ -75,7 +73,6 @@ class SearchAndSwapTest : BaseTestCase() {
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8519")
     @DisplayName("Search and Swap: add token with derivation")
     @Test
@@ -123,7 +120,6 @@ class SearchAndSwapTest : BaseTestCase() {
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8523")
     @DisplayName("Search and Swap: Markets error")
     @Test
@@ -160,7 +156,6 @@ class SearchAndSwapTest : BaseTestCase() {
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8522")
     @DisplayName("Search and Swap: check 'Unsupported token pair' warning")
     @Test
@@ -211,7 +206,6 @@ class SearchAndSwapTest : BaseTestCase() {
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8521")
     @DisplayName("Swap: search token on Swap token screen")
     @Test
