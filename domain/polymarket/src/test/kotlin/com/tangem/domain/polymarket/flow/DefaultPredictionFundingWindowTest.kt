@@ -144,6 +144,7 @@ internal class DefaultPredictionFundingWindowTest {
 
             // Act
             val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
             window.isOpen(WALLET_ID).test {
                 assertThat(awaitItem()).isTrue()
                 advanceTimeBy(2.minutes.inWholeMilliseconds - 1)
@@ -165,11 +166,12 @@ internal class DefaultPredictionFundingWindowTest {
 
         // Act
         val watching = launch { window.watch(WALLET_ID) }
-        window.isOpen(WALLET_ID).test {
-            assertThat(awaitItem()).isTrue()
+        runCurrent()
 
-            // Assert
+        // Assert
+        window.isOpen(WALLET_ID).test {
             assertThat(awaitItem()).isFalse()
+            expectNoEvents()
         }
         watching.cancel()
     }
@@ -184,11 +186,12 @@ internal class DefaultPredictionFundingWindowTest {
 
         // Act
         val watching = launch { window.watch(WALLET_ID) }
-        window.isOpen(WALLET_ID).test {
-            assertThat(awaitItem()).isTrue()
+        runCurrent()
 
-            // Assert
+        // Assert
+        window.isOpen(WALLET_ID).test {
             assertThat(awaitItem()).isFalse()
+            expectNoEvents()
         }
         watching.cancel()
     }
@@ -201,6 +204,7 @@ internal class DefaultPredictionFundingWindowTest {
             status.value = PredictionAccountStatusValue.Loading
             window.open(WALLET_ID)
             val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
             window.isOpen(WALLET_ID).test {
                 assertThat(awaitItem()).isTrue()
                 status.value = createActive(BigDecimal("1.00"))
@@ -226,6 +230,7 @@ internal class DefaultPredictionFundingWindowTest {
 
             // Act
             val watching = launch { window.watch(WALLET_ID) }
+            runCurrent()
             window.isOpen(WALLET_ID).test {
                 assertThat(awaitItem()).isTrue()
                 advanceTimeBy(2.minutes.inWholeMilliseconds + 1)
@@ -245,6 +250,7 @@ internal class DefaultPredictionFundingWindowTest {
 
         // Act
         val watching = launch { window.watch(WALLET_ID) }
+        runCurrent()
         window.isOpen(WALLET_ID).test {
             assertThat(awaitItem()).isTrue()
             advanceTimeBy(1.minutes.inWholeMilliseconds + 1)
@@ -277,6 +283,29 @@ internal class DefaultPredictionFundingWindowTest {
         }
         secondWatch.cancel()
     }
+
+    @Test
+    fun `GIVEN an open window WHEN the balance changes while the screen is left THEN it closes on re-entry`() =
+        runTest {
+            // Arrange
+            val window = createWindow()
+            window.open(WALLET_ID)
+            val firstWatch = launch { window.watch(WALLET_ID) }
+            runCurrent()
+            firstWatch.cancel()
+            status.value = createActive(BigDecimal("4.00"))
+
+            // Act
+            val secondWatch = launch { window.watch(WALLET_ID) }
+            runCurrent()
+
+            // Assert
+            window.isOpen(WALLET_ID).test {
+                assertThat(awaitItem()).isFalse()
+                expectNoEvents()
+            }
+            secondWatch.cancel()
+        }
 
     @Test
     fun `GIVEN a window opened for one wallet WHEN another wallet is observed THEN it stays closed`() = runTest {
