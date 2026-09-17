@@ -1,14 +1,7 @@
 package com.tangem.features.feed.ui.v2
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -18,12 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.impl.R
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_sign_plus_16
 
 private val FeedBlockShape = RoundedCornerShape(size = 20.dp)
 
@@ -168,11 +161,11 @@ private fun PlusAffordance() {
         modifier = Modifier
             .size(size = 24.dp)
             .clip(shape = CircleShape)
-            .background(color = TangemTheme.colors3.bg.tertiary),
+            .background(color = TangemTheme.colors3.bg.opaque.primary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_plus_24),
+            imageVector = Icons.ic_sign_plus_16,
             contentDescription = null,
             tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.size(size = 16.dp),
