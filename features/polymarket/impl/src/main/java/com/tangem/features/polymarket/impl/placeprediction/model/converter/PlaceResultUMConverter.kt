@@ -28,8 +28,8 @@ internal object PlaceResultUMConverter {
 
     /**
      * @param side the side the order was signed for — it decides which leg of the response is the shares one
-     * @param quotedShares the shares leg of the signed quote — the leg a fill is measured against, since the
-     *  collateral leg is truncated by the exchange whenever the implied price is not exactly representable
+     * @param quotedShares the shares leg of the signed quote — the worst case the order was signed for, so a
+     *  fill reaching it is a full one and only a fill short of it is partial
      * @param quotedAmount the collateral leg, shown to the user but never used to decide the fill
      */
     fun convert(
@@ -52,14 +52,13 @@ internal object PlaceResultUMConverter {
 
         return when {
             filledShares.signum() <= 0 -> PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
-            filledShares.compareTo(quotedShares) == 0 -> PlaceOutcome.Reportable(
+            filledShares >= quotedShares -> PlaceOutcome.Reportable(
                 result = PlaceResultUM.Filled(
                     placedAt = placedAt,
                     collateralAmount = quotedAmount,
                     shares = filledShares,
                 ),
             )
-            filledShares > quotedShares -> submitted(placedAt = placedAt)
             else -> result.collateralLeg(side = side)
                 ?.let { spent ->
                     PlaceOutcome.Reportable(
