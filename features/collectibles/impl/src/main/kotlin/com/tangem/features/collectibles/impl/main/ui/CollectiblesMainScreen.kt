@@ -1,6 +1,5 @@
 package com.tangem.features.collectibles.impl.main.ui
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,8 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -30,11 +27,8 @@ import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.discovery.ui.isCollectiblesTabBandPinned
-import com.tangem.features.collectibles.impl.discovery.ui.preview.CollectiblesDiscoveryPreviewComponent
-import com.tangem.features.collectibles.impl.discovery.ui.preview.CollectiblesDiscoveryPreviewData
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesLeadingBlocks
 import com.tangem.features.collectibles.impl.main.ui.components.CollectiblesMainList
@@ -45,7 +39,6 @@ import com.tangem.features.collectibles.impl.main.ui.components.MainListKeys
 import com.tangem.features.collectibles.impl.main.ui.components.rememberFillerHeight
 import com.tangem.features.collectibles.impl.main.ui.components.rememberListFill
 import com.tangem.features.collectibles.impl.main.ui.components.rememberRestingFooterHeight
-import com.tangem.features.collectibles.impl.main.ui.preview.CollectiblesMainPreviewData
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -58,11 +51,10 @@ internal fun CollectiblesMainScreen(
     modifier: Modifier = Modifier,
 ) {
     val isSearchActive = discoveryState.search.isActive
-    val hasTabs = discoveryState.tabs.isNotEmpty()
     val mainListState = rememberLazyListState()
-    val searchEntry = remember(isSearchActive, hasTabs) {
+    val searchEntry = remember(isSearchActive, discoveryState.hasTabs) {
         Snapshot.withoutReadObservation {
-            createSearchEntry(mainListState = mainListState, hasTabs = hasTabs)
+            createSearchEntry(mainListState = mainListState, hasTabs = discoveryState.hasTabs)
         }
     }
     val listState = if (isSearchActive) searchEntry.listState else mainListState
@@ -78,33 +70,13 @@ internal fun CollectiblesMainScreen(
     val isTabBandPinned by remember(mainListState) {
         derivedStateOf { mainListState.isCollectiblesTabBandPinned(headerKey = MainListKeys.HEADER) }
     }
-    val shouldShowPinnedTabs = isTabBandPinned && !isSearchActive && hasTabs
-
-    // Measured here rather than inside the list: the list has two call sites (pull to refresh is dropped in
-    // search), and a swap between them would take the frozen filler down with the composition.
-    val fill = rememberListFill(
-        listState = listState,
-        rowCount = (discoveryState.content as? CollectiblesDiscoveryUM.ContentUM.Content)?.rows?.size ?: 0,
-        hasTabs = hasTabs,
-    )
-    val fillerHeight = rememberFillerHeight(
-        fill = fill,
-        isSearchActive = isSearchActive,
-        isEnteringSearch = lead.areShown,
-    )
+    val shouldShowPinnedTabs = isTabBandPinned && !isSearchActive && discoveryState.hasTabs
 
     TangemTopBarScaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
-            TangemTopNavigation(
-                title = state.title,
-                subtitle = if (isTabBandPinned || isSearchActive) state.balance.fiatPlain else null,
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                fadeEnabled = false,
-                onBack = state.onBackClick,
-                endButton = { CollectiblesMainMenu(menu = state.menu) },
-            )
+            CollectiblesTopBar(state = state, isBalanceShown = isTabBandPinned || isSearchActive)
         },
         overlay = { contentPadding ->
             CollectiblesPinnedHeader(
@@ -132,19 +104,28 @@ internal fun CollectiblesMainScreen(
             discoveryState = discoveryState,
             listState = listState,
             lead = CollectiblesLeadingBlocks(
-                isHeaderShown = lead.areShown,
-                isTabBandShown = lead.areShown,
+                areShown = lead.areShown,
                 isTabBandPinned = isTabBandPinned,
                 alpha = lead.alpha,
             ),
-            fillerHeight = fillerHeight,
-            statusHeight = fill.statusHeight,
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding(),
                 bottom = bottomInset,
             ),
         )
     }
+}
+
+@Composable
+private fun CollectiblesTopBar(state: CollectiblesMainUM, isBalanceShown: Boolean) {
+    TangemTopNavigation(
+        title = state.title,
+        subtitle = if (isBalanceShown) state.balance.fiatPlain else null,
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        fadeEnabled = false,
+        onBack = state.onBackClick,
+        endButton = { CollectiblesMainMenu(menu = state.menu) },
+    )
 }
 
 @Suppress("LongParameterList")
@@ -156,12 +137,23 @@ private fun RefreshableList(
     discoveryState: CollectiblesDiscoveryUM,
     listState: LazyListState,
     lead: CollectiblesLeadingBlocks,
-    fillerHeight: Dp,
-    statusHeight: Dp,
     contentPadding: PaddingValues,
 ) {
+    val isSearchActive = discoveryState.search.isActive
+
+    val fill = rememberListFill(
+        listState = listState,
+        rowCount = (discoveryState.content as? CollectiblesDiscoveryUM.ContentUM.Content)?.rows?.size ?: 0,
+        hasTabs = discoveryState.hasTabs,
+    )
+    val fillerHeight = rememberFillerHeight(
+        fill = fill,
+        isSearchActive = isSearchActive,
+        isEnteringSearch = lead.areShown,
+    )
+
     MaterialBackdrop {
-        if (discoveryState.search.isActive) {
+        if (isSearchActive) {
             CollectiblesMainList(
                 state = state,
                 discoveryComponent = discoveryComponent,
@@ -169,7 +161,7 @@ private fun RefreshableList(
                 listState = listState,
                 lead = lead,
                 fillerHeight = fillerHeight,
-                statusHeight = statusHeight,
+                statusHeight = fill.statusHeight,
                 contentPadding = contentPadding,
             )
         } else {
@@ -184,13 +176,16 @@ private fun RefreshableList(
                     listState = listState,
                     lead = lead,
                     fillerHeight = fillerHeight,
-                    statusHeight = statusHeight,
+                    statusHeight = fill.statusHeight,
                     contentPadding = contentPadding,
                 )
             }
         }
     }
 }
+
+private val CollectiblesDiscoveryUM.hasTabs: Boolean
+    get() = tabs !is CollectiblesDiscoveryUM.TabsUM.Hidden
 
 @Composable
 private fun MaterialBackdrop(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
@@ -204,80 +199,4 @@ private fun MaterialBackdrop(modifier: Modifier = Modifier, content: @Composable
         )
         CompositionLocalProvider(LocalHazeState provides buttonsHazeState, content = content)
     }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Preview(widthDp = 402, heightDp = 874, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun CollectiblesMainScreenPreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.default)
-    }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Composable
-private fun CollectiblesMainScreenZeroPreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(
-            state = CollectiblesMainPreviewData.zero,
-            discoveryState = CollectiblesDiscoveryPreviewData.default,
-        )
-    }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Composable
-private fun CollectiblesMainScreenListErrorPreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.listError)
-    }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Composable
-private fun CollectiblesMainScreenSearchActivePreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchActive)
-    }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Composable
-private fun CollectiblesMainScreenSearchZeroPreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchZero)
-    }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Composable
-private fun CollectiblesMainScreenSearchErrorPreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(discoveryState = CollectiblesDiscoveryPreviewData.searchError)
-    }
-}
-
-@Preview(widthDp = 402, heightDp = 874, showBackground = true)
-@Composable
-private fun CollectiblesMainScreenMenuPreview() {
-    TangemThemePreviewRedesign {
-        PreviewScreen(
-            state = CollectiblesMainPreviewData.menuShown,
-            discoveryState = CollectiblesDiscoveryPreviewData.default,
-        )
-    }
-}
-
-@Composable
-private fun PreviewScreen(
-    discoveryState: CollectiblesDiscoveryUM,
-    state: CollectiblesMainUM = CollectiblesMainPreviewData.default,
-) {
-    CollectiblesMainScreen(
-        state = state,
-        pullToRefresh = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
-        discoveryComponent = remember { CollectiblesDiscoveryPreviewComponent(um = discoveryState) },
-        discoveryState = discoveryState,
-    )
 }

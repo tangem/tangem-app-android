@@ -43,7 +43,6 @@ private const val LEAD_SCROLL_STIFFNESS = 300f
 /** Share of the travel before the top bar over which the leading blocks fade out; zero turns the fade off. */
 private const val LEAD_FADE_FRACTION = 0.9f
 
-
 /**
  * How the leading blocks behave while search is being entered.
  *
