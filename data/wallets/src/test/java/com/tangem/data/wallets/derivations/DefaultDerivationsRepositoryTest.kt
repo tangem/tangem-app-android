@@ -2,14 +2,19 @@ package com.tangem.data.wallets.derivations
 
 import arrow.core.right
 import com.google.common.truth.Truth
+import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
+import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,10 +31,11 @@ internal class DefaultDerivationsRepositoryTest {
 
     private val userWalletsListRepository = mockk<UserWalletsListRepository>()
     private val coldDerivationsRepository: ColdMapDerivationsRepository = mockk()
+    private val hotDerivationsRepository: HotMapDerivationsRepository = mockk()
 
     private val repository = DefaultDerivationsRepository(
         userWalletsListRepository = userWalletsListRepository,
-        hotDerivationsRepository = mockk(),
+        hotDerivationsRepository = hotDerivationsRepository,
         coldDerivationsRepository = coldDerivationsRepository,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -46,7 +52,27 @@ internal class DefaultDerivationsRepositoryTest {
 
     @AfterEach
     fun tearDown() {
-        clearMocks(userWalletsListRepository, coldDerivationsRepository)
+        clearMocks(userWalletsListRepository, coldDerivationsRepository, hotDerivationsRepository)
+    }
+
+    @Test
+    fun `GIVEN currencies is empty WHEN findMissingDerivations THEN empty map without touching the wallet`() = runTest {
+        val actual = repository.findMissingDerivations(userWalletId = defaultUserWalletId, currencies = emptyList())
+
+        Truth.assertThat(actual).isEmpty()
+        coVerify(inverse = true) { userWalletsListRepository.userWallets }
+    }
+
+    @Test
+    fun `GIVEN a Cold wallet WHEN findMissingDerivations THEN dispatched to the cold repository`() = runTest {
+        val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
+        val expected = mapOf(ByteArrayKey("AABB".hexToBytes()) to listOf(mockk<DerivationPath>()))
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(defaultUserWallet))
+        coEvery { coldDerivationsRepository.findMissingDerivations(defaultUserWallet, currencies) } returns expected
+
+        val actual = repository.findMissingDerivations(userWalletId = defaultUserWalletId, currencies = currencies)
+
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
@@ -144,4 +170,45 @@ internal class DefaultDerivationsRepositoryTest {
             userWalletsListRepository.saveWithoutLock(updatedWallet, true)
         }
     }
+
+    @Test
+    fun `GIVEN userWalletId WHEN getExistingDerivedKeys THEN delegates to the wallet-based overload`() = runTest {
+        // Arrange
+        val seedKey = ByteArrayKey("AABB".hexToBytes())
+        val expected = ExtendedPublicKeysMap(mapOf(mockk<DerivationPath>() to mockk()))
+        val walletWithKeys = defaultUserWallet.copy(
+            scanResponse = MockScanResponseFactory.create(
+                cardConfig = GenericCardConfig(2),
+                derivedKeys = mapOf(seedKey to expected),
+            ),
+        )
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(walletWithKeys))
+
+        // Act
+        val actual = repository.getExistingDerivedKeys(userWalletId = defaultUserWalletId, seedKey = seedKey)
+
+        // Assert
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN a wallet object WHEN getExistingDerivedKeys THEN reads from it without touching the repository`() =
+        runTest {
+            // Arrange
+            val seedKey = ByteArrayKey("AABB".hexToBytes())
+            val expected = ExtendedPublicKeysMap(mapOf(mockk<DerivationPath>() to mockk()))
+            val walletWithKeys = defaultUserWallet.copy(
+                scanResponse = MockScanResponseFactory.create(
+                    cardConfig = GenericCardConfig(2),
+                    derivedKeys = mapOf(seedKey to expected),
+                ),
+            )
+
+            // Act
+            val actual = repository.getExistingDerivedKeys(userWallet = walletWithKeys, seedKey = seedKey)
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(expected)
+            coVerify(inverse = true) { userWalletsListRepository.userWallets }
+        }
 }
