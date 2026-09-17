@@ -269,6 +269,8 @@ sealed class AppRoute(val path: String) : Route {
          * Single Payment account per wallet — resolved by userWalletId on the swap side, no id needed here.
          * PredictionWithdraw anchors the prediction account as the concrete FROM; the debit is not signed with
          * a wallet key but submitted as a signed batch through our backend.
+         * PredictionTopUp anchors the prediction account as the concrete TO — its deposit token at the bridge
+         * address — and is the only way the app funds that account through the swap screen.
          */
         @Serializable
         sealed interface AccountFlow {
@@ -277,6 +279,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object Withdraw : AccountFlow
 
             @Serializable data object PredictionWithdraw : AccountFlow
+
+            @Serializable data object PredictionTopUp : AccountFlow
         }
     }
 
