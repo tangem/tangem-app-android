@@ -19,7 +19,9 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
+import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -206,8 +208,13 @@ internal class PolymarketMainModel @Inject constructor(
         router.push(PolymarketRoute.Positions(userWalletId = params.userWalletId, initialTab = tab))
     }
 
-    private fun openPosition(id: PolymarketPositionId) {
-        router.push(PolymarketRoute.PositionDetails(params.userWalletId, id))
+    private fun openPosition(position: PolymarketPosition.Open) {
+        when {
+            position.canOpenPositionResult -> router.push(PolymarketRoute.PositionResult(params.userWalletId, position))
+            position.canOpenPositionDetails -> router.push(
+                PolymarketRoute.PositionDetails(params.userWalletId, position.id),
+            )
+        }
     }
 
     fun onLoadMore() {
@@ -421,7 +428,7 @@ internal class PolymarketMainModel @Inject constructor(
                 fromCryptoCurrency = collateral,
                 fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 screenSource = AnalyticsParam.ScreensSources.Predictions.value,
-                accountFlow = null,
+                accountFlow = AppRoute.Swap.AccountFlow.PredictionTopUp,
             ),
         )
     }

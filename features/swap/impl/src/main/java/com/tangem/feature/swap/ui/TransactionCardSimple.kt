@@ -53,16 +53,18 @@ internal fun TransactionCardSimple(
         is TransactionCardType.ReadOnly -> SwapTokenScreenTestTags.RECEIVE_CARD
     }
 
+    val onChangeTokenClick = onSelectTokenClick.takeUnless { swapCardState.isSelectionLocked }
+
     when (swapCardState) {
         is SwapCardState.Empty -> SimpleTransactionCardEmpty(
             cardState = swapCardState,
-            onChangeTokenClick = onSelectTokenClick,
+            onChangeTokenClick = onChangeTokenClick,
             modifier = modifier.testTag(cardTag),
         )
         is SwapCardState.SwapCardData -> SimpleTransactionCardData(
             cardState = swapCardState,
             priceImpact = priceImpact,
-            onChangeTokenClick = onSelectTokenClick.takeUnless { swapCardState.isSelectionLocked },
+            onChangeTokenClick = onChangeTokenClick,
             modifier = modifier.testTag(cardTag),
         )
         is SwapCardState.Loading -> SimpleTransactionCardLoading(modifier = modifier.testTag(cardTag))
@@ -130,7 +132,7 @@ private fun SimpleTransactionCardData(
 private fun SimpleTransactionCardEmpty(
     cardState: SwapCardState.Empty,
     modifier: Modifier = Modifier,
-    onChangeTokenClick: () -> Unit,
+    onChangeTokenClick: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
@@ -180,10 +182,12 @@ private fun SimpleTransactionCardEmpty(
                         .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
                 )
             }
-            ChooseTokenPulseButton(
-                isPulseEnabled = cardState.isPulseAnimationEnabled,
-                onClick = onChangeTokenClick,
-            )
+            if (onChangeTokenClick != null) {
+                ChooseTokenPulseButton(
+                    isPulseEnabled = cardState.isPulseAnimationEnabled,
+                    onClick = onChangeTokenClick,
+                )
+            }
         }
     }
 }
