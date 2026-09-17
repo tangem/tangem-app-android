@@ -15,6 +15,10 @@ import javax.inject.Singleton
  *
  * Always taken INSIDE the per-wallet lock, never around it, so the acquisition order is the same
  * everywhere and the two locks cannot deadlock.
+ *
+ * `/refresh` and `/authenticate` deliberately stay outside it: a request that already holds this lock
+ * refreshes on a 401, and a non-reentrant mutex would deadlock there. Their writes are ordered by
+ * `SessionTokensStore.save`, which drops a token set older than the stored one.
  */
 @Singleton
 internal class SessionTokenRotationLock @Inject constructor() : Mutex by Mutex()
