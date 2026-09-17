@@ -54,7 +54,6 @@ internal class TangemPayOnboardingModelTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(router, repository, eligibilityManager, analytics, produceInitialDataUseCase, urlOpener)
-        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
     }
 
@@ -193,32 +192,9 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN tiers off and KYC not approved WHEN onboarding starts THEN order created before KYC`() = runTest {
+    fun `GIVEN KYC not approved WHEN onboarding starts THEN order not created before KYC`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("011")
-        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
-        coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
-        coEvery { repository.getCustomerInfo(userWalletId) } returns
-            buildCustomerInfo(kycStatus = KycStatus.PENDING).right()
-        coEvery { repository.createOrder(userWalletId) } returns "order_1".right()
-
-        // Act
-        val model = createModel(TangemPayOnboardingComponent.Params.HotWalletOnboarding(userWalletId))
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) { repository.createOrder(userWalletId) }
-        verify(exactly = 1) {
-            router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId), onComplete = any())
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN tiers on and KYC not approved WHEN onboarding starts THEN order not created before KYC`() = runTest {
-        // Arrange
-        val userWalletId = UserWalletId("011")
-        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
         coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
         coEvery { repository.getCustomerInfo(userWalletId) } returns
             buildCustomerInfo(kycStatus = KycStatus.PENDING).right()
