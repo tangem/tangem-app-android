@@ -11,6 +11,7 @@ import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
+import com.tangem.lib.auth.session.internal.SessionTokenRotationLock
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.lib.auth.social.SocialRecoveryClient
 import com.tangem.lib.auth.social.internal.DefaultSocialRecoveryClient
@@ -53,6 +54,7 @@ internal object SocialRecoveryModule {
         errorConverter: AuthErrorConverter,
         sessionTokensStore: SessionTokensStore,
         walletRegistrar: WalletRegistrar,
+        rotationLock: SessionTokenRotationLock,
         dispatchers: CoroutineDispatcherProvider,
     ): SocialRecoveryClient {
         return DefaultSocialRecoveryClient(
@@ -65,6 +67,7 @@ internal object SocialRecoveryModule {
             errorConverter = errorConverter,
             sessionTokensStore = sessionTokensStore,
             walletRegistrar = walletRegistrar,
+            rotationLock = rotationLock,
             dispatchers = dispatchers,
         )
     }

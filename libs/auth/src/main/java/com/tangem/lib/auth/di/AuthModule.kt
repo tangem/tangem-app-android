@@ -43,6 +43,7 @@ import com.tangem.lib.auth.session.internal.DisabledDeviceRegistrar
 import com.tangem.lib.auth.session.internal.DisabledSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DisabledWalletRegistrar
 import com.tangem.lib.auth.session.internal.DisabledSessionTokensStore
+import com.tangem.lib.auth.session.internal.SessionTokenRotationLock
 import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -256,6 +257,7 @@ internal object AuthModule {
         errorConverter: AuthErrorConverter,
         appPreferencesStore: AppPreferencesStore,
         nonceRequestPerformanceTracker: NonceRequestPerformanceTracker,
+        rotationLock: SessionTokenRotationLock,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletRegistrar {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledWalletRegistrar
@@ -270,6 +272,7 @@ internal object AuthModule {
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             nonceRequestPerformanceTracker = nonceRequestPerformanceTracker,
+            rotationLock = rotationLock,
             dispatchers = dispatchers,
         )
     }
