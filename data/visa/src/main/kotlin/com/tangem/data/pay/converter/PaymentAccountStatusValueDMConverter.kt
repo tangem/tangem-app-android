@@ -39,7 +39,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
                 currencyCode = value.balance?.fiatBalance?.currency,
-                depositAddress = value.depositAddress,
                 fiatBalance = value.balance?.fiatBalance?.toDM(),
                 cryptoBalance = value.balance?.cryptoBalance?.toDM(),
                 availableForWithdrawal = value.balance?.availableForWithdrawal,
@@ -103,7 +102,6 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.ActiveAccount -> PaymentAccountStatusValue.Loaded(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
-                depositAddress = value.depositAddress,
                 balance = value.getBalance(),
                 cryptoCurrency = cryptoCurrency,
                 networks = emptyList(),

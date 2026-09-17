@@ -2,9 +2,11 @@ package com.tangem.data.collectibles.account.converter
 
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountStatusValueDTO
 import com.tangem.data.collectibles.account.entity.CollectiblesVaultBalanceDTO
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
+import javax.inject.Inject
 
 /**
  * Maps between [CollectiblesAccountStatusValue] and its storage DTO.
@@ -16,7 +18,9 @@ import com.tangem.domain.models.account.CollectiblesVaultBalance
  * session, whatever it was when it was written. [CollectiblesAccountStatusValue.MissedDerivation] is the exception —
  * it says the owner key is missing on this device, which no chain read is needed to know.
  */
-internal object CollectiblesAccountStatusValueDTOConverter {
+internal class CollectiblesAccountStatusValueDTOConverter @Inject constructor(
+    private val currencyFactory: CollectiblesVaultCurrencyFactory,
+) {
 
     fun convert(value: CollectiblesAccountStatusValue): CollectiblesAccountStatusValueDTO? = when (value) {
         is CollectiblesAccountStatusValue.Onboarded -> CollectiblesAccountStatusValueDTO.Onboarded(
@@ -44,7 +48,13 @@ internal object CollectiblesAccountStatusValueDTOConverter {
         is CollectiblesAccountStatusValueDTO.MissedDerivation -> CollectiblesAccountStatusValue.MissedDerivation
     }
 
-    private fun CollectiblesVaultBalance.toDTO() = CollectiblesVaultBalanceDTO(usdcAmount = usdcAmount)
+    private fun CollectiblesVaultBalance.toDTO() = CollectiblesVaultBalanceDTO(
+        usdcAmount = usdcAmount,
+        usdcMint = usdcToken.contractAddress,
+    )
 
-    private fun CollectiblesVaultBalanceDTO.toDomain() = CollectiblesVaultBalance(usdcAmount = usdcAmount)
+    private fun CollectiblesVaultBalanceDTO.toDomain() = CollectiblesVaultBalance(
+        usdcToken = currencyFactory.create(mint = usdcMint),
+        usdcAmount = usdcAmount,
+    )
 }

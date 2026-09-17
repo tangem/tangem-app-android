@@ -3,10 +3,11 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.test.mock.collectibles.MockCollectibles
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
-import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
@@ -101,9 +102,9 @@ internal class CollectiblesWalletBlockConverterTest {
         val unknown = CollectiblesWalletBlockUM.Balance.Unknown::class.java
         val amount = CollectiblesWalletBlockUM.Balance.Amount::class.java
 
-        val pricedBalance = CollectiblesVaultBalance(
-            usdcAmount = BigDecimal("2"),
-            usdcFiatRate = BigDecimal("150"),
+        val pricedBalance = MockCollectibles.vaultBalance(
+            amount = BigDecimal("2"),
+            fiatRate = BigDecimal("150"),
         )
     }
 }

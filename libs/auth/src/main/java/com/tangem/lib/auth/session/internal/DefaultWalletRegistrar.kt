@@ -28,10 +28,8 @@ import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("LongParameterList")
 internal class DefaultWalletRegistrar(
@@ -44,27 +42,25 @@ internal class DefaultWalletRegistrar(
     private val errorConverter: AuthErrorConverter,
     private val appPreferencesStore: AppPreferencesStore,
     private val nonceRequestPerformanceTracker: NonceRequestPerformanceTracker,
+    // shared with the social binding client, which posts to the same endpoint — see the class doc
+    private val locks: WalletRegistrationLocks,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletRegistrar {
-
-    // Per-wallet mutex: serialises concurrent attempts for the SAME wallet (so its nonce isn't
-    // consumed twice) while letting different wallets register in parallel. The registered-wallet
-    // set is mutated atomically inside a single DataStore transaction (see [markRegistered]), so it
-    // needs no cross-wallet lock.
-    private val mutexes = ConcurrentHashMap<String, Mutex>()
 
     override suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit> =
         withContext(dispatchers.io) {
             // Hold the per-wallet lock across the WHOLE one-shot flow (idempotency + nonce + sign +
             // submit), so two concurrent register() calls for the same wallet can't both pass the
             // idempotency check and consume/sign separate nonces.
-            getMutex(walletId).withLock {
+            locks.forWallet(walletId).withLock {
                 either {
                     if (isAlreadyRegistered(walletId)) return@either
                     requireSession()
                     val nonce = fetchNonce()
                     val prepared = assemble(walletId, nonce, signer)
-                    handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
+                    locks.sessionRotation.withLock {
+                        handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
+                    }
                 }
             }
         }
@@ -93,7 +89,7 @@ internal class DefaultWalletRegistrar(
         nonce: WalletNonce,
         signer: WalletSigner,
     ): Either<WalletRegistrationError, PreparedWalletRegistration?> = withContext(dispatchers.io) {
-        getMutex(walletId).withLock {
+        locks.forWallet(walletId).withLock {
             either {
                 if (isAlreadyRegistered(walletId)) return@either null
                 assemble(walletId, nonce, signer)
@@ -103,56 +99,59 @@ internal class DefaultWalletRegistrar(
 
     override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
         withContext(dispatchers.io) {
-            getMutex(prepared.walletId).withLock {
-                either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
+            locks.forWallet(prepared.walletId).withLock {
+                locks.sessionRotation.withLock {
+                    either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
+                }
             }
         }
 
     override suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit> =
         withContext(dispatchers.io) {
-            getMutex(walletId).withLock {
-                either {
-                    val request = WalletUnregisterRequest(walletId = walletId)
-                    when (val response = authApi.unregisterWallet(request)) {
-                        is ApiResponse.Success -> {
-                            try {
-                                // Server rotated the session tokens to reflect the removed wallet;
-                                // convert, persist and drop the local marker in one catch so this
-                                // method stays total — every failure becomes a typed Left, never a throw.
-                                val tokens = SessionTokensConverter.convertBack(response.data)
-                                store.save(tokens)
-                                markUnregistered(walletId)
-                            } catch (e: Exception) {
-                                TangemLogger.e("Failed to persist wallet-unregister tokens / marker", e)
-                                raise(WalletRegistrationError.PersistenceFailed(e))
-                            }
-                            TangemLogger.i("Wallet unregistered successfully")
-                        }
-                        is ApiResponse.Error -> {
-                            val authError = errorConverter.convert(response.cause)
-                            if (authError is AuthError.NotFound) {
-                                // Wallet is already not registered server-side (e.g. unregistered
-                                // elsewhere). The desired end state is reached, so clear the local
-                                // marker and treat it as success — idempotent, mirroring how register
-                                // treats a 409 Conflict.
-                                TangemLogger.i("Wallet already not registered server-side (404) — clearing marker")
-                                try {
-                                    markUnregistered(walletId)
-                                } catch (e: Exception) {
-                                    TangemLogger.e("Failed to clear marker after unregister 404", e)
-                                    raise(WalletRegistrationError.PersistenceFailed(e))
-                                }
-                            } else {
-                                TangemLogger.e("/wallet/unregister request failed: $authError")
-                                raise(WalletRegistrationError.Api(authError))
-                            }
-                        }
-                    }
+            locks.forWallet(walletId).withLock {
+                locks.sessionRotation.withLock {
+                    either { unregisterWallet(walletId) }
                 }
             }
         }
 
-    private fun getMutex(walletId: String): Mutex = mutexes.computeIfAbsent(walletId) { Mutex() }
+    private suspend fun Raise<WalletRegistrationError>.unregisterWallet(walletId: String) {
+        val request = WalletUnregisterRequest(walletId = walletId)
+        when (val response = authApi.unregisterWallet(request)) {
+            is ApiResponse.Success -> {
+                try {
+                    // Server rotated the session tokens to reflect the removed wallet;
+                    // convert, persist and drop the local marker in one catch so this
+                    // method stays total — every failure becomes a typed Left, never a throw.
+                    val tokens = SessionTokensConverter.convertBack(response.data)
+                    store.save(tokens)
+                    markUnregistered(walletId)
+                } catch (e: Exception) {
+                    TangemLogger.e("Failed to persist wallet-unregister tokens / marker", e)
+                    raise(WalletRegistrationError.PersistenceFailed(e))
+                }
+                TangemLogger.i("Wallet unregistered successfully")
+            }
+            is ApiResponse.Error -> {
+                val authError = errorConverter.convert(response.cause)
+                if (authError is AuthError.NotFound) {
+                    // Wallet is already not registered server-side (e.g. unregistered elsewhere). The
+                    // desired end state is reached, so clear the local marker and treat it as success —
+                    // idempotent, mirroring how register treats a 409 Conflict.
+                    TangemLogger.i("Wallet already not registered server-side (404) — clearing marker")
+                    try {
+                        markUnregistered(walletId)
+                    } catch (e: Exception) {
+                        TangemLogger.e("Failed to clear marker after unregister 404", e)
+                        raise(WalletRegistrationError.PersistenceFailed(e))
+                    }
+                } else {
+                    TangemLogger.e("/wallet/unregister request failed: $authError")
+                    raise(WalletRegistrationError.Api(authError))
+                }
+            }
+        }
+    }
 
     private suspend fun Raise<WalletRegistrationError>.isAlreadyRegistered(walletId: String): Boolean {
         val isRegistered = try {

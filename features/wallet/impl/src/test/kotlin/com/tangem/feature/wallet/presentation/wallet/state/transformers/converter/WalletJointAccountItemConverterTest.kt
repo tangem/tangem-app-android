@@ -9,6 +9,9 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_clock_16
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -89,7 +92,7 @@ internal class WalletJointAccountItemConverterTest {
         // Assert
         val banner = requireNotNull(state.banner)
         assertThat(banner.text).isEqualTo(resourceReference(R.string.joint_account_invite_members_to_join))
-        assertThat(banner.iconRes).isEqualTo(R.drawable.ic_group_24)
+        assertThat(banner.icon).isEqualTo(Icons.ic_user_plus_16)
 
         // Act
         banner.onClick()
@@ -137,7 +140,7 @@ internal class WalletJointAccountItemConverterTest {
         // Assert
         val banner = requireNotNull(state.banner)
         assertThat(banner.text).isEqualTo(resourceReference(R.string.joint_account_activation_account_button_title))
-        assertThat(banner.iconRes).isEqualTo(R.drawable.ic_circle_clock_24)
+        assertThat(banner.icon).isEqualTo(Icons.ic_clock_16)
 
         // Act
         banner.onClick()
