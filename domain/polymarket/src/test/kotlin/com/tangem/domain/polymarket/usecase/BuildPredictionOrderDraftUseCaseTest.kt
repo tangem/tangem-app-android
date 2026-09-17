@@ -149,6 +149,18 @@ internal class BuildPredictionOrderDraftUseCaseTest {
     }
 
     @Test
+    fun `GIVEN a notional under the book minimum WHEN built THEN it is still drafted`() {
+        // Arrange
+        val quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT)
+
+        // Act
+        val actual = useCase(quote = quote, assetId = ASSET_ID, isNegRisk = false, side = PredictionOrderSide.BUY)
+
+        // Assert
+        assertThat(actual.getOrNull()).isNotNull()
+    }
+
+    @Test
     fun `GIVEN a quote priced for the other side WHEN built THEN it is refused`() {
         // Arrange
         val quote = createQuote(side = PredictionOrderSide.SELL)
