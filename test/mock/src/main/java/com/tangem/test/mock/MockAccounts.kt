@@ -97,7 +97,6 @@ object MockAccounts {
         cryptoCurrency: CryptoCurrency.Token = createPaymentAccountToken(),
         source: StatusSource = StatusSource.ACTUAL,
         customerId: String = "cust_1",
-        depositAddress: String? = "0xdeposit",
         fiatRate: BigDecimal? = BigDecimal.ONE,
         balance: PaymentAccountStatusValue.Balance = createPaymentAccountBalance(),
         networks: List<PaymentNetworkStatus> = emptyList(),
@@ -107,7 +106,6 @@ object MockAccounts {
             value = PaymentAccountStatusValue.Loaded(
                 source = source,
                 customerId = customerId,
-                depositAddress = depositAddress,
                 balance = balance,
                 cryptoCurrency = cryptoCurrency,
                 networks = networks,
