@@ -23,6 +23,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
+import com.tangem.features.txhistory.joint.operation.model.JointOperationState.Role
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
@@ -104,12 +105,13 @@ internal class JointOperationUMConverter(
                 ),
             )
         }
-        if (state.ownAnswer == Answer.DECLINED) return@buildList
+        if (state.ownAnswer == Answer.DECLINED || state.role == Role.UNKNOWN) return@buildList
+        val isInitiator = state.role == Role.INITIATOR
         add(
             TxHistoryDetailsUM.MenuItemUM(
-                icon = if (state.isInitiator) Icons.ic_trash_bin_24 else Icons.ic_cross_24,
+                icon = if (isInitiator) Icons.ic_trash_bin_24 else Icons.ic_cross_24,
                 title = resourceReference(
-                    if (state.isInitiator) CoreUiR.string.common_delete else CoreUiR.string.common_decline,
+                    if (isInitiator) CoreUiR.string.common_delete else CoreUiR.string.common_decline,
                 ),
                 isDestructive = true,
                 action = TxHistoryDetailsUM.MenuItemUM.Action.Direct(onRefuseClick),
