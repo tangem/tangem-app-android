@@ -44,24 +44,27 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlaceResul
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import androidx.annotation.StringRes
+import com.tangem.domain.polymarket.model.PredictionOrderSide
 
 @Composable
 internal fun PlacePredictionStatusContent(
     result: PlaceResultUM,
     market: MarketHeaderUM,
+    side: PredictionOrderSide,
     intents: PlacePredictionIntents,
     modifier: Modifier = Modifier,
 ) {
     TangemStatusScreen(
         modifier = modifier,
         variant = result.variant(),
-        title = result.title(),
+        title = result.title(side = side),
         description = stringReference(result.placedAt.formatPlacedAt()),
         asset = { ResultIcon(result = result) },
         details = {
             ResultBanner(result = result)
             PredictionMarketBlock(state = market)
-            ResultRows(result = result, market = market)
+            ResultRows(result = result, market = market, side = side)
         },
         footer = {
             TangemButton(
@@ -125,7 +128,7 @@ private fun BannerIcon(icon: ImageVector) {
 }
 
 @Composable
-private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM) {
+private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM, side: PredictionOrderSide) {
     val shares = when (result) {
         is PlaceResultUM.Filled -> result.shares
         is PlaceResultUM.PartiallyFilled -> result.shares
@@ -136,7 +139,12 @@ private fun ResultRows(result: PlaceResultUM, market: MarketHeaderUM) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         DetailRow(
-            title = resourceReference(R.string.prediction_place_result_tokens_bought),
+            title = resourceReference(
+                when (side) {
+                    PredictionOrderSide.BUY -> R.string.prediction_place_result_tokens_bought
+                    PredictionOrderSide.SELL -> R.string.prediction_close_result_tokens_sold
+                },
+            ),
             value = shares?.formatPolymarketShares() ?: DASH_SIGN,
         )
         DetailRow(
@@ -169,13 +177,16 @@ private fun PlaceResultUM.variant(): TangemStatusScreen.Variant = when (this) {
     is PlaceResultUM.NotFilled -> TangemStatusScreen.Variant.Error
 }
 
-private fun PlaceResultUM.title(): TextReference = when (this) {
+private fun PlaceResultUM.title(side: PredictionOrderSide): TextReference = when (this) {
     is PlaceResultUM.Filled -> resourceReference(
-        R.string.prediction_place_result_placed_title,
+        when (side) {
+            PredictionOrderSide.BUY -> R.string.prediction_place_result_placed_title
+            PredictionOrderSide.SELL -> R.string.prediction_close_result_sold_title
+        },
         wrappedList(collateralAmount.formatPolymarketEnteredAmount()),
     )
     is PlaceResultUM.PartiallyFilled -> combinedReference(
-        resourceReference(R.string.prediction_place_result_partial_title),
+        resourceReference(side.partialTitle()),
         stringReference(value = "\n"),
         resourceReference(
             R.string.prediction_place_result_partial_amount,
@@ -185,8 +196,19 @@ private fun PlaceResultUM.title(): TextReference = when (this) {
             ),
         ),
     )
-    is PlaceResultUM.NotFilled -> resourceReference(R.string.prediction_place_result_no_fill_title)
-    is PlaceResultUM.Submitted -> resourceReference(R.string.prediction_place_result_partial_title)
+    is PlaceResultUM.NotFilled -> resourceReference(
+        when (side) {
+            PredictionOrderSide.BUY -> R.string.prediction_place_result_no_fill_title
+            PredictionOrderSide.SELL -> R.string.prediction_close_result_no_fill_title
+        },
+    )
+    is PlaceResultUM.Submitted -> resourceReference(side.partialTitle())
+}
+
+@StringRes
+private fun PredictionOrderSide.partialTitle(): Int = when (this) {
+    PredictionOrderSide.BUY -> R.string.prediction_place_result_partial_title
+    PredictionOrderSide.SELL -> R.string.prediction_close_result_partially_sold_title
 }
 
 private fun Long.formatPlacedAt(): String = DateTimeFormatters.formatDate(
@@ -207,6 +229,7 @@ private fun PlacePredictionStatusContentPreview(
     TangemThemePreviewRedesign {
         PlacePredictionStatusContent(
             result = result,
+            side = PredictionOrderSide.BUY,
             market = MarketHeaderUM(
                 title = "Will Uzbekistan win the 2026 FIFA World Cup?",
                 imageUrl = null,
