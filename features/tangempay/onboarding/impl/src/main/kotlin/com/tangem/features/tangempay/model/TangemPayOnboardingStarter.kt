@@ -11,6 +11,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
@@ -162,7 +163,17 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             val isOrderCreated = createCampaignOrder(userWalletId, campaignKey, callbacks)
             if (!isOrderCreated) return
         }
-        openKyc(userWalletId)
+        if (tangemPayFeatureToggles.isResidencyStepEnabled) {
+            router.replaceAll(
+                AppRoute.Wallet,
+                AppRoute.TangemPayEligibility(
+                    product = TangemPayProduct.PAYMENT_ACCOUNT,
+                    userWalletId = userWalletId,
+                ),
+            )
+        } else {
+            openKyc(userWalletId)
+        }
     }
 
     private suspend fun createLegacyOrderBeforeKycIfNeeded(userWalletId: UserWalletId, customerInfo: CustomerInfo) {

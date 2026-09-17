@@ -65,7 +65,7 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
         is EligibilityInnerRoute.RegionUnavailable -> RegionUnavailableComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = RegionUnavailableComponent.Params(
-                userWalletId = null,
+                userWalletId = params.userWalletId,
                 product = params.product,
                 countryCode = route.countryCode,
                 regionCode = route.regionCode,

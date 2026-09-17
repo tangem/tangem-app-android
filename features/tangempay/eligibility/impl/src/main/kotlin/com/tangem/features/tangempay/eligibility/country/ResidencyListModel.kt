@@ -169,10 +169,15 @@ internal class ResidencyListModel @Inject constructor(
     private suspend fun continueOnboarding(itemId: String) {
         continuingItemId = itemId
         updateContent()
-        onboardingLauncher.start(
-            onWalletSelectionRequired = ::openWalletSelector,
-            onFailed = ::releaseContinuing,
-        )
+        val userWalletId = params.userWalletId
+        if (userWalletId != null) {
+            onboardingLauncher.openKyc(userWalletId)
+        } else {
+            onboardingLauncher.start(
+                onWalletSelectionRequired = ::openWalletSelector,
+                onFailed = ::releaseContinuing,
+            )
+        }
     }
 
     private fun openWalletSelector(walletsIds: List<UserWalletId>) {
