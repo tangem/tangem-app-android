@@ -34,19 +34,26 @@ internal class PolymarketPositionsLoader @Inject constructor(
         userWalletId: UserWalletId,
         tab: PolymarketPositionsTab,
         onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
-    ): Feed = Feed(userWalletId, tab, onPositionClick)
+        onClosedPositionClick: ((PolymarketPosition.Closed) -> Unit)? = null,
+    ): Feed = Feed(
+        userWalletId = userWalletId,
+        tab = tab,
+        onPositionClick = onPositionClick,
+        onClosedPositionClick = onClosedPositionClick,
+    )
 
     internal inner class Feed(
         userWalletId: UserWalletId,
         tab: PolymarketPositionsTab,
         onPositionClick: ((PolymarketPosition.Open) -> Unit)?,
+        onClosedPositionClick: ((PolymarketPosition.Closed) -> Unit)?,
     ) {
 
         val state: StateFlow<FilteredContent>
             field = MutableStateFlow(FilteredContent())
 
         private val session = createSession(userWalletId, tab)
-        private val converter = PolymarketPositionUMConverter(onPositionClick)
+        private val converter = PolymarketPositionUMConverter(onPositionClick, onClosedPositionClick)
         private var observation: Job? = null
         private val selectedFilter = MutableStateFlow(PolymarketPositionsFilter.ALL)
 
