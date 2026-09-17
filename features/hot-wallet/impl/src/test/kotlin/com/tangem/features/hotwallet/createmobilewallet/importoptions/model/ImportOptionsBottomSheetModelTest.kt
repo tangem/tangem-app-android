@@ -13,7 +13,7 @@ import com.tangem.features.hotwallet.createmobilewallet.importoptions.ImportOpti
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.entity.ImportOptionsBottomSheetUM
 import com.tangem.domain.cloudbackup.restore.CloudRestoreResult
 import com.tangem.domain.cloudbackup.restore.CloudRestoreResultHolder
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,7 +22,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -236,17 +235,6 @@ internal class ImportOptionsBottomSheetModelTest {
             cloudRestoreResultHolder = holder,
         ),
     )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private companion object {
         const val ACCOUNT_EMAIL = "user@gmail.com"

@@ -42,6 +42,9 @@ object TangemPayTestTags {
     const val FREEZE_CARD_ROW = "TANGEM_PAY_FREEZE_CARD_ROW"
     const val CARD_FROZEN_BADGE = "TANGEM_PAY_CARD_FROZEN_BADGE"
 
+    // Payment account / card page top bar more-actions menu item
+    const val CONTEXT_MENU_ITEM = "TANGEM_PAY_CONTEXT_MENU_ITEM"
+
     // Card page top bar more-actions menu (redesign)
     const val CARD_PAGE_MORE_BUTTON = "TANGEM_PAY_CARD_PAGE_MORE_BUTTON"
 
@@ -110,6 +113,14 @@ object TangemPayTestTags {
 
     // Daily limit success screen
     const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
+
+    // Multichain receive sheet (Add funds -> From another wallet or exchange -> network).
+    // Its address view and its QR view never compose together, so they share the address and action tags.
+    const val RECEIVE_ADDRESS = "TANGEM_PAY_RECEIVE_ADDRESS"
+    const val RECEIVE_COPY_BUTTON = "TANGEM_PAY_RECEIVE_COPY_BUTTON"
+    const val RECEIVE_SHARE_BUTTON = "TANGEM_PAY_RECEIVE_SHARE_BUTTON"
+    const val RECEIVE_SHOW_QR_BUTTON = "TANGEM_PAY_RECEIVE_SHOW_QR_BUTTON"
+    const val RECEIVE_QR_CODE = "TANGEM_PAY_RECEIVE_QR_CODE"
 
     // Bank transfer (virtual account) deposit bottom sheet
     const val VA_DEPOSIT_SHOW_DETAILS_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SHOW_DETAILS_BUTTON"

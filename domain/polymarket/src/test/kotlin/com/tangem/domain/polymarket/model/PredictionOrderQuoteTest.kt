@@ -14,6 +14,7 @@ internal class PredictionOrderQuoteTest {
     fun minAmount(model: MinAmountModel) {
         // Arrange
         val quote = createQuote(
+            side = model.side,
             worstCasePrice = model.worstCasePrice,
             minOrderSize = model.minOrderSize,
             minOrderAmount = model.minOrderAmount,
@@ -31,6 +32,7 @@ internal class PredictionOrderQuoteTest {
         val minOrderSize: BigDecimal,
         val minOrderAmount: BigDecimal?,
         val expected: BigDecimal,
+        val side: PredictionOrderSide = PredictionOrderSide.BUY,
     )
 
     private fun provideTestModels() = listOf(
@@ -52,15 +54,30 @@ internal class PredictionOrderQuoteTest {
             minOrderAmount = null,
             expected = BigDecimal("0.50"),
         ),
+        MinAmountModel(
+            side = PredictionOrderSide.SELL,
+            worstCasePrice = BigDecimal("0.90"),
+            minOrderSize = BigDecimal("5"),
+            minOrderAmount = BigDecimal("1.00"),
+            expected = BigDecimal("5"),
+        ),
+        MinAmountModel(
+            side = PredictionOrderSide.SELL,
+            worstCasePrice = BigDecimal("0.10"),
+            minOrderSize = BigDecimal("5"),
+            minOrderAmount = null,
+            expected = BigDecimal("5"),
+        ),
     )
 
     private fun createQuote(
+        side: PredictionOrderSide,
         worstCasePrice: BigDecimal,
         minOrderSize: BigDecimal,
         minOrderAmount: BigDecimal?,
     ) = PredictionOrderQuote(
         status = PredictionQuoteStatus.FULL,
-        side = PredictionOrderSide.BUY,
+        side = side,
         shares = BigDecimal("10"),
         notional = BigDecimal("5"),
         expectedExecutionAmount = BigDecimal("10"),
