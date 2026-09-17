@@ -16,7 +16,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
-import com.tangem.features.feed.components.v2.blocks.FeedBlockCallbacks
+import com.tangem.features.feed.components.v2.blocks.FeedBlockModalCallbacks
 import com.tangem.features.feed.components.v2.model.converter.EarnBlockConverter
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedTabId
@@ -47,7 +47,7 @@ internal class EarnBlockModel @Inject constructor(
     getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
 ) : Model() {
 
-    private val callbacks = paramsContainer.require<FeedBlockCallbacks>()
+    private val callbacks = paramsContainer.require<FeedBlockModalCallbacks>()
 
     val state: StateFlow<EarnBlockUM> = combine(
         flow = userWalletsListRepository.userWallets,
