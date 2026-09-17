@@ -50,6 +50,7 @@ internal data class PlacePredictionUM(
                 PredictionOrderSide.SELL -> OrderSideUM.Sell(
                     available = BigDecimal.ZERO,
                     proceeds = SharesProceedsUM.Unavailable,
+                    balance = null,
                 )
             },
             amountValue = "",
@@ -90,6 +91,7 @@ internal data class MarketHeaderUM(
     val outcomePriceCents: Int?,
     val resolutionDateMillis: Long?,
     val isPriceUnavailable: Boolean = false,
+    val entryPriceCents: Int? = null,
 )
 
 @Immutable
@@ -116,8 +118,24 @@ internal sealed interface OrderSideUM {
     data class Buy(val balance: BigDecimal?, val hasSufficientBalance: Boolean) : OrderSideUM
 
     /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
-    data class Sell(val available: BigDecimal, val proceeds: SharesProceedsUM) : OrderSideUM
+    data class Sell(
+        val available: BigDecimal,
+        val proceeds: SharesProceedsUM,
+        val balance: BigDecimal?,
+    ) : OrderSideUM
 }
+
+internal val OrderSideUM.side: PredictionOrderSide
+    get() = when (this) {
+        is OrderSideUM.Buy -> PredictionOrderSide.BUY
+        is OrderSideUM.Sell -> PredictionOrderSide.SELL
+    }
+
+internal val OrderSideUM.balance: BigDecimal?
+    get() = when (this) {
+        is OrderSideUM.Buy -> balance
+        is OrderSideUM.Sell -> balance
+    }
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
