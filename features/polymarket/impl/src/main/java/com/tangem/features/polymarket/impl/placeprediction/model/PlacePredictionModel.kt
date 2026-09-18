@@ -53,9 +53,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
-import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
 import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
-import com.tangem.features.polymarket.impl.placeprediction.entity.canQuote
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
@@ -660,28 +659,16 @@ internal class PlacePredictionModel @Inject constructor(
 
         if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
-        if (uiState.value.enteredAmount() == null) {
-            startPriceLoop()
-            return
-        }
-
-        if (!uiState.value.canQuote() || uiState.value.isBelowMinAmount()) return
-
         modelScope.launch {
-            if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
+            if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
-                requestQuote()
-                if (uiState.value.quote.isMarketClosed()) break
-                delay(timeMillis = pollInterval())
-            }
-        }.saveIn(quoteJobHolder)
-    }
-
-    private fun startPriceLoop() {
-        modelScope.launch {
-            while (isActive && uiState.value.submit is SubmitUM.Idle && uiState.value.enteredAmount() == null) {
-                val canKeepPolling = requestPrice()
+                val canKeepPolling = if (uiState.value.isQuotable()) {
+                    requestQuote()
+                    !uiState.value.quote.isMarketClosed()
+                } else {
+                    requestPrice()
+                }
                 if (!canKeepPolling) return@launch
                 delay(timeMillis = pollInterval())
             }
@@ -725,7 +712,7 @@ internal class PlacePredictionModel @Inject constructor(
     private suspend fun requestQuote() {
         val state = uiState.value
         val amount = state.enteredAmount() ?: return
-        if (state.submit !is SubmitUM.Idle || state.isBelowMinAmount()) return
+        if (state.submit !is SubmitUM.Idle || !state.isQuotable()) return
 
         uiState.update(SetQuoteLoadingTransformer)
 
