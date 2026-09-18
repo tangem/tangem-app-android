@@ -535,7 +535,7 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN quote loaded WHEN read THEN headline is the expectation AND floor is the guarantee`() = runTest {
+    fun `GIVEN quote loaded WHEN read THEN headline is the expectation`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -547,7 +547,6 @@ internal class PlacePredictionModelTest {
         // Assert
         val quote = model.uiState.value.quote as QuoteUM.Content
         assertThat(quote.expected).isEqualTo(BigDecimal("23.8"))
-        assertThat(quote.guaranteed).isEqualTo(BigDecimal("23.2"))
 
         model.onDestroy()
     }
@@ -1532,7 +1531,7 @@ internal class PlacePredictionModelTest {
             }
             val order = model.uiState.value.order as OrderSideUM.Sell
             assertThat(order.proceeds).isEqualTo(
-                SharesProceedsUM.Content(expected = BigDecimal("11.01"), guaranteed = BigDecimal("10.88")),
+                SharesProceedsUM.Content(expected = BigDecimal("11.01")),
             )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
 
