@@ -131,12 +131,10 @@ fun getTangemPayCancelPendingTransitionRequestCount(): Int =
 
 /** The tap only starts the request, so the journal is polled before the exactly-once check. */
 fun BaseTestCase.assertTangemPayTariffRequestSentOnce(name: String, countBefore: Int, count: () -> Int) {
-    step("Assert the $name request was sent once") {
-        awaitSuccess {
-            if (count() - countBefore < 1) throw AssertionError("The $name request should be sent")
-        }
-        Assert.assertEquals("The $name request should be sent once", 1, count() - countBefore)
+    awaitSuccess {
+        if (count() - countBefore < 1) throw AssertionError("The $name request should be sent")
     }
+    Assert.assertEquals("The $name request should be sent once", 1, count() - countBefore)
 }
 
 /** From the Main screen, opens plan selection through the 'Select plan' Tangem Pay tile. */
@@ -195,8 +193,10 @@ fun BaseTestCase.selectTangemPayPlanForConfirmation() {
     step("Click on 'Select' button") {
         onTangemPaySelectPlanScreen { selectButton.clickWithAssertion() }
     }
-    step("Assert plan confirmation step is displayed") {
+    step("Assert plan confirmation button is displayed") {
         awaitSuccess { onTangemPaySelectPlanScreen { confirmButton.assertIsDisplayed() } }
+    }
+    step("Assert plan cancellation button is displayed") {
         onTangemPaySelectPlanScreen { cancelButton.assertIsDisplayed() }
     }
 }
@@ -223,18 +223,14 @@ fun BaseTestCase.pressBackFromCurrentPlan() {
 }
 
 fun BaseTestCase.assertTangemPayCurrentPlanName(expectedPlanName: String) {
-    step("Assert current plan is '$expectedPlanName'") {
-        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
-            onTangemPayCurrentPlanScreen { planName(expectedPlanName).assertIsDisplayed() }
-        }
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT) {
+        onTangemPayCurrentPlanScreen { planName(expectedPlanName).assertIsDisplayed() }
     }
 }
 
 /** Waits for the top-up banner to leave the payment account — the proof a transition order is gone. */
 fun BaseTestCase.assertTangemPayAwaitingDepositBannerHidden(planFee: String) {
-    step("Assert 'Top-up your account' banner is not displayed") {
-        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            onTangemPayMainScreen { awaitingDepositBannerTitle(planFee).assertDoesNotExist() }
-        }
+    awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        onTangemPayMainScreen { awaitingDepositBannerTitle(planFee).assertDoesNotExist() }
     }
 }
