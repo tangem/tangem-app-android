@@ -262,8 +262,10 @@ internal class CollectiblesDiscoveryContentTransformerTest {
     fun `GIVEN tabs and a query WHEN transform THEN only the content area changes`() {
         // Arrange
         val prevState = createPrevState(
-            tabs = persistentListOf(
-                TangemTabItemUM.Content(id = "all", label = stringReference("All cards"), onClick = {}),
+            tabs = CollectiblesDiscoveryUM.TabsUM.Content(
+                tabs = persistentListOf(
+                    TangemTabItemUM.Content(id = "all", label = stringReference("All cards"), onClick = {}),
+                ),
             ),
             search = createSearchState(query = "pokemon", isActive = true),
         )
@@ -286,7 +288,7 @@ internal class CollectiblesDiscoveryContentTransformerTest {
     )
 
     private fun createPrevState(
-        tabs: ImmutableList<TangemTabItemUM> = persistentListOf(),
+        tabs: CollectiblesDiscoveryUM.TabsUM = CollectiblesDiscoveryUM.TabsUM.Hidden,
         content: CollectiblesDiscoveryUM.ContentUM = CollectiblesDiscoveryUM.ContentUM.Loading,
         search: TangemSearch.State = createSearchState(),
     ): CollectiblesDiscoveryUM = CollectiblesDiscoveryUM(tabs = tabs, content = content, search = search)

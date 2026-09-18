@@ -130,7 +130,7 @@ internal class ChooseTokenListItemConverter(
                         account.tokenList.flattenCurrencies().map { account to it }
                     is AccountStatus.Payment ->
                         account.paymentCryptoCurrencies().map { account to it }
-                    is AccountStatus.Virtual -> emptyList()
+                    is AccountStatus.Money -> emptyList()
                     is AccountStatus.Prediction -> emptyList()
                     is AccountStatus.Collectibles -> emptyList()
                     // Joint currencies belong to the Safe contract: only the flows that never spend from the
@@ -170,7 +170,7 @@ internal class ChooseTokenListItemConverter(
                 when (accountStatus) {
                     is AccountStatus.Personal -> accountStatus.toPortfolioItem(params)
                     is AccountStatus.Payment -> accountStatus.createPaymentAccountItem(params.expandedAccounts)
-                    is AccountStatus.Virtual -> null
+                    is AccountStatus.Money -> null
                     is AccountStatus.Prediction -> null
                     is AccountStatus.Collectibles -> null
                     is AccountStatus.Joint ->

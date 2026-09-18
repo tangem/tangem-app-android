@@ -13,7 +13,6 @@ import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
-import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -126,7 +125,6 @@ internal class PolymarketEventDetailsModelTest {
                     eventId = "event-1",
                     marketId = "market-1",
                     assetId = "asset-1",
-                    side = PredictionOrderSide.BUY,
                 ),
                 onComplete = any(),
             )

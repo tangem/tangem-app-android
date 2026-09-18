@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.res.LocalMaterialRenderingEnabled
 import com.tangem.core.ui.res.LocalMaterialShadowEnabled
 import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
@@ -45,7 +46,8 @@ import dev.chrisbanes.haze.HazeTint
  *   tinted with `material.fill.blur`. When `LocalHazeState.blurEnabled` is `false` (e.g.
  *   previews, low-end devices), the surface falls back to opaque `material.fill.solid` overlaid
  *   with translucent `material.tint.solid` so both layers remain visible. [materialStyle] picks the
- *   token set all of the above is read from.
+ *   token set all of the above is read from. Under [LocalMaterialRenderingEnabled] `false` none of
+ *   this chrome is drawn and only [content] remains.
  *
  * Interaction:
  * - When [onClick] is non-null the surface is clickable. The v2 ripple configuration is provided
@@ -86,16 +88,17 @@ fun TangemSurface(
     content: @Composable () -> Unit,
 ) {
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val isMaterialDrawn = isMaterial && LocalMaterialRenderingEnabled.current
 
     val surface: @Composable () -> Unit = {
         Box(
             modifier = modifier
-                .conditionalCompose(isMaterial) { materialShadow(shape, shadowRadius) }
+                .conditionalCompose(isMaterialDrawn) { materialShadow(shape, shadowRadius) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
-                .conditionalCompose(isMaterial) { materialBorder(shape = shape, style = materialStyle) }
+                .conditionalCompose(isMaterialDrawn) { materialBorder(shape = shape, style = materialStyle) }
                 .clip(shape)
                 .background(if (isMaterial) Color.Transparent else color, shape)
-                .conditionalCompose(isMaterial) { materialFill(style = materialStyle) }
+                .conditionalCompose(isMaterialDrawn) { materialFill(style = materialStyle) }
                 .conditionalCompose(onClick != null) {
                     clickable(
                         interactionSource = resolvedInteractionSource,

@@ -71,7 +71,7 @@ fun AccountStatusList.hasMultiCurrencyAccount(): Boolean = accountStatuses.any {
         // The token list of a joint account stays empty until it is active; its currencies are known all along
         is AccountStatus.Joint -> status.account.cryptoCurrencies.size > 1
         is AccountStatus.Payment -> false
-        is AccountStatus.Virtual -> false
+        is AccountStatus.Money -> false
         is AccountStatus.Prediction -> false
         is AccountStatus.Collectibles -> false
     }

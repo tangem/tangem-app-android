@@ -44,6 +44,7 @@ dependencies {
     api(projects.domain.news)
     api(projects.domain.search)
     api(projects.domain.settings)
+    api(projects.domain.staking)
     api(projects.domain.tokens)
     api(projects.domain.wallets)
     api(projects.domain.yieldSupply)
@@ -51,6 +52,8 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.card)
     implementation(projects.domain.core)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.referral)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.visa)
@@ -114,5 +117,6 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.common.test)
     testImplementation(projects.domain.wallets.models)
 }

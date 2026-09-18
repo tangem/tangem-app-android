@@ -122,6 +122,19 @@ data class TxInfo(
         @Serializable
         data object GaslessFee : TransactionType
 
+        /**
+         * A transaction that moved no coin — the wallet only paid the network fee of a token transfer. The fee
+         * itself is in [TxInfo.fee].
+         *
+         * @property amount  the tokens that did move; `null` for a token the wallet does not track
+         * @property address recipient of the tokens
+         */
+        @Serializable
+        data class NetworkFee(
+            val amount: SdkAmount?,
+            val address: String,
+        ) : TransactionType
+
         @Serializable
         sealed interface YieldSupply : TransactionType {
 

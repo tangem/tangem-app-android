@@ -63,7 +63,7 @@ private fun PortfolioDonutIcon(modifier: Modifier = Modifier) {
     )
     val trackColor = TangemTheme.colors3.border.tertiary
 
-    Canvas(modifier = modifier.size(size = 28.dp)) {
+    Canvas(modifier = modifier.size(size = 24.dp)) {
         val strokeWidth = 5.dp.toPx()
         val inset = strokeWidth / 2
         val arcSize = Size(width = size.width - strokeWidth, height = size.height - strokeWidth)

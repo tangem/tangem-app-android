@@ -9,7 +9,7 @@ import com.tangem.core.ui.extensions.TextReference
 
 /**
  * Settlement styling is independent of the P&L direction. [result] replaces [currentValue] when present.
- * A null [onClick] leaves closed or not-yet-supported positions non-interactive.
+ * A null [onClick] leaves positions without a supported details or claim flow non-interactive.
  */
 @Immutable
 internal data class PolymarketPositionUM(

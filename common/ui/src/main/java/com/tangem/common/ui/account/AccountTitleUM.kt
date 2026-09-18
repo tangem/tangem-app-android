@@ -33,11 +33,11 @@ sealed interface AccountTitleUM {
                 )
             }
 
-            fun virtual(prefixText: TextReference = TextReference.EMPTY): Account {
+            fun moneyAccount(prefixText: TextReference = TextReference.EMPTY): Account {
                 return Account(
                     prefixText = prefixText,
                     name = stringReference("Virtual account"),
-                    icon = AccountIconUM.Virtual,
+                    icon = AccountIconUM.Money,
                 )
             }
         }
