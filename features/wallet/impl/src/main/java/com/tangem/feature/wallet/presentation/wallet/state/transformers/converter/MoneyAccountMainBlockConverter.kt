@@ -23,37 +23,37 @@ internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, M
             is MoneyAccountStatusValue.NotCreated,
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
-            is MoneyAccountStatusValue.Issuance -> statusValue.toUM()
-            is MoneyAccountStatusValue.Issued -> statusValue.toUM()
+            is MoneyAccountStatusValue.Onboarding -> statusValue.toUM()
+            is MoneyAccountStatusValue.Account -> statusValue.toUM()
             is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
             is MoneyAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
             is MoneyAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
         }
     }
 
-    private fun MoneyAccountStatusValue.Issuance.toUM(): MoneyAccountMainUM {
+    private fun MoneyAccountStatusValue.Onboarding.toUM(): MoneyAccountMainUM {
         return when (this) {
-            is MoneyAccountStatusValue.Issuance.UnderReview -> MoneyAccountMainUM.UnderReview(
+            is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.UnderReview(
                 subtitle = TextReference.Res(R.string.tangempay_kyc_in_progress),
                 onClick = ::onAccountClick,
             )
-            is MoneyAccountStatusValue.Issuance.VerificationDeclined -> MoneyAccountMainUM.UnderReview(
+            is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> MoneyAccountMainUM.UnderReview(
                 subtitle = TextReference.Res(R.string.tangempay_kyc_has_failed),
                 onClick = ::onAccountClick,
             )
-            is MoneyAccountStatusValue.Issuance.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
+            is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
                 onClick = ::onAccountClick,
             )
-            is MoneyAccountStatusValue.Issuance.Issuing,
-            is MoneyAccountStatusValue.Issuance.Activating,
+            is MoneyAccountStatusValue.Onboarding.Issuing,
+            is MoneyAccountStatusValue.Onboarding.Activating,
             -> MoneyAccountMainUM.Provisioning(onClick = ::onAccountClick)
         }
     }
 
-    private fun MoneyAccountStatusValue.Issued.toUM(): MoneyAccountMainUM {
+    private fun MoneyAccountStatusValue.Account.toUM(): MoneyAccountMainUM {
         return when (this) {
-            is MoneyAccountStatusValue.Issued.Deactivated -> MoneyAccountMainUM.Empty
-            is MoneyAccountStatusValue.Issued.Active -> {
+            is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.Account.Active -> {
                 val balance = balance ?: return MoneyAccountMainUM.Loading
 
                 MoneyAccountMainUM.Content(
