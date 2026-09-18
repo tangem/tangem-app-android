@@ -1,93 +1,72 @@
 package com.tangem.data.moneyaccount.flow
 
-import arrow.core.right
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
-import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
-import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultMoneyAccountStatusFetcherTest {
 
     private val moneyAccountStatusesStore: MoneyAccountStatusesStore = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
-    private val networkFactory: NetworkFactory = mockk()
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
-    private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
-    private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk(relaxed = true)
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
         dispatchers = dispatchers,
-        networkFactory = networkFactory,
-        tangemPayCurrencyFactory = tangemPayCurrencyFactory,
-        userWalletsListRepository = userWalletsListRepository,
-        singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-        singleNetworkStatusSupplier = singleNetworkStatusSupplier,
     )
 
     private val userWalletId = UserWalletId("011")
-    private val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
-    private val network: Network = mockk()
-    private val token: CryptoCurrency.Token = mockk()
 
     @BeforeEach
-    fun setUp() {
-        clearMocks(networkFactory, tangemPayCurrencyFactory, singleNetworkStatusFetcher, userWalletsListRepository)
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
-        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } returns token
-        coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
+    fun resetMocks() {
+        clearMocks(moneyAccountStatusesStore)
     }
 
     @Test
-    fun `GIVEN network created WHEN invoke THEN on-chain status fetched with VA token`() = runTest {
+    fun `GIVEN status fetched WHEN invoke THEN status stored`() = runTest {
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(userWalletId))
+
+        // Assert
+        coVerify(exactly = 1) {
+            moneyAccountStatusesStore.store(
+                userWalletId = userWalletId,
+                status = AccountStatus.Money(
+                    account = Account.Money(userWalletId),
+                    value = MoneyAccountStatusValue.NotCreated,
+                ),
+            )
+        }
+        coVerify(exactly = 0) {
+            moneyAccountStatusesStore.updateStatusSource(userWalletId, StatusSource.ONLY_CACHE)
+        }
+    }
+
+    @Test
+    fun `GIVEN store throws WHEN invoke THEN source degraded to cache`() = runTest {
         // Arrange
-        every {
-            networkFactory.create(any<Blockchain>(), any<Network.DerivationPath>(), any<UserWallet>())
-        } returns network
+        coEvery { moneyAccountStatusesStore.store(any(), any()) } throws IllegalStateException()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(userWalletId))
 
         // Assert
         coVerify(exactly = 1) {
-            singleNetworkStatusFetcher(
-                SingleNetworkStatusFetcher.Params(
-                    userWalletId = userWalletId,
-                    network = network,
-                    extraTokens = setOf(token),
-                ),
+            moneyAccountStatusesStore.updateStatusSource(
+                userWalletId = userWalletId,
+                source = StatusSource.ONLY_CACHE,
             )
         }
-    }
-
-    @Test
-    fun `GIVEN network cannot be created WHEN invoke THEN on-chain fetch skipped`() = runTest {
-        // Arrange
-        every {
-            networkFactory.create(any<Blockchain>(), any<Network.DerivationPath>(), any<UserWallet>())
-        } returns null
-
-        // Act
-        fetcher.invoke(MoneyAccountStatusFetcher.Params(userWalletId))
-
-        // Assert
-        coVerify(exactly = 0) { singleNetworkStatusFetcher(any()) }
     }
 }
