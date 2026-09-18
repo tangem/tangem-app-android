@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -52,6 +51,7 @@ class PolymarketPositionsSession internal constructor(
     private var scope: CoroutineScope? = null
     private var job: Job? = null
     private var invalidationJob: Job? = null
+    private var appliedRevision: Long = invalidator.currentRevision(userWalletId)
     private val request = MutableStateFlow(Request())
     private var isDisposed = false
     private var requestMore: (() -> Unit)? = null
@@ -68,9 +68,11 @@ class PolymarketPositionsSession internal constructor(
         }
         invalidationJob?.cancel()
         invalidationJob = scope.launch {
-            invalidator.signal
-                .filter { it == userWalletId }
-                .collect { if (request.value.isResumed) load() }
+            invalidator.revisionFlow(userWalletId).collect { revision ->
+                if (revision == appliedRevision) return@collect
+                appliedRevision = revision
+                if (request.value.isResumed) load()
+            }
         }
     }
 
