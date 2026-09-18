@@ -4,16 +4,20 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.converter.PolymarketPositionStatusConverter
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchAction
+import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionsUpdateRequest
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -23,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -46,12 +51,17 @@ class PolymarketPositionsSession internal constructor(
     private val request = MutableStateFlow(Request())
     private var isDisposed = false
     private var requestMore: (() -> Unit)? = null
+    private var refreshLoadedPages: (() -> Unit)? = null
 
     fun resume(scope: CoroutineScope) {
         if (isDisposed) return
+        val wasResumed = request.value.isResumed
         request.update { it.copy(isResumed = true) }
         this.scope = scope
-        if (job == null) load()
+        when {
+            job == null -> load()
+            !wasResumed -> refreshLoadedPages?.invoke()
+        }
     }
 
     fun pause() {
@@ -63,6 +73,7 @@ class PolymarketPositionsSession internal constructor(
         isDisposed = true
         job?.cancel()
         requestMore = null
+        refreshLoadedPages = null
         scope = null
     }
 
@@ -92,6 +103,7 @@ class PolymarketPositionsSession internal constructor(
         val scope = scope?.takeIf { it.isActive } ?: return
         job?.cancel()
         requestMore = null
+        refreshLoadedPages = null
         state.value = PolymarketPositionsState(
             status = PaginationStatus.InitialLoading,
             filter = request.value.filter,
@@ -127,6 +139,9 @@ class PolymarketPositionsSession internal constructor(
             }
         }
 
+        refreshLoadedPages = pageRefresher(batchFlow, actions, config)
+        logRefreshFailures(batchFlow)
+
         val batches = batchFlow.state.onEach { batch ->
             when (batch.status) {
                 PaginationStatus.None, PaginationStatus.InitialLoading, PaginationStatus.NextBatchLoading -> Unit
@@ -159,6 +174,35 @@ class PolymarketPositionsSession internal constructor(
             }
         }
         actions.emit(BatchAction.Reload(config))
+    }
+
+    private fun CoroutineScope.pageRefresher(
+        batchFlow: PolymarketPositionsBatchFlow,
+        actions: MutableSharedFlow<PolymarketPositionsBatchAction>,
+        config: PolymarketPositionsListConfig,
+    ): () -> Unit = {
+        val keys = batchFlow.state.value.data.mapTo(mutableSetOf()) { it.key }
+        if (isActive && keys.isNotEmpty()) {
+            launch {
+                actions.emit(
+                    BatchAction.UpdateBatches(
+                        keys = keys,
+                        updateRequest = PolymarketPositionsUpdateRequest(config),
+                        async = true,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun CoroutineScope.logRefreshFailures(batchFlow: PolymarketPositionsBatchFlow) {
+        batchFlow.updateResults
+            .onEach { (_, result) ->
+                if (result is BatchUpdateResult.Error) {
+                    TangemLogger.e("Failed to refresh Polymarket positions: ${result.throwable}")
+                }
+            }
+            .launchIn(this)
     }
 
     private companion object {
