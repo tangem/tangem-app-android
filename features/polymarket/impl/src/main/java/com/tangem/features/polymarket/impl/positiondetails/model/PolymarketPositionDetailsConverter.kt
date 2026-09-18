@@ -1,7 +1,6 @@
 package com.tangem.features.polymarket.impl.positiondetails.model
 
 import com.tangem.core.res.R
-import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -16,6 +15,8 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
+import com.tangem.features.polymarket.impl.common.outcomeAccent
+import com.tangem.features.polymarket.impl.common.toBubbleVariant
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Content
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Notice
@@ -52,11 +53,7 @@ internal class PolymarketPositionDetailsConverter :
                 ),
                 currentValue = stringReference(position.currentValue.formatPolymarketMoney()),
                 outcomeLabel = stringReference(position.outcome),
-                outcomeVariant = when {
-                    position.outcome.equals("Yes", ignoreCase = true) -> TangemMessageBubble.Variant.Info
-                    position.outcome.equals("No", ignoreCase = true) -> TangemMessageBubble.Variant.Error
-                    else -> TangemMessageBubble.Variant.Neutral
-                },
+                outcomeVariant = position.outcomeAccent.toBubbleVariant(),
                 payout = position.size.takeIf { position.canOpenPositionDetails }
                     ?.let { stringReference(it.formatPolymarketMoney()) },
             ),
