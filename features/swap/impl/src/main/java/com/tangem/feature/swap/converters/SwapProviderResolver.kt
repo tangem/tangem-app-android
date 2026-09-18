@@ -12,7 +12,8 @@ import java.math.RoundingMode
 
 /**
  * Pure provider-level decisions for the swap UI:
- *  - [findBest] — which provider is the "best" among the loaded quotes, and
+ *  - [findBest] — which provider is the "best" among the loaded quotes,
+ *  - [preferAvailable] — which quotes are eligible for those decisions at all, and
  *  - [resolveBadge] — which [ProviderState.AdditionalBadge] a provider row should show.
  */
 internal object SwapProviderResolver {
@@ -28,17 +29,31 @@ internal object SwapProviderResolver {
     /**
      * Picks the best provider among [states].
      *
-     * When at least one DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins; otherwise
-     * the overall best-rated provider is returned (the best CEX when no DEX is available). "Best rated" =
-     * lowest from/to fiat ratio (most output per unit of input). Returns null when [states] is empty.
+     * Region-restricted quotes are left out of the ranking (see [preferAvailable]). When at least one
+     * DEX/DEX_BRIDGE provider is present, the best-rated DEX provider wins; otherwise the overall
+     * best-rated provider is returned (the best CEX when no DEX is available). "Best rated" = lowest
+     * from/to fiat ratio (most output per unit of input). Returns null when [states] is empty.
      */
     fun findBest(states: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
-        val dexStates = states.filterKeys { it.type.isDex() }
+        val availableStates = preferAvailable(states)
+        val dexStates = availableStates.filterKeys { it.type.isDex() }
         return if (dexStates.isNotEmpty()) {
             findBestRated(dexStates)
         } else {
-            findBestRated(states)
+            findBestRated(availableStates)
         }
+    }
+
+    /**
+     * Quotes the user can actually swap through: a region-restricted quote is displayable but not
+     * executable, so it wins neither the best-rate ranking nor the automatic provider selection. When
+     * every quote is restricted the full set stands in, so a provider is still picked instead of
+     * leaving the form without one.
+     */
+    fun <T : SwapState> preferAvailable(states: Map<SwapProvider, T>): Map<SwapProvider, T> {
+        return states
+            .filterValues { state -> (state as? SwapState.QuotesLoadedState)?.isRestricted != true }
+            .ifEmpty { states }
     }
 
     /**
@@ -91,12 +106,13 @@ internal object SwapProviderResolver {
         states: Map<SwapProvider, SwapState.QuotesLoadedState>,
         provider: SwapProvider,
     ): AdditionalBadge {
-        val overallBest = findBestRated(states)
+        val availableStates = preferAvailable(states)
+        val overallBest = findBestRated(availableStates)
         val isOverallBest = provider.providerId == overallBest?.providerId
 
-        val dexStates = states.filterKeys { it.type.isDex() }
+        val dexStates = availableStates.filterKeys { it.type.isDex() }
         val hasDex = dexStates.isNotEmpty()
-        val hasCex = states.keys.any { !it.type.isDex() }
+        val hasCex = availableStates.keys.any { !it.type.isDex() }
         val bestDex = findBestRated(dexStates)
         val isBestDex = bestDex != null && provider.providerId == bestDex.providerId
         // Both types present and a CEX is the overall best (i.e. overall best != best DEX).

@@ -8,6 +8,7 @@ import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
@@ -21,6 +22,7 @@ internal data class PolymarketPositionsPreviewCase(
     val selectedTab: Tab = Tab.Active,
     val active: Content = Content.Empty,
     val finished: Content = Content.Empty,
+    val selectedFilter: PolymarketPositionsFilter = PolymarketPositionsFilter.ALL,
 )
 
 internal class PolymarketPositionsPreviewProvider :
@@ -66,6 +68,43 @@ private fun screenCases(): List<PolymarketPositionsPreviewCase> {
                 }.toImmutableList(),
             ),
         ),
+    ) + filteredCases(active)
+}
+
+private fun filteredCases(active: Content.Data): List<PolymarketPositionsPreviewCase> {
+    val won = active.copy(
+        positions = active.positions.take(1).map { position ->
+            position.copy(
+                result = TangemBadgeUM(
+                    text = resourceReference(R.string.prediction_positions_won),
+                    status = TangemBadge.Status.Success,
+                ),
+            )
+        }.toImmutableList(),
+    )
+    return listOf(
+        PolymarketPositionsPreviewCase("Won filter", active = won, selectedFilter = PolymarketPositionsFilter.WON),
+        PolymarketPositionsPreviewCase("No matches", selectedFilter = PolymarketPositionsFilter.LOST),
+        PolymarketPositionsPreviewCase(
+            "Looking for matches",
+            active = Content.Loading,
+            selectedFilter = PolymarketPositionsFilter.PENDING,
+        ),
+        PolymarketPositionsPreviewCase(
+            "Filtered error",
+            active = Content.Error(onRetry = {}),
+            selectedFilter = PolymarketPositionsFilter.DISPUTED,
+        ),
+        PolymarketPositionsPreviewCase(
+            "Partial matches loading",
+            active = won.copy(nextPage = NextPage.Loading),
+            selectedFilter = PolymarketPositionsFilter.WON,
+        ),
+        PolymarketPositionsPreviewCase(
+            "Partial matches error",
+            active = won.copy(nextPage = NextPage.Error(onRetry = {})),
+            selectedFilter = PolymarketPositionsFilter.WON,
+        ),
     )
 }
 
@@ -85,19 +124,6 @@ private fun activePositions() = listOf("France", "Argentina", "Uzbekistan").mapI
     )
 }.toImmutableList()
 
-private fun finishedPositions() = listOf(
-    R.string.prediction_positions_won to TangemBadge.Status.Success,
-    R.string.prediction_positions_lost to TangemBadge.Status.Error,
-    R.string.prediction_positions_split to TangemBadge.Status.Neutral,
-    R.string.prediction_positions_closed to TangemBadge.Status.Neutral,
-).mapIndexed { index, (label, status) ->
-    activePositions().first().copy(
-        id = "finished_$index",
-        priceChange = TangemPriceChange.State(
-            value = stringReference("$12.40"),
-            direction = TangemPriceChange.Direction.Up,
-        ),
-        currentValue = null,
-        result = TangemBadgeUM(text = resourceReference(label), status = status, size = TangemBadge.Size.X6),
-    )
+private fun finishedPositions() = finishedPositionCards().mapIndexed { index, case ->
+    case.state.copy(id = "finished_$index")
 }.toImmutableList()
