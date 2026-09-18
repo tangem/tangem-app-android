@@ -48,23 +48,6 @@ sealed class MoneyAccountStatusValue {
         }
     }
 
-    fun copySealed(balance: Balance?): MoneyAccountStatusValue {
-        return when (this) {
-            is Onboarding.Issuing -> copy(balance = balance)
-            is Onboarding.UnderReview -> copy(balance = balance)
-            is Onboarding.VerificationDeclined -> copy(balance = balance)
-            is Onboarding.Activating -> copy(balance = balance)
-            is Account.Active -> copy(balance = balance)
-            is Account.Deactivated -> copy(balance = balance)
-            is Loading,
-            is Empty,
-            is NotCreated,
-            is Onboarding.CountryNotSupported,
-            is Error,
-            -> this
-        }
-    }
-
     @Serializable
     data object Empty : MoneyAccountStatusValue() {
         override val source: StatusSource = StatusSource.ACTUAL
