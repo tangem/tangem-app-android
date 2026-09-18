@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
@@ -17,6 +18,7 @@ import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
@@ -303,5 +305,17 @@ internal object PolymarketDomainModule {
         signer = signer,
         store = store,
         codec = codec,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSubmitPredictionClaimInteractor(
+        redeemRepository: PolymarketRedeemRepository,
+        polymarketRepository: PolymarketRepository,
+        signer: PolymarketTypedDataSigner,
+    ): SubmitPredictionClaimInteractor = SubmitPredictionClaimInteractor(
+        redeemRepository = redeemRepository,
+        polymarketRepository = polymarketRepository,
+        signer = signer,
     )
 }
