@@ -6,15 +6,16 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import arrow.core.Either
 import arrow.core.left
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.features.collectibles.impl.CollectiblesRoute
+import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
 import com.tangem.features.collectibles.impl.onboarding.model.converter.CollectiblesOnboardingUMConverter
 import com.tangem.features.collectibles.impl.onboarding.ui.state.CollectiblesOnboardingUM
@@ -48,6 +49,7 @@ internal class CollectiblesOnboardingModel @Inject constructor(
                     onCreateAccountClick = ::onCreateAccountClick,
                     onCollectiblesTermsClick = ::onCollectiblesTermsClick,
                     onTangemTermsClick = ::onTangemTermsClick,
+                    onPrivacyNoticeClick = ::onPrivacyNoticeClick,
                 ),
             ),
         )
@@ -115,11 +117,10 @@ internal class CollectiblesOnboardingModel @Inject constructor(
 
         TangemLogger.e("Failed to create the collectibles account: $error")
 
-        // TODO([REDACTED_TASK_KEY]): hardcoded like the rest of this feature's copy — move to Lokalise with it.
         messageSender.send(
             DialogMessage(
-                title = stringReference("Couldn't create the Packs account"),
-                message = stringReference("Please try again later"),
+                title = TextReference.Res(R.string.common_something_went_wrong),
+                message = TextReference.Res(R.string.collectibles_welcome_creation_failed_message),
             ),
         )
     }
@@ -132,8 +133,13 @@ internal class CollectiblesOnboardingModel @Inject constructor(
         urlOpener.openUrl(TANGEM_TERMS_URL)
     }
 
+    private fun onPrivacyNoticeClick() {
+        urlOpener.openUrl(PRIVACY_NOTICE_URL)
+    }
+
     private companion object {
 
         const val TANGEM_TERMS_URL = "https://tangem.com/tangem_tos.html"
+        const val PRIVACY_NOTICE_URL = "https://tangem.com/privacy-policy.html"
     }
 }
