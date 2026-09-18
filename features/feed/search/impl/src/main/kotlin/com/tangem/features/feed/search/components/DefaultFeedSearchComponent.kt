@@ -76,7 +76,7 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
 
         if (state.query.isBlank()) {
             FeedSearchPlaceholder(
-                recent = state.recent,
+                recentQueries = state.recentQueries,
                 marketList = emptySearchTab,
                 bottomSheetState = bottomSheetState,
                 contentPadding = contentPadding,

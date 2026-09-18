@@ -24,8 +24,6 @@ import com.tangem.features.feed.ui.FeedSearchSectionHeader
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 10
 private const val MARKET_SHIMMER_COUNT = 10
-private val ROW_HORIZONTAL_PADDING = 4.dp
-private val SECTION_HORIZONTAL_PADDING = 16.dp
 
 @Composable
 internal fun CryptoEmptySearchContent(
@@ -47,20 +45,20 @@ internal fun CryptoEmptySearchContent(
         item(key = "marketHeader") {
             FeedSearchSectionHeader(
                 title = stringResourceSafe(R.string.markets_common_title),
-                modifier = Modifier.padding(horizontal = SECTION_HORIZONTAL_PADDING),
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
 
         when (state) {
             is MarketPulseListUM.Loading -> marketTokenShimmers(
                 count = MARKET_SHIMMER_COUNT,
-                horizontalPadding = ROW_HORIZONTAL_PADDING,
+                horizontalPadding = 4.dp,
             )
             is MarketPulseListUM.Error -> item(key = "marketError") {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = SECTION_HORIZONTAL_PADDING, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     UnableToLoadData(onRetryClick = state.onRetry)
@@ -68,7 +66,7 @@ internal fun CryptoEmptySearchContent(
             }
             is MarketPulseListUM.Content -> marketTokenItems(
                 items = state.items,
-                horizontalPadding = ROW_HORIZONTAL_PADDING,
+                horizontalPadding = 4.dp,
             )
         }
     }
