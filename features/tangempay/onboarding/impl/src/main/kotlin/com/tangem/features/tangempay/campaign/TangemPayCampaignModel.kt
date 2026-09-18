@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.campaign
 
+import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -18,6 +19,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.model.TangemPayCampaignResolution
+import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
@@ -45,6 +47,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase,
+    private val getCustomerOffersUseCase: GetCustomerOffersUseCase,
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase,
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
@@ -65,7 +68,7 @@ internal class TangemPayCampaignModel @Inject constructor(
         onWalletSelectorRequested = { walletsIds ->
             bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(walletsIds))
         },
-        onIssueCampaignCard = ::showIssueCard,
+        onCustomerAlreadyApproved = ::proceedToCampaignCard,
     )
 
     init {
@@ -113,6 +116,24 @@ internal class TangemPayCampaignModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private suspend fun proceedToCampaignCard(userWalletId: UserWalletId) {
+        val offer = getCustomerOffersUseCase
+            .campaignOffer(userWalletId = userWalletId, deeplinkValue = params.campaignKey)
+            .getOrElse { error ->
+                TangemLogger.e("[TangemPay][Campaign] Failed to load campaign offer: $error")
+                setCtaLoading(false)
+                uiMessageSender.send(TangemPayCampaignMessages.retryableErrorSnackbar())
+                return
+            }
+        setCtaLoading(false)
+        if (offer == null) {
+            TangemLogger.i("[TangemPay][Campaign] No campaign offer for key=${params.campaignKey}")
+            showUnavailableDialog()
+            return
+        }
+        showIssueCard(userWalletId, offer)
     }
 
     private fun showIssueCard(userWalletId: UserWalletId, offer: Offer) {
