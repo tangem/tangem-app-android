@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
+import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
 import com.tangem.utils.converter.Converter
@@ -32,6 +33,7 @@ internal class PolymarketPositionResultConverter : Converter<PolymarketPosition.
                 title = value.title,
                 imageUrl = value.iconUrl,
                 outcomeTitle = value.outcome,
+                outcomeAccent = value.outcomeAccent,
                 outcomePriceCents = value.avgPrice.movePointRight(2).setScale(0, RoundingMode.HALF_UP).toInt(),
                 resolutionDateMillis = null,
             ),
