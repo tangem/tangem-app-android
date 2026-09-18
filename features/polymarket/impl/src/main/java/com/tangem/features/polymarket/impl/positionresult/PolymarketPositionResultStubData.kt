@@ -1,6 +1,6 @@
 package com.tangem.features.polymarket.impl.positionresult
 
-import com.tangem.core.ui.R
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
@@ -25,10 +25,11 @@ internal object PolymarketPositionResultStubData {
             value = stringReference("$500"),
         ),
         profit = PolymarketPositionResultUM.Metric(
-            title = stringReference("Profit"),
+            title = resourceReference(R.string.prediction_position_result_profit),
             value = stringReference("▲ $245.00 (2.08%)"),
         ),
         footerNote = resourceReference(R.string.prediction_position_result_balance_note),
+        action = PolymarketPositionResultUM.Action.Claim(inProgress = false),
     )
 
     val lost = won.copy(
@@ -37,6 +38,7 @@ internal object PolymarketPositionResultStubData {
         invested = null,
         profit = null,
         footerNote = null,
+        action = PolymarketPositionResultUM.Action.Dismiss,
     )
 
     val splitWithProfit = won.copy(
@@ -45,4 +47,9 @@ internal object PolymarketPositionResultStubData {
     )
 
     val splitWithoutProfit = splitWithProfit.copy(profit = null)
+
+    val wonPayoutPending = won.copy(
+        footerNote = resourceReference(R.string.prediction_position_result_payout_pending_note),
+        action = PolymarketPositionResultUM.Action.Dismiss,
+    )
 }
