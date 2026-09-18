@@ -122,7 +122,73 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
     }
 
     @Test
-    fun `GIVEN paused session WHEN resumed THEN retains data without refetching`() = runTest {
+    fun `GIVEN paused session with loaded pages WHEN resumed THEN re-reads them in place and keeps the pagination`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            val first = position(assetId = "first")
+            val sold = position(assetId = "sold")
+            fetch = { offset -> page(listOf(if (offset == 0) first else sold), last = false) }
+            session.resume(backgroundScope)
+            runCurrent()
+            session.loadMore()
+            runCurrent()
+            val loaded = session.state.value
+            val refreshedFirst = position(assetId = "first")
+            val third = position(assetId = "third")
+            val fourth = position(assetId = "fourth")
+            fetch = { offset ->
+                when (offset) {
+                    0 -> page(listOf(refreshedFirst), last = false)
+                    30 -> page(listOf(third), last = false)
+                    else -> page(listOf(fourth))
+                }
+            }
+
+            // Act
+            session.pause()
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Assert
+            assertThat(session.state.value).isEqualTo(loaded.copy(positions = listOf(refreshedFirst, third)))
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30).inOrder()
+
+            // Act
+            session.loadMore()
+            runCurrent()
+
+            // Assert
+            assertThat(session.state.value).isEqualTo(
+                PolymarketPositionsState(listOf(refreshedFirst, third, fourth), PaginationStatus.EndOfPagination),
+            )
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60).inOrder()
+        }
+
+    @Test
+    fun `GIVEN paused session WHEN resumed and the re-read fails THEN keeps the loaded rows`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        fetch = { page(last = false) }
+        session.resume(backgroundScope)
+        runCurrent()
+        session.loadMore()
+        runCurrent()
+        val loaded = session.state.value
+        fetch = { BatchFetchResult.Error(IllegalStateException("Offline")) }
+
+        // Act
+        session.pause()
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value).isSameInstanceAs(loaded)
+        assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN paused session WHEN load more or retry requested THEN nothing is read until resumed`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
         fetch = { page(last = false) }
@@ -138,12 +204,25 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         session.retry()
         advanceTimeBy(120_000)
         runCurrent()
-        session.resume(backgroundScope)
-        runCurrent()
 
         // Assert
         assertThat(session.state.value).isSameInstanceAs(loaded)
         assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+    }
+
+    @Test
+    fun `GIVEN resumed session WHEN resumed again THEN does not re-read`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(requests.map { it.second }).containsExactly(0)
     }
 
     @ParameterizedTest
