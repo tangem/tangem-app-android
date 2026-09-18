@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.search.ui.state.RecentUM
 import com.tangem.features.feed.ui.FeedTabRow
 import com.tangem.features.feed.ui.FeedTabUM
@@ -26,7 +29,13 @@ import kotlinx.collections.immutable.ImmutableList
  * there is no scope to pick.
  */
 @Composable
-internal fun FeedSearchPlaceholder(recent: RecentUM?, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+internal fun FeedSearchPlaceholder(
+    recent: RecentUM?,
+    marketList: FeedTabComponent?,
+    bottomSheetState: State<BottomSheetState>,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -36,6 +45,12 @@ internal fun FeedSearchPlaceholder(recent: RecentUM?, contentPadding: PaddingVal
         if (recent != null) {
             FeedSearchRecent(state = recent)
         }
+
+        marketList?.Content(
+            bottomSheetState = bottomSheetState,
+            contentPadding = PaddingValues(),
+            modifier = Modifier.weight(weight = 1f),
+        )
     }
 }
 
