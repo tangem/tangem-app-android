@@ -43,11 +43,10 @@ internal class BankWithdrawFormFieldsTest {
     }
 
     @Test
-    fun `GIVEN bank details WHEN fields THEN six bank fields in figma order with country`() {
+    fun `GIVEN bank details WHEN fields THEN five bank fields in figma order without country`() {
         // Assert
         assertThat(BankWithdrawFormFields.bankDetails).containsExactly(
             BankWithdrawFormField.BankName,
-            BankWithdrawFormField.BankCountry,
             BankWithdrawFormField.BankRegion,
             BankWithdrawFormField.BankCity,
             BankWithdrawFormField.BankAddressLine1,

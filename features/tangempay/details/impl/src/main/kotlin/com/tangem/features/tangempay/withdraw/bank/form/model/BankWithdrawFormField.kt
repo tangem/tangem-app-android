@@ -77,11 +77,6 @@ internal enum class BankWithdrawFormField(
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_bank_name),
         kind = BankWithdrawFieldKind.TextField(KeyboardType.Text, KeyboardCapitalization.Words),
     ),
-    BankCountry(
-        label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_country),
-        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_country),
-        kind = BankWithdrawFieldKind.SelectorField,
-    ),
     BankRegion(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_region),
         placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_region),

@@ -85,7 +85,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         val state = summary(model)
         assertThat(state.header.title).isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_confirm_title))
         assertThat(state.transfer?.amount?.amount).isEqualTo("$500")
-        assertThat(state.recipientCards.map { it.rows.size }).containsExactly(2, 7, 6).inOrder()
+        assertThat(state.recipientCards.map { it.rows.size }).containsExactly(2, 7, 5).inOrder()
         assertThat(state.isSendEnabled).isTrue()
         assertThat(state.isSending).isFalse()
         model.onDestroy()

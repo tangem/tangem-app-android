@@ -66,7 +66,6 @@ internal object TangemPayBankWithdrawPreviewData {
 
     private val bankCard = persistentListOf(
         DetailRowUM(label = BankWithdrawFormField.BankName.label, value = "Arasaka Bank"),
-        DetailRowUM(label = BankWithdrawFormField.BankCountry.label, value = "US"),
         DetailRowUM(label = BankWithdrawFormField.BankRegion.label, value = "CA"),
         DetailRowUM(label = BankWithdrawFormField.BankCity.label, value = "Night City"),
         DetailRowUM(label = BankWithdrawFormField.BankAddressLine1.label, value = "Ebunike st., 32A"),
