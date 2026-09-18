@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.badge.TangemBadge
@@ -61,6 +62,8 @@ internal fun PolymarketPositionSummary(state: Summary, modifier: Modifier = Modi
                 modifier = Modifier.alignBy(FirstBaseline),
                 text = state.outcomeLabel,
                 variant = state.outcomeVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             state.payout?.let { payout ->
                 TangemBadge(
