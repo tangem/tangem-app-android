@@ -28,10 +28,10 @@ internal class MultiWalletCreateWalletComponent(
 
     init {
         lifecycle.doOnStart {
-            params.innerNavigation.update {
-                it.copy(
+            params.innerNavigation.update { navigationState ->
+                navigationState.copy(
                     stackSize = 2,
-                    stackMaxSize = 9,
+                    stackMaxSize = 10,
                 )
             }
 
