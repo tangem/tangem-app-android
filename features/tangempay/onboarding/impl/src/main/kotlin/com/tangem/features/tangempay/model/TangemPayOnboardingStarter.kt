@@ -14,6 +14,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
@@ -44,6 +45,7 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         val onLoadingChange: (Boolean) -> Unit,
         val onExit: () -> Unit,
         val onWalletSelectorRequested: (List<UserWalletId>) -> Unit = {},
+        val onIssueCampaignCard: (UserWalletId, Offer) -> Unit = { _, _ -> },
     )
 
     suspend fun proceedWithWallets(
@@ -78,7 +80,11 @@ internal class TangemPayOnboardingStarter @Inject constructor(
                         Mode.StartOnboarding -> startOnboarding(userWalletId, campaignKey, callbacks)
                     }
                 } else {
-                    callbacks.onExit()
+                    proceedAsApprovedCustomer(
+                        userWalletId = userWalletId,
+                        campaignKey = campaignKey,
+                        callbacks = callbacks,
+                    )
                 }
                 callbacks.onLoadingChange(false)
             }
@@ -99,7 +105,11 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             },
             ifRight = { customerInfo ->
                 if (customerInfo.kycStatus == KycStatus.APPROVED) {
-                    callbacks.onExit()
+                    proceedAsApprovedCustomer(
+                        userWalletId = userWalletId,
+                        campaignKey = campaignKey,
+                        callbacks = callbacks,
+                    )
                 } else {
                     proceedToKyc(
                         userWalletId = userWalletId,
@@ -145,6 +155,20 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         )
     }
 
+    private suspend fun proceedAsApprovedCustomer(
+        userWalletId: UserWalletId,
+        campaignKey: String?,
+        callbacks: Callbacks,
+    ) {
+        if (campaignKey == null) {
+            callbacks.onExit()
+            return
+        }
+        val offer = loadCampaignOffer(userWalletId, campaignKey, callbacks) ?: return
+        callbacks.onLoadingChange(false)
+        callbacks.onIssueCampaignCard(userWalletId, offer)
+    }
+
     private suspend fun proceedToKyc(userWalletId: UserWalletId, campaignKey: String?, callbacks: Callbacks) {
         if (campaignKey != null) {
             val isOrderCreated = createCampaignOrder(userWalletId, campaignKey, callbacks)
@@ -163,23 +187,31 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         }
     }
 
-    private suspend fun createCampaignOrder(
+    private suspend fun loadCampaignOffer(
         userWalletId: UserWalletId,
         campaignKey: String,
         callbacks: Callbacks,
-    ): Boolean {
+    ): Offer? {
         val offer = getCustomerOffersUseCase.campaignOffer(userWalletId = userWalletId, deeplinkValue = campaignKey)
             .getOrElse { error ->
                 TangemLogger.e("[TangemPay][Campaign] Failed to load campaign offer: $error")
                 showRetryableError(callbacks)
-                return false
+                return null
             }
         if (offer == null) {
             TangemLogger.i("[TangemPay][Campaign] No campaign offer for key=$campaignKey")
             callbacks.onLoadingChange(false)
             uiMessageSender.send(TangemPayCampaignMessages.unavailableDialog(onDismiss = callbacks.onExit))
-            return false
         }
+        return offer
+    }
+
+    private suspend fun createCampaignOrder(
+        userWalletId: UserWalletId,
+        campaignKey: String,
+        callbacks: Callbacks,
+    ): Boolean {
+        val offer = loadCampaignOffer(userWalletId, campaignKey, callbacks) ?: return false
         val specificationName = offer.data.specificationName
         if (specificationName == null) {
             TangemLogger.e("[TangemPay][Campaign] Campaign offer has no specification name")

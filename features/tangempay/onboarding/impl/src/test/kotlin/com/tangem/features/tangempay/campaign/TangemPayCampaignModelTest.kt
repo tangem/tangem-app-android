@@ -22,7 +22,6 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.model.TangemPayCampaignResolution
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
@@ -35,6 +34,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -55,7 +55,6 @@ internal class TangemPayCampaignModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val eligibilityManager: TangemPayEligibilityManager = mockk()
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase = mockk()
-    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val onboardingStarter: TangemPayOnboardingStarter = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
@@ -69,14 +68,12 @@ internal class TangemPayCampaignModelTest {
             userWalletsListRepository,
             eligibilityManager,
             resolveTangemPayCampaignUseCase,
-            produceTangemPayInitialDataUseCase,
             clearAppsFlyerDeeplinkUseCase,
             onboardingStarter,
             analytics,
         )
         givenResolution(TangemPayCampaignResolution.Landing(CAMPAIGN))
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-        coEvery { produceTangemPayInitialDataUseCase(any()) } returns Unit.right()
     }
 
     @Nested
@@ -125,47 +122,6 @@ internal class TangemPayCampaignModelTest {
             // Assert
             val landing = model.uiState.value as TangemPayCampaignUM.Landing
             assertThat(landing.mode).isEqualTo(TangemPayCampaignUM.Landing.Mode.NoPay)
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN issue card resolution WHEN model created THEN child opened with the offer art`() = runTest {
-            // Arrange
-            givenWallets(WALLET_ID)
-            givenResolution(issueCardResolution(offer = campaignOffer(mainImageUrl = OFFER_ART_URL)))
-
-            // Act
-            val model = createModel(testScope = this)
-            val children = model.trackChildren()
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.uiState.value).isEqualTo(TangemPayCampaignUM.Loading)
-            assertThat(children).containsExactly(
-                TangemPayCampaignChild.IssueCard(
-                    userWalletId = WALLET_ID,
-                    cardArtUrl = OFFER_ART_URL,
-                    feeAmount = BigDecimal.ZERO,
-                    feeCurrency = Currency.getInstance("USD"),
-                ),
-            )
-            verify(exactly = 0) { uiMessageSender.send(any()) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN offer without art WHEN model created THEN child uses the campaign art`() = runTest {
-            // Arrange
-            givenWallets(WALLET_ID)
-            givenResolution(issueCardResolution(offer = campaignOffer()))
-
-            // Act
-            val model = createModel(testScope = this)
-            val children = model.trackChildren()
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(children.single()?.cardArtUrl).isEqualTo(CARD_ART_URL)
             model.onDestroy()
         }
 
@@ -224,94 +180,52 @@ internal class TangemPayCampaignModelTest {
             model.onDestroy()
         }
 
-        @Test
-        fun `GIVEN session expired WHEN model created THEN session renewed AND campaign resolved again`() = runTest {
-            // Arrange
-            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returnsMany listOf(
-                TangemPayCampaignResolution.SessionExpired(WALLET_ID).right(),
-                TangemPayCampaignResolution.Landing(CAMPAIGN).right(),
-            )
+    }
 
-            // Act
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Landing::class.java)
-            coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
-            coVerify(exactly = 2) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
-            model.onDestroy()
-        }
+    @Nested
+    inner class IssueCard {
 
         @Test
-        fun `GIVEN two expired sessions WHEN model created THEN both renewed AND campaign resolved`() = runTest {
-            // Arrange
-            coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returnsMany listOf(
-                TangemPayCampaignResolution.SessionExpired(WALLET_ID).right(),
-                TangemPayCampaignResolution.SessionExpired(OTHER_WALLET_ID).right(),
-                TangemPayCampaignResolution.Landing(CAMPAIGN).right(),
-            )
-
-            // Act
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Landing::class.java)
-            coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
-            coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(OTHER_WALLET_ID) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN session renewal fails WHEN model created THEN error state AND campaign not resolved again`() =
+        fun `GIVEN approved customer reported by starter WHEN get card THEN child opened with the offer art`() =
             runTest {
                 // Arrange
-                givenResolution(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
-                coEvery { produceTangemPayInitialDataUseCase(WALLET_ID) } returns IllegalStateException().left()
-
-                // Act
+                givenWallets(WALLET_ID)
                 val model = createModel(testScope = this)
+                val children = model.trackChildren()
                 advanceUntilIdle()
 
+                // Act
+                starterCallbacks(model).onIssueCampaignCard(
+                    WALLET_ID,
+                    campaignOffer(mainImageUrl = OFFER_ART_URL),
+                )
+
                 // Assert
-                assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
-                coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
-                coVerify(exactly = 1) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
+                assertThat(children).containsExactly(
+                    TangemPayCampaignChild.IssueCard(
+                        userWalletId = WALLET_ID,
+                        cardArtUrl = OFFER_ART_URL,
+                        feeAmount = BigDecimal.ZERO,
+                        feeCurrency = Currency.getInstance("USD"),
+                    ),
+                )
+                verify(exactly = 0) { uiMessageSender.send(any()) }
                 model.onDestroy()
             }
 
         @Test
-        fun `GIVEN session still expired after renewal WHEN model created THEN error state AND no second renewal`() =
-            runTest {
-                // Arrange
-                givenResolution(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
-
-                // Act
-                val model = createModel(testScope = this)
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
-                coVerify(exactly = 1) { produceTangemPayInitialDataUseCase(WALLET_ID) }
-                coVerify(exactly = 2) { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) }
-                model.onDestroy()
-            }
-
-        @Test
-        fun `GIVEN renewal exhausted WHEN retry THEN the session is renewed again`() = runTest {
+        fun `GIVEN offer without art WHEN get card THEN child uses the campaign art`() = runTest {
             // Arrange
-            givenResolution(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+            givenWallets(WALLET_ID)
             val model = createModel(testScope = this)
+            val children = model.trackChildren()
             advanceUntilIdle()
 
             // Act
-            (model.uiState.value as TangemPayCampaignUM.Error).onRetry()
-            advanceUntilIdle()
+            starterCallbacks(model).onIssueCampaignCard(WALLET_ID, campaignOffer())
 
             // Assert
-            assertThat(model.uiState.value).isInstanceOf(TangemPayCampaignUM.Error::class.java)
-            coVerify(exactly = 2) { produceTangemPayInitialDataUseCase(WALLET_ID) }
+            assertThat(children.single()?.cardArtUrl).isEqualTo(CARD_ART_URL)
             model.onDestroy()
         }
     }
@@ -577,18 +491,17 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
-        fun `GIVEN issue card resolution WHEN model created THEN exist pay event sent`() = runTest {
+        fun `GIVEN approved customer reported by starter WHEN get card THEN exist pay event sent`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
-            givenResolution(issueCardResolution(offer = campaignOffer()))
-
-            // Act
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
+            // Act
+            starterCallbacks(model).onIssueCampaignCard(WALLET_ID, campaignOffer())
+
             // Assert
             verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay()) }
-            verify(exactly = 1) { analytics.send(any()) }
             model.onDestroy()
         }
 
@@ -634,11 +547,13 @@ internal class TangemPayCampaignModelTest {
         coEvery { userWalletsListRepository.userWalletsSync() } returns walletsIds.map { mockk<UserWallet>() }
     }
 
-    private fun issueCardResolution(offer: Offer) = TangemPayCampaignResolution.IssueCard(
-        userWalletId = WALLET_ID,
-        campaign = CAMPAIGN,
-        offer = offer,
-    )
+    private fun TestScope.starterCallbacks(model: TangemPayCampaignModel): TangemPayOnboardingStarter.Callbacks {
+        model.onWalletSelected(WALLET_ID)
+        advanceUntilIdle()
+        val callbacks = slot<TangemPayOnboardingStarter.Callbacks>()
+        coVerify { onboardingStarter.checkCustomerInfo(any(), any(), any(), capture(callbacks)) }
+        return callbacks.captured
+    }
 
     private fun campaignOffer(mainImageUrl: String? = null) = Offer(
         type = Offer.Type.CARD_ISSUE_VIRTUAL_RAIN_DEEPLINK,
@@ -672,7 +587,6 @@ internal class TangemPayCampaignModelTest {
             userWalletsListRepository = userWalletsListRepository,
             eligibilityManager = eligibilityManager,
             resolveTangemPayCampaignUseCase = resolveTangemPayCampaignUseCase,
-            produceTangemPayInitialDataUseCase = produceTangemPayInitialDataUseCase,
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             onboardingStarter = onboardingStarter,
             analytics = analytics,
@@ -684,7 +598,6 @@ internal class TangemPayCampaignModelTest {
         const val CARD_ART_URL = "https://example.com/oxford.png"
         const val OFFER_ART_URL = "https://example.com/oxford-offer.png"
         val WALLET_ID = UserWalletId("011")
-        val OTHER_WALLET_ID = UserWalletId("012")
         val CAMPAIGN = TangemPayCampaign(cardArtUrl = CARD_ART_URL)
         val UNIVERSAL_ERROR = object : UniversalError {
             override val errorCode: Int = 0

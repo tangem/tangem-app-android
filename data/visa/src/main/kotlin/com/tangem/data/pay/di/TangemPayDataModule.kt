@@ -343,14 +343,10 @@ internal interface TangemPayDataModule {
         fun provideResolveTangemPayCampaignUseCase(
             onboardingRepository: OnboardingRepository,
             campaignRepository: TangemPayCampaignRepository,
-            eligibilityManager: TangemPayEligibilityManager,
-            getCustomerOffersUseCase: GetCustomerOffersUseCase,
         ): ResolveTangemPayCampaignUseCase {
             return ResolveTangemPayCampaignUseCase(
                 onboardingRepository = onboardingRepository,
                 campaignRepository = campaignRepository,
-                eligibilityManager = eligibilityManager,
-                getCustomerOffersUseCase = getCustomerOffersUseCase,
             )
         }
 
