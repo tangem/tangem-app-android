@@ -133,7 +133,7 @@ private fun PlacePredictionUM.sharesProceeds(isBelowMinAmount: Boolean): SharesP
     return when {
         isBelowMinAmount && minAmount != null -> SharesProceedsUM.BelowMinimum(minShares = minAmount)
         quote is QuoteUM.Loading -> SharesProceedsUM.Loading
-        quote is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected, guaranteed = quote.guaranteed)
+        quote is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected)
         else -> SharesProceedsUM.Unavailable
     }
 }
