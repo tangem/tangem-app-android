@@ -60,6 +60,8 @@ internal class JointCosignRequestsModel @Inject constructor(
         .flowOn(dispatchers.io)
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = JointCosignRequestsUM.Empty)
 
+    private var isPendingOperationConsumed = false
+
     init {
         subscribePolling()
     }
@@ -86,6 +88,17 @@ internal class JointCosignRequestsModel @Inject constructor(
                 if (resumed) pollingCoordinator.poll(walletId = params.userWalletId) else emptyFlow()
             }
             .launchIn(modelScope)
+    }
+
+    /**
+     * Opens the operation carried by [JointCosignRequestsComponent.Params.pendingOperationId] (e.g. a `joint_tx`
+     * push notification), once. Must be called by the owning component only after its `childSlot` observing
+     * [operationNavigation] is wired up — otherwise the activation has no subscriber and is silently dropped.
+     */
+    fun consumePendingOperation() {
+        if (isPendingOperationConsumed) return
+        isPendingOperationConsumed = true
+        params.pendingOperationId?.let(::openOperation)
     }
 
     private fun openOperation(operationId: String) {

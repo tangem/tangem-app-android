@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.stateIn
 @Stable
 internal class FeedTopBlocksComponent(
     context: AppComponentContext,
+    params: Params,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by context {
@@ -45,9 +46,14 @@ internal class FeedTopBlocksComponent(
             addAccountTypeComponentFactory = addAccountTypeComponentFactory,
         ),
         TangemPayBlockComponent(context = child(key = TangemPayBlockComponent.KEY)),
+        EarnBlockComponent(context = child(key = EarnBlockComponent.KEY), callbacks = params.callbacks),
         PredictionsBlockComponent(context = child(key = PredictionsBlockComponent.KEY)),
         CollectiblesBlockComponent(
             context = child(key = CollectiblesBlockComponent.KEY),
+            portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+        ),
+        ReferralBlockComponent(
+            context = child(key = ReferralBlockComponent.KEY),
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         ),
     )
@@ -68,4 +74,8 @@ internal class FeedTopBlocksComponent(
         // sheet is up should not yank the sheet away from under the user.
         blocks.forEach { block -> key(block.key) { block.Overlay() } }
     }
+
+    data class Params(
+        val callbacks: FeedBlockModalCallbacks,
+    )
 }

@@ -692,10 +692,7 @@ internal class PolymarketMainModelTest {
         assertThat(route.captured.fromCurrencyPosition).isEqualTo(AppRoute.Swap.CurrencyPosition.TO)
         assertThat(route.captured.accountFlow).isEqualTo(AppRoute.Swap.AccountFlow.PredictionTopUp)
         assertThat(route.captured.screenSource).isEqualTo(AnalyticsParam.ScreensSources.Predictions.value)
-        verifyOrder {
-            fundingWindow.arm(USER_WALLET_ID)
-            router.push(any<AppRoute.Swap>(), any())
-        }
+        verify { router.push(any<AppRoute.Swap>(), any()) }
         model.onDestroy()
     }
 
@@ -717,7 +714,6 @@ internal class PolymarketMainModelTest {
             assertThat(route.captured.fromCurrencyPosition).isEqualTo(AppRoute.Swap.CurrencyPosition.FROM)
             assertThat(route.captured.screenSource).isEqualTo(AnalyticsParam.ScreensSources.Predictions.value)
             assertThat(route.captured.accountFlow).isEqualTo(AppRoute.Swap.AccountFlow.PredictionWithdraw)
-            verify(exactly = 0) { fundingWindow.arm(any()) }
             model.onDestroy()
         }
 

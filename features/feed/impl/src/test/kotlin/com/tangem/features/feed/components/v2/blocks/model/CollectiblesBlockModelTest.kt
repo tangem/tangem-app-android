@@ -1,6 +1,5 @@
 package com.tangem.features.feed.components.v2.blocks.model
 
-import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.CollectiblesStartRoute
@@ -16,7 +15,8 @@ import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.feed.components.v2.blocks.CollectiblesBlockComponent
-import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.features.feed.components.v2.createTestingCoroutineDispatcherProvider
+import com.tangem.features.feed.components.v2.trackSlot
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -320,10 +320,4 @@ internal class CollectiblesBlockModelTest {
         every { this@mockk.isMultiCurrency } returns isMultiCurrency
     }
 
-    private fun SlotNavigation<CollectiblesBlockComponent.WalletSelectorConfig>.trackSlot():
-        List<CollectiblesBlockComponent.WalletSelectorConfig?> {
-        val tracked = mutableListOf<CollectiblesBlockComponent.WalletSelectorConfig?>()
-        subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
-        return tracked
-    }
 }
