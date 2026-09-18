@@ -71,7 +71,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
             val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
             accountList
                 .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
-                .addAccountIf(userWallet.isVirtualAccountSupported()) { Account.Virtual(walletId) }
+                .addAccountIf(userWallet.isMoneyAccountSupported()) { Account.Money(walletId) }
                 .addAccountIf(userWallet.isPredictionSupported(isPredictionOnboarded)) {
                     Account.Prediction(walletId)
                 }
@@ -92,7 +92,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
         return collectiblesAccountRepository.getStatus(walletId).map { status -> status.isAccountCreated }
     }
 
-    private fun UserWallet.isVirtualAccountSupported(): Boolean {
+    private fun UserWallet.isMoneyAccountSupported(): Boolean {
         if (!moneyAccountsFeatureToggles.isMoneyAccountsEnabled) return false
 
         return isTangemPayCompatible
