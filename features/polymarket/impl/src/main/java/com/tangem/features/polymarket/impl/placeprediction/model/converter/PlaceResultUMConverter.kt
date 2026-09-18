@@ -52,13 +52,17 @@ internal object PlaceResultUMConverter {
 
         return when {
             filledShares.signum() <= 0 -> PlaceOutcome.Anomalous(reason = ZERO_SHARES_REASON)
-            filledShares >= quotedShares -> PlaceOutcome.Reportable(
-                result = PlaceResultUM.Filled(
-                    placedAt = placedAt,
-                    collateralAmount = quotedAmount,
-                    shares = filledShares,
-                ),
-            )
+            filledShares >= quotedShares -> result.collateralLeg(side = side)
+                ?.let { amount ->
+                    PlaceOutcome.Reportable(
+                        result = PlaceResultUM.Filled(
+                            placedAt = placedAt,
+                            collateralAmount = amount,
+                            shares = filledShares,
+                        ),
+                    )
+                }
+                ?: submitted(placedAt = placedAt)
             else -> result.collateralLeg(side = side)
                 ?.let { spent ->
                     PlaceOutcome.Reportable(
