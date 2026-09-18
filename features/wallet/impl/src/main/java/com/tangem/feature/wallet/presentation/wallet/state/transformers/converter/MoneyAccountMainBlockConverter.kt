@@ -11,7 +11,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -20,45 +19,57 @@ internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, M
 
     override fun convert(value: AccountStatus.Money): MoneyAccountMainUM {
         return when (val statusValue = value.value) {
-            is MoneyAccountStatusValue.Empty -> MoneyAccountMainUM.Empty
-            is MoneyAccountStatusValue.NotCreated -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.Empty,
+            is MoneyAccountStatusValue.NotCreated,
+            -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
-            is MoneyAccountStatusValue.UnderReview -> MoneyAccountMainUM.UnderReview(
-                subtitle = when (statusValue.kycStatus) {
-                    KycStatus.REJECTED -> TextReference.Res(R.string.tangempay_kyc_has_failed)
-                    else -> TextReference.Res(R.string.tangempay_kyc_in_progress)
-                },
-                onClick = {
-                    // TODO([REDACTED_TASK_KEY]): navigate to VA screen
-                },
-            )
-            is MoneyAccountStatusValue.Provisioning -> MoneyAccountMainUM.Provisioning(
-                onClick = {
-                    // TODO([REDACTED_TASK_KEY]): navigate to VA screen
-                },
-            )
-            is MoneyAccountStatusValue.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
-                onClick = {
-                    // TODO([REDACTED_TASK_KEY]): navigate to VA screen
-                },
-            )
-            is MoneyAccountStatusValue.Active -> MoneyAccountMainUM.Content(
-                subtitle = stringReference(statusValue.cryptoCurrency.symbol),
-                isBalanceFlickering = statusValue.source == StatusSource.CACHE,
-                balance = getBalanceText(
-                    currencyCode = statusValue.fiatBalance.currency,
-                    balance = statusValue.fiatBalance.availableBalance,
-                ),
-                balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
-                shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
-                onClick = {
-                    // TODO([REDACTED_TASK_KEY]): navigate to VA screen
-                },
-            )
+            is MoneyAccountStatusValue.Onboarding -> statusValue.toUM()
+            is MoneyAccountStatusValue.Account -> statusValue.toUM()
             is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
             is MoneyAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
             is MoneyAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
         }
+    }
+
+    private fun MoneyAccountStatusValue.Onboarding.toUM(): MoneyAccountMainUM {
+        return when (this) {
+            is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.UnderReview(
+                subtitle = TextReference.Res(R.string.tangempay_kyc_in_progress),
+                onClick = ::onAccountClick,
+            )
+            is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> MoneyAccountMainUM.UnderReview(
+                subtitle = TextReference.Res(R.string.tangempay_kyc_has_failed),
+                onClick = ::onAccountClick,
+            )
+            is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
+                onClick = ::onAccountClick,
+            )
+            is MoneyAccountStatusValue.Onboarding.Issuing,
+            is MoneyAccountStatusValue.Onboarding.Activating,
+            -> MoneyAccountMainUM.Provisioning(onClick = ::onAccountClick)
+        }
+    }
+
+    private fun MoneyAccountStatusValue.Account.toUM(): MoneyAccountMainUM {
+        return when (this) {
+            is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.Account.Active -> {
+                val balance = balance ?: return MoneyAccountMainUM.Loading
+
+                MoneyAccountMainUM.Content(
+                    subtitle = stringReference(balance.cryptoCurrency.symbol),
+                    isBalanceFlickering = source == StatusSource.CACHE,
+                    balance = getBalanceText(currencyCode = balance.currencyCode, balance = balance.cryptoAmount),
+                    balanceSubtitle = stringReference(balance.cryptoCurrency.symbol),
+                    shouldShowOnlyCacheWarning = source == StatusSource.ONLY_CACHE,
+                    onClick = ::onAccountClick,
+                )
+            }
+        }
+    }
+
+    private fun onAccountClick() {
+        // TODO([REDACTED_TASK_KEY]): navigate to VA screen
     }
 
     private fun getBalanceText(currencyCode: String, balance: BigDecimal): TextReference {
