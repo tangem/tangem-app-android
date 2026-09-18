@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -61,12 +62,18 @@ internal object PolymarketDomainModule {
     fun provideCreatePolymarketPositionsSessionUseCase(
         repository: PolymarketPositionsRepository,
         deriveAddresses: DerivePolymarketAddressesUseCase,
+        invalidator: PredictionPositionsInvalidator,
         dispatchers: CoroutineDispatcherProvider,
     ): CreatePolymarketPositionsSessionUseCase = CreatePolymarketPositionsSessionUseCase(
         repository = repository,
         deriveAddresses = deriveAddresses,
+        invalidator = invalidator,
         dispatchers = dispatchers,
     )
+
+    @Provides
+    @Singleton
+    fun providePredictionPositionsInvalidator(): PredictionPositionsInvalidator = PredictionPositionsInvalidator()
 
     @Provides
     @Singleton
