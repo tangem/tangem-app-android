@@ -136,7 +136,6 @@ private fun previewState(
 private fun previewQuote(status: PredictionQuoteStatus = PredictionQuoteStatus.FULL): QuoteUM.Content = QuoteUM.Content(
     status = status,
     expected = BigDecimal("4705.88"),
-    guaranteed = BigDecimal("4612.54"),
     feeTotal = BigDecimal("1.4"),
     total = BigDecimal("4001.4"),
     signable = SignableQuoteUM(quote = previewSignableQuote(status = status), receivedAtMillis = PLACED_AT),
@@ -152,7 +151,6 @@ private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStat
     QuoteUM.Content(
         status = status,
         expected = BigDecimal("43.54"),
-        guaranteed = BigDecimal("43.11"),
         feeTotal = BigDecimal("0.45"),
         total = BigDecimal("42.66"),
         signable = SignableQuoteUM(

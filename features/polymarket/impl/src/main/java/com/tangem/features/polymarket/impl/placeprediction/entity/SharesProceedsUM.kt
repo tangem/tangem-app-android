@@ -12,5 +12,5 @@ internal sealed interface SharesProceedsUM {
 
     data class BelowMinimum(val minShares: BigDecimal) : SharesProceedsUM
 
-    data class Content(val expected: BigDecimal, val guaranteed: BigDecimal) : SharesProceedsUM
+    data class Content(val expected: BigDecimal) : SharesProceedsUM
 }
