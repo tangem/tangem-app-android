@@ -14,7 +14,7 @@ import java.math.RoundingMode
  * Pure provider-level decisions for the swap UI:
  *  - [findBest] — which provider is the "best" among the loaded quotes,
  *  - [preferAvailable] — which quotes are eligible for those decisions at all, and
- *  - [resolveBadge] — which [ProviderState.AdditionalBadge] a provider row should show.
+ *  - [resolveBadge] / [resolveListBadge] — which [ProviderState.AdditionalBadge] a provider row should show.
  */
 internal object SwapProviderResolver {
 
@@ -57,7 +57,7 @@ internal object SwapProviderResolver {
     }
 
     /**
-     * Resolves the badge for a single provider row.
+     * Resolves the badge for the provider block on the swap form.
      *
      * Priority: FCA restriction → permission required → recommended → best rate → none. A best-rate
      * badge is shown only when more than one provider is considered, FCA restrictions are not applied,
@@ -90,13 +90,41 @@ internal object SwapProviderResolver {
             priceImpact != null && !priceImpact.shouldShowWarning()
 
         return when {
-            needApplyFCARestrictions && provider.isFCARestricted() -> AdditionalBadge.FCAWarningList
+            needApplyFCARestrictions && isFCARestricted(provider) -> AdditionalBadge.FCAWarningList
             permissionState is PermissionDataState.PermissionRequired -> AdditionalBadge.PermissionRequired
             provider.isRecommended -> AdditionalBadge.Recommended
             isBestRateBadgeAllowed -> resolveBestRateBadge(states, provider)
             else -> AdditionalBadge.Empty
         }
     }
+
+    /**
+     * Resolves the badge for a provider row in the picker, where the user chooses between providers.
+     *
+     * Same as [resolveBadge], except a region-restricted quote reports that it cannot be traded instead
+     * of carrying a badge that invites the user into it. The form block keeps [resolveBadge]: it
+     * describes the provider already selected, not a choice between them.
+     */
+    fun resolveListBadge(
+        states: Map<SwapProvider, SwapState.QuotesLoadedState>,
+        provider: SwapProvider,
+        needApplyFCARestrictions: Boolean,
+        state: SwapState? = null,
+    ): AdditionalBadge {
+        if ((state as? SwapState.QuotesLoadedState)?.isRestricted == true) {
+            return AdditionalBadge.Unavailable
+        }
+
+        return resolveBadge(
+            states = states,
+            provider = provider,
+            needApplyFCARestrictions = needApplyFCARestrictions,
+            state = state,
+        )
+    }
+
+    /** Whether [provider] is on the FCA warning list, regardless of which badge its row ends up with. */
+    fun isFCARestricted(provider: SwapProvider): Boolean = provider.providerId in FCA_RESTRICTED_PROVIDER_IDS
 
     /**
      * Picks the best-rate badge for [provider] once it has passed the eligibility gate in [resolveBadge].
@@ -129,8 +157,6 @@ internal object SwapProviderResolver {
     private fun findBestRated(states: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
         return states.minByOrNull { entry -> entry.value.rateRatio() }?.key
     }
-
-    private fun SwapProvider.isFCARestricted(): Boolean = providerId in FCA_RESTRICTED_PROVIDER_IDS
 
     private fun SwapState.QuotesLoadedState.rateRatio(): BigDecimal {
         val fromAmountFiat = fromTokenInfo.amountFiat
