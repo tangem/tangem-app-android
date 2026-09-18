@@ -1,6 +1,7 @@
 package com.tangem.data.collectibles.vault
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import arrow.core.raise.either
@@ -21,11 +22,14 @@ import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.GachaVaultLimits
+import com.tangem.domain.models.account.CollectiblesVaultBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -39,6 +43,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 
 /**
  * Adapter over the blockchain SDK's `CollectiblesVaultProvider`, which `WalletManager` implements by delegation —
@@ -51,6 +56,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultGachaVaultRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val networkProvider: CollectiblesOwnerNetworkProvider,
+    private val currencyFactory: CollectiblesVaultCurrencyFactory,
     private val ownerDeriver: CollectiblesOwnerDeriver,
     private val derivationsRepository: DerivationsRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
@@ -98,6 +104,54 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             is UserWallet.Hot -> deriveAndInitLocally(userWallet, hotDelegate, limits)
         }
     }
+
+    override suspend fun getVaultBalance(
+        userWallet: UserWallet,
+        cachedToken: CryptoCurrency.Token?,
+    ): Either<CollectiblesAccountError, CollectiblesVaultBalance> = withContext(dispatchers.io) {
+        either {
+            val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+            val walletManager = vaultWalletManager(userWalletId = userWallet.walletId, network = network)
+                .mapLeft { it.toVaultFailure(userWallet) }
+                .bind()
+
+            val vaultAddress = walletManager.getCollectiblesVaultAddress().toEither()
+                .mapLeft { it.toVaultFailure(userWallet) }
+                .bind()
+
+            val token = cachedToken ?: walletManager.getCollectiblesVaultUsdc().toEither()
+                .map { usdc -> currencyFactory.create(mint = usdc.mint) }
+                .mapLeft { it.toVaultFailure(userWallet) }
+                .bind()
+
+            // TODO find out the right way to get vault balance
+            val balances = walletManagersFacade.getTokenBalances(
+                userWalletId = userWallet.walletId,
+                network = network,
+                address = vaultAddress,
+            )
+
+            CollectiblesVaultBalance(
+                usdcToken = token,
+                // The provider lists only the accounts holding something, so an absent entry is an empty one
+                usdcAmount = balances.firstOrNull { it.contractAddress == token.contractAddress }?.amount
+                    ?: BigDecimal.ZERO,
+            )
+        }
+    }
+
+    override suspend fun getVaultTopUpAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String> =
+        withContext(dispatchers.io) {
+            either {
+                val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+
+                vaultWalletManager(userWalletId = userWallet.walletId, network = network)
+                    .flatMap { walletManager -> walletManager.getCollectiblesVaultUsdc().toEither() }
+                    .map { usdc -> usdc.address }
+                    .mapLeft { it.toVaultFailure(userWallet) }
+                    .bind()
+            }
+        }
 
     override suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit> =
         withContext(dispatchers.io) {

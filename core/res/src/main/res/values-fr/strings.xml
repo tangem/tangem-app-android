@@ -2236,7 +2236,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Recevoir des USD depuis un compte bancaire via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">Depuis un compte bancaire</string>
-  <string name="tangempay_topup_receive_body">Envoyez USDC Polygon à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_body_multichain">Envoyez des USDC ou USDT à l\'adresse de votre compte</string>
   <string name="tangempay_topup_receive_title">Depuis un autre wallet ou exchange</string>
   <string name="tangempay_topup_swap_body">Rechargez votre compte avec n’importe quel jeton de votre portefeuille</string>
