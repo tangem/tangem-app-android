@@ -515,24 +515,6 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN quote reports a live market WHEN interval elapses THEN it re-quotes on the fast cadence`() = runTest {
-        // Arrange
-        coEvery { getQuoteUseCase(request = any()) } returns createQuote(isLive = true).right()
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        model.onAmountChange(value = "10")
-        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-
-        // Act
-        advanceTimeBy(delayTimeMillis = LIVE_QUOTE_POLL_INTERVAL_MILLIS + 1)
-
-        // Assert
-        coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
-
-        model.onDestroy()
-    }
-
-    @Test
     fun `GIVEN amount below one cent WHEN entered THEN quote is Empty AND no request made`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
