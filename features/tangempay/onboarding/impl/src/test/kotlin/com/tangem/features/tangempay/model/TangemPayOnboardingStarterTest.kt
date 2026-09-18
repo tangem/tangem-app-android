@@ -52,13 +52,18 @@ internal class TangemPayOnboardingStarterTest {
     private val loadingChanges = mutableListOf<Boolean>()
     private var exitCount = 0
     private var requestedWalletsIds: List<UserWalletId>? = null
-    private val issuedCampaignCards = mutableListOf<Pair<UserWalletId, Offer>>()
+    private val approvedCustomers = mutableListOf<UserWalletId>()
 
     private val callbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = { isLoading -> loadingChanges += isLoading },
         onExit = { exitCount++ },
         onWalletSelectorRequested = { walletsIds -> requestedWalletsIds = walletsIds },
-        onIssueCampaignCard = { userWalletId, offer -> issuedCampaignCards += userWalletId to offer },
+        onCustomerAlreadyApproved = { userWalletId -> approvedCustomers += userWalletId },
+    )
+
+    private val callbacksWithoutApprovedHandler = TangemPayOnboardingStarter.Callbacks(
+        onLoadingChange = { isLoading -> loadingChanges += isLoading },
+        onExit = { exitCount++ },
     )
 
     private val starter = TangemPayOnboardingStarter(
@@ -87,7 +92,7 @@ internal class TangemPayOnboardingStarterTest {
         loadingChanges.clear()
         exitCount = 0
         requestedWalletsIds = null
-        issuedCampaignCards.clear()
+        approvedCustomers.clear()
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns Unit.right()
         coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.PENDING).right()
@@ -222,114 +227,7 @@ internal class TangemPayOnboardingStarterTest {
     inner class ApprovedCustomer {
 
         @Test
-        fun `GIVEN approved customer and campaign WHEN checkCustomerInfo THEN card order screen opened`() = runTest {
-            // Arrange
-            givenApprovedCustomer()
-            val offer = campaignOffer()
-            coEvery { getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY) } returns offer.right()
-
-            // Act
-            starter.checkCustomerInfo(
-                userWalletId = USER_WALLET_ID,
-                mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
-                campaignKey = CAMPAIGN_KEY,
-                callbacks = callbacks,
-            )
-
-            // Assert
-            assertThat(issuedCampaignCards).containsExactly(USER_WALLET_ID to offer)
-            assertThat(exitCount).isEqualTo(0)
-            coVerify(exactly = 0) { produceInitialDataUseCase(any()) }
-            coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN approved customer and campaign WHEN startOnboarding THEN card order screen opened after re-auth`() =
-            runTest {
-                // Arrange
-                givenApprovedCustomer()
-                val offer = campaignOffer()
-                coEvery { getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY) } returns offer.right()
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
-
-                // Assert
-                assertThat(issuedCampaignCards).containsExactly(USER_WALLET_ID to offer)
-                assertThat(exitCount).isEqualTo(0)
-                coVerify(exactly = 1) { produceInitialDataUseCase(USER_WALLET_ID) }
-                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
-                assertThat(loadingChanges).containsExactly(true, false).inOrder()
-            }
-
-        @Test
-        fun `GIVEN no campaign offer for approved customer WHEN startOnboarding THEN dialog shown AND no card order`() =
-            runTest {
-                // Arrange
-                givenApprovedCustomer()
-                coEvery { getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY) } returns null.right()
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
-
-                // Assert
-                verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
-                assertThat(issuedCampaignCards).isEmpty()
-                assertThat(loadingChanges).containsExactly(true, false).inOrder()
-            }
-
-        @Test
-        fun `GIVEN no campaign offer for approved customer WHEN dialog dismissed THEN exit callback invoked`() =
-            runTest {
-                // Arrange
-                givenApprovedCustomer()
-                coEvery { getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY) } returns null.right()
-                val messages = mutableListOf<DialogMessage>()
-                every { uiMessageSender.send(capture(messages)) } returns Unit
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
-                messages.single().onDismissRequest()
-
-                // Assert
-                assertThat(exitCount).isEqualTo(1)
-            }
-
-        @Test
-        fun `GIVEN offers request fails for approved customer WHEN startOnboarding THEN snackbar AND no card order`() =
-            runTest {
-                // Arrange
-                givenApprovedCustomer()
-                coEvery {
-                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
-                } returns VisaApiError.Unspecified.left()
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
-
-                // Assert
-                verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
-                assertThat(issuedCampaignCards).isEmpty()
-                assertThat(loadingChanges).containsExactly(true, false).inOrder()
-            }
-
-        @Test
-        fun `GIVEN approved customer without campaign WHEN startOnboarding THEN exit AND offers not requested`() =
-            runTest {
-                // Arrange
-                givenApprovedCustomer()
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
-
-                // Assert
-                assertThat(exitCount).isEqualTo(1)
-                assertThat(issuedCampaignCards).isEmpty()
-                coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-            }
-
-        @Test
-        fun `GIVEN approved customer without campaign WHEN checkCustomerInfo THEN exit AND offers not requested`() =
+        fun `GIVEN approved customer and a handler WHEN checkCustomerInfo THEN handler invoked instead of exit`() =
             runTest {
                 // Arrange
                 givenApprovedCustomer()
@@ -338,15 +236,65 @@ internal class TangemPayOnboardingStarterTest {
                 starter.checkCustomerInfo(
                     userWalletId = USER_WALLET_ID,
                     mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
-                    campaignKey = null,
+                    campaignKey = CAMPAIGN_KEY,
                     callbacks = callbacks,
                 )
 
                 // Assert
-                assertThat(exitCount).isEqualTo(1)
-                assertThat(issuedCampaignCards).isEmpty()
+                assertThat(approvedCustomers).containsExactly(USER_WALLET_ID)
+                assertThat(exitCount).isEqualTo(0)
+                coVerify(exactly = 0) { produceInitialDataUseCase(any()) }
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
             }
+
+        @Test
+        fun `GIVEN approved customer and a handler WHEN startOnboarding THEN handler invoked after re-auth`() =
+            runTest {
+                // Arrange
+                givenApprovedCustomer()
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(approvedCustomers).containsExactly(USER_WALLET_ID)
+                assertThat(exitCount).isEqualTo(0)
+                coVerify(exactly = 1) { produceInitialDataUseCase(USER_WALLET_ID) }
+                coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN approved customer and no handler WHEN checkCustomerInfo THEN exit`() = runTest {
+            // Arrange
+            givenApprovedCustomer()
+
+            // Act
+            starter.checkCustomerInfo(
+                userWalletId = USER_WALLET_ID,
+                mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                campaignKey = null,
+                callbacks = callbacksWithoutApprovedHandler,
+            )
+
+            // Assert
+            assertThat(exitCount).isEqualTo(1)
+            assertThat(approvedCustomers).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN approved customer and no handler WHEN startOnboarding THEN exit`() = runTest {
+            // Arrange
+            givenApprovedCustomer()
+
+            // Act
+            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacksWithoutApprovedHandler)
+
+            // Assert
+            assertThat(exitCount).isEqualTo(1)
+            assertThat(approvedCustomers).isEmpty()
+        }
 
         private fun givenApprovedCustomer() {
             coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.APPROVED).right()

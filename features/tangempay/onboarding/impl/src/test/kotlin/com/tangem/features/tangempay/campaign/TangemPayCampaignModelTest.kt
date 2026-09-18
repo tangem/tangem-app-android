@@ -13,6 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -22,8 +23,10 @@ import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.TangemPayCampaign
 import com.tangem.domain.pay.model.TangemPayCampaignResolution
+import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
@@ -55,6 +58,7 @@ internal class TangemPayCampaignModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val eligibilityManager: TangemPayEligibilityManager = mockk()
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase = mockk()
+    private val getCustomerOffersUseCase: GetCustomerOffersUseCase = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val onboardingStarter: TangemPayOnboardingStarter = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
@@ -68,6 +72,7 @@ internal class TangemPayCampaignModelTest {
             userWalletsListRepository,
             eligibilityManager,
             resolveTangemPayCampaignUseCase,
+            getCustomerOffersUseCase,
             clearAppsFlyerDeeplinkUseCase,
             onboardingStarter,
             analytics,
@@ -186,19 +191,17 @@ internal class TangemPayCampaignModelTest {
     inner class IssueCard {
 
         @Test
-        fun `GIVEN approved customer reported by starter WHEN get card THEN child opened with the offer art`() =
+        fun `GIVEN approved customer reported by starter WHEN offer loaded THEN child opened with the offer art`() =
             runTest {
                 // Arrange
                 givenWallets(WALLET_ID)
+                givenCampaignOffer(campaignOffer(mainImageUrl = OFFER_ART_URL))
                 val model = createModel(testScope = this)
                 val children = model.trackChildren()
                 advanceUntilIdle()
 
                 // Act
-                starterCallbacks(model).onIssueCampaignCard(
-                    WALLET_ID,
-                    campaignOffer(mainImageUrl = OFFER_ART_URL),
-                )
+                starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
 
                 // Assert
                 assertThat(children).containsExactly(
@@ -209,23 +212,68 @@ internal class TangemPayCampaignModelTest {
                         feeCurrency = Currency.getInstance("USD"),
                     ),
                 )
+                coVerify(exactly = 1) { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) }
                 verify(exactly = 0) { uiMessageSender.send(any()) }
                 model.onDestroy()
             }
 
         @Test
-        fun `GIVEN offer without art WHEN get card THEN child uses the campaign art`() = runTest {
+        fun `GIVEN offer without art WHEN approved customer reported THEN child uses the campaign art`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
+            givenCampaignOffer(campaignOffer())
             val model = createModel(testScope = this)
             val children = model.trackChildren()
             advanceUntilIdle()
 
             // Act
-            starterCallbacks(model).onIssueCampaignCard(WALLET_ID, campaignOffer())
+            starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
 
             // Assert
             assertThat(children.single()?.cardArtUrl).isEqualTo(CARD_ART_URL)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no campaign offer WHEN approved customer reported THEN dialog shown AND dismiss closes`() =
+            runTest {
+                // Arrange
+                givenWallets(WALLET_ID)
+                givenCampaignOffer(offer = null)
+                val messages = mutableListOf<DialogMessage>()
+                every { uiMessageSender.send(capture(messages)) } returns Unit
+                val model = createModel(testScope = this)
+                val children = model.trackChildren()
+                advanceUntilIdle()
+
+                // Act
+                starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
+                messages.single().onDismissRequest()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(children).isEmpty()
+                verify(exactly = 1) { router.replaceAll(AppRoute.Wallet) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN offers request fails WHEN approved customer reported THEN snackbar shown AND no child`() = runTest {
+            // Arrange
+            givenWallets(WALLET_ID)
+            coEvery {
+                getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY)
+            } returns VisaApiError.Unspecified.left()
+            val model = createModel(testScope = this)
+            val children = model.trackChildren()
+            advanceUntilIdle()
+
+            // Act
+            starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+            assertThat(children).isEmpty()
             model.onDestroy()
         }
     }
@@ -491,14 +539,15 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
-        fun `GIVEN approved customer reported by starter WHEN get card THEN exist pay event sent`() = runTest {
+        fun `GIVEN approved customer reported by starter WHEN offer loaded THEN exist pay event sent`() = runTest {
             // Arrange
             givenWallets(WALLET_ID)
+            givenCampaignOffer(campaignOffer())
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Act
-            starterCallbacks(model).onIssueCampaignCard(WALLET_ID, campaignOffer())
+            starterCallbacks(model).onCustomerAlreadyApproved?.invoke(WALLET_ID)
 
             // Assert
             verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay()) }
@@ -541,6 +590,10 @@ internal class TangemPayCampaignModelTest {
 
     private fun givenResolution(resolution: TangemPayCampaignResolution) {
         coEvery { resolveTangemPayCampaignUseCase(CAMPAIGN_KEY) } returns resolution.right()
+    }
+
+    private fun givenCampaignOffer(offer: Offer?) {
+        coEvery { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) } returns offer.right()
     }
 
     private fun givenWallets(vararg walletsIds: UserWalletId) {
@@ -587,6 +640,7 @@ internal class TangemPayCampaignModelTest {
             userWalletsListRepository = userWalletsListRepository,
             eligibilityManager = eligibilityManager,
             resolveTangemPayCampaignUseCase = resolveTangemPayCampaignUseCase,
+            getCustomerOffersUseCase = getCustomerOffersUseCase,
             clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
             onboardingStarter = onboardingStarter,
             analytics = analytics,
