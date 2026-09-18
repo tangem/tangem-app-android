@@ -43,10 +43,11 @@ internal fun CollectiblesOnboardingFooter(
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = resourceReference(
-                id = R.string.prediction_onboarding_legal,
+                id = R.string.collectibles_welcome_legal_disclaimer,
                 formatArgs = wrappedList(
                     termsLink(title = state.collectiblesTitle, onClick = state.onCollectiblesTermsClick),
                     termsLink(title = state.tangemTitle, onClick = state.onTangemTermsClick),
+                    termsLink(title = state.privacyTitle, onClick = state.onPrivacyNoticeClick),
                 ),
             ).resolveAnnotatedReference(),
             style = TangemTheme.typography3.caption.medium,
