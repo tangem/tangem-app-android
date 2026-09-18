@@ -18,7 +18,7 @@ internal class PolymarketPositionsBatchFetcher(
     batchSize = batchSize,
     subFetcher = { request, _, _ ->
         fetchPage(request.params, request.limit, request.offset).fold(
-            ifLeft = { BatchFetchResult.Error(PositionsReadException(it)) },
+            ifLeft = { BatchFetchResult.Error(PolymarketPositionsReadException(it)) },
             ifRight = { page ->
                 BatchFetchResult.Success(
                     data = page.positions,
@@ -33,8 +33,6 @@ internal class PolymarketPositionsBatchFetcher(
     init {
         require(batchSize in 1..MAX_PAGE_SIZE)
     }
-
-    private class PositionsReadException(val error: PolymarketPositionsError) : Exception(error.toString())
 
     private companion object {
         const val MAX_PAGE_SIZE = 30
