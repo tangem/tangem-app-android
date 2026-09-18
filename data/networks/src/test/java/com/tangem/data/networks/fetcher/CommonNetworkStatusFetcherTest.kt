@@ -191,6 +191,30 @@ internal class CommonNetworkStatusFetcherTest {
         verify { networksStatusesStore wasNot Called }
     }
 
+    @Test
+    fun `GIVEN the Safe manager cannot be built WHEN fetch THEN the failure is returned and the cache downgraded`() =
+        runTest {
+            // Arrange
+            val userWalletId = UserWalletId("011")
+            val coin = cryptoCurrencyFactory.ethereum.copy(network = jointNetwork)
+            val cause = IllegalArgumentException("Unable to create the Safe wallet manager")
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, jointNetwork) } throws cause
+            coEvery {
+                networksStatusesStore.setSourceAsOnlyCache(userWalletId = userWalletId, network = jointNetwork)
+            } returns Unit
+
+            // Act
+            val actual = fetcher.fetch(
+                userWalletId = userWalletId,
+                network = jointNetwork,
+                networkCurrencies = setOf(coin),
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(Either.Left(cause))
+            coVerify(inverse = true) { walletManagersFacade.update(any(), any(), any(), any()) }
+        }
+
     private val jointNetwork = cryptoCurrencyFactory.ethereum.network.let { network ->
         val derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
 

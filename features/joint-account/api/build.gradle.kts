@@ -30,5 +30,4 @@ dependencies {
 
     /** Other */
     api(deps.kotlin.immutable.collections)
-    implementation(deps.androidx.annotation)
 }
