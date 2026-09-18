@@ -8,8 +8,9 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldError
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFieldKind
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
-import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.form.model.FormState
+import com.tangem.features.tangempay.withdraw.bank.form.model.kindIn
+import com.tangem.features.tangempay.withdraw.bank.form.model.placeholderIn
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
@@ -25,20 +26,19 @@ internal class TangemPayBankWithdrawFormUMFactory(
 
     fun create(draft: BankWithdrawDraft, state: FormState): TangemPayBankWithdrawFormUM {
         val values = state.values(fields, draft)
-        val visibleFields = BankWithdrawFormFields.visible(fields = fields, values = values)
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
-            fields = visibleFields
+            fields = fields
                 .mapIndexed { index, field ->
                     createField(
                         field = field,
-                        value = values[field].orEmpty(),
+                        values = values,
                         error = state.errors[field]?.toText(),
-                        isLast = index == visibleFields.lastIndex,
+                        isLast = index == fields.lastIndex,
                     )
                 }
                 .toImmutableList(),
-            isContinueEnabled = visibleFields.all { field -> !values[field].isNullOrBlank() },
+            isContinueEnabled = fields.all { field -> !values[field].isNullOrBlank() },
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )
@@ -46,25 +46,28 @@ internal class TangemPayBankWithdrawFormUMFactory(
 
     private fun createField(
         field: BankWithdrawFormField,
-        value: String,
+        values: Map<BankWithdrawFormField, String>,
         error: TextReference?,
         isLast: Boolean,
-    ): FieldUM = when (val kind = field.kind) {
+    ): FieldUM = when (val kind = field.kindIn(values)) {
         is BankWithdrawFieldKind.TextField -> FieldUM.Text(
             field = field,
-            value = value,
+            value = values[field].orEmpty(),
+            placeholder = field.placeholderIn(values),
             error = error,
             keyboardOptions = KeyboardOptions(
                 capitalization = kind.capitalization,
                 keyboardType = kind.keyboardType,
                 imeAction = if (isLast) ImeAction.Done else ImeAction.Next,
             ),
+            contentType = field.contentType,
             onValueChange = { newValue -> callbacks.onValueChange(field, newValue) },
             onFocusChange = { isFocused -> callbacks.onFocusChange(field, isFocused) },
         )
         BankWithdrawFieldKind.SelectorField -> FieldUM.Selector(
             field = field,
-            value = value,
+            value = values[field].orEmpty(),
+            placeholder = field.placeholderIn(values),
             error = error,
             onClick = { callbacks.onSelectorClick(field) },
         )
@@ -76,6 +79,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
             resourceReference(R.string.tangempay_withdraw_bank_field_error_invalid_format)
         BankWithdrawFieldError.InvalidRoutingNumber ->
             resourceReference(R.string.tangempay_withdraw_bank_field_error_routing_number)
+        BankWithdrawFieldError.NonLatin -> resourceReference(R.string.tangempay_order_data_field_latin_only)
     }
 
     data class Callbacks(
