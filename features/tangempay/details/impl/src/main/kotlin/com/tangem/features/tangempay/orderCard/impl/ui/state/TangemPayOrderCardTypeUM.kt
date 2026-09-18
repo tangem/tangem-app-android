@@ -8,6 +8,7 @@ internal data class TangemPayOrderCardTypeUM(
     val isError: Boolean,
     val availableTypes: List<OrderCardType>,
     val cardImageUrl: String?,
+    val isBasicPlan: Boolean,
     val virtual: Virtual,
     val plastic: Plastic,
     val onBackClick: () -> Unit,
