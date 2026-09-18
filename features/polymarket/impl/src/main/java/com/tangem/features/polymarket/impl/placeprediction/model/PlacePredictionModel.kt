@@ -87,8 +87,7 @@ import javax.inject.Inject
 
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 
-internal const val LIVE_QUOTE_POLL_INTERVAL_MILLIS = 3_000L
-internal const val QUOTE_POLL_INTERVAL_MILLIS = 15_000L
+internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -124,8 +123,6 @@ internal class PlacePredictionModel @Inject constructor(
     private val tradingAllowanceJobHolder = JobHolder()
 
     private val positionJobHolder = JobHolder()
-
-    private var isMarketLive = false
 
     private var isNegRiskMarket: Boolean? = null
 
@@ -165,7 +162,7 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     /**
-     * The flow polls a live market every few seconds, so it must not keep doing that off-screen: the loop is
+     * The flow polls the market every few seconds, so it must not keep doing that off-screen: the loop is
      * suspended with the screen and resumed with it, rather than living as long as the model.
      */
     fun onScreenShown() {
@@ -646,7 +643,6 @@ internal class PlacePredictionModel @Inject constructor(
             )
 
             isNegRiskMarket = position.isNegRisk
-            isMarketLive = position.isLive
 
             uiState.update(SetPositionTransformer(position = position))
 
@@ -670,7 +666,7 @@ internal class PlacePredictionModel @Inject constructor(
                     requestPrice()
                 }
                 if (!canKeepPolling) return@launch
-                delay(timeMillis = pollInterval())
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
             }
         }.saveIn(quoteJobHolder)
     }
@@ -707,8 +703,6 @@ internal class PlacePredictionModel @Inject constructor(
         )
     }
 
-    private fun pollInterval(): Long = if (isMarketLive) LIVE_QUOTE_POLL_INTERVAL_MILLIS else QUOTE_POLL_INTERVAL_MILLIS
-
     private suspend fun requestQuote() {
         val state = uiState.value
         val amount = state.enteredAmount() ?: return
@@ -728,7 +722,6 @@ internal class PlacePredictionModel @Inject constructor(
             )
         }
 
-        result.onRight { isMarketLive = it.isLive }
         if (uiState.value.submit is SubmitUM.Idle) {
             uiState.update(
                 SetQuoteResultTransformer(result = result, receivedAtMillis = System.currentTimeMillis()),
