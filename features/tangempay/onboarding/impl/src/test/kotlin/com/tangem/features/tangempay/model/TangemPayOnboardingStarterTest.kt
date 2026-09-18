@@ -319,17 +319,34 @@ internal class TangemPayOnboardingStarterTest {
             }
 
         @Test
-        fun `GIVEN initial data fails WHEN startOnboarding THEN loading reset AND KYC not opened`() = runTest {
-            // Arrange
-            coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns RuntimeException("boom").left()
+        fun `GIVEN initial data fails WHEN startOnboarding THEN snackbar shown AND loading reset AND KYC not opened`() =
+            runTest {
+                // Arrange
+                coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns RuntimeException("boom").left()
 
-            // Act
-            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
 
-            // Assert
-            assertThat(loadingChanges).containsExactly(true, false).inOrder()
-            verify(exactly = 0) { router.replaceAll(*anyVararg()) }
-        }
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+                assertThat(loadingChanges).containsExactly(true, false).inOrder()
+                verify(exactly = 0) { router.replaceAll(*anyVararg()) }
+            }
+
+        @Test
+        fun `GIVEN customer info fails after re-auth WHEN startOnboarding THEN snackbar shown AND KYC not opened`() =
+            runTest {
+                // Arrange
+                coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
+
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+                assertThat(loadingChanges).containsExactly(true, false).inOrder()
+                verify(exactly = 0) { router.replaceAll(*anyVararg()) }
+            }
     }
 
     @Nested
