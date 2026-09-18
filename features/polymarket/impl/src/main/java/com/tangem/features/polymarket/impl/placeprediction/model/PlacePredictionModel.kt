@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
@@ -111,6 +112,7 @@ internal class PlacePredictionModel @Inject constructor(
     private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
+    private val predictionFundingWindow: PredictionFundingWindow,
 ) : Model(), PlacePredictionIntents {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -457,8 +459,18 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     private fun showResult(result: PlaceResultUM) {
+        if (result.movesBalance()) predictionFundingWindow.open(userWalletId = params.userWalletId)
+
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
         router.replaceAll(PlacePredictionRoute.Status)
+    }
+
+    private fun PlaceResultUM.movesBalance(): Boolean = when (this) {
+        is PlaceResultUM.Filled,
+        is PlaceResultUM.PartiallyFilled,
+        is PlaceResultUM.Submitted,
+        -> true
+        is PlaceResultUM.NotFilled -> false
     }
 
     /**
