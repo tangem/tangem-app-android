@@ -6,8 +6,8 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFi
 
 /**
  * Inverse of [NewRecipientDraft.toBankAccountDetails]: lets the preview render a saved recipient and a recipient being
- * added through the same form-field rows. The postal address's second line and the bank country have no form field
- * and are dropped.
+ * added through the same form-field rows. The postal address's second line and the bank country have no form field and
+ * are dropped.
  */
 internal fun BankAccountDetails.toFormValues(): Map<BankWithdrawFormField, String> = buildMap {
     put(BankWithdrawFormField.AccountNumber, accountNumber)
