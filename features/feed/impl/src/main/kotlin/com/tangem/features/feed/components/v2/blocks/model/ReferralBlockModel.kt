@@ -47,6 +47,9 @@ internal class ReferralBlockModel @Inject constructor(
     val portfolioSelectorController: PortfolioSelectorController,
 ) : Model() {
 
+    /** Ticks when the statuses are worth reading again — see [onResume]. */
+    private val statusRefreshes = MutableStateFlow(value = 0)
+
     /**
      * Wallets that can still be invited.
      *
@@ -57,6 +60,7 @@ internal class ReferralBlockModel @Inject constructor(
     private val invitableWallets: StateFlow<List<UserWalletId>> = userWalletsListRepository.userWallets
         .map { wallets -> wallets.orEmpty().filter { !it.isLocked && it.isReferralOffered() } }
         .distinctUntilChanged { old, new -> old.map(UserWallet::walletId) == new.map(UserWallet::walletId) }
+        .combine(statusRefreshes) { offered, _ -> offered }
         .map { offered -> offered.filterNot { it.hasJoinedReferral() }.map(UserWallet::walletId) }
         .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
 
@@ -81,6 +85,20 @@ internal class ReferralBlockModel @Inject constructor(
     }
 
     private val walletSelectionJob = JobHolder()
+
+    /** Set while the screen this card leads to is up — the only window in which a status can change. */
+    private var isReferralScreenOpen = false
+
+    /**
+     * Joining happens on the referral screen and reaches nothing this model listens to, so the statuses
+     * are read again on the way back from it — and only from it, since no other screen can have changed them.
+     */
+    fun onResume() {
+        if (!isReferralScreenOpen) return
+        isReferralScreenOpen = false
+
+        statusRefreshes.update { it + 1 }
+    }
 
     fun onClick() {
         val wallets = invitableWallets.value
@@ -113,6 +131,7 @@ internal class ReferralBlockModel @Inject constructor(
     }
 
     private fun openReferral(walletId: UserWalletId) {
+        isReferralScreenOpen = true
         router.push(AppRoute.ReferralProgram(userWalletId = walletId))
     }
 
