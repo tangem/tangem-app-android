@@ -11,7 +11,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,7 +20,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultMoneyAccountMainComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: MoneyAccountMainComponent.Params,
-    private val addFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
+    private val addFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
 ) : MoneyAccountMainComponent, AppComponentContext by appComponentContext {
 
     private val model: MoneyAccountMainModel = getOrCreateModel(params = params)
@@ -47,7 +47,7 @@ internal class DefaultMoneyAccountMainComponent @AssistedInject constructor(
         return when (config) {
             is MoneyAccountMainNavigationBottomSheetConfig.AddFunds -> addFundsComponentFactory.create(
                 context = childByContext(componentContext),
-                params = VirtualAccountAddFundsBottomSheetComponent.Params(
+                params = MoneyAccountAddFundsBottomSheetComponent.Params(
                     userWalletId = params.userWalletId,
                     listener = model,
                     requisites = config.requisites,

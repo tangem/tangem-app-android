@@ -31,7 +31,7 @@ import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -43,7 +43,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val virtualAccountAddFundsComponentFactory: VirtualAccountAddFundsBottomSheetComponent.Factory,
+    private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
     private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
     private val countrySelectorComponentFactory: TangemPayCountrySelectorComponent.Factory,
@@ -109,7 +109,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
-            virtualAccountAddFundsComponentFactory = virtualAccountAddFundsComponentFactory,
+            moneyAccountAddFundsComponentFactory = moneyAccountAddFundsComponentFactory,
         )
         is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
