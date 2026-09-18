@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +24,7 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.animation.TangemAnimationSpec
 import com.tangem.core.ui.ds2.animation.TangemTransition
-import com.tangem.core.ui.ds2.animation.WithoutMaterialShadowWhileAnimating
+import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.GroupEntry
@@ -35,8 +36,36 @@ import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import kotlin.math.roundToInt
 
 private enum class SlotId { Start, Content, Group, End }
+
+@Composable
+private fun EndSlot(endButton: (@Composable () -> Unit)?) {
+    val displayedEnd = rememberLastNonNull(endButton)
+    val reveal by animateFloatAsState(
+        targetValue = if (endButton != null) 1f else 0f,
+        animationSpec = TangemAnimationSpec.Reveal,
+        label = "TangemTopNavigation.endReveal",
+    )
+
+    Box(modifier = Modifier.layoutId(SlotId.End)) {
+        if (reveal > 0f) {
+            Box(modifier = Modifier.revealFromBehindGroup { reveal }) {
+                displayedEnd?.invoke()
+            }
+        }
+    }
+}
+
+private fun Modifier.revealFromBehindGroup(progress: () -> Float): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val width = (placeable.width * progress().coerceIn(0f, 1f)).roundToInt()
+
+    layout(width = width, height = placeable.height) {
+        placeable.place(x = width - placeable.width, y = 0)
+    }
+}
 
 /**
  * Top navigation bar from the redesigned design system.
@@ -104,7 +133,7 @@ fun TangemTopNavigation(
                         enter = TangemTransition.SlotEnterHorizontally,
                         exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        WithoutMaterialShadowWhileAnimating {
+                        WithoutMaterialWhileAnimating {
                             displayedStart?.invoke()
                         }
                     }
@@ -129,7 +158,7 @@ fun TangemTopNavigation(
                         enter = TangemTransition.SlotEnterHorizontally,
                         exit = TangemTransition.SlotExitHorizontally,
                     ) {
-                        WithoutMaterialShadowWhileAnimating {
+                        WithoutMaterialWhileAnimating {
                             displayedGroup?.let { group ->
                                 TangemButtonStack(
                                     variant = if (isEndButtonsGroupBackgroundShown) {
@@ -144,18 +173,7 @@ fun TangemTopNavigation(
                     }
                 }
 
-                val displayedEnd = rememberLastNonNull(endButton)
-                Box(modifier = Modifier.layoutId(SlotId.End)) {
-                    AnimatedVisibility(
-                        visible = endButton != null,
-                        enter = TangemTransition.SlotEnterHorizontally,
-                        exit = TangemTransition.SlotExitHorizontally,
-                    ) {
-                        WithoutMaterialShadowWhileAnimating {
-                            displayedEnd?.invoke()
-                        }
-                    }
-                }
+                EndSlot(endButton = endButton)
             },
         ) { measurables, constraints ->
             val groupSpacingPx = 8.dp.roundToPx()
