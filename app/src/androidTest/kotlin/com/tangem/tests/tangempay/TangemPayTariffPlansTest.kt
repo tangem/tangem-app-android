@@ -52,6 +52,19 @@ class TangemPayTariffPlansTest : BaseTestCase() {
     private val plusProgramValue = "Signature"
     private val plusMaxCards = "5"
 
+    // Localized text asserted in the bodies below.
+    private val cardRelatedSection = getResourceString(CoreResR.string.tangempay_current_plan_section_card)
+    private val planRelatedSection = getResourceString(CoreResR.string.tangempay_current_plan_section_plan)
+    private val noFeeAppliedPoint = getResourceString(CoreResR.string.tangempay_select_plan_confirm_point_no_fee)
+    private val stayOnPlusButton =
+        getResourceString(CoreResR.string.tangempay_current_plan_stay_button, plusPlan)
+    private val awaitingPlanFeeNotification =
+        getResourceString(CoreResR.string.tangempay_current_plan_awaiting_deposit_notification, plusPlan)
+    private val upgradeConfirmTitle =
+        getResourceString(CoreResR.string.tangempay_select_plan_confirm_upgrade_title, plusProgram)
+    private val monthlyFeePoint =
+        getResourceString(CoreResR.string.tangempay_select_plan_confirm_point_monthly_fee, plusFee)
+
     @AllureId("10382")
     @DisplayName("Tangem Pay: comparing plans during onboarding lists both plans")
     @Ignore("[REDACTED_TASK_KEY]: onboarding comparison drops the ACTIVATION transitions, so only Basic is listed")
@@ -71,11 +84,11 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert the '$planFeeAttribute' comparison section is displayed") {
                 onTangemPayComparePlansSheet { sectionTitle(planFeeAttribute).assertIsDisplayed() }
             }
-            step("Assert '$basicPlan' and '$plusPlan' rows are displayed") {
-                onTangemPayComparePlansSheet {
-                    planRow(basicPlan).assertIsDisplayed()
-                    planRow(plusPlan).assertIsDisplayed()
-                }
+            step("Assert '$basicPlan' row is displayed") {
+                onTangemPayComparePlansSheet { planRow(basicPlan).assertIsDisplayed() }
+            }
+            step("Assert '$plusPlan' row is displayed") {
+                onTangemPayComparePlansSheet { planRow(plusPlan).assertIsDisplayed() }
             }
         }
     }
@@ -94,12 +107,14 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
-            step("Assert '$basicPlan' plan details are displayed") {
-                onTangemPaySelectPlanScreen {
-                    title.assertTextEquals(basicPlan)
-                    point(basicDailyLimitPoint).assertIsDisplayed()
-                    point(basicFeePoint).assertIsDisplayed()
-                }
+            step("Assert '$basicPlan' plan name is displayed") {
+                onTangemPaySelectPlanScreen { title.assertTextEquals(basicPlan) }
+            }
+            step("Assert '$basicDailyLimitPoint' point is displayed") {
+                onTangemPaySelectPlanScreen { point(basicDailyLimitPoint).assertIsDisplayed() }
+            }
+            step("Assert '$basicFeePoint' point is displayed") {
+                onTangemPaySelectPlanScreen { point(basicFeePoint).assertIsDisplayed() }
             }
             val ordersBefore = getTangemPayPlanOrderRequestCount()
             step("Complete the plan order in WireMock") { stageTangemPayPlanOrderCompleted(planBasicState) }
@@ -112,8 +127,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 }
             }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(basicPlan)
-            assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
+            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
+            step("Assert the plan order request was sent once") {
+                assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
+            }
         }
     }
 
@@ -132,11 +149,13 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Swipe to the '$plusPlan' plan") {
-                onTangemPaySelectPlanScreen {
-                    scrollToPlanAt(index = 1)
-                    awaitSuccess { title.assertTextEquals(plusPlan) }
-                    point(plusFeePoint).assertIsDisplayed()
-                }
+                onTangemPaySelectPlanScreen { scrollToPlanAt(index = 1) }
+            }
+            step("Assert '$plusPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) } }
+            }
+            step("Assert '$plusFeePoint' point is displayed") {
+                onTangemPaySelectPlanScreen { point(plusFeePoint).assertIsDisplayed() }
             }
             step("Put the plan fee order in 'awaiting deposit' in WireMock") {
                 stageTangemPayPlanFeeAwaitingDeposit()
@@ -154,12 +173,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert the awaiting-payment notification is displayed") {
                 awaitSuccess {
                     onTangemPayCurrentPlanScreen {
-                        notificationText(
-                            getResourceString(
-                                CoreResR.string.tangempay_current_plan_awaiting_deposit_notification,
-                                plusPlan,
-                            ),
-                        ).assertIsDisplayed()
+                        notificationText(awaitingPlanFeeNotification).assertIsDisplayed()
                     }
                 }
             }
@@ -167,18 +181,22 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 onTangemPayCurrentPlanScreen { notificationButton.clickWithAssertion() }
             }
             step("Drain the plan order list in WireMock") { drainTangemPayPlanOrders() }
-            assertTangemPayTariffRequestSentOnce(
-                name = "order cancellation",
-                countBefore = cancelsBefore,
-                count = ::getTangemPayCancelPlanOrderRequestCount,
-            )
+            step("Assert the order cancellation request was sent once") {
+                assertTangemPayTariffRequestSentOnce(
+                    name = "order cancellation",
+                    countBefore = cancelsBefore,
+                    count = ::getTangemPayCancelPlanOrderRequestCount,
+                )
+            }
             step("Assert the plan notification is not displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayCurrentPlanScreen { notification.assertDoesNotExist() }
                 }
             }
             step("Press back to the payment account") { pressBackFromCurrentPlan() }
-            assertTangemPayAwaitingDepositBannerHidden(plusFee)
+            step("Assert 'Top-up your account' banner is not displayed") {
+                assertTangemPayAwaitingDepositBannerHidden(plusFee)
+            }
         }
     }
 
@@ -197,10 +215,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Open Main screen with the Tangem Pay tile") { openMainScreenWithTangemPayTile() }
             step("Open plan selection from onboarding") { openTangemPaySelectPlanFromOnboarding() }
             step("Swipe to the '$plusPlan' plan") {
-                onTangemPaySelectPlanScreen {
-                    scrollToPlanAt(index = 1)
-                    awaitSuccess { title.assertTextEquals(plusPlan) }
-                }
+                onTangemPaySelectPlanScreen { scrollToPlanAt(index = 1) }
+            }
+            step("Assert '$plusPlan' plan name is displayed") {
+                awaitSuccess { onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) } }
             }
             step("Put the plan fee order in 'awaiting deposit' in WireMock") {
                 stageTangemPayPlanFeeAwaitingDeposit()
@@ -214,9 +232,11 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 }
             }
             step("Complete the plan order in WireMock") { stageTangemPayPlanOrderCompleted(planPlusState) }
-            assertTangemPayAwaitingDepositBannerHidden(plusFee)
+            step("Assert 'Top-up your account' banner is not displayed") {
+                assertTangemPayAwaitingDepositBannerHidden(plusFee)
+            }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(plusPlan)
+            step("Assert current plan is '$plusPlan'") { assertTangemPayCurrentPlanName(plusPlan) }
         }
     }
 
@@ -236,17 +256,17 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
             step("Open plan selection") { openTangemPayChangePlan() }
             step("Open 'Compare plans' sheet") { openTangemPayComparePlans(basicPlan) }
-            step("Assert the '$maxCardsIssuedAttribute' comparison section is displayed") {
-                onTangemPayComparePlansSheet {
-                    scrollToSection(maxCardsIssuedAttribute)
-                    sectionTitle(maxCardsIssuedAttribute).assertIsDisplayed()
-                }
+            step("Scroll to the '$maxCardsIssuedAttribute' comparison section") {
+                onTangemPayComparePlansSheet { scrollToSection(maxCardsIssuedAttribute) }
             }
-            step("Assert '$basicPlan' and '$plusPlan' rows are displayed") {
-                onTangemPayComparePlansSheet {
-                    planRow(basicPlan).assertIsDisplayed()
-                    planRow(plusPlan).assertIsDisplayed()
-                }
+            step("Assert the '$maxCardsIssuedAttribute' comparison section is displayed") {
+                onTangemPayComparePlansSheet { sectionTitle(maxCardsIssuedAttribute).assertIsDisplayed() }
+            }
+            step("Assert '$basicPlan' row is displayed") {
+                onTangemPayComparePlansSheet { planRow(basicPlan).assertIsDisplayed() }
+            }
+            step("Assert '$plusPlan' row is displayed") {
+                onTangemPayComparePlansSheet { planRow(plusPlan).assertIsDisplayed() }
             }
         }
     }
@@ -265,15 +285,25 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(basicPlan)
-            step("Assert the plan sections and rows are displayed") {
+            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
+            step("Assert '$cardRelatedSection' section is displayed") {
+                onTangemPayCurrentPlanScreen { sectionHeader(cardRelatedSection).assertIsDisplayed() }
+            }
+            step("Assert '$planRelatedSection' section is displayed") {
+                onTangemPayCurrentPlanScreen { sectionHeader(planRelatedSection).assertIsDisplayed() }
+            }
+            step("Assert '$visaProgrammeAttribute' row is displayed") {
                 onTangemPayCurrentPlanScreen {
-                    sectionHeader(getResourceString(CoreResR.string.tangempay_current_plan_section_card))
-                        .assertIsDisplayed()
-                    sectionHeader(getResourceString(CoreResR.string.tangempay_current_plan_section_plan))
-                        .assertIsDisplayed()
                     planRow(label = visaProgrammeAttribute, value = basicProgramValue).assertIsDisplayed()
+                }
+            }
+            step("Assert '$planFeeAttribute' row is displayed") {
+                onTangemPayCurrentPlanScreen {
                     planRow(label = planFeeAttribute, value = basicFeeValue).assertIsDisplayed()
+                }
+            }
+            step("Assert '$maxCardsIssuedAttribute' row is displayed") {
+                onTangemPayCurrentPlanScreen {
                     planRow(label = maxCardsIssuedAttribute, value = basicMaxCards).assertIsDisplayed()
                 }
             }
@@ -282,21 +312,11 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) }
             }
             step("Click on 'Select' button") { selectTangemPayPlanForConfirmation() }
-            step("Assert the upgrade confirmation is displayed") {
-                onTangemPaySelectPlanScreen {
-                    title.assertTextEquals(
-                        getResourceString(
-                            CoreResR.string.tangempay_select_plan_confirm_upgrade_title,
-                            plusProgram,
-                        ),
-                    )
-                    point(
-                        getResourceString(
-                            CoreResR.string.tangempay_select_plan_confirm_point_monthly_fee,
-                            plusFee,
-                        ),
-                    ).assertIsDisplayed()
-                }
+            step("Assert the upgrade confirmation title is displayed") {
+                onTangemPaySelectPlanScreen { title.assertTextEquals(upgradeConfirmTitle) }
+            }
+            step("Assert the monthly fee point is displayed") {
+                onTangemPaySelectPlanScreen { point(monthlyFeePoint).assertIsDisplayed() }
             }
             step("Put the plan fee order in 'awaiting deposit' in WireMock") {
                 stageTangemPayPlanFeeAwaitingDeposit(plan = planBasicInsufficientBalanceState)
@@ -342,8 +362,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 }
             }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(plusPlan)
-            assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
+            step("Assert current plan is '$plusPlan'") { assertTangemPayCurrentPlanName(plusPlan) }
+            step("Assert the plan order request was sent once") {
+                assertTangemPayTariffRequestSentOnce("plan order", ordersBefore, ::getTangemPayPlanOrderRequestCount)
+            }
         }
     }
 
@@ -374,20 +396,24 @@ class TangemPayTariffPlansTest : BaseTestCase() {
                 onTangemPayCurrentPlanScreen { notificationButton.performClick() }
             }
             step("Drain the plan order list in WireMock") { drainTangemPayPlanOrders() }
-            assertTangemPayTariffRequestSentOnce(
-                name = "order cancellation",
-                countBefore = cancelsBefore,
-                count = ::getTangemPayCancelPlanOrderRequestCount,
-            )
+            step("Assert the order cancellation request was sent once") {
+                assertTangemPayTariffRequestSentOnce(
+                    name = "order cancellation",
+                    countBefore = cancelsBefore,
+                    count = ::getTangemPayCancelPlanOrderRequestCount,
+                )
+            }
             step("Assert the plan notification is not displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayCurrentPlanScreen { notification.assertDoesNotExist() }
                 }
             }
             step("Press back to the payment account") { pressBackFromCurrentPlan() }
-            assertTangemPayAwaitingDepositBannerHidden(plusFee)
+            step("Assert 'Top-up your account' banner is not displayed") {
+                assertTangemPayAwaitingDepositBannerHidden(plusFee)
+            }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(basicPlan)
+            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
         }
     }
 
@@ -405,11 +431,19 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(plusPlan)
-            step("Assert the plan rows are displayed") {
+            step("Assert current plan is '$plusPlan'") { assertTangemPayCurrentPlanName(plusPlan) }
+            step("Assert '$visaProgrammeAttribute' row is displayed") {
                 onTangemPayCurrentPlanScreen {
                     planRow(label = visaProgrammeAttribute, value = plusProgramValue).assertIsDisplayed()
+                }
+            }
+            step("Assert '$planFeeAttribute' row is displayed") {
+                onTangemPayCurrentPlanScreen {
                     planRow(label = planFeeAttribute, value = plusFee).assertIsDisplayed()
+                }
+            }
+            step("Assert '$maxCardsIssuedAttribute' row is displayed") {
+                onTangemPayCurrentPlanScreen {
                     planRow(label = maxCardsIssuedAttribute, value = plusMaxCards).assertIsDisplayed()
                 }
             }
@@ -419,10 +453,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             }
             step("Click on 'Select' button") { selectTangemPayPlanForConfirmation() }
             step("Assert the downgrade confirmation is displayed") {
-                onTangemPaySelectPlanScreen {
-                    point(getResourceString(CoreResR.string.tangempay_select_plan_confirm_point_no_fee))
-                        .assertIsDisplayed()
-                }
+                onTangemPaySelectPlanScreen { point(noFeeAppliedPoint).assertIsDisplayed() }
             }
             val requestsBefore = getTangemPayPendingTransitionRequestCount()
             step("Schedule the pending downgrade in WireMock") {
@@ -434,17 +465,17 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert the 'Stay on $plusPlan' offer is displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayCurrentPlanScreen {
-                        notificationButtonWithText(
-                            getResourceString(CoreResR.string.tangempay_current_plan_stay_button, plusPlan),
-                        ).assertIsDisplayed()
+                        notificationButtonWithText(stayOnPlusButton).assertIsDisplayed()
                     }
                 }
             }
-            assertTangemPayTariffRequestSentOnce(
-                name = "pending transition",
-                countBefore = requestsBefore,
-                count = ::getTangemPayPendingTransitionRequestCount,
-            )
+            step("Assert the pending transition request was sent once") {
+                assertTangemPayTariffRequestSentOnce(
+                    name = "pending transition",
+                    countBefore = requestsBefore,
+                    count = ::getTangemPayPendingTransitionRequestCount,
+                )
+            }
         }
     }
 
@@ -462,39 +493,41 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            val stayOnPlanButtonText =
-                getResourceString(CoreResR.string.tangempay_current_plan_stay_button, plusPlan)
             step("Assert the pending downgrade notification is displayed") {
                 awaitSuccess {
                     onTangemPayCurrentPlanScreen {
-                        notificationButtonWithText(stayOnPlanButtonText).assertIsDisplayed()
+                        notificationButtonWithText(stayOnPlusButton).assertIsDisplayed()
                     }
                 }
             }
             val requestsBefore = getTangemPayCancelPendingTransitionRequestCount()
-            step("Click on '$stayOnPlanButtonText' button") {
+            step("Click on '$stayOnPlusButton' button") {
                 onTangemPayCurrentPlanScreen { notificationButton.clickWithAssertion() }
             }
-            step("Assert the 'Stay on $plusPlan' sheet is displayed") {
+            step("Assert the 'Stay on $plusPlan' sheet title is displayed") {
                 awaitSuccess {
                     onTangemPayTariffMessageSheet { stayOnPlanTitle(plusPlan).assertIsDisplayed() }
                 }
+            }
+            step("Assert the 'Stay on $plusPlan' sheet description is displayed") {
                 onTangemPayTariffMessageSheet { stayOnPlanDescription(basicPlan).assertIsDisplayed() }
             }
             step("Keep the customer on $plusPlan in WireMock") { stageTangemPayPlanState(planPlusState) }
-            step("Click on '$stayOnPlanButtonText' button on the sheet") {
+            step("Click on '$stayOnPlusButton' button on the sheet") {
                 onTangemPayTariffMessageSheet { primaryButton.clickWithAssertion() }
             }
-            assertTangemPayTariffRequestSentOnce(
-                name = "pending transition cancellation",
-                countBefore = requestsBefore,
-                count = ::getTangemPayCancelPendingTransitionRequestCount,
-            )
-            assertTangemPayCurrentPlanName(plusPlan)
+            step("Assert the pending transition cancellation request was sent once") {
+                assertTangemPayTariffRequestSentOnce(
+                    name = "pending transition cancellation",
+                    countBefore = requestsBefore,
+                    count = ::getTangemPayCancelPendingTransitionRequestCount,
+                )
+            }
+            step("Assert current plan is '$plusPlan'") { assertTangemPayCurrentPlanName(plusPlan) }
             step("Assert the 'Stay on $plusPlan' offer is not displayed") {
                 awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayCurrentPlanScreen {
-                        notificationButtonWithText(stayOnPlanButtonText).assertDoesNotExist()
+                        notificationButtonWithText(stayOnPlusButton).assertDoesNotExist()
                     }
                 }
             }
@@ -515,7 +548,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Open 'Current plan' screen") { openTangemPayCurrentPlan() }
-            assertTangemPayCurrentPlanName(basicPlan)
+            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
             step("Assert 'Change plan' button is not displayed") {
                 onTangemPayCurrentPlanScreen { changePlanButton.assertDoesNotExist() }
             }
@@ -537,8 +570,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Click on 'Add card' button") { openTangemPayCardsLimitSheet() }
-            step("Assert 'Cards limit reached for this plan' sheet is displayed") {
+            step("Assert 'Cards limit reached for this plan' sheet title is displayed") {
                 awaitSuccess { onTangemPayTariffMessageSheet { cardsLimitForPlanTitle.assertIsDisplayed() } }
+            }
+            step("Assert 'Cards limit reached for this plan' sheet description is displayed") {
                 onTangemPayTariffMessageSheet { cardsLimitForPlanDescription.assertIsDisplayed() }
             }
         }
@@ -559,8 +594,10 @@ class TangemPayTariffPlansTest : BaseTestCase() {
         ).run {
             step("Open Tangem Pay payment account") { openTangemPay() }
             step("Click on 'Add card' button") { openTangemPayCardsLimitSheet() }
-            step("Assert 'Maximum Cards Issued' sheet is displayed") {
+            step("Assert 'Maximum Cards Issued' sheet title is displayed") {
                 awaitSuccess { onTangemPayTariffMessageSheet { maximumCardsTitle.assertIsDisplayed() } }
+            }
+            step("Assert 'Maximum Cards Issued' sheet description is displayed") {
                 onTangemPayTariffMessageSheet { maximumCardsDescription.assertIsDisplayed() }
             }
         }
@@ -590,7 +627,7 @@ class TangemPayTariffPlansTest : BaseTestCase() {
             step("Assert 'Current plan' screen is displayed") {
                 awaitSuccess { onTangemPayCurrentPlanScreen { screen.assertIsDisplayed() } }
             }
-            assertTangemPayCurrentPlanName(basicPlan)
+            step("Assert current plan is '$basicPlan'") { assertTangemPayCurrentPlanName(basicPlan) }
             step("Open plan selection") { openTangemPayChangePlan() }
             step("Assert '$plusPlan' plan is displayed") {
                 onTangemPaySelectPlanScreen { title.assertTextEquals(plusPlan) }
