@@ -49,6 +49,9 @@ internal class IntroductionStories(
     /** The scan tap being served; cleared once settled or once the viewer closes the story around it. */
     private var pendingScanAction: StoriesV2PendingAction? = null
 
+    /** The store tap being served; the browser covers the story, so the tap settles on the next resume. */
+    private var pendingStoreAction: StoriesV2PendingAction? = null
+
     fun openAfterSheetCollapse() {
         if (isShown) return
         isOpening = true
@@ -77,6 +80,7 @@ internal class IntroductionStories(
             StoriesV2Result.Completed,
             -> {
                 pendingScanAction = null
+                pendingStoreAction = null
                 close()
             }
             // Nothing to show, so the tap that opened it must still do what its scan slide would have, the way
@@ -123,10 +127,15 @@ internal class IntroductionStories(
     }
 
     /**
-     * Takes down a story that ended under a covering screen the viewer has now backed out of: they land on the
-     * welcome screen, without the sheet the story replaced. The resume re-applies the video on its own.
+     * Settles whatever left the screen and has now handed it back. A store tap picks its slide up where it paused;
+     * a story that ended under a covering screen the viewer backed out of is taken down, so they land on the
+     * welcome screen without the sheet the story replaced. The resume re-applies the video on its own.
      */
     fun onScreenResumed() {
+        pendingStoreAction?.let { action ->
+            pendingStoreAction = null
+            action.resume()
+        }
         if (!isDismissPendingResume) return
         isDismissPendingResume = false
         isShown = false
@@ -147,8 +156,9 @@ internal class IntroductionStories(
 
     private fun openTangemStore(action: StoriesV2PendingAction) {
         analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
-        // Deliberately a terminal exit: the tap ends the story rather than suspending it around the browser.
-        action.end()
+        // The browser is a layer over the screen rather than a flow that replaces it, so the story stays suspended
+        // on its slide: closing the store puts the viewer back where they were reading, not on a bare welcome.
+        pendingStoreAction = action
         scope.launch {
             // The url the story carries is the bare storefront; the generated one adds the language, the utm
             // campaign and the referral promocode, which is what every other buy entry point reports on.

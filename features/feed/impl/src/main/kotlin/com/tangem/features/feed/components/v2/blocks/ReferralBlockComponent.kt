@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -44,6 +45,10 @@ internal class ReferralBlockComponent(
         serializer = null,
         handleBackButton = false,
     ) { _, componentContext -> walletSelectorChild(componentContext) }
+
+    init {
+        lifecycle.doOnResume { model.onResume() }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
