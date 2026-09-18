@@ -119,7 +119,6 @@ internal class TangemPayDetailsModelTest {
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
         val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
         val model = createModel(testScope = this, statusFlow = statusFlow)
@@ -143,7 +142,6 @@ internal class TangemPayDetailsModelTest {
         // Arrange
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns
             enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
 
@@ -164,7 +162,6 @@ internal class TangemPayDetailsModelTest {
         // Arrange
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns
             enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
         val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
@@ -193,7 +190,6 @@ internal class TangemPayDetailsModelTest {
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
         val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
         val model = createModel(testScope = this, statusFlow = statusFlow)
@@ -218,7 +214,6 @@ internal class TangemPayDetailsModelTest {
         // Arrange
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns
             enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
         val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
@@ -257,7 +252,6 @@ internal class TangemPayDetailsModelTest {
         // Arrange
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns
             enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
 
@@ -277,7 +271,6 @@ internal class TangemPayDetailsModelTest {
         // Arrange
         mockkStatic(DateFormat::class)
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns
             enabledCashbackSummary(displayMode = CashbackDisplayMode.ALT_BLOCK).right()
         val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
@@ -299,7 +292,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN summary fails WHEN model created THEN cashback error block shown`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
 
         // Act
@@ -314,7 +306,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN summary fails WHEN model created THEN banner error state showed sent once`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
         val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
 
@@ -332,7 +323,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN cashback error block shown WHEN status re-emits THEN error block survives`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
         val statusFlow = MutableStateFlow(paymentStatus(loadedStatus()))
         val model = createModel(testScope = this, statusFlow = statusFlow)
@@ -354,7 +344,6 @@ internal class TangemPayDetailsModelTest {
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
         val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
         advanceUntilIdle()
@@ -376,7 +365,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN cashback error block shown WHEN reload tapped THEN progress shown while request in flight`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns mockk<VisaApiError>(relaxed = true).left()
         val model = createModel(testScope = this, statusFlow = MutableStateFlow(paymentStatus(loadedStatus())))
         advanceUntilIdle()
@@ -406,7 +394,6 @@ internal class TangemPayDetailsModelTest {
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
 
         // Act
@@ -425,7 +412,6 @@ internal class TangemPayDetailsModelTest {
     @Test
     fun `GIVEN deactivated account WHEN screen started THEN cashback is not requested and block absent`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } returns enabledCashbackSummary().right()
         val model = createModel(testScope = this, statusValue = deactivatedStatus(id = "customer-id"))
         advanceUntilIdle()
@@ -447,7 +433,6 @@ internal class TangemPayDetailsModelTest {
         every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
         mockkObject(DateTimeFormatters)
         every { DateTimeFormatters.formatDateRange(any(), any(), any()) } returns "Sep 4 – 8"
-        every { tangemPayFeatureToggles.isCashbackEnabled } returns true
         coEvery { getCashbackSummaryUseCase(any()) } coAnswers {
             delay(timeMillis = 100)
             enabledCashbackSummary().right()
@@ -1331,7 +1316,6 @@ internal class TangemPayDetailsModelTest {
             model: DeepLinkRouteModel,
         ) = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isCashbackEnabled } returns true
             every { tangemPayFeatureToggles.isPlasticCardOrderEnabled } returns true
             val payModel = createModel(
                 testScope = this,
@@ -1346,22 +1330,6 @@ internal class TangemPayDetailsModelTest {
             // Assert
             verify(exactly = 1) { router.push(route = model.expectedRoute, onComplete = any()) }
             verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerClicked>()) }
-            payModel.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN cashback deeplink route WHEN cashback is disabled THEN nothing is pushed`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isCashbackEnabled } returns false
-
-            // Act
-            val payModel = createModel(testScope = this, initialRoute = TangemPayDetailsInitialRoute.CASHBACK)
-            advanceUntilIdle()
-
-            // Assert
-            verify(exactly = 0) {
-                router.push(route = TangemPayAccountDetailsInnerRoute.Cashback, onComplete = any())
-            }
             payModel.onDestroy()
         }
 

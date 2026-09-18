@@ -114,12 +114,19 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,
-            params = PlacePredictionComponent.Params(
+            params = PlacePredictionComponent.Params.Buy(
                 userWalletId = configuration.userWalletId,
                 eventId = configuration.eventId,
                 marketId = configuration.marketId,
                 assetId = configuration.assetId,
-                side = configuration.side,
+            ),
+        )
+        is PolymarketRoute.ClosePosition -> PlacePredictionComponent(
+            appComponentContext = factoryContext,
+            params = PlacePredictionComponent.Params.Sell(
+                userWalletId = configuration.userWalletId,
+                positionId = configuration.positionId,
+                marketId = configuration.marketId,
             ),
         )
         is PolymarketRoute.Search -> PolymarketSearchComponent(
