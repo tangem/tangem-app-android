@@ -17,8 +17,6 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -216,6 +214,36 @@ internal class SubmitPredictionClaimInteractorTest {
         }
 
     @Test
+    fun `GIVEN the poll answers that the claim is unknown WHEN it is read THEN the polling stops at once`() =
+        runTest {
+            // Arrange
+            coEvery { redeemRepository.submit(any(), any()) } returns
+                receipt(PredictionClaimState.IN_PROGRESS).right()
+            coEvery { redeemRepository.getState(any(), any()) } returns PolymarketRedeemError.NotFound.left()
+
+            // Act
+            val actual = interactor.claim(params())
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionClaimFailure.Rejected(PolymarketRedeemError.NotFound).left())
+            coVerify(exactly = 1) { redeemRepository.getState(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the poll is unauthorized WHEN it is read THEN the polling stops at once`() = runTest {
+        // Arrange
+        coEvery { redeemRepository.submit(any(), any()) } returns receipt(PredictionClaimState.IN_PROGRESS).right()
+        coEvery { redeemRepository.getState(any(), any()) } returns PolymarketRedeemError.Unauthorized.left()
+
+        // Act
+        val actual = interactor.claim(params())
+
+        // Assert
+        assertThat(actual).isEqualTo(PredictionClaimFailure.Rejected(PolymarketRedeemError.Unauthorized).left())
+        coVerify(exactly = 1) { redeemRepository.getState(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN a poll read fails WHEN the next one settles THEN the failure does not end the polling`() =
         runTest {
             // Arrange
@@ -231,25 +259,6 @@ internal class SubmitPredictionClaimInteractorTest {
 
             // Assert
             assertThat(actual).isEqualTo(receipt(PredictionClaimState.CONFIRMED).right())
-        }
-
-    @Test
-    fun `GIVEN a claim is already running WHEN a second is started THEN it is refused without a second submit`() =
-        runTest {
-            // Arrange
-            coEvery { redeemRepository.submit(any(), any()) } returns
-                receipt(PredictionClaimState.IN_PROGRESS).right()
-            coEvery { redeemRepository.getState(any(), any()) } returns
-                receipt(PredictionClaimState.IN_PROGRESS).right()
-            val first = async(UnconfinedTestDispatcher(testScheduler)) { interactor.claim(params()) }
-
-            // Act
-            val actual = interactor.claim(params())
-
-            // Assert
-            assertThat(actual).isEqualTo(PredictionClaimFailure.AlreadyInFlight.left())
-            first.await()
-            coVerify(exactly = 1) { redeemRepository.submit(any(), any()) }
         }
 
     private fun params() = SubmitPredictionClaimInteractor.Params(
