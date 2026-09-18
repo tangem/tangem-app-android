@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
@@ -83,7 +84,6 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
             ),
             listOf(
                 BankWithdrawFormField.BankName.label,
-                BankWithdrawFormField.BankCountry.label,
                 BankWithdrawFormField.BankRegion.label,
                 BankWithdrawFormField.BankCity.label,
                 BankWithdrawFormField.BankAddressLine1.label,
@@ -288,7 +288,11 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     private fun newRecipientDraft() = BankWithdrawDraft(
         entry = BankWithdrawEntry.NewPersonal,
         recipient = null,
-        newRecipient = NewRecipientDraft(fields = personalFormValues),
+        newRecipient = NewRecipientDraft(
+            isThirdParty = false,
+            accountType = BankAccountType.CHECKING,
+            fields = personalFormValues,
+        ),
         amount = BigDecimal("500"),
         source = bankWithdrawSource(),
         destination = offrampDestination(),

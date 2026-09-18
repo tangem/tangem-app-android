@@ -52,6 +52,7 @@ internal class TangemPayBankWithdrawChoiceModel @Inject constructor(
     }
 
     private fun onContinueClick() {
-        params.onContinue(selectedId.value)
+        // The button is already disabled without a selection; the guard also covers a click racing the state update.
+        params.onContinue(selectedId.value ?: return)
     }
 }

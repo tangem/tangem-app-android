@@ -57,7 +57,6 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     fun onCountrySelected(field: BankWithdrawFormField, country: TangemPayCountry, region: TangemPayRegion?) {
         val regionField = when (field) {
             BankWithdrawFormField.Country -> BankWithdrawFormField.Region
-            BankWithdrawFormField.BankCountry -> BankWithdrawFormField.BankRegion
             else -> null
         }
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
@@ -100,14 +99,14 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     private fun onSelectorClick(field: BankWithdrawFormField) {
         val config = when (field) {
-            BankWithdrawFormField.Country, BankWithdrawFormField.BankCountry -> {
+            BankWithdrawFormField.Country -> {
                 CountrySelectorConfig.Country(field)
             }
             BankWithdrawFormField.Region -> {
                 regionConfig(field, countryField = BankWithdrawFormField.Country)
             }
             BankWithdrawFormField.BankRegion -> {
-                regionConfig(field, countryField = BankWithdrawFormField.BankCountry)
+                CountrySelectorConfig.Region(field = field, countryCode = BankWithdrawFormFields.US_COUNTRY_CODE)
             }
             else -> null
         }

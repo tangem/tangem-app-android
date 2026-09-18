@@ -24,11 +24,10 @@ internal class NewRecipientDraftTest {
         BankWithdrawFormField.AddressLine1 to "1 Main St",
         BankWithdrawFormField.PostalCode to "10001",
         BankWithdrawFormField.BankName to "Test Bank",
-        BankWithdrawFormField.BankCountry to "CA",
-        BankWithdrawFormField.BankRegion to "Ontario",
-        BankWithdrawFormField.BankCity to "Toronto",
+        BankWithdrawFormField.BankRegion to "ca",
+        BankWithdrawFormField.BankCity to "San Francisco",
         BankWithdrawFormField.BankAddressLine1 to "2 Bank St",
-        BankWithdrawFormField.BankPostalCode to "M5H 2N2",
+        BankWithdrawFormField.BankPostalCode to "94105",
     )
 
     private val businessFields = personalFields
@@ -67,10 +66,10 @@ internal class NewRecipientDraftTest {
                 bankAddress = PostalAddress(
                     line1 = "2 Bank St",
                     line2 = null,
-                    city = "Toronto",
-                    region = "Ontario",
-                    postalCode = "M5H 2N2",
-                    countryCode = "CA",
+                    city = "San Francisco",
+                    region = "CA",
+                    postalCode = "94105",
+                    countryCode = "US",
                 ),
                 accountNumber = "4830019271",
                 routingNumber = "021000021",
@@ -82,21 +81,21 @@ internal class NewRecipientDraftTest {
     @Test
     fun `GIVEN complete business draft WHEN to bank account details THEN business beneficiary`() {
         // Arrange
-        val draft = NewRecipientDraft(fields = businessFields)
+        val draft = answeredDraft(fields = businessFields, isThirdParty = true)
 
         // Act
         val actual = draft.toBankAccountDetails(rail = BankRail.ACH, isBusiness = true)
 
         // Assert
         assertThat(actual.beneficiary).isEqualTo(Beneficiary.Business(name = "Raxanax"))
-        assertThat(actual.isThirdParty).isFalse()
+        assertThat(actual.isThirdParty).isTrue()
         assertThat(actual.accountType).isEqualTo(BankAccountType.CHECKING)
     }
 
     @Test
     fun `GIVEN business fields WHEN checked as personal THEN incomplete`() {
         // Arrange
-        val draft = NewRecipientDraft(fields = businessFields)
+        val draft = answeredDraft(fields = businessFields)
 
         // Assert
         assertThat(draft.isComplete(isBusiness = true)).isTrue()
@@ -106,7 +105,34 @@ internal class NewRecipientDraftTest {
     @Test
     fun `GIVEN blank bank name WHEN is complete THEN false`() {
         // Arrange
-        val draft = NewRecipientDraft(fields = personalFields + (BankWithdrawFormField.BankName to "  "))
+        val draft = answeredDraft(fields = personalFields + (BankWithdrawFormField.BankName to "  "))
+
+        // Assert
+        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no bank region WHEN is complete THEN false`() {
+        // Arrange
+        val draft = answeredDraft(fields = personalFields - BankWithdrawFormField.BankRegion)
+
+        // Assert
+        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN draft without transfer type WHEN is complete THEN false`() {
+        // Arrange
+        val draft = NewRecipientDraft(accountType = BankAccountType.CHECKING, fields = personalFields)
+
+        // Assert
+        assertThat(draft.isComplete(isBusiness = false)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN draft without account type WHEN is complete THEN false`() {
+        // Arrange
+        val draft = NewRecipientDraft(isThirdParty = false, fields = personalFields)
 
         // Assert
         assertThat(draft.isComplete(isBusiness = false)).isFalse()
@@ -117,7 +143,7 @@ internal class NewRecipientDraftTest {
         // Arrange
         val draft = BankWithdrawDraft(
             entry = BankWithdrawEntry.NewPersonal,
-            newRecipient = NewRecipientDraft(fields = personalFields),
+            newRecipient = answeredDraft(fields = personalFields),
         )
 
         // Assert
@@ -129,7 +155,7 @@ internal class NewRecipientDraftTest {
         // Arrange
         val draft = BankWithdrawDraft(
             entry = BankWithdrawEntry.NewBusiness,
-            newRecipient = NewRecipientDraft(fields = businessFields),
+            newRecipient = answeredDraft(fields = businessFields, isThirdParty = true),
             destination = offrampDestination(rail = BankRail.WIRE),
         )
 
@@ -146,11 +172,18 @@ internal class NewRecipientDraftTest {
         // Arrange
         val draft = BankWithdrawDraft(
             entry = BankWithdrawEntry.NewPersonal,
-            newRecipient = NewRecipientDraft(fields = personalFields - BankWithdrawFormField.City),
+            newRecipient = answeredDraft(fields = personalFields - BankWithdrawFormField.City),
             destination = offrampDestination(),
         )
 
         // Assert
         assertThat(draft.toNewBankAccountDetails()).isNull()
     }
+
+    /** A draft with both choice steps answered — the only state in which the form fields decide completeness. */
+    private fun answeredDraft(
+        fields: Map<BankWithdrawFormField, String>,
+        isThirdParty: Boolean = false,
+        accountType: BankAccountType = BankAccountType.CHECKING,
+    ) = NewRecipientDraft(isThirdParty = isThirdParty, accountType = accountType, fields = fields)
 }
