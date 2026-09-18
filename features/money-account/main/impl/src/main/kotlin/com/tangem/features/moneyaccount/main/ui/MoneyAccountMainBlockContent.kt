@@ -90,7 +90,7 @@ private fun MoneyAccountMainContent(
     ) {
         AccountIcon(
             name = TextReference.EMPTY,
-            icon = AccountIconUM.Virtual,
+            icon = AccountIconUM.Money,
             size = AccountIconSize.Default,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
@@ -138,7 +138,7 @@ private fun MoneyAccountStateRow(
     ) {
         AccountIcon(
             name = TextReference.EMPTY,
-            icon = AccountIconUM.Virtual,
+            icon = AccountIconUM.Money,
             size = AccountIconSize.Default,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
