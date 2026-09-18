@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -170,30 +169,17 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,
             )
-            is AmountCaptionUM.ToWin -> Column(
+            is AmountCaptionUM.ToWin -> TangemBadge(
                 modifier = Modifier.padding(top = CAPTION_GAP),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(space = 4.dp),
-            ) {
-                TangemBadge(
-                    text = stringReference(
-                        stringResourceSafe(
-                            R.string.prediction_place_to_win,
-                            caption.payout.expected.formatPolymarketMoney(),
-                        ),
+                text = stringReference(
+                    stringResourceSafe(
+                        R.string.prediction_place_to_win,
+                        caption.payout.formatPolymarketMoney(),
                     ),
-                    status = TangemBadge.Status.Info,
-                    size = TangemBadge.Size.X6,
-                )
-                Text(
-                    text = stringResourceSafe(
-                        R.string.prediction_place_at_least,
-                        caption.payout.guaranteed.formatPolymarketMoney(),
-                    ),
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.secondary,
-                )
-            }
+                ),
+                status = TangemBadge.Status.Success,
+                size = TangemBadge.Size.X6,
+            )
             null -> Unit
         }
     }
