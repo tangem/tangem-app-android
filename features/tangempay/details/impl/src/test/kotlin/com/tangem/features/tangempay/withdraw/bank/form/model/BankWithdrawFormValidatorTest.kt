@@ -43,13 +43,10 @@ internal class BankWithdrawFormValidatorTest {
     }
 
     @Test
-    fun `GIVEN country fields WHEN dependent fields THEN region and postal code of the same section`() {
+    fun `GIVEN recipient country WHEN dependent fields THEN region and postal code of the same section`() {
         // Assert
         assertThat(BankWithdrawFormValidator.dependentFieldsOf(BankWithdrawFormField.Country))
             .containsExactly(BankWithdrawFormField.Region, BankWithdrawFormField.PostalCode)
-            .inOrder()
-        assertThat(BankWithdrawFormValidator.dependentFieldsOf(BankWithdrawFormField.BankCountry))
-            .containsExactly(BankWithdrawFormField.BankRegion, BankWithdrawFormField.BankPostalCode)
             .inOrder()
         assertThat(BankWithdrawFormValidator.dependentFieldsOf(BankWithdrawFormField.City)).isEmpty()
     }
@@ -90,7 +87,6 @@ internal class BankWithdrawFormValidatorTest {
         single(BankWithdrawFormField.BankName, "", expected = BankWithdrawFieldError.Required),
         single(BankWithdrawFormField.Country, "us", expected = null),
         single(BankWithdrawFormField.Country, "USA", expected = BankWithdrawFieldError.InvalidFormat),
-        single(BankWithdrawFormField.BankCountry, "U1", expected = BankWithdrawFieldError.InvalidFormat),
         withCountry(BankWithdrawFormField.Region, "CA", country = "US", expected = null),
         withCountry(BankWithdrawFormField.Region, "ca", country = "us", expected = null),
         withCountry(
@@ -101,11 +97,12 @@ internal class BankWithdrawFormValidatorTest {
         ),
         withCountry(BankWithdrawFormField.Region, "Ontario", country = "CA", expected = null),
         single(BankWithdrawFormField.Region, "California", expected = null),
-        withCountry(BankWithdrawFormField.BankRegion, "NY", country = "US", expected = null),
+        single(BankWithdrawFormField.BankRegion, "NY", expected = null),
+        single(BankWithdrawFormField.BankRegion, "New York", expected = BankWithdrawFieldError.InvalidFormat),
         withCountry(
             BankWithdrawFormField.BankRegion,
             "New York",
-            country = "US",
+            country = "GB",
             expected = BankWithdrawFieldError.InvalidFormat,
         ),
         withCountry(BankWithdrawFormField.PostalCode, "12345", country = "US", expected = null),
@@ -118,13 +115,14 @@ internal class BankWithdrawFormValidatorTest {
             expected = BankWithdrawFieldError.InvalidFormat,
         ),
         withCountry(BankWithdrawFormField.PostalCode, "SW1A 1AA", country = "GB", expected = null),
+        single(BankWithdrawFormField.BankPostalCode, "10001", expected = null),
+        single(BankWithdrawFormField.BankPostalCode, "1234", expected = BankWithdrawFieldError.InvalidFormat),
         withCountry(
             BankWithdrawFormField.BankPostalCode,
-            "1".repeat(21),
+            "SW1A 1AA",
             country = "GB",
             expected = BankWithdrawFieldError.InvalidFormat,
         ),
-        withCountry(BankWithdrawFormField.BankPostalCode, "10001", country = "us", expected = null),
         single(BankWithdrawFormField.City, "x".repeat(100), expected = null),
         single(BankWithdrawFormField.AddressLine1, "x".repeat(101), expected = BankWithdrawFieldError.InvalidFormat),
         single(BankWithdrawFormField.BankCity, "", expected = BankWithdrawFieldError.Required),
@@ -139,15 +137,9 @@ internal class BankWithdrawFormValidatorTest {
         value: String,
         country: String,
         expected: BankWithdrawFieldError?,
-    ): ValidationModel {
-        val countryField = when (field) {
-            BankWithdrawFormField.BankRegion, BankWithdrawFormField.BankPostalCode -> BankWithdrawFormField.BankCountry
-            else -> BankWithdrawFormField.Country
-        }
-        return ValidationModel(
-            field = field,
-            values = mapOf(field to value, countryField to country),
-            expected = expected,
-        )
-    }
+    ) = ValidationModel(
+        field = field,
+        values = mapOf(field to value, BankWithdrawFormField.Country to country),
+        expected = expected,
+    )
 }
