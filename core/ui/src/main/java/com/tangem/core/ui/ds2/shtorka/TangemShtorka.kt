@@ -44,7 +44,9 @@ import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 
 /**
  * Design-system v2 shtorka: a persistent, non-modal bottom sheet
@@ -216,6 +218,8 @@ private fun DetentHaptics(state: TangemShtorkaState) {
     val haptic = LocalHapticFeedback.current
     LaunchedEffect(state) {
         snapshotFlow { state.currentDetent }
+            .filter { it !in state.skippedDetents }
+            .distinctUntilChanged()
             .drop(1)
             .collect { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
     }

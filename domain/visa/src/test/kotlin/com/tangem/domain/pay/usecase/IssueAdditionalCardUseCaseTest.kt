@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.IssueAdditionalCardError
 import com.tangem.domain.pay.model.IssueAdditionalCardResult
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
@@ -58,7 +59,7 @@ internal class IssueAdditionalCardUseCaseTest {
         @Test
         fun `GIVEN no additional-card offer WHEN invoked THEN Other Unspecified AND no order is created`() = runTest {
             // Arrange
-            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns emptyList<Offer>().right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers().right()
 
             // Act
             val result = useCase(USER_WALLET_ID)
@@ -73,7 +74,7 @@ internal class IssueAdditionalCardUseCaseTest {
         fun `GIVEN an offer without a spec name WHEN invoked THEN no order is created`() = runTest {
             // Arrange
             coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns
-                listOf(VIRTUAL_OFFER.copy(data = VIRTUAL_OFFER.data.copy(specificationName = null))).right()
+                customerOffers(VIRTUAL_OFFER.copy(data = VIRTUAL_OFFER.data.copy(specificationName = null))).right()
 
             // Act
             val result = useCase(USER_WALLET_ID)
@@ -87,7 +88,7 @@ internal class IssueAdditionalCardUseCaseTest {
         fun `GIVEN active issue order of the offer type WHEN invoked THEN Resumed without createOrder`() = runTest {
             // Arrange
             val existing = order(id = "existing", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.PROCESSING)
-            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(VIRTUAL_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(VIRTUAL_OFFER).right()
             coEvery {
                 orderRepository.findOrders(
                     userWalletId = USER_WALLET_ID,
@@ -110,7 +111,7 @@ internal class IssueAdditionalCardUseCaseTest {
             // Arrange
             val existing = order(id = "existing", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2, status = OrderStatus.NEW)
             val created = order(id = "new", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW)
-            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(VIRTUAL_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(VIRTUAL_OFFER).right()
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(existing).right()
@@ -127,7 +128,7 @@ internal class IssueAdditionalCardUseCaseTest {
         @Test
         fun `GIVEN backend returns insufficient balance WHEN invoked THEN Other with the cause`() = runTest {
             // Arrange
-            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(VIRTUAL_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(VIRTUAL_OFFER).right()
             coEvery {
                 orderRepository.createOrder(
                     userWalletId = USER_WALLET_ID,
@@ -150,7 +151,7 @@ internal class IssueAdditionalCardUseCaseTest {
         fun `GIVEN no active order AND createOrder succeeds WHEN invoked THEN Created without deeplink`() = runTest {
             // Arrange
             val created = order(id = "new", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW)
-            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(VIRTUAL_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(VIRTUAL_OFFER).right()
             coEvery {
                 orderRepository.createOrder(
                     userWalletId = USER_WALLET_ID,
@@ -180,7 +181,7 @@ internal class IssueAdditionalCardUseCaseTest {
                 // Arrange
                 val created = order(id = "new", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2, status = OrderStatus.NEW)
                 coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns
-                    listOf(VIRTUAL_OFFER, CAMPAIGN_OFFER).right()
+                    customerOffers(VIRTUAL_OFFER, CAMPAIGN_OFFER).right()
                 coEvery {
                     orderRepository.createOrder(
                         userWalletId = USER_WALLET_ID,
@@ -202,7 +203,7 @@ internal class IssueAdditionalCardUseCaseTest {
         @Test
         fun `GIVEN offers without campaign offer WHEN invoked with deeplink THEN NoCampaignOffer`() = runTest {
             // Arrange
-            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns listOf(VIRTUAL_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(VIRTUAL_OFFER).right()
 
             // Act
             val result = useCase(USER_WALLET_ID, deeplinkValue = DEEPLINK_VALUE)
@@ -215,7 +216,7 @@ internal class IssueAdditionalCardUseCaseTest {
         @Test
         fun `GIVEN backend rejects the offer WHEN invoked with deeplink THEN OfferNotAvailable`() = runTest {
             // Arrange
-            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns listOf(CAMPAIGN_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(CAMPAIGN_OFFER).right()
             coEvery { orderRepository.createOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns
                 VisaApiError.CardIssueOfferNotAvailable.left()
 
@@ -247,7 +248,7 @@ internal class IssueAdditionalCardUseCaseTest {
         ) = runTest {
             // Arrange
             val existing = order(id = "existing", type = type, status = OrderStatus.PROCESSING)
-            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns listOf(CAMPAIGN_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(CAMPAIGN_OFFER).right()
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(existing).right()
@@ -267,7 +268,7 @@ internal class IssueAdditionalCardUseCaseTest {
             // Arrange
             val plastic = order(id = "plastic", type = OrderType.CARD_ISSUE_PLASTIC_RAIN, status = OrderStatus.PROCESSING)
             val created = order(id = "new", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2, status = OrderStatus.NEW)
-            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns listOf(CAMPAIGN_OFFER).right()
+            coEvery { offersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE) } returns customerOffers(CAMPAIGN_OFFER).right()
             coEvery {
                 orderRepository.findOrders(userWalletId = USER_WALLET_ID, types = any(), statuses = any())
             } returns listOf(plastic).right()
@@ -320,3 +321,6 @@ internal class IssueAdditionalCardUseCaseTest {
         )
     }
 }
+
+private fun customerOffers(vararg offers: Offer) =
+    CustomerOffers(orderable = offers.toList(), artwork = emptyMap())

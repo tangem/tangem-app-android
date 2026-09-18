@@ -104,7 +104,7 @@ internal interface WalletWarningsClickIntents {
 internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
-    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    private val deriveCurrencyAndOwnerKeysUseCase: DeriveCurrencyAndOwnerKeysUseCase,
     private val setCardWasScannedUseCase: SetCardWasScannedUseCase,
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
@@ -174,7 +174,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped())
 
         modelScope.launch {
-            derivePublicKeysUseCase(
+            deriveCurrencyAndOwnerKeysUseCase(
                 userWalletId = userWalletId,
                 currencies = missedAddressCurrencies,
             ).fold(

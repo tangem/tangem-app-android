@@ -38,6 +38,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     targetsByAddress: Map<String, StakingTarget> = emptyMap(),
     onOpenValidator: (String) -> Unit = {},
     onAddContact: (() -> Unit)? = null,
+    networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TxHistoryInfo, TxHistoryDetailsUM> {
 
     private val menu = buildDetailsMenu(
@@ -56,6 +57,7 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onOpenValidator = onOpenValidator,
         isBalanceHidden = isBalanceHidden,
         lookup = lookup,
+        networkTokens = networkTokens,
     )
 
     private val expressConverter = ExpressTxToDetailsUMConverter(

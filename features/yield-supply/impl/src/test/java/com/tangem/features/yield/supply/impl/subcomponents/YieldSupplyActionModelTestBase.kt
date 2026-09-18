@@ -25,14 +25,13 @@ import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -73,18 +72,6 @@ internal abstract class YieldSupplyActionModelTestBase {
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         every { notificationsUpdateTrigger.hasErrorFlow } returns MutableStateFlow(false)
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns cryptoCurrencyStatus.right()
-    }
-
-    /** A [StandardTestDispatcher] for every role so `advanceUntilIdle()` drives the model's coroutines. */
-    protected fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     /** Network fee is paid in the native coin (token amounts are rejected by `increaseGasLimitBy`). */
