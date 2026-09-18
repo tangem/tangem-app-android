@@ -125,18 +125,34 @@ internal class DefaultWalletManagersFacadeSafeManagerTest {
     }
 
     @Test
-    fun `GIVEN the SDK cannot build the Safe manager WHEN getOrCreateWalletManager THEN it fails loudly`() = runTest {
+    fun `GIVEN the SDK cannot build the Safe manager WHEN getOrCreateWalletManager THEN null and nothing stored`() =
+        runTest {
+            // Arrange
+            every { sdkFactory.createSafeWalletManager(Blockchain.Ethereum, any(), SAFE_ADDRESS) } returns null
+
+            // Act
+            @Suppress("DEPRECATION")
+            val actual = facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork)
+
+            // Assert
+            assertThat(actual).isNull()
+            coVerify(exactly = 0) { walletManagersStore.store(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the owner key is not derived WHEN getOrCreateWalletManager THEN null instead of a failure`() = runTest {
         // Arrange
-        every { sdkFactory.createSafeWalletManager(Blockchain.Ethereum, any(), SAFE_ADDRESS) } returns null
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(
+            listOf(SafeTestFixtures.hotWallet(derivedPaths = emptySet())),
+        )
 
         // Act
         @Suppress("DEPRECATION")
-        val actual = runCatching {
-            facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork)
-        }.exceptionOrNull()
+        val actual = facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork)
 
         // Assert
-        assertThat(actual).isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(actual).isNull()
+        coVerify(exactly = 0) { walletManagersStore.store(any(), any()) }
     }
 
     @Test
