@@ -134,7 +134,7 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     }
 
     @Test
-    fun `GIVEN country without regions WHEN create THEN the blank region row is dropped`() {
+    fun `GIVEN saved recipient without a region WHEN create THEN the blank region row is dropped`() {
         // Arrange
         val recipient = bankAccount(id = "acc-1")
         val details = recipient.details

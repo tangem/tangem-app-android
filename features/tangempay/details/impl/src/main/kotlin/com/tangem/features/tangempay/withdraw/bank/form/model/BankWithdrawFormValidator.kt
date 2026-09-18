@@ -1,5 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.form.model
 
+import com.tangem.features.tangempay.common.TangemPayFormCharset
+
 /**
  * Format rules from the analyst spec, applied to trimmed values; US addresses get the stricter state and ZIP checks.
  */
@@ -13,6 +15,20 @@ internal object BankWithdrawFormValidator {
     private val TWO_LETTER_CODE = Regex("^[A-Za-z]{2}$")
     private val US_ZIP = Regex("^\\d{5}(-?\\d{4})?$")
 
+    /** Free-text fields Rain accepts in Latin script only; the rest are digits and codes the format rules pin down. */
+    private val LATIN_ONLY_FIELDS = setOf(
+        BankWithdrawFormField.FirstName,
+        BankWithdrawFormField.LastName,
+        BankWithdrawFormField.BusinessName,
+        BankWithdrawFormField.BankName,
+        BankWithdrawFormField.Region,
+        BankWithdrawFormField.BankRegion,
+        BankWithdrawFormField.City,
+        BankWithdrawFormField.AddressLine1,
+        BankWithdrawFormField.BankCity,
+        BankWithdrawFormField.BankAddressLine1,
+    )
+
     fun validate(field: BankWithdrawFormField, values: Map<BankWithdrawFormField, String>): BankWithdrawFieldError? {
         val value = values[field].orEmpty().trim()
         if (value.isEmpty()) return BankWithdrawFieldError.Required
@@ -20,12 +36,10 @@ internal object BankWithdrawFormValidator {
             ?.let { countryField -> values[countryField] }
             ?.trim()
             ?.equals(BankWithdrawFormFields.US_COUNTRY_CODE, ignoreCase = true) == true
-        return when {
-            field == BankWithdrawFormField.RoutingNumber -> {
-                if (isRoutingNumber(value)) null else BankWithdrawFieldError.InvalidRoutingNumber
-            }
-            hasValidFormat(field = field, value = value, isUsAddress = isUsAddress) -> null
-            else -> BankWithdrawFieldError.InvalidFormat
+        return if (field == BankWithdrawFormField.RoutingNumber) {
+            if (isRoutingNumber(value)) null else BankWithdrawFieldError.InvalidRoutingNumber
+        } else {
+            formatError(field = field, value = value, isUsAddress = isUsAddress)
         }
     }
 
@@ -40,6 +54,19 @@ internal object BankWithdrawFormValidator {
     fun dependentFieldsOf(field: BankWithdrawFormField): List<BankWithdrawFormField> = when (field) {
         BankWithdrawFormField.Country -> listOf(BankWithdrawFormField.Region, BankWithdrawFormField.PostalCode)
         else -> emptyList()
+    }
+
+    /** Shape and length are judged first, so an over-long non-Latin value reads as a length problem, as on iOS. */
+    private fun formatError(
+        field: BankWithdrawFormField,
+        value: String,
+        isUsAddress: Boolean,
+    ): BankWithdrawFieldError? = when {
+        !hasValidFormat(field = field, value = value, isUsAddress = isUsAddress) ->
+            BankWithdrawFieldError.InvalidFormat
+        field in LATIN_ONLY_FIELDS && !TangemPayFormCharset.isAddressCharsetValid(value) ->
+            BankWithdrawFieldError.NonLatin
+        else -> null
     }
 
     private fun hasValidFormat(field: BankWithdrawFormField, value: String, isUsAddress: Boolean): Boolean {

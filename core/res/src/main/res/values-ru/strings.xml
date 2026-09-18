@@ -2383,7 +2383,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Получайте банковские переводы в USD через ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">С банковского счёта</string>
-  <string name="tangempay_topup_receive_body">Отправьте USDC Polygon на адрес вашего аккаунта</string>
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
   <string name="tangempay_topup_receive_title">С другого кошелька или биржи</string>
   <string name="tangempay_topup_swap_body">Пополните платежный аккаунт любым токеном из вашего кошелька</string>
