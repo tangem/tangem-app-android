@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
@@ -109,6 +110,7 @@ internal class PlacePredictionModelTest {
     private val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
     private val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
     private val positionsRepository: PolymarketPositionsRepository = mockk()
+    private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private var model: PlacePredictionModel? = null
 
@@ -130,6 +132,7 @@ internal class PlacePredictionModelTest {
             placeOrderUseCase,
             awaitDelayedOrderUseCase,
             positionsRepository,
+            fundingWindow,
         )
 
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
@@ -692,6 +695,85 @@ internal class PlacePredictionModelTest {
         assertThat(result).isInstanceOf(PlaceResultUM.Filled::class.java)
         assertThat((result as PlaceResultUM.Filled).collateralAmount).isEqualTo(BigDecimal("10"))
         verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the order fills WHEN place clicked THEN the balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the exchange found no match WHEN place clicked THEN no balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no answer from the exchange WHEN place clicked THEN the balance window still opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            PredictionPlaceOrderError.Ambiguous(detail = "the exchange never answered").left()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the signature fails WHEN place clicked THEN no balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { signOrderInteractor(request = any()) } returns
+            PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
 
         model.onDestroy()
     }
@@ -1485,6 +1567,7 @@ internal class PlacePredictionModelTest {
             placePredictionOrderUseCase = placeOrderUseCase,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
             positionsRepository = positionsRepository,
+            predictionFundingWindow = fundingWindow,
         ).also { model = it }
     }
 
