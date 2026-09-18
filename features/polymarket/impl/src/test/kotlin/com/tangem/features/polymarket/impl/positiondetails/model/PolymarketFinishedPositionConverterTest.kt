@@ -85,6 +85,18 @@ internal class PolymarketFinishedPositionConverterTest {
         assertThat(actual.summary.outcomeVariant).isEqualTo(TangemMessageBubble.Variant.Neutral)
     }
 
+    @Test
+    fun `GIVEN first outcome of the market WHEN converted THEN colours it blue whatever its label`() {
+        // Arrange
+        val position = createClosedPolymarketPosition(outcome = "Up", outcomeIndex = 0)
+
+        // Act
+        val actual = converter.convert(position)
+
+        // Assert
+        assertThat(actual.summary.outcomeVariant).isEqualTo(TangemMessageBubble.Variant.Info)
+    }
+
     private fun provideTestModels(): List<FinishedModel> {
         val won = TangemBadgeUM(
             text = resourceReference(R.string.prediction_positions_won),
