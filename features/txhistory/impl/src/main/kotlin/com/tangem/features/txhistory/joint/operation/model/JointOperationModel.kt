@@ -169,7 +169,7 @@ internal class JointOperationModel @Inject constructor(
 
     fun onRefuseClick() {
         val operation = currentState ?: return
-        if (isBusy || operation.role == Role.UNKNOWN) return
+        if (isBusy || !operation.canRefuse) return
 
         uiMessageSender.send(refusalMessages.confirmation(isInitiator = operation.role == Role.INITIATOR))
     }

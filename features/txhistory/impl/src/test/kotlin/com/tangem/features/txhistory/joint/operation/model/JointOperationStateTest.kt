@@ -165,6 +165,54 @@ internal class JointOperationStateTest {
     }
 
     @Test
+    fun `GIVEN this member waits for their turn WHEN state built THEN they may refuse the operation`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.WAITING)))
+
+        // Act
+        val actual = state.canRefuse
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @Test
+    fun `GIVEN this owner address is outside the roster WHEN state built THEN they may not refuse the operation`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OTHER, answer = Answer.CREATED)))
+
+        // Act
+        val actual = state.canRefuse
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN this member already declined WHEN state built THEN they may not refuse the operation again`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.DECLINED)))
+
+        // Act
+        val actual = state.canRefuse
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the backend named no initiator WHEN state built THEN they may not refuse the operation`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN)), initiator = null)
+
+        // Act
+        val actual = state.canRefuse
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
     fun `GIVEN as many declines as the threshold allows WHEN state built THEN it is still reachable`() {
         // Arrange — 3 members, threshold 2: one decline leaves exactly two who can sign
         val state = state(
