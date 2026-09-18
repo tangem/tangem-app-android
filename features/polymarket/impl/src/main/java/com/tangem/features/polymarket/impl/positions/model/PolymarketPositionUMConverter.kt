@@ -1,25 +1,25 @@
 package com.tangem.features.polymarket.impl.positions.model
 
-import com.tangem.core.res.R
-import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.badge.TangemBadgeUM
+import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
 import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketPositionId
-import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.converter.PolymarketPositionStatusConverter
+import com.tangem.domain.polymarket.model.PolymarketPositionStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import com.tangem.features.polymarket.impl.positiondetails.model.canOpenPositionDetails
+import com.tangem.features.polymarket.impl.positionresult.model.canOpenPositionResult
 import com.tangem.utils.converter.Converter
 
 internal class PolymarketPositionUMConverter(
-    private val onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+    private val onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
+    private val onClosedPositionClick: ((PolymarketPosition.Closed) -> Unit)? = null,
 ) : Converter<PolymarketPosition, PolymarketPositionUM> {
+
+    private val badgeConverter = PolymarketPositionBadgeConverter()
 
     override fun convert(value: PolymarketPosition): PolymarketPositionUM = when (value) {
         is PolymarketPosition.Open -> convertOpen(value)
@@ -47,19 +47,22 @@ internal class PolymarketPositionUMConverter(
             },
         ),
         currentValue = stringReference(value.currentValue.formatPolymarketMoney()),
-        result = resultBadge(value),
-        onClick = onPositionClick?.takeIf { value.canOpenPositionDetails }?.let { { it(value.id) } },
+        result = badgeConverter.convert(value),
+        glowVariant = when (PolymarketPositionStatusConverter.convert(value)) {
+            PolymarketPositionStatus.WON, PolymarketPositionStatus.LOST, PolymarketPositionStatus.SPLIT ->
+                when (value.cashPnl.signum()) {
+                    1 -> TangemGlowRing.Variant.Info
+                    -1 -> TangemGlowRing.Variant.Error
+                    else -> null
+                }
+            else -> null
+        },
+        onClick = onPositionClick
+            ?.takeIf { value.canOpenPositionDetails || value.canOpenPositionResult }
+            ?.let { { it(value) } },
     )
 
     private fun convertClosed(value: PolymarketPosition.Closed): PolymarketPositionUM {
-        val (label, status) = when (value.status) {
-            PolymarketClosedPositionStatus.CLOSED -> R.string.prediction_positions_closed to TangemBadge.Status.Neutral
-            PolymarketClosedPositionStatus.WON -> R.string.prediction_positions_won to TangemBadge.Status.Success
-            PolymarketClosedPositionStatus.LOST -> R.string.prediction_positions_lost to TangemBadge.Status.Error
-            PolymarketClosedPositionStatus.SPLIT -> R.string.prediction_positions_split to TangemBadge.Status.Neutral
-            PolymarketClosedPositionStatus.UNKNOWN ->
-                R.string.prediction_positions_unknown to TangemBadge.Status.Neutral
-        }
         return PolymarketPositionUM(
             id = "${value.id.conditionId}:${value.id.assetId}",
             title = stringReference(value.title),
@@ -70,32 +73,10 @@ internal class PolymarketPositionUMConverter(
                 value.outcome.equals("No", ignoreCase = true) -> TangemMessageBubble.Variant.Error
                 else -> TangemMessageBubble.Variant.Neutral
             },
-            priceChange = TangemPriceChange.State(
-                value = stringReference(value.realizedPnl.abs().formatPolymarketMoney()),
-                direction = when (value.realizedPnl.signum()) {
-                    -1 -> TangemPriceChange.Direction.Down
-                    1 -> TangemPriceChange.Direction.Up
-                    else -> TangemPriceChange.Direction.Neutral
-                },
-            ),
+            priceChange = null,
             currentValue = null,
-            result = TangemBadgeUM(text = resourceReference(label), status = status, size = TangemBadge.Size.X6),
-        )
-    }
-
-    private fun resultBadge(value: PolymarketPosition.Open): TangemBadgeUM? {
-        val (text, status) = when (value.result) {
-            PolymarketPositionResult.WON ->
-                "Won ${value.currentValue.formatPolymarketMoney()}" to TangemBadge.Status.Success
-            PolymarketPositionResult.LOST -> "Lost" to TangemBadge.Status.Error
-            PolymarketPositionResult.SPLIT -> "Split" to TangemBadge.Status.Neutral
-            PolymarketPositionResult.UNKNOWN -> "Unknown" to TangemBadge.Status.Neutral
-            null -> return null
-        }
-        return TangemBadgeUM(
-            text = stringReference(text),
-            status = status,
-            size = TangemBadge.Size.X6,
+            result = badgeConverter.convert(value),
+            onClick = onClosedPositionClick?.let { { it(value) } },
         )
     }
 }

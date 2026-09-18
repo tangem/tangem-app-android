@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -21,6 +22,8 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.SdkAmount
+import com.tangem.domain.models.network.SdkAmountType
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
@@ -53,6 +56,14 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         get() = TxHistoryItemToTransactionItemUMConverter(
             currency = token,
             txHistoryUiActions = txHistoryUiActions,
+        )
+
+    /** The coin history of a wallet that tracks [token] — the only case where a network-fee row can name its asset. */
+    private val networkFeeConverter
+        get() = TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            networkTokens = setOf(token),
         )
 
     // region Pill dispatch routing
@@ -149,7 +160,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN GaslessFee WHEN convert THEN Content with gasless fee title`() {
+    fun `GIVEN GaslessFee WHEN convert THEN Content with network fee title`() {
         val tx = txInfo(
             type = TransactionType.GaslessFee,
             interactionAddressType = null,
@@ -157,7 +168,52 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.gasless_transaction_fee))
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+    }
+
+    @Test
+    fun `GIVEN NetworkFee WHEN convert THEN amount is the network fee it paid`() {
+        // The transaction moved no coin, so the row shows its fee rather than its own zero amount
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(
+                amount = SdkAmount(
+                    currencySymbol = "USDT",
+                    value = BigDecimal("5"),
+                    decimals = 6,
+                    type = SdkAmountType.Token(contractAddress = TOKEN_CONTRACT),
+                ),
+                address = EXTERNAL_ADDRESS,
+            ),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = null,
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = networkFeeConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.title).isEqualTo(resRef(R.string.common_network_fee_title))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_percent_20))
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS}0.000015")
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.FeeFor(symbol = "USDT", icon = CryptoCurrencyToIconStateConverter().convert(token)),
+        )
+    }
+
+    @Test
+    fun `GIVEN NetworkFee for an untracked token WHEN convert THEN generic for-sending subtitle`() {
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            interactionAddressType = null,
+        )
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.Plain(resRef(R.string.transaction_history_fee_for_sending)),
+        )
     }
 
     @Test

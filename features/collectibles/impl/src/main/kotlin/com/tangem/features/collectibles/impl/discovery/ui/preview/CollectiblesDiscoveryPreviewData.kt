@@ -26,12 +26,14 @@ internal object CollectiblesDiscoveryPreviewData {
     )
 
     val default = CollectiblesDiscoveryUM(
-        tabs = persistentListOf(
-            tab(id = "all", label = "All cards", counter = "32", isSelected = true),
-            tab(id = "sports", label = "Sports", counter = "8"),
-            tab(id = "pokemon", label = "Pokemon", counter = "12"),
-            tab(id = "something_else", label = "Something else", counter = "6"),
-            tab(id = "anime", label = "Anime", counter = "6"),
+        tabs = CollectiblesDiscoveryUM.TabsUM.Content(
+            tabs = persistentListOf(
+                tab(id = "all", label = "All cards", counter = "32", isSelected = true),
+                tab(id = "sports", label = "Sports", counter = "8"),
+                tab(id = "pokemon", label = "Pokemon", counter = "12"),
+                tab(id = "something_else", label = "Something else", counter = "6"),
+                tab(id = "anime", label = "Anime", counter = "6"),
+            ),
         ),
         content = content(
             pack,
@@ -42,10 +44,13 @@ internal object CollectiblesDiscoveryPreviewData {
         search = searchState(query = "", isActive = false),
     )
 
-    val loading = default.copy(content = CollectiblesDiscoveryUM.ContentUM.Loading)
+    val loading = default.copy(
+        tabs = CollectiblesDiscoveryUM.TabsUM.Loading,
+        content = CollectiblesDiscoveryUM.ContentUM.Loading,
+    )
 
     val listError = default.copy(
-        tabs = persistentListOf(),
+        tabs = CollectiblesDiscoveryUM.TabsUM.Hidden,
         content = CollectiblesDiscoveryUM.ContentUM.Error(
             message = stringReference("Failed to load cards list.\nTap to reload"),
             onReloadClick = {},
@@ -53,7 +58,7 @@ internal object CollectiblesDiscoveryPreviewData {
     )
 
     val searchActive = default.copy(
-        tabs = persistentListOf(),
+        tabs = CollectiblesDiscoveryUM.TabsUM.Hidden,
         content = content(
             pack,
             pack.copy(id = "water_1", title = stringReference("Water 1")),
@@ -117,6 +122,8 @@ internal class CollectiblesDiscoveryPreviewComponent(
     override val tabScrollState: ScrollState = ScrollState(initial = 0)
 
     override fun onLoadMore() { /* no-op */ }
+
+    override fun onRefresh() { /* no-op */ }
 
     override fun LazyListScope.content(uiState: CollectiblesDiscoveryUM, modifier: Modifier) {
         collectiblesDiscoveryList(state = uiState, tabScrollState = tabScrollState)

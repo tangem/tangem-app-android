@@ -88,7 +88,7 @@ internal fun JointAccountCompositionScreen(
             Text(
                 modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
                 text = explanationText(state = state),
-                style = TangemTheme.typography3.body.medium,
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
             )
 
@@ -229,18 +229,25 @@ private fun SteppersCard(state: JointAccountCompositionUM, modifier: Modifier = 
                 state.maxMembers.toString(),
             ),
             stepper = state.totalMembers,
+            isLast = false,
         )
 
         StepperRow(
             title = stringResourceSafe(R.string.joint_account_members_signers_title),
             subtitle = stringResourceSafe(R.string.joint_account_members_signers_subtitle),
             stepper = state.requiredToSign,
+            isLast = true,
         )
     }
 }
 
 @Composable
-private fun StepperRow(title: String, subtitle: String, stepper: JointAccountCompositionUM.StepperUM) {
+private fun StepperRow(
+    title: String,
+    subtitle: String,
+    stepper: JointAccountCompositionUM.StepperUM,
+    isLast: Boolean,
+) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
@@ -256,7 +263,7 @@ private fun StepperRow(title: String, subtitle: String, stepper: JointAccountCom
         endSlot = {
             StepperControls(stepper = stepper)
         },
-        divider = true,
+        divider = !isLast,
     )
 }
 
