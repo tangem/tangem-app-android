@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.orderCard.impl.model
 
+import com.tangem.features.tangempay.common.TangemPayFormCharset
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderFieldError
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.FieldUM
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardDataScreenUM.Form
@@ -8,12 +9,12 @@ internal enum class OrderFormField(
     val read: (Form) -> FieldUM,
     val write: (Form, FieldUM) -> Form,
     val isRequired: Boolean = true,
-    val isContentValid: (String) -> Boolean = OrderFormValidator::isAddressCharsetValid,
+    val isContentValid: (String) -> Boolean = TangemPayFormCharset::isAddressCharsetValid,
 ) {
     EmbossName(
         read = { it.embossName },
         write = { form, field -> form.copy(embossName = field) },
-        isContentValid = OrderFormValidator::isEmbossCharsetValid,
+        isContentValid = TangemPayFormCharset::isEmbossCharsetValid,
     ),
     FirstName(read = { it.firstName }, write = { form, field -> form.copy(firstName = field) }),
     LastName(read = { it.lastName }, write = { form, field -> form.copy(lastName = field) }),

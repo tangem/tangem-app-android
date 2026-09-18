@@ -284,6 +284,7 @@
     <item quantity="one">%d card</item>
     <item quantity="other">%d cards</item>
   </plurals>
+  <string name="collectibles_account_collection_empty">No cards</string>
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
   <string name="collectibles_entrance_card_subtitle">Open packs of graded collectible cards</string>
@@ -302,11 +303,12 @@
   <string name="collectibles_machine_tier_uncommon">Uncommon</string>
   <string name="collectibles_machine_value_and_odds_section">Pack value and odds</string>
   <string name="collectibles_main_all_cards_tab">All cards</string>
+  <string name="collectibles_main_all_packs_tab">All packs</string>
   <string name="collectibles_main_menu_get_assistance">Get assistance</string>
   <string name="collectibles_main_menu_how_it_works">How it works</string>
   <string name="collectibles_main_pack_buyback_badge">Buyback %s</string>
   <string name="collectibles_main_packs_empty">There are no packs here yet</string>
-  <string name="collectibles_main_packs_load_error">Failed to load packs.\nTap to reload</string>
+  <string name="collectibles_main_packs_load_error">Failed to load packs. Tap to reload</string>
   <string name="collectibles_main_search_empty">No results. Try to change your wording\nor explore from the list</string>
   <string name="collectibles_main_search_load_error">Failed to load cards list.\nTap to reload</string>
   <string name="collectibles_main_title">Packs account</string>
@@ -2839,7 +2841,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">Receive USD from a bank account via ACH/FedWire</string>
   <string name="tangempay_topup_bank_transfer_title">From a bank account</string>
-  <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_body_multichain">Send USDC or USDT to your account’s address</string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
@@ -2891,6 +2892,7 @@
   <string name="tangempay_withdraw_bank_placeholder_first_name">John</string>
   <string name="tangempay_withdraw_bank_placeholder_last_name">Doe</string>
   <string name="tangempay_withdraw_bank_placeholder_region">Eg., CA</string>
+  <string name="tangempay_withdraw_bank_placeholder_region_name">Eg., Bavaria</string>
   <string name="tangempay_withdraw_bank_recipient_business">Business</string>
   <string name="tangempay_withdraw_bank_recipient_info">Recipient info</string>
   <string name="tangempay_withdraw_bank_recipients_title">Bank transfers</string>
