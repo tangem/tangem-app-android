@@ -27,11 +27,9 @@ internal data class NewRecipientDraft(
 
 internal fun NewRecipientDraft.isComplete(isBusiness: Boolean): Boolean {
     if (isThirdParty == null || accountType == null) return false
-    val required = BankWithdrawFormFields.visible(
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) + BankWithdrawFormFields.bankDetails,
-        values = fields,
-    )
-    return required.all { field -> !fields[field].isNullOrBlank() }
+    val formFields = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) +
+        BankWithdrawFormFields.bankDetails
+    return formFields.all { field -> !fields[field].isNullOrBlank() }
 }
 
 /** The order payload for a recipient added in this wizard, or null until the rail and every form step are in place. */
