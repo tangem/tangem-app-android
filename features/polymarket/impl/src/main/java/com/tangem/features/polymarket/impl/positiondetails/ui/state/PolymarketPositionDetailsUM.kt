@@ -24,6 +24,7 @@ internal data class PolymarketPositionDetailsUM(
             val information: Information,
             val notice: Notice? = null,
             val onClosePositionClick: (() -> Unit)? = null,
+            val onBuyMoreClick: (() -> Unit)? = null,
         ) : Content
     }
 
