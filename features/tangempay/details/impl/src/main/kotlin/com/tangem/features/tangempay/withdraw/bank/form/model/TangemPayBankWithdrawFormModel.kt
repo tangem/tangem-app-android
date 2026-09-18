@@ -115,8 +115,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     private fun onContinueClick() {
         val values = currentValues()
-        val visibleFields = BankWithdrawFormFields.visible(fields = form.fields, values = values)
-        val errors = BankWithdrawFormValidator.validateAll(fields = visibleFields, values = values)
+        val errors = BankWithdrawFormValidator.validateAll(fields = form.fields, values = values)
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors) }
         } else {
