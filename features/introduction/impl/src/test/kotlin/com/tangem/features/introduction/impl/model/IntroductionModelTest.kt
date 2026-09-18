@@ -1337,7 +1337,7 @@ internal class IntroductionModelTest {
         )
 
         @Test
-        fun `GIVEN the story shown WHEN the buy action is picked THEN the story ends and the link opens`() {
+        fun `GIVEN the story shown WHEN the buy action is picked THEN the link opens and the story is kept`() {
             // Arrange
             val model = createModel()
             model.openStory()
@@ -1350,11 +1350,55 @@ internal class IntroductionModelTest {
             model.onStoryAction(action)
 
             // Assert
-            verify(exactly = 1) { action.end() }
-            verify(exactly = 0) { action.resume() }
             verify(exactly = 1) { urlOpener.openUrl(BUY_LINK) }
+            verify(exactly = 0) { action.end() }
+            verify(exactly = 0) { action.resume() }
             assertThat(sentEvents.last())
                 .isEqualTo(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Stories))
+        }
+
+        @Test
+        fun `GIVEN the store opened from a slide WHEN the screen resumes THEN that slide carries on`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            coEvery {
+                generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Creation)
+            } returns BUY_LINK
+            val action = pendingAction(actionId = "learn_more")
+            model.onStoryAction(action)
+            model.setVideoRunning(isRunning = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+            model.setVideoRunning(isRunning = false)
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 1) { action.resume() }
+            verify(exactly = 0) { action.end() }
+            assertThat(model.uiState.value.isVideoRunning).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the store opened from a slide WHEN the viewer closes the story THEN the resume settles nothing`() {
+            // Arrange
+            val model = createModel()
+            model.openStory()
+            coEvery {
+                generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Creation)
+            } returns BUY_LINK
+            val action = pendingAction(actionId = "learn_more")
+            model.onStoryAction(action)
+            model.onStoryResult(StoriesV2Result.Dismissed)
+            model.setVideoRunning(isRunning = false)
+
+            // Act
+            model.setVideoRunning(isRunning = true)
+
+            // Assert
+            verify(exactly = 0) { action.resume() }
+            verify(exactly = 0) { action.end() }
         }
 
         @Test
