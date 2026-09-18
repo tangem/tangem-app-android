@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.features.feed.nav.FeedTabComponent
-import com.tangem.features.feed.search.ui.state.RecentUM
+import com.tangem.features.feed.search.ui.state.RecentQueryUM
 import com.tangem.features.feed.ui.FeedTabRow
 import com.tangem.features.feed.ui.FeedTabUM
 import com.tangem.features.feed.v2.FeedV2Component
@@ -30,7 +30,7 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable
 internal fun FeedSearchPlaceholder(
-    recent: RecentUM?,
+    recentQueries: ImmutableList<RecentQueryUM>,
     marketList: FeedTabComponent?,
     bottomSheetState: State<BottomSheetState>,
     contentPadding: PaddingValues,
@@ -42,8 +42,8 @@ internal fun FeedSearchPlaceholder(
             .padding(top = contentPadding.calculateTopPadding()),
     ) {
         // TODO: [TWI-1608] Suggested + Popular
-        if (recent != null) {
-            FeedSearchRecent(state = recent)
+        if (recentQueries.isNotEmpty()) {
+            FeedSearchRecent(queries = recentQueries)
         }
 
         marketList?.Content(

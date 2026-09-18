@@ -16,8 +16,6 @@ interface FeedSearchHistoryRepository {
 
     suspend fun removeRecentQuery(query: String)
 
-    suspend fun clear()
-
     companion object {
 
         const val MAX_HISTORY_SIZE = 10

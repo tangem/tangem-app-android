@@ -7,7 +7,6 @@ import com.tangem.data.feed.search.store.FeedSearchHistoryStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.create
 import com.tangem.domain.feed.search.repository.FeedSearchHistoryRepository
-import com.tangem.domain.feed.search.usecase.ClearFeedSearchHistoryUseCase
 import com.tangem.domain.feed.search.usecase.GetRecentFeedSearchQueriesUseCase
 import com.tangem.domain.feed.search.usecase.RemoveFeedSearchQueryUseCase
 import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
@@ -57,10 +56,5 @@ internal object FeedSearchDataModule {
     @Provides
     fun provideRemoveFeedSearchQueryUseCase(repository: FeedSearchHistoryRepository): RemoveFeedSearchQueryUseCase {
         return RemoveFeedSearchQueryUseCase(repository = repository)
-    }
-
-    @Provides
-    fun provideClearFeedSearchHistoryUseCase(repository: FeedSearchHistoryRepository): ClearFeedSearchHistoryUseCase {
-        return ClearFeedSearchHistoryUseCase(repository = repository)
     }
 }

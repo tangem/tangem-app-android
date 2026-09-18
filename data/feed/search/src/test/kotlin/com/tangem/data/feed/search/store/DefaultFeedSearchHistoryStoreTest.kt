@@ -71,16 +71,4 @@ internal class DefaultFeedSearchHistoryStoreTest {
         // Assert
         assertThat(store.getQueries().first().map(QueryDTO::text)).containsExactly("bitcoin")
     }
-
-    @Test
-    fun `GIVEN queries stored WHEN clear THEN history is empty`() = runTest {
-        // Arrange
-        store.saveQuery(QueryDTO(text = "bitcoin", timestamp = 1))
-
-        // Act
-        store.clear()
-
-        // Assert
-        assertThat(store.getQueries().first()).isEmpty()
-    }
 }

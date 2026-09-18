@@ -23,6 +23,4 @@ internal sealed class FeedSearchAnalyticsEvent(
         event = "Hint Clicked",
         params = mapOf("Text" to hint),
     )
-
-    class ButtonClearHistoryClick : FeedSearchAnalyticsEvent(event = "Button - Clear History")
 }

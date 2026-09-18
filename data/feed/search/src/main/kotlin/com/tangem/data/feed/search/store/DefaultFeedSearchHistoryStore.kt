@@ -28,8 +28,4 @@ internal class DefaultFeedSearchHistoryStore(
             current.copy(queries = current.queries.filterNot { it.text == text })
         }
     }
-
-    override suspend fun clear() {
-        dataStore.updateData { FeedSearchHistoryDTO() }
-    }
 }
