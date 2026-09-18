@@ -34,6 +34,7 @@ dependencies {
 
     /** Common modules */
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain module */
     implementation(projects.domain.settings)
