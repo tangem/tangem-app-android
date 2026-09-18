@@ -5,32 +5,25 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
-import com.tangem.blockchain.blockchains.ethereum.ExternalAddressBalanceProvider
-import com.tangem.blockchain.blockchains.ethereum.network.ContractCallData
+import com.tangem.blockchain.blockchains.ethereum.SafeEthereumWalletManager
 import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Lazy
 import java.math.BigInteger
 import javax.inject.Inject
 
 /**
- * [JointNetworkReader] on top of the joint account's [ExternalAddressBalanceProvider]. A provider already
-
- * reads and deliberately NOT stored — the balance pipeline owns the cache, and racing it with a provider
- * that carries no balance state would clobber a stateful one.
+ * [JointNetworkReader] on top of the joint network's [SafeEthereumWalletManager]: the same manager the balance
+ * pipeline keeps, so every read here is made for the Safe address. The facade is lazy because it sits behind the
+ * accounts fetcher, which reaches it through the tokens saver.
  */
 internal class DefaultJointNetworkReader @Inject constructor(
-    private val externalAddressBalanceProvidersStore: ExternalAddressBalanceProvidersStore,
-    private val jointAccountSafeAddressResolver: Lazy<JointAccountSafeAddressResolver>,
-    blockchainSDKFactory: BlockchainSDKFactory,
+    private val walletManagersFacade: Lazy<WalletManagersFacade>,
 ) : JointNetworkReader {
-
-    private val walletManagerFactory by lazy { WalletManagerFactory(blockchainSDKFactory) }
 
     override suspend fun getChainId(network: Network): Either<Throwable, Long> {
         val chainId = network.toBlockchain().getChainId()
@@ -40,16 +33,14 @@ internal class DefaultJointNetworkReader @Inject constructor(
     }
 
     override suspend fun getCode(userWalletId: UserWalletId, network: Network): Either<Throwable, String> {
-        return withProvider(userWalletId, network) { provider -> provider.getCode(address = provider.address) }
+        return withManager(userWalletId, network) { manager -> manager.getCode() }
     }
 
     override suspend fun getContractNonce(
         userWalletId: UserWalletId,
         network: Network,
     ): Either<Throwable, BigInteger> {
-        return withProvider(userWalletId, network) { provider ->
-            provider.getContractNonce(address = provider.address)
-        }
+        return withManager(userWalletId, network) { manager -> manager.getContractNonce() }
     }
 
     override suspend fun estimateGasLimit(
@@ -59,10 +50,9 @@ internal class DefaultJointNetworkReader @Inject constructor(
         value: BigInteger,
         data: String,
     ): Either<Throwable, BigInteger> {
-        return withProvider(userWalletId, network) { provider ->
-            provider.getGasLimit(
+        return withManager(userWalletId, network) { manager ->
+            manager.estimateGasLimit(
                 to = to,
-                from = provider.address,
                 value = "0x${value.toString(HEX_RADIX)}",
                 data = data.takeIf { it != EMPTY_CALLDATA },
             )
@@ -70,7 +60,7 @@ internal class DefaultJointNetworkReader @Inject constructor(
     }
 
     override suspend fun getGasPrice(userWalletId: UserWalletId, network: Network): Either<Throwable, BigInteger> {
-        return withProvider(userWalletId, network) { provider -> provider.getGasPrice() }
+        return withManager(userWalletId, network) { manager -> manager.getGasPrice() }
     }
 
     override suspend fun callSafeContract(
@@ -78,42 +68,26 @@ internal class DefaultJointNetworkReader @Inject constructor(
         network: Network,
         data: String,
     ): Either<Throwable, String> {
-        return withProvider(userWalletId, network) { provider ->
-            provider.callContract(data = ContractCallData(to = provider.address, data = data))
-        }
+        return withManager(userWalletId, network) { manager -> manager.callSafeContract(data = data) }
     }
 
-    private suspend fun <T> withProvider(
+    /** No manager means the account has no Safe address yet — an operation cannot be built for it */
+    private suspend fun <T> withManager(
         userWalletId: UserWalletId,
         network: Network,
-        read: suspend (ExternalAddressBalanceProvider) -> Result<T>,
+        read: suspend (SafeEthereumWalletManager) -> Result<T>,
     ): Either<Throwable, T> = either {
-        val provider = externalAddressBalanceProvidersStore.getSyncOrNull(userWalletId, network)
-            ?: createTransientProvider(userWalletId = userWalletId, network = network).bind()
+        val manager = walletManagersFacade.get().getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+        val safeManager = ensureNotNull(manager as? SafeEthereumWalletManager) {
+            IllegalStateException("No Safe wallet manager for the joint network ${network.id}")
+        }
 
-        when (val result = read(provider)) {
+        when (val result = read(safeManager)) {
             is Result.Success -> result.data
             is Result.Failure -> raise(r = result.error)
-        }
-    }
-
-    private suspend fun createTransientProvider(
-        userWalletId: UserWalletId,
-        network: Network,
-    ): Either<Throwable, ExternalAddressBalanceProvider> = either {
-        val safeAddress = jointAccountSafeAddressResolver.get()
-            .resolve(userWalletId, setOf(network))[network]
-        ensureNotNull(safeAddress) {
-            IllegalStateException("No Safe address for the joint network ${network.id}")
-        }
-
-        val provider = walletManagerFactory.createExternalAddressBalanceProvider(
-            blockchain = network.toBlockchain(),
-            address = safeAddress,
-        )
-
-        ensureNotNull(provider) {
-            IllegalStateException("Unable to create a balance provider for the joint network ${network.id}")
         }
     }
 
