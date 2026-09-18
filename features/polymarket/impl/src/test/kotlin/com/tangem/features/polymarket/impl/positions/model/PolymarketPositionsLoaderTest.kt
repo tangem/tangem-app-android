@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.positions.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
@@ -442,7 +443,12 @@ internal class PolymarketPositionsLoaderTest {
         }
         val dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher)
         return PolymarketPositionsLoader(
-            createSession = CreatePolymarketPositionsSessionUseCase(repository, deriveAddresses, dispatchers),
+            createSession = CreatePolymarketPositionsSessionUseCase(
+                repository = repository,
+                deriveAddresses = deriveAddresses,
+                invalidator = PredictionPositionsInvalidator(),
+                dispatchers = dispatchers,
+            ),
             dispatchers = dispatchers,
         )
     }
