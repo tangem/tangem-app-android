@@ -15,8 +15,8 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketWalletApprovalsReq
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletOperationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletStatusResponse
-import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawRequest
-import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -153,8 +153,8 @@ interface PolymarketApi {
     @POST("api/predictions/v1/withdraw")
     suspend fun submitWithdraw(
         @Header("wallet-id") walletId: String,
-        @Body request: PolymarketWithdrawRequest,
-    ): ApiResponse<PolymarketWithdrawResponse>
+        @Body request: PolymarketRelayedBatchRequest,
+    ): ApiResponse<PolymarketRelayedBatchResponse>
 
     /**
      * Read leg 1 from the BFF's own record of the withdrawal, not from the relayer. A `404` means the id is
@@ -164,5 +164,5 @@ interface PolymarketApi {
     suspend fun getWithdrawState(
         @Header("wallet-id") walletId: String,
         @Path("transactionId") transactionId: String,
-    ): ApiResponse<PolymarketWithdrawResponse>
+    ): ApiResponse<PolymarketRelayedBatchResponse>
 }
