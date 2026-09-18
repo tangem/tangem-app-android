@@ -54,7 +54,7 @@ class MultiWalletBalanceFetcherTest {
                 sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
             ),
             WalletFetchingSource.TangemPay,
-            WalletFetchingSource.VirtualAccount,
+            WalletFetchingSource.Money,
             WalletFetchingSource.Prediction,
             WalletFetchingSource.Collectibles,
         )

@@ -34,12 +34,8 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
-    private val isTiersPlusPlanEnabled: Boolean,
 ) {
-    private val notificationFactory = TangemPayDetailsNotificationFactory(
-        intents = intents,
-        isTiersPlusPlanEnabled = isTiersPlusPlanEnabled,
-    )
+    private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
 
     private val subtitle = resourceReference(R.string.tangempay_multinetwork)
 
@@ -81,7 +77,7 @@ internal class TangemPayDetailsStateFactory(
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
         val tiersNotificationType = status.tariffPlan?.let { plan ->
-            TangemPayTiersBannerType.fromPlan(isTiersPlusPlanEnabled, plan)
+            TangemPayTiersBannerType.fromPlan(plan)
         }
         val issueCardNotificationType = status.cards.resolveProgressBanner().takeIf { type ->
             tiersNotificationType != TangemPayTiersBannerType.TopUpForTierUpgrade ||
@@ -328,7 +324,7 @@ internal class TangemPayDetailsStateFactory(
 
     private fun getTopBarMenuItems(tariffPlan: TangemPayTariffPlanState?): ImmutableList<TangemPayDropDownItemUM> {
         return buildList {
-            if (isTiersPlusPlanEnabled && tariffPlan != null) {
+            if (tariffPlan != null) {
                 val isPlanChanging = tariffPlan.isPlanTransitioningState
                 add(
                     TangemPayDropDownItemUM(

@@ -4,7 +4,9 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.components.v2.blocks.model.AddAccountBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.CollectiblesBlockModel
+import com.tangem.features.feed.components.v2.blocks.model.EarnBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
+import com.tangem.features.feed.components.v2.blocks.model.ReferralBlockModel
 import com.tangem.features.feed.components.v2.blocks.model.TangemPayBlockModel
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
 import com.tangem.features.feed.model.FeedEntryModel
@@ -92,6 +94,16 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(AddAccountBlockModel::class)
     fun provideAddAccountBlockModel(model: AddAccountBlockModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnBlockModel::class)
+    fun provideEarnBlockModel(model: EarnBlockModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(ReferralBlockModel::class)
+    fun provideReferralBlockModel(model: ReferralBlockModel): Model
 
     @Binds
     @IntoMap

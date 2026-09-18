@@ -16,7 +16,6 @@ import com.tangem.features.tangempay.tiers.formatRecurringFeeOrNull
 
 internal class TangemPayDetailsNotificationFactory(
     private val intents: TangemPayDetailIntents,
-    private val isTiersPlusPlanEnabled: Boolean,
 ) {
     fun createErrorConfig(error: PaymentAccountStatusValue.Error?): TangemMessageBanner.State? = when (error) {
         null -> null
@@ -54,7 +53,7 @@ internal class TangemPayDetailsNotificationFactory(
 
     fun createTiersConfig(tariffPlan: TangemPayTariffPlanState?): TangemMessageBanner.State? {
         tariffPlan ?: return null
-        return when (TangemPayTiersBannerType.fromPlan(isTiersPlusPlanEnabled, tariffPlan)) {
+        return when (TangemPayTiersBannerType.fromPlan(tariffPlan)) {
             null -> null
             TangemPayTiersBannerType.TierSystemDowngrade -> createTariffSystemDowngradePendingConfig(tariffPlan)
             TangemPayTiersBannerType.TopUpForTierUpgrade -> createTopUpForTierUpgradeConfig(tariffPlan)
@@ -131,12 +130,7 @@ internal enum class TangemPayTiersBannerType {
     ;
 
     internal companion object {
-        fun fromPlan(
-            isTiersPlusPlanEnabled: Boolean,
-            tariffPlan: TangemPayTariffPlanState,
-        ): TangemPayTiersBannerType? {
-            if (!isTiersPlusPlanEnabled) return null
-
+        fun fromPlan(tariffPlan: TangemPayTariffPlanState): TangemPayTiersBannerType? {
             if (tariffPlan.tariff.status == TangemPayCustomerTariffPlan.Status.SYSTEM_DOWNGRADE_PENDING) {
                 tariffPlan.tariff.formatNextBillingDateOrNull() ?: return null
                 return TierSystemDowngrade
