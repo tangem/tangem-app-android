@@ -40,7 +40,6 @@ import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
@@ -72,7 +71,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val closeCardRepository: TangemPayCloseCardRepository = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
 
     private val fetcher = DefaultPaymentAccountStatusFetcher(
@@ -88,7 +86,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         closeCardRepository = closeCardRepository,
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
         getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
     )
 
@@ -245,14 +242,11 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             closeCardRepository,
             cardDetailsRepository,
             issueCardRepository,
-            tangemPayFeatureToggles,
             getTangemPayTariffPlanStateUseCase,
         )
         // Relaxed mocks don't need clearing — deviceSecurity, eligibilityManager, paymentAccountStatusesStore
         // are relaxed and consistent with their relaxed defaults (false, empty, etc.)
         clearMocks(paymentAccountStatusesStore, answers = false)
-        // Tiers off by default — legacy auto-order-creation behavior. Individual tests override.
-        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
     }
 
@@ -654,7 +648,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     customerOrderRepository.getOrderData(userWalletId, STALE_ORDER_ID)
                 } returns VisaApiError.OrderNotFound.left()
                 coEvery { onboardingRepository.clearOrderId(userWalletId) } just Runs
-                coEvery { onboardingRepository.createOrder(userWalletId) } returns "order-2".right()
                 val storedStatuses = captureStoredStatuses()
 
                 // Act
@@ -722,7 +715,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             closeCardRepository = closeCardRepository,
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
         )
 
@@ -770,7 +762,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     inner class TiersPlanSelection {
 
         @Test
-        fun `GIVEN tiers on and KYC approved and no plan order WHEN invoke THEN stores AwaitingPlanSelection`() =
+        fun `GIVEN KYC approved and no plan order WHEN invoke THEN stores AwaitingPlanSelection`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -780,7 +772,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns emptyList()
                 val storedStatuses = captureStoredStatuses()
 
@@ -790,11 +781,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 assertThat(storedStatuses.last().value)
                     .isInstanceOf(PaymentAccountStatusValue.AwaitingPlanSelection::class.java)
-                coVerify(exactly = 0) { onboardingRepository.createOrder(userWalletId) }
             }
 
         @Test
-        fun `GIVEN tiers on and fallback plan is missing WHEN invoke THEN stores IssuingCard without order`() =
+        fun `GIVEN fallback plan is missing WHEN invoke THEN stores IssuingCard without order`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(
@@ -804,7 +794,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = null,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 val storedStatuses = captureStoredStatuses()
 
                 // Act
@@ -813,11 +802,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // Assert
                 assertThat(storedStatuses.last().value)
                     .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
-                coVerify(exactly = 0) { onboardingRepository.createOrder(userWalletId) }
             }
 
         @Test
-        fun `GIVEN tiers on and plan selected but no balance yet WHEN invoke THEN stores Inactive`() = runTest {
+        fun `GIVEN plan selected but no balance yet WHEN invoke THEN stores Inactive`() = runTest {
             // Arrange
             val customerInfo = buildCustomerInfo(
                 productInstances = emptyList(),
@@ -826,7 +814,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
             coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
                 listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
             )
@@ -841,11 +828,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Assert
             assertThat(storedStatuses.last().value)
                 .isInstanceOf(PaymentAccountStatusValue.Inactive::class.java)
-            coVerify(exactly = 0) { onboardingRepository.createOrder(userWalletId) }
         }
 
         @Test
-        fun `GIVEN tiers on and latest issuance order canceled WHEN invoke THEN stores CardIssueFailed`() = runTest {
+        fun `GIVEN latest issuance order canceled WHEN invoke THEN stores CardIssueFailed`() = runTest {
             // Arrange
             val planState = TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
             stubPlanSelectionCustomer()
@@ -1022,53 +1008,14 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
         }
 
         @Test
-        fun `GIVEN tiers off and KYC approved without card WHEN invoke THEN creates order and stays issuing`() = runTest {
-            // Arrange
-            val customerInfo = buildCustomerInfo(productInstances = emptyList())
-            stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
-            coEvery { onboardingRepository.createOrder(userWalletId) } returns Either.Right("order_1")
-            val storedStatuses = captureStoredStatuses()
-
-            // Act
-            fetcher.invoke(params)
-
-            // Assert
-            assertThat(storedStatuses.last().value)
-                .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
-            coVerify(exactly = 1) { onboardingRepository.createOrder(userWalletId) }
-        }
-
-        @Test
-        fun `GIVEN tiers off and balance without instances but local issue order WHEN invoke THEN stores IssuingCard`() =
+        fun `GIVEN balance without instances but local issue order WHEN invoke THEN stores Loaded with placeholder`() =
             runTest {
                 // Arrange
                 val customerInfo = buildCustomerInfo(productInstances = emptyList())
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
-                coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
-                coEvery { onboardingRepository.createOrder(userWalletId) } returns Either.Right("order_1")
-                val storedStatuses = captureStoredStatuses()
-
-                // Act
-                fetcher.invoke(params)
-
-                // Assert
-                assertThat(storedStatuses.last().value)
-                    .isInstanceOf(PaymentAccountStatusValue.IssuingCard::class.java)
-            }
-
-        @Test
-        fun `GIVEN tiers on and balance without instances but local issue order WHEN invoke THEN stores Loaded with placeholder`() =
-            runTest {
-                // Arrange
-                val customerInfo = buildCustomerInfo(productInstances = emptyList())
-                stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_1")
                 coEvery {
                     cardDetailsRepository.getOrderInfo(userWalletId, "order_1")
@@ -1089,7 +1036,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = emptyList())
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
             coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("virtual_order")
             coEvery {
                 cardDetailsRepository.getOrderInfo(userWalletId, "virtual_order")
@@ -1116,7 +1062,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             // Arrange
             val customerInfo = buildCustomerInfo(productInstances = emptyList())
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
             coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("plastic_order")
             coEvery {
                 cardDetailsRepository.getOrderInfo(userWalletId, "plastic_order")
@@ -1154,7 +1099,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 ),
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
             coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("plastic_order")
             coEvery {
                 cardDetailsRepository.getOrderInfo(userWalletId, "plastic_order")
@@ -1191,7 +1135,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 // GIVEN
                 val customerInfo = buildCustomerInfo()
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_gone")
                 coEvery {
                     cardDetailsRepository.getOrderInfo(userWalletId, "order_gone")
@@ -1223,7 +1166,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
                     listOf(
                         order(
@@ -1256,7 +1198,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
             coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
                 listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
             )
@@ -1610,7 +1551,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery {
                     getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
                 } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
@@ -1639,7 +1579,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     cryptoBalance = null,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 val cached = loadedFixture()
                 coEvery { paymentAccountStatusesStore.getSyncOrNull(userWalletId) } returns AccountStatus.Payment(
                     account = Account.Payment(userWalletId = userWalletId),
@@ -1669,7 +1608,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery {
                     getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
                 } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
@@ -1720,7 +1658,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                     tariffPlan = customerTariffPlan,
                 )
                 stubHappyPath(customerInfo)
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
                 coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
                     listOf(activeOrder(id = "order_1", type = OrderType.TARIFF_PLAN_TRANSITION)),
                 )
@@ -1748,7 +1685,6 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 tariffPlan = customerTariffPlan,
             )
             stubHappyPath(customerInfo)
-            every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
             coEvery {
                 customerOrderRepository.findOrders(any(), any(), any())
             } returns VisaApiError.UnknownWithoutCode.left()

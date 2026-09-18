@@ -85,7 +85,6 @@ internal class TangemPayOnboardingStarterTest {
         loadingChanges.clear()
         exitCount = 0
         requestedWalletsIds = null
-        every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns true
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns Unit.right()
         coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.PENDING).right()
@@ -241,23 +240,6 @@ internal class TangemPayOnboardingStarterTest {
                 // Assert
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
                 coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
-                verify(exactly = 1) {
-                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
-                }
-            }
-
-        @Test
-        fun `GIVEN tiers off and no product instance WHEN startOnboarding THEN legacy order created with defaults`() =
-            runTest {
-                // Arrange
-                every { tangemPayFeatureToggles.isTiersPlusPlanEnabled } returns false
-                coEvery { repository.createOrder(USER_WALLET_ID) } returns ORDER_ID.right()
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
-
-                // Assert
-                coVerify(exactly = 1) { repository.createOrder(USER_WALLET_ID) }
                 verify(exactly = 1) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }

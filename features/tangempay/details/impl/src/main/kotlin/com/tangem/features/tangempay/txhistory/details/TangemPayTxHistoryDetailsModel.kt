@@ -16,7 +16,6 @@ import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
@@ -35,7 +34,6 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
     private val tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
     private val cashbackRepository: CashbackRepository,
-    private val featureToggles: TangemPayFeatureToggles,
     private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -110,7 +108,6 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     }
 
     private fun loadCashbackDetails() {
-        if (!featureToggles.isCashbackEnabled) return
         val current = params.transaction
         if (current !is TangemPayTxHistoryItem.Spend) return
         if (loadCashbackJob?.isActive == true) return
@@ -143,7 +140,6 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
                 transactionLoadState = transactionLoadState,
                 cashbackDetails = cashbackDetail,
                 cashbackLoadState = cashbackLoadState,
-                isCashbackEnabled = featureToggles.isCashbackEnabled,
                 onExplorerClick = ::openExplorer,
                 onDisputeClick = { dispute(customerId = params.customerId) },
                 onCardRefreshClick = ::loadTransaction,

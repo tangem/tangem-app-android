@@ -52,6 +52,9 @@ internal class DefaultJointCosignRequestsComponent @AssistedInject constructor(
     init {
         lifecycle.doOnResume { model.onResume() }
         lifecycle.doOnPause { model.onPause() }
+        // The slot above must already be subscribed to model.operationNavigation before this runs,
+        // otherwise a pending operation's activation has no observer and is silently dropped.
+        model.consumePendingOperation()
     }
 
     override val state: StateFlow<JointCosignRequestsUM>
