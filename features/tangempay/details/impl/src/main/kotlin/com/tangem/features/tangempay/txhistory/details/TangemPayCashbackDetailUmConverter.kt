@@ -29,10 +29,8 @@ internal object TangemPayCashbackDetailUmConverter {
         transaction: TangemPayTxHistoryItem,
         cashback: TangemPayTxHistoryItem.Cashback?,
         loadState: TransactionLoadState,
-        isCashbackEnabled: Boolean,
         onRefreshClick: () -> Unit,
     ): CashbackDetailUM? {
-        if (!isCashbackEnabled) return null
         if (transaction !is TangemPayTxHistoryItem.Spend) return null
         return when (loadState) {
             TransactionLoadState.Loading -> CashbackDetailUM.Loading
