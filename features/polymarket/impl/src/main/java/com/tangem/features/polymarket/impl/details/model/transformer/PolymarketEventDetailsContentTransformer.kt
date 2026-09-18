@@ -107,10 +107,10 @@ internal class PolymarketEventDetailsContentTransformer(
     }
 
     private fun transformOutcome(market: PolymarketMarket, outcome: PolymarketOutcome): PolymarketDetailsOutcomeUM {
-        val price = outcome.probability.formatCents()
         return PolymarketDetailsOutcomeUM(
             assetId = outcome.assetId,
-            title = stringReference("${outcome.title} • $price"),
+            title = stringReference(outcome.title),
+            price = stringReference(outcome.probability.formatCents()),
             onClick = { onOutcomeClick(market.id, outcome.assetId) },
         )
     }
