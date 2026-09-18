@@ -12,7 +12,7 @@ import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.TangemPayAuthApi
 import com.tangem.spend.datasource.visa.VisaApi
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
-import com.tangem.spend.datasource.visa.entity.VirtualAccountStatusValueDM
+import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -112,16 +112,16 @@ internal object SpendDatasourceModule {
                         .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
                 )
                 .add(
-                    NamePolymorphicAdapterFactory.of(VirtualAccountStatusValueDM::class.java)
-                        .withSubtype(VirtualAccountStatusValueDM.Empty::class.java, "empty")
-                        .withSubtype(VirtualAccountStatusValueDM.NotCreated::class.java, "not_created")
-                        .withSubtype(VirtualAccountStatusValueDM.UnderReview::class.java, "kyc_status")
-                        .withSubtype(VirtualAccountStatusValueDM.Provisioning::class.java, "provisioning")
+                    NamePolymorphicAdapterFactory.of(MoneyAccountStatusValueDM::class.java)
+                        .withSubtype(MoneyAccountStatusValueDM.Empty::class.java, "empty")
+                        .withSubtype(MoneyAccountStatusValueDM.NotCreated::class.java, "not_created")
+                        .withSubtype(MoneyAccountStatusValueDM.UnderReview::class.java, "kyc_status")
+                        .withSubtype(MoneyAccountStatusValueDM.Provisioning::class.java, "provisioning")
                         .withSubtype(
-                            VirtualAccountStatusValueDM.CountryNotSupported::class.java,
+                            MoneyAccountStatusValueDM.CountryNotSupported::class.java,
                             "country_not_supported",
                         )
-                        .withSubtype(VirtualAccountStatusValueDM.ActiveAccount::class.java, "active_account"),
+                        .withSubtype(MoneyAccountStatusValueDM.ActiveAccount::class.java, "active_account"),
                 )
         }
     }

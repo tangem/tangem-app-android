@@ -259,7 +259,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
-            DeepLinkRoute.OnboardVirtualAccounts.host -> onboardMoneyAccountDeepLink.create(deeplinkUri)
+            DeepLinkRoute.OnboardMoneyAccount.host -> onboardMoneyAccountDeepLink.create(deeplinkUri)
             DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
             DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
             DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
