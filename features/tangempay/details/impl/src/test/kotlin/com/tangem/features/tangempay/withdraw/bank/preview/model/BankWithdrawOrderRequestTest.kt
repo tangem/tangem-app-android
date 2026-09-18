@@ -27,6 +27,11 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BankWithdrawOrderRequestTest {
 
+    private val businessFormValues = personalFormValues
+        .minus(BankWithdrawFormField.FirstName)
+        .minus(BankWithdrawFormField.LastName)
+        .plus(BankWithdrawFormField.BusinessName to "Arasaka")
+
     @Test
     fun `GIVEN saved recipient WHEN toOrderRequest THEN saved recipient id and amount in cents`() {
         // Arrange
@@ -95,6 +100,31 @@ internal class BankWithdrawOrderRequestTest {
     }
 
     @Test
+    fun `GIVEN new business recipient WHEN toOrderRequest THEN third party is true`() {
+        // Arrange
+        val business = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewBusiness,
+            amount = BigDecimal("500"),
+            source = bankWithdrawSource(),
+            destination = offrampDestination(),
+        )
+        val draft = business.copy(
+            newRecipient = business.newRecipient.copy(
+                accountType = BankAccountType.CHECKING,
+                fields = businessFormValues,
+            ),
+        )
+
+        // Act
+        val actual = draft.toOrderRequest()
+
+        // Assert
+        val details = (actual?.recipient as? BankOfframpRecipient.New)?.details
+        assertThat(details?.isThirdParty).isTrue()
+        assertThat(details?.beneficiary).isEqualTo(Beneficiary.Business(name = "Arasaka"))
+    }
+
+    @Test
     fun `GIVEN amount with more than two decimals WHEN toOrderRequest THEN cents rounded half up`() {
         // Arrange
         val draft = savedDraft().copy(amount = BigDecimal("500.555"))
@@ -121,7 +151,8 @@ internal class BankWithdrawOrderRequestTest {
         savedDraft().copy(source = null),
         savedDraft().copy(destination = null),
         savedDraft().copy(recipient = null),
-        newDraft().copy(newRecipient = NewRecipientDraft(fields = personalFormValues - BankWithdrawFormField.BankName)),
+        newDraft().copy(newRecipient = answeredRecipient(personalFormValues - BankWithdrawFormField.BankName)),
+        newDraft().copy(newRecipient = NewRecipientDraft(fields = personalFormValues)),
     )
 
     private fun savedDraft() = BankWithdrawDraft(
@@ -134,9 +165,15 @@ internal class BankWithdrawOrderRequestTest {
 
     private fun newDraft() = BankWithdrawDraft(
         entry = BankWithdrawEntry.NewPersonal,
-        newRecipient = NewRecipientDraft(fields = personalFormValues),
+        newRecipient = answeredRecipient(personalFormValues),
         amount = BigDecimal("500"),
         source = bankWithdrawSource(),
         destination = offrampDestination(),
+    )
+
+    private fun answeredRecipient(fields: Map<BankWithdrawFormField, String>) = NewRecipientDraft(
+        isThirdParty = false,
+        accountType = BankAccountType.CHECKING,
+        fields = fields,
     )
 }

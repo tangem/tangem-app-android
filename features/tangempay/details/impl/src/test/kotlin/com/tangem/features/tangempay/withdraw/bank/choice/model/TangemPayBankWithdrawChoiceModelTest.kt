@@ -107,6 +107,53 @@ internal class TangemPayBankWithdrawChoiceModelTest {
     }
 
     @Test
+    fun `GIVEN no preselection WHEN model created THEN no option selected and continue disabled`() {
+        // Act
+        val model = createModel(
+            config = BankWithdrawChoices.transferType(isThirdParty = null),
+            step = TangemPayBankWithdrawInnerRoute.TransferType,
+        )
+
+        // Assert
+        val state = model.uiState.value
+        assertThat(state.options.map { it.isSelected }).containsExactly(false, false).inOrder()
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no preselection WHEN continue clicked THEN nothing reported`() {
+        // Arrange
+        val model = createModel(
+            config = BankWithdrawChoices.accountType(selected = null),
+            step = TangemPayBankWithdrawInnerRoute.AccountType,
+        )
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 0) { onContinue(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN option clicked WHEN model updates THEN continue enabled`() {
+        // Arrange
+        val model = createModel(
+            config = BankWithdrawChoices.accountType(selected = null),
+            step = TangemPayBankWithdrawInnerRoute.AccountType,
+        )
+
+        // Act
+        model.uiState.value.options[1].onClick()
+
+        // Assert
+        assertThat(model.uiState.value.isContinueEnabled).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN model WHEN back clicked THEN router pops`() {
         // Arrange
         val model = createModel(
