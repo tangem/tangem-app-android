@@ -63,6 +63,18 @@ internal class DefaultDerivationsRepository @Inject constructor(
         }
     }
 
+    override suspend fun findMissingDerivations(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): Map<ByteArrayKey, List<DerivationPath>> {
+        if (currencies.isEmpty()) return emptyMap()
+
+        return when (val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)) {
+            is UserWallet.Cold -> coldDerivationsRepository.findMissingDerivations(userWallet, currencies)
+            is UserWallet.Hot -> hotDerivationsRepository.findMissingDerivations(userWallet, currencies)
+        }
+    }
+
     override suspend fun derivePublicKeys(
         userWalletId: UserWalletId,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
@@ -100,6 +112,10 @@ internal class DefaultDerivationsRepository @Inject constructor(
         seedKey: ByteArrayKey,
     ): ExtendedPublicKeysMap {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        return getExistingDerivedKeys(userWallet, seedKey)
+    }
+
+    override suspend fun getExistingDerivedKeys(userWallet: UserWallet, seedKey: ByteArrayKey): ExtendedPublicKeysMap {
         return userWallet.getExistingDerivedKeys()[seedKey] ?: ExtendedPublicKeysMap(emptyMap())
     }
 

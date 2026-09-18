@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.mapNotNull
  *
  * It uses [SingleAccountListSupplier] to get the list of accounts and filters it to find the specific
  * portfolio-holding account ([Account.CryptoPortfolio] or [Account.Joint]). [Account.Payment],
- * [Account.Virtual] and [Account.Prediction] accounts are deliberately excluded — they hold no
+ * [Account.Money] and [Account.Prediction] accounts are deliberately excluded — they hold no
  * portfolio and have no use for this producer.
  *
  * @property params Parameters containing the account ID for which the portfolio is produced.

@@ -89,6 +89,7 @@ internal class DefaultRetrofitFactory @Inject constructor(
         sessionAuth = spec.shouldUseSessionAuth,
         timeouts = spec.timeouts,
         logsSaving = spec.shouldSaveLogs,
+        loggable = spec.isLoggable,
     )
 
     private fun <T : Any> createApi(
@@ -98,6 +99,7 @@ internal class DefaultRetrofitFactory @Inject constructor(
         sessionAuth: Boolean,
         timeouts: Timeouts?,
         logsSaving: Boolean,
+        loggable: Boolean,
     ): T {
         val environmentConfig = apiConfigsManager.getEnvironmentConfig(apiConfigId)
 
@@ -117,7 +119,9 @@ internal class DefaultRetrofitFactory @Inject constructor(
                     .let {
                         if (logsSaving) it.applyLogsSaving() else it
                     }
-                    .addLoggers(apiConfigId = apiConfigId, context = context)
+                    .let {
+                        if (loggable) it.addLoggers(apiConfigId = apiConfigId, context = context) else it
+                    }
                     .build(),
             )
             .build()

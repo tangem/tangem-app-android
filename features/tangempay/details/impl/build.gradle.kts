@@ -78,8 +78,4 @@ dependencies {
     /** Test */
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
 }

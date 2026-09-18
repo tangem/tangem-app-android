@@ -103,7 +103,7 @@ internal class CountrySelectorModel @Inject constructor(
 
     private fun onCountryClick(country: TangemPayCountry) {
         val params = params as? Params.Countries ?: return
-        if (country.hasRegions) {
+        if (country.hasRegions && params.shouldIncludeRegions) {
             showRegions(country)
         } else {
             params.onSelected(country, null)

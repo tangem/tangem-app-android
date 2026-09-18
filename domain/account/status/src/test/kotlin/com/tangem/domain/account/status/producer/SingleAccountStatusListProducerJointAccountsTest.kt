@@ -17,7 +17,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.models.account.VirtualAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -46,7 +46,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 
@@ -168,9 +168,9 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                     AccountStatus.Payment(Account.Payment(walletId), PaymentAccountStatusValue.NotCreated),
                 )
             },
-            virtualAccountStatusSupplier = mockk<VirtualAccountStatusSupplier> {
+            moneyAccountStatusSupplier = mockk<MoneyAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = walletId) } returns flowOf(
-                    AccountStatus.Virtual(Account.Virtual(walletId), VirtualAccountStatusValue.NotCreated),
+                    AccountStatus.Money(Account.Money(walletId), MoneyAccountStatusValue.NotCreated),
                 )
             },
             predictionAccountStatusSupplier = mockk<PredictionAccountStatusSupplier> {

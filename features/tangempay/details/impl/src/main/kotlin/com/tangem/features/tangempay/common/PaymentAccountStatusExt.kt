@@ -74,26 +74,12 @@ internal fun AccountStatus.Payment.networksOrNull(): List<PaymentNetworkStatus>?
 internal val PaymentAccountStatusValue.Balance.hasWithdrawableAmount: Boolean
     get() = availableForWithdrawal.signum() > 0
 
-internal fun PaymentAccountStatusValue.canAddFunds(isMultichainEnabled: Boolean): Boolean = when (this) {
-    is PaymentAccountStatusValue.Error.CardIssueFailed -> {
-        val accountBalance = balance
-        accountBalance != null && if (isMultichainEnabled) {
-            networks.hasAvailableNetwork()
-        } else {
-            accountBalance.cryptoBalance.depositAddress.isNotEmpty()
-        }
+internal val PaymentAccountStatusValue.canAddFunds: Boolean
+    get() = when (this) {
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> balance != null && networks.hasAvailableNetwork()
+        is PaymentAccountStatusValue.Loaded -> networks.hasAvailableNetwork()
+        is PaymentAccountStatusValue.Deactivated -> networks.hasAvailableNetwork()
+        else -> false
     }
-    is PaymentAccountStatusValue.Loaded -> if (isMultichainEnabled) {
-        networks.hasAvailableNetwork()
-    } else {
-        !depositAddress.isNullOrEmpty()
-    }
-    is PaymentAccountStatusValue.Deactivated -> if (isMultichainEnabled) {
-        networks.hasAvailableNetwork()
-    } else {
-        balance?.cryptoBalance?.depositAddress?.isNotEmpty() == true
-    }
-    else -> false
-}
 
 private fun List<PaymentNetworkStatus>.hasAvailableNetwork(): Boolean = any { it is PaymentNetworkStatus.Available }

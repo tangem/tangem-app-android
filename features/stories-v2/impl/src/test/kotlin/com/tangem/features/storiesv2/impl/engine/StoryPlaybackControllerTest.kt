@@ -10,7 +10,9 @@ import com.tangem.features.storiesv2.StoryV2ActionTarget
 import com.tangem.features.storiesv2.StoryV2Source
 import com.tangem.features.storiesv2.impl.content.StoryV2Action
 import com.tangem.features.storiesv2.impl.content.StoryV2Asset
+import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.features.storiesv2.impl.content.StoryV2Composition
+import com.tangem.features.storiesv2.impl.content.StoryV2Haptic
 import com.tangem.features.storiesv2.impl.content.StoryV2EndBehavior
 import com.tangem.features.storiesv2.impl.content.StoryV2MediaRef
 import com.tangem.features.storiesv2.impl.content.StoryV2Origin
@@ -203,7 +205,7 @@ internal class StoryPlaybackControllerTest {
     @Test
     fun `GIVEN haptic markers WHEN the position crosses them THEN each fires exactly once`() {
         // Arrange
-        val controller = openController(composition = videoStory(hapticAtMs = listOf(1_000L, 2_000L)))
+        val controller = openController(composition = videoStory(haptics = listOf(haptic(1_000L), haptic(2_000L))))
 
         // Act
         controller.onProgress(positionMs = 1_200L, elapsedMs = 16L)
@@ -217,7 +219,7 @@ internal class StoryPlaybackControllerTest {
     @Test
     fun `GIVEN a held story WHEN the position crosses a marker THEN no haptic fires`() {
         // Arrange
-        val controller = openController(composition = videoStory(hapticAtMs = listOf(1_000L)))
+        val controller = openController(composition = videoStory(haptics = listOf(haptic(1_000L))))
 
         // Act
         controller.setHeld(held = true)
@@ -230,7 +232,7 @@ internal class StoryPlaybackControllerTest {
     @Test
     fun `GIVEN a backgrounded story WHEN the position crosses a marker THEN no haptic fires`() {
         // Arrange
-        val controller = openController(composition = videoStory(hapticAtMs = listOf(1_000L)))
+        val controller = openController(composition = videoStory(haptics = listOf(haptic(1_000L))))
 
         // Act
         controller.setInForeground(inForeground = false)
@@ -743,10 +745,16 @@ internal class StoryPlaybackControllerTest {
         onResult = { results += it },
     )
 
+    private fun haptic(atMs: Long, pulses: Int = 1) = StoryV2Haptic(
+        atMs = atMs,
+        effect = TangemHapticEffect.OneTime.Tick,
+        pulses = pulses,
+    )
+
     private fun videoStory(
         endBehavior: StoryV2EndBehavior = StoryV2EndBehavior.LOOP,
         actions: List<StoryV2Action> = emptyList(),
-        hapticAtMs: List<Long> = emptyList(),
+        haptics: List<StoryV2Haptic> = emptyList(),
     ) = StoryV2Composition(
         id = "test_story",
         version = 7,
@@ -763,7 +771,7 @@ internal class StoryPlaybackControllerTest {
                     poster = StoryV2MediaRef.DrawableResource(id = index),
                     durationMs = SLIDE_DURATION_MS,
                 ),
-                hapticAtMs = hapticAtMs,
+                haptics = haptics,
             )
         },
     )

@@ -28,6 +28,8 @@ internal class DefaultCollectiblesDiscoveryComponent @AssistedInject constructor
 
     override fun onLoadMore() = model.onLoadMore()
 
+    override fun onRefresh() = model.onRefresh()
+
     override fun LazyListScope.content(uiState: CollectiblesDiscoveryUM, modifier: Modifier) {
         collectiblesDiscoveryList(state = uiState, tabScrollState = tabScrollState)
     }

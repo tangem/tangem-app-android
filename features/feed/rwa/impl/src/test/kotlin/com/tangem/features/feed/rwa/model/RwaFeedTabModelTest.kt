@@ -19,17 +19,21 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.analytics.FeedSortPeriod
 import com.tangem.features.feed.analytics.FeedSortType
+import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.model.list.RwaInterval
 import com.tangem.features.feed.rwa.model.list.RwaSort
 import com.tangem.features.feed.rwa.ui.state.RwaFeaturedUM
 import com.tangem.features.feed.rwa.ui.state.RwaListUM
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryFilter
+import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -46,7 +50,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -81,6 +84,9 @@ internal class RwaFeedTabModelTest {
     private val listActions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
     private val featuredActions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
 
+    private val pendingFilter = MutableStateFlow<FeedEntryFilter?>(null)
+    private val feedEntryController = FakeFeedEntryController(pendingFilter)
+
     private var model: RwaFeedTabModel? = null
 
     @BeforeEach
@@ -96,6 +102,7 @@ internal class RwaFeedTabModelTest {
         listActions.clear()
         featuredActions.clear()
         sentEvents.clear()
+        pendingFilter.value = null
         every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
 
         coEvery { userCountryResolver.resolve() } returns "DE"
@@ -439,6 +446,103 @@ internal class RwaFeedTabModelTest {
         )
     }
 
+    @Test
+    fun `GIVEN a category deeplink WHEN the tab opens THEN the list is requested once, already filtered`() = runTest {
+        // Arrange
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(
+            listOf(umbrellaCategory(), category(id = STOCKS_ID, code = STOCKS_CODE)),
+        )
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, categoryId = STOCKS_CODE)
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert — requesting the umbrella first would show the wrong list and then swap it out
+        assertThat(reloadConfigs(listActions).map { it.categoryId }).containsExactly(STOCKS_ID)
+        assertThat(pendingFilter.value).isNull()
+        // the host reports the open; the tab must not also report a pick the user never made
+        assertThat(sectionEvents()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN loaded categories WHEN a deeplink lands THEN it is applied without refetching them`() = runTest {
+        // Arrange
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(
+            listOf(umbrellaCategory(), category(id = STOCKS_ID, code = STOCKS_CODE)),
+        )
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act — the id is the other identifier a deeplink may carry
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, categoryId = STOCKS_ID)
+        advanceUntilIdle()
+
+        // Assert — the umbrella request is the one made before the deeplink arrived
+        assertThat(reloadConfigs(listActions).map { it.categoryId })
+            .containsExactly(UMBRELLA_ID, STOCKS_ID)
+            .inOrder()
+        coVerify(exactly = 1) { getCoinCategoriesUseCase(country = "DE") }
+        assertThat(pendingFilter.value).isNull()
+        assertThat(sectionEvents()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a deeplink applied the filter WHEN the user then picks one THEN only that pick is reported`() =
+        runTest {
+            // Arrange
+            coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(
+                listOf(umbrellaCategory(), category(id = STOCKS_ID, code = STOCKS_CODE)),
+            )
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, categoryId = STOCKS_CODE)
+            val underTest = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            underTest.onCategorySelect(
+                CategorySelection(
+                    category = CategorySelection.Entry(id = "2", displayName = "Bonds", code = "bonds"),
+                ),
+            )
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sectionEvents()).containsExactly(
+                FeedSectionAnalyticsEvent.SelectCategory(section = "Assets", categoryId = "bonds"),
+            )
+        }
+
+    @Test
+    fun `GIVEN a category nothing matches WHEN the tab opens THEN it loads scoped to the umbrella`() = runTest {
+        // Arrange
+        coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(listOf(umbrellaCategory()))
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.RealAssets, categoryId = "made-up")
+
+        // Act
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(reloadConfigs(listActions).map { it.categoryId }).containsExactly(UMBRELLA_ID)
+        assertThat(pendingFilter.value).isNull()
+    }
+
+    @Test
+    fun `GIVEN a deeplink for another tab WHEN the tab opens THEN it is left parked and nothing is filtered`() =
+        runTest {
+            // Arrange
+            coEvery { getCoinCategoriesUseCase(country = "DE") } returns Either.Right(listOf(umbrellaCategory()))
+            pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, categoryId = "layer-1")
+
+            // Act
+            createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert — only the addressed tab may clear the slot
+            assertThat(reloadConfigs(listActions).map { it.categoryId }).containsExactly(UMBRELLA_ID)
+            assertThat(pendingFilter.value).isNotNull()
+        }
+
     private fun sectionEvents() = sentEvents.filterIsInstance<FeedSectionAnalyticsEvent>()
 
     /** The tab carries its own `onClick`, so the enum's id is the only bridge from a sort to its tab. */
@@ -460,20 +564,10 @@ internal class RwaFeedTabModelTest {
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getCoinCategoriesUseCase = getCoinCategoriesUseCase,
         userCountryResolver = userCountryResolver,
+        feedEntryController = feedEntryController,
         analyticsEventHandler = analyticsEventHandler,
         router = router,
     ).also { model = it }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private fun umbrellaCategory() = category(id = UMBRELLA_ID, code = ReservedCategoryCodes.REAL_WORLD_ASSETS)
 
@@ -492,6 +586,23 @@ internal class RwaFeedTabModelTest {
         isVisible = true,
     )
 
+    private class FakeFeedEntryController(
+        override val pendingFilter: MutableStateFlow<FeedEntryFilter?>,
+    ) : FeedEntryController {
+
+        override val pendingEntry = MutableStateFlow<FeedEntryRequest?>(null)
+
+        override fun request(request: FeedEntryRequest) = Unit
+
+        override fun consumeEntry() {
+            pendingEntry.value = null
+        }
+
+        override fun consumeFilter() {
+            pendingFilter.value = null
+        }
+    }
+
     private class FakeBatchFlow(
         override val state: StateFlow<BatchListState<Int, List<TokenMarket>>> = MutableStateFlow(
             BatchListState(data = emptyList(), status = PaginationStatus.None),
@@ -507,5 +618,7 @@ internal class RwaFeedTabModelTest {
         const val COMMODITIES_ID = "rwa-commodities"
         const val PICKED_ID = "rwa-picked"
         const val FEATURED_ID = "rwa-featured"
+        const val STOCKS_ID = "rwa-stocks"
+        const val STOCKS_CODE = "stocks"
     }
 }

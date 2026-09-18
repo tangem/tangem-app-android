@@ -22,7 +22,7 @@ typealias AccountCurrencyId = Pair<AccountId, CryptoCurrency.ID>
  * @property accounts      a list of accounts belonging to the user wallet
  * @property totalAccounts the backend's counter of the wallet's **crypto** accounts, archived ones included.
  * Joint accounts have their own parallel counter ([totalJointAccounts]) and are not in this one, and the special
- * accounts (payment, virtual, prediction) are injected by the app rather than counted by the backend at all — so
+ * accounts (payment, money, prediction) are injected by the app rather than counted by the backend at all — so
  * this number must never be compared against the length of [accounts]
  * @property totalJointAccounts the backend's counter of the wallet's joint accounts, archived ones included
  * (`totalJointAccounts` of `GET /accounts`). Zero for a wallet that has none, and for a list assembled without
@@ -122,7 +122,7 @@ data class AccountList private constructor(
             when (account) {
                 is Account.Personal -> account.cryptoCurrencies
                 is Account.Payment -> emptyList()
-                is Account.Virtual -> emptyList()
+                is Account.Money -> emptyList()
                 is Account.Prediction -> emptyList()
                 is Account.Collectibles -> emptyList()
                 // A joint account is a Safe contract, not an EOA: its currencies must never reach the regular
@@ -187,9 +187,9 @@ data class AccountList private constructor(
         }
 
         @Serializable
-        data object ExceedsMaxVirtualAccountsCount : Error {
+        data object ExceedsMaxMoneyAccountsCount : Error {
             override fun toString(): String =
-                "$tag: The number of virtual accounts must not exceed $MAX_VIRTUAL_ACCOUNTS_COUNT"
+                "$tag: The number of money accounts must not exceed $MAX_MONEY_ACCOUNTS_COUNT"
         }
 
         @Serializable
@@ -228,7 +228,7 @@ data class AccountList private constructor(
     companion object {
 
         const val MAX_PAYMENT_ACCOUNTS_COUNT = 1
-        const val MAX_VIRTUAL_ACCOUNTS_COUNT = 1
+        const val MAX_MONEY_ACCOUNTS_COUNT = 1
         const val MAX_PREDICTION_ACCOUNTS_COUNT = 1
         const val MAX_COLLECTIBLES_ACCOUNTS_COUNT = 1
         const val MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT = 20
@@ -259,8 +259,8 @@ data class AccountList private constructor(
             val paymentAccounts = accounts.filterIsInstance<Account.Payment>()
             ensure(paymentAccounts.size <= MAX_PAYMENT_ACCOUNTS_COUNT) { Error.ExceedsMaxPaymentAccountsCount }
 
-            val virtualAccounts = accounts.filterIsInstance<Account.Virtual>()
-            ensure(virtualAccounts.size <= MAX_VIRTUAL_ACCOUNTS_COUNT) { Error.ExceedsMaxVirtualAccountsCount }
+            val moneyAccounts = accounts.filterIsInstance<Account.Money>()
+            ensure(moneyAccounts.size <= MAX_MONEY_ACCOUNTS_COUNT) { Error.ExceedsMaxMoneyAccountsCount }
 
             val predictionAccounts = accounts.filterIsInstance<Account.Prediction>()
             ensure(predictionAccounts.size <= MAX_PREDICTION_ACCOUNTS_COUNT) {

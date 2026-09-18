@@ -1,32 +1,16 @@
 package com.tangem.domain.polymarket.session
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
-import com.tangem.domain.polymarket.model.PolymarketPositionId
-import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
-import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
-import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.pagination.BatchFetchResult
-import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.PaginationStatus
-import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
-import com.tangem.pagination.toBatchFlow
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -35,14 +19,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class PolymarketPositionsSessionTest {
-
-    private val repository: PolymarketPositionsRepository = mockk()
-    private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
-    private val wallet = UserWalletId("011")
-    private val addresses: PolymarketAddresses = mockk()
-    private val requests = mutableListOf<Pair<PolymarketPositionsListConfig, Int>>()
-    private var fetch: suspend (Int) -> BatchFetchResult<List<PolymarketPosition>> = { page() }
+internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBase() {
 
     @Test
     fun `GIVEN overlapping pages WHEN loading more THEN preserves order and advances by source pages`() = runTest {
@@ -145,7 +122,73 @@ internal class PolymarketPositionsSessionTest {
     }
 
     @Test
-    fun `GIVEN paused session WHEN resumed THEN retains data without refetching`() = runTest {
+    fun `GIVEN paused session with loaded pages WHEN resumed THEN re-reads them in place and keeps the pagination`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            val first = position(assetId = "first")
+            val sold = position(assetId = "sold")
+            fetch = { offset -> page(listOf(if (offset == 0) first else sold), last = false) }
+            session.resume(backgroundScope)
+            runCurrent()
+            session.loadMore()
+            runCurrent()
+            val loaded = session.state.value
+            val refreshedFirst = position(assetId = "first")
+            val third = position(assetId = "third")
+            val fourth = position(assetId = "fourth")
+            fetch = { offset ->
+                when (offset) {
+                    0 -> page(listOf(refreshedFirst), last = false)
+                    30 -> page(listOf(third), last = false)
+                    else -> page(listOf(fourth))
+                }
+            }
+
+            // Act
+            session.pause()
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Assert
+            assertThat(session.state.value).isEqualTo(loaded.copy(positions = listOf(refreshedFirst, third)))
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30).inOrder()
+
+            // Act
+            session.loadMore()
+            runCurrent()
+
+            // Assert
+            assertThat(session.state.value).isEqualTo(
+                PolymarketPositionsState(listOf(refreshedFirst, third, fourth), PaginationStatus.EndOfPagination),
+            )
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60).inOrder()
+        }
+
+    @Test
+    fun `GIVEN paused session WHEN resumed and the re-read fails THEN keeps the loaded rows`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        fetch = { page(last = false) }
+        session.resume(backgroundScope)
+        runCurrent()
+        session.loadMore()
+        runCurrent()
+        val loaded = session.state.value
+        fetch = { BatchFetchResult.Error(IllegalStateException("Offline")) }
+
+        // Act
+        session.pause()
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value).isSameInstanceAs(loaded)
+        assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN paused session WHEN load more or retry requested THEN nothing is read until resumed`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
         fetch = { page(last = false) }
@@ -161,12 +204,25 @@ internal class PolymarketPositionsSessionTest {
         session.retry()
         advanceTimeBy(120_000)
         runCurrent()
-        session.resume(backgroundScope)
-        runCurrent()
 
         // Assert
         assertThat(session.state.value).isSameInstanceAs(loaded)
         assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+    }
+
+    @Test
+    fun `GIVEN resumed session WHEN resumed again THEN does not re-read`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(requests.map { it.second }).containsExactly(0)
     }
 
     @ParameterizedTest
@@ -216,43 +272,6 @@ internal class PolymarketPositionsSessionTest {
         assertThat(requests.map { it.second })
             .containsExactlyElementsIn(if (hasLoadedPage) listOf(0, 30, 0) else listOf(0, 0)).inOrder()
     }
-
-    private fun TestScope.createFactory(): CreatePolymarketPositionsSessionUseCase {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        coEvery { deriveAddresses.stored(wallet) } returns addresses
-        every { repository.getPositionsBatchFlow(any(), any()) } answers {
-            val context = firstArg<PolymarketPositionsBatchingContext>()
-            val size = secondArg<Int>()
-            BatchListSource(
-                fetchDispatcher = dispatcher,
-                context = context,
-                generateNewKey = { keys -> keys.size },
-                batchFetcher = LimitOffsetBatchFetcher<PolymarketPositionsListConfig, List<PolymarketPosition>>(
-                    prefetchDistance = size,
-                    batchSize = size,
-                    subFetcher = { request, _, _ ->
-                        requests += request.params to request.offset
-                        fetch(request.offset)
-                    },
-                ),
-            ).toBatchFlow()
-        }
-        return CreatePolymarketPositionsSessionUseCase(
-            repository,
-            deriveAddresses,
-            TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
-        )
-    }
-
-    private fun position(assetId: String = "asset", conditionId: String = "condition"): PolymarketPosition =
-        mockk<PolymarketPosition.Open> {
-            every { id } returns PolymarketPositionId(conditionId, assetId)
-        }
-
-    private fun page(
-        positions: List<PolymarketPosition> = listOf(position()),
-        last: Boolean = true,
-    ): BatchFetchResult<List<PolymarketPosition>> = BatchFetchResult.Success(positions, positions.isEmpty(), last)
 
     private companion object {
         @JvmStatic

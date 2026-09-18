@@ -10,10 +10,8 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import javax.inject.Inject
 
 @ModelScoped
@@ -24,7 +22,6 @@ internal class PaymentAccountOnboardingLauncher @Inject constructor(
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingRepository: OnboardingRepository,
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
-    private val featureToggles: TangemPayFeatureToggles,
 ) {
     suspend fun start(onWalletSelectionRequired: (List<UserWalletId>) -> Unit, onFailed: () -> Unit) {
         val walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
@@ -48,18 +45,14 @@ internal class PaymentAccountOnboardingLauncher @Inject constructor(
                 if (customerInfo.kycStatus == KycStatus.APPROVED) {
                     router.pop()
                 } else {
-                    createOrderIfNeeded(userWalletId = userWalletId, customerInfo = customerInfo)
-                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId))
+                    openKyc(userWalletId)
                 }
             },
         )
     }
 
-    private suspend fun createOrderIfNeeded(userWalletId: UserWalletId, customerInfo: CustomerInfo) {
-        val shouldCreateOrder = !featureToggles.isTiersPlusPlanEnabled && customerInfo.productInstance == null
-        if (!shouldCreateOrder) return
-
-        onboardingRepository.createOrder(userWalletId)
+    fun openKyc(userWalletId: UserWalletId) {
+        router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId))
     }
 
     private fun showError(onFailed: () -> Unit) {
