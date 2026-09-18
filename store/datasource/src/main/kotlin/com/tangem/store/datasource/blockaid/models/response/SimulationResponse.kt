@@ -6,5 +6,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class SimulationResponse(
     @Json(name = "status") val status: String,
-    @Json(name = "account_summary") val accountSummary: AccountSummaryResponse,
+    @Json(name = "account_summary") val accountSummary: AccountSummaryResponse?,
 )
