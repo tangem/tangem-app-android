@@ -23,7 +23,7 @@ internal class MoneyAccountStatusValueTest {
             fiatRate = fiatRate,
         )
 
-    private fun activeWith(balance: MoneyAccountStatusValue.Balance?) = MoneyAccountStatusValue.Issued.Active(
+    private fun activeWith(balance: MoneyAccountStatusValue.Balance?) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
         balance = balance,
         customerId = "customer",
@@ -57,7 +57,7 @@ internal class MoneyAccountStatusValueTest {
     @Test
     fun `GIVEN no balance WHEN totalFiatBalance THEN zero`() {
         // Arrange
-        val issuing = MoneyAccountStatusValue.Issuance.Issuing(
+        val issuing = MoneyAccountStatusValue.Onboarding.Issuing(
             source = StatusSource.ACTUAL,
             balance = null,
             customerId = null,
@@ -103,7 +103,7 @@ internal class MoneyAccountStatusValueTest {
     @Test
     fun `GIVEN progress status WHEN copySealed with source THEN source replaced`() {
         // Arrange
-        val status = MoneyAccountStatusValue.Issuance.UnderReview(
+        val status = MoneyAccountStatusValue.Onboarding.UnderReview(
             source = StatusSource.ACTUAL,
             balance = null,
             customerId = "customer",
