@@ -157,7 +157,7 @@ internal sealed interface SellPositionUM {
 
     data object Loading : SellPositionUM
 
-    /** @property available the held shares the market can accept, truncated onto the on-chain grid */
+    /** @property available the held shares the market can accept, truncated onto its 2-decimal grid */
     data class Held(val available: BigDecimal) : SellPositionUM
 
     data object NotHeld : SellPositionUM
