@@ -88,7 +88,7 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
     }
 
     @AllureId("10413")
-    @DisplayName("Tangem Pay: card issuing starts from the mobile onboarding opened by a deep link")
+    @DisplayName("Tangem Pay: card issuing starts from the mobile onboarding opened automatically by a deep link")
     @Test
     fun cardIssuingStartsFromMobileOnboardingDeepLinkTest() {
         val eligibilityPaeraCustomerState = "PaeraCustomer"
@@ -102,15 +102,17 @@ class TangemPayHotWalletOnboardingTest : BaseTestCase() {
             step("Set WireMock scenario '$TANGEM_PAY_KYC_STATUS_SCENARIO' to '$kycInProgressState'") {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
             }
+            step("Assert 'Introduction' screen is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onIntroductionScreen { createWalletButton.assertIsDisplayed() }
+                }
+            }
             // The AppsFlyer SDK never delivers its callback in tests, so the deep link it would have stored
             // is written straight to the repository the app reads it back from.
             step("Store the AppsFlyer deep link '$mobileOnboardingDeepLink'") {
                 runBlocking { appsFlyerRepository.storeNavigationDeeplink(mobileOnboardingDeepLink) }
             }
-            step("Click on 'Create wallet' button") {
-                onIntroductionScreen { createWalletButton.clickWithAssertion() }
-            }
-            step("Assert Tangem Pay mobile onboarding screen is displayed") {
+            step("Assert Tangem Pay mobile onboarding screen opens without any tap") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onTangemPayHotWalletOnboardingScreen {
                         title.assertIsDisplayed()
