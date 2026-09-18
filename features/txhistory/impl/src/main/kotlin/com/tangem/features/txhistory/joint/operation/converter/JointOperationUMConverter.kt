@@ -105,7 +105,7 @@ internal class JointOperationUMConverter(
                 ),
             )
         }
-        if (state.ownAnswer == Answer.DECLINED || state.role == Role.UNKNOWN) return@buildList
+        if (!state.canRefuse) return@buildList
         val isInitiator = state.role == Role.INITIATOR
         add(
             TxHistoryDetailsUM.MenuItemUM(
