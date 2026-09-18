@@ -54,17 +54,18 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
             return Unit.right()
         }
 
-        // A pending joint account has no Safe yet, so no wallet manager: there is nothing to read and no error to store
-        if (network.derivationPath is Network.DerivationPath.Joint &&
-            walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network) == null
-        ) {
-            TangemLogger.i(
-                "Skipping fetch for $userWalletId [${network.id}]: the joint account has no Safe address yet",
-            )
-            return Unit.right()
-        }
-
         return Either.catchOn(dispatchers.default) {
+            // A pending joint account has no Safe yet, so no wallet manager: there is nothing to read and no error
+            // to store. Building the manager can fail, so the lookup stays inside the catch
+            if (network.derivationPath is Network.DerivationPath.Joint &&
+                walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network) == null
+            ) {
+                TangemLogger.i(
+                    "Skipping fetch for $userWalletId [${network.id}]: the joint account has no Safe address yet",
+                )
+                return@catchOn
+            }
+
             val extraTokens = networkCurrencies.filterIsInstance<CryptoCurrency.Token>().toSet()
 
             val result = withContext(dispatchers.io) {
