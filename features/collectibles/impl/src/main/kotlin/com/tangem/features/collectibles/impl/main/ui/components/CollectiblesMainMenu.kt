@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -30,8 +32,6 @@ import com.tangem.core.ui.res.generated.icons.ic_dots_vertical_20
 import com.tangem.features.collectibles.impl.main.ui.preview.CollectiblesMainPreviewData
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 
-private val MenuWidth = 238.dp
-
 @Composable
 internal fun CollectiblesMainMenu(menu: CollectiblesMainUM.MenuUM, modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
@@ -41,22 +41,33 @@ internal fun CollectiblesMainMenu(menu: CollectiblesMainUM.MenuUM, modifier: Mod
             iconStart = TangemIconUM.Icon(imageVector = Icons.ic_dots_vertical_20),
             onClick = menu.onMenuClick,
         )
-        TangemContextMenu( // TODO align with design
+        TangemContextMenu(
+            // TODO align position and show animation
             expanded = menu.isShown,
             onDismissRequest = menu.onDismiss,
-            modifier = Modifier.width(MenuWidth),
+            modifier = Modifier
+                .hazeEffectTangem { blurRadius = 10.dp }
+                .width(238.dp),
         ) {
-            menu.items.fastForEach { item ->
-                if (item.hasDividerAbove) {
-                    HorizontalDivider(
-                        thickness = 0.5.dp,
-                        color = TangemTheme.colors3.border.primary,
+            Column(
+                modifier = Modifier.padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp,
+                ),
+            ) {
+                menu.items.fastForEach { item ->
+                    if (item.hasDividerAbove) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            thickness = 1.dp,
+                            color = TangemTheme.colors3.border.primary,
+                        )
+                    }
+                    CollectiblesMenuItem(
+                        item = item,
+                        onClick = { item.onClick() },
                     )
                 }
-                CollectiblesMenuItem(
-                    item = item,
-                    onClick = { item.onClick() },
-                )
             }
         }
     }
@@ -72,7 +83,7 @@ private fun CollectiblesMenuItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 6.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
