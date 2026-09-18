@@ -81,6 +81,7 @@ import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.PredictionWithdrawalFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
@@ -208,6 +209,7 @@ internal class SwapModel @Inject constructor(
     private val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor,
     private val predictionWithdrawalTracker: PredictionWithdrawalTracker,
+    private val predictionFundingWindow: PredictionFundingWindow,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
@@ -1616,14 +1618,16 @@ internal class SwapModel @Inject constructor(
                     currentSelected
                 }
             } else {
-                val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
+                val recommendedProvider = SwapProviderResolver.preferAvailable(successLoadedData)
+                    .keys.firstOrNull { it.isRecommended }
                 triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
 
+                val fallbackProvider = SwapProviderResolver.preferAvailable(consideredProviders).keys.first()
                 if (isAmountChangedByUser) {
                     isAmountChangedByUser = false
-                    recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
+                    recommendedProvider ?: bestQuotesProvider ?: fallbackProvider
                 } else {
-                    recommendedProvider ?: consideredProviders.keys.first()
+                    recommendedProvider ?: fallbackProvider
                 }
             }
         } else {
@@ -1744,6 +1748,7 @@ internal class SwapModel @Inject constructor(
                             },
                         )
                         sendSwapInProgressEvent()
+                        openPredictionFundingWindow()
 
                         router.replaceAll(SwapRoute.Success)
                     }
@@ -1987,9 +1992,14 @@ internal class SwapModel @Inject constructor(
                         }
                     },
                 )
+                openPredictionFundingWindow()
                 router.replaceAll(SwapRoute.Success)
             },
         )
+    }
+
+    private fun openPredictionFundingWindow() {
+        if (isPredictionTopUpFlow) predictionFundingWindow.open(params.userWalletId)
     }
 
     private fun sendTransferInProgressEvent(isTangemPay: Boolean) {
@@ -2093,7 +2103,7 @@ internal class SwapModel @Inject constructor(
                 cryptoCurrency = swapCurrency,
             ).map { (_, status) -> status }
             // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
-            is Account.Virtual -> emptyFlow()
+            is Account.Money -> emptyFlow()
             is Account.Prediction -> emptyFlow()
             // Collectibles account holds no spendable currencies of its own — its funds live in the gacha vault
             is Account.Collectibles -> emptyFlow()

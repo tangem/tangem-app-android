@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -95,6 +96,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     route = AppRoute.CurrencyDetails(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
+                        navigationAction = navigationActionFor(type = type, transactionId = transactionId),
                     ),
                     onComplete = { walletDeepLinkActionTrigger.selectWallet(userWallet.walletId) },
                 )
@@ -107,6 +109,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                     NotificationType.SwapStatus,
                     NotificationType.OnrampStatus,
                     -> tokenDetailsDeepLinkActionTrigger.trigger(transactionId)
+                    NotificationType.JointTx,
                     NotificationType.Promo,
                     NotificationType.IncomeTransactions,
                     NotificationType.JointMembers,
@@ -118,6 +121,11 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             }
             if (isFromOnNewIntent) fetchCurrency(userWallet, cryptoCurrency)
         }
+    }
+
+    private fun navigationActionFor(type: NotificationType, transactionId: String?): NavigationAction? {
+        if (transactionId == null || type != NotificationType.JointTx) return null
+        return NavigationAction.JointOperation(operationId = transactionId)
     }
 
     /**

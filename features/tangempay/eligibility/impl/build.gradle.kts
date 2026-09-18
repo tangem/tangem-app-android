@@ -25,7 +25,6 @@ dependencies {
 
     /** Features api */
     api(projects.features.tangempay.eligibility.api)
-    implementation(projects.features.tangempay.details.api)
     implementation(projects.features.commonFeatures.api)
 
     /** Domain */
