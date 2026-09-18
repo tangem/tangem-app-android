@@ -22,6 +22,31 @@ import org.junit.jupiter.params.ParameterizedTest
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTestBase() {
 
+    @Test
+    fun `GIVEN Won filter WHEN resumed and a row is no longer won THEN it leaves the filtered list`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        val won = position(assetId = "won", result = PolymarketPositionResult.WON)
+        val stillWon = position(assetId = "still", result = PolymarketPositionResult.WON)
+        fetch = { page(listOf(won, stillWon)) }
+        session.selectFilter(PolymarketPositionsFilter.WON)
+        session.resume(backgroundScope)
+        runCurrent()
+        val reopened = position(assetId = "won")
+        fetch = { page(listOf(reopened, stillWon)) }
+
+        // Act
+        session.pause()
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value).isEqualTo(
+            PolymarketPositionsState(listOf(stillWon), PaginationStatus.EndOfPagination, PolymarketPositionsFilter.WON),
+        )
+        assertThat(requests.map { it.second }).containsExactly(0, 0).inOrder()
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN rare matches WHEN filter selected THEN continues through unmatched and empty pages`(
@@ -268,7 +293,7 @@ internal class PolymarketPositionsFilteringTest : PolymarketPositionsSessionTest
             ),
         )
         assertThat(reopened.state.value.filter).isEqualTo(PolymarketPositionsFilter.ALL)
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 60, 0).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60, 0).inOrder()
     }
 
     private companion object {
