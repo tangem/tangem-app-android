@@ -118,6 +118,27 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
+    fun `GIVEN new business entry WHEN model created THEN draft is third party`() {
+        // Act
+        val model = createModel(BankWithdrawEntry.NewBusiness)
+
+        // Assert
+        assertThat(model.draft.value.newRecipient)
+            .isEqualTo(NewRecipientDraft(isThirdParty = true, accountType = null))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new personal entry WHEN model created THEN draft has no transfer type yet`() {
+        // Act
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+
+        // Assert
+        assertThat(model.draft.value.newRecipient).isEqualTo(NewRecipientDraft())
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN see all entry WHEN recipient selected THEN draft keeps recipient`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.SeeAll)

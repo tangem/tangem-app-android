@@ -12,10 +12,9 @@ import java.time.Instant
 /**
  * Fills the header the user reads before paying.
  *
- * The price shown here is the outcome's probability, which is a caption and nothing more: it is a live best ask
- * without slippage that silently falls back to a stale price when the order book is unreachable. Everything the
- * order actually executes at comes from the quote. A market that reports no probability keeps the caption
- * empty, the way the feed and the details screen do, rather than printing it as free.
+ * Seeds the price with the outcome's probability. Price polling updates it with the best ask while the amount
+ * is empty; a placeable quote updates it with the average execution price after an amount is entered.
+ * A market that reports no probability keeps the initial caption empty rather than printing it as free.
  */
 internal class SetMarketTransformer(
     private val market: PolymarketMarket,

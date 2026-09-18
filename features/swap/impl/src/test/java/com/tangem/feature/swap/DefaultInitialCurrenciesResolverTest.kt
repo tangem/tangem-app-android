@@ -1722,26 +1722,26 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     @Test
-    fun `GIVEN toggle off WHEN withdraw resolve THEN the account legacy currency is still resolvable`() = runTest {
-        // Arrange — multichain data is present, but the account flow is off: the legacy currency the entry
-        // point passes is not one of the issued networks, exactly as on a real multichain account.
-        val legacyCurrency = mockCryptoCurrency()
-        val legacyStatus = createCurrencyStatus(legacyCurrency, fiatAmount = BigDecimal("10"))
-        val issuedStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
-        setupSupplier(listOf(createPaymentAccountStatus(legacyStatus, listOf(issuedStatus))))
+    fun `GIVEN toggle off WHEN withdraw resolve THEN the first issued currency is resolvable`() = runTest {
+        // Arrange — with the account flow off a payment account is represented by a single currency, which is
+        // now the first of its issued networks: there is no separate account-level currency any more.
+        val issuedCurrency = mockCryptoCurrency()
+        val issuedStatus = createCurrencyStatus(issuedCurrency, fiatAmount = BigDecimal("10"))
+        val secondStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("50"))
+        setupSupplier(listOf(createPaymentAccountStatus(issuedStatus, listOf(issuedStatus, secondStatus))))
         setupAvailabilityForAnyCurrency()
 
         // Act
         val (from, _) = resolver.invoke(
             userWalletId,
-            initialCryptoCurrency = legacyCurrency,
+            initialCryptoCurrency = issuedCurrency,
             swapCurrencyPosition = CurrencyPosition.FROM,
             accountFlow = AccountFlow.Withdraw,
             isAccountFlowEnabled = false,
         )
 
         // Assert
-        assertThat(from?.status).isSameInstanceAs(legacyStatus)
+        assertThat(from?.status).isSameInstanceAs(issuedStatus)
     }
 
     @Test
@@ -1774,12 +1774,11 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     private fun createPaymentAccountStatus(
-        legacyStatus: CryptoCurrencyStatus,
-        issuedNetworkStatuses: List<CryptoCurrencyStatus> = listOf(legacyStatus),
+        primaryStatus: CryptoCurrencyStatus,
+        issuedNetworkStatuses: List<CryptoCurrencyStatus> = listOf(primaryStatus),
     ): AccountStatus.Payment {
         val statusValue = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
             every { cryptoCurrencyStatuses } returns issuedNetworkStatuses
-            every { cryptoCurrencyStatus } returns legacyStatus
         }
         return AccountStatus.Payment(account = Account.Payment(userWalletId), value = statusValue)
     }
