@@ -8,11 +8,13 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.polymarket.converter.PolymarketClosedPositionConverter
 import com.tangem.data.polymarket.converter.PolymarketOpenPositionConverter
 import com.tangem.data.polymarket.pagination.PolymarketPositionsBatchFetcher
+import com.tangem.data.polymarket.pagination.PolymarketPositionsUpdateFetcher
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
+import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
@@ -36,13 +38,18 @@ internal class DefaultPolymarketPositionsRepository @Inject constructor(
         fetchDispatcher = dispatchers.io,
         context = context,
         generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
-        batchFetcher = PolymarketPositionsBatchFetcher(batchSize = batchSize) { config, limit, offset ->
-            when (config.tab) {
-                PolymarketPositionsTab.ACTIVE -> getOpenPositions(config.addresses, limit, offset)
-                PolymarketPositionsTab.FINISHED -> getClosedPositions(config.addresses, limit, offset)
-            }
-        },
+        batchFetcher = PolymarketPositionsBatchFetcher(batchSize = batchSize, fetchPage = ::fetchPage),
+        updateFetcher = PolymarketPositionsUpdateFetcher(batchSize = batchSize, fetchPage = ::fetchPage),
     ).toBatchFlow()
+
+    private suspend fun fetchPage(
+        config: PolymarketPositionsListConfig,
+        limit: Int,
+        offset: Int,
+    ): Either<PolymarketPositionsError, PolymarketPositionsPage<PolymarketPosition>> = when (config.tab) {
+        PolymarketPositionsTab.ACTIVE -> getOpenPositions(config.addresses, limit, offset)
+        PolymarketPositionsTab.FINISHED -> getClosedPositions(config.addresses, limit, offset)
+    }
 
     override suspend fun getOpenPositions(
         addresses: PolymarketAddresses,
