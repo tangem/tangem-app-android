@@ -304,6 +304,8 @@
   <string name="collectibles_machine_value_and_odds_section">Pack value and odds</string>
   <string name="collectibles_main_all_cards_tab">All cards</string>
   <string name="collectibles_main_all_packs_tab">All packs</string>
+  <string name="collectibles_main_menu_activity_log">Activity log</string>
+  <string name="collectibles_main_menu_deliveries">Deliveries</string>
   <string name="collectibles_main_menu_get_assistance">Get assistance</string>
   <string name="collectibles_main_menu_how_it_works">How it works</string>
   <string name="collectibles_main_pack_buyback_badge">Buyback %s</string>
@@ -639,6 +641,7 @@
   <string name="common_warning">Warning</string>
   <string name="common_week">week</string>
   <string name="common_with">with</string>
+  <string name="common_withdrawal">Withdrawal</string>
   <string name="common_withdrawing">Withdrawing</string>
   <string name="common_yes">Yes</string>
   <string name="common_yield_mode">Yield Mode</string>
@@ -1747,6 +1750,11 @@
   <string name="prediction_add_funds_swap_subtitle">Use crypto in your Tangem wallet to top up your Polymarket account</string>
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
+  <string name="prediction_claim_error_failed">The claim did not go through. Nothing left your account, and you can try again.</string>
+  <string name="prediction_claim_error_generic">The claim could not be sent. Please try again.</string>
+  <string name="prediction_claim_error_rejected">Polymarket refused to relay the claim. Refresh your positions and try again.</string>
+  <string name="prediction_claim_error_unavailable">Polymarket is unreachable right now. Try again in a few minutes.</string>
+  <string name="prediction_claim_error_unconfirmed">The claim is taking longer than usual. Check your positions before claiming again.</string>
   <string name="prediction_close_button">Close position</string>
   <string name="prediction_close_min_shares_error">At least %s tokens</string>
   <string name="prediction_close_result_no_fill_title">No liquidity for selling</string>
@@ -1770,6 +1778,7 @@
   </plurals>
   <string name="prediction_event_probability">Probability</string>
   <string name="prediction_event_total_volume">Total volume:</string>
+  <string name="prediction_fee_sheet_polymarket_fee">Polymarket Fee</string>
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
@@ -1863,6 +1872,13 @@
   <string name="prediction_place_you_vote">You vote</string>
   <string name="prediction_place_you_will_pay">You will pay</string>
   <string name="prediction_position_result_balance_note">Funds will be added to your balance</string>
+  <string name="prediction_position_result_claim_action">Claim reward</string>
+  <string name="prediction_position_result_dismiss_action">Dismiss</string>
+  <string name="prediction_position_result_loss_title">Loss %s</string>
+  <string name="prediction_position_result_payout_pending_note">The payout is not on chain yet. Check back in a few minutes.</string>
+  <string name="prediction_position_result_profit">Profit</string>
+  <string name="prediction_position_result_split_title">Split %s</string>
+  <string name="prediction_position_result_won_title">You Won %s</string>
   <string name="prediction_positions_active">Active</string>
   <string name="prediction_positions_closed">Closed</string>
   <string name="prediction_positions_closure_date">Closure Date</string>

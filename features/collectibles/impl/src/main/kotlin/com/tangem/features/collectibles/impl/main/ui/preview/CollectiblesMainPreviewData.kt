@@ -26,13 +26,11 @@ internal object CollectiblesMainPreviewData {
         ),
         actions = persistentListOf(
             CollectiblesMainUM.ActionUM(
-                id = "add_funds",
                 icon = Icons.ic_arrow_down_24,
                 title = stringReference("Add funds"),
                 onClick = {},
             ),
             CollectiblesMainUM.ActionUM(
-                id = "withdrawal",
                 icon = Icons.ic_arrow_up_24,
                 title = stringReference("Withdrawal"),
                 onClick = {},

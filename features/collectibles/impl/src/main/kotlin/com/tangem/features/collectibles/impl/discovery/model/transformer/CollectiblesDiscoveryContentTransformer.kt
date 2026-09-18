@@ -1,8 +1,9 @@
 package com.tangem.features.collectibles.impl.discovery.model.transformer
 
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
+import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.discovery.model.converter.CollectiblesDiscoveryPackConverter
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import com.tangem.pagination.PaginationStatus
@@ -41,7 +42,7 @@ internal class CollectiblesDiscoveryContentTransformer(
                 CollectiblesDiscoveryUM.ContentUM.Loading
             }
             is PaginationStatus.InitialLoadingError -> CollectiblesDiscoveryUM.ContentUM.Error(
-                message = stringReference(ERROR_MESSAGE),
+                message = TextReference.Res(R.string.collectibles_main_search_load_error),
                 onReloadClick = onReloadClick,
             )
             is PaginationStatus.NextBatchLoading -> toContent(isLoadingNextPage = true)
@@ -59,7 +60,7 @@ internal class CollectiblesDiscoveryContentTransformer(
             .distinctBy(CollectibleGachaMachine::id)
 
         if (machines.isEmpty()) {
-            return CollectiblesDiscoveryUM.ContentUM.Empty(message = stringReference(EMPTY_MESSAGE))
+            return CollectiblesDiscoveryUM.ContentUM.Empty(TextReference.Res(R.string.collectibles_main_search_empty))
         }
 
         val rows = machines
@@ -79,7 +80,5 @@ internal class CollectiblesDiscoveryContentTransformer(
     private companion object {
 
         const val PACKS_PER_ROW = 2
-        const val ERROR_MESSAGE = "Failed to load cards list.\nTap to reload"
-        const val EMPTY_MESSAGE = "No results. Try to change your wording\nor explore from the list"
     }
 }

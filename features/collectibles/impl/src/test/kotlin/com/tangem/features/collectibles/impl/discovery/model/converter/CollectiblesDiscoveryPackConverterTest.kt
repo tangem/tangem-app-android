@@ -1,7 +1,10 @@
 package com.tangem.features.collectibles.impl.discovery.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.collectibles.impl.discovery.createMachine
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -80,7 +83,8 @@ internal class CollectiblesDiscoveryPackConverterTest {
         val actual = converter.convert(createMachine(instantBuybackPercent = 80))
 
         // Assert
-        assertThat(actual.badge).isEqualTo(stringReference("Buyback 80%"))
+        assertThat(actual.badge)
+            .isEqualTo(TextReference.Res(R.string.collectibles_main_pack_buyback_badge, wrappedList("80%")))
     }
 
     @Test

@@ -1,8 +1,10 @@
 package com.tangem.features.collectibles.impl.discovery.model.converter
 
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
+import com.tangem.features.collectibles.impl.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -23,7 +25,7 @@ internal class CollectiblesDiscoveryTabsConverter(
     override fun convert(value: Input): ImmutableList<TangemTabItemUM> {
         val allTab = TangemTabItemUM.Content(
             id = ALL_TAB_ID,
-            label = stringReference("All cards"),
+            label = TextReference.Res(R.string.collectibles_main_all_packs_tab),
             counter = stringReference(value.categories.totalMachinesQuantity.toString()),
             isSelected = value.selectedCategoryId == null,
             onClick = { onCategoryClick(null) },

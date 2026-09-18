@@ -21,7 +21,6 @@ internal data class CollectiblesMainUM(
     )
 
     data class ActionUM(
-        val id: String,
         val icon: ImageVector,
         val title: TextReference,
         val onClick: () -> Unit,
