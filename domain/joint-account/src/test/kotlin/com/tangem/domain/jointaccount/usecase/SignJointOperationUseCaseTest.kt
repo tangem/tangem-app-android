@@ -15,6 +15,7 @@ import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
+import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -86,7 +87,8 @@ internal class SignJointOperationUseCaseTest {
         coEvery { verifier.verify(any(), any(), any(), any(), any()) } returns Unit.right()
         coEvery { networkReader.getGasPrice(any(), any()) } returns GAS_PRICE.right()
         coEvery { refundReceiverProvider.refundReceiver() } returns REFUND_RECEIVER
-        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns Unit.right()
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            SafeDeployment.DEPLOYED.right()
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns ALICE.right()
         coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.SAFE
@@ -220,7 +222,39 @@ internal class SignJointOperationUseCaseTest {
         }
 
     @Test
-    fun `GIVEN blockaid could not validate WHEN invoke THEN nothing is signed`() = runTest {
+    fun `GIVEN no verdict for a safe not deployed yet WHEN invoke THEN the operation is still signed`() = runTest {
+        // Arrange
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            SafeDeployment.NOT_DEPLOYED.right()
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+            JointOperationBlockaidGate.Verdict.UNKNOWN
+
+        // Act
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { signer.signOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN blockaid unavailable for a safe not deployed yet WHEN invoke THEN nothing is signed`() = runTest {
+        // Arrange
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            SafeDeployment.NOT_DEPLOYED.right()
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+            JointOperationBlockaidGate.Verdict.UNAVAILABLE
+
+        // Act
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no verdict for a deployed safe WHEN invoke THEN nothing is signed`() = runTest {
         // Arrange
         coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.UNKNOWN
