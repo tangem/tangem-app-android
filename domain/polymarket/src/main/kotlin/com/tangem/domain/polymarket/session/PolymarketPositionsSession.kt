@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.session
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.converter.PolymarketPositionStatusConverter
+import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -40,6 +42,7 @@ class PolymarketPositionsSession internal constructor(
     private val tab: PolymarketPositionsTab,
     private val repository: PolymarketPositionsRepository,
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
+    private val invalidator: PredictionPositionsInvalidator,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -48,6 +51,7 @@ class PolymarketPositionsSession internal constructor(
 
     private var scope: CoroutineScope? = null
     private var job: Job? = null
+    private var invalidationJob: Job? = null
     private val request = MutableStateFlow(Request())
     private var isDisposed = false
     private var requestMore: (() -> Unit)? = null
@@ -62,10 +66,18 @@ class PolymarketPositionsSession internal constructor(
             job == null -> load()
             !wasResumed -> refreshLoadedPages?.invoke()
         }
+        invalidationJob?.cancel()
+        invalidationJob = scope.launch {
+            invalidator.signal
+                .filter { it == userWalletId }
+                .collect { if (request.value.isResumed) load() }
+        }
     }
 
     fun pause() {
         request.update { it.copy(isResumed = false) }
+        invalidationJob?.cancel()
+        invalidationJob = null
     }
 
     fun dispose() {
