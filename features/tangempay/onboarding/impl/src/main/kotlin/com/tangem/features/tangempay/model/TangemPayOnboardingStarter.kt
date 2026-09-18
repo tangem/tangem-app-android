@@ -14,7 +14,6 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
@@ -73,14 +72,10 @@ internal class TangemPayOnboardingStarter @Inject constructor(
                     when (mode) {
                         Mode.ContinueToKyc -> proceedToKyc(
                             userWalletId = userWalletId,
-                            customerInfo = customerInfo,
                             campaignKey = campaignKey,
                             callbacks = callbacks,
                         )
-                        Mode.StartOnboarding -> {
-                            if (campaignKey == null) createLegacyOrderBeforeKycIfNeeded(userWalletId, customerInfo)
-                            startOnboarding(userWalletId, campaignKey, callbacks)
-                        }
+                        Mode.StartOnboarding -> startOnboarding(userWalletId, campaignKey, callbacks)
                     }
                 } else {
                     callbacks.onExit()
@@ -108,7 +103,6 @@ internal class TangemPayOnboardingStarter @Inject constructor(
                 } else {
                     proceedToKyc(
                         userWalletId = userWalletId,
-                        customerInfo = customerInfo,
                         campaignKey = campaignKey,
                         callbacks = callbacks,
                     )
@@ -151,15 +145,8 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         )
     }
 
-    private suspend fun proceedToKyc(
-        userWalletId: UserWalletId,
-        customerInfo: CustomerInfo,
-        campaignKey: String?,
-        callbacks: Callbacks,
-    ) {
-        if (campaignKey == null) {
-            createLegacyOrderBeforeKycIfNeeded(userWalletId, customerInfo)
-        } else {
+    private suspend fun proceedToKyc(userWalletId: UserWalletId, campaignKey: String?, callbacks: Callbacks) {
+        if (campaignKey != null) {
             val isOrderCreated = createCampaignOrder(userWalletId, campaignKey, callbacks)
             if (!isOrderCreated) return
         }
@@ -173,15 +160,6 @@ internal class TangemPayOnboardingStarter @Inject constructor(
             )
         } else {
             openKyc(userWalletId)
-        }
-    }
-
-    private suspend fun createLegacyOrderBeforeKycIfNeeded(userWalletId: UserWalletId, customerInfo: CustomerInfo) {
-        val shouldCreateOrder = !tangemPayFeatureToggles.isTiersPlusPlanEnabled && customerInfo.productInstance == null
-        if (!shouldCreateOrder) return
-
-        repository.createOrder(userWalletId).onLeft { error ->
-            TangemLogger.e("Error creating order before KYC: $error")
         }
     }
 

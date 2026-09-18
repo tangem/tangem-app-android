@@ -19,6 +19,9 @@ internal interface CollectiblesDiscoveryComponent : ComposableListContentCompone
     /** Requests the next page; the model ignores it while a page is on its way or the list has ended. */
     fun onLoadMore()
 
+    /** Refetches the catalogue from page one, keeping the selected category and the query. */
+    fun onRefresh()
+
     interface Factory {
         fun create(context: AppComponentContext): CollectiblesDiscoveryComponent
     }
