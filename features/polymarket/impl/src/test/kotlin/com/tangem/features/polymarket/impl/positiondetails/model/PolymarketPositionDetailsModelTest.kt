@@ -13,6 +13,8 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.domain.polymarket.model.PolymarketStatus
@@ -408,6 +410,85 @@ internal class PolymarketPositionDetailsModelTest {
         assertThat(second.data().summary.currentValue).isEqualTo(stringReference("$42.00"))
     }
 
+    @Test
+    fun `GIVEN a tradable market WHEN buy tapped THEN the buy route carries wallet, event, market and outcome`() =
+        runModelTest {
+            // Arrange
+            coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+            val model = createModel()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            requireNotNull(model.data().onBuyMoreClick).invoke()
+
+            // Assert
+            verify(exactly = 1) {
+                router.push(
+                    PolymarketRoute.PlacePrediction(wallet, "event", "market-from-event", position.id.assetId),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN a market that refuses orders WHEN opened THEN buy is not offered`() = runModelTest {
+        // Arrange
+        coEvery { getEvent("event") } returns
+            createEvent(markets = listOf(createMarket(isAcceptingOrders = false))).right()
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.data().onBuyMoreClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN a position awaiting resolution WHEN opened THEN buy is not offered`() = runModelTest {
+        // Arrange
+        coEvery { repository.getPosition(addresses, position.id) } returns
+            position.copy(resolutionStatus = PolymarketResolutionStatus.DISPUTED).right()
+        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.data().onBuyMoreClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN no market of the event holds the outcome WHEN opened THEN buy is not offered`() = runModelTest {
+        // Arrange
+        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket(assetId = "other"))).right()
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.data().onBuyMoreClick).isNull()
+    }
+
+    @Test
+    fun `GIVEN the event could not be read WHEN opened THEN buy is not offered`() = runModelTest {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(model.data().onBuyMoreClick).isNull()
+    }
+
     private fun runModelTest(block: suspend TestScope.() -> Unit) = runTest {
         try {
             block()
@@ -430,7 +511,7 @@ internal class PolymarketPositionDetailsModelTest {
         ).also(models::add)
     }
 
-    private fun createEvent() = PolymarketEvent(
+    private fun createEvent(markets: List<PolymarketMarket> = emptyList()) = PolymarketEvent(
         id = "event",
         slug = "event",
         title = "Loaded event",
@@ -447,7 +528,33 @@ internal class PolymarketPositionDetailsModelTest {
         totalMarketsCount = 0,
         isNegRisk = false,
         displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = emptyList(),
+        markets = markets,
+    )
+
+    private fun createMarket(
+        assetId: String = position.id.assetId,
+        isAcceptingOrders: Boolean = true,
+    ) = PolymarketMarket(
+        id = "market-from-event",
+        eventId = "event",
+        title = "Will the event happen?",
+        slug = "market",
+        description = "",
+        groupItemTitle = null,
+        iconUrl = null,
+        imageUrl = null,
+        status = PolymarketStatus.ACTIVE,
+        isNegRisk = false,
+        isAcceptingOrders = isAcceptingOrders,
+        startDate = null,
+        endDate = null,
+        startDateIso = null,
+        endDateIso = null,
+        volume = null,
+        volume24h = null,
+        liquidity = null,
+        orderIndex = 0,
+        outcomes = listOf(PolymarketOutcome(assetId = assetId, title = "Yes", probability = null)),
     )
 
     internal data class UnsellableModel(val position: PolymarketPosition.Open)
