@@ -14,6 +14,7 @@ import com.arkivanov.decompose.router.children.ChildNavState
 import com.arkivanov.decompose.router.pages.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
@@ -47,6 +48,8 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
 
+    private val emptySearchTab: FeedTabComponent? = buildEmptySearchTab()
+
     private val pagesNavigation = PagesNavigation<FeedTabId>()
 
     private val pages: Value<ChildPages<FeedTabId, FeedTabComponent>> = childPages(
@@ -72,7 +75,13 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         val state by model.uiState.collectAsStateWithLifecycle()
 
         if (state.query.isBlank()) {
-            FeedSearchPlaceholder(recent = state.recent, contentPadding = contentPadding, modifier = modifier)
+            FeedSearchPlaceholder(
+                recent = state.recent,
+                marketList = emptySearchTab,
+                bottomSheetState = bottomSheetState,
+                contentPadding = contentPadding,
+                modifier = modifier,
+            )
             return
         }
 
@@ -96,6 +105,12 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
                 modifier = tabModifier.fillMaxSize(),
             )
         }
+    }
+
+    private fun buildEmptySearchTab(): FeedTabComponent? {
+        val childContext = child(key = "emptySearchTab")
+
+        return contributors.firstNotNullOfOrNull { it.createEmptySearchTab(context = childContext) }
     }
 
     private fun createSearchTab(id: FeedTabId, componentContext: ComponentContext): FeedTabComponent {
