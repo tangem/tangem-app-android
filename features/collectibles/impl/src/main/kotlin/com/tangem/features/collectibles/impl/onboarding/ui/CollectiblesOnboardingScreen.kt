@@ -99,6 +99,7 @@ private fun previewState(isCreatingAccount: Boolean) = CollectiblesOnboardingUMC
             onCreateAccountClick = {},
             onCollectiblesTermsClick = {},
             onTangemTermsClick = {},
+            onPrivacyNoticeClick = {},
         ),
     )
     .copy(isCreatingAccount = isCreatingAccount)
