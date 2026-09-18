@@ -3,6 +3,7 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -105,6 +106,10 @@ internal class AppsFlyerDeeplinkRouterTest {
     private fun provideFreshInstallEntryModels(): List<BlockedRouteModel> = listOf(
         BlockedRouteModel(AppRoute.Home(), expected = true),
         BlockedRouteModel(AppRoute.Stories(storyId = "id", screenSource = "src"), expected = true),
+        BlockedRouteModel(
+            AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten),
+            expected = false,
+        ),
         BlockedRouteModel(AppRoute.Wallet, expected = false),
         BlockedRouteModel(AppRoute.AppSettings, expected = false),
         BlockedRouteModel(
@@ -140,7 +145,7 @@ internal class AppsFlyerDeeplinkRouterTest {
         }
 
     @Test
-    fun `GIVEN deeplink and empty wallets on Home WHEN observe THEN stories kept and deeplink not consumed`() =
+    fun `GIVEN deeplink and empty wallets on Home WHEN observe THEN replaceAll onboarding and clear`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
             coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
@@ -150,10 +155,98 @@ internal class AppsFlyerDeeplinkRouterTest {
             router.observe(backgroundScope, currentRoute)
             advanceUntilIdle()
 
-            // Assert — the intro stories must not be skipped: Home consumes the deep link on "Get started".
-            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            // Assert — root, not push: the onboarding falls back to Home with `replaceCurrent`.
+            verify(exactly = 1) { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
             verify(exactly = 0) { appRouter.push(route = any(), onComplete = any()) }
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN deeplink and empty wallets on Stories WHEN observe THEN replaceAll onboarding and clear`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Stories(storyId = "id", screenSource = "src"))
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN deeplink and empty wallets on forgotten wallet Home WHEN observe THEN does not route`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(
+                AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten),
+            )
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert — returning after forgetting the last wallet is not an install entry to hijack.
+            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN deeplink and empty wallets on card scan launch WHEN observe THEN does not route`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(
+                AppRoute.Home(launchMode = InitScreenLaunchMode.WithCardScan),
+            )
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert — the NFC scan started by the launch owns the screen.
+            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN deeplink and empty wallets on CreateWalletStart WHEN observe THEN does not route`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(
+                AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet),
+            )
+
+            // Act
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Assert — wallet creation is already under way; the link waits for a start screen.
+            verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
+            coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
+        }
+
+    @Test
+    fun `GIVEN routed from Home WHEN route becomes onboarding THEN does not route again`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            val currentRoute = MutableStateFlow<AppRoute?>(AppRoute.Home())
+            router.observe(backgroundScope, currentRoute)
+            advanceUntilIdle()
+
+            // Act — the store is mocked, so the link still reads as pending on the re-emission.
+            currentRoute.value = AppRoute.TangemPayHotWalletOnboarding
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding, onComplete = any()) }
+            coVerify(exactly = 1) { clearAppsFlyerDeeplinkUseCase() }
         }
 
     @Test

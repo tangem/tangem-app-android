@@ -2,6 +2,7 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplink
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
@@ -61,10 +62,8 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
         // A flow is in progress: keep the deep link pending, re-evaluate on next route change.
         if (isNavigationBlocked(currentRoute)) return
 
-        // No wallet yet: the user is on the intro stories, which this deep link must not skip. It stays pending
-        // and Home consumes it on "Get started", right after the stories (see HomeModel.onGetStartedClick).
         if (userWalletsListRepository.userWalletsSync().isEmpty()) {
-            TangemLogger.i("[TangemPay][HWO] No wallets yet, keeping the deep link until the stories are over")
+            routeTangemPayOnboardingOnFreshInstall(currentRoute)
             return
         }
 
@@ -73,6 +72,29 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
         appRouter.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.MobileOnboardingDeeplink))
         // One-shot: consume the deep link once routed so the user isn't forced back here on relaunch.
         clearAppsFlyerDeeplinkUseCase()
+    }
+
+    /**
+     * No wallet yet: the hot wallet onboarding creates one as part of the Tangem Pay flow, so it replaces the
+     * start screen instead of waiting for a tap on it.
+     */
+    private suspend fun routeTangemPayOnboardingOnFreshInstall(currentRoute: AppRoute) {
+        // Also the re-entry guard: the route this method installs is not an install entry, so the re-emission
+        // that `replaceAll` triggers cannot route a second time before the clear has landed.
+        if (!isFreshInstallEntry(currentRoute)) return
+
+        // An NFC launch already owns the screen; DeepLinkFactory defers to the card SDK for the same reason.
+        if (currentRoute is AppRoute.Home && currentRoute.launchMode == InitScreenLaunchMode.WithCardScan) {
+            TangemLogger.i("[TangemPay][HWO] Card scan is in progress, keeping the deep link")
+            return
+        }
+
+        TangemLogger.i("[TangemPay][HWO] Routing AppsFlyer deep link as the root")
+        // Consumed before navigating, not after: on a device without hot wallet support the onboarding falls back
+        // to Home, and a link still pending by then would route again from there, forever.
+        clearAppsFlyerDeeplinkUseCase()
+        // Root, not push: that same fallback uses `replaceCurrent`, which would otherwise stack a second Home.
+        appRouter.replaceAll(AppRoute.TangemPayHotWalletOnboarding)
     }
 
     private suspend fun routeTangemPayCampaign(campaignKey: String, currentRoute: AppRoute) {
@@ -101,8 +123,13 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 }
 
-internal fun isFreshInstallEntry(currentRoute: AppRoute?): Boolean =
-    currentRoute is AppRoute.Home || currentRoute is AppRoute.Stories
+internal fun isFreshInstallEntry(currentRoute: AppRoute?): Boolean = when (currentRoute) {
+    // A Home reached by forgetting the last wallet is a return, not an install entry: a link left pending by an
+    // earlier session must not hijack it.
+    is AppRoute.Home -> currentRoute.entryReason == AppRoute.Home.EntryReason.Launch
+    is AppRoute.Stories -> true
+    else -> false
+}
 
 // Mirrors DeepLinkFactory.checkRoutingReadiness (minus Home and Stories, which fresh-install links need) plus
 // the Tangem Pay flows these links open, so a pending link never stacks a second one on top of them.
