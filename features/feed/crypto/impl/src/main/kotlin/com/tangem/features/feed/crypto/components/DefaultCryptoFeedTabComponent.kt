@@ -91,6 +91,10 @@ internal class DefaultCryptoFeedTabComponent @AssistedInject constructor(
         bottomSheet.child?.instance?.BottomSheet()
     }
 
+    override fun resetScroll() {
+        listState.requestScrollToItem(index = 0)
+    }
+
     private fun bottomSheetChild(config: FeedCryptoTabBottomSheetConfig): ComposableBottomSheetComponent {
         return when (config) {
             is FeedCryptoTabBottomSheetConfig.MarketIndexInfo -> indexInfoChild(config = config)
