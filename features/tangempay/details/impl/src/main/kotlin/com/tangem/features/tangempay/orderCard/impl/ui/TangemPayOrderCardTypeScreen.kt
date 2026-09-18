@@ -9,7 +9,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,13 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
@@ -41,8 +36,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.badge.TangemBadge
@@ -65,8 +58,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_cloud_12_filled
+import com.tangem.features.tangempay.common.TangemPayCardArtwork
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
@@ -80,7 +72,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import com.tangem.core.ui.R as CoreUiR
 
-private const val CARD_ASPECT_RATIO = 1.585f
 private const val UNAVAILABLE_ROW_ALPHA = 0.4f
 
 @Composable
@@ -177,7 +168,6 @@ private fun ColumnScope.OrderTypeBody(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .navigationBarsPadding(),
     ) {
         CardTypeTabs(
@@ -186,10 +176,19 @@ private fun ColumnScope.OrderTypeBody(
             onTypeClick = state.onTypeClick,
             onTypeSwipe = state.onTypeSwipe,
         )
+        DetailsArea(
+            state = state,
+            availableTypes = availableTypes,
+            pagerState = detailsPagerState,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
         SpacerH(16.dp)
-        DetailsArea(state = state, availableTypes = availableTypes, pagerState = detailsPagerState)
-        SpacerH(16.dp)
-        SelectButton(state = state, availableTypes = availableTypes, pagerState = cardPagerState)
+        SelectButton(
+            state = state,
+            availableTypes = availableTypes,
+            pagerState = cardPagerState,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
         SpacerH(12.dp)
     }
 }
@@ -299,58 +298,19 @@ private fun CardTypeTabs(
 
     TangemTabNavigation(
         tabs = tabs,
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         variant = TangemTabItem.Variant.Material,
-        contentPadding = PaddingValues(0.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
     )
 }
 
-@Suppress("MagicNumber")
 @Composable
 private fun CardArtwork(imageUrl: String?, type: OrderCardType?, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(CARD_ASPECT_RATIO)
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                Brush.linearGradient(colors = listOf(Color(0xFF2A2E3A), Color(0xFF1C1F29))),
-            ),
-    ) {
-        Icon(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .size(height = 16.dp, width = 44.dp),
-            imageVector = ImageVector.vectorResource(CoreUiR.drawable.ic_visa_logo),
-            tint = TangemTheme.colors3.icon.staticDark,
-            contentDescription = null,
-        )
-        if (imageUrl != null) {
-            SubcomposeAsyncImage(
-                modifier = Modifier.matchParentSize(),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .crossfade(true)
-                    .build(),
-                loading = {},
-                error = {},
-                contentScale = ContentScale.Crop,
-                contentDescription = null,
-            )
-        }
-        if (type == OrderCardType.Virtual) {
-            Icon(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
-                    .size(20.dp),
-                imageVector = Icons.ic_cloud_12_filled,
-                tint = TangemTheme.colors3.icon.staticDark,
-                contentDescription = null,
-            )
-        }
-    }
+    TangemPayCardArtwork(
+        imageUrl = imageUrl,
+        isVirtual = type == OrderCardType.Virtual,
+        modifier = modifier,
+    )
 }
 
 @Composable
