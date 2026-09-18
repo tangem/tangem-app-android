@@ -1044,8 +1044,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     /**
      * A joint network's manager is the Safe's: built on the owner key at [path] once the account has a Safe address.
-     * `null` means one thing only — the address has not arrived yet, so the caller may retry later. The resolver is
-     * lazy: it sits behind the accounts fetcher, which reaches this facade through the tokens saver.
+     * `null` means the manager cannot be built yet — the address has not arrived, or the owner key at [path] is not
+     * derived on this wallet — so the caller reads nothing and may retry later. The resolver is lazy: it sits behind
+     * the accounts fetcher, which reaches this facade through the tokens saver.
      */
     private suspend fun createSafeWalletManager(
         userWallet: UserWallet,
@@ -1059,14 +1060,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 return null
             }
 
-        return requireNotNull(
-            walletManagerFactory.createSafeWalletManager(
-                userWallet = userWallet,
-                blockchain = blockchain,
-                derivationPath = path,
-                safeAddress = safeAddress,
-            ),
-        ) { "Unable to create the Safe wallet manager for $blockchain at ${path.rawPath}" }
+        return walletManagerFactory.createSafeWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = path,
+            safeAddress = safeAddress,
+        )
+            ?: run {
+                // The owner key is missing or the SDK refused the address: a caller reads nothing, it never crashes
+                TangemLogger.e("Unable to create the Safe wallet manager for $blockchain at ${path.rawPath}")
+                null
+            }
     }
 
     private fun getWmInitializationMutex(
