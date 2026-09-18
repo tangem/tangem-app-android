@@ -75,4 +75,6 @@ interface FeedTabContributor {
      * @param query the search bar's current text, shared by every tab of the search screen
      */
     fun createSearchTab(context: AppComponentContext, query: StateFlow<String>): FeedTabComponent? = null
+
+    fun createEmptySearchTab(context: AppComponentContext): FeedTabComponent? = null
 }
