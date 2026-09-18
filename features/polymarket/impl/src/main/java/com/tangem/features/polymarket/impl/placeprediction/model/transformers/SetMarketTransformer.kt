@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
+import com.tangem.features.polymarket.impl.common.polymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
@@ -26,6 +27,10 @@ internal class SetMarketTransformer(
             title = market.title,
             imageUrl = market.imageUrl ?: market.iconUrl,
             outcomeTitle = outcome.title,
+            outcomeAccent = polymarketOutcomeAccent(
+                outcomeIndex = market.outcomes.indexOf(outcome).takeIf { it >= 0 },
+                outcome = outcome.title,
+            ),
             outcomePriceCents = outcome.probability?.toCents(),
             resolutionDateMillis = market.endDate?.toEpochMillisOrNull(),
         ),
