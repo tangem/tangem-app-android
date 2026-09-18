@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_coin_token_20
+import com.tangem.features.feed.crypto.CryptoFeedEmptySearchTabComponent
 import com.tangem.features.feed.crypto.CryptoFeedSearchTabComponent
 import com.tangem.features.feed.crypto.CryptoFeedTabComponent
 import com.tangem.features.feed.crypto.impl.R
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal class CryptoFeedTabContributor @Inject constructor(
     private val componentFactory: CryptoFeedTabComponent.Factory,
     private val searchComponentFactory: CryptoFeedSearchTabComponent.Factory,
+    private val emptySearchComponentFactory: CryptoFeedEmptySearchTabComponent.Factory,
 ) : FeedTabContributor {
 
     override val id: FeedTabId = FeedTabId.Crypto
@@ -37,5 +39,9 @@ internal class CryptoFeedTabContributor @Inject constructor(
             context = context,
             params = CryptoFeedSearchTabComponent.Params(query = query),
         )
+    }
+
+    override fun createEmptySearchTab(context: AppComponentContext): FeedTabComponent {
+        return emptySearchComponentFactory.create(context = context, params = Unit)
     }
 }
