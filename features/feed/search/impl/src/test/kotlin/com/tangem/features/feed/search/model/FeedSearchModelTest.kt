@@ -8,7 +8,7 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.search.FeedSearchBarController
 import com.tangem.features.feed.search.FeedSearchBarUM
 import com.tangem.features.feed.search.model.analytics.FeedSearchAnalyticsEvent
-import com.tangem.features.feed.search.ui.state.RecentUM
+import com.tangem.features.feed.search.ui.state.RecentQueryUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +27,6 @@ internal class FeedSearchModelTest {
 
     private val getRecentFeedSearchQueriesUseCase: GetRecentFeedSearchQueriesUseCase = mockk()
     private val removeFeedSearchQueryUseCase: RemoveFeedSearchQueryUseCase = mockk(relaxed = true)
-    private val clearFeedSearchHistoryUseCase: ClearFeedSearchHistoryUseCase = mockk(relaxed = true)
     private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
@@ -36,7 +35,6 @@ internal class FeedSearchModelTest {
         clearMocks(
             getRecentFeedSearchQueriesUseCase,
             removeFeedSearchQueryUseCase,
-            clearFeedSearchHistoryUseCase,
             saveFeedSearchQueryUseCase,
             analyticsEventHandler,
         )
@@ -54,9 +52,7 @@ internal class FeedSearchModelTest {
         // Assert
         val state = model.uiState.value
         assertThat(state.query).isEqualTo("bitc")
-
-        val recent = requireNotNull(state.recent)
-        assertThat(recent.queries.map(RecentUM.QueryUM::text))
+        assertThat(state.recentQueries.map(RecentQueryUM::text))
             .containsExactly("D. Trump", "Apple", "Dollar")
             .inOrder()
 
@@ -64,7 +60,7 @@ internal class FeedSearchModelTest {
     }
 
     @Test
-    fun `GIVEN empty history WHEN model created THEN there is no recent block`() = runTest {
+    fun `GIVEN empty history WHEN model created THEN there are no recent queries`() = runTest {
         // Arrange
         stubHistory(queries = emptyList())
 
@@ -73,7 +69,7 @@ internal class FeedSearchModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.recent).isNull()
+        assertThat(model.uiState.value.recentQueries).isEmpty()
 
         model.onDestroy()
     }
@@ -87,7 +83,7 @@ internal class FeedSearchModelTest {
         advanceUntilIdle()
 
         // Act
-        model.uiState.value.recent?.queries?.first()?.onClick?.invoke()
+        model.uiState.value.recentQueries.first().onClick()
         advanceUntilIdle()
 
         // Assert
@@ -105,29 +101,12 @@ internal class FeedSearchModelTest {
         advanceUntilIdle()
 
         // Act
-        model.uiState.value.recent?.queries?.first()?.onRemoveClick?.invoke()
+        model.uiState.value.recentQueries.first().onRemoveClick()
         advanceUntilIdle()
 
         // Assert
         coVerify(exactly = 1) { removeFeedSearchQueryUseCase("Apple") }
         coVerify(exactly = 0) { removeFeedSearchQueryUseCase("Dollar") }
-
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN history WHEN clear is clicked THEN the whole history is cleared`() = runTest {
-        // Arrange
-        stubHistory(queries = listOf("Apple"))
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-
-        // Act
-        model.uiState.value.recent?.onClearClick?.invoke()
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 1) { clearFeedSearchHistoryUseCase() }
 
         model.onDestroy()
     }
@@ -140,7 +119,7 @@ internal class FeedSearchModelTest {
         advanceUntilIdle()
 
         // Act
-        model.uiState.value.recent?.queries?.first()?.onClick?.invoke()
+        model.uiState.value.recentQueries.first().onClick()
 
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(FeedSearchAnalyticsEvent.HintClicked("Apple")) }
@@ -197,7 +176,6 @@ internal class FeedSearchModelTest {
             searchBarController = searchBarController,
             analyticsEventHandler = analyticsEventHandler,
             removeFeedSearchQueryUseCase = removeFeedSearchQueryUseCase,
-            clearFeedSearchHistoryUseCase = clearFeedSearchHistoryUseCase,
             saveFeedSearchQueryUseCase = saveFeedSearchQueryUseCase,
             getRecentFeedSearchQueriesUseCase = getRecentFeedSearchQueriesUseCase,
         )

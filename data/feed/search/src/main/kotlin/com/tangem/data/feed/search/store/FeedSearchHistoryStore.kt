@@ -10,6 +10,4 @@ internal interface FeedSearchHistoryStore {
     suspend fun saveQuery(query: QueryDTO)
 
     suspend fun removeQuery(text: String)
-
-    suspend fun clear()
 }
