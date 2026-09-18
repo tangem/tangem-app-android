@@ -169,16 +169,17 @@ internal class PolymarketEventDetailsContentTransformerTest {
             val actual = transform(event)
 
             // Assert
-            Truth.assertThat(actual.activeMarkets.single().outcomes.single().title)
-                .isEqualTo(stringReference(model.expected))
+            val outcome = actual.activeMarkets.single().outcomes.single()
+            Truth.assertThat(outcome.title to outcome.price)
+                .isEqualTo(stringReference(model.title) to stringReference(model.expectedPrice))
         }
 
         private fun provideTestModels(): List<OutcomeLabelModel> = listOf(
             // An implied probability doubles as the outcome share price in cents.
-            OutcomeLabelModel(title = "Yes", probability = BigDecimal("0.25"), expected = "Yes • 25¢"),
+            OutcomeLabelModel(title = "Yes", probability = BigDecimal("0.25"), expectedPrice = "25¢"),
             // Half-up rounding to a whole cent.
-            OutcomeLabelModel(title = "No", probability = BigDecimal("0.746"), expected = "No • 75¢"),
-            OutcomeLabelModel(title = "Yes", probability = null, expected = "Yes • $DASH_SIGN"),
+            OutcomeLabelModel(title = "No", probability = BigDecimal("0.746"), expectedPrice = "75¢"),
+            OutcomeLabelModel(title = "Yes", probability = null, expectedPrice = DASH_SIGN),
         )
     }
 
@@ -328,7 +329,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
     internal data class OutcomeLabelModel(
         val title: String,
         val probability: BigDecimal?,
-        val expected: String,
+        val expectedPrice: String,
     )
 
     internal data class ResolutionDateModel(
