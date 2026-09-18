@@ -9,4 +9,11 @@ package com.tangem.domain.polymarket.model
 enum class PredictionOrderSide {
     BUY,
     SELL,
+    ;
+
+    /** @return the side of the book an order on this side is filled from. */
+    fun opposite(): PredictionOrderSide = when (this) {
+        BUY -> SELL
+        SELL -> BUY
+    }
 }
