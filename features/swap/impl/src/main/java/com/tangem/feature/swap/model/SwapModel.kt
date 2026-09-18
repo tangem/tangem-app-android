@@ -1618,14 +1618,16 @@ internal class SwapModel @Inject constructor(
                     currentSelected
                 }
             } else {
-                val recommendedProvider = successLoadedData.keys.firstOrNull { it.isRecommended }
+                val recommendedProvider = SwapProviderResolver.preferAvailable(successLoadedData)
+                    .keys.firstOrNull { it.isRecommended }
                 triggerPromoProviderEvent(recommendedProvider, bestQuotesProvider)
 
+                val fallbackProvider = SwapProviderResolver.preferAvailable(consideredProviders).keys.first()
                 if (isAmountChangedByUser) {
                     isAmountChangedByUser = false
-                    recommendedProvider ?: bestQuotesProvider ?: consideredProviders.keys.first()
+                    recommendedProvider ?: bestQuotesProvider ?: fallbackProvider
                 } else {
-                    recommendedProvider ?: consideredProviders.keys.first()
+                    recommendedProvider ?: fallbackProvider
                 }
             }
         } else {
