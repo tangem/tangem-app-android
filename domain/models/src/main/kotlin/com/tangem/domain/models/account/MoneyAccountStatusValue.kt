@@ -33,16 +33,16 @@ sealed class MoneyAccountStatusValue {
 
     fun copySealed(source: StatusSource): MoneyAccountStatusValue {
         return when (this) {
-            is Issuance.Issuing -> copy(source = source)
-            is Issuance.UnderReview -> copy(source = source)
-            is Issuance.VerificationDeclined -> copy(source = source)
-            is Issuance.Activating -> copy(source = source)
-            is Issued.Active -> copy(source = source)
-            is Issued.Deactivated -> copy(source = source)
+            is Onboarding.Issuing -> copy(source = source)
+            is Onboarding.UnderReview -> copy(source = source)
+            is Onboarding.VerificationDeclined -> copy(source = source)
+            is Onboarding.Activating -> copy(source = source)
+            is Account.Active -> copy(source = source)
+            is Account.Deactivated -> copy(source = source)
             is Loading,
             is Empty,
             is NotCreated,
-            is Issuance.CountryNotSupported,
+            is Onboarding.CountryNotSupported,
             is Error,
             -> this
         }
@@ -50,16 +50,16 @@ sealed class MoneyAccountStatusValue {
 
     fun copySealed(balance: Balance?): MoneyAccountStatusValue {
         return when (this) {
-            is Issuance.Issuing -> copy(balance = balance)
-            is Issuance.UnderReview -> copy(balance = balance)
-            is Issuance.VerificationDeclined -> copy(balance = balance)
-            is Issuance.Activating -> copy(balance = balance)
-            is Issued.Active -> copy(balance = balance)
-            is Issued.Deactivated -> copy(balance = balance)
+            is Onboarding.Issuing -> copy(balance = balance)
+            is Onboarding.UnderReview -> copy(balance = balance)
+            is Onboarding.VerificationDeclined -> copy(balance = balance)
+            is Onboarding.Activating -> copy(balance = balance)
+            is Account.Active -> copy(balance = balance)
+            is Account.Deactivated -> copy(balance = balance)
             is Loading,
             is Empty,
             is NotCreated,
-            is Issuance.CountryNotSupported,
+            is Onboarding.CountryNotSupported,
             is Error,
             -> this
         }
@@ -84,7 +84,7 @@ sealed class MoneyAccountStatusValue {
     }
 
     @Serializable
-    sealed class Issuance : MoneyAccountStatusValue() {
+    sealed class Onboarding : MoneyAccountStatusValue() {
 
         abstract val customerId: String?
 
@@ -94,7 +94,7 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String?,
             @SerialName("step") val step: IssuingStep,
-        ) : Issuance()
+        ) : Onboarding()
 
         @Serializable
         data class UnderReview(
@@ -102,17 +102,17 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
             @SerialName("kyc_status") val kycStatus: KycStatus,
-        ) : Issuance()
+        ) : Onboarding()
 
         @Serializable
         data class VerificationDeclined(
             @SerialName("source") override val source: StatusSource,
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
-        ) : Issuance()
+        ) : Onboarding()
 
         @Serializable
-        data object CountryNotSupported : Issuance() {
+        data object CountryNotSupported : Onboarding() {
             override val source: StatusSource = StatusSource.ACTUAL
             override val balance: Balance? = null
             override val customerId: String? = null
@@ -123,11 +123,11 @@ sealed class MoneyAccountStatusValue {
             @SerialName("source") override val source: StatusSource,
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String?,
-        ) : Issuance()
+        ) : Onboarding()
     }
 
     @Serializable
-    sealed class Issued : MoneyAccountStatusValue() {
+    sealed class Account : MoneyAccountStatusValue() {
 
         abstract val customerId: String
         abstract val productInstanceId: String
@@ -138,7 +138,7 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
             @SerialName("product_instance_id") override val productInstanceId: String,
-        ) : Issued()
+        ) : Account()
 
         @Serializable
         data class Deactivated(
@@ -146,7 +146,7 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
             @SerialName("product_instance_id") override val productInstanceId: String,
-        ) : Issued()
+        ) : Account()
     }
 
     @Serializable
