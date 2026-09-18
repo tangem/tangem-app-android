@@ -2,6 +2,7 @@ package com.tangem.features.feed.ui.v2
 
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +22,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ import com.tangem.features.feed.v2.FeedV2Component
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Shtorka 2.0 feed layout: the whole screen scrolls as one — the top blocks collapse away with the
@@ -55,6 +58,7 @@ import kotlinx.collections.immutable.ImmutableList
  * list itself scrolls; scrolling back down re-expands the blocks once the list is at its top. The
  * shtorka's own nested scroll still wins first, raising the sheet before anything collapses.
  *
+ * @param collapseTopBlocksRequests blocks collapse on request too, when one of them opens a tab
  * @param tabContent the selected tab page, provided by the feed's pager
  */
 @Suppress("LongParameterList")
@@ -66,6 +70,7 @@ internal fun FeedV2Content(
     isExpanded: Boolean,
     contentPadding: PaddingValues,
     onExpandSheet: () -> Unit,
+    collapseTopBlocksRequests: Flow<Unit>,
     modifier: Modifier = Modifier,
     topBlocks: @Composable (Modifier) -> Unit,
     tabContent: @Composable (Modifier, PaddingValues) -> Unit,
@@ -81,13 +86,25 @@ internal fun FeedV2Content(
         TopBlocksCollapseConnection(topBlocksHeightPx = topBlocksHeightPx, offsetState = topBlocksOffsetState)
     }
 
+    // the two collapse animations below can be asked for at once — dropping the sheet mid-collapse
+    // starts the re-expansion — and the later one must take the offset over, not fight for it
+    val collapseMutex = remember { MutatorMutex() }
+
     // the semi-open detent is sized for expanded blocks — ease them back when the sheet drops;
     // a snap here would jump the tab row mid-gesture, since isExpanded flips while dragging
     LaunchedEffect(isExpanded) {
         if (!isExpanded && topBlocksOffset != 0f) {
-            animate(initialValue = topBlocksOffset, targetValue = 0f) { value, _ ->
-                topBlocksOffsetState.value = value
-            }
+            collapseMutex.mutate { topBlocksOffsetState.animateOffsetTo(target = 0f) }
+        }
+    }
+
+    // a tab opened from a block leaves the row behind: the sheet rises to the height the collapsed
+    // layout is sized for, and the blocks travel the same way a scroll up would take them
+    val currentOnExpandSheet by rememberUpdatedState(onExpandSheet)
+    LaunchedEffect(collapseTopBlocksRequests, topBlocksHeightPx) {
+        collapseTopBlocksRequests.collect {
+            currentOnExpandSheet()
+            collapseMutex.mutate { topBlocksOffsetState.animateOffsetTo(target = -topBlocksHeightPx) }
         }
     }
 
@@ -133,6 +150,10 @@ internal fun FeedV2Content(
             tabRowOffsetPx = { chromeOffset.roundToInt() },
         )
     }
+}
+
+private suspend fun MutableState<Float>.animateOffsetTo(target: Float) {
+    animate(initialValue = value, targetValue = target) { animatedValue, _ -> value = animatedValue }
 }
 
 /**

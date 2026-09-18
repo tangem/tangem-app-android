@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.usecase.GetCollectiblesVaultTopUpAddressUseCase
@@ -52,6 +53,7 @@ internal class CollectiblesMainModel @Inject constructor(
     private val getCollectiblesVaultTopUpAddressUseCase: GetCollectiblesVaultTopUpAddressUseCase,
     private val clipboardManager: ClipboardManager,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -103,8 +105,20 @@ internal class CollectiblesMainModel @Inject constructor(
                 onClick = ::onCollectionClick,
             ),
             menu = menuConverter.convert(Unit),
+            isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
         )
+    }
+
+    fun onRefresh() {
+        modelScope.launch {
+            uiState.update { state -> state.copy(isBalanceRefreshing = true) }
+
+            collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+                .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles account balance", error) }
+
+            uiState.update { state -> state.copy(isBalanceRefreshing = false) }
+        }
     }
 
     private fun onMenuClick() {
