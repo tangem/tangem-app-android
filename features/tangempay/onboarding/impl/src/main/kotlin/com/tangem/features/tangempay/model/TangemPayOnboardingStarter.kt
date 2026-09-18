@@ -90,13 +90,13 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         callbacks.onLoadingChange(true)
         produceInitialDataUseCase(userWalletId).onLeft { error ->
             TangemLogger.e("Error producing initial data: ${error.message ?: "Unknown error"}")
-            callbacks.onLoadingChange(false)
+            showRetryableError(callbacks)
             return
         }
         repository.getCustomerInfo(userWalletId = userWalletId).fold(
             ifLeft = { error ->
                 TangemLogger.e("Error getCustomerInfo: ${error.errorCode}")
-                callbacks.onLoadingChange(false)
+                showRetryableError(callbacks)
             },
             ifRight = { customerInfo ->
                 if (customerInfo.kycStatus == KycStatus.APPROVED) {
