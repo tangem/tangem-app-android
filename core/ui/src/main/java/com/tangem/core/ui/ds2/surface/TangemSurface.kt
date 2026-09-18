@@ -94,13 +94,14 @@ fun TangemSurface(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val materialOpacity = materialChromeOpacity(isMaterial)
     val isMaterialDrawn = materialOpacity > 0f
+    val isBorderDrawn = isMaterialDrawn && isMaterialBorderEnabled
 
     val surface: @Composable () -> Unit = {
         Box(
             modifier = modifier
                 .conditionalCompose(isMaterialDrawn) { materialShadow(shape, shadowRadius, materialOpacity) }
                 .conditionalCompose(border != null) { border(border!!, shape) }
-                .conditionalCompose(isMaterialDrawn && isMaterialBorderEnabled) { materialBorder(shape, materialStyle, materialOpacity) }
+                .conditionalCompose(isBorderDrawn) { materialBorder(shape, materialStyle, materialOpacity) }
                 .clip(shape)
                 .background(if (isMaterial) Color.Transparent else color, shape)
                 .conditionalCompose(isMaterialDrawn) { materialFill(materialStyle, materialOpacity) }
