@@ -347,8 +347,18 @@ private fun previewMarket(id: String, title: String, volume: String, withOutcome
         iconUrl = null,
         outcomes = if (withOutcomes) {
             persistentListOf(
-                PolymarketDetailsOutcomeUM(assetId = "yes", title = stringReference("Yes • 25¢"), onClick = {}),
-                PolymarketDetailsOutcomeUM(assetId = "no", title = stringReference("No • 74¢"), onClick = {}),
+                PolymarketDetailsOutcomeUM(
+                    assetId = "yes",
+                    title = stringReference("Yes"),
+                    price = stringReference("25¢"),
+                    onClick = {},
+                ),
+                PolymarketDetailsOutcomeUM(
+                    assetId = "no",
+                    title = stringReference("No"),
+                    price = stringReference("74¢"),
+                    onClick = {},
+                ),
             )
         } else {
             persistentListOf()
