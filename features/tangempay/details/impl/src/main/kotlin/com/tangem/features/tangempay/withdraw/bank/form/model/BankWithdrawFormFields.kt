@@ -7,16 +7,17 @@ import kotlinx.collections.immutable.toImmutableList
 /** Ordered inputs of each form step as laid out in Figma; a business recipient has one name field instead of two. */
 internal object BankWithdrawFormFields {
 
+    const val US_COUNTRY_CODE = "US"
+
     val bankDetails: ImmutableList<BankWithdrawFormField> = persistentListOf(
         BankWithdrawFormField.BankName,
-        BankWithdrawFormField.BankCountry,
         BankWithdrawFormField.BankRegion,
         BankWithdrawFormField.BankCity,
         BankWithdrawFormField.BankAddressLine1,
         BankWithdrawFormField.BankPostalCode,
     )
 
-    private val regionFields = setOf(BankWithdrawFormField.Region, BankWithdrawFormField.BankRegion)
+    private val regionFields = setOf(BankWithdrawFormField.Region)
 
     fun recipientDetails(isBusiness: Boolean): ImmutableList<BankWithdrawFormField> = buildList {
         add(BankWithdrawFormField.AccountNumber)
