@@ -90,15 +90,17 @@ internal data class PolymarketDetailsMarketUM(
 )
 
 /**
- * An outcome button of a market card, labelled with the outcome and its price (e.g. "Yes • 25¢").
+ * An outcome button of a market card.
  *
  * @property assetId upstream asset id of the outcome
- * @property title button label
+ * @property title outcome label as served by the backend
+ * @property price outcome share price, e.g. "25¢", or a dash when unknown
  * @property onClick opens the Place-prediction sheet preselected with this outcome
  */
 @Immutable
 internal data class PolymarketDetailsOutcomeUM(
     val assetId: String,
     val title: TextReference,
+    val price: TextReference,
     val onClick: () -> Unit,
 )
