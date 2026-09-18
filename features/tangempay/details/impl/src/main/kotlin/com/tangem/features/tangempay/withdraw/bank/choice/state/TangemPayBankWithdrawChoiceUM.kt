@@ -10,6 +10,7 @@ internal data class TangemPayBankWithdrawChoiceUM(
     val header: BankWithdrawHeaderUM,
     val sectionTitle: TextReference,
     val options: ImmutableList<OptionUM>,
+    val isContinueEnabled: Boolean,
     val onBackClick: () -> Unit,
     val onContinueClick: () -> Unit,
 ) {
