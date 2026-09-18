@@ -56,6 +56,9 @@ internal interface InnerWalletRouter {
     /** Open the members screen of the wallet's joint account [cryptoAccountId] */
     fun openJointAccountMembers(userWalletId: UserWalletId, cryptoAccountId: String)
 
+    /** Open [currency]'s token details and raise the joint operation [operationId] sheet on top */
+    fun openJointOperation(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String)
+
     /** Open add and manage tokens bottom sheet */
     fun openAddAndManageBottomSheet(userWalletId: UserWalletId)
 
