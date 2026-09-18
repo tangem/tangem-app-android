@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,10 +40,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadingState
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
+import com.tangem.features.polymarket.impl.positiondetails.ui.PolymarketFinishedPositionSheet
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionsPreviewCase
 import com.tangem.features.polymarket.impl.positions.ui.preview.PolymarketPositionsPreviewProvider
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM
@@ -58,8 +61,8 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
             modifier = modifier,
             topBar = { PositionsTopBar(state) },
         ) { contentPadding ->
-            key(state.selectedTab) {
-                val listState = rememberSaveable(state.selectedTab, saver = LazyListState.Saver) { LazyListState() }
+            key(state.selectedTab, state.selectedFilter) {
+                val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
                 when (val content = state.content) {
                     is Content.Data -> PositionsList(content, listState, contentPadding)
                     else -> Box(
@@ -68,7 +71,7 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
                     ) {
                         when (content) {
                             Content.Loading -> PolymarketLoadingState()
-                            Content.Empty -> EmptyPositions(state.selectedTab)
+                            Content.Empty -> EmptyPositions(state.selectedTab, state.selectedFilter)
                             is Content.Error -> PositionsRetry(content.onRetry)
                             is Content.Data -> Unit
                         }
@@ -76,6 +79,7 @@ internal fun PolymarketPositionsScreen(state: PolymarketPositionsUM, modifier: M
                 }
             }
         }
+        PolymarketFinishedPositionSheet(state = state.finishedPosition, onDismiss = state.onFinishedPositionDismiss)
     }
 }
 
@@ -89,25 +93,39 @@ private fun PositionsTopBar(state: PolymarketPositionsUM) {
             blurBackground = false,
             fadeEnabled = false,
         )
-        TangemTabNavigation(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            tabs = persistentListOf(
-                TangemTabItemUM.Content(
-                    id = Tab.Active.name,
-                    label = resourceReference(R.string.prediction_positions_active),
-                    isSelected = state.selectedTab == Tab.Active,
-                    onClick = { state.onTabSelect(Tab.Active) },
-                ),
-                TangemTabItemUM.Content(
-                    id = Tab.Finished.name,
-                    label = resourceReference(R.string.prediction_positions_finished),
-                    isSelected = state.selectedTab == Tab.Finished,
-                    onClick = { state.onTabSelect(Tab.Finished) },
-                ),
-            ),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PositionsTabs(state, Modifier.weight(1f))
+            if (state.selectedTab == Tab.Active) {
+                PolymarketPositionsFilterDropdown(selected = state.selectedFilter, onSelect = state.onFilterSelect)
+            }
+        }
     }
+}
+
+@Composable
+private fun PositionsTabs(state: PolymarketPositionsUM, modifier: Modifier = Modifier) {
+    TangemTabNavigation(
+        modifier = modifier,
+        contentPadding = PaddingValues(0.dp),
+        tabs = persistentListOf(
+            TangemTabItemUM.Content(
+                id = Tab.Active.name,
+                label = resourceReference(R.string.prediction_positions_active),
+                isSelected = state.selectedTab == Tab.Active,
+                onClick = { state.onTabSelect(Tab.Active) },
+            ),
+            TangemTabItemUM.Content(
+                id = Tab.Finished.name,
+                label = resourceReference(R.string.prediction_positions_finished),
+                isSelected = state.selectedTab == Tab.Finished,
+                onClick = { state.onTabSelect(Tab.Finished) },
+            ),
+        ),
+    )
 }
 
 @Composable
@@ -148,12 +166,13 @@ private fun PositionsList(content: Content.Data, listState: LazyListState, conte
 }
 
 @Composable
-private fun EmptyPositions(tab: Tab) {
+private fun EmptyPositions(tab: Tab, filter: PolymarketPositionsFilter) {
     Text(
         text = stringResourceSafe(
-            when (tab) {
-                Tab.Active -> R.string.prediction_positions_empty_active
-                Tab.Finished -> R.string.prediction_positions_empty_finished
+            when {
+                filter != PolymarketPositionsFilter.ALL -> R.string.common_no_results
+                tab == Tab.Active -> R.string.prediction_positions_empty_active
+                else -> R.string.prediction_positions_empty_finished
             },
         ),
         color = TangemTheme.colors3.text.secondary,
@@ -184,13 +203,19 @@ private fun PolymarketPositionsScreenPreview(
     @PreviewParameter(PolymarketPositionsPreviewProvider::class) case: PolymarketPositionsPreviewCase,
 ) {
     var selectedTab by remember(case) { mutableStateOf(case.selectedTab) }
+    var selectedFilter by remember(case) { mutableStateOf(case.selectedFilter) }
     TangemThemePreviewRedesign {
         PolymarketPositionsScreen(
             state = PolymarketPositionsUM(
                 selectedTab = selectedTab,
                 content = if (selectedTab == Tab.Active) case.active else case.finished,
-                onTabSelect = { selectedTab = it },
+                onTabSelect = { tab ->
+                    selectedTab = tab
+                    selectedFilter = PolymarketPositionsFilter.ALL
+                },
                 onBackClick = {},
+                selectedFilter = selectedFilter,
+                onFilterSelect = { selectedFilter = it },
             ),
         )
     }

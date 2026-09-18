@@ -1413,6 +1413,7 @@ internal class TokenDetailsModel @Inject constructor(
             is NavigationAction.Staking -> openStaking()
             is NavigationAction.CloreMigration -> onCloreMigrationClick()
             is NavigationAction.YieldSupply,
+            is NavigationAction.JointOperation,
             null,
             -> Unit
         }

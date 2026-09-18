@@ -329,7 +329,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         return when (this) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
-            is Account.Virtual -> AccountIconUM.Virtual
+            is Account.Money -> AccountIconUM.Money
             is Account.Prediction -> AccountIconUM.Prediction
             is Account.Collectibles -> AccountIconUM.Collectibles
         }

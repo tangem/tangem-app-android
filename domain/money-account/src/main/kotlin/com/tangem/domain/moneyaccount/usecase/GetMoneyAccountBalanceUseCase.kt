@@ -16,7 +16,7 @@ class GetMoneyAccountBalanceUseCase(
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<Throwable, BigDecimal> = Either.catch {
-        val token = tangemPayCurrencyFactory.createVirtualAccountToken(userWalletId)
+        val token = tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId)
 
         singleNetworkStatusFetcher(
             SingleNetworkStatusFetcher.Params(

@@ -60,7 +60,7 @@ internal fun buildOwnAccountAddressMapAllNetworks(
                         map.getOrPut(rawId) { mutableMapOf() }[address] = status.account
                     }
                 }
-                is AccountStatus.Virtual -> Unit
+                is AccountStatus.Money -> Unit
                 is AccountStatus.Prediction -> Unit
                 is AccountStatus.Collectibles -> Unit
             }

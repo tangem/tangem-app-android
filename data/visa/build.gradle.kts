@@ -75,9 +75,7 @@ dependencies {
     // region Project - Domain
     api(projects.domain.common)
     api(projects.domain.core)
-    api(projects.domain.networks)
     api(projects.domain.quotes)
-    api(projects.domain.moneyAccount)
     api(projects.domain.visa)
     api(projects.domain.wallets)
     implementation(projects.domain.card)
@@ -92,7 +90,6 @@ dependencies {
 
     // region Project - Features
     api(projects.features.swap.domain)
-    api(projects.features.tangempay.details.api)
     // endregion
 
     // region Project - Libs

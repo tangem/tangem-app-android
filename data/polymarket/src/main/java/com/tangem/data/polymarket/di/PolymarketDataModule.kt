@@ -13,7 +13,6 @@ import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.polymarket.PolymarketBridgeAssetsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
@@ -37,7 +36,6 @@ import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawalTrackingConfig
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
-import com.tangem.domain.swap.SwapTransactionRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -163,17 +161,13 @@ internal interface PolymarketDataModule {
         @Provides
         @Singleton
         fun providePredictionFundingWindow(
-            userWalletsListRepository: UserWalletsListRepository,
-            swapTransactionRepository: SwapTransactionRepository,
             predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-            collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
             config: PredictionBalancePollingConfig,
+            appScope: AppCoroutineScope,
         ): PredictionFundingWindow = DefaultPredictionFundingWindow(
-            userWalletsListRepository = userWalletsListRepository,
-            swapTransactionRepository = swapTransactionRepository,
             predictionAccountStatusSupplier = predictionAccountStatusSupplier,
-            collateralCurrencyFactory = collateralCurrencyFactory,
             config = config,
+            appScope = appScope,
         )
     }
 }

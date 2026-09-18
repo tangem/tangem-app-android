@@ -301,7 +301,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 is AccountStatus.Personal -> accountStatus.flattenCurrencies()
                 is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus, isAccountFlowEnabled)
                 // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
-                is AccountStatus.Virtual -> emptyList()
+                is AccountStatus.Money -> emptyList()
                 is AccountStatus.Prediction -> listOfNotNull(
                     (accountStatus.value as? PredictionAccountStatusValue.Active)?.cryptoCurrencyStatus,
                 )

@@ -420,7 +420,6 @@ internal class PolymarketMainModel @Inject constructor(
 
     override fun onSwapClick() {
         val collateral = activeStatus.value?.cryptoCurrencyStatus?.currency ?: return
-        predictionFundingWindow.arm(userWalletId = params.userWalletId)
         addFundsNavigation.dismiss()
         router.push(
             AppRoute.Swap(
