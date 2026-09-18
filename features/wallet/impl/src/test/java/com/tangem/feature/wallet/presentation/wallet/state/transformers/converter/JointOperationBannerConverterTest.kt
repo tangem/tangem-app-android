@@ -20,7 +20,12 @@ import com.tangem.core.ui.R as CoreUiR
 
 internal class JointOperationBannerConverterTest {
 
-    private val converter = JointOperationBannerConverter(isBalanceHidden = false)
+    private val clickedOperations = mutableListOf<JointPendingOperation>()
+
+    private val converter = JointOperationBannerConverter(
+        isBalanceHidden = false,
+        onBannerClick = clickedOperations::add,
+    )
 
     private val coin: CryptoCurrency.Coin = mockk {
         every { name } returns "Ethereum"
@@ -168,6 +173,19 @@ internal class JointOperationBannerConverterTest {
 
         // Assert
         assertThat(actual.map(JointOperationBannerUM::operationId)).containsExactly("close", "far").inOrder()
+    }
+
+    @Test
+    fun `GIVEN a banner WHEN its onClick is invoked THEN the click callback receives that operation`() {
+        // Arrange
+        val target = operation(operationId = "target")
+
+        // Act
+        val actual = converter.convert(listOf(target))
+        actual.single().banner.onClick?.invoke()
+
+        // Assert
+        assertThat(clickedOperations).containsExactly(target)
     }
 
     @Test
