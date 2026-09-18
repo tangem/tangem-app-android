@@ -144,7 +144,8 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
                 OfferHeader(advantage = onrampOfferUM.advantages)
                 RateBlock(
                     rate = onrampOfferUM.rate,
-                    diff = onrampOfferUM.diff,
+                    diff = onrampOfferUM.diff
+                        .takeIf { onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Restricted },
                     isOfferUnavailable = onrampOfferUM.advantages is OnrampOfferAdvantagesUM.Unavailable,
                 )
             }
@@ -178,9 +179,20 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
                 modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE),
             )
         }
-        OnrampOfferAdvantagesUM.Restricted,
-        OnrampOfferAdvantagesUM.Default,
-        -> {
+        OnrampOfferAdvantagesUM.Restricted -> {
+            Text(
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.background.secondary,
+                        shape = RoundedCornerShape(4.dp),
+                    )
+                    .padding(horizontal = 4.dp),
+                text = stringResourceSafe(R.string.common_not_available),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
+        OnrampOfferAdvantagesUM.Default -> {
             Text(
                 text = stringResourceSafe(R.string.onramp_title_you_get),
                 style = TangemTheme.typography.caption2,
