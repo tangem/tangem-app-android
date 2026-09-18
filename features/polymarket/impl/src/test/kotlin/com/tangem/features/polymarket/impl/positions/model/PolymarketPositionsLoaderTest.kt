@@ -10,12 +10,16 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import com.tangem.domain.polymarket.model.PolymarketPositionsUpdateRequest
 import com.tangem.domain.polymarket.usecase.CreatePolymarketPositionsSessionUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Content
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
+import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.BatchUpdateFetcher
+import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -220,29 +224,30 @@ internal class PolymarketPositionsLoaderTest {
     }
 
     @Test
-    fun `GIVEN loaded pages WHEN returning from details THEN keeps pages and continues the same pagination`() = runTest {
-        // Arrange
-        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-        fetch = { _, offset -> page(offset.toString(), last = offset == 60) }
-        feed.resume(backgroundScope)
-        runCurrent()
-        (data(feed).nextPage as NextPage.Ready).onLoadMore()
-        runCurrent()
-        val initial = data(feed)
+    fun `GIVEN loaded pages WHEN returning from details THEN re-reads them in place and continues the same pagination`() =
+        runTest {
+            // Arrange
+            val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+            fetch = { _, offset -> page(offset.toString(), last = offset == 60) }
+            feed.resume(backgroundScope)
+            runCurrent()
+            (data(feed).nextPage as NextPage.Ready).onLoadMore()
+            runCurrent()
+            fetch = { _, offset -> page(if (offset == 30) "31" else offset.toString(), last = offset == 60) }
 
-        // Act
-        feed.pause()
-        feed.resume(backgroundScope)
-        runCurrent()
-        val returned = data(feed)
-        (returned.nextPage as NextPage.Ready).onLoadMore()
-        runCurrent()
+            // Act
+            feed.pause()
+            feed.resume(backgroundScope)
+            runCurrent()
+            val returned = data(feed)
+            (returned.nextPage as NextPage.Ready).onLoadMore()
+            runCurrent()
 
-        // Assert
-        assertThat(returned).isSameInstanceAs(initial)
-        assertThat(ids(feed)).containsExactly("condition:0", "condition:30", "condition:60").inOrder()
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 60).inOrder()
-    }
+            // Assert
+            assertThat(returned.positions.map { it.id }).containsExactly("condition:0", "condition:31").inOrder()
+            assertThat(ids(feed)).containsExactly("condition:0", "condition:31", "condition:60").inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60).inOrder()
+        }
 
     @Test
     fun `GIVEN closed list WHEN opened in a new feed THEN starts from the first page`() = runTest {
@@ -283,30 +288,31 @@ internal class PolymarketPositionsLoaderTest {
     }
 
     @Test
-    fun `GIVEN paused feed WHEN time passes or old callback runs THEN waits for resume`() = runTest {
-        // Arrange
-        val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
-        fetch = { _, _ -> page("one", last = false) }
-        feed.resume(backgroundScope)
-        runCurrent()
-        val loadMore = (data(feed).nextPage as NextPage.Ready).onLoadMore
+    fun `GIVEN paused feed WHEN time passes or old callback runs THEN nothing loads until resume re-reads the page`() =
+        runTest {
+            // Arrange
+            val feed = createLoader().createFeed(wallet, PolymarketPositionsTab.ACTIVE)
+            fetch = { _, _ -> page("one", last = false) }
+            feed.resume(backgroundScope)
+            runCurrent()
+            val loadMore = (data(feed).nextPage as NextPage.Ready).onLoadMore
 
-        // Act
-        feed.pause()
-        loadMore()
-        advanceTimeBy(60_000)
-        runCurrent()
+            // Act
+            feed.pause()
+            loadMore()
+            advanceTimeBy(60_000)
+            runCurrent()
 
-        // Assert
-        assertThat(requests).hasSize(1)
+            // Assert
+            assertThat(requests).hasSize(1)
 
-        // Act
-        feed.resume(backgroundScope)
-        runCurrent()
+            // Act
+            feed.resume(backgroundScope)
+            runCurrent()
 
-        // Assert
-        assertThat(requests.map { it.second }).containsExactly(0)
-    }
+            // Assert
+            assertThat(requests.map { it.second }).containsExactly(0, 0).inOrder()
+        }
 
     @Test
     fun `GIVEN disposed feed WHEN old request completes THEN cannot publish or affect the new feed`() = runTest {
@@ -431,6 +437,7 @@ internal class PolymarketPositionsLoaderTest {
                         fetch(request.params, request.offset)
                     },
                 ),
+                updateFetcher = refreshByOffset(size),
             ).toBatchFlow()
         }
         val dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher)
@@ -448,4 +455,26 @@ internal class PolymarketPositionsLoaderTest {
     private fun data(feed: PolymarketPositionsLoader.Feed) = feed.state.value.content as Content.Data
 
     private fun ids(feed: PolymarketPositionsLoader.Feed) = data(feed).positions.map { it.id }
+
+    /** Mirrors the production update fetcher: page `k` is read again at offset `k * size` and replaced. */
+    private fun refreshByOffset(size: Int) =
+        object : BatchUpdateFetcher<Int, List<PolymarketPosition>, PolymarketPositionsUpdateRequest> {
+            override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<PolymarketPosition>>.fetchUpdateAsync(
+                toUpdate: List<Batch<Int, List<PolymarketPosition>>>,
+                updateRequest: PolymarketPositionsUpdateRequest,
+            ) {
+                toUpdate.forEach { batch ->
+                    requests += updateRequest.config to batch.key * size
+                    val positions = when (val result = fetch(updateRequest.config, batch.key * size)) {
+                        is BatchFetchResult.Success -> result.data
+                        is BatchFetchResult.Error -> throw result.throwable
+                    }
+                    update {
+                        BatchUpdateResult.Success(
+                            mapNotNull { if (it.key == batch.key) it.copy(data = positions) else null },
+                        )
+                    }
+                }
+            }
+        }
 }
