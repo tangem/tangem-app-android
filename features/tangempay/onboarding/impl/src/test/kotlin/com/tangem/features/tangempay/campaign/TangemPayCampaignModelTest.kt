@@ -191,6 +191,32 @@ internal class TangemPayCampaignModelTest {
     inner class IssueCard {
 
         @Test
+        fun `GIVEN issue card resolution WHEN model created THEN child opened with campaign art AND no landing`() =
+            runTest {
+                // Arrange
+                givenWallets(WALLET_ID)
+                givenResolution(
+                    TangemPayCampaignResolution.IssueCard(
+                        userWalletId = WALLET_ID,
+                        campaign = CAMPAIGN,
+                        offer = campaignOffer(),
+                    ),
+                )
+
+                // Act
+                val model = createModel(testScope = this)
+                val children = model.trackChildren()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value).isEqualTo(TangemPayCampaignUM.Loading)
+                assertThat(children.single()?.cardArtUrl).isEqualTo(CARD_ART_URL)
+                verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.CobrandOnboardingExistPay()) }
+                verify(exactly = 1) { analytics.send(any()) }
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN approved customer reported by starter WHEN offer loaded THEN child opened with the offer art`() =
             runTest {
                 // Arrange
