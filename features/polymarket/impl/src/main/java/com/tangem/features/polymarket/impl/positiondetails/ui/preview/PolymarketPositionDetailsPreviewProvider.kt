@@ -85,6 +85,7 @@ private fun detailsStateCases(positive: Content.Data): Map<String, Content> = li
     "Unknown status" to positive.copy(
         information = positive.information.copy(status = resourceReference(R.string.prediction_positions_unknown)),
     ),
+    "Buy unavailable" to positive.copy(onBuyMoreClick = null),
     "Initial loading" to Content.Loading,
     "Initial error" to Content.Error(onRetry = {}),
     "Position unavailable" to Content.Unavailable,
@@ -116,6 +117,7 @@ private fun positionDetails() = Content.Data(
         status = resourceReference(R.string.prediction_positions_open),
         endDate = stringReference("Dec 31, 2026"),
     ),
+    onBuyMoreClick = {},
 )
 
 private fun pnl(value: String, direction: TangemPriceChange.Direction) = TangemPriceChange.State(

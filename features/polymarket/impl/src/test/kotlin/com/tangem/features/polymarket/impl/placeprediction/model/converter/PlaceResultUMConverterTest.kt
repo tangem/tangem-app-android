@@ -60,6 +60,18 @@ internal class PlaceResultUMConverterTest {
     }
 
     @Test
+    fun `GIVEN the book beat the worst case WHEN more shares were filled THEN the fill is full`() {
+        // Arrange
+        val better = QUOTED_SHARES + BigDecimal("4.5")
+
+        // Act
+        val actual = convert(result = result(shares = better))
+
+        // Assert
+        assertThat(actual).isEqualTo(PlaceOutcome.Reportable(result = filled(shares = better)))
+    }
+
+    @Test
     fun `GIVEN a sell WHEN the money leg is zero THEN the shares still decide the fill`() {
         // Act
         val actual = convert(
@@ -115,7 +127,7 @@ internal class PlaceResultUMConverterTest {
         ),
         ConvertModel(
             result = result(shares = QUOTED_SHARES + BigDecimal.ONE),
-            expected = PlaceOutcome.Reportable(PlaceResultUM.Submitted(placedAt = PLACED_AT)),
+            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES + BigDecimal.ONE)),
         ),
         ConvertModel(
             result = result(status = "delayed"),
@@ -180,7 +192,7 @@ internal class PlaceResultUMConverterTest {
         ConvertModel(
             side = PredictionOrderSide.SELL,
             result = result(side = PredictionOrderSide.SELL, shares = QUOTED_SHARES + BigDecimal.ONE),
-            expected = PlaceOutcome.Reportable(PlaceResultUM.Submitted(placedAt = PLACED_AT)),
+            expected = PlaceOutcome.Reportable(filled(shares = QUOTED_SHARES + BigDecimal.ONE)),
         ),
     )
 

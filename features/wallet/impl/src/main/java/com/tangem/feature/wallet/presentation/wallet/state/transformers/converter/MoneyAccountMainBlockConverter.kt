@@ -10,50 +10,50 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.VirtualAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Virtual, MoneyAccountMainUM> {
+internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, MoneyAccountMainUM> {
 
-    override fun convert(value: AccountStatus.Virtual): MoneyAccountMainUM {
+    override fun convert(value: AccountStatus.Money): MoneyAccountMainUM {
         return when (val statusValue = value.value) {
-            is VirtualAccountStatusValue.Empty,
-            is VirtualAccountStatusValue.NotCreated,
+            is MoneyAccountStatusValue.Empty,
+            is MoneyAccountStatusValue.NotCreated,
             -> MoneyAccountMainUM.Empty
-            is VirtualAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
-            is VirtualAccountStatusValue.Issuance -> statusValue.toUM()
-            is VirtualAccountStatusValue.Issued -> statusValue.toUM()
-            is VirtualAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
-            is VirtualAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
-            is VirtualAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
+            is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
+            is MoneyAccountStatusValue.Issuance -> statusValue.toUM()
+            is MoneyAccountStatusValue.Issued -> statusValue.toUM()
+            is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
+            is MoneyAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
+            is MoneyAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
         }
     }
 
-    private fun VirtualAccountStatusValue.Issuance.toUM(): MoneyAccountMainUM {
+    private fun MoneyAccountStatusValue.Issuance.toUM(): MoneyAccountMainUM {
         return when (this) {
-            is VirtualAccountStatusValue.Issuance.UnderReview -> MoneyAccountMainUM.UnderReview(
+            is MoneyAccountStatusValue.Issuance.UnderReview -> MoneyAccountMainUM.UnderReview(
                 subtitle = TextReference.Res(R.string.tangempay_kyc_in_progress),
                 onClick = ::onAccountClick,
             )
-            is VirtualAccountStatusValue.Issuance.VerificationDeclined -> MoneyAccountMainUM.UnderReview(
+            is MoneyAccountStatusValue.Issuance.VerificationDeclined -> MoneyAccountMainUM.UnderReview(
                 subtitle = TextReference.Res(R.string.tangempay_kyc_has_failed),
                 onClick = ::onAccountClick,
             )
-            is VirtualAccountStatusValue.Issuance.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
+            is MoneyAccountStatusValue.Issuance.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
                 onClick = ::onAccountClick,
             )
-            is VirtualAccountStatusValue.Issuance.Issuing,
-            is VirtualAccountStatusValue.Issuance.Activating,
+            is MoneyAccountStatusValue.Issuance.Issuing,
+            is MoneyAccountStatusValue.Issuance.Activating,
             -> MoneyAccountMainUM.Provisioning(onClick = ::onAccountClick)
         }
     }
 
-    private fun VirtualAccountStatusValue.Issued.toUM(): MoneyAccountMainUM {
+    private fun MoneyAccountStatusValue.Issued.toUM(): MoneyAccountMainUM {
         return when (this) {
-            is VirtualAccountStatusValue.Issued.Deactivated -> MoneyAccountMainUM.Empty
-            is VirtualAccountStatusValue.Issued.Active -> {
+            is MoneyAccountStatusValue.Issued.Deactivated -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.Issued.Active -> {
                 val balance = balance ?: return MoneyAccountMainUM.Loading
 
                 MoneyAccountMainUM.Content(

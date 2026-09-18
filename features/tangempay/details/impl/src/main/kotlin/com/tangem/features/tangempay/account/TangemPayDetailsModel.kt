@@ -106,7 +106,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -289,7 +288,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun fetchCashbackBlock() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
+        if (cashbackBlockJobHolder.isActive) return
         // A closed account shows only the deactivation notice — no cashback UI on top of it ([REDACTED_TASK_KEY])
         if (currentStatus.value.value is PaymentAccountStatusValue.Deactivated) return
         modelScope.launch {
@@ -685,7 +684,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openCashback() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled) return
         currentStatus.value.ifLoadedOrNull { router.push(TangemPayAccountDetailsInnerRoute.Cashback) }
     }
 
@@ -827,9 +825,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             is PaymentAccountStatusValue.Inactive -> state.tariffPlan
             else -> null
         }
-        val banner = tariffPlan?.let {
-            TangemPayTiersBannerType.fromPlan(tangemPayFeatureToggles.isTiersPlusPlanEnabled, tariffPlan)
-        }
+        val banner = tariffPlan?.let { TangemPayTiersBannerType.fromPlan(it) }
 
         if (banner == shownTiersBanner) return
         shownTiersBanner = banner

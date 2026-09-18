@@ -10,10 +10,10 @@ import kotlinx.serialization.Serializable
 
 /**
  * Represents the various states a prediction account can have, encapsulating different information based on
- * the state. Mirrors [VirtualAccountStatusValue], but carries the states of a prediction deposit wallet:
+ * the state. Mirrors [MoneyAccountStatusValue], but carries the states of a prediction deposit wallet:
  * it is either absent, being set up, or holding a collateral balance.
  *
- * Unlike the payment and virtual accounts, no state of this one reports [TotalFiatBalance.Loading]: the wallet
+ * Unlike the payment and money accounts, no state of this one reports [TotalFiatBalance.Loading]: the wallet
  * total is the sum of every account's contribution, and a single loading or failed contribution short-circuits
  * it, so this account alone would stall or blank the number the user already had. A state whose amount this
  * device cannot read contributes a loaded zero instead — the total omits the collateral rather than hiding the

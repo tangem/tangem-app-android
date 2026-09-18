@@ -34,6 +34,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionWithdrawalTracker
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
@@ -123,6 +124,7 @@ internal abstract class SwapModelTestBase {
     protected val polymarketCollateralCurrencyFactory: PolymarketCollateralCurrencyFactory = mockk()
     protected val submitPredictionWithdrawalInteractor: SubmitPredictionWithdrawalInteractor = mockk(relaxed = true)
     protected val predictionWithdrawalTracker: PredictionWithdrawalTracker = mockk(relaxUnitFun = true)
+    protected val predictionFundingWindow: PredictionFundingWindow = mockk(relaxUnitFun = true)
     protected val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase = mockk(relaxed = true)
     protected val allowPermissionsHandler: AllowPermissionsHandler = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
@@ -274,6 +276,7 @@ internal abstract class SwapModelTestBase {
         polymarketCollateralCurrencyFactory = polymarketCollateralCurrencyFactory,
         submitPredictionWithdrawalInteractor = submitPredictionWithdrawalInteractor,
         predictionWithdrawalTracker = predictionWithdrawalTracker,
+        predictionFundingWindow = predictionFundingWindow,
         derivePolymarketAddressesUseCase = derivePolymarketAddressesUseCase,
         allowPermissionsHandler = allowPermissionsHandler,
         swapFeatureToggles = swapFeatureToggles,

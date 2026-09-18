@@ -21,7 +21,6 @@ import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -73,9 +72,11 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
         }
     }
 
+    fun onRefresh() = reload()
+
     private fun buildInitialState(): CollectiblesDiscoveryUM {
         return CollectiblesDiscoveryUM(
-            tabs = persistentListOf(),
+            tabs = CollectiblesDiscoveryUM.TabsUM.Loading,
             content = CollectiblesDiscoveryUM.ContentUM.Loading,
             search = TangemSearch.State(
                 placeholderText = resourceReference(R.string.common_search),
@@ -91,10 +92,15 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
 
     private fun loadCategories() {
         modelScope.launch {
-            getCategoriesUseCase().onRight { loaded ->
-                categories = loaded
-                uiState.update { it.copy(tabs = buildTabs()) }
-            }
+            uiState.update { it.copy(tabs = CollectiblesDiscoveryUM.TabsUM.Loading) }
+
+            getCategoriesUseCase()
+                .onRight { loaded ->
+                    categories = loaded
+                    uiState.update { it.copy(tabs = buildTabs()) }
+                }
+                .onLeft { uiState.update { state -> state.copy(tabs = CollectiblesDiscoveryUM.TabsUM.Hidden) } }
+
             reloadMachines()
         }.saveIn(categoriesJob)
     }
@@ -151,14 +157,18 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun buildTabs() = categories?.let { loaded ->
-        tabsConverter.convert(
-            value = CollectiblesDiscoveryTabsConverter.Input(
-                categories = loaded,
-                selectedCategoryId = selectedCategoryId,
+    private fun buildTabs(): CollectiblesDiscoveryUM.TabsUM {
+        val loaded = categories ?: return CollectiblesDiscoveryUM.TabsUM.Hidden
+
+        return CollectiblesDiscoveryUM.TabsUM.Content(
+            tabs = tabsConverter.convert(
+                value = CollectiblesDiscoveryTabsConverter.Input(
+                    categories = loaded,
+                    selectedCategoryId = selectedCategoryId,
+                ),
             ),
         )
-    } ?: persistentListOf()
+    }
 
     private fun onQueryChange(query: String) {
         uiState.update { it.copy(search = it.search.copy(query = query)) }
