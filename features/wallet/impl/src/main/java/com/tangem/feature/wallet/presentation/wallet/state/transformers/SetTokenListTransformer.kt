@@ -57,7 +57,7 @@ internal class SetTokenListTransformer(
                     walletCardState = prevState.walletCardState.toLoadedState(),
                     tokensListState = prevState.tokensListState.toLoadedState(),
                     tangemPayMainUM = prevState.tangemPayMainUM.toLoadedState(),
-                    moneyAccountMainUM = prevState.moneyAccountMainUM.toLoadedVirtualState(),
+                    moneyAccountMainUM = prevState.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
                     collectiblesWalletBlockUM = collectiblesBlockState(),
                     buttons = prevState.enableButtons(),
@@ -84,7 +84,7 @@ internal class SetTokenListTransformer(
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
-                    moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedVirtualState(),
+                    moneyAccountMainUM = walletUM.moneyAccountMainUM.toLoadedMoneyAccountState(),
                     polymarketWalletBlockUM = predictionBlockState(),
                     collectiblesWalletBlockUM = collectiblesBlockState(),
                     tokensListUM = tokensListUM,
@@ -165,15 +165,15 @@ internal class SetTokenListTransformer(
         return tangemPayConverter.convert(paymentAccountStatus)
     }
 
-    private fun MoneyAccountMainUM.toLoadedVirtualState(): MoneyAccountMainUM {
-        val virtualAccountStatus = when (params) {
+    private fun MoneyAccountMainUM.toLoadedMoneyAccountState(): MoneyAccountMainUM {
+        val moneyAccountStatus = when (params) {
             is TokenConverterParams.Account -> params.accountList.accountStatuses
-                .filterIsInstance<AccountStatus.Virtual>()
+                .filterIsInstance<AccountStatus.Money>()
                 .firstOrNull()
             is TokenConverterParams.Wallet -> return MoneyAccountMainUM.Empty
         } ?: return this
 
-        return moneyAccountConverter.convert(virtualAccountStatus)
+        return moneyAccountConverter.convert(moneyAccountStatus)
     }
 
     private fun collectiblesBlockState(): CollectiblesWalletBlockUM {

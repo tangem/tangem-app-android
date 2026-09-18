@@ -71,7 +71,7 @@ internal class DefaultTangemSdkManager(
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
-    private val tangemPayVirtualAccountTaskFactory: TangemPayGenerateVirtualAccountAddressTask.Factory,
+    private val tangemPayMoneyAccountTaskFactory: TangemPayGenerateMoneyAccountAddressTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
@@ -588,12 +588,12 @@ internal class DefaultTangemSdkManager(
         }
     }
 
-    override suspend fun tangemPayProduceVirtualAccountData(
+    override suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, VirtualAccountActivationData> {
+    ): Either<Throwable, MoneyAccountActivationData> {
         return coroutineScope {
             val result = runTaskAsyncReturnOnMain(
-                runnable = tangemPayVirtualAccountTaskFactory.create(coroutineScope = this),
+                runnable = tangemPayMoneyAccountTaskFactory.create(coroutineScope = this),
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
@@ -602,7 +602,7 @@ internal class DefaultTangemSdkManager(
 
             return@coroutineScope when (result) {
                 is CompletionResult.Failure<*> -> result.error.left()
-                is CompletionResult.Success<VirtualAccountActivationData> -> result.data.right()
+                is CompletionResult.Success<MoneyAccountActivationData> -> result.data.right()
             }
         }
     }
