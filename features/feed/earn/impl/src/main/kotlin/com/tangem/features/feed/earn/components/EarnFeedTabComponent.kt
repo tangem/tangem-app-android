@@ -84,6 +84,10 @@ internal class EarnFeedTabComponent @AssistedInject constructor(
         bottomSheet.child?.instance?.BottomSheet()
     }
 
+    override fun resetScroll() {
+        listState.requestScrollToItem(index = 0)
+    }
+
     private fun bottomSheetChild(
         config: EarnBottomSheetRoute,
         componentContext: ComponentContext,
