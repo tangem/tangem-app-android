@@ -9,7 +9,7 @@ internal object SharesCalculator {
     private val HUNDRED = BigDecimal(100)
 
     /**
-     * @return the largest amount of [held] shares the market can accept, truncated onto the on-chain grid.
+     * @return the largest amount of [held] shares the market can accept, truncated onto its 2-decimal grid.
      */
     fun available(held: BigDecimal): BigDecimal = held.setScale(PolymarketConst.SHARES_DECIMALS, RoundingMode.FLOOR)
 
