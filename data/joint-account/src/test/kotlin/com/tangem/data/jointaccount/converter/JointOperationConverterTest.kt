@@ -30,7 +30,7 @@ internal class JointOperationConverterTest {
             votes = listOf(
                 JointOperationDto.VoteDto(
                     address = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
-                    vote = "decline",
+                    vote = "reject",
                     votedAt = "2026-09-07T10:00:00Z",
                 ),
             ),
@@ -87,7 +87,7 @@ internal class JointOperationConverterTest {
             chainId = 1,
             votes = listOf(
                 JointOperationDto.VoteDto(address = "0xa", vote = "approve", votedAt = "2026-09-07T10:00:00Z"),
-                JointOperationDto.VoteDto(address = "0xb", vote = "decline", votedAt = "2026-09-07T10:01:00Z"),
+                JointOperationDto.VoteDto(address = "0xb", vote = "reject", votedAt = "2026-09-07T10:01:00Z"),
                 JointOperationDto.VoteDto(address = "0xc", vote = "abstain", votedAt = null),
             ),
         )
