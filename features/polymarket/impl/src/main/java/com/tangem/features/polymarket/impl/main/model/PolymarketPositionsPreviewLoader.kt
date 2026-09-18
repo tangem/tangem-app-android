@@ -13,12 +13,14 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 internal class PolymarketPositionsPreviewLoader @Inject constructor(
     private val repository: PolymarketPositionsRepository,
@@ -44,7 +46,10 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
             }
-            refresh(userWalletId, onRetry, converter)
+            while (true) {
+                refresh(userWalletId, onRetry, converter)
+                delay(POLL_INTERVAL)
+            }
         }.saveIn(refreshJob)
     }
 
@@ -88,5 +93,6 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
 
     private companion object {
         const val PREVIEW_SIZE = 3
+        val POLL_INTERVAL = 20.seconds
     }
 }
