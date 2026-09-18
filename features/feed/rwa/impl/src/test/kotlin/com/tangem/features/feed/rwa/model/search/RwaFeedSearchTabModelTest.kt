@@ -15,9 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feed.search.model.RecentFeedSearchItem
 import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
-import com.tangem.domain.feed.search.usecase.SaveRecentFeedSearchItemUseCase
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
@@ -95,7 +93,6 @@ internal class RwaFeedSearchTabModelTest {
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val saveRecentFeedSearchItemUseCase: SaveRecentFeedSearchItemUseCase = mockk(relaxed = true)
     private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
 
@@ -116,7 +113,6 @@ internal class RwaFeedSearchTabModelTest {
             getSearchResultsUseCase,
             router,
             analyticsEventHandler,
-            saveRecentFeedSearchItemUseCase,
             saveFeedSearchQueryUseCase,
         )
         actions.clear()
@@ -429,7 +425,7 @@ internal class RwaFeedSearchTabModelTest {
     }
 
     @Test
-    fun `GIVEN an asset row WHEN it is clicked THEN the token and the query are written to search history`() =
+    fun `GIVEN an asset row WHEN it is clicked THEN the query is written to search history`() =
         runTest {
             // Arrange
             val query = MutableStateFlow("")
@@ -445,11 +441,6 @@ internal class RwaFeedSearchTabModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) {
-                saveRecentFeedSearchItemUseCase(
-                    match<RecentFeedSearchItem> { it is RecentFeedSearchItem.MarketToken && it.id == "tsla" },
-                )
-            }
             coVerify(exactly = 1) { saveFeedSearchQueryUseCase("tsla") }
             verify { router.push(route = any<FeedRoute.MarketsTokenDetails>(), onComplete = any()) }
 
@@ -618,7 +609,6 @@ internal class RwaFeedSearchTabModelTest {
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
             analyticsEventHandler = analyticsEventHandler,
-            saveRecentFeedSearchItemUseCase = saveRecentFeedSearchItemUseCase,
             saveFeedSearchQueryUseCase = saveFeedSearchQueryUseCase,
             router = router,
         )
