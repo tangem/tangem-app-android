@@ -13,7 +13,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.models.account.VirtualAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
@@ -27,7 +27,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -48,7 +48,7 @@ import java.math.BigDecimal
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 
 /**
- * Special accounts — payment, virtual, prediction, collectibles — joined into the producer's `combine` from their
+ * Special accounts — payment, money, prediction, collectibles — joined into the producer's `combine` from their
  * suppliers.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -93,7 +93,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
         // Assert
         assertThat(statuses.filterIsInstance<AccountStatus.CryptoPortfolio>()).hasSize(1)
         assertThat(statuses.filterIsInstance<AccountStatus.Payment>()).hasSize(1)
-        assertThat(statuses.filterIsInstance<AccountStatus.Virtual>()).hasSize(1)
+        assertThat(statuses.filterIsInstance<AccountStatus.Money>()).hasSize(1)
     }
 
     @Test
@@ -246,11 +246,11 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                     ),
                 )
             },
-            virtualAccountStatusSupplier = mockk<VirtualAccountStatusSupplier> {
+            moneyAccountStatusSupplier = mockk<MoneyAccountStatusSupplier> {
                 every { this@mockk.invoke(userWalletId = walletId) } returns flowOf(
-                    AccountStatus.Virtual(
-                        account = Account.Virtual(walletId),
-                        value = VirtualAccountStatusValue.NotCreated,
+                    AccountStatus.Money(
+                        account = Account.Money(walletId),
+                        value = MoneyAccountStatusValue.NotCreated,
                     ),
                 )
             },
@@ -311,6 +311,6 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
 
     private fun accountListWithSpecialAccounts(): AccountList = accountList()
         .plus(Account.Payment(walletId)).getOrNull()!!
-        .plus(Account.Virtual(walletId)).getOrNull()!!
+        .plus(Account.Money(walletId)).getOrNull()!!
         .plus(Account.Prediction(walletId)).getOrNull()!!
 }

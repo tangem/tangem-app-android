@@ -2,9 +2,6 @@ package com.tangem.features.moneyaccount.onboarding.ui
 
 import androidx.compose.runtime.Immutable
 
-/**
- * UI model for the Virtual Account onboarding screen.
- */
 @Immutable
 internal sealed class MoneyAccountOnboardingUM {
 

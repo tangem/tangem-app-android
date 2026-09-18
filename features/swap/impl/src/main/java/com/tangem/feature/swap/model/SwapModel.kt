@@ -2101,7 +2101,7 @@ internal class SwapModel @Inject constructor(
                 cryptoCurrency = swapCurrency,
             ).map { (_, status) -> status }
             // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
-            is Account.Virtual -> emptyFlow()
+            is Account.Money -> emptyFlow()
             is Account.Prediction -> emptyFlow()
             // Collectibles account holds no spendable currencies of its own — its funds live in the gacha vault
             is Account.Collectibles -> emptyFlow()

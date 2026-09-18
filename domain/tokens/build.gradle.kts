@@ -29,6 +29,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.express)
     api(projects.domain.legacy)
+    api(projects.domain.moneyAccount)
     api(projects.domain.networks)
     api(projects.domain.collectibles)
     api(projects.domain.polymarket)

@@ -232,6 +232,7 @@ dependencies {
     implementation(projects.data.appsflyer)
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
+    implementation(projects.data.moneyAccount)
     implementation(projects.data.stories)
     implementation(projects.data.marketing)
     implementation(projects.data.onboarding)

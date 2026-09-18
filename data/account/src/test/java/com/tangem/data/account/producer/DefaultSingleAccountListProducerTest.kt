@@ -106,7 +106,7 @@ class DefaultSingleAccountListProducerTest {
     }
 
     @Test
-    fun `GIVEN virtual accounts enabled WHEN produce THEN account list contains virtual account`() = runTest {
+    fun `GIVEN money accounts enabled WHEN produce THEN account list contains money account`() = runTest {
         // Arrange
         val supportedWallet = mockk<UserWallet.Hot> {
             every { walletId } returns userWalletId
@@ -143,8 +143,8 @@ class DefaultSingleAccountListProducerTest {
         val expected = accountList
             .plus(Account.Payment(userWalletId))
             .getOrElse { error("Unable to add payment account: $it") }
-            .plus(Account.Virtual(userWalletId))
-            .getOrElse { error("Unable to add virtual account: $it") }
+            .plus(Account.Money(userWalletId))
+            .getOrElse { error("Unable to add money account: $it") }
         Truth.assertThat(actual).containsExactly(expected)
     }
 
