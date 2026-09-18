@@ -1,4 +1,4 @@
-package com.tangem.features.tangempay.orderCard.impl.model
+package com.tangem.features.tangempay.common
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.TestInstance
@@ -7,18 +7,18 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.text.Normalizer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class OrderFormValidatorTest {
+internal class TangemPayFormCharsetTest {
 
     @ParameterizedTest
     @MethodSource("embossCases")
     fun isEmbossCharsetValid(model: CharsetModel) {
-        assertThat(OrderFormValidator.isEmbossCharsetValid(model.input)).isEqualTo(model.expected)
+        assertThat(TangemPayFormCharset.isEmbossCharsetValid(model.input)).isEqualTo(model.expected)
     }
 
     @ParameterizedTest
     @MethodSource("addressCases")
     fun isAddressCharsetValid(model: CharsetModel) {
-        assertThat(OrderFormValidator.isAddressCharsetValid(model.input)).isEqualTo(model.expected)
+        assertThat(TangemPayFormCharset.isAddressCharsetValid(model.input)).isEqualTo(model.expected)
     }
 
     internal data class CharsetModel(val input: String, val expected: Boolean)
