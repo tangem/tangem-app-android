@@ -21,6 +21,7 @@ import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.nav.analyticsSection
 import com.tangem.features.feed.rwa.categories.CategorySelection
 import com.tangem.features.feed.rwa.categories.CategorySelectorRoute
+import com.tangem.features.feed.rwa.categories.DeeplinkCategoryFilter
 import com.tangem.features.feed.rwa.categories.ReservedCategoryCodes
 import com.tangem.features.feed.rwa.categories.RwaCategoryNames
 import com.tangem.features.feed.rwa.categories.RwaDefaultCategory
@@ -36,6 +37,8 @@ import com.tangem.features.feed.rwa.ui.state.RwaFeaturedUM
 import com.tangem.features.feed.rwa.ui.state.RwaFeedTabUM
 import com.tangem.features.feed.rwa.ui.state.RwaIntervalUM
 import com.tangem.features.feed.rwa.ui.state.RwaListUM
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -66,13 +69,14 @@ private const val CATEGORIES_FILTER_ID = "rwa_categories"
  * categories fetch, so the first list request waits for it.
  */
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class RwaFeedTabModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCoinCategoriesUseCase: GetCoinCategoriesUseCase,
     private val userCountryResolver: UserCountryResolver,
+    private val feedEntryController: FeedEntryController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
 ) : Model(), CategorySelectorComponent.ModelCallback {
@@ -93,6 +97,8 @@ internal class RwaFeedTabModel @Inject constructor(
 
     private val categoriesState = MutableStateFlow(CategoriesState())
     private val visibleItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+
+    private val deeplinkCategory = DeeplinkCategoryFilter()
 
     /**
      * Source of truth for the trend interval and the sort; conflation is what makes re-picking the current
@@ -188,7 +194,22 @@ internal class RwaFeedTabModel @Inject constructor(
             .onEach { featured -> uiState.update { it.copy(featured = featured) } }
             .launchIn(modelScope)
 
+        feedEntryController.pendingFilter
+            .filterNotNull()
+            .filter { it.tabId == FeedTabId.RealAssets }
+            .onEach(::onDeeplinkFilter)
+            .launchIn(modelScope)
+
         loadCategories()
+    }
+
+    private fun onDeeplinkFilter(filter: FeedEntryFilter) {
+        feedEntryController.consumeFilter()
+        deeplinkCategory.park(categoryId = filter.categoryId)
+
+        // still loading: onCategoriesLoaded applies the parked id as soon as the tree arrives
+        val categories = categoriesState.value.all
+        if (categories.isNotEmpty()) deeplinkCategory.take(categories)?.let(::applySelection)
     }
 
     private fun initialState(): RwaFeedTabUM {
@@ -248,7 +269,17 @@ internal class RwaFeedTabModel @Inject constructor(
             displayName = umbrella.displayName,
             code = umbrella.code,
         )
-        categoriesState.update { it.copy(rwaCategory = entry) }
+        categoriesState.update { it.copy(all = categories, rwaCategory = entry) }
+
+        val deeplinkSelection = deeplinkCategory.take(categories = categories)
+
+        if (deeplinkSelection != null) {
+            // it outranks the regional default, which only ever picks for a user who has not chosen — and
+            // asking for the umbrella is choosing too, though it leaves the selection itself empty
+            categoriesState.update { it.copy(isDefaultApplied = true) }
+            applySelection(deeplinkSelection)
+            return
+        }
 
         val default = defaultSelection(categories = categories, country = country)
 
@@ -394,6 +425,11 @@ internal class RwaFeedTabModel @Inject constructor(
                 categoryId = selection.category?.code ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
             ),
         )
+        applySelection(selection)
+    }
+
+    /** `Select Category` describes a pick the user made, so a deeplink arriving filtered is not one. */
+    private fun applySelection(selection: CategorySelection) {
         uiState.update { state ->
             state.copy(
                 appliedSelection = selection,
@@ -435,6 +471,8 @@ internal class RwaFeedTabModel @Inject constructor(
      * while it is null a reload has to re-run the fetch before it can request anything.
      */
     private data class CategoriesState(
+        /** The resolved tree, kept for the one filter that arrives against it later — a deeplink's category. */
+        val all: List<CoinCategory> = emptyList(),
         val rwaCategory: CategorySelection.Entry? = null,
         val featuredCategoryId: String? = null,
         val isFailed: Boolean = false,
