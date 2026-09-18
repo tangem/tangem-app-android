@@ -15,6 +15,7 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         val order = prevState.order as? OrderSideUM.Sell ?: return prevState
+        val available = SharesCalculator.available(held = position.size)
 
         return prevState.copy(
             market = prevState.market.copy(
@@ -28,11 +29,15 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
                     ?.toInstant()
                     ?.toEpochMilli(),
             ),
-            order = order.copy(
-                position = SellPositionUM.Held(available = SharesCalculator.available(held = position.size)),
-            ),
+            order = order.copy(position = SellPositionUM.Held(available = available)),
+            amountValue = prevState.amountValue.orWholePosition(available = available),
             isMarketAcceptingOrders = position.isAcceptingOrders,
         ).recomputeGate()
+    }
+
+    private fun String.orWholePosition(available: BigDecimal): String = when {
+        isNotBlank() || available.signum() <= 0 -> this
+        else -> available.toPlainString()
     }
 
     private fun BigDecimal.toCents(): Int = movePointRight(2).toInt()
