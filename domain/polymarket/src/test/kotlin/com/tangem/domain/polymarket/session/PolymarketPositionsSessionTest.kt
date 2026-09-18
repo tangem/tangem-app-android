@@ -53,6 +53,45 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
     }
 
     @Test
+    fun `GIVEN a resumed session WHEN the positions are invalidated THEN the list is fetched again`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        val first = position(assetId = "one")
+        val second = position(assetId = "two")
+        var isReloaded = false
+        fetch = { page(listOf(if (isReloaded) second else first)) }
+        session.resume(backgroundScope)
+        runCurrent()
+
+        // Act
+        isReloaded = true
+        invalidator.invalidate(wallet)
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value)
+            .isEqualTo(PolymarketPositionsState(listOf(second), PaginationStatus.EndOfPagination))
+        assertThat(requests.map { it.second }).containsExactly(0, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a paused session WHEN the positions are invalidated THEN nothing is fetched`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        fetch = { page(listOf(position())) }
+        session.resume(backgroundScope)
+        runCurrent()
+        session.pause()
+
+        // Act
+        invalidator.invalidate(wallet)
+        runCurrent()
+
+        // Assert
+        assertThat(requests.map { it.second }).containsExactly(0)
+    }
+
+    @Test
     fun `GIVEN failed next page WHEN manually retried THEN retains positions and retries the same offset`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)

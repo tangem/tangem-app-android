@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.main.model
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
 import com.tangem.features.polymarket.impl.positions.model.PolymarketPositionUMConverter
@@ -16,6 +17,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,6 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class PolymarketPositionsPreviewLoader @Inject constructor(
     private val repository: PolymarketPositionsRepository,
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
+    private val invalidator: PredictionPositionsInvalidator,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -32,6 +35,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
         field = MutableStateFlow<PolymarketPositionsPreviewUM>(PolymarketPositionsPreviewUM.Loading)
 
     private val refreshJob = JobHolder()
+    private val invalidationJob = JobHolder()
     private var isResumed = false
 
     fun resume(
@@ -41,8 +45,8 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     ) {
         isResumed = true
         val converter = PolymarketPositionUMConverter(onPositionClick)
+        val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
         scope.launch {
-            val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
             }
@@ -51,11 +55,17 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
                 delay(POLL_INTERVAL)
             }
         }.saveIn(refreshJob)
+        scope.launch {
+            invalidator.signal
+                .filter { it == userWalletId }
+                .collect { if (isResumed) refresh(userWalletId, onRetry, converter) }
+        }.saveIn(invalidationJob)
     }
 
     fun pause() {
         isResumed = false
         refreshJob.cancel()
+        invalidationJob.cancel()
     }
 
     private suspend fun refresh(
