@@ -27,8 +27,4 @@ internal class DefaultFeedSearchHistoryRepository(
     override suspend fun removeRecentQuery(query: String) = withContext(dispatchers.io) {
         store.removeQuery(query)
     }
-
-    override suspend fun clear() = withContext(dispatchers.io) {
-        store.clear()
-    }
 }
