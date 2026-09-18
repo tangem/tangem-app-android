@@ -62,6 +62,8 @@ internal fun PolymarketPositionDetailsScreen(state: PolymarketPositionDetailsUM,
             overlay = {
                 if (state.content is Content.Data) {
                     PositionDetailsFooter(
+                        onClosePositionClick = state.content.onClosePositionClick,
+                        onBuyMoreClick = state.content.onBuyMoreClick,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .onSizeChanged { size -> footerHeight = size.height },
@@ -114,7 +116,11 @@ private fun PositionDetailsContent(state: Content.Data, contentPadding: PaddingV
 }
 
 @Composable
-private fun PositionDetailsFooter(modifier: Modifier = Modifier) {
+private fun PositionDetailsFooter(
+    onClosePositionClick: (() -> Unit)?,
+    onBuyMoreClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     TangemFooter(modifier = modifier) {
         TangemButtonGroup(
             modifier = Modifier.fillMaxWidth(),
@@ -124,13 +130,15 @@ private fun PositionDetailsFooter(modifier: Modifier = Modifier) {
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.common_close),
-                onClick = {},
+                isEnabled = onClosePositionClick != null,
+                onClick = { onClosePositionClick?.invoke() },
             )
             TangemButton(
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.common_buy),
-                onClick = {},
+                isEnabled = onBuyMoreClick != null,
+                onClick = { onBuyMoreClick?.invoke() },
             )
         }
     }
