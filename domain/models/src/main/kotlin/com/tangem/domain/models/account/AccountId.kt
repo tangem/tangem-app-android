@@ -38,7 +38,7 @@ data class AccountId private constructor(
     companion object {
 
         const val PaymentAccountIdPrefix = "payment_"
-        const val VirtualAccountIdPrefix = "virtual_"
+        const val MoneyAccountIdPrefix = "money_"
         const val PredictionAccountIdPrefix = "prediction_"
         const val CollectiblesAccountIdPrefix = "collectibles_"
 
@@ -97,8 +97,8 @@ data class AccountId private constructor(
             return AccountId(value = "$PaymentAccountIdPrefix$userWalletId", userWalletId = userWalletId)
         }
 
-        fun forVirtualAccount(userWalletId: UserWalletId): AccountId {
-            return AccountId(value = "$VirtualAccountIdPrefix$userWalletId", userWalletId = userWalletId)
+        fun forMoneyAccount(userWalletId: UserWalletId): AccountId {
+            return AccountId(value = "$MoneyAccountIdPrefix$userWalletId", userWalletId = userWalletId)
         }
 
         fun forPredictionAccount(userWalletId: UserWalletId): AccountId {

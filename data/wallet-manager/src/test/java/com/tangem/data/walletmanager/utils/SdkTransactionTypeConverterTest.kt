@@ -30,7 +30,7 @@ internal class SdkTransactionTypeConverterTest {
         @ProvideTestModels
         fun convert(model: GaslessModel) {
             // Act
-            val actual = converter.convert(item(destination = model.destination, methodId = GASLESS_METHOD_ID))
+            val actual = converter.convert(item(destination = model.destination, methodId = model.methodId))
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -57,6 +57,17 @@ internal class SdkTransactionTypeConverterTest {
                     ),
                 ),
                 expected = TxInfo.TransactionType.UnknownOperation,
+            ),
+            // The asset is keyed with the 0x prefix; a selector parsed out of the raw call data arrives without one
+            GaslessModel(
+                destination = singleUser(FEE_RECIPIENT),
+                methodId = GASLESS_METHOD_ID.removePrefix("0x"),
+                expected = TxInfo.TransactionType.GaslessFee,
+            ),
+            GaslessModel(
+                destination = singleUser(FEE_RECIPIENT),
+                methodId = GASLESS_METHOD_ID.uppercase(),
+                expected = TxInfo.TransactionType.GaslessFee,
             ),
         )
     }
@@ -189,6 +200,108 @@ internal class SdkTransactionTypeConverterTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TokenTransfer {
+
+        private val usdt = currencyFactory.createToken(
+            blockchain = Blockchain.Ethereum,
+            id = "tether",
+            contractAddress = USDT_CONTRACT,
+            symbol = "USDT",
+            decimals = 6,
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: TokenTransferModel) {
+            // Arrange
+            val converter = createConverter(currency = model.currency, networkTokens = model.networkTokens)
+
+            // Act
+            val actual = converter.convert(
+                item(
+                    destination = singleContract(USDT_CONTRACT),
+                    methodId = model.methodId,
+                    callData = model.callData,
+                ),
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<TokenTransferModel> {
+            val coin = currencyFactory.createCoin(Blockchain.Ethereum)
+            return listOf(
+                // Coin history: the call moves no coin, so it becomes the network-fee row for the tokens it sent
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(usdt),
+                    callData = transferCallData(rawAmount = FIVE_USDT_RAW_HEX),
+                    expected = TxInfo.TransactionType.NetworkFee(
+                        amount = SdkAmount(
+                            currencySymbol = "USDT",
+                            value = BigDecimal("5.000000"),
+                            decimals = 6,
+                            type = SdkAmountType.Token(contractAddress = USDT_CONTRACT, id = "tether"),
+                        ),
+                        address = RECIPIENT,
+                    ),
+                ),
+                // Untracked contract: the sent tokens cannot be denominated, the fee row still stands
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = emptySet(),
+                    callData = transferCallData(rawAmount = FIVE_USDT_RAW_HEX),
+                    expected = TxInfo.TransactionType.NetworkFee(amount = null, address = RECIPIENT),
+                ),
+                // Token history: the very same call is the transfer itself
+                TokenTransferModel(
+                    currency = usdt,
+                    networkTokens = setOf(usdt),
+                    callData = transferCallData(rawAmount = FIVE_USDT_RAW_HEX),
+                    expected = TxInfo.TransactionType.Transfer,
+                ),
+                // Call data that is not a flat ERC-20 transfer decodes to nothing and stays a plain transfer
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(usdt),
+                    callData = TRANSFER_METHOD_ID,
+                    expected = TxInfo.TransactionType.Transfer,
+                ),
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(usdt),
+                    callData = null,
+                    expected = TxInfo.TransactionType.Transfer,
+                ),
+                // A selector parsed out of the raw call data carries no 0x prefix, and still resolves to `transfer`
+                TokenTransferModel(
+                    currency = coin,
+                    networkTokens = setOf(usdt),
+                    methodId = TRANSFER_METHOD_ID.removePrefix("0x"),
+                    callData = transferCallData(rawAmount = FIVE_USDT_RAW_HEX),
+                    expected = TxInfo.TransactionType.NetworkFee(
+                        amount = SdkAmount(
+                            currencySymbol = "USDT",
+                            value = BigDecimal("5.000000"),
+                            decimals = 6,
+                            type = SdkAmountType.Token(contractAddress = USDT_CONTRACT, id = "tether"),
+                        ),
+                        address = RECIPIENT,
+                    ),
+                ),
+            )
+        }
+
+        private fun transferCallData(rawAmount: String): String {
+            val recipientWord = RECIPIENT.removePrefix("0x").padStart(length = 64, padChar = '0')
+            val amountWord = rawAmount.padStart(length = 64, padChar = '0')
+            return TRANSFER_METHOD_ID + recipientWord + amountWord
+        }
+    }
+
     private fun createConverter(
         currency: CryptoCurrency,
         networkTokens: Set<CryptoCurrency.Token> = emptySet(),
@@ -196,6 +309,7 @@ internal class SdkTransactionTypeConverterTest {
         smartContractMethods = mapOf(
             GASLESS_METHOD_ID to SmartContractMethod(info = null, source = null, name = "gaslessTransaction"),
             APPROVE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "approve"),
+            TRANSFER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "transfer"),
         ),
         yieldSupplyAddresses = emptySet(),
         gaslessFeeAddresses = setOf(FEE_RECIPIENT),
@@ -230,6 +344,15 @@ internal class SdkTransactionTypeConverterTest {
     internal data class GaslessModel(
         val destination: TransactionHistoryItem.DestinationType,
         val expected: TxInfo.TransactionType,
+        val methodId: String = GASLESS_METHOD_ID,
+    )
+
+    internal data class TokenTransferModel(
+        val currency: CryptoCurrency,
+        val networkTokens: Set<CryptoCurrency.Token>,
+        val callData: String?,
+        val expected: TxInfo.TransactionType,
+        val methodId: String = TRANSFER_METHOD_ID,
     )
 
     internal data class ApproveModel(
@@ -243,6 +366,7 @@ internal class SdkTransactionTypeConverterTest {
     private companion object {
         const val GASLESS_METHOD_ID = "0x6234d42b"
         const val APPROVE_METHOD_ID = "0x095ea7b3"
+        const val TRANSFER_METHOD_ID = "0xa9059cbb"
         const val SENDER = "0x9ffd974772bda94d288240c1b22f367ce75ccd7f"
         const val RECIPIENT = "0x2222222222222222222222222222222222222222"
         const val FEE_RECIPIENT = "0x1111111111111111111111111111111111111111"

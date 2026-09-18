@@ -82,9 +82,9 @@ sealed interface AccountStatus {
     ) : AccountStatus
 
     @Serializable
-    data class Virtual(
-        override val account: Account.Virtual,
-        val value: VirtualAccountStatusValue,
+    data class Money(
+        override val account: Account.Money,
+        val value: MoneyAccountStatusValue,
     ) : AccountStatus
 
     @Serializable

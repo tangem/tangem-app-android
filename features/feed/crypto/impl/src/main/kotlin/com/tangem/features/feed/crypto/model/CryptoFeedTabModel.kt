@@ -22,6 +22,7 @@ import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.crypto.categories.MarketCategoryFilterController
+import com.tangem.features.feed.crypto.categories.MarketCategoryResolver
 import com.tangem.features.feed.crypto.categories.MarketCategorySelection
 import com.tangem.features.feed.crypto.categories.MarketCategorySelectorRoute
 import com.tangem.features.feed.crypto.impl.R
@@ -34,6 +35,8 @@ import com.tangem.features.feed.crypto.ui.state.*
 import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedTabId
 import com.tangem.features.feed.nav.analyticsSection
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryFilter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -65,6 +68,8 @@ internal class CryptoFeedTabModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getMarketIndicatorsUseCase: GetMarketIndicatorsUseCase,
     private val categoryFilterController: MarketCategoryFilterController,
+    private val categoryResolver: MarketCategoryResolver,
+    private val feedEntryController: FeedEntryController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
 ) : Model() {
@@ -73,6 +78,19 @@ internal class CryptoFeedTabModel @Inject constructor(
     val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
     val bottomSheetNavigation: SlotNavigation<FeedCryptoTabBottomSheetConfig> = SlotNavigation()
+
+    /**
+     * Read synchronously at construction, before the first list request is issued: with a category
+     * deeplink already pending, loading unfiltered first would show the wrong list and then swap it.
+     */
+    private var isAwaitingDeeplinkCategory: Boolean = feedEntryController.pendingFilter.value
+        ?.let { it.tabId == FeedTabId.Crypto && it.categoryId != null } == true
+
+    /**
+     * Selection this tab published from a deeplink, until the controller hands it back. The selector
+     * screen publishes through the same seam, so nothing but the value tells the two apart.
+     */
+    private var deeplinkSelection: MarketCategorySelection? = null
 
     private val updateQuotesJob = JobHolder()
     private val marketIndicatorsJob = JobHolder()
@@ -184,8 +202,42 @@ internal class CryptoFeedTabModel @Inject constructor(
             .onEach { visibleBatchKeys -> listManager.loadCharts(visibleBatchKeys, selectedInterval.value) }
             .launchIn(modelScope)
 
-        listManager.reload()
+        feedEntryController.pendingFilter
+            .filterNotNull()
+            .filter { it.tabId == FeedTabId.Crypto }
+            .onEach(::onDeeplinkFilter)
+            .launchIn(modelScope)
+
+        if (!isAwaitingDeeplinkCategory) listManager.reload()
         fetchMarketIndicators()
+    }
+
+    private suspend fun onDeeplinkFilter(filter: FeedEntryFilter) {
+        feedEntryController.consumeFilter()
+
+        val selection = filter.categoryId
+            ?.let { resolveCategory(categoryId = it) }
+            ?.let { MarketCategorySelection(category = it) }
+
+        if (selection != null && selection != categoryFilterController.selection.value) {
+            // applying it drives both the chip and the reload, through the controller's own collector
+            deeplinkSelection = selection
+            categoryFilterController.onSelectionApplied(selection)
+        } else if (isAwaitingDeeplinkCategory) {
+            // nothing to apply, or it is already applied and so will not re-emit: init skipped the
+            // first load waiting for this, so issue it now
+            listManager.reload()
+        }
+
+        isAwaitingDeeplinkCategory = false
+    }
+
+    private suspend fun resolveCategory(categoryId: String): MarketCategorySelection.Entry? {
+        val entry = categoryResolver.resolve(categoryId = categoryId, currency = currentAppCurrency.value.code)
+
+        if (entry == null) TangemLogger.i("Shtorka deeplink: no crypto category matches '$categoryId'")
+
+        return entry
     }
 
     private fun loadData() {
@@ -228,12 +280,18 @@ internal class CryptoFeedTabModel @Inject constructor(
     }
 
     private fun applyCategorySelection(selection: MarketCategorySelection) {
-        analyticsEventHandler.send(
-            FeedSectionAnalyticsEvent.SelectCategory(
-                section = FeedTabId.Crypto.analyticsSection,
-                categoryId = selection.category?.id ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
-            ),
-        )
+        // `Select Category` describes a pick the user made; a deeplink arrives already filtered
+        val isFromDeeplink = selection == deeplinkSelection
+        deeplinkSelection = null
+
+        if (!isFromDeeplink) {
+            analyticsEventHandler.send(
+                FeedSectionAnalyticsEvent.SelectCategory(
+                    section = FeedTabId.Crypto.analyticsSection,
+                    categoryId = selection.category?.id ?: FeedSectionAnalyticsEvent.ALL_CATEGORIES,
+                ),
+            )
+        }
         updateMarketPulse { it.copy(categoriesFilter = categoriesFilterItem(selection)) }
         listManager.reload()
     }

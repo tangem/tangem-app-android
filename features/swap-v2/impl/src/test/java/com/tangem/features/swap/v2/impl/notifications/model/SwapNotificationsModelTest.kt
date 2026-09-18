@@ -20,7 +20,7 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coVerify
@@ -29,7 +29,6 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -298,17 +297,6 @@ internal class SwapNotificationsModelTest {
         quoteId = null,
         isRestricted = isRestricted,
     )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private companion object {
         val provider = ExpressProvider(

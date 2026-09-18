@@ -130,10 +130,13 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
         if (featureToggles.isResidencyStepEnabled) {
-            router.push(AppRoute.TangemPayEligibility(product = TangemPayProduct.PAYMENT_ACCOUNT))
-            return
-        }
-        if (params is TangemPayOnboardingComponent.Params.Deeplink ||
+            router.push(
+                AppRoute.TangemPayEligibility(
+                    product = TangemPayProduct.PAYMENT_ACCOUNT,
+                    userWalletId = null,
+                ),
+            )
+        } else if (params is TangemPayOnboardingComponent.Params.Deeplink ||
             params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
         ) {
             modelScope.launch {

@@ -68,6 +68,7 @@ internal fun TangemPayBankWithdrawChoiceScreen(state: TangemPayBankWithdrawChoic
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
                 size = TangemButton.Size.X12,
+                isEnabled = state.isContinueEnabled,
                 text = resourceReference(R.string.common_continue),
                 onClick = state.onContinueClick,
             )
@@ -99,6 +100,7 @@ private val CardCornerRadius = 24.dp
 
 private class ChoicePreviewProvider : PreviewParameterProvider<TangemPayBankWithdrawChoiceUM> {
     override val values: Sequence<TangemPayBankWithdrawChoiceUM> = sequenceOf(
+        TangemPayBankWithdrawChoicePreviewData.transferTypeUnanswered,
         TangemPayBankWithdrawChoicePreviewData.transferType,
         TangemPayBankWithdrawChoicePreviewData.accountType,
     )
