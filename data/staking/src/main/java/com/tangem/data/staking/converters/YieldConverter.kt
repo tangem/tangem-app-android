@@ -29,6 +29,8 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     private const val DIVIDE_SCALE = 8
 
+    private const val NO_NAME = "No name"
+
     override fun convert(value: YieldDTO): Yield {
         val rewardType = convertRewardType(value.rewardType.asMandatory("rewardType"))
         return Yield(
@@ -131,19 +133,21 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO, rewardType: RewardType): Yield.Validator {
         val address = validatorDTO.address.asMandatory("address")
+        // StakeKit returns validators without metadata (hundreds of Cardano pools), the same fallback as on iOS
+        val name = validatorDTO.name ?: NO_NAME
 
         return Yield.Validator(
             address = address,
-            status = convertValidatorStatus(validatorDTO.status.asMandatory("status")),
-            name = validatorDTO.name.asMandatory("name"),
+            status = convertValidatorStatus(validatorDTO.status ?: ValidatorStatusDTO.UNKNOWN),
+            name = name,
             image = validatorDTO.image,
             website = validatorDTO.website,
             rewardInfo = createRewardInfo(apr = validatorDTO.apr, commission = validatorDTO.commission, rewardType),
             commission = validatorDTO.commission,
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
-            preferred = validatorDTO.preferred.asMandatory("preferred"),
-            isStrategicPartner = isStrategicPartner(validatorDTO.address, validatorDTO.name.asMandatory("name")),
+            preferred = validatorDTO.preferred == true,
+            isStrategicPartner = isStrategicPartner(address, name),
         )
     }
 
