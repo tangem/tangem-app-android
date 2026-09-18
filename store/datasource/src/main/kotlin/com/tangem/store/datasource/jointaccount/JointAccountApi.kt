@@ -9,10 +9,10 @@ import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
-import com.tangem.store.datasource.jointaccount.models.RejectJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -48,11 +48,14 @@ interface JointAccountApi {
      * `/accounts/archived`, and this endpoint is refetched after unarchiving. The free derivation index does not
      * come from here: it is `totalJointAccounts` in `GET /accounts`.
      *
-     * Not cacheable — `If-None-Match` is not supported, since participants join in other wallets and move no version
-     * of this one. Refresh on push and on screen opening.
+     * The response carries an ETag covering everything the list shows — a member, a status, an operation, a vote —
+     * so [eTag] asks the backend to answer `304` while nothing of it moved. Refresh on push and on screen opening.
      */
     @GET("api/v1/wallets/{walletId}/joint-accounts")
-    suspend fun getJointAccounts(@Path("walletId") walletId: String): ApiResponse<GetJointAccountsResponse>
+    suspend fun getJointAccounts(
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetJointAccountsResponse>
 
     /**
      * Shows the invitee what he is joining: the configuration and who is inviting. The path is wallet-scoped even
@@ -115,6 +118,5 @@ interface JointAccountApi {
     suspend fun rejectJointOperation(
         @Path("walletId") walletId: String,
         @Path("operationId") operationId: String,
-        @Body body: RejectJointOperationRequest,
     ): ApiResponse<Unit>
 }
