@@ -66,6 +66,8 @@ private fun PositionValues(state: PolymarketPositionUM) {
             text = state.outcomeLabel,
             variant = state.outcomeVariant,
             modifier = Modifier.widthIn(max = 96.dp).alignBy(FirstBaseline),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
         if (state.priceChange != null) {
