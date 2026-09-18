@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -20,7 +21,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
-import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
@@ -29,12 +29,16 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
+import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
 import kotlinx.collections.immutable.persistentListOf
 
 private val ChipShape = RoundedCornerShape(50.dp)
+
+/** Figma caps the feed's outcome label at about five characters so the market title keeps its room. */
+private val OutcomeButtonMaxWidth = 88.dp
 
 @Composable
 internal fun PolymarketEventCard(state: PolymarketEventUM, modifier: Modifier = Modifier) {
@@ -122,14 +126,15 @@ private fun EventRow(state: PolymarketEventRowUM) {
             // The first outcome carries the info appearance, the second the error one — driven by
             // position, not by label, since upstream labels aren't always "Yes"/"No".
             state.outcomes.forEachIndexed { index, outcome ->
-                TangemButton(
-                    variant = if (index == 0) {
-                        TangemButton.Variant.SecondaryInfo
+                PolymarketOutcomeButton(
+                    modifier = Modifier.widthIn(max = OutcomeButtonMaxWidth),
+                    title = outcome.title,
+                    appearance = if (index == 0) {
+                        PolymarketOutcomeButton.Appearance.Info
                     } else {
-                        TangemButton.Variant.SecondaryError
+                        PolymarketOutcomeButton.Appearance.Error
                     },
-                    size = TangemButton.Size.X9,
-                    text = outcome.title,
+                    size = PolymarketOutcomeButton.Size.X9,
                     onClick = outcome.onClick,
                 )
             }
@@ -194,7 +199,7 @@ private fun groupedPreviewEvent(): PolymarketEventUM {
                 marketId = "uzbekistan",
                 title = stringReference("Uzbekistan"),
                 probability = stringReference("3%"),
-                outcomes = previewOutcomes(),
+                outcomes = previewOutcomes(first = "Uzbekistan wins the final"),
             ),
         ),
         hiddenMarketsCount = 4,
@@ -221,15 +226,15 @@ private fun plainPreviewEvent(): PolymarketEventUM {
     )
 }
 
-private fun previewOutcomes() = persistentListOf(
+private fun previewOutcomes(first: String = "Yes", second: String = "No") = persistentListOf(
     PolymarketOutcomeUM(
         assetId = "yes",
-        title = stringReference("Yes"),
+        title = stringReference(first),
         onClick = {},
     ),
     PolymarketOutcomeUM(
         assetId = "no",
-        title = stringReference("No"),
+        title = stringReference(second),
         onClick = {},
     ),
 )
