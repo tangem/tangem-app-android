@@ -23,7 +23,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
-import com.tangem.domain.visa.model.VirtualAccountActivationData
+import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
@@ -239,9 +239,9 @@ class MockTangemSdkManager(
         error("Not implemented")
     }
 
-    override suspend fun tangemPayProduceVirtualAccountData(
+    override suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, VirtualAccountActivationData> {
+    ): Either<Throwable, MoneyAccountActivationData> {
         error("Not implemented")
     }
 

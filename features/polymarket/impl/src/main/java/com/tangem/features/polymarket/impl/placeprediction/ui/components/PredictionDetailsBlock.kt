@@ -42,7 +42,7 @@ internal fun PredictionDetailsBlock(state: PlacePredictionUM, modifier: Modifier
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TangemBadge(
-                            text = stringReference(state.payment.tokenSymbol),
+                            text = stringReference(state.collateral.tokenSymbol),
                             size = TangemBadge.Size.X6,
                         )
                         DetailValue(

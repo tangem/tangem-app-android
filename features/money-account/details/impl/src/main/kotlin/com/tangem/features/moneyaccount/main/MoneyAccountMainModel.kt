@@ -10,8 +10,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
-import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsListener
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -25,7 +25,7 @@ internal class MoneyAccountMainModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-) : Model(), VirtualAccountAddFundsListener {
+) : Model(), MoneyAccountAddFundsListener {
 
     @Suppress("UnusedPrivateProperty")
     private val params = paramsContainer.require<MoneyAccountMainComponent.Params>()
@@ -56,17 +56,17 @@ internal class MoneyAccountMainModel @Inject constructor(
     )
 
     private fun buildRequisites(details: MoneyAccountDepositDetails) = listOf(
-        VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
+        MoneyAccountAddFundsBottomSheetComponent.RequisitesRow(
             title = resourceReference(R.string.virtual_account_requisites_beneficiary_name),
             titleForShare = "Beneficiary name",
             value = details.beneficiaryName,
         ),
-        VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
+        MoneyAccountAddFundsBottomSheetComponent.RequisitesRow(
             title = resourceReference(R.string.virtual_account_requisites_account_number),
             titleForShare = "Account number",
             value = details.accountNumber,
         ),
-        VirtualAccountAddFundsBottomSheetComponent.RequisitesRow(
+        MoneyAccountAddFundsBottomSheetComponent.RequisitesRow(
             title = resourceReference(R.string.virtual_account_requisites_routing_number),
             titleForShare = "Routing number",
             value = details.routingNumber,

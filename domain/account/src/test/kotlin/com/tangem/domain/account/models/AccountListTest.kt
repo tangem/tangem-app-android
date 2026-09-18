@@ -342,10 +342,10 @@ internal class AccountListTest {
             CreateTestModel(
                 accounts = listOf(
                     Account.Personal.createMainAccount(userWalletId),
-                    Account.Virtual(userWalletId),
-                    Account.Virtual(userWalletId),
+                    Account.Money(userWalletId),
+                    Account.Money(userWalletId),
                 ),
-                expected = AccountList.Error.ExceedsMaxVirtualAccountsCount.left(),
+                expected = AccountList.Error.ExceedsMaxMoneyAccountsCount.left(),
             ),
             CreateTestModel(
                 accounts = listOf(
