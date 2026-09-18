@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
@@ -110,6 +111,7 @@ internal class PlacePredictionModelTest {
     private val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
     private val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
     private val positionsRepository: PolymarketPositionsRepository = mockk()
+    private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private var model: PlacePredictionModel? = null
 
@@ -131,6 +133,7 @@ internal class PlacePredictionModelTest {
             placeOrderUseCase,
             awaitDelayedOrderUseCase,
             positionsRepository,
+            fundingWindow,
         )
 
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
@@ -698,6 +701,85 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN the order fills WHEN place clicked THEN the balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the exchange found no match WHEN place clicked THEN no balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no answer from the exchange WHEN place clicked THEN the balance window still opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            PredictionPlaceOrderError.Ambiguous(detail = "the exchange never answered").left()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the signature fails WHEN place clicked THEN no balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { signOrderInteractor(request = any()) } returns
+            PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN the user declines the signature WHEN place clicked THEN the flow returns to idle silently`() =
         runTest {
             // Arrange
@@ -1146,6 +1228,10 @@ internal class PlacePredictionModelTest {
     @Test
     fun `GIVEN amount entered and cleared WHEN polling THEN price loop yields to quote loop and resumes`() = runTest {
         // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+            createQuote().copy(status = PredictionQuoteStatus.PARTIAL, averagePrice = BigDecimal("0.64")).right(),
+        )
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScreenShown()
@@ -1153,7 +1239,11 @@ internal class PlacePredictionModelTest {
 
         // Act
         model.onAmountChange(value = "10")
-        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 2)
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(64)
 
         // Assert
         coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
@@ -1161,6 +1251,31 @@ internal class PlacePredictionModelTest {
         model.onAmountChange(value = "")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a priced quote WHEN refresh fails or liquidity is unavailable THEN header keeps the last price`() = runTest {
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+            PredictionOrderQuoteError.Network.left(),
+            createQuote().copy(
+                status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                averagePrice = BigDecimal.ZERO,
+            ).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
 
         model.onDestroy()
     }
@@ -1599,6 +1714,7 @@ internal class PlacePredictionModelTest {
             placePredictionOrderUseCase = placeOrderUseCase,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
             positionsRepository = positionsRepository,
+            predictionFundingWindow = fundingWindow,
         ).also { model = it }
     }
 
