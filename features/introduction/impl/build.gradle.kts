@@ -14,6 +14,7 @@ dependencies {
     /** Project - API */
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.introduction.api)
+    implementation(projects.features.pushNotifications.api)
     implementation(projects.features.storiesV2.api)
 
     /** Core */

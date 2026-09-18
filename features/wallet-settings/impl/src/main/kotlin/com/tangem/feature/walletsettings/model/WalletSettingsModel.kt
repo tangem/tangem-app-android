@@ -303,7 +303,12 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onPushNotificationPermissionGranted(isGranted: Boolean) {
-        analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isGranted))
+        analyticsEventHandler.send(
+            PushNotificationAnalyticEvents.PermissionStatus(
+                isAllowed = isGranted,
+                source = AnalyticsParam.ScreensSources.WalletSettings,
+            ),
+        )
         state.update { value ->
             value.copy(
                 hasRequestPushNotificationsPermission = false,
