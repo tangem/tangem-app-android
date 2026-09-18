@@ -17,10 +17,9 @@ import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPosition
 
 internal data class PolymarketPositionCardPreviewCase(val name: String, val state: PolymarketPositionUM)
 
-/** UI samples also cover states whose production mapping belongs to the history/claim integration. */
 internal class PolymarketPositionCardPreviewProvider :
     CollectionPreviewParameterProvider<PolymarketPositionCardPreviewCase>(
-        activeCases() + resolvedCases() + finishedCases() + resolutionCases(),
+        activeCases() + resolvedCases() + finishedPositionCards() + resolutionCases(),
     ) {
 
     override fun getDisplayName(index: Int): String = values.elementAt(index).name
@@ -69,72 +68,87 @@ private fun resolvedCases(): List<PolymarketPositionCardPreviewCase> {
     )
     return listOf(
         PolymarketPositionCardPreviewCase(
-            "Resolved - Won - current mapping",
-            won.copy(result = badge("Won $1,245.00", TangemBadge.Status.Success)),
-        ),
-        PolymarketPositionCardPreviewCase(
-            "UI: Won - Yes - awaiting claim",
-            won.copy(glowVariant = TangemGlowRing.Variant.Info),
-        ),
-        PolymarketPositionCardPreviewCase(
-            "UI: Won - No - awaiting claim",
+            "Active - Won - No - gain",
             won.copy(
                 outcomeLabel = stringReference("No"),
                 outcomeVariant = TangemMessageBubble.Variant.Error,
+                glowVariant = TangemGlowRing.Variant.Info,
+            ),
+        ),
+        PolymarketPositionCardPreviewCase(
+            "Active - Lost - loss",
+            resolved.copy(
+                result = badge("Lost $0.00", TangemBadge.Status.Error, icon = Icons.ic_heart_broken_16),
                 glowVariant = TangemGlowRing.Variant.Error,
             ),
         ),
         PolymarketPositionCardPreviewCase(
-            "Resolved - Lost",
-            resolved.copy(result = badge("Lost", TangemBadge.Status.Error)),
+            "Active - Split - loss",
+            resolved.copy(
+                result = badge("Split $1,245.00", TangemBadge.Status.Neutral, icon = Icons.ic_arrow_split_top_16),
+                glowVariant = TangemGlowRing.Variant.Error,
+            ),
         ),
         PolymarketPositionCardPreviewCase(
-            "Resolved - Split",
-            resolved.copy(result = badge("Split", TangemBadge.Status.Neutral)),
+            "Active - Split - gain",
+            won.copy(
+                result = badge("Split $1,245.00", TangemBadge.Status.Neutral, icon = Icons.ic_arrow_split_top_16),
+                glowVariant = TangemGlowRing.Variant.Info,
+            ),
+        ),
+        PolymarketPositionCardPreviewCase(
+            "Active - Split - unchanged",
+            resolved.copy(
+                priceChange = priceChange("$0.00 (0%)", TangemPriceChange.Direction.Neutral),
+                result = badge("Split $1,245.00", TangemBadge.Status.Neutral, icon = Icons.ic_arrow_split_top_16),
+            ),
         ),
     )
 }
 
-private fun finishedCases(): List<PolymarketPositionCardPreviewCase> {
-    // The closed API supplies realised P&L without a percentage or a separate payout amount.
-    val finished = activePosition().copy(
-        priceChange = priceChange("$12.40", TangemPriceChange.Direction.Up),
-        currentValue = null,
-        onClick = null,
-    )
+internal fun finishedPositionCards(): List<PolymarketPositionCardPreviewCase> {
+    val finished = activePosition().copy(priceChange = null, currentValue = null, onClick = null)
     return listOf(
         PolymarketPositionCardPreviewCase(
-            "UI: Finished - Won",
-            finished.copy(result = badge("Won", TangemBadge.Status.Success, icon = Icons.ic_checkmark_16)),
+            "Finished - Won",
+            finished.copy(result = badge("Won $12.40", TangemBadge.Status.Success, icon = Icons.ic_checkmark_16)),
         ),
         PolymarketPositionCardPreviewCase(
-            "UI: Finished - Lost with positive realised P&L",
-            finished.copy(result = badge("Lost", TangemBadge.Status.Error, icon = Icons.ic_heart_broken_16)),
+            "Finished - Lost",
+            finished.copy(result = badge("Lost $12.40", TangemBadge.Status.Error, icon = Icons.ic_heart_broken_16)),
         ),
         PolymarketPositionCardPreviewCase(
-            "UI: Finished - Split",
-            finished.copy(result = badge("Split", TangemBadge.Status.Neutral, icon = Icons.ic_arrow_split_top_16)),
-        ),
-        PolymarketPositionCardPreviewCase(
-            "UI: Finished - Closed - gain",
-            finished.copy(result = badge("Closed", TangemBadge.Status.Neutral)),
-        ),
-        PolymarketPositionCardPreviewCase(
-            "UI: Finished - Closed - loss",
+            "Finished - Split",
             finished.copy(
-                priceChange = priceChange("$12.40", TangemPriceChange.Direction.Down),
-                result = badge("Closed", TangemBadge.Status.Neutral),
+                result = badge("Split $12.40", TangemBadge.Status.Neutral, icon = Icons.ic_arrow_split_top_16),
             ),
+        ),
+        PolymarketPositionCardPreviewCase(
+            "Finished - Closed - gain",
+            finished.copy(result = badge("Closed $12.40", TangemBadge.Status.Success)),
+        ),
+        PolymarketPositionCardPreviewCase(
+            "Finished - Closed - loss",
+            finished.copy(result = badge("Closed $12.40", TangemBadge.Status.Error)),
+        ),
+        PolymarketPositionCardPreviewCase(
+            "Finished - Closed - unchanged",
+            finished.copy(result = badge("Closed $0.00", TangemBadge.Status.Neutral)),
         ),
     )
 }
 
 private fun resolutionCases(): List<PolymarketPositionCardPreviewCase> {
     val active = activePosition()
-    // Pending/Proposed and Disputed currently use the active card; their banners belong to details.
     return listOf(
-        PolymarketPositionCardPreviewCase("Pending / Proposed - active appearance", active),
-        PolymarketPositionCardPreviewCase("Disputed - active appearance", active),
+        PolymarketPositionCardPreviewCase(
+            "Pending / Proposed",
+            active.copy(result = badge("Pending", TangemBadge.Status.Warning)),
+        ),
+        PolymarketPositionCardPreviewCase(
+            "Disputed",
+            active.copy(result = badge("Disputed", TangemBadge.Status.Warning)),
+        ),
         PolymarketPositionCardPreviewCase(
             "Unknown result",
             active.copy(result = badge("Unknown", TangemBadge.Status.Neutral), onClick = null),

@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SelectSwapProviderBottomSheetTestTags
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderState
@@ -52,6 +53,9 @@ private fun ProviderContentState(state: SwapProviderState.Content, modifier: Mod
             .testTag(SelectSwapProviderBottomSheetTestTags.PROVIDER_ITEM),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val (alpha, colorFilter) = getGreyScaleColorFilter(
+            isGrayscale = state.additionalBadge == SwapProviderState.AdditionalBadge.Unavailable,
+        )
         SubcomposeAsyncImage(
             modifier = Modifier
                 .size(size = 40.dp)
@@ -62,6 +66,8 @@ private fun ProviderContentState(state: SwapProviderState.Content, modifier: Mod
             error = {
                 ErrorProviderIcon(Modifier.size(size = 40.dp))
             },
+            alpha = alpha,
+            colorFilter = colorFilter,
             contentDescription = null,
         )
 
@@ -86,6 +92,7 @@ private fun ProviderContentState(state: SwapProviderState.Content, modifier: Mod
                     SwapProviderState.AdditionalBadge.FCAWarningList -> FCABadgeItem(badgeModifier)
                     SwapProviderState.AdditionalBadge.BestTrade -> BestTradeItem(badgeModifier)
                     SwapProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
+                    SwapProviderState.AdditionalBadge.Unavailable -> UnavailableBadgeItem(badgeModifier)
                     SwapProviderState.AdditionalBadge.Empty -> Unit
                 }
             }
@@ -169,6 +176,24 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResourceSafe(id = R.string.express_provider_permission_needed),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = 6.dp),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun UnavailableBadgeItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+            shape = TangemTheme.shapes.roundedCornersLarge,
+        ),
+    ) {
+        Text(
+            text = stringResourceSafe(id = R.string.common_not_available),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.padding(horizontal = 6.dp),

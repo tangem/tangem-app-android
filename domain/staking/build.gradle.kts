@@ -43,6 +43,7 @@ dependencies {
 
     // region Libs
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
     // endregion
 
     // region Tests

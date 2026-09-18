@@ -47,4 +47,7 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

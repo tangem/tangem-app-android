@@ -47,10 +47,7 @@ internal fun JointAccountActivationConfirmationBS(
         type = TangemBottomSheetType.Modal,
         containerColor = TangemTheme.colors3.bg.secondary,
         title = {
-            TangemTopNavigation(
-                blurBackground = false,
-                endButton = { TangemButton.Close(onClick = onDismiss) },
-            )
+            TangemTopNavigation(endButton = { TangemButton.Close(onClick = onDismiss) })
         },
         content = {
             Content(
@@ -122,6 +119,14 @@ private fun Content(
         ) {
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(CoreUiR.string.common_cancel),
+                onClick = onCancelClick,
+            )
+
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(CoreUiR.string.common_activate),
@@ -130,14 +135,6 @@ private fun Content(
                 },
                 isLoading = isConfirming,
                 onClick = onConfirmClick,
-            )
-
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(CoreUiR.string.common_cancel),
-                onClick = onCancelClick,
             )
         }
     }

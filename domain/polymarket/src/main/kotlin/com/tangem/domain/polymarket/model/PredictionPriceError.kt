@@ -11,6 +11,8 @@ sealed interface PredictionPriceError : PolymarketError {
     /** HTTP 400 — the token id itself is refused. Terminal for polling. */
     data object InvalidAsset : PredictionPriceError
 
+    data object EmptyBook : PredictionPriceError
+
     /** Anything else (5xx included) — callers treat it like [Network]. */
     data class Unknown(val httpCode: Int?, val detail: String?) : PredictionPriceError
 }
