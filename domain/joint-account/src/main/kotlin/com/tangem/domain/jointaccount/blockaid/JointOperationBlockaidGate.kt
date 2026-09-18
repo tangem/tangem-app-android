@@ -18,7 +18,10 @@ interface JointOperationBlockaidGate {
         WARNING,
         MALICIOUS,
 
-        /** The check did not run or did not validate — Blockaid guarantees nothing either way */
+        /** Blockaid answered, but could not validate the payload — or the check could not be built for it at all */
         UNKNOWN,
+
+        /** Blockaid did not answer: the request failed on the way, or the answer could not be read */
+        UNAVAILABLE,
     }
 }
