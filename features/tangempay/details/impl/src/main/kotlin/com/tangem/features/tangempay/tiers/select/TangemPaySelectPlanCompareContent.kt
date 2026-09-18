@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -76,6 +78,7 @@ private fun ComparePlansContent(compare: TangemPaySelectPlanUM.ComparePlans, onL
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(TangemPayTestTags.COMPARE_PLANS_CONTENT)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
@@ -101,7 +104,9 @@ private fun CompareSection(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier
+                .testTag(TangemPayTestTags.COMPARE_PLANS_SECTION_TITLE)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             text = formatAnnotatedWithLinks(rawString = title.resolveReference(), onLinkClick = onLinkClick),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -132,6 +137,7 @@ private fun CompareRow(
     onLinkClick: (url: String) -> Unit,
 ) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.COMPARE_PLANS_ROW),
         divider = divider,
         contentLead = TangemRowContentLead.End,
         verticalAlignment = TangemRowVerticalAlignment.Center,
