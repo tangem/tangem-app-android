@@ -7,7 +7,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
@@ -137,6 +139,7 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
                 content = content.copy(
                     event = content.event?.copy(onClick = loaded.eventId?.let { { openEvent() } }),
                     onClosePositionClick = { closePosition() }.takeIf { loaded.canClosePosition },
+                    onBuyMoreClick = buyableMarket()?.let { market -> { buyMore(market) } },
                 ),
             )
         }
@@ -163,6 +166,28 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 positionId = loaded.id,
                 marketId = marketId,
+            ),
+        )
+    }
+
+    private fun buyableMarket(): PolymarketMarket? {
+        val loaded = position ?: return null
+        if (loaded.resolutionStatus != PolymarketResolutionStatus.OPEN) return null
+        val loadedEvent = event?.takeIf { it.id == loaded.eventId } ?: return null
+        return loadedEvent.markets
+            .firstOrNull { market -> market.outcomes.any { it.assetId == loaded.id.assetId } }
+            ?.takeIf { it.isAcceptingOrders }
+    }
+
+    private fun buyMore(market: PolymarketMarket) {
+        val loaded = position ?: return
+        val eventId = loaded.eventId ?: return
+        router.push(
+            PolymarketRoute.PlacePrediction(
+                userWalletId = params.userWalletId,
+                eventId = eventId,
+                marketId = market.id,
+                assetId = loaded.id.assetId,
             ),
         )
     }
