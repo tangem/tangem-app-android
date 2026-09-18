@@ -19,6 +19,7 @@ import com.tangem.core.ui.R as CoreUiR
 
 internal class JointOperationBannerConverter(
     private val isBalanceHidden: Boolean,
+    private val onBannerClick: (JointPendingOperation) -> Unit,
 ) : Converter<List<JointPendingOperation>, ImmutableList<JointOperationBannerUM>> {
 
     override fun convert(value: List<JointPendingOperation>): ImmutableList<JointOperationBannerUM> {
@@ -40,6 +41,7 @@ internal class JointOperationBannerConverter(
                             collected = operation.collected,
                             total = operation.threshold,
                         ),
+                        onClick = { onBannerClick(operation) },
                     ),
                 )
             }

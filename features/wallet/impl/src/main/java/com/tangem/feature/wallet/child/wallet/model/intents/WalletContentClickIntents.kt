@@ -78,6 +78,8 @@ internal interface WalletContentClickIntents {
 
     fun onJointAccountClick(userWalletId: UserWalletId, cryptoAccountId: String)
 
+    fun onJointOperationBannerClick(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String)
+
     fun onManageTokensClick(userWalletId: UserWalletId)
 
     fun onTransactionClick(txHash: String)
@@ -256,6 +258,14 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onJointAccountClick(userWalletId: UserWalletId, cryptoAccountId: String) {
         router.openJointAccountMembers(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
+    }
+
+    override fun onJointOperationBannerClick(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        operationId: String,
+    ) {
+        router.openJointOperation(userWalletId = userWalletId, currency = currency, operationId = operationId)
     }
 
     override fun onManageTokensClick(userWalletId: UserWalletId) {
