@@ -22,12 +22,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
-import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
+import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -100,15 +100,16 @@ private fun MarketCard(state: PolymarketDetailsMarketUM, modifier: Modifier = Mo
                     // The first outcome carries the info appearance, the second the error one — driven by
                     // position, not by label, since upstream labels aren't always "Yes"/"No".
                     state.outcomes.forEachIndexed { index, outcome ->
-                        TangemButton(
+                        PolymarketOutcomeButton(
                             modifier = Modifier.weight(1f),
-                            variant = if (index == 0) {
-                                TangemButton.Variant.SecondaryInfo
+                            title = outcome.title,
+                            price = outcome.price,
+                            appearance = if (index == 0) {
+                                PolymarketOutcomeButton.Appearance.Info
                             } else {
-                                TangemButton.Variant.SecondaryError
+                                PolymarketOutcomeButton.Appearance.Error
                             },
-                            size = TangemButton.Size.X11,
-                            text = outcome.title,
+                            size = PolymarketOutcomeButton.Size.X11,
                             onClick = outcome.onClick,
                         )
                     }

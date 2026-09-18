@@ -78,22 +78,12 @@ internal class PolymarketEventUMConverter(
     ): PolymarketOutcomeUM {
         return PolymarketOutcomeUM(
             assetId = outcome.assetId,
-            title = stringReference(outcome.title.truncateOutcomeLabel()),
+            title = stringReference(outcome.title),
             onClick = { onOutcomeClick(event.id, market.id, outcome.assetId) },
         )
     }
 
-    /** The feed's outcome buttons fit at most [MAX_OUTCOME_LABEL_LENGTH] characters of the label (per design). */
-    private fun String.truncateOutcomeLabel(): String {
-        return if (length > MAX_OUTCOME_LABEL_LENGTH) take(MAX_OUTCOME_LABEL_LENGTH) + ELLIPSIS else this
-    }
-
     private fun BigDecimal?.formatProbability(): String = format {
         percent(minFractionDigits = 0, maxFractionDigits = 0)
-    }
-
-    private companion object {
-        const val MAX_OUTCOME_LABEL_LENGTH = 5
-        const val ELLIPSIS = "…"
     }
 }
