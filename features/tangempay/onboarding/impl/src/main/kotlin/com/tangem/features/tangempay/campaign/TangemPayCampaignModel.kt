@@ -62,6 +62,8 @@ internal class TangemPayCampaignModel @Inject constructor(
     val uiState: StateFlow<TangemPayCampaignUM>
         field = MutableStateFlow<TangemPayCampaignUM>(TangemPayCampaignUM.Loading)
 
+    private var campaignCardArtUrl: String? = null
+
     private val starterCallbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = ::setCtaLoading,
         onExit = ::onClose,
@@ -110,6 +112,10 @@ internal class TangemPayCampaignModel @Inject constructor(
                 ifLeft = { showError() },
                 ifRight = { resolution ->
                     when (resolution) {
+                        is TangemPayCampaignResolution.IssueCard -> {
+                            campaignCardArtUrl = resolution.campaign.cardArtUrl
+                            showIssueCard(resolution.userWalletId, resolution.offer)
+                        }
                         is TangemPayCampaignResolution.Landing -> showLanding(resolution.campaign)
                         TangemPayCampaignResolution.Unavailable -> showUnavailableDialog()
                     }
@@ -141,7 +147,7 @@ internal class TangemPayCampaignModel @Inject constructor(
         childNavigation.activate(
             TangemPayCampaignChild.IssueCard(
                 userWalletId = userWalletId,
-                cardArtUrl = offer.mainImageUrl ?: (uiState.value as? TangemPayCampaignUM.Landing)?.cardArtUrl,
+                cardArtUrl = offer.mainImageUrl ?: campaignCardArtUrl,
                 feeAmount = offer.fee.amount,
                 feeCurrency = offer.fee.currency,
             ),
@@ -149,6 +155,7 @@ internal class TangemPayCampaignModel @Inject constructor(
     }
 
     private suspend fun showLanding(campaign: TangemPayCampaign) {
+        campaignCardArtUrl = campaign.cardArtUrl
         val mode = if (userWalletsListRepository.userWalletsSync().isEmpty()) {
             TangemPayCampaignUM.Landing.Mode.NoWallet
         } else {
@@ -182,11 +189,11 @@ internal class TangemPayCampaignModel @Inject constructor(
     private fun onGetCardClick() {
         val landing = uiState.value as? TangemPayCampaignUM.Landing ?: return
         if (landing.isCtaLoading) return
+        setCtaLoading(true)
 
         modelScope.launch {
             when (landing.mode) {
                 TangemPayCampaignUM.Landing.Mode.NoWallet -> {
-                    setCtaLoading(true)
                     val userWallet = onboardingStarter.createHotWallet(onLoadingChange = ::setCtaLoading)
                         ?: return@launch
                     onboardingStarter.startOnboarding(
@@ -199,6 +206,7 @@ internal class TangemPayCampaignModel @Inject constructor(
                     val walletsIds = eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
                     if (walletsIds.isEmpty()) {
                         TangemLogger.i("[TangemPay][Campaign] No eligible wallets for the campaign, closing")
+                        setCtaLoading(false)
                         onClose()
                         return@launch
                     }
