@@ -27,17 +27,17 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.balance
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import java.math.BigDecimal
 
 /** What the order is paid from and what it pays out, as read on the summary screen. */
 @Composable
 internal fun PredictionPaymentBlock(
     amountValue: String,
-    payout: PayoutUM?,
+    payout: BigDecimal?,
     collateral: CollateralUM,
     order: OrderSideUM,
     modifier: Modifier = Modifier,
@@ -92,7 +92,7 @@ private fun SourceHeader(collateral: CollateralUM, order: OrderSideUM) {
 }
 
 @Composable
-private fun BuyAmountRow(amountValue: String, payout: PayoutUM?, collateral: CollateralUM) {
+private fun BuyAmountRow(amountValue: String, payout: BigDecimal?, collateral: CollateralUM) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -113,10 +113,10 @@ private fun BuyAmountRow(amountValue: String, payout: PayoutUM?, collateral: Col
                     text = stringReference(
                         value = stringResourceSafe(
                             R.string.prediction_place_to_win,
-                            payout.expected.formatPolymarketMoney(),
+                            payout.formatPolymarketMoney(),
                         ),
                     ),
-                    status = TangemBadge.Status.Info,
+                    status = TangemBadge.Status.Success,
                     size = TangemBadge.Size.X4,
                 )
             }
@@ -126,7 +126,7 @@ private fun BuyAmountRow(amountValue: String, payout: PayoutUM?, collateral: Col
 }
 
 @Composable
-private fun SellAmountRow(amountValue: String, payout: PayoutUM?, collateral: CollateralUM) {
+private fun SellAmountRow(amountValue: String, payout: BigDecimal?, collateral: CollateralUM) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
@@ -137,9 +137,9 @@ private fun SellAmountRow(amountValue: String, payout: PayoutUM?, collateral: Co
             verticalArrangement = Arrangement.spacedBy(space = 4.dp),
         ) {
             Text(
-                text = payout?.expected?.formatPolymarketMoney() ?: DASH_SIGN,
+                text = payout?.formatPolymarketMoney() ?: DASH_SIGN,
                 style = TangemTheme.typography3.heading.medium,
-                color = TangemTheme.colors3.text.primary,
+                color = TangemTheme.colors3.text.status.success,
             )
             Text(
                 text = stringResourceSafe(
