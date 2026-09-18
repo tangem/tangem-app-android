@@ -1,6 +1,7 @@
 package com.tangem.grow.datasource.polymarket
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketApprovalCallDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketConfigurationResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketEventResponse
@@ -162,6 +163,36 @@ interface PolymarketApi {
      */
     @GET("api/predictions/v1/withdraw/{transactionId}")
     suspend fun getWithdrawState(
+        @Header("wallet-id") walletId: String,
+        @Path("transactionId") transactionId: String,
+    ): ApiResponse<PolymarketRelayedBatchResponse>
+
+    /**
+     * Read the single contract call that redeems a resolved position. Offline lookup: it relays nothing and
+     * may be retried freely.
+     */
+    @GET("api/predictions/v1/positions/redeem/call")
+    suspend fun getRedeemCall(
+        @Header("wallet-id") walletId: String,
+        @Query("conditionId") conditionId: String,
+        @Query("negRisk") isNegRisk: Boolean,
+    ): ApiResponse<PolymarketApprovalCallDto>
+
+    /**
+     * Relay the signed redeem call (gasless). Idempotent per (wallet, market): a claim already in flight
+     * answers with its own `transactionId` and current state instead of relaying a second one.
+     */
+    @POST("api/predictions/v1/positions/redeem")
+    suspend fun submitRedeem(
+        @Header("wallet-id") walletId: String,
+        @Body request: PolymarketRelayedBatchRequest,
+    ): ApiResponse<PolymarketRelayedBatchResponse>
+
+    /**
+     * Read the BFF's own record of the claim. A `404` means the id is not this wallet's claim — stop polling.
+     */
+    @GET("api/predictions/v1/positions/redeem/{transactionId}")
+    suspend fun getRedeemState(
         @Header("wallet-id") walletId: String,
         @Path("transactionId") transactionId: String,
     ): ApiResponse<PolymarketRelayedBatchResponse>
