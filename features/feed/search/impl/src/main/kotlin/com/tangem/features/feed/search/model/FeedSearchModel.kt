@@ -4,7 +4,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.feed.search.usecase.ClearFeedSearchHistoryUseCase
 import com.tangem.domain.feed.search.usecase.GetRecentFeedSearchQueriesUseCase
 import com.tangem.domain.feed.search.usecase.RemoveFeedSearchQueryUseCase
 import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
@@ -12,7 +11,7 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.search.FeedSearchBarController
 import com.tangem.features.feed.search.model.analytics.FeedSearchAnalyticsEvent
 import com.tangem.features.feed.search.ui.state.FeedSearchUM
-import com.tangem.features.feed.search.ui.state.RecentUM
+import com.tangem.features.feed.search.ui.state.RecentQueryUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
@@ -37,7 +36,6 @@ internal class FeedSearchModel @Inject constructor(
     private val searchBarController: FeedSearchBarController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val removeFeedSearchQueryUseCase: RemoveFeedSearchQueryUseCase,
-    private val clearFeedSearchHistoryUseCase: ClearFeedSearchHistoryUseCase,
     private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase,
     getRecentFeedSearchQueriesUseCase: GetRecentFeedSearchQueriesUseCase,
 ) : Model() {
@@ -62,7 +60,7 @@ internal class FeedSearchModel @Inject constructor(
         FeedSearchUM(
             source = params.source,
             query = query,
-            recent = toRecentUM(queries = queries),
+            recentQueries = queries.take(DISPLAYED_QUERIES_COUNT).map(::toQueryUM).toImmutableList(),
         )
     }.stateIn(
         scope = modelScope,
@@ -85,16 +83,7 @@ internal class FeedSearchModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun toRecentUM(queries: List<String>): RecentUM? {
-        if (queries.isEmpty()) return null
-
-        return RecentUM(
-            queries = queries.take(DISPLAYED_QUERIES_COUNT).map(::toQueryUM).toImmutableList(),
-            onClearClick = ::onClearClick,
-        )
-    }
-
-    private fun toQueryUM(query: String): RecentUM.QueryUM = RecentUM.QueryUM(
+    private fun toQueryUM(query: String): RecentQueryUM = RecentQueryUM(
         text = query,
         onClick = { onQueryClick(query) },
         onRemoveClick = { modelScope.launch { removeFeedSearchQueryUseCase(query) } },
@@ -103,11 +92,6 @@ internal class FeedSearchModel @Inject constructor(
     private fun onQueryClick(query: String) {
         analyticsEventHandler.send(FeedSearchAnalyticsEvent.HintClicked(query))
         searchBarController.onQueryChange(query)
-    }
-
-    private fun onClearClick() {
-        analyticsEventHandler.send(FeedSearchAnalyticsEvent.ButtonClearHistoryClick())
-        modelScope.launch { clearFeedSearchHistoryUseCase() }
     }
 
     private companion object {
