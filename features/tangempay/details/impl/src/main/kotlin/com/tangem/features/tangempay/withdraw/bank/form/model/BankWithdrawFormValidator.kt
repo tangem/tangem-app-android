@@ -5,7 +5,6 @@ package com.tangem.features.tangempay.withdraw.bank.form.model
  */
 internal object BankWithdrawFormValidator {
 
-    private const val US_COUNTRY_CODE = "US"
     private const val ROUTING_NUMBER_LENGTH = 9
     private const val NAME_MAX_LENGTH = 255
     private const val ADDRESS_MAX_LENGTH = 100
@@ -20,7 +19,7 @@ internal object BankWithdrawFormValidator {
         val isUsAddress = countryFieldOf(field)
             ?.let { countryField -> values[countryField] }
             ?.trim()
-            ?.equals(US_COUNTRY_CODE, ignoreCase = true) == true
+            ?.equals(BankWithdrawFormFields.US_COUNTRY_CODE, ignoreCase = true) == true
         return when {
             field == BankWithdrawFormField.RoutingNumber -> {
                 if (isRoutingNumber(value)) null else BankWithdrawFieldError.InvalidRoutingNumber
@@ -40,8 +39,6 @@ internal object BankWithdrawFormValidator {
     /** Address fields whose rules change with [field]; editing a country makes their earlier verdicts stale. */
     fun dependentFieldsOf(field: BankWithdrawFormField): List<BankWithdrawFormField> = when (field) {
         BankWithdrawFormField.Country -> listOf(BankWithdrawFormField.Region, BankWithdrawFormField.PostalCode)
-        BankWithdrawFormField.BankCountry ->
-            listOf(BankWithdrawFormField.BankRegion, BankWithdrawFormField.BankPostalCode)
         else -> emptyList()
     }
 
@@ -54,20 +51,19 @@ internal object BankWithdrawFormValidator {
             BankWithdrawFormField.BusinessName,
             BankWithdrawFormField.BankName,
             -> value.length <= NAME_MAX_LENGTH
-            BankWithdrawFormField.Country,
-            BankWithdrawFormField.BankCountry,
-            -> TWO_LETTER_CODE.matches(value)
-            BankWithdrawFormField.Region,
-            BankWithdrawFormField.BankRegion,
-            -> if (isUsAddress) TWO_LETTER_CODE.matches(value) else value.length <= ADDRESS_MAX_LENGTH
+            BankWithdrawFormField.Country -> TWO_LETTER_CODE.matches(value)
+            BankWithdrawFormField.Region ->
+                if (isUsAddress) TWO_LETTER_CODE.matches(value) else value.length <= ADDRESS_MAX_LENGTH
             BankWithdrawFormField.City,
             BankWithdrawFormField.AddressLine1,
             BankWithdrawFormField.BankCity,
             BankWithdrawFormField.BankAddressLine1,
             -> value.length <= ADDRESS_MAX_LENGTH
-            BankWithdrawFormField.PostalCode,
-            BankWithdrawFormField.BankPostalCode,
-            -> if (isUsAddress) US_ZIP.matches(value) else value.length <= POSTAL_CODE_MAX_LENGTH
+            BankWithdrawFormField.PostalCode ->
+                if (isUsAddress) US_ZIP.matches(value) else value.length <= POSTAL_CODE_MAX_LENGTH
+            // Bank rails are US-only: the form has no bank country and the order always sends US.
+            BankWithdrawFormField.BankRegion -> TWO_LETTER_CODE.matches(value)
+            BankWithdrawFormField.BankPostalCode -> US_ZIP.matches(value)
         }
     }
 
@@ -79,9 +75,6 @@ internal object BankWithdrawFormValidator {
         BankWithdrawFormField.Region,
         BankWithdrawFormField.PostalCode,
         -> BankWithdrawFormField.Country
-        BankWithdrawFormField.BankRegion,
-        BankWithdrawFormField.BankPostalCode,
-        -> BankWithdrawFormField.BankCountry
         else -> null
     }
 }

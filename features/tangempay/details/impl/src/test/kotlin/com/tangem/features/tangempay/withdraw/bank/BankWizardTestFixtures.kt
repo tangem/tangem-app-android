@@ -25,7 +25,7 @@ internal const val BASE_CHAIN_ID = 8453L
 internal const val USDC_POLYGON = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 internal const val USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 
-/** A complete personal recipient's 15 form answers, shared by the new-recipient-draft tests that need one. */
+/** A complete personal recipient's 14 form answers, shared by the new-recipient-draft tests that need one. */
 internal val personalFormValues: Map<BankWithdrawFormField, String> = mapOf(
     BankWithdrawFormField.AccountNumber to "1234567890",
     BankWithdrawFormField.RoutingNumber to "021000021",
@@ -37,7 +37,6 @@ internal val personalFormValues: Map<BankWithdrawFormField, String> = mapOf(
     BankWithdrawFormField.AddressLine1 to "Megatower H10, 322F",
     BankWithdrawFormField.PostalCode to "90001",
     BankWithdrawFormField.BankName to "Arasaka Bank",
-    BankWithdrawFormField.BankCountry to "US",
     BankWithdrawFormField.BankRegion to "CA",
     BankWithdrawFormField.BankCity to "Night City",
     BankWithdrawFormField.BankAddressLine1 to "Ebunike st., 32A",
