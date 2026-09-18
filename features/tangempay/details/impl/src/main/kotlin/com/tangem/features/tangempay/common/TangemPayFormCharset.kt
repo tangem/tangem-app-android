@@ -1,9 +1,10 @@
-package com.tangem.features.tangempay.orderCard.impl.model
+package com.tangem.features.tangempay.common
 
 import com.tangem.utils.StringsSigns
 import java.text.Normalizer
 
-internal object OrderFormValidator {
+/** Charset rules shared by the card order form and the bank off-ramp form. */
+internal object TangemPayFormCharset {
 
     private const val RIGHT_SINGLE_QUOTE = '’'
     private const val LEFT_SINGLE_QUOTE = '‘'

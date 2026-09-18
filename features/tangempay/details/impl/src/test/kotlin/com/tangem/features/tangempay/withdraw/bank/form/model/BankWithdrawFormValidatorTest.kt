@@ -82,7 +82,10 @@ internal class BankWithdrawFormValidatorTest {
         ),
         single(BankWithdrawFormField.RoutingNumber, "", expected = BankWithdrawFieldError.Required),
         single(BankWithdrawFormField.FirstName, " John ", expected = null),
+        single(BankWithdrawFormField.FirstName, "Zoë", expected = null),
+        single(BankWithdrawFormField.FirstName, "Иван", expected = BankWithdrawFieldError.NonLatin),
         single(BankWithdrawFormField.LastName, "a".repeat(255), expected = null),
+        single(BankWithdrawFormField.LastName, "O’Brien", expected = null),
         single(BankWithdrawFormField.BusinessName, "a".repeat(256), expected = BankWithdrawFieldError.InvalidFormat),
         single(BankWithdrawFormField.BankName, "", expected = BankWithdrawFieldError.Required),
         single(BankWithdrawFormField.Country, "us", expected = null),
@@ -97,6 +100,9 @@ internal class BankWithdrawFormValidatorTest {
         ),
         withCountry(BankWithdrawFormField.Region, "Ontario", country = "CA", expected = null),
         single(BankWithdrawFormField.Region, "California", expected = null),
+        single(BankWithdrawFormField.Region, "", expected = BankWithdrawFieldError.Required),
+        single(BankWithdrawFormField.Region, "x".repeat(101), expected = BankWithdrawFieldError.InvalidFormat),
+        single(BankWithdrawFormField.Region, "Бавария", expected = BankWithdrawFieldError.NonLatin),
         single(BankWithdrawFormField.BankRegion, "NY", expected = null),
         single(BankWithdrawFormField.BankRegion, "New York", expected = BankWithdrawFieldError.InvalidFormat),
         withCountry(
@@ -124,8 +130,11 @@ internal class BankWithdrawFormValidatorTest {
             expected = BankWithdrawFieldError.InvalidFormat,
         ),
         single(BankWithdrawFormField.City, "x".repeat(100), expected = null),
+        single(BankWithdrawFormField.City, "Nürnberg", expected = null),
+        single(BankWithdrawFormField.City, "я".repeat(101), expected = BankWithdrawFieldError.InvalidFormat),
         single(BankWithdrawFormField.AddressLine1, "x".repeat(101), expected = BankWithdrawFieldError.InvalidFormat),
         single(BankWithdrawFormField.BankCity, "", expected = BankWithdrawFieldError.Required),
+        single(BankWithdrawFormField.BankCity, "东京", expected = BankWithdrawFieldError.NonLatin),
         single(BankWithdrawFormField.BankAddressLine1, "1 Main St", expected = null),
     )
 

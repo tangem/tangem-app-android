@@ -103,7 +103,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         return cards.map { (fields, target) ->
             RecipientCardUM(
                 rows = fields.mapNotNull { field ->
-                    // A country without regions leaves its region empty, and an empty row reads as missing data.
+                    // A saved recipient can come back missing a value, and an empty row reads as missing data.
                     values[field]
                         ?.takeIf(String::isNotBlank)
                         ?.let { value -> DetailRowUM(label = field.label, value = value) }

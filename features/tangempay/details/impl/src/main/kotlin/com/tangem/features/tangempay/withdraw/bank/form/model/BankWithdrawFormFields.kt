@@ -17,8 +17,6 @@ internal object BankWithdrawFormFields {
         BankWithdrawFormField.BankPostalCode,
     )
 
-    private val regionFields = setOf(BankWithdrawFormField.Region)
-
     fun recipientDetails(isBusiness: Boolean): ImmutableList<BankWithdrawFormField> = buildList {
         add(BankWithdrawFormField.AccountNumber)
         add(BankWithdrawFormField.RoutingNumber)
@@ -35,10 +33,7 @@ internal object BankWithdrawFormFields {
         add(BankWithdrawFormField.PostalCode)
     }.toImmutableList()
 
-    fun visible(
-        fields: List<BankWithdrawFormField>,
-        values: Map<BankWithdrawFormField, String>,
-    ): ImmutableList<BankWithdrawFormField> = fields
-        .filterNot { field -> field in regionFields && values[field].isNullOrBlank() }
-        .toImmutableList()
+    /** Rain wants a two-letter state code for a US address; the rest of the world sends a free-text region. */
+    fun isUsRecipientCountry(values: Map<BankWithdrawFormField, String>): Boolean =
+        values[BankWithdrawFormField.Country]?.trim().equals(US_COUNTRY_CODE, ignoreCase = true)
 }

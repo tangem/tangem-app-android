@@ -86,9 +86,10 @@ private fun TextField(state: FieldUM.Text, modifier: Modifier = Modifier) {
         onValueChange = state.onValueChange,
         modifier = modifier,
         state = inputState(error = state.error),
-        placeholder = state.field.placeholder,
+        placeholder = state.placeholder,
         keyboardOptions = state.keyboardOptions,
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+        contentType = state.contentType,
         onFocusChange = state.onFocusChange,
     )
 }
@@ -99,7 +100,7 @@ private fun SelectorField(state: FieldUM.Selector, modifier: Modifier = Modifier
     SelectorInput(
         label = state.field.label,
         value = state.value,
-        placeholder = state.field.placeholder,
+        placeholder = state.placeholder,
         state = inputState(error = state.error),
         onClick = {
             focusManager.clearFocus()
@@ -141,7 +142,8 @@ private class FormPreviewProvider : PreviewParameterProvider<TangemPayBankWithdr
     override val values: Sequence<TangemPayBankWithdrawFormUM> = sequenceOf(
         TangemPayBankWithdrawFormPreviewData.personalEmpty,
         TangemPayBankWithdrawFormPreviewData.personalWithError,
-        TangemPayBankWithdrawFormPreviewData.personalWithoutRegion,
+        TangemPayBankWithdrawFormPreviewData.personalFreeTextRegion,
+        TangemPayBankWithdrawFormPreviewData.personalUsRegion,
         TangemPayBankWithdrawFormPreviewData.businessBank,
     )
 }

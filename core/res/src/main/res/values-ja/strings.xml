@@ -2332,7 +2332,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">ACH/FedWire経由で銀行口座からUSDを受け取る</string>
   <string name="tangempay_topup_bank_transfer_title">銀行口座から</string>
-  <string name="tangempay_topup_receive_body">USDC Polygon をアカウントのアドレスに送信</string>
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
   <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>
   <string name="tangempay_topup_swap_body">ウォレットの暗号資産を使って、決済アカウントにチャージできます</string>
