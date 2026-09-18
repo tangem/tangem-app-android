@@ -6,8 +6,9 @@ import kotlinx.coroutines.flow.Flow
 interface PredictionFundingWindow {
 
     /**
-     * Records that a top-up has been sent to [userWalletId]'s prediction account, so the balance is polled
-     * faster and the awaiting-funds banner is shown until the funds land or the window elapses.
+     * Records that something is about to move [userWalletId]'s prediction balance — a top-up on its way, an
+     * order that reached the exchange — so the balance is polled faster and the awaiting-funds banner is
+     * shown until the balance changes or the window elapses.
      */
     fun open(userWalletId: UserWalletId)
 
