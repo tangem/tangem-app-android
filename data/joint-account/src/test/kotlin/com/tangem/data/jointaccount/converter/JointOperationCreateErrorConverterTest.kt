@@ -1,6 +1,7 @@
 package com.tangem.data.jointaccount.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -19,7 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationCreateErrorConverterTest {
 
-    private val converter = JointOperationCreateErrorConverter()
+    private val converter = JointOperationCreateErrorConverter(moshi = Moshi.Builder().build())
 
     @ParameterizedTest
     @ProvideTestModels
@@ -38,11 +39,8 @@ internal class JointOperationCreateErrorConverterTest {
     )
 
     private fun provideTestModels(): List<ConvertModel> {
-        val nonceMismatch = httpException(
-            code = Code.BAD_REQUEST,
-            errorBody = """{"error":"nonce_mismatch: expected 5"}""",
-        )
-        val plainBadRequest = httpException(code = Code.BAD_REQUEST, errorBody = """{"error":"bad payload"}""")
+        val plainBadRequest = httpException(code = Code.BAD_REQUEST, errorBody = errorBody(code = "INVALID_BASE_GAS"))
+        val unparsableBadRequest = httpException(code = Code.BAD_REQUEST, errorBody = "NONCE_MISMATCH")
         val notFound = httpException(code = Code.NOT_FOUND, errorBody = null)
 
         return listOf(
@@ -52,19 +50,30 @@ internal class JointOperationCreateErrorConverterTest {
                 expected = JointOperationCreateError.SlotBusy,
             ),
             ConvertModel(
-                code = nonceMismatch.code,
-                errorBody = nonceMismatch.errorBody,
+                code = Code.BAD_REQUEST,
+                errorBody = errorBody(code = "NONCE_MISMATCH"),
                 expected = JointOperationCreateError.NetworkStateMoved,
             ),
             ConvertModel(
                 code = Code.BAD_REQUEST,
-                errorBody = "GAS_PRICE_TOO_LOW",
+                errorBody = errorBody(code = "GAS_PRICE_TOO_LOW"),
+                expected = JointOperationCreateError.NetworkStateMoved,
+            ),
+            ConvertModel(
+                code = Code.BAD_REQUEST,
+                errorBody = errorBody(code = "GAS_PRICE_TOO_HIGH"),
                 expected = JointOperationCreateError.NetworkStateMoved,
             ),
             ConvertModel(
                 code = plainBadRequest.code,
                 errorBody = plainBadRequest.errorBody,
                 expected = JointOperationCreateError.Failed(cause = plainBadRequest),
+            ),
+            // The code is a field of its own: a reason spelled out in prose is not one the client acts on
+            ConvertModel(
+                code = unparsableBadRequest.code,
+                errorBody = unparsableBadRequest.errorBody,
+                expected = JointOperationCreateError.Failed(cause = unparsableBadRequest),
             ),
             ConvertModel(
                 code = notFound.code,
@@ -86,7 +95,7 @@ internal class JointOperationCreateErrorConverterTest {
         every { TangemLogger.e(capture(message), any()) } just Runs
 
         // Act
-        converter.convert(httpException(code = Code.BAD_REQUEST, errorBody = "GAS_PRICE_TOO_LOW"))
+        converter.convert(httpException(code = Code.BAD_REQUEST, errorBody = errorBody(code = "GAS_PRICE_TOO_LOW")))
 
         // Assert
         assertThat(message.captured).contains("GAS_PRICE_TOO_LOW")
@@ -104,6 +113,9 @@ internal class JointOperationCreateErrorConverterTest {
         // Assert
         assertThat(actual).isEqualTo(JointOperationCreateError.Failed(cause = timeout))
     }
+
+    private fun errorBody(code: String): String =
+        """{"statusCode":400,"error":"Bad Request","message":"nonce 7 came, the Safe is at 8","code":"$code"}"""
 
     private fun httpException(code: Code, errorBody: String?) = ApiResponseError.HttpException(
         code = code,

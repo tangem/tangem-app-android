@@ -3,6 +3,9 @@ package com.tangem.data.jointaccount.fetcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ETAG_HEADER
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.converter.JointOperationConverter
@@ -31,11 +34,13 @@ import org.junit.jupiter.api.Test
 internal class DefaultSingleJointAccountListFetcherTest {
 
     private val jointAccountApi: JointAccountApi = mockk()
+    private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
     private val walletId = UserWalletId("011121314151617181910A0B0C0D0E0F011121314151617181910A0B0C0D0E0F")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountApi)
+        clearMocks(jointAccountApi, eTagsStore)
+        coEvery { eTagsStore.getSyncOrNull(walletId, ETagsStore.Key.JointAccounts) } returns STORED_ETAG
     }
 
     private fun TestScopeContext.createFetcher(): DefaultSingleJointAccountListFetcher {
@@ -43,6 +48,7 @@ internal class DefaultSingleJointAccountListFetcherTest {
             jointAccountApi = jointAccountApi,
             store = store,
             converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
+            eTagsStore = eTagsStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
     }
@@ -63,8 +69,11 @@ internal class DefaultSingleJointAccountListFetcherTest {
         val context = TestScopeContext(TestAppCoroutineScope(testScope = this))
         advanceUntilIdle()
         val fetcher = with(context) { createFetcher() }
-        coEvery { jointAccountApi.getJointAccounts(walletId.stringValue) } returns ApiResponse.Success(
+        coEvery {
+            jointAccountApi.getJointAccounts(walletId = walletId.stringValue, eTag = STORED_ETAG)
+        } returns ApiResponse.Success(
             data = GetJointAccountsResponse(jointAccounts = listOf(createJointAccountDto())),
+            headers = mapOf(ETAG_HEADER to listOf(NEW_ETAG)),
         )
 
         // Act
@@ -74,7 +83,10 @@ internal class DefaultSingleJointAccountListFetcherTest {
         assertThat(result.isRight()).isTrue()
         assertThat(context.store.get(walletId).first())
             .containsExactly(createJointAccount(source = StatusSource.ACTUAL))
-        coVerify(exactly = 1) { jointAccountApi.getJointAccounts(walletId.stringValue) }
+        coVerify(exactly = 1) {
+            jointAccountApi.getJointAccounts(walletId = walletId.stringValue, eTag = STORED_ETAG)
+            eTagsStore.store(userWalletId = walletId, key = ETagsStore.Key.JointAccounts, value = NEW_ETAG)
+        }
     }
 
     @Test
@@ -85,7 +97,7 @@ internal class DefaultSingleJointAccountListFetcherTest {
         val fetcher = with(context) { createFetcher() }
         val cached = createJointAccount(source = StatusSource.ACTUAL)
         context.store.store(walletId, listOf(cached))
-        coEvery { jointAccountApi.getJointAccounts(any()) } throws IllegalStateException("network down")
+        coEvery { jointAccountApi.getJointAccounts(any(), any()) } throws IllegalStateException("network down")
 
         // Act
         val result = fetcher(walletId)
@@ -102,7 +114,7 @@ internal class DefaultSingleJointAccountListFetcherTest {
         val context = TestScopeContext(TestAppCoroutineScope(testScope = this))
         advanceUntilIdle()
         val fetcher = with(context) { createFetcher() }
-        coEvery { jointAccountApi.getJointAccounts(any()) } throws IllegalStateException("network down")
+        coEvery { jointAccountApi.getJointAccounts(any(), any()) } throws IllegalStateException("network down")
 
         // Act
         val result = fetcher(walletId)
@@ -119,7 +131,7 @@ internal class DefaultSingleJointAccountListFetcherTest {
         val context = TestScopeContext(TestAppCoroutineScope(testScope = this))
         advanceUntilIdle()
         val fetcher = with(context) { createFetcher() }
-        coEvery { jointAccountApi.getJointAccounts(any()) } returns ApiResponse.Success(
+        coEvery { jointAccountApi.getJointAccounts(any(), any()) } returns ApiResponse.Success(
             data = GetJointAccountsResponse(jointAccounts = emptyList()),
         )
 
@@ -130,5 +142,39 @@ internal class DefaultSingleJointAccountListFetcherTest {
         assertThat(result.isRight()).isTrue()
         assertThat(context.store.get(walletId).first()).isEmpty()
         assertThat(context.store.contains(walletId)).isTrue()
+    }
+
+    @Test
+    fun `GIVEN nothing moved since the stored tag WHEN invoke THEN the cache is kept and marked ACTUAL`() = runTest {
+        // Arrange
+        val context = TestScopeContext(TestAppCoroutineScope(testScope = this))
+        advanceUntilIdle()
+        val fetcher = with(context) { createFetcher() }
+        val cached = createJointAccount(source = StatusSource.CACHE)
+        context.store.store(walletId, listOf(cached))
+        coEvery { jointAccountApi.getJointAccounts(any(), any()) } returns notModified()
+
+        // Act
+        val result = fetcher(walletId)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(context.store.get(walletId).first())
+            .containsExactly(cached.copy(source = StatusSource.ACTUAL))
+        coVerify(exactly = 0) { eTagsStore.store(any(), any(), any()) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun notModified(): ApiResponse<GetJointAccountsResponse> = ApiResponse.Error(
+        cause = ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.NOT_MODIFIED,
+            message = null,
+            errorBody = null,
+        ),
+    ) as ApiResponse<GetJointAccountsResponse>
+
+    private companion object {
+        const val STORED_ETAG = "stored-etag"
+        const val NEW_ETAG = "new-etag"
     }
 }
