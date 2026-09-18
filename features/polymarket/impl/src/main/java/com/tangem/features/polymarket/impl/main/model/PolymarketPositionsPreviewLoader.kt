@@ -17,7 +17,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,6 +36,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     private val refreshJob = JobHolder()
     private val invalidationJob = JobHolder()
     private var isResumed = false
+    private var appliedRevision = 0L
 
     fun resume(
         scope: CoroutineScope,
@@ -46,6 +46,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
         isResumed = true
         val converter = PolymarketPositionUMConverter(onPositionClick)
         val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
+        appliedRevision = invalidator.currentRevision(userWalletId)
         scope.launch {
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
@@ -56,9 +57,11 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
             }
         }.saveIn(refreshJob)
         scope.launch {
-            invalidator.signal
-                .filter { it == userWalletId }
-                .collect { if (isResumed) refresh(userWalletId, onRetry, converter) }
+            invalidator.revisionFlow(userWalletId).collect { revision ->
+                if (revision == appliedRevision) return@collect
+                appliedRevision = revision
+                if (isResumed) refresh(userWalletId, onRetry, converter)
+            }
         }.saveIn(invalidationJob)
     }
 
