@@ -80,6 +80,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         params = JointCosignRequestsComponent.Params(
             userWalletId = params.userWalletId,
             currency = params.currency,
+            pendingOperationId = (params.navigationAction as? NavigationAction.JointOperation)?.operationId,
         ),
     )
 

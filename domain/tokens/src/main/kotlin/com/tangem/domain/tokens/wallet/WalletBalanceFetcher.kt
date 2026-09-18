@@ -29,7 +29,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
@@ -65,7 +65,7 @@ class WalletBalanceFetcher internal constructor(
     private val singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
     private val balanceFetchingOperations: BalanceFetchingOperations,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
@@ -85,7 +85,7 @@ class WalletBalanceFetcher internal constructor(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
@@ -106,7 +106,7 @@ class WalletBalanceFetcher internal constructor(
             stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
@@ -126,7 +126,7 @@ class WalletBalanceFetcher internal constructor(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
@@ -154,7 +154,7 @@ class WalletBalanceFetcher internal constructor(
             stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
@@ -241,12 +241,12 @@ class WalletBalanceFetcher internal constructor(
                 }
             }
 
-            // Fetch Virtual account separately for the same reason as TangemPay
+            // Fetch Money account separately for the same reason as TangemPay
             if (
-                fetchingSources.any { it is WalletFetchingSource.VirtualAccount } &&
+                fetchingSources.any { it is WalletFetchingSource.Money } &&
                 moneyAccountsFeatureToggles.isMoneyAccountsEnabled
             ) {
-                virtualAccountStatusFetcher.invoke(VirtualAccountStatusFetcher.Params(userWalletId))
+                moneyAccountStatusFetcher.invoke(MoneyAccountStatusFetcher.Params(userWalletId))
             }
         }
     }
