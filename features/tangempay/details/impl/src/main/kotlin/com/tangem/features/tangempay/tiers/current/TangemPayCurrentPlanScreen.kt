@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
@@ -29,6 +30,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.R as CoreUiR
@@ -38,6 +40,7 @@ internal fun TangemPayCurrentPlanScreen(state: TangemPayCurrentPlanUM, modifier:
     Box(
         modifier = modifier
             .fillMaxSize()
+            .testTag(TangemPayTestTags.CURRENT_PLAN_SCREEN)
             .background(TangemTheme.colors3.bg.primary),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -84,6 +87,7 @@ private fun PlanNotification(notification: TangemPayCurrentPlanUM.Notification, 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .testTag(TangemPayTestTags.CURRENT_PLAN_NOTIFICATION)
             .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors3.bg.status.infoSubtle)
             .padding(16.dp),
@@ -108,7 +112,9 @@ private fun PlanNotification(notification: TangemPayCurrentPlanUM.Notification, 
         }
         notification.button?.let { button ->
             TangemButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TangemPayTestTags.CURRENT_PLAN_NOTIFICATION_BUTTON),
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X11,
                 text = button.text,
@@ -127,10 +133,9 @@ private fun PlanSection(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            modifier = Modifier.padding(
-                horizontal = 20.dp,
-                vertical = 8.dp,
-            ),
+            modifier = Modifier
+                .testTag(TangemPayTestTags.CURRENT_PLAN_SECTION_HEADER)
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             text = section.header.resolveReference(),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -164,6 +169,7 @@ private fun PlanInfoRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .testTag(TangemPayTestTags.CURRENT_PLAN_ROW)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
@@ -193,7 +199,9 @@ private fun PlanFooter(state: TangemPayCurrentPlanUM, modifier: Modifier = Modif
     ) {
         state.onChangePlanClick?.let { onChangePlanClick ->
             TangemButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TangemPayTestTags.CURRENT_PLAN_CHANGE_BUTTON),
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
                 text = resourceReference(R.string.tangempay_current_plan_change),
