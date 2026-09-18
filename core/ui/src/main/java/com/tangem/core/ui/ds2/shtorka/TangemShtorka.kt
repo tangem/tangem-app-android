@@ -138,6 +138,7 @@ fun TangemShtorka(
             },
         color = color,
         isMaterial = isMaterial,
+        isMaterialBorderEnabled = false,
         materialStyle = materialStyle,
         shape = shape,
     ) {

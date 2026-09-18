@@ -76,7 +76,11 @@ class TangemShtorkaState internal constructor(
     /** 1 at the collapsed detent, 0 at the next one up; drives the capsule corners. */
     internal var collapseProgress: Float = 0f
 
-    /** Width ratio of the card to its [TangemShtorka.Detent.Full] width, written during layout. */
+    /**
+     * Scale the chrome slot renders at, written during layout. Follows the card's width ratio to
+     * its [TangemShtorka.Detent.Full] width, floored at the floating-inset scale so the chrome's
+     * unscaled measure never overhangs the window (haze would truncate its effects there).
+     */
     internal var chromeScale: Float = 1f
 
     /** Scale of the content slot — equals [chromeScale] except on the collapse leg, where it freezes. */
