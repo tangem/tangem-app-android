@@ -472,6 +472,27 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN the first quote states a minimum the sum is below WHEN it arrives THEN the price is polled`() =
+        runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns
+                createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onAmountChange(value = "1")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(atLeast = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a stated minimum WHEN a smaller sum is entered THEN no quote is requested`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -1356,8 +1377,10 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
-        fun `GIVEN sell params WHEN screen shown THEN the live price is the best bid`() = runTest {
+        fun `GIVEN a position too small to quote WHEN screen shown THEN the live price is the best bid`() = runTest {
             // Arrange
+            coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
+                createPosition(size = BigDecimal("0.005")).right()
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
 
@@ -1367,6 +1390,18 @@ internal class PlacePredictionModelTest {
 
             // Assert
             coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.BUY) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a held position WHEN model created THEN the whole position is selected`() = runTest {
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEqualTo("51.23")
 
             model.onDestroy()
         }
@@ -1449,6 +1484,7 @@ internal class PlacePredictionModelTest {
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
                     .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.79")))
+                assertThat(model.uiState.value.amountValue).isEqualTo("12.80")
                 assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
                 verify { messageSender.send(any()) }
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }

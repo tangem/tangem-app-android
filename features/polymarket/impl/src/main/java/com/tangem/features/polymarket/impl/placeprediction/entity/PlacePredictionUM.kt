@@ -83,6 +83,12 @@ internal fun PlacePredictionUM.canQuote(): Boolean = when (val order = order) {
 }
 
 /**
+ * Whether the screen has a sum the BFF would price. A screen that has none still has a market, so the price
+ * keeps being polled rather than the screen freezing on the last figures it read.
+ */
+internal fun PlacePredictionUM.isQuotable(): Boolean = enteredAmount() != null && canQuote() && !isBelowMinAmount()
+
+/**
  * A price is a property of the market, not of the position, so it is still worth polling while the position
  * is on its way — but not once reading it has failed, since then the screen has nothing to price.
  */
