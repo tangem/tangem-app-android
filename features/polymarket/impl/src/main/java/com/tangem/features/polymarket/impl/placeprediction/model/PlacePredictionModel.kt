@@ -647,26 +647,16 @@ internal class PlacePredictionModel @Inject constructor(
 
         if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
-        if (!uiState.value.isQuotable()) {
-            startPriceLoop()
-            return
-        }
-
         modelScope.launch {
-            if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
+            if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
-                requestQuote()
-                if (uiState.value.quote.isMarketClosed()) break
-                delay(timeMillis = pollInterval())
-            }
-        }.saveIn(quoteJobHolder)
-    }
-
-    private fun startPriceLoop() {
-        modelScope.launch {
-            while (isActive && uiState.value.submit is SubmitUM.Idle && !uiState.value.isQuotable()) {
-                val canKeepPolling = requestPrice()
+                val canKeepPolling = if (uiState.value.isQuotable()) {
+                    requestQuote()
+                    !uiState.value.quote.isMarketClosed()
+                } else {
+                    requestPrice()
+                }
                 if (!canKeepPolling) return@launch
                 delay(timeMillis = pollInterval())
             }
