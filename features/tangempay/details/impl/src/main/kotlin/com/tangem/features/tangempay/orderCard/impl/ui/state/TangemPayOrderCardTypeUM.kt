@@ -60,7 +60,7 @@ internal fun TangemPayOrderCardTypeUM.imageUrlFor(type: OrderCardType): String? 
         is TangemPayOrderCardTypeUM.Plastic.Available -> plastic.offerImageUrl
         is TangemPayOrderCardTypeUM.Plastic.Unavailable -> null
     }
-} ?: cardImageUrl
+} ?: cardImageUrl.takeIf { !isLoading }
 
 internal fun availableTypesOf(isPlasticEnabled: Boolean, isVirtualAvailable: Boolean = true): List<OrderCardType> =
     buildList {
