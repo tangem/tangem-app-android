@@ -106,9 +106,11 @@ internal class DefaultSessionTokenRefresher(
             TangemLogger.i("Calling /refresh with stored refresh token")
             when (val result = callRefresh(current.refreshToken)) {
                 is RefreshOutcome.Success -> {
-                    store.save(result.tokens)
+                    // the store answers with what is actually in effect: our reply may have lost a race
+                    // with another rotation, and the caller retries its request with what we return
+                    val inEffect = store.save(result.tokens)
                     TangemLogger.i("/refresh succeeded; session tokens persisted")
-                    return result.tokens.right()
+                    return inEffect.right()
                 }
                 // 401: refresh token is invalid/expired/revoked/replayed but the device key is
                 // intact server-side → fall back to /authenticate to mint a new pair.
@@ -187,9 +189,9 @@ internal class DefaultSessionTokenRefresher(
         when (authResponse) {
             is ApiResponse.Success -> {
                 val tokens = SessionTokensConverter.convertBack(authResponse.data)
-                store.save(tokens)
+                val inEffect = store.save(tokens)
                 TangemLogger.i("/authenticate succeeded; session tokens persisted")
-                tokens
+                inEffect
             }
             is ApiResponse.Error -> handleAuthError(errorConverter.convert(authResponse.cause))
         }

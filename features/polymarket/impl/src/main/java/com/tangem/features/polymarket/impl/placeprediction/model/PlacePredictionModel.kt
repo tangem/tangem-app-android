@@ -19,11 +19,13 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
-import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
@@ -46,18 +48,23 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippagePickerUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
-import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
+import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetMarketTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetOutcomePriceTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPaymentCurrencyTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
@@ -103,16 +110,20 @@ internal class PlacePredictionModel @Inject constructor(
     private val signPredictionOrderInteractor: SignPredictionOrderInteractor,
     private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
+    private val positionsRepository: PolymarketPositionsRepository,
+    private val predictionFundingWindow: PredictionFundingWindow,
 ) : Model(), PlacePredictionIntents {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
 
     val uiState: StateFlow<PlacePredictionUM>
-        field = MutableStateFlow(PlacePredictionUM.initial())
+        field = MutableStateFlow(PlacePredictionUM.initial(side = params.side))
 
     private val quoteJobHolder = JobHolder()
 
     private val tradingAllowanceJobHolder = JobHolder()
+
+    private val positionJobHolder = JobHolder()
 
     private var isMarketLive = false
 
@@ -121,8 +132,11 @@ internal class PlacePredictionModel @Inject constructor(
     private var isScreenShown = false
 
     init {
-        uiState.update(SetPaymentCurrencyTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
-        loadMarket()
+        uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
+        when (val params = params) {
+            is PlacePredictionComponent.Params.Buy -> loadMarket(params = params)
+            is PlacePredictionComponent.Params.Sell -> loadPosition(params = params)
+        }
         loadBalance()
         loadTradingAllowance()
     }
@@ -157,6 +171,8 @@ internal class PlacePredictionModel @Inject constructor(
     fun onScreenShown() {
         isScreenShown = true
         if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
+        if (reloadPositionIfLost()) return
+
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -196,6 +212,8 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     override fun onQuoteRetryClick() {
+        if (reloadPositionIfLost()) return
+
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -227,13 +245,17 @@ internal class PlacePredictionModel @Inject constructor(
             return
         }
 
-        when (spendingPower(addresses = addresses, required = frozen.quote.total)) {
-            SpendingPower.Sufficient -> Unit
-            SpendingPower.Insufficient -> {
+        when (val power = spendingPower(addresses = addresses, frozen = frozen)) {
+            is SpendingPower.Sufficient -> Unit
+            is SpendingPower.Insufficient -> {
                 returnToIdle()
                 return
             }
-            SpendingPower.Unknown -> {
+            is SpendingPower.Refused -> {
+                showPlaceFailure(reason = power.reason)
+                return
+            }
+            is SpendingPower.Unknown -> {
                 showPlaceFailure(reason = "Spending power could not be read")
                 return
             }
@@ -263,6 +285,7 @@ internal class PlacePredictionModel @Inject constructor(
             .map { result ->
                 PlaceResultUMConverter.convert(
                     result = result,
+                    side = params.side,
                     quotedShares = frozen.quote.shares,
                     quotedAmount = frozen.quote.notional,
                     placedAt = System.currentTimeMillis(),
@@ -276,7 +299,20 @@ internal class PlacePredictionModel @Inject constructor(
             )
     }
 
-    private suspend fun spendingPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
+    private suspend fun spendingPower(addresses: PolymarketAddresses, frozen: SignableQuoteUM): SpendingPower =
+        when (val params = params) {
+            is PlacePredictionComponent.Params.Buy -> collateralPower(
+                addresses = addresses,
+                required = frozen.quote.total,
+            )
+            is PlacePredictionComponent.Params.Sell -> sharesPower(
+                addresses = addresses,
+                positionId = params.positionId,
+                required = frozen.quote.shares,
+            )
+        }
+
+    private suspend fun collateralPower(addresses: PolymarketAddresses, required: BigDecimal): SpendingPower {
         val balance = withContext(dispatchers.default) {
             getPolymarketBalanceInteractor(addresses = addresses).getOrNull()
         } ?: return SpendingPower.Unknown
@@ -286,7 +322,48 @@ internal class PlacePredictionModel @Inject constructor(
         return if (balance.balance >= required) SpendingPower.Sufficient else SpendingPower.Insufficient
     }
 
-    private enum class SpendingPower { Sufficient, Insufficient, Unknown }
+    private suspend fun sharesPower(
+        addresses: PolymarketAddresses,
+        positionId: PolymarketPositionId,
+        required: BigDecimal,
+    ): SpendingPower {
+        val position = withContext(dispatchers.default) {
+            positionsRepository.getPosition(addresses = addresses, id = positionId)
+        }.fold(
+            ifLeft = { return SpendingPower.Unknown },
+            ifRight = { position ->
+                position ?: run {
+                    uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.NotHeld))
+                    return SpendingPower.Refused(reason = "Position is no longer held")
+                }
+            },
+        )
+
+        uiState.update(SetPositionTransformer(position = position))
+
+        if (!position.isAcceptingOrders) {
+            return SpendingPower.Refused(reason = "Market stopped accepting orders before signing")
+        }
+
+        val available = SharesCalculator.available(held = position.size)
+        return if (available >= required) {
+            SpendingPower.Sufficient
+        } else {
+            SpendingPower.Refused(reason = "Position holds $available shares, the quote was for $required")
+        }
+    }
+
+    private sealed interface SpendingPower {
+
+        data object Sufficient : SpendingPower
+
+        data object Insufficient : SpendingPower
+
+        /** @property reason what the exported log says when the order is turned away before a signature */
+        data class Refused(val reason: String) : SpendingPower
+
+        data object Unknown : SpendingPower
+    }
 
     private fun onSignFailure(failure: PredictionOrderFailure) {
         val isCancelled = failure is PredictionOrderFailure.Signing &&
@@ -381,8 +458,18 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     private fun showResult(result: PlaceResultUM) {
+        if (result.movesBalance()) predictionFundingWindow.open(userWalletId = params.userWalletId)
+
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Result(result = result)))
         router.replaceAll(PlacePredictionRoute.Status)
+    }
+
+    private fun PlaceResultUM.movesBalance(): Boolean = when (this) {
+        is PlaceResultUM.Filled,
+        is PlaceResultUM.PartiallyFilled,
+        is PlaceResultUM.Submitted,
+        -> true
+        is PlaceResultUM.NotFilled -> false
     }
 
     /**
@@ -473,7 +560,7 @@ internal class PlacePredictionModel @Inject constructor(
         -> false
     }
 
-    private fun loadMarket() {
+    private fun loadMarket(params: PlacePredictionComponent.Params.Buy) {
         modelScope.launch {
             val event = withContext(dispatchers.default) {
                 getPolymarketEventUseCase(eventId = params.eventId).getOrNull()
@@ -513,33 +600,75 @@ internal class PlacePredictionModel @Inject constructor(
         }
     }
 
+    /** @return whether a fresh read was started, in which case it — not the caller — restarts the loop. */
+    private fun reloadPositionIfLost(): Boolean {
+        val params = params as? PlacePredictionComponent.Params.Sell ?: return false
+        val position = (uiState.value.order as? OrderSideUM.Sell)?.position ?: return false
+
+        if (position is SellPositionUM.Loading || position is SellPositionUM.Held) return false
+
+        uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.Loading))
+        loadPosition(params = params)
+        return true
+    }
+
+    private fun failPosition(position: SellPositionUM) {
+        uiState.update(SetSellPositionStateTransformer(position = position))
+        restartQuoteLoop(withDebounce = false)
+    }
+
+    private fun loadPosition(params: PlacePredictionComponent.Params.Sell) {
+        modelScope.launch {
+            val addresses = withContext(dispatchers.default) {
+                derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
+            }
+            if (addresses == null) {
+                logger.e("No stored addresses; the screen keeps nothing sellable")
+                failPosition(position = SellPositionUM.Unreadable)
+                return@launch
+            }
+
+            val position = withContext(dispatchers.default) {
+                positionsRepository.getPosition(addresses = addresses, id = params.positionId)
+            }.fold(
+                ifLeft = { error ->
+                    logger.e("Position could not be read, the screen keeps nothing sellable: $error")
+                    failPosition(position = SellPositionUM.Unreadable)
+                    return@launch
+                },
+                ifRight = { position ->
+                    position ?: run {
+                        logger.e("Position is not held or not indexed yet; the screen keeps nothing sellable")
+                        failPosition(position = SellPositionUM.NotHeld)
+                        return@launch
+                    }
+                },
+            )
+
+            isNegRiskMarket = position.isNegRisk
+            isMarketLive = position.isLive
+
+            uiState.update(SetPositionTransformer(position = position))
+
+            if (isScreenShown) restartQuoteLoop(withDebounce = false)
+        }.saveIn(positionJobHolder)
+    }
+
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!uiState.value.isMarketAcceptingOrders) return
-
-        if (uiState.value.enteredAmount() == null) {
-            startPriceLoop()
-            return
-        }
-
-        if (uiState.value.isBelowMinAmount()) return
+        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         modelScope.launch {
-            if (withDebounce) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
+            if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
 
             while (isActive && uiState.value.submit is SubmitUM.Idle) {
-                requestQuote()
-                if (uiState.value.quote.isMarketClosed()) break
-                delay(timeMillis = pollInterval())
-            }
-        }.saveIn(quoteJobHolder)
-    }
-
-    private fun startPriceLoop() {
-        modelScope.launch {
-            while (isActive && uiState.value.submit is SubmitUM.Idle && uiState.value.enteredAmount() == null) {
-                val canKeepPolling = requestPrice()
+                val canKeepPolling = if (uiState.value.isQuotable()) {
+                    requestQuote()
+                    !uiState.value.quote.isMarketClosed()
+                } else {
+                    requestPrice()
+                }
                 if (!canKeepPolling) return@launch
                 delay(timeMillis = pollInterval())
             }
@@ -548,8 +677,7 @@ internal class PlacePredictionModel @Inject constructor(
 
     private suspend fun requestPrice(): Boolean {
         val result = withContext(dispatchers.default) {
-            // A buy executes against the SELL side of the book, so the fair price to show is the best ask.
-            getPredictionPriceUseCase(assetId = params.assetId, side = PredictionOrderSide.SELL)
+            getPredictionPriceUseCase(assetId = params.assetId, side = params.side.opposite())
         }
 
         return result.fold(
@@ -562,6 +690,10 @@ internal class PlacePredictionModel @Inject constructor(
                     PredictionPriceError.InvalidAsset -> {
                         uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
                         false
+                    }
+                    PredictionPriceError.EmptyBook -> {
+                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.EmptyBook))
+                        true
                     }
                     PredictionPriceError.Network,
                     is PredictionPriceError.Unknown,
@@ -580,7 +712,7 @@ internal class PlacePredictionModel @Inject constructor(
     private suspend fun requestQuote() {
         val state = uiState.value
         val amount = state.enteredAmount() ?: return
-        if (state.submit !is SubmitUM.Idle || state.isBelowMinAmount()) return
+        if (state.submit !is SubmitUM.Idle || !state.isQuotable()) return
 
         uiState.update(SetQuoteLoadingTransformer)
 

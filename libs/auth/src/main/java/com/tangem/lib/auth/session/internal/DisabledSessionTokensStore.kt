@@ -13,7 +13,7 @@ internal object DisabledSessionTokensStore : SessionTokensStore {
 
     override suspend fun get(): Option<SessionTokens> = None
 
-    override suspend fun save(tokens: SessionTokens) = Unit
+    override suspend fun save(tokens: SessionTokens): SessionTokens = tokens
 
     override suspend fun clear() = Unit
 }

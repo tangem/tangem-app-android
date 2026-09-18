@@ -69,6 +69,8 @@ class DefaultDeviceRegistrarTest {
     @BeforeEach
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokenRefresher)
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
