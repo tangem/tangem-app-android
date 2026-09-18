@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CardIssueOffers
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.repository.CustomerOffersRepository
@@ -177,7 +178,7 @@ internal class GetCustomerOffersUseCaseTest {
             // Arrange
             coEvery {
                 customerOffersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE)
-            } returns listOf(virtualOffer(), deeplinkOffer()).right()
+            } returns customerOffers(virtualOffer(), deeplinkOffer()).right()
 
             // Act
             val actual = useCase.campaignOffer(USER_WALLET_ID, DEEPLINK_VALUE)
@@ -192,7 +193,7 @@ internal class GetCustomerOffersUseCaseTest {
         // Arrange
         coEvery {
             customerOffersRepository.getOffers(USER_WALLET_ID, DEEPLINK_VALUE)
-        } returns listOf(virtualOffer(), plasticOffer()).right()
+        } returns customerOffers(virtualOffer(), plasticOffer()).right()
 
         // Act
         val actual = useCase.campaignOffer(USER_WALLET_ID, DEEPLINK_VALUE)
@@ -218,11 +219,11 @@ internal class GetCustomerOffersUseCaseTest {
     private fun givenProductInstanceOffers(vararg offers: Offer) {
         coEvery {
             customerOffersRepository.getProductInstanceOffers(USER_WALLET_ID, PRODUCT_INSTANCE_ID)
-        } returns offers.toList().right()
+        } returns customerOffers(*offers).right()
     }
 
     private fun givenOffers(vararg offers: Offer) {
-        coEvery { customerOffersRepository.getOffers(USER_WALLET_ID) } returns offers.toList().right()
+        coEvery { customerOffersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(*offers).right()
     }
 
     private fun plasticOffer() = offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN)
@@ -245,3 +246,6 @@ internal class GetCustomerOffersUseCaseTest {
         const val DEEPLINK_VALUE = "tpay_for_oxford"
     }
 }
+
+private fun customerOffers(vararg offers: Offer) =
+    CustomerOffers(orderable = offers.toList(), artwork = emptyMap())

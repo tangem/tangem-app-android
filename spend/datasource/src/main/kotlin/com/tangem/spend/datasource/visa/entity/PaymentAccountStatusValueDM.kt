@@ -47,7 +47,6 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "active_account") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
         @Json(name = "currency_code") val currencyCode: String?,
-        @Json(name = "deposit_address") val depositAddress: String?,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
         @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM?,
         @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
