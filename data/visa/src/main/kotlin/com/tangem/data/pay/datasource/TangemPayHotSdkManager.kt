@@ -80,8 +80,17 @@ internal class TangemPayHotSdkManager @Inject constructor(
             val extendedPublicKey = curveResponse.publicKeys[VisaUtilities.moneyAccountDerivationPath]
                 ?: raise(VisaActivationError.MissingWallet.tangemError)
 
+            val address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey)
+            val content = VisaUtilities.moneyAccountDepositAddressMessage(depositAddress = address)
+            val signature = getSignature(
+                unlockHotWallet = unlockHotWallet,
+                hash = VisaUtilities.hashPersonalMessage(content.toByteArray(Charsets.UTF_8)),
+                extendedPublicKey = getExtendedPublicKey(unlockHotWallet = unlockHotWallet),
+            )
+
             MoneyAccountActivationData(
-                address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey),
+                address = address,
+                signature = signature,
                 derivedKeys = mapOf(
                     curveResponse.seedKey.publicKey.toMapKey() to ExtendedPublicKeysMap(
                         mapOf(VisaUtilities.moneyAccountDerivationPath to extendedPublicKey),

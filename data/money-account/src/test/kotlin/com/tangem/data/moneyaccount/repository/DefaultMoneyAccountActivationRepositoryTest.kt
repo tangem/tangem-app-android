@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -44,7 +45,11 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
     private val derivedKeys: Map<ByteArrayKey, ExtendedPublicKeysMap> = mapOf(
         ByteArrayKey(byteArrayOf(1, 2, 3)) to ExtendedPublicKeysMap(emptyMap()),
     )
-    private val activationData = MoneyAccountActivationData(address = "0xVA", derivedKeys = derivedKeys)
+    private val activationData = MoneyAccountActivationData(
+        address = "0xVA",
+        signature = "0xSIG",
+        derivedKeys = derivedKeys,
+    )
 
     @BeforeEach
     fun setUp() {
@@ -62,6 +67,18 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
 
         // Assert
         coVerify(exactly = 1) { derivationsRepository.storeDerivedKeys(userWalletId, derivedKeys) }
+    }
+
+    @Test
+    fun `GIVEN datasource returns data WHEN activate THEN deposit credentials returned`() = runTest {
+        // Arrange
+        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns activationData.right()
+
+        // Act
+        val actual = repository.activateMoneyAccount(userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountDepositCredentials(address = "0xVA", signature = "0xSIG"))
     }
 
     @Test
