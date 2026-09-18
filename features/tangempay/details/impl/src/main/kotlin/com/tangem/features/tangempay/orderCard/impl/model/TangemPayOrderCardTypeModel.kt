@@ -18,6 +18,7 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.common.cardMainImageUrl
+import com.tangem.features.tangempay.common.tariffPlan
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
 import com.tangem.features.tangempay.orderCard.impl.ui.state.TangemPayOrderCardTypeUM
@@ -62,6 +63,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
                 isError = false,
                 availableTypes = availableTypesOf(isPlasticEnabled = featureToggles.isPlasticCardOrderEnabled),
                 cardImageUrl = null,
+                isBasicPlan = true,
                 virtual = TangemPayOrderCardTypeUM.Virtual(issueFee = ""),
                 plastic = TangemPayOrderCardTypeUM.Plastic.Unavailable(country = ""),
                 onBackClick = ::onBackClick,
@@ -76,7 +78,7 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
     init {
         analytics.send(TangemPayAnalyticsEvents.Plastic.CardTypeSelectionScreenOpened())
         loadData()
-        observeCardImage()
+        observePaymentAccount()
     }
 
     fun onBackClick() {
@@ -123,12 +125,16 @@ internal class TangemPayOrderCardTypeModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.Plastic.DeliveryCostNotEnoughMoneyShowed())
     }
 
-    private fun observeCardImage() {
+    private fun observePaymentAccount() {
         modelScope.launch {
             paymentAccountStatusSupplier(params.userWalletId).collect { status ->
                 val url = status.takeIf { it.value is PaymentAccountStatusValue.Loaded }?.cardMainImageUrl
-                if (url != null) {
-                    state.update { it.copy(cardImageUrl = url) }
+                val isBasicPlan = status.tariffPlan?.plan?.isBasicTier
+                state.update { current ->
+                    current.copy(
+                        cardImageUrl = url ?: current.cardImageUrl,
+                        isBasicPlan = isBasicPlan ?: current.isBasicPlan,
+                    )
                 }
             }
         }
