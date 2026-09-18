@@ -34,7 +34,9 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatPolymarketPercent
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.availableOrZero
 import com.tangem.features.polymarket.impl.placeprediction.model.SharesCalculator
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
@@ -45,21 +47,29 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
 @Composable
 internal fun PredictionSharesBlock(
     selected: BigDecimal,
-    available: BigDecimal,
+    position: SellPositionUM,
     proceeds: SharesProceedsUM,
     onAmountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
-            ProceedsSection(selected = selected, available = available, proceeds = proceeds)
-            CalculatorRow(selected = selected, available = available, onAmountChange = onAmountChange)
+            ProceedsSection(selected = selected, position = position, proceeds = proceeds)
+            CalculatorRow(selected = selected, position = position, onAmountChange = onAmountChange)
         }
     }
 }
 
+private fun SellPositionUM.availableLabel(): String = when (this) {
+    is SellPositionUM.Held -> available.formatPolymarketShares()
+    SellPositionUM.Loading,
+    SellPositionUM.NotHeld,
+    SellPositionUM.Unreadable,
+    -> DASH_SIGN
+}
+
 @Composable
-private fun ProceedsSection(selected: BigDecimal, available: BigDecimal, proceeds: SharesProceedsUM) {
+private fun ProceedsSection(selected: BigDecimal, position: SellPositionUM, proceeds: SharesProceedsUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,7 +89,7 @@ private fun ProceedsSection(selected: BigDecimal, available: BigDecimal, proceed
             text = stringResourceSafe(
                 R.string.prediction_close_selling_of,
                 selected.formatPolymarketShares(),
-                available.formatPolymarketShares(),
+                position.availableLabel(),
             ),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
@@ -160,7 +170,9 @@ private fun ProceedsCaption(proceeds: SharesProceedsUM) {
 }
 
 @Composable
-private fun CalculatorRow(selected: BigDecimal, available: BigDecimal, onAmountChange: (String) -> Unit) {
+private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmountChange: (String) -> Unit) {
+    val available = position.availableOrZero
+    val hasShares = position is SellPositionUM.Held && available > BigDecimal.ZERO
     val isSteppable = SharesCalculator.isSteppable(available)
 
     Row(
@@ -177,6 +189,7 @@ private fun CalculatorRow(selected: BigDecimal, available: BigDecimal, onAmountC
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X8,
                 text = fraction.label(),
+                isEnabled = hasShares,
                 onClick = {
                     onAmountChange(SharesCalculator.fraction(available, fraction.percent).toPlainString())
                 },
@@ -225,7 +238,7 @@ private fun PredictionSharesBlockPreview(
     TangemThemePreviewRedesign {
         PredictionSharesBlock(
             selected = state.selected,
-            available = state.available,
+            position = state.position,
             proceeds = state.proceeds,
             onAmountChange = {},
         )
@@ -234,7 +247,7 @@ private fun PredictionSharesBlockPreview(
 
 private data class PredictionSharesBlockPreviewState(
     val selected: BigDecimal,
-    val available: BigDecimal,
+    val position: SellPositionUM,
     val proceeds: SharesProceedsUM,
 )
 
@@ -243,22 +256,22 @@ private class PredictionSharesBlockPreviewProvider : PreviewParameterProvider<Pr
     override val values = sequenceOf(
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("0.00"),
-            available = BigDecimal("51.23"),
+            position = SellPositionUM.Held(available = BigDecimal("51.23")),
             proceeds = SharesProceedsUM.Unavailable,
         ),
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("3.00"),
-            available = BigDecimal("51.23"),
+            position = SellPositionUM.Held(available = BigDecimal("51.23")),
             proceeds = SharesProceedsUM.BelowMinimum(minShares = BigDecimal("5.00")),
         ),
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("12.80"),
-            available = BigDecimal("51.23"),
+            position = SellPositionUM.Held(available = BigDecimal("51.23")),
             proceeds = SharesProceedsUM.Loading,
         ),
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("51.23"),
-            available = BigDecimal("51.23"),
+            position = SellPositionUM.Held(available = BigDecimal("51.23")),
             proceeds = SharesProceedsUM.Content(
                 expected = BigDecimal("43.54"),
                 guaranteed = BigDecimal("43.11"),
@@ -266,7 +279,17 @@ private class PredictionSharesBlockPreviewProvider : PreviewParameterProvider<Pr
         ),
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("0.50"),
-            available = BigDecimal("0.50"),
+            position = SellPositionUM.Held(available = BigDecimal("0.50")),
+            proceeds = SharesProceedsUM.Unavailable,
+        ),
+        PredictionSharesBlockPreviewState(
+            selected = BigDecimal("0.00"),
+            position = SellPositionUM.Loading,
+            proceeds = SharesProceedsUM.Unavailable,
+        ),
+        PredictionSharesBlockPreviewState(
+            selected = BigDecimal("0.00"),
+            position = SellPositionUM.Unreadable,
             proceeds = SharesProceedsUM.Unavailable,
         ),
     )

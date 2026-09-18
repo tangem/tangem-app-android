@@ -20,11 +20,11 @@ dependencies {
 
     // region Core modules
     api(projects.core.security)
-    implementation(projects.domain.core)
     // endregion
 
     // region Domain
     api(projects.domain.common)
+    api(projects.domain.core)
     api(projects.domain.networks)
     api(projects.domain.visa)
     // endregion

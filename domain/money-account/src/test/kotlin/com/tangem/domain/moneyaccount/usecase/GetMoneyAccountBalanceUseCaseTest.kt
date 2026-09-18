@@ -43,7 +43,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(tangemPayCurrencyFactory, singleNetworkStatusFetcher, singleNetworkStatusSupplier)
-        every { tangemPayCurrencyFactory.createVirtualAccountToken(userWalletId) } returns token
+        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } returns token
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
     }
 
@@ -88,7 +88,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     @Test
     fun `GIVEN token cannot be created WHEN invoke THEN left returned`() = runTest {
         // Arrange
-        every { tangemPayCurrencyFactory.createVirtualAccountToken(userWalletId) } throws IllegalArgumentException()
+        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } throws IllegalArgumentException()
 
         // Act
         val actual = useCase(userWalletId)

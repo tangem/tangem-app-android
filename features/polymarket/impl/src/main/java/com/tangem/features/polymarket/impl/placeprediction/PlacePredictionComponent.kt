@@ -20,6 +20,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.features.polymarket.impl.placeprediction.amount.PlacePredictionAmountComponent
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModel
@@ -95,11 +96,32 @@ internal class PlacePredictionComponent(
         }
     }
 
-    data class Params(
-        val userWalletId: UserWalletId,
-        val eventId: String,
-        val marketId: String,
-        val assetId: String,
-        val side: PredictionOrderSide,
-    )
+    sealed interface Params {
+
+        val userWalletId: UserWalletId
+        val marketId: String
+        val assetId: String
+        val side: PredictionOrderSide
+
+        data class Buy(
+            override val userWalletId: UserWalletId,
+            val eventId: String,
+            override val marketId: String,
+            override val assetId: String,
+        ) : Params {
+
+            override val side: PredictionOrderSide = PredictionOrderSide.BUY
+        }
+
+        data class Sell(
+            override val userWalletId: UserWalletId,
+            val positionId: PolymarketPositionId,
+            override val marketId: String,
+        ) : Params {
+
+            override val assetId: String = positionId.assetId
+
+            override val side: PredictionOrderSide = PredictionOrderSide.SELL
+        }
+    }
 }

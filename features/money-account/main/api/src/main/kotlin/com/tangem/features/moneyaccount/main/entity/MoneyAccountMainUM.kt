@@ -3,11 +3,6 @@ package com.tangem.features.moneyaccount.main.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
-/**
- * UI model for the Virtual Account main-screen block.
- *
- * Mirrors `TangemPayMainUM` but carries virtual-account-specific states (no card-related variants).
- */
 @Immutable
 sealed class MoneyAccountMainUM {
 
