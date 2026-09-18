@@ -25,7 +25,7 @@ class SafeCompositionChecker(
         safeAddress: String,
         owners: List<String>,
         threshold: Int,
-    ): Either<JointOperationCreateError, Unit> = either {
+    ): Either<JointOperationCreateError, SafeDeployment> = either {
         checkAddress(safeAddress = safeAddress, owners = owners, threshold = threshold).bind()
 
         val code = networkReader
@@ -33,10 +33,10 @@ class SafeCompositionChecker(
             .mapLeft(JointOperationCreateError::Failed)
             .bind()
 
-        if (code.length > EMPTY_CODE.length) {
-            checkDeployed(userWalletId = userWalletId, network = network, owners = owners, threshold = threshold)
-                .bind()
-        }
+        if (code.length <= EMPTY_CODE.length) return@either SafeDeployment.NOT_DEPLOYED
+
+        checkDeployed(userWalletId = userWalletId, network = network, owners = owners, threshold = threshold).bind()
+        SafeDeployment.DEPLOYED
     }
 
     private suspend fun checkDeployed(

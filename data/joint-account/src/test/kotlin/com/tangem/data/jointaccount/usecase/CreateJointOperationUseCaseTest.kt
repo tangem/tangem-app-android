@@ -16,6 +16,7 @@ import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
+import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -68,7 +69,8 @@ internal class CreateJointOperationUseCaseTest {
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
         coEvery { networkReader.getChainId(network) } returns CHAIN_ID.right()
-        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns Unit.right()
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            SafeDeployment.DEPLOYED.right()
         coEvery { gasBuilder.build(userWalletId = any(), network = any(), call = any()) } returns safeTx().right()
         coEvery { signer.signOperation(any(), any(), any(), any(), any()) } returns SIGNATURE.right()
         coEvery { repository.createOperation(any(), any(), any(), any(), any()) } returns Unit.right()
