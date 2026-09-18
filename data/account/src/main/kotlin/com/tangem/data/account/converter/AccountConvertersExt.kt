@@ -11,7 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 internal fun String.toAccountId(userWalletId: UserWalletId): AccountId {
     return when {
         startsWith(AccountId.PaymentAccountIdPrefix) -> AccountId.forPaymentAccount(userWalletId).right()
-        startsWith(AccountId.VirtualAccountIdPrefix) -> AccountId.forVirtualAccount(userWalletId).right()
+        startsWith(AccountId.MoneyAccountIdPrefix) -> AccountId.forMoneyAccount(userWalletId).right()
         else -> AccountId.forCryptoPortfolio(value = this, userWalletId = userWalletId)
     }.getOrElse {
         error("Unable to create AccountId from value: $this. Cause: $it")

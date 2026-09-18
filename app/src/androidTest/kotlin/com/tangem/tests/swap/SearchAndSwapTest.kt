@@ -3,6 +3,7 @@ package com.tangem.tests.swap
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.performTextInputInChunks
 import com.tangem.common.utils.setWireMockScenarioState
@@ -18,7 +19,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -27,12 +27,10 @@ class SearchAndSwapTest : BaseTestCase() {
     private val allFilterLabel = getResourceString(R.string.common_all)
     private val hideZeroBalanceLabel = getResourceString(R.string.swap_token_selector_filter_hide_zero_balance)
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8520")
     @DisplayName("Search and Swap: add token without derivation")
     @Test
     fun addTokenWithoutDerivationTest() {
-        val swapTokenName = "Ethereum"
         val receiveTokenName = "Tether"
         val swapTokenSymbol = "ETH"
         val receiveTokenSymbol = "USDT"
@@ -48,9 +46,8 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.MainScreen)
             }
-            step("Click on token with name '$swapTokenName'") {
-                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
-                waitForIdle()
+            step("Click on 'Choose token' button") {
+                onSwapTokenScreen { chooseTokenButton.performClick() }
             }
             step("Click on 'Search' text field") {
                 onSwapSelectTokenScreen { searchBarPlaceholderText.performClick() }
@@ -67,20 +64,22 @@ class SearchAndSwapTest : BaseTestCase() {
                 onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
-                onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                }
             }
             step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
-                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                }
             }
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8519")
     @DisplayName("Search and Swap: add token with derivation")
     @Test
     fun addTokenWithDerivationTest() {
-        val swapTokenName = "Ethereum"
         val receiveTokenName = "TRON"
         val swapTokenSymbol = "ETH"
         val receiveTokenSymbol = "TRX"
@@ -96,9 +95,8 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.MainScreen)
             }
-            step("Click on token with name '$swapTokenName'") {
-                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
-                waitForIdle()
+            step("Click on 'Choose token' button") {
+                onSwapTokenScreen { chooseTokenButton.performClick() }
             }
             step("Click on 'Search' text field") {
                 onSwapSelectTokenScreen { searchBarPlaceholderText.performClick() }
@@ -115,20 +113,22 @@ class SearchAndSwapTest : BaseTestCase() {
                 onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
-                onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                }
             }
             step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
-                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                }
             }
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8523")
     @DisplayName("Search and Swap: Markets error")
     @Test
     fun marketsErrorTest() {
-        val swapTokenName = "Ethereum"
         val scenarioName = "coins_list_api"
         val scenarioState = "Error"
 
@@ -147,9 +147,8 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.MainScreen)
             }
-            step("Click on token with name '$swapTokenName'") {
-                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
-                waitForIdle()
+            step("Click on 'Choose token' button") {
+                onSwapTokenScreen { chooseTokenButton.performClick() }
             }
             step("Assert 'Unable to load data...' error is displayed") {
                 onSwapSelectTokenScreen { unableToLoadData.assertIsDisplayed() }
@@ -160,12 +159,10 @@ class SearchAndSwapTest : BaseTestCase() {
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8522")
     @DisplayName("Search and Swap: check 'Unsupported token pair' warning")
     @Test
     fun unsupportedTokenPairTest() {
-        val swapTokenName = "Ethereum"
         val receiveTokenName = "Pepe"
         val warningTitle = getResourceString(R.string.warning_express_unsupported_pair_title)
         val warningMessage = getResourceString(R.string.warning_express_unsupported_pair_description)
@@ -181,9 +178,8 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.MainScreen)
             }
-            step("Click on token with name '$swapTokenName'") {
-                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
-                waitForIdle()
+            step("Click on 'Choose token' button") {
+                onSwapTokenScreen { chooseTokenButton.performClick() }
             }
             step("Click on 'Search' text field") {
                 onSwapSelectTokenScreen { searchBarPlaceholderText.performClick() }
@@ -211,7 +207,6 @@ class SearchAndSwapTest : BaseTestCase() {
         }
     }
 
-    @Ignore("ToDo: [REDACTED_JIRA]")
     @AllureId("8521")
     @DisplayName("Swap: search token on Swap token screen")
     @Test
@@ -238,8 +233,8 @@ class SearchAndSwapTest : BaseTestCase() {
             step("Click on 'Replace tokens' button") {
                 onSwapTokenScreen { replaceTokensButton.performClick() }
             }
-            step("Click on 'Select token' icon") {
-                onSwapTokenScreen { swapSelectTokenIcon.performClick() }
+            step("Click on 'Choose token' button") {
+                onSwapTokenScreen { chooseTokenButton.performClick() }
             }
             step("Click on 'Search' icon") {
                 onSwapSelectTokenScreen { searchBarIcon.performClick() }
@@ -256,10 +251,14 @@ class SearchAndSwapTest : BaseTestCase() {
                 onAddTokenBottomSheet { confirmButton.performClick() }
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
-                onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                }
             }
             step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
-                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                }
             }
         }
     }

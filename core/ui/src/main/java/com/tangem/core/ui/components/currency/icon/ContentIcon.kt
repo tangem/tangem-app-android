@@ -70,7 +70,7 @@ internal fun ContentIcon(
         is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(modifier = modifier, size = icon.size)
         is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
             modifier = modifier,
-            resId = icon.resId,
+            imageVector = icon.imageVector(),
             color = icon.color,
             size = icon.size,
         )

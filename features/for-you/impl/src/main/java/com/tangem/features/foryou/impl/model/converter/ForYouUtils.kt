@@ -104,7 +104,7 @@ internal fun forYouSentimentBadge(
 /**
  * Ids of the accounts the portfolio selector can actually offer: the crypto-portfolio ones.
  *
- * A wallet's statuses also carry `Payment` / `Virtual` / `Prediction` / `Joint` accounts, and the selector
+ * A wallet's statuses also carry `Payment` / `MoneyAccount` / `Prediction` / `Joint` accounts, and the selector
  * renders no row for those. Seeding the selection with an id that has no row would strand it there forever —
  * nothing could ever uncheck it, so the selection could never become empty and the Apply button could never
  * disable.
