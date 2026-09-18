@@ -17,12 +17,9 @@ import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketRelayerDeadline
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
 import kotlin.time.Duration.Companion.seconds
 
 sealed interface PredictionClaimFailure {
-
-    data object AlreadyInFlight : PredictionClaimFailure
 
     data object CallUnavailable : PredictionClaimFailure
 
@@ -50,19 +47,12 @@ class SubmitPredictionClaimInteractor(
     private val signer: PolymarketTypedDataSigner,
 ) {
 
-    private val inFlight = Mutex()
-
     /**
      * @return the settled receipt of the claim; the backend keys a claim on (wallet, market), so a resumed
      *  screen or a repeated tap converges on the claim already in flight rather than relaying a second one
      */
     suspend fun claim(params: Params): Either<PredictionClaimFailure, PredictionClaimReceipt> = either {
-        ensure(inFlight.tryLock()) { PredictionClaimFailure.AlreadyInFlight }
-        try {
-            settle(params, submit(params))
-        } finally {
-            inFlight.unlock()
-        }
+        settle(params, submit(params))
     }
 
     private suspend fun Raise<PredictionClaimFailure>.submit(params: Params): PredictionClaimReceipt {
@@ -120,10 +110,16 @@ class SubmitPredictionClaimInteractor(
             latest = redeemRepository.getState(
                 walletId = params.walletId,
                 transactionId = submitted.transactionId,
-            ).getOrElse { return@repeat }
+            ).getOrElse { error ->
+                if (error.endsPolling()) raise(PredictionClaimFailure.Rejected(error))
+                return@repeat
+            }
         }
         return if (latest.state.isTerminal) terminal(latest) else raise(PredictionClaimFailure.Unconfirmed(latest))
     }
+
+    private fun PolymarketRedeemError.endsPolling(): Boolean =
+        this is PolymarketRedeemError.NotFound || this is PolymarketRedeemError.Unauthorized
 
     private fun Raise<PredictionClaimFailure>.terminal(receipt: PredictionClaimReceipt): PredictionClaimReceipt =
         if (receipt.state == PredictionClaimState.FAILED) raise(PredictionClaimFailure.Failed(receipt)) else receipt
