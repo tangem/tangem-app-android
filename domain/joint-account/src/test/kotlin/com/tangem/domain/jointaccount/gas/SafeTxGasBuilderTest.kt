@@ -61,7 +61,7 @@ internal class SafeTxGasBuilderTest {
             operation = SafeTx.OPERATION_CALL,
             safeTxGas = BigInteger.valueOf(150_000),
             baseGas = model.expectedBaseGas,
-            gasPrice = GAS_PRICE_ESTIMATE * BigInteger.TWO,
+            gasPrice = EXPECTED_GAS_PRICE,
             gasToken = SafeTxGasBuilder.NATIVE_GAS_TOKEN,
             refundReceiver = TREASURY,
             nonce = model.expectedNonce,
@@ -202,6 +202,9 @@ internal class SafeTxGasBuilderTest {
             data = "0x",
         )
         val GAS_PRICE_ESTIMATE: BigInteger = BigInteger.valueOf(30_000_000_000)
+
+        /** +100 % of the estimate, by requirement */
+        val EXPECTED_GAS_PRICE: BigInteger = BigInteger.valueOf(60_000_000_000)
         const val TREASURY = "0xfc719364bccdc92d055d8c3164ef1ab4f5a9182c"
         const val DEPLOYED_CODE = "0x6080604052"
     }

@@ -56,7 +56,7 @@ internal class JointOperationConverter @Inject constructor(
 
     private fun convertVote(value: String): JointOperation.MemberSignature.State = when (value) {
         "approve" -> JointOperation.MemberSignature.State.SIGNED
-        "decline" -> JointOperation.MemberSignature.State.DECLINED
+        "reject" -> JointOperation.MemberSignature.State.DECLINED
         else -> JointOperation.MemberSignature.State.UNKNOWN
     }
 }
