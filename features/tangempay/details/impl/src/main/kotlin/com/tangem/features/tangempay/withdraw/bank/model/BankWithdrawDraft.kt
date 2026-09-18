@@ -11,7 +11,9 @@ import java.math.BigDecimal
 internal data class BankWithdrawDraft(
     val entry: BankWithdrawEntry,
     val recipient: BankAccount? = null,
-    val newRecipient: NewRecipientDraft = NewRecipientDraft(),
+    // Reading `entry` here applies the default at construction only, never on copy(): the business flag has to
+    // land once, before the wizard starts, because that flow has no Type of transfer step.
+    val newRecipient: NewRecipientDraft = NewRecipientDraft.forEntry(entry),
     val amount: BigDecimal? = null,
     val source: BankWithdrawSource? = null,
     val destination: OfframpDestination? = null,
