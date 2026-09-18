@@ -132,7 +132,7 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
         }
         .getOrElse { it.toSigningError().left() }
 
-    override suspend fun signWithdrawal(
+    override suspend fun signRelayedBatch(
         userWalletId: UserWalletId,
         payload: PolymarketApprovalsPayload,
     ): Either<PolymarketSigningError, String> = Either
