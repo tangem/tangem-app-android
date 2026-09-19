@@ -164,6 +164,33 @@ internal class DefaultSingleJointAccountListFetcherTest {
         coVerify(exactly = 0) { eTagsStore.store(any(), any(), any()) }
     }
 
+    @Test
+    fun `GIVEN a 304 but no cache WHEN invoke THEN the tag is dropped and the list refetched without it`() = runTest {
+        // Arrange
+        val context = TestScopeContext(TestAppCoroutineScope(testScope = this))
+        advanceUntilIdle()
+        val fetcher = with(context) { createFetcher() }
+        coEvery {
+            jointAccountApi.getJointAccounts(walletId = walletId.stringValue, eTag = STORED_ETAG)
+        } returns notModified()
+        coEvery { jointAccountApi.getJointAccounts(walletId = walletId.stringValue) } returns ApiResponse.Success(
+            data = GetJointAccountsResponse(jointAccounts = listOf(createJointAccountDto())),
+            headers = mapOf(ETAG_HEADER to listOf(NEW_ETAG)),
+        )
+
+        // Act
+        val result = fetcher(walletId)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(context.store.get(walletId).first())
+            .containsExactly(createJointAccount(source = StatusSource.ACTUAL))
+        coVerify(exactly = 1) {
+            eTagsStore.clear(userWalletId = walletId, key = ETagsStore.Key.JointAccounts)
+            eTagsStore.store(userWalletId = walletId, key = ETagsStore.Key.JointAccounts, value = NEW_ETAG)
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun notModified(): ApiResponse<GetJointAccountsResponse> = ApiResponse.Error(
         cause = ApiResponseError.HttpException(
