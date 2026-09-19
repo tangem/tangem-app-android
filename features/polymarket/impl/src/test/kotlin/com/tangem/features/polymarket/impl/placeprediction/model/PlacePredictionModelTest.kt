@@ -389,7 +389,7 @@ internal class PlacePredictionModelTest {
 
         // Assert
         assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isNull()
-        assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
+        assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
         assertThat(model.uiState.value.amountCaption).isNotInstanceOf(AmountCaptionUM.Shortfall::class.java)
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
@@ -1370,7 +1370,7 @@ internal class PlacePredictionModelTest {
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
             assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(35)
-            assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
+            assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
             coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
 
             model.onDestroy()
@@ -1782,8 +1782,8 @@ internal class PlacePredictionModelTest {
                 ),
             ),
             network = network,
-            name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
-            symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
+            name = PolymarketCollateralCurrencyFactory.COLLATERAL_NAME,
+            symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,
             iconUrl = null,
             isCustom = false,
