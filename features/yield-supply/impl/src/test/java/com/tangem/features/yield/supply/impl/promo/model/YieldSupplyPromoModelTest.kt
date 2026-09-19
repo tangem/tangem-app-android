@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.promo.model
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -11,6 +12,7 @@ import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
@@ -42,24 +44,35 @@ internal class YieldSupplyPromoModelTest {
     fun `GIVEN a joint account token WHEN onStartEarningClick THEN coming soon and no action sheet`() {
         // Arrange
         val model = createModel(currency = joint)
+        val opened = model.openedBottomSheets()
 
         // Act
         model.onStartEarningClick()
 
         // Assert
         verify(exactly = 1) { alertFactory.showJointAccountComingSoon() }
+        assertThat(opened).isEmpty()
     }
 
     @Test
     fun `GIVEN a personal token WHEN onStartEarningClick THEN the action sheet opens`() {
         // Arrange
         val model = createModel(currency = personal)
+        val opened = model.openedBottomSheets()
 
         // Act
         model.onStartEarningClick()
 
         // Assert
         verify(exactly = 0) { alertFactory.showJointAccountComingSoon() }
+        assertThat(opened).containsExactly(YieldSupplyPromoConfig.Action)
+    }
+
+    private fun YieldSupplyPromoModel.openedBottomSheets(): List<YieldSupplyPromoConfig?> {
+        val opened = mutableListOf<YieldSupplyPromoConfig?>()
+        bottomSheetNavigation.subscribe { event -> opened += event.transformer(null) }
+
+        return opened
     }
 
     private fun createModel(currency: CryptoCurrency): YieldSupplyPromoModel = YieldSupplyPromoModel(
