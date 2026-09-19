@@ -7,6 +7,8 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -21,8 +23,13 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val moneyAccountStatusesStore: MoneyAccountStatusesStore = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
+    private val orderRepository: MoneyAccountOrderRepository = mockk(relaxed = true)
+    private val onboardingRepository: OnboardingRepository = mockk(relaxed = true)
+
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
+        orderRepository = orderRepository,
+        onboardingRepository = onboardingRepository,
         dispatchers = dispatchers,
     )
 
@@ -30,7 +37,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(moneyAccountStatusesStore)
+        clearMocks(moneyAccountStatusesStore, orderRepository, onboardingRepository)
     }
 
     @Test
