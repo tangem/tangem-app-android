@@ -17,7 +17,9 @@ interface PolymarketCollateralCurrencyFactory {
     fun createDepositTarget(): CryptoCurrency.Token
 
     companion object {
-        const val TOKEN_NAME = "USDC"
-        const val TOKEN_SYMBOL = "USDC"
+        const val COLLATERAL_NAME = "Polymarket USD"
+        const val COLLATERAL_SYMBOL = "pUSD"
+        const val DEPOSIT_NAME = "USDC"
+        const val DEPOSIT_SYMBOL = "USDC"
     }
 }
