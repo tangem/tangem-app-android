@@ -7,12 +7,15 @@ import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.jointaccount.converter.JointAccountDtoConverter
 import com.tangem.data.jointaccount.store.JointAccountsStore
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.store.datasource.jointaccount.JointAccountApi
+import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class DefaultSingleJointAccountListFetcher @Inject constructor(
@@ -32,25 +35,34 @@ internal class DefaultSingleJointAccountListFetcher @Inject constructor(
                 eTag = eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETAG_KEY),
             )
 
-            when (response) {
-                is ApiResponse.Success -> {
-                    storeETag(userWalletId = userWalletId, response = response)
+            when {
+                response is ApiResponse.Success -> storeAccounts(userWalletId = userWalletId, response = response)
+                // Nothing in the list moved since the stored ETag, so the cache is the current state
+                response.isNotModified() && store.contains(userWalletId) -> {
+                    store.updateStatusSource(userWalletId = userWalletId, source = StatusSource.ACTUAL)
+                }
+                // The tag outlives the cache, so a 304 with nothing cached would read as a wallet without accounts
+                response.isNotModified() -> {
+                    TangemLogger.i("The joint accounts ETag outlived the cache, refetching without it")
+                    eTagsStore.clear(userWalletId = userWalletId, key = ETAG_KEY)
 
-                    store.store(
+                    storeAccounts(
                         userWalletId = userWalletId,
-                        accounts = response.data.jointAccounts.map(converter::convert),
+                        response = jointAccountApi.getJointAccounts(walletId = userWalletId.stringValue),
                     )
                 }
-                // Nothing in the list moved since the stored ETag, so the cache is the current state
-                is ApiResponse.Error -> if (response.isNotModified()) {
-                    store.updateStatusSource(userWalletId = userWalletId, source = StatusSource.ACTUAL)
-                } else {
-                    throw response.cause
-                }
+                else -> throw (response as ApiResponse.Error).cause
             }
         }.onLeft {
             store.updateStatusSource(userWalletId = userWalletId, source = StatusSource.ONLY_CACHE)
         }
+    }
+
+    private suspend fun storeAccounts(userWalletId: UserWalletId, response: ApiResponse<GetJointAccountsResponse>) {
+        val accounts = response.getOrThrow()
+
+        storeETag(userWalletId = userWalletId, response = response)
+        store.store(userWalletId = userWalletId, accounts = accounts.jointAccounts.map(converter::convert))
     }
 
     /** A response without the header keeps the stored value: a read invalidates nothing */
@@ -60,8 +72,8 @@ internal class DefaultSingleJointAccountListFetcher @Inject constructor(
         eTagsStore.store(userWalletId = userWalletId, key = ETAG_KEY, value = eTag)
     }
 
-    private fun ApiResponse.Error.isNotModified(): Boolean {
-        val httpException = cause as? ApiResponseError.HttpException ?: return false
+    private fun ApiResponse<*>.isNotModified(): Boolean {
+        val httpException = (this as? ApiResponse.Error)?.cause as? ApiResponseError.HttpException ?: return false
 
         return httpException.code == ApiResponseError.HttpException.Code.NOT_MODIFIED
     }
