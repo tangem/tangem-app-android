@@ -91,12 +91,15 @@ sealed class VisaApiError(
     data object CardReissuePlasticInvalidEmbossName : VisaApiError(104140143)
 
     data object WaitlistInvalidEmail : VisaApiError(-1)
+    data object AccountIssueActiveOrderExists : VisaApiError(-1)
 
     companion object {
         private const val WAITLIST_INVALID_EMAIL_NAME = "WaitlistInvalidEmailException"
+        private const val ACCOUNT_ISSUE_ACTIVE_ORDER_EXISTS_NAME = "AccountIssueActiveOrderExistsException"
 
         fun fromBackendName(backendErrorName: String?): VisaApiError? = when (backendErrorName) {
             WAITLIST_INVALID_EMAIL_NAME -> WaitlistInvalidEmail
+            ACCOUNT_ISSUE_ACTIVE_ORDER_EXISTS_NAME -> AccountIssueActiveOrderExists
             else -> null
         }
 

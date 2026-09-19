@@ -10,6 +10,7 @@ import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepo
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
@@ -22,11 +23,15 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
+import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
+import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.TrackMoneyAccountOrderUseCase
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -122,6 +127,46 @@ internal interface MoneyAccountDataModule {
                 tangemPayCurrencyFactory = tangemPayCurrencyFactory,
                 singleNetworkStatusFetcher = singleNetworkStatusFetcher,
                 singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideTrackMoneyAccountOrderUseCase(
+            orderRepository: MoneyAccountOrderRepository,
+            startPolling: StartTangemPayOrderPollingUseCase,
+            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
+        ): TrackMoneyAccountOrderUseCase {
+            return TrackMoneyAccountOrderUseCase(
+                orderRepository = orderRepository,
+                startPolling = startPolling,
+                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        fun provideCreateMoneyAccountOrderUseCase(
+            orderRepository: MoneyAccountOrderRepository,
+            trackOrder: TrackMoneyAccountOrderUseCase,
+        ): CreateMoneyAccountOrderUseCase {
+            return CreateMoneyAccountOrderUseCase(
+                orderRepository = orderRepository,
+                trackOrder = trackOrder,
+            )
+        }
+
+        @Provides
+        fun provideRestoreMoneyAccountOrderUseCase(
+            orderRepository: MoneyAccountOrderRepository,
+            onboardingRepository: OnboardingRepository,
+            trackOrder: TrackMoneyAccountOrderUseCase,
+        ): RestoreMoneyAccountOrderUseCase {
+            return RestoreMoneyAccountOrderUseCase(
+                orderRepository = orderRepository,
+                onboardingRepository = onboardingRepository,
+                trackOrder = trackOrder,
             )
         }
 
