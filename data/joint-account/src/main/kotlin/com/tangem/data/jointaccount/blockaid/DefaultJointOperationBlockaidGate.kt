@@ -58,7 +58,7 @@ internal class DefaultJointOperationBlockaidGate @Inject constructor(
             .fold(
                 ifLeft = { error ->
                     TangemLogger.e("Blockaid check of a joint operation did not run", error)
-                    JointOperationBlockaidGate.Verdict.UNKNOWN
+                    JointOperationBlockaidGate.Verdict.UNAVAILABLE
                 },
                 ifRight = ::toVerdict,
             )
