@@ -33,6 +33,12 @@ data class PredictionOrderQuote(
             PredictionOrderSide.BUY -> maxOf(minOrderSize * worstCasePrice, minOrderAmount ?: BigDecimal.ZERO)
             PredictionOrderSide.SELL -> minOrderSize
         }
+
+    /** @param isFullClose the sale covers the whole remaining position, which lifts [minOrderSize]. */
+    fun isPlaceable(isFullClose: Boolean): Boolean = when (side) {
+        PredictionOrderSide.BUY -> status.isPlaceable
+        PredictionOrderSide.SELL -> status.isPlaceableForSell(isFullClose = isFullClose)
+    }
 }
 
 data class PredictionOrderFees(
