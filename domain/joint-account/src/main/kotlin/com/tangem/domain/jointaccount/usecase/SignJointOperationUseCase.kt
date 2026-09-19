@@ -22,6 +22,7 @@ import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
+import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
@@ -85,7 +86,7 @@ class SignJointOperationUseCase(
             )
             .bind()
 
-        checkComposition(
+        val deployment = checkComposition(
             userWalletId = userWalletId,
             network = network,
             safeAddress = safeAddress,
@@ -98,6 +99,7 @@ class SignJointOperationUseCase(
             chainId = chainId,
             safeAddress = safeAddress,
             ownerAddress = ownerAddress,
+            deployment = deployment,
         )
 
         val signature = signer
@@ -175,8 +177,8 @@ class SignJointOperationUseCase(
         network: Network,
         safeAddress: String,
         jointAccount: JointAccount,
-    ) {
-        compositionChecker
+    ): SafeDeployment {
+        return compositionChecker
             .ensureMatches(
                 userWalletId = userWalletId,
                 network = network,
@@ -194,6 +196,7 @@ class SignJointOperationUseCase(
         chainId: Long,
         safeAddress: String,
         ownerAddress: String,
+        deployment: SafeDeployment,
     ) {
         val verdict = blockaidGate.verify(
             network = network,
@@ -203,10 +206,21 @@ class SignJointOperationUseCase(
             ownerAddress = ownerAddress,
         )
 
-        ensure(verdict != JointOperationBlockaidGate.Verdict.MALICIOUS) { JointOperationSignError.Malicious }
-        // No verdict is not a pass: a co-signer cannot read the payload, so an unverified one is not signed
-        ensure(verdict != JointOperationBlockaidGate.Verdict.UNKNOWN) {
-            JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict"))
+        when (verdict) {
+            JointOperationBlockaidGate.Verdict.SAFE,
+            JointOperationBlockaidGate.Verdict.WARNING,
+            -> Unit
+            JointOperationBlockaidGate.Verdict.MALICIOUS -> raise(JointOperationSignError.Malicious)
+            // No answer is not a pass: a co-signer cannot read the payload, so an unverified one is not signed
+            JointOperationBlockaidGate.Verdict.UNAVAILABLE -> raise(
+                JointOperationSignError.Failed(cause = IllegalStateException("Blockaid is unavailable")),
+            )
+            // Blockaid judges the signature by reading the Safe contract; before the first operation deploys it
+            // there is nothing to read and no verdict can come. The CREATE2 check above already proved the payload
+            // targets our composition, so only a deployed Safe left without a verdict stays unsigned.
+            JointOperationBlockaidGate.Verdict.UNKNOWN -> ensure(deployment == SafeDeployment.NOT_DEPLOYED) {
+                JointOperationSignError.Failed(cause = IllegalStateException("Blockaid returned no verdict"))
+            }
         }
     }
 
