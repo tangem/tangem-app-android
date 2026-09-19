@@ -48,6 +48,13 @@ data class CustomerInfo(
     /** Transitional single-card accessor — returns the first card, or null if none. */
     val cardInfo: CardInfo? get() = cards.firstOrNull()
 
+    // TODO v_rodionov: [REDACTED_TASK_KEY] ACCOUNT is for MVP0, for MONEY ACCOUNT there should be a new type.
+    //  Define it on  backend first
+    val accountProductInstance: ProductInstance?
+        get() = productInstances.firstOrNull {
+            it.specificationDataType == ProductInstance.SpecificationDataType.ACCOUNT
+        }
+
     /** Card-level product instances only (excludes the VA ACCOUNT instance). */
     val cardProductInstances: List<ProductInstance>
         get() = productInstances.filter { it.specificationDataType == ProductInstance.SpecificationDataType.CARD }

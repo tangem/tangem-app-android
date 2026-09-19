@@ -11,10 +11,10 @@ import com.tangem.data.pay.util.BankCredentialsConverter
 import com.tangem.data.pay.util.CustomerInfoConverter
 import com.tangem.data.pay.util.OnrampFeeConverter
 import com.tangem.spend.datasource.pay.TangemPayApi
+import com.tangem.spend.datasource.pay.models.request.AccountOrderRequest
 import com.tangem.spend.datasource.pay.models.request.DeeplinkValidityRequest
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
 import com.tangem.spend.datasource.pay.models.request.SetTangemPayEnabledRequest
-import com.tangem.spend.datasource.pay.models.request.VirtualAccountOrderRequest
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.spend.datasource.pay.store.TangemPayCardFrozenStateStore
@@ -42,6 +42,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
+private const val VIRTUAL_ACCOUNT_SPECIFICATION_NAME = "SP_000006"
 
 @Suppress("LongParameterList", "TooManyFunctions")
 internal class DefaultOnboardingRepository @Inject constructor(
@@ -213,10 +214,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
         idempotencyKey: String,
     ): Either<VisaApiError, String> = withContext(dispatcherProvider.io) {
         requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.createVirtualAccountOrder(
+            tangemPayApi.createAccountOrder(
                 authHeader = authHeader,
-                body = VirtualAccountOrderRequest(
-                    data = VirtualAccountOrderRequest.Data(depositAddress = paymentAccountAddress),
+                body = AccountOrderRequest(
+                    data = AccountOrderRequest.Data(
+                        depositAddress = paymentAccountAddress,
+                        type = OrderType.ACCOUNT_ISSUE_VIRTUAL_RAIN.wireValue,
+                        specificationName = VIRTUAL_ACCOUNT_SPECIFICATION_NAME,
+                        signature = null,
+                    ),
                     idempotencyKey = idempotencyKey,
                 ),
             )
