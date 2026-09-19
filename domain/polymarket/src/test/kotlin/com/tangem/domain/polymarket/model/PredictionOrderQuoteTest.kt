@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -70,13 +71,74 @@ internal class PredictionOrderQuoteTest {
         ),
     )
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsPlaceable {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a quote WHEN isPlaceable THEN only a full close lifts the minimum order size`(
+            model: PlaceableModel,
+        ) {
+            // Arrange
+            val quote = createQuote(
+                side = model.side,
+                worstCasePrice = BigDecimal("0.50"),
+                minOrderSize = BigDecimal("5"),
+                minOrderAmount = null,
+                status = model.status,
+            )
+
+            // Act
+            val actual = quote.isPlaceable(isFullClose = model.isFullClose)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            PlaceableModel(status = PredictionQuoteStatus.FULL, isFullClose = false, expected = true),
+            PlaceableModel(status = PredictionQuoteStatus.PARTIAL, isFullClose = false, expected = true),
+            PlaceableModel(
+                status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+                isFullClose = false,
+                expected = false,
+            ),
+            PlaceableModel(
+                status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+                isFullClose = true,
+                expected = true,
+            ),
+            PlaceableModel(
+                status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE,
+                isFullClose = true,
+                side = PredictionOrderSide.BUY,
+                expected = false,
+            ),
+            PlaceableModel(
+                status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                isFullClose = true,
+                expected = false,
+            ),
+            PlaceableModel(status = PredictionQuoteStatus.MARKET_CLOSED, isFullClose = true, expected = false),
+        )
+    }
+
+    internal data class PlaceableModel(
+        val status: PredictionQuoteStatus,
+        val isFullClose: Boolean,
+        val expected: Boolean,
+        val side: PredictionOrderSide = PredictionOrderSide.SELL,
+    )
+
     private fun createQuote(
         side: PredictionOrderSide,
         worstCasePrice: BigDecimal,
         minOrderSize: BigDecimal,
         minOrderAmount: BigDecimal?,
+        status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
     ) = PredictionOrderQuote(
-        status = PredictionQuoteStatus.FULL,
+        status = status,
         side = side,
         shares = BigDecimal("10"),
         notional = BigDecimal("5"),
