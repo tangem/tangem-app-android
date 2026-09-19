@@ -138,9 +138,9 @@ interface TangemPayApi {
 
     // TODO: Doston: [REDACTED_TASK_KEY] Unify with method above
     @POST("v1/order")
-    suspend fun createVirtualAccountOrder(
+    suspend fun createAccountOrder(
         @Header("Authorization") authHeader: String,
-        @Body body: VirtualAccountOrderRequest,
+        @Body body: AccountOrderRequest,
     ): ApiResponse<OrderResponse>
 
     @POST("v1/order/{order_id}/cancel")
