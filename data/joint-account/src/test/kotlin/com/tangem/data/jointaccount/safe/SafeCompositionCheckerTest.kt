@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
+import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.safe.SafeSingleton
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -172,7 +173,7 @@ internal class SafeCompositionCheckerTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(SafeDeployment.NOT_DEPLOYED.right())
     }
 
     @Test
