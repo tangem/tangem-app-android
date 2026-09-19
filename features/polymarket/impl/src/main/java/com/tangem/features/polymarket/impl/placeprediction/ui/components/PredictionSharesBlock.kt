@@ -199,8 +199,8 @@ private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmou
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X8,
             iconStart = TangemIconUM.Icon(imageVector = Icons.ic_sign_minus_24),
-            isEnabled = isSteppable && selected > BigDecimal.ZERO,
-            onClick = { onAmountChange(SharesCalculator.decreased(selected).toPlainString()) },
+            isEnabled = isSteppable && selected > SharesCalculator.minimum(available),
+            onClick = { onAmountChange(SharesCalculator.decreased(selected, available).toPlainString()) },
         )
         TangemButton(
             variant = TangemButton.Variant.Secondary,
