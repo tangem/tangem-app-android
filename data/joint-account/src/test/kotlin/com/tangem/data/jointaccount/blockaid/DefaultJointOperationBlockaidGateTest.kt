@@ -112,7 +112,7 @@ internal class DefaultJointOperationBlockaidGateTest {
     }
 
     @Test
-    fun `GIVEN blockaid transport fails WHEN verify THEN UNKNOWN instead of blocking`() = runTest {
+    fun `GIVEN blockaid transport fails WHEN verify THEN UNAVAILABLE, apart from a verdict it could not give`() = runTest {
         // Arrange
         coEvery { blockAidVerifier.verifyTransaction(data = any()) } returns
             IllegalStateException("blockaid down").left()
@@ -127,7 +127,7 @@ internal class DefaultJointOperationBlockaidGateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.UNKNOWN)
+        assertThat(actual).isEqualTo(JointOperationBlockaidGate.Verdict.UNAVAILABLE)
     }
 
     @Test
