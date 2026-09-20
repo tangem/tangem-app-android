@@ -171,7 +171,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val domain = PaymentAccountStatusValue.Loaded(
                 source = StatusSource.ACTUAL,
                 customerId = "customer-3",
-                depositAddress = null,
                 balance = null,
                 cryptoCurrency = cryptoCurrency,
                 networks = emptyList(),
@@ -299,7 +298,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val dm = PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = "customer-4",
                 currencyCode = null,
-                depositAddress = null,
                 fiatBalance = null,
                 cryptoBalance = null,
                 fiatRate = null,
@@ -313,7 +311,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             // THEN
             val loaded = result as PaymentAccountStatusValue.Loaded
             assertThat(loaded.balance).isNull()
-            assertThat(loaded.cryptoCurrencyStatus).isNull()
+            assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
             assertThat(loaded.source).isEqualTo(StatusSource.CACHE)
         }
 
@@ -394,7 +392,6 @@ internal class PaymentAccountStatusValueDMConverterTest {
     ) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "cust_1",
-        depositAddress = "0xDEPOSIT",
         balance = PaymentAccountStatusValue.Balance(
             fiatBalance = PaymentAccountStatusValue.FiatBalance(
                 availableBalance = BigDecimal("10"),

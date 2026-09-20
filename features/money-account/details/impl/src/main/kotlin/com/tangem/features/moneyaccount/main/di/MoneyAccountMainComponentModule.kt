@@ -1,9 +1,9 @@
 package com.tangem.features.moneyaccount.main.di
 
-import com.tangem.features.moneyaccount.details.component.VirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountMainComponent
 import com.tangem.features.moneyaccount.main.DefaultMoneyAccountMainComponent
-import com.tangem.features.moneyaccount.main.addfunds.DefaultVirtualAccountAddFundsBottomSheetComponent
+import com.tangem.features.moneyaccount.main.addfunds.DefaultMoneyAccountAddFundsBottomSheetComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,7 +19,7 @@ internal interface MoneyAccountMainComponentModule {
     ): MoneyAccountMainComponent.Factory
 
     @Binds
-    fun bindVirtualAccountAddFundsComponentFactory(
-        factory: DefaultVirtualAccountAddFundsBottomSheetComponent.Factory,
-    ): VirtualAccountAddFundsBottomSheetComponent.Factory
+    fun bindMoneyAccountAddFundsComponentFactory(
+        factory: DefaultMoneyAccountAddFundsBottomSheetComponent.Factory,
+    ): MoneyAccountAddFundsBottomSheetComponent.Factory
 }

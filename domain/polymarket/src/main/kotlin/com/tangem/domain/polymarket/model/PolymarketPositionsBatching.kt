@@ -5,10 +5,12 @@ import com.tangem.pagination.BatchFlow
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchingContext
 
-typealias PolymarketPositionsBatchingContext = BatchingContext<Int, PolymarketPositionsListConfig, Nothing>
+typealias PolymarketPositionsBatchingContext =
+    BatchingContext<Int, PolymarketPositionsListConfig, PolymarketPositionsUpdateRequest>
 
-typealias PolymarketPositionsBatchAction = BatchAction<Int, PolymarketPositionsListConfig, Nothing>
+typealias PolymarketPositionsBatchAction =
+    BatchAction<Int, PolymarketPositionsListConfig, PolymarketPositionsUpdateRequest>
 
-typealias PolymarketPositionsBatchFlow = BatchFlow<Int, List<PolymarketPosition>, Nothing>
+typealias PolymarketPositionsBatchFlow = BatchFlow<Int, List<PolymarketPosition>, PolymarketPositionsUpdateRequest>
 
 typealias PolymarketPositionsBatchListState = BatchListState<Int, List<PolymarketPosition>>
