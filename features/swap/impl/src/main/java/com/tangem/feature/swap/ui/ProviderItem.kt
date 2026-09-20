@@ -36,8 +36,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
-import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
-import com.tangem.core.ui.utils.GrayscaleColorFilter
+import com.tangem.core.ui.utils.getGreyScaleColorFilter
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -107,6 +106,9 @@ private fun ProviderContentState(
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            val (alpha, colorFilter) = getGreyScaleColorFilter(
+                isGrayscale = state.additionalBadge == ProviderState.AdditionalBadge.Unavailable,
+            )
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12)
@@ -122,6 +124,8 @@ private fun ProviderContentState(
                         ),
                     )
                 },
+                alpha = alpha,
+                colorFilter = colorFilter,
                 contentDescription = null,
             )
 
@@ -163,6 +167,7 @@ private fun ProviderContentState(
                         ProviderState.AdditionalBadge.BestDexRate -> BestDexRateItem(badgeModifier)
                         ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.Recommended -> RecommendedItem(badgeModifier)
+                        ProviderState.AdditionalBadge.Unavailable -> UnavailableBadgeItem(badgeModifier)
                         ProviderState.AdditionalBadge.Empty -> Unit
                     }
                 }
@@ -232,7 +237,7 @@ private fun ProviderUnavailableState(
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val (alpha, colorFilter) = GRAY_SCALE_ALPHA to GrayscaleColorFilter
+            val (alpha, colorFilter) = getGreyScaleColorFilter(isGrayscale = true)
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12)
@@ -432,6 +437,24 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResourceSafe(id = R.string.express_provider_permission_needed),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun UnavailableBadgeItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+            shape = TangemTheme.shapes.roundedCornersLarge,
+        ),
+    ) {
+        Text(
+            text = stringResourceSafe(id = R.string.common_not_available),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),

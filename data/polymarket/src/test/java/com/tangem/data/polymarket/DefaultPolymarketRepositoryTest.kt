@@ -1,5 +1,6 @@
 package com.tangem.data.polymarket
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -29,6 +30,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketApiKeyRespons
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowanceResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.geo.models.PolymarketGeoblockResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketCategoriesResponse
@@ -64,6 +66,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderStateError
 import com.tangem.domain.polymarket.model.PredictionOrderStatus
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
+import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchingContext
@@ -84,8 +87,11 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.crypto.Mac
@@ -875,6 +881,102 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(result).isEqualTo(PredictionOrderStateError.Unknown(httpCode = 500, detail = "upstream").left())
     }
 
+    internal data class PriceModel(
+        val side: PredictionOrderSide,
+        val price: String,
+        val expected: Either<PredictionPriceError, BigDecimal>,
+    ) {
+        override fun toString(): String = "$side answers $price"
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetPrice {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun getPrice(model: PriceModel) = runTest {
+            // Arrange
+            coEvery { clobApi.getPrice(tokenId = ASSET_ID, side = model.side.name) } returns
+                ApiResponse.Success(PolymarketPriceResponse(price = model.price))
+
+            // Act
+            val result = repository.getPrice(assetId = ASSET_ID, side = model.side)
+
+            // Assert
+            assertThat(result).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            PriceModel(
+                side = PredictionOrderSide.BUY,
+                price = "0",
+                expected = PredictionPriceError.EmptyBook.left(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.BUY,
+                price = "0.000",
+                expected = PredictionPriceError.EmptyBook.left(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.SELL,
+                price = "1",
+                expected = PredictionPriceError.EmptyBook.left(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.SELL,
+                price = "1.000",
+                expected = PredictionPriceError.EmptyBook.left(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.BUY,
+                price = "0.001",
+                expected = BigDecimal("0.001").right(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.SELL,
+                price = "0.999",
+                expected = BigDecimal("0.999").right(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.BUY,
+                price = "1",
+                expected = BigDecimal("1").right(),
+            ),
+            PriceModel(
+                side = PredictionOrderSide.SELL,
+                price = "0",
+                expected = BigDecimal("0").right(),
+            ),
+        )
+
+        @Test
+        fun `GIVEN an unreadable price WHEN getPrice THEN reports unknown`() = runTest {
+            // Arrange
+            coEvery { clobApi.getPrice(tokenId = ASSET_ID, side = any()) } returns
+                ApiResponse.Success(PolymarketPriceResponse(price = "not a number"))
+
+            // Act
+            val result = repository.getPrice(assetId = ASSET_ID, side = PredictionOrderSide.BUY)
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PredictionPriceError.Unknown::class.java)
+        }
+
+        @Test
+        fun `GIVEN no orderbook WHEN getPrice THEN reports a closed market apart from an empty book`() = runTest {
+            // Arrange
+            coEvery { clobApi.getPrice(tokenId = ASSET_ID, side = any()) } returns
+                httpError(code = Code.NOT_FOUND, body = null)
+
+            // Act
+            val result = repository.getPrice(assetId = ASSET_ID, side = PredictionOrderSide.BUY)
+
+            // Assert
+            assertThat(result).isEqualTo(PredictionPriceError.MarketClosed.left())
+        }
+    }
+
     @Test
     fun `GIVEN credentials WHEN getBalanceAllowance THEN signs the read path and converts the base units`() = runTest {
         // Arrange
@@ -1090,6 +1192,7 @@ internal class DefaultPolymarketRepositoryTest {
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
         const val ORDER_ID = "0x6b2e"
+        const val ASSET_ID = "1116047"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
         const val BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000001"
         const val DW = "0xDEf0000000000000000000000000000000000002"

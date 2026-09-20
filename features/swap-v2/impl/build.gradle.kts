@@ -97,10 +97,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(projects.common.test)
     api(deps.kotlin.coroutines)

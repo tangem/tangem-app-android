@@ -20,7 +20,7 @@ internal class BankWithdrawChoicesTest {
             resourceReference(R.string.tangempay_withdraw_bank_transfer_type_third_party),
         ).inOrder()
         assertThat(config.selectedId).isEqualTo(config.options[0].id)
-        assertThat(BankWithdrawChoices.isThirdParty(config.selectedId)).isFalse()
+        assertThat(BankWithdrawChoices.isThirdParty(requireNotNull(config.selectedId))).isFalse()
     }
 
     @Test
@@ -30,7 +30,17 @@ internal class BankWithdrawChoicesTest {
 
         // Assert
         assertThat(config.selectedId).isEqualTo(config.options[1].id)
-        assertThat(BankWithdrawChoices.isThirdParty(config.selectedId)).isTrue()
+        assertThat(BankWithdrawChoices.isThirdParty(requireNotNull(config.selectedId))).isTrue()
+    }
+
+    @Test
+    fun `GIVEN nothing chosen WHEN transfer type config THEN no option selected`() {
+        // Act
+        val config = BankWithdrawChoices.transferType(isThirdParty = null)
+
+        // Assert
+        assertThat(config.selectedId).isNull()
+        assertThat(config.options).hasSize(2)
     }
 
     @Test
@@ -44,7 +54,20 @@ internal class BankWithdrawChoicesTest {
             resourceReference(R.string.tangempay_withdraw_bank_account_type_checking),
             resourceReference(R.string.tangempay_withdraw_bank_account_type_saving),
         ).inOrder()
-        assertThat(BankWithdrawChoices.accountTypeOf(config.selectedId)).isEqualTo(BankAccountType.SAVINGS)
+        assertThat(BankWithdrawChoices.accountTypeOf(requireNotNull(config.selectedId)))
+            .isEqualTo(BankAccountType.SAVINGS)
         assertThat(BankWithdrawChoices.accountTypeOf(config.options[0].id)).isEqualTo(BankAccountType.CHECKING)
+    }
+
+    @Test
+    fun `GIVEN nothing chosen WHEN account type config THEN no option selected`() {
+        // Act
+        val config = BankWithdrawChoices.accountType(selected = null)
+
+        // Assert
+        assertThat(config.selectedId).isNull()
+        assertThat(config.options.map { it.id })
+            .containsExactlyElementsIn(BankAccountType.entries.map { it.name })
+            .inOrder()
     }
 }

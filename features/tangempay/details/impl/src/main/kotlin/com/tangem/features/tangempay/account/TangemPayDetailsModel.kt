@@ -106,8 +106,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        isTiersPlusPlanEnabled = tangemPayFeatureToggles.isTiersPlusPlanEnabled,
-        isMultichainEnabled = tangemPayFeatureToggles.isAccountMultichainEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -256,7 +254,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun openAddFunds() {
         val status = currentStatus.value
         val balance = status.balanceOrNull()
-        if (balance == null || !status.value.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
+        if (balance == null || !status.value.canAddFunds) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
             return
         }
@@ -290,7 +288,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun fetchCashbackBlock() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled || cashbackBlockJobHolder.isActive) return
+        if (cashbackBlockJobHolder.isActive) return
         // A closed account shows only the deactivation notice — no cashback UI on top of it ([REDACTED_TASK_KEY])
         if (currentStatus.value.value is PaymentAccountStatusValue.Deactivated) return
         modelScope.launch {
@@ -586,7 +584,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
         val networks = currentStatus.value.networksOrNull().orEmpty()
-        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
+        if (shouldUseChooseNetwork(networks)) {
             bottomSheetNavigation.activate(TangemPayDetailsNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(
@@ -686,7 +684,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun openCashback() {
-        if (!tangemPayFeatureToggles.isCashbackEnabled) return
         currentStatus.value.ifLoadedOrNull { router.push(TangemPayAccountDetailsInnerRoute.Cashback) }
     }
 
@@ -828,9 +825,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             is PaymentAccountStatusValue.Inactive -> state.tariffPlan
             else -> null
         }
-        val banner = tariffPlan?.let {
-            TangemPayTiersBannerType.fromPlan(tangemPayFeatureToggles.isTiersPlusPlanEnabled, tariffPlan)
-        }
+        val banner = tariffPlan?.let { TangemPayTiersBannerType.fromPlan(it) }
 
         if (banner == shownTiersBanner) return
         shownTiersBanner = banner

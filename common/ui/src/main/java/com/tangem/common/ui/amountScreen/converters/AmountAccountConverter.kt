@@ -31,7 +31,7 @@ class AmountAccountConverter(
         return when (account) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(account.icon)
             is Account.Payment -> AccountIconUM.Payment
-            is Account.Virtual -> AccountIconUM.Virtual
+            is Account.Money -> AccountIconUM.Money
             is Account.Prediction -> AccountIconUM.Prediction
             is Account.Collectibles -> AccountIconUM.Collectibles
         }

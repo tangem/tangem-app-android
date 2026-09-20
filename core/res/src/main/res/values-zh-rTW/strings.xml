@@ -742,7 +742,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">透過 ACH/FedWire 從銀行帳戶接收美元</string>
   <string name="tangempay_topup_bank_transfer_title">從銀行帳戶</string>
-  <string name="tangempay_topup_receive_body">将 USDC Polygon 发送至您账户地址</string>
   <string name="tangempay_topup_receive_body_multichain">將 USDC 或 USDT 傳送至您帳戶的地址</string>
   <string name="tangempay_topup_receive_title">从其他钱包或交易所</string>
   <string name="tangempay_topup_swap_body">使用您錢包中的任意代幣為支付帳戶充值</string>

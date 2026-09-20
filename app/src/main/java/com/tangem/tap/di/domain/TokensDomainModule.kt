@@ -24,7 +24,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
@@ -168,7 +168,7 @@ internal object TokensDomainModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
@@ -187,7 +187,7 @@ internal object TokensDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-            virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+            moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
             moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,

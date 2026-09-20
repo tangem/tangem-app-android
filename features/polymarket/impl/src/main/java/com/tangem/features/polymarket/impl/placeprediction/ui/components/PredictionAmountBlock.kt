@@ -38,14 +38,16 @@ import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentSourceUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 @Composable
 internal fun PredictionAmountBlock(
     amountValue: String,
     amountCaption: AmountCaptionUM?,
-    payment: PaymentSourceUM,
+    collateral: CollateralUM,
+    balance: BigDecimal?,
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -63,12 +65,12 @@ internal fun PredictionAmountBlock(
             )
             TangemRow(
                 verticalAlignment = TangemRowVerticalAlignment.Center,
-                startSlot = payment.iconState?.let { iconState ->
+                startSlot = collateral.iconState?.let { iconState ->
                     { CurrencyIcon(state = iconState, shouldDisplayNetwork = true) }
                 },
                 titleSlot = {
                     Text(
-                        text = payment.tokenSymbol,
+                        text = collateral.tokenSymbol,
                         style = TangemTheme.typography3.body.medium,
                         color = TangemTheme.colors3.text.primary,
                     )
@@ -77,7 +79,7 @@ internal fun PredictionAmountBlock(
                     Text(
                         text = stringResourceSafe(
                             R.string.common_balance,
-                            payment.balance.formatPolymarketMoney(),
+                            balance.formatPolymarketMoney(),
                         ),
                         style = TangemTheme.typography3.caption.medium,
                         color = TangemTheme.colors3.text.secondary,

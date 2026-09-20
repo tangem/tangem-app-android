@@ -17,7 +17,12 @@ import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
+import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
@@ -57,12 +62,16 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -72,7 +81,6 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -102,6 +110,8 @@ internal class PlacePredictionModelTest {
     private val signOrderInteractor: SignPredictionOrderInteractor = mockk()
     private val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
     private val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
+    private val positionsRepository: PolymarketPositionsRepository = mockk()
+    private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
 
     private var model: PlacePredictionModel? = null
 
@@ -122,6 +132,8 @@ internal class PlacePredictionModelTest {
             signOrderInteractor,
             placeOrderUseCase,
             awaitDelayedOrderUseCase,
+            positionsRepository,
+            fundingWindow,
         )
 
         coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
@@ -133,6 +145,8 @@ internal class PlacePredictionModelTest {
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+        coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+            createPosition().right()
     }
 
     @AfterEach
@@ -151,7 +165,7 @@ internal class PlacePredictionModelTest {
         assertThat(model.uiState.value.market.title).isEqualTo("Market question")
         assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
         assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(42)
-        assertThat(model.uiState.value.payment.balance).isEqualTo(BigDecimal("100"))
+        assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("100"))
 
         model.onDestroy()
     }
@@ -333,7 +347,7 @@ internal class PlacePredictionModelTest {
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
         // Assert
-        assertThat(model.uiState.value.payment.hasSufficientBalance).isFalse()
+        assertThat((model.uiState.value.order as OrderSideUM.Buy).hasSufficientBalance).isFalse()
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
         model.onDestroy()
@@ -374,8 +388,8 @@ internal class PlacePredictionModelTest {
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
         // Assert
-        assertThat(model.uiState.value.payment.balance).isNull()
-        assertThat(model.uiState.value.payment.tokenSymbol).isEqualTo("USDC")
+        assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isNull()
+        assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
         assertThat(model.uiState.value.amountCaption).isNotInstanceOf(AmountCaptionUM.Shortfall::class.java)
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
@@ -458,6 +472,27 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
+    fun `GIVEN the first quote states a minimum the sum is below WHEN it arrives THEN the price is polled`() =
+        runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns
+                createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onAmountChange(value = "1")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(atLeast = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
+
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN a stated minimum WHEN a smaller sum is entered THEN no quote is requested`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -526,8 +561,8 @@ internal class PlacePredictionModelTest {
 
         // Assert
         val quote = model.uiState.value.quote as QuoteUM.Content
-        assertThat(quote.expectedShares).isEqualTo(BigDecimal("23.8"))
-        assertThat(quote.guaranteedShares).isEqualTo(BigDecimal("23.2"))
+        assertThat(quote.expected).isEqualTo(BigDecimal("23.8"))
+        assertThat(quote.guaranteed).isEqualTo(BigDecimal("23.2"))
 
         model.onDestroy()
     }
@@ -680,8 +715,87 @@ internal class PlacePredictionModelTest {
         assertThat(submitWhilePosting).isEqualTo(SubmitUM.Posting)
         val result = (model.uiState.value.submit as SubmitUM.Result).result
         assertThat(result).isInstanceOf(PlaceResultUM.Filled::class.java)
-        assertThat((result as PlaceResultUM.Filled).amount).isEqualTo(BigDecimal("10"))
+        assertThat((result as PlaceResultUM.Filled).collateralAmount).isEqualTo(BigDecimal("10"))
         verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the order fills WHEN place clicked THEN the balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the exchange found no match WHEN place clicked THEN no balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no answer from the exchange WHEN place clicked THEN the balance window still opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { placeOrderUseCase(any(), any(), any()) } returns
+            PredictionPlaceOrderError.Ambiguous(detail = "the exchange never answered").left()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { fundingWindow.open(userWalletId = USER_WALLET_ID) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the signature fails WHEN place clicked THEN no balance window opens`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        coEvery { signOrderInteractor(request = any()) } returns
+            PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+        model.onScreenHidden()
+
+        // Act
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { fundingWindow.open(userWalletId = any()) }
 
         model.onDestroy()
     }
@@ -838,8 +952,8 @@ internal class PlacePredictionModelTest {
             assertThat((model.uiState.value.submit as SubmitUM.Result).result).isEqualTo(
                 PlaceResultUM.Filled(
                     placedAt = (model.uiState.value.submit as SubmitUM.Result).result.placedAt,
-                    amount = BigDecimal("11.60"),
-                    tokensBought = BigDecimal("23.2"),
+                    collateralAmount = BigDecimal("11.60"),
+                    shares = BigDecimal("23.2"),
                 ),
             )
             verify { router.replaceAll(PlacePredictionRoute.Status, onComplete = any()) }
@@ -1135,6 +1249,10 @@ internal class PlacePredictionModelTest {
     @Test
     fun `GIVEN amount entered and cleared WHEN polling THEN price loop yields to quote loop and resumes`() = runTest {
         // Arrange
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+            createQuote().copy(status = PredictionQuoteStatus.PARTIAL, averagePrice = BigDecimal("0.64")).right(),
+        )
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScreenShown()
@@ -1142,7 +1260,11 @@ internal class PlacePredictionModelTest {
 
         // Act
         model.onAmountChange(value = "10")
-        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 2)
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(64)
 
         // Assert
         coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
@@ -1150,6 +1272,31 @@ internal class PlacePredictionModelTest {
         model.onAmountChange(value = "")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(48)
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a priced quote WHEN refresh fails or liquidity is unavailable THEN header keeps the last price`() = runTest {
+        coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+            PredictionOrderQuoteError.Network.left(),
+            createQuote().copy(
+                status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                averagePrice = BigDecimal.ZERO,
+            ).right(),
+        )
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
+
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        assertThat(model.uiState.value.market.outcomePriceCents).isEqualTo(61)
 
         model.onDestroy()
     }
@@ -1206,17 +1353,386 @@ internal class PlacePredictionModelTest {
         }
     }
 
-    private fun createModel(testScope: TestScope): PlacePredictionModel {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Sell {
+
+        @Test
+        fun `GIVEN sell params WHEN model created THEN the position fills the screen AND no event is read`() = runTest {
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            val order = model.uiState.value.order as OrderSideUM.Sell
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(order.balance).isEqualTo(BigDecimal("100"))
+            assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
+            assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
+            assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(35)
+            assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
+            coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a position too small to quote WHEN screen shown THEN the live price is the best bid`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
+                createPosition(size = BigDecimal("0.005")).right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenShown()
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.BUY) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a held position WHEN model created THEN the whole position is selected`() = runTest {
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEqualTo("51.23")
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN shares selected WHEN debounce elapses THEN a sell quote is requested for them`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            coVerify(exactly = 1) {
+                getQuoteUseCase(
+                    request = PredictionOrderQuoteRequest(
+                        marketId = MARKET_ID,
+                        assetId = ASSET_ID,
+                        side = PredictionOrderSide.SELL,
+                        amount = BigDecimal("12.80"),
+                        slippagePercent = model.uiState.value.slippage.percent,
+                    ),
+                )
+            }
+            val order = model.uiState.value.order as OrderSideUM.Sell
+            assertThat(order.proceeds).isEqualTo(
+                SharesProceedsUM.Content(expected = BigDecimal("11.01"), guaranteed = BigDecimal("10.88")),
+            )
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read AND the order is signed as a sell`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val request = slot<PredictionSignRequest>()
+                coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+                coVerify(exactly = 1) { getBalanceInteractor(addresses = any()) }
+                assertThat(request.captured.side).isEqualTo(PredictionOrderSide.SELL)
+                assertThat(request.captured.quote).isEqualTo(createSellQuote())
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the position shrank below the quoted shares WHEN place clicked THEN nothing is signed AND the user is told`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = BigDecimal("12.8")).right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                    createPosition(size = BigDecimal("12.799")).right()
+                model.onScreenHidden()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
+                    .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.79")))
+                assertThat(model.uiState.value.amountValue).isEqualTo("12.80")
+                assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+                verify { messageSender.send(any()) }
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a cheap quote but too few shares WHEN place clicked THEN the shares leg decides`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns
+                createSellQuote(shares = BigDecimal("40")).copy(total = BigDecimal("0.5")).right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onAmountChange(value = "40")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition(size = BigDecimal("39.99")).right()
+            model.onScreenHidden()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the market stopped accepting orders WHEN place clicked THEN nothing is signed AND the user is told`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                    createPosition().copy(isAcceptingOrders = false).right()
+                model.onScreenHidden()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
+                verify { messageSender.send(any()) }
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the position is gone WHEN place clicked THEN nothing is signed AND the user is told`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            model.onScreenHidden()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            verify { messageSender.send(any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the position cannot be re-read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            model.onScreenHidden()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            verify { messageSender.send(any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the position cannot be read WHEN model created THEN nothing is sellable`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onAmountChange(value = "1")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced sell WHEN the position turns out to be gone THEN the stale proceeds go with it`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onAmountChange(value = "12.80")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+                model.onScreenHidden()
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
+                assertThat((model.uiState.value.order as OrderSideUM.Sell).proceeds)
+                    .isEqualTo(SharesProceedsUM.Unavailable)
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN an unreadable position WHEN the screen is shown again THEN the position is read again`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition().right()
+
+            // Act
+            model.onScreenShown()
+            runCurrent()
+            model.onScreenHidden()
+
+            // Assert
+            val order = model.uiState.value.order as OrderSideUM.Sell
+            assertThat(order.position).isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+            assertThat(model.uiState.value.notifications)
+                .doesNotContain(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN an unreadable position WHEN retry clicked THEN the position is read again`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                createPosition().right()
+
+            // Act
+            model.onQuoteRetryClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
+                .isEqualTo(SellPositionUM.Held(available = BigDecimal("51.23")))
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the position cannot be read WHEN screen shown THEN no price is polled`() = runTest {
+            // Arrange
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
+                PolymarketPositionsError.Network.left()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+
+            // Act
+            model.onScreenShown()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no stored addresses WHEN model created THEN the user is told instead of nothing`() = runTest {
+            // Arrange
+            coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns null
+
+            // Act
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onScreenShown()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value.notifications)
+                .contains(PredictionNotificationUM.PositionUnavailable)
+            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+
+            model.onDestroy()
+        }
+    }
+
+    private fun createModel(
+        testScope: TestScope,
+        params: PlacePredictionComponent.Params = PlacePredictionComponent.Params.Buy(
+            userWalletId = USER_WALLET_ID,
+            eventId = EVENT_ID,
+            marketId = MARKET_ID,
+            assetId = ASSET_ID,
+        ),
+    ): PlacePredictionModel {
         return PlacePredictionModel(
-            paramsContainer = MutableParamsContainer(
-                value = PlacePredictionComponent.Params(
-                    userWalletId = USER_WALLET_ID,
-                    eventId = EVENT_ID,
-                    marketId = MARKET_ID,
-                    assetId = ASSET_ID,
-                    side = PredictionOrderSide.BUY,
-                ),
-            ),
+            paramsContainer = MutableParamsContainer(value = params),
             router = router,
             urlOpener = urlOpener,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
@@ -1233,22 +1749,13 @@ internal class PlacePredictionModelTest {
             signPredictionOrderInteractor = signOrderInteractor,
             placePredictionOrderUseCase = placeOrderUseCase,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
+            positionsRepository = positionsRepository,
+            predictionFundingWindow = fundingWindow,
         ).also { model = it }
     }
 
     private val getCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase = mockk {
         every { this@mockk.invoke() } returns createCollateralCurrency()
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
     }
 
     private fun createCollateralCurrency(): CryptoCurrency.Token {
@@ -1309,6 +1816,22 @@ internal class PlacePredictionModelTest {
         isLive = isLive,
     )
 
+    private fun createPosition(size: BigDecimal = BigDecimal("51.234567")): PolymarketPosition.Open =
+        createPolymarketPosition(assetId = ASSET_ID).copy(
+            id = POSITION_ID,
+            marketId = MARKET_ID,
+            size = size,
+            isNegRisk = false,
+        )
+
+    private fun createSellQuote(shares: BigDecimal = BigDecimal("12.8")): PredictionOrderQuote = createQuote().copy(
+        side = PredictionOrderSide.SELL,
+        shares = shares,
+        notional = BigDecimal("10.88"),
+        expectedExecutionAmount = BigDecimal("11.01"),
+        total = BigDecimal("10.48"),
+    )
+
     private fun createEvent(isAcceptingOrders: Boolean = true): PolymarketEvent = PolymarketEvent(
         id = EVENT_ID,
         slug = "event-slug",
@@ -1361,6 +1884,12 @@ internal class PlacePredictionModelTest {
         const val ASSET_ID = "asset-1"
         const val NETWORK_RAW_ID = "polygon-ecosystem-token"
         val USER_WALLET_ID = UserWalletId("011")
+        val POSITION_ID = PolymarketPositionId(conditionId = "condition-1", assetId = ASSET_ID)
+        val SELL_PARAMS = PlacePredictionComponent.Params.Sell(
+            userWalletId = USER_WALLET_ID,
+            positionId = POSITION_ID,
+            marketId = MARKET_ID,
+        )
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
 

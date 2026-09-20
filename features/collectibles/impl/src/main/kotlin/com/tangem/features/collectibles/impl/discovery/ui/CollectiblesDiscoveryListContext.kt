@@ -11,6 +11,8 @@ import androidx.compose.ui.unit.dp
  * @property isTabBandPinned the band is docked under the top bar: the inline item degrades to a spacer
  * @property isTabBandShown `false` only in search mode entered past the band — the item renders zero-height,
  *   so the copied scroll position of the search list keeps its meaning
+ * @property leadingBlocksAlpha fades the band out over the tail of the scroll into search, so it is already
+ *   invisible by the time the item is dropped
  * @property statusHeight min height of the loading/error/empty box, measured by the host so its content centres
  *   in what is left of the viewport
  */
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.dp
 internal data class CollectiblesDiscoveryListContext(
     val isTabBandPinned: Boolean,
     val isTabBandShown: Boolean,
+    val leadingBlocksAlpha: Float,
     val statusHeight: Dp,
 ) {
 
@@ -25,6 +28,7 @@ internal data class CollectiblesDiscoveryListContext(
         val Default = CollectiblesDiscoveryListContext(
             isTabBandPinned = false,
             isTabBandShown = true,
+            leadingBlocksAlpha = 1f,
             statusHeight = 0.dp,
         )
     }

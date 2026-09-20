@@ -9,20 +9,27 @@ import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 
-/** Answers collected for a recipient the user is adding; each wizard step fills its own part. */
+/** Answers collected for a recipient the user is adding; a step's answer stays null until that step is taken. */
 internal data class NewRecipientDraft(
-    /** Only the personal flow asks this; a business recipient never sees the Type of transfer step. */
-    val isThirdParty: Boolean = false,
-    val accountType: BankAccountType = BankAccountType.CHECKING,
+    /** A business recipient is always a third-party transfer; only the personal flow is asked about it. */
+    val isThirdParty: Boolean? = null,
+    val accountType: BankAccountType? = null,
     val fields: Map<BankWithdrawFormField, String> = emptyMap(),
-)
+) {
+
+    companion object {
+
+        /** A business recipient never sees the Type of transfer step, and Rain still requires the flag for them. */
+        fun forEntry(entry: BankWithdrawEntry): NewRecipientDraft =
+            NewRecipientDraft(isThirdParty = true.takeIf { entry == BankWithdrawEntry.NewBusiness })
+    }
+}
 
 internal fun NewRecipientDraft.isComplete(isBusiness: Boolean): Boolean {
-    val required = BankWithdrawFormFields.visible(
-        fields = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) + BankWithdrawFormFields.bankDetails,
-        values = fields,
-    )
-    return required.all { field -> !fields[field].isNullOrBlank() }
+    if (isThirdParty == null || accountType == null) return false
+    val formFields = BankWithdrawFormFields.recipientDetails(isBusiness = isBusiness) +
+        BankWithdrawFormFields.bankDetails
+    return formFields.all { field -> !fields[field].isNullOrBlank() }
 }
 
 /** The order payload for a recipient added in this wizard, or null until the rail and every form step are in place. */
@@ -46,25 +53,28 @@ internal fun NewRecipientDraft.toBankAccountDetails(rail: BankRail, isBusiness: 
     return BankAccountDetails(
         currency = USD_CURRENCY,
         rail = rail,
-        isThirdParty = isThirdParty,
+        isThirdParty = requireNotNull(isThirdParty),
         beneficiary = beneficiary,
-        beneficiaryAddress = postalAddress(RECIPIENT_ADDRESS),
+        beneficiaryAddress = postalAddress(
+            address = RECIPIENT_ADDRESS,
+            countryCode = value(BankWithdrawFormField.Country).uppercase(),
+        ),
         bankName = value(BankWithdrawFormField.BankName),
-        bankAddress = postalAddress(BANK_ADDRESS),
+        // Rain's bank rails are US-only: the form has no bank country field and the order always sends US.
+        bankAddress = postalAddress(address = BANK_ADDRESS, countryCode = BankWithdrawFormFields.US_COUNTRY_CODE),
         accountNumber = value(BankWithdrawFormField.AccountNumber),
         routingNumber = value(BankWithdrawFormField.RoutingNumber),
-        accountType = accountType,
+        accountType = requireNotNull(accountType),
     )
 }
 
-private fun NewRecipientDraft.postalAddress(address: AddressFields): PostalAddress {
-    val countryCode = value(address.country).uppercase()
+private fun NewRecipientDraft.postalAddress(address: AddressFields, countryCode: String): PostalAddress {
     val region = fields[address.region].orEmpty().trim()
     return PostalAddress(
         line1 = value(address.line1),
         line2 = null,
         city = value(address.city),
-        region = if (countryCode == US_COUNTRY_CODE) region.uppercase() else region,
+        region = if (countryCode == BankWithdrawFormFields.US_COUNTRY_CODE) region.uppercase() else region,
         postalCode = value(address.postalCode),
         countryCode = countryCode,
     )
@@ -73,7 +83,6 @@ private fun NewRecipientDraft.postalAddress(address: AddressFields): PostalAddre
 private fun NewRecipientDraft.value(field: BankWithdrawFormField): String = fields.getValue(field).trim()
 
 private data class AddressFields(
-    val country: BankWithdrawFormField,
     val region: BankWithdrawFormField,
     val city: BankWithdrawFormField,
     val line1: BankWithdrawFormField,
@@ -81,7 +90,6 @@ private data class AddressFields(
 )
 
 private val RECIPIENT_ADDRESS = AddressFields(
-    country = BankWithdrawFormField.Country,
     region = BankWithdrawFormField.Region,
     city = BankWithdrawFormField.City,
     line1 = BankWithdrawFormField.AddressLine1,
@@ -89,7 +97,6 @@ private val RECIPIENT_ADDRESS = AddressFields(
 )
 
 private val BANK_ADDRESS = AddressFields(
-    country = BankWithdrawFormField.BankCountry,
     region = BankWithdrawFormField.BankRegion,
     city = BankWithdrawFormField.BankCity,
     line1 = BankWithdrawFormField.BankAddressLine1,
@@ -97,4 +104,3 @@ private val BANK_ADDRESS = AddressFields(
 )
 
 private const val USD_CURRENCY = "USD"
-private const val US_COUNTRY_CODE = "US"

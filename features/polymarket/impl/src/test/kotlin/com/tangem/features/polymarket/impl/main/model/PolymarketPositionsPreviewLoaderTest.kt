@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketPositionsPreviewLoaderTest {
@@ -47,14 +48,114 @@ internal class PolymarketPositionsPreviewLoaderTest {
         // Act
         loader.resume(backgroundScope, userWalletId)
         runCurrent()
-        advanceTimeBy(60_000)
-        runCurrent()
 
         // Assert
         val content = loader.state.value as PolymarketPositionsPreviewUM.Content
-        assertThat(content.positions.map { it.id }).containsExactly("condition:c", "condition:a", "condition:b").inOrder()
+        assertThat(
+            content.positions.map { it.id },
+        ).containsExactly("condition:c", "condition:a", "condition:b").inOrder()
         coVerify(exactly = 1) { repository.getOpenPositions(addresses, 3, 0) }
         coVerify(exactly = 0) { deriveAddresses.invoke(any()) }
+    }
+
+    @Test
+    fun `GIVEN resumed preview WHEN poll interval passes THEN reads again`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Act
+        passPollInterval()
+        passPollInterval()
+
+        // Assert
+        coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+    }
+
+    @Test
+    fun `GIVEN paused preview WHEN poll interval passes THEN nothing is requested until resumed`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Act
+        loader.pause()
+        advanceTimeBy(POLL_INTERVAL * 3)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { repository.getOpenPositions(addresses, 3, 0) }
+
+        // Act
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
+    }
+
+    @Test
+    fun `GIVEN visible positions WHEN scheduled refresh fails THEN keeps cards outdated until next refresh succeeds`() =
+        runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returnsMany listOf(
+                page.right(),
+                PolymarketPositionsError.Network.left(),
+                page.right(),
+            )
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            val initial = loader.state.value as PolymarketPositionsPreviewUM.Content
+
+            // Act
+            passPollInterval()
+            val outdated = loader.state.value as PolymarketPositionsPreviewUM.Content
+
+            // Assert
+            assertThat(outdated.positions).isEqualTo(initial.positions)
+            assertThat(outdated.onRetry).isNotNull()
+
+            // Act
+            passPollInterval()
+
+            // Assert
+            assertThat(loader.state.value).isEqualTo(initial)
+            coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+
+    @Test
+    fun `GIVEN outdated preview WHEN retry tapped THEN reads at once and keeps polling`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returnsMany listOf(
+            page.right(),
+            PolymarketPositionsError.Network.left(),
+            page.right(),
+            page.right(),
+        )
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        passPollInterval()
+        val outdated = loader.state.value as PolymarketPositionsPreviewUM.Content
+
+        // Act
+        requireNotNull(outdated.onRetry).invoke()
+        runCurrent()
+
+        // Assert
+        assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(outdated.positions))
+        coVerify(exactly = 3) { repository.getOpenPositions(addresses, 3, 0) }
+
+        // Act
+        passPollInterval()
+
+        // Assert
+        coVerify(exactly = 4) { repository.getOpenPositions(addresses, 3, 0) }
     }
 
     @Test
@@ -123,32 +224,6 @@ internal class PolymarketPositionsPreviewLoaderTest {
     }
 
     @Test
-    fun `GIVEN paused preview WHEN resumed THEN loads once without polling`() = runTest {
-        // Arrange
-        val loader = createLoader()
-        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
-        loader.resume(backgroundScope, userWalletId)
-        runCurrent()
-
-        // Act
-        loader.pause()
-        advanceTimeBy(60_000)
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = 1) { repository.getOpenPositions(addresses, 3, 0) }
-
-        // Act
-        loader.resume(backgroundScope, userWalletId)
-        runCurrent()
-        advanceTimeBy(20_000)
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
-    }
-
-    @Test
     fun `GIVEN initial error WHEN paused and old retry invoked THEN does not request again`() = runTest {
         // Arrange
         val loader = createLoader()
@@ -160,7 +235,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
         // Act
         loader.pause()
         failed.onRetry()
-        advanceTimeBy(60_000)
+        advanceTimeBy(POLL_INTERVAL * 3)
         runCurrent()
 
         // Assert
@@ -206,5 +281,14 @@ internal class PolymarketPositionsPreviewLoaderTest {
                 single = dispatcher,
             ),
         )
+    }
+
+    private fun TestScope.passPollInterval() {
+        advanceTimeBy(POLL_INTERVAL)
+        runCurrent()
+    }
+
+    private companion object {
+        val POLL_INTERVAL = 20.seconds
     }
 }

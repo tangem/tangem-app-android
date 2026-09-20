@@ -7,7 +7,33 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.features.collectibles.impl.discovery.ui.DiscoveryListKeys
 
-internal data class CollectiblesListFill(val statusHeight: Dp, val fillerHeight: Dp)
+internal data class CollectiblesListFill(
+    val statusHeight: Dp,
+    val fillerHeight: Dp,
+    val foldedFillerHeight: Dp,
+)
+
+/**
+ * The filler height to hand the list. Frozen at the resting measurement while search is being entered, so
+ * the scroll range still covers the leading blocks; live afterwards, so the keyboard shrinks it instead of
+ * leaving empty space to scroll through.
+ *
+ * Remember it where the list's call site cannot change, or the frozen value goes with the composition.
+ */
+@Composable
+internal fun rememberFillerHeight(fill: CollectiblesListFill, isSearchActive: Boolean, isEnteringSearch: Boolean): Dp {
+    var restingFoldedHeight by remember { mutableStateOf(0.dp) }
+
+    LaunchedEffect(isSearchActive, fill.foldedFillerHeight) {
+        if (!isSearchActive) restingFoldedHeight = fill.foldedFillerHeight
+    }
+
+    return when {
+        !isSearchActive -> fill.fillerHeight
+        isEnteringSearch -> restingFoldedHeight
+        else -> fill.foldedFillerHeight
+    }
+}
 
 @Composable
 internal fun rememberListFill(listState: LazyListState, rowCount: Int, hasTabs: Boolean): CollectiblesListFill {
@@ -22,6 +48,7 @@ internal fun rememberListFill(listState: LazyListState, rowCount: Int, hasTabs: 
                 ?: 0
         }
     }
+
     // Kept across the swap of list states: a row measures the same in both, and the search list has no layout of
     // its own on its first frame — recomputing there would blow the filler up to a whole viewport.
     var knownRowHeight by remember { mutableIntStateOf(0) }
@@ -35,21 +62,27 @@ internal fun rememberListFill(listState: LazyListState, rowCount: Int, hasTabs: 
             val available = (info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding)
                 .coerceAtLeast(minimumValue = 0)
 
-            // Measured, not assumed: the leading blocks shrink to nothing while folding into search, and a
-            // status box sized past them would centre its content off by half of whatever it overshot.
             val leadingHeight = info.visibleItemsInfo.sumOf { item ->
                 if (item.key == MainListKeys.HEADER || item.key == DiscoveryListKeys.TABS) item.size else 0
             }
 
-            // What is left of the viewport below the tab band once it is pinned, top bar and bottom inset
-            // excluded. Filling exactly this leaves the header as the only thing that scrolls away.
+            val rowsHeight = rowCount * knownRowHeight
             val bandHeight = if (hasTabs) bandBlockHeightPx else 0
-            val filler = (available - bandHeight - rowCount * knownRowHeight).coerceAtLeast(minimumValue = 0)
 
-            (available - leadingHeight).coerceAtLeast(minimumValue = 0) to filler
+            Metrics(
+                statusHeight = (available - leadingHeight).coerceAtLeast(minimumValue = 0),
+                fillerHeight = (available - bandHeight - rowsHeight).coerceAtLeast(minimumValue = 0),
+                foldedFillerHeight = (available - rowsHeight).coerceAtLeast(minimumValue = 0),
+            )
         }
     }
     return with(density) {
-        CollectiblesListFill(statusHeight = metrics.first.toDp(), fillerHeight = metrics.second.toDp())
+        CollectiblesListFill(
+            statusHeight = metrics.statusHeight.toDp(),
+            fillerHeight = metrics.fillerHeight.toDp(),
+            foldedFillerHeight = metrics.foldedFillerHeight.toDp(),
+        )
     }
 }
+
+private data class Metrics(val statusHeight: Int, val fillerHeight: Int, val foldedFillerHeight: Int)

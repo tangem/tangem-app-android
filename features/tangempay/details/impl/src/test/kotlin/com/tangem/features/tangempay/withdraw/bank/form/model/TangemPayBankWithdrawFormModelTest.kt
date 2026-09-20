@@ -127,6 +127,21 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
+    fun `GIVEN non-latin city WHEN field blurred THEN latin error shown`() {
+        // Arrange
+        val model = createModel(formFields = cityFields)
+        fill(model, BankWithdrawFormField.City, "Москва")
+
+        // Act
+        textField(model, BankWithdrawFormField.City).onFocusChange(false)
+
+        // Assert
+        assertThat(textField(model, BankWithdrawFormField.City).error)
+            .isEqualTo(resourceReference(R.string.tangempay_order_data_field_latin_only))
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN field with error WHEN value changes THEN error cleared`() {
         // Arrange
         val model = createModel()
@@ -311,21 +326,36 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
-    fun `GIVEN region filled WHEN country picked without region THEN region field dropped`() {
-        // GIVEN
+    fun `GIVEN no country picked WHEN model created THEN region is a free-text field`() {
+        // GIVEN + WHEN
         val model = createModel(formFields = addressFields)
-        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = texas)
-
-        // WHEN
-        model.onCountrySelected(field = BankWithdrawFormField.Country, country = greatBritain, region = null)
 
         // THEN
-        assertThat(model.uiState.value.fields.map { it.field }).containsExactly(BankWithdrawFormField.Country)
+        assertThat(model.uiState.value.fields.map { it.field }).containsExactlyElementsIn(addressFields).inOrder()
+        assertThat(anyField(model, BankWithdrawFormField.Region)).isInstanceOf(FieldUM.Text::class.java)
+        assertThat(anyField(model, BankWithdrawFormField.Region).placeholder)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_placeholder_region_name))
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN country picked without region WHEN country selected THEN region field hidden and continue enabled`() {
+    fun `GIVEN US picked WHEN country selected THEN region is a selector`() {
+        // GIVEN
+        val model = createModel(formFields = addressFields)
+
+        // WHEN
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // THEN
+        assertThat(anyField(model, BankWithdrawFormField.Region)).isInstanceOf(FieldUM.Selector::class.java)
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("CA")
+        assertThat(anyField(model, BankWithdrawFormField.Region).placeholder)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_placeholder_region))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country without regions WHEN country selected THEN region is free text and continue disabled`() {
         // GIVEN
         val model = createModel(formFields = addressFields)
 
@@ -333,29 +363,8 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
 
         // THEN
-        assertThat(model.uiState.value.fields.map { it.field }).containsExactly(BankWithdrawFormField.Country)
-        assertThat(model.uiState.value.isContinueEnabled).isTrue()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN country picked without region WHEN continue clicked THEN region reported as empty`() {
-        // GIVEN
-        val model = createModel(formFields = addressFields)
-        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
-
-        // WHEN
-        model.uiState.value.onContinueClick()
-
-        // THEN
-        verify(exactly = 1) {
-            onContinue(
-                mapOf(
-                    BankWithdrawFormField.Country to "MC",
-                    BankWithdrawFormField.Region to "",
-                ),
-            )
-        }
+        assertThat(anyField(model, BankWithdrawFormField.Region)).isInstanceOf(FieldUM.Text::class.java)
+        assertThat(model.uiState.value.isContinueEnabled).isFalse()
         model.onDestroy()
     }
 
@@ -366,18 +375,45 @@ internal class TangemPayBankWithdrawFormModelTest {
 
         // THEN
         assertThat(model.uiState.value.fields.map { it.field })
-            .containsExactlyElementsIn(BankWithdrawFormFields.bankDetails - BankWithdrawFormField.BankRegion)
+            .containsExactlyElementsIn(BankWithdrawFormFields.bankDetails)
             .inOrder()
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN no country picked WHEN model created THEN region field hidden`() {
-        // GIVEN + WHEN
+    fun `GIVEN free-text region typed WHEN continue clicked THEN region reported`() {
+        // GIVEN
         val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
+        fill(model, BankWithdrawFormField.Region, " Bavaria ")
+
+        // WHEN
+        model.uiState.value.onContinueClick()
 
         // THEN
-        assertThat(model.uiState.value.fields.map { it.field }).containsExactly(BankWithdrawFormField.Country)
+        verify(exactly = 1) {
+            onContinue(
+                mapOf(
+                    BankWithdrawFormField.Country to "MC",
+                    BankWithdrawFormField.Region to "Bavaria",
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN free-text region typed WHEN US picked THEN region cleared`() {
+        // GIVEN
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
+        fill(model, BankWithdrawFormField.Region, "Bavaria")
+
+        // WHEN
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // THEN
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("CA")
         model.onDestroy()
     }
 
@@ -411,25 +447,9 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
-    fun `GIVEN bank address form WHEN bank country selector clicked THEN country picker opened`() {
+    fun `GIVEN bank details WHEN bank region selector clicked THEN us region picker opened`() {
         // GIVEN
         val model = createModel(formFields = bankAddressFields)
-
-        // WHEN
-        selectorField(model, BankWithdrawFormField.BankCountry).onClick()
-
-        // THEN
-        verify(exactly = 1) {
-            onOpenSelector(CountrySelectorConfig.Country(field = BankWithdrawFormField.BankCountry))
-        }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank country picked WHEN bank region selector clicked THEN picker opened for that country`() {
-        // GIVEN
-        val model = createModel(formFields = bankAddressFields)
-        model.onCountrySelected(field = BankWithdrawFormField.BankCountry, country = usa, region = california)
 
         // WHEN
         selectorField(model, BankWithdrawFormField.BankRegion).onClick()
@@ -443,53 +463,12 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN bank country with regions WHEN country selected THEN bank region filled and shown`() {
-        // GIVEN
-        val model = createModel(formFields = bankAddressFields)
-
-        // WHEN
-        model.onCountrySelected(field = BankWithdrawFormField.BankCountry, country = usa, region = california)
-
-        // THEN
-        assertThat(model.uiState.value.fields.map { it.field })
-            .containsExactly(BankWithdrawFormField.BankCountry, BankWithdrawFormField.BankRegion)
-            .inOrder()
-        assertThat(selectorField(model, BankWithdrawFormField.BankRegion).value).isEqualTo("CA")
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank country without regions WHEN country selected THEN bank region hidden`() {
-        // GIVEN
-        val model = createModel(formFields = bankAddressFields)
-
-        // WHEN
-        model.onCountrySelected(field = BankWithdrawFormField.BankCountry, country = monaco, region = null)
-
-        // THEN
-        assertThat(model.uiState.value.fields.map { it.field }).containsExactly(BankWithdrawFormField.BankCountry)
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN bank region picked WHEN only region changed THEN bank country kept`() {
-        // GIVEN
-        val model = createModel(formFields = bankAddressFields)
-        model.onCountrySelected(field = BankWithdrawFormField.BankCountry, country = usa, region = california)
-
-        // WHEN
-        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = texas)
-
-        // THEN
-        assertThat(selectorField(model, BankWithdrawFormField.BankCountry).value).isEqualTo("US")
-        assertThat(selectorField(model, BankWithdrawFormField.BankRegion).value).isEqualTo("TX")
-        model.onDestroy()
-    }
-
     private fun fill(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField, value: String) {
         textField(model, field).onValueChange(value)
     }
+
+    private fun anyField(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField) =
+        model.uiState.value.fields.first { it.field == field }
 
     private fun textField(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField) =
         model.uiState.value.fields.filterIsInstance<FieldUM.Text>().first { it.field == field }
@@ -529,8 +508,8 @@ internal class TangemPayBankWithdrawFormModelTest {
             BankWithdrawFormField.Region,
             BankWithdrawFormField.PostalCode,
         )
-        val bankAddressFields =
-            persistentListOf(BankWithdrawFormField.BankCountry, BankWithdrawFormField.BankRegion)
+        val bankAddressFields = persistentListOf(BankWithdrawFormField.BankRegion)
+        val cityFields = persistentListOf(BankWithdrawFormField.City)
         val usa = TangemPayCountry("US", "United States", null, isSuggested = true, hasRegions = true)
         val greatBritain = TangemPayCountry("GB", "United Kingdom", null, isSuggested = false, hasRegions = true)
         val monaco = TangemPayCountry("MC", "Monaco", null, isSuggested = false, hasRegions = false)

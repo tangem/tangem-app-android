@@ -19,6 +19,11 @@ internal object TangemPayBankWithdrawChoicePreviewData {
         onContinueClick = {},
     )
 
+    val transferTypeUnanswered: TangemPayBankWithdrawChoiceUM = create(
+        config = BankWithdrawChoices.transferType(isThirdParty = null),
+        step = TangemPayBankWithdrawInnerRoute.TransferType,
+    )
+
     val transferType: TangemPayBankWithdrawChoiceUM = create(
         config = BankWithdrawChoices.transferType(isThirdParty = false),
         step = TangemPayBankWithdrawInnerRoute.TransferType,

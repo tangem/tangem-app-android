@@ -27,7 +27,7 @@ import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
@@ -58,7 +58,7 @@ internal class WalletBalanceFetcherTest {
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk()
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
-    private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher = mockk()
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles = mockk {
         every { isMoneyAccountsEnabled } returns false
@@ -82,7 +82,7 @@ internal class WalletBalanceFetcherTest {
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
@@ -105,7 +105,7 @@ internal class WalletBalanceFetcherTest {
             multiStakingBalanceFetcher,
             // PER_CLASS: a fetcher left out here carries its calls into the next test
             paymentAccountStatusFetcher,
-            virtualAccountStatusFetcher,
+            moneyAccountStatusFetcher,
             predictionAccountStatusFetcher,
             collectiblesAccountStatusFetcher,
         )
@@ -1105,7 +1105,7 @@ internal class WalletBalanceFetcherTest {
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,

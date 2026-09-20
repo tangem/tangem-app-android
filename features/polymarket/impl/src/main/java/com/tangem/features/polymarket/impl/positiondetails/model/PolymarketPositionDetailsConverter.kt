@@ -119,3 +119,6 @@ internal class PolymarketPositionDetailsConverter :
 
 internal val PolymarketPosition.Open.canOpenPositionDetails: Boolean
     get() = resolutionStatus != PolymarketResolutionStatus.RESOLVED && result == null && !isRedeemable
+
+internal val PolymarketPosition.Open.canClosePosition: Boolean
+    get() = canOpenPositionDetails && marketId != null && isAcceptingOrders && size.signum() > 0

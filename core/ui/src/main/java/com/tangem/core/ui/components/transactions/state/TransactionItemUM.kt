@@ -168,6 +168,14 @@ sealed interface TransactionItemUM {
         }
 
         /**
+         * What a fee-only row was paid for — "Send <token icon> USDT"; its amount is the fee itself, not anything
+         * [symbol] moved. A row that cannot name its asset falls back to [Plain].
+         *
+         * @property icon token avatar drawn before the ticker; `null` renders the ticker alone.
+         */
+        data class FeeFor(val symbol: String, val icon: CurrencyIconState?) : ContentSubtitle
+
+        /**
          * DeFi provider counterparty — renders as "to/from: <provider icon> <name>", e.g. "from: 🟣 Aave".
          * Unlike [OwnAccount] (a white-tinted monogram in a colored square), [iconResId] is a bundled full-color
          * provider drawable rendered untinted in a circle.

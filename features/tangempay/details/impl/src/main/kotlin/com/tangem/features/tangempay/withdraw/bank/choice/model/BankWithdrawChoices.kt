@@ -13,7 +13,7 @@ internal object BankWithdrawChoices {
     private const val OWN_ACCOUNT_ID = "own_account"
     private const val THIRD_PARTY_ID = "third_party"
 
-    fun transferType(isThirdParty: Boolean): BankWithdrawChoiceConfig = BankWithdrawChoiceConfig(
+    fun transferType(isThirdParty: Boolean?): BankWithdrawChoiceConfig = BankWithdrawChoiceConfig(
         sectionTitle = resourceReference(R.string.tangempay_withdraw_bank_transfer_type_title),
         options = persistentListOf(
             BankWithdrawChoiceOption(
@@ -25,17 +25,17 @@ internal object BankWithdrawChoices {
                 title = resourceReference(R.string.tangempay_withdraw_bank_transfer_type_third_party),
             ),
         ),
-        selectedId = if (isThirdParty) THIRD_PARTY_ID else OWN_ACCOUNT_ID,
+        selectedId = isThirdParty?.let { if (it) THIRD_PARTY_ID else OWN_ACCOUNT_ID },
     )
 
     fun isThirdParty(selectedId: String): Boolean = selectedId == THIRD_PARTY_ID
 
-    fun accountType(selected: BankAccountType): BankWithdrawChoiceConfig = BankWithdrawChoiceConfig(
+    fun accountType(selected: BankAccountType?): BankWithdrawChoiceConfig = BankWithdrawChoiceConfig(
         sectionTitle = resourceReference(R.string.tangempay_withdraw_bank_account_type_title),
         options = BankAccountType.entries
             .map { type -> BankWithdrawChoiceOption(id = type.name, title = type.title()) }
             .toImmutableList(),
-        selectedId = selected.name,
+        selectedId = selected?.name,
     )
 
     fun accountTypeOf(selectedId: String): BankAccountType = BankAccountType.valueOf(selectedId)
