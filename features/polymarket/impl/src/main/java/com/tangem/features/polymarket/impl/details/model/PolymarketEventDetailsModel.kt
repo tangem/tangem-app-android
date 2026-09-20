@@ -6,7 +6,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.domain.polymarket.model.PolymarketEvent
-import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketUrlBuilder
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
@@ -94,7 +93,6 @@ internal class PolymarketEventDetailsModel @Inject constructor(
                 eventId = params.eventId,
                 marketId = marketId,
                 assetId = assetId,
-                side = PredictionOrderSide.BUY,
             ),
         )
     }

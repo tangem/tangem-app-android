@@ -248,11 +248,131 @@ internal class ResolveTangemPayCampaignUseCaseTest {
         coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
     }
 
+    @Test
+    fun `GIVEN a Pay wallet without stored credentials WHEN invoked THEN session expired AND no customer info`() =
+        runTest {
+            // Arrange
+            givenWallets(WALLET_ID to true)
+            coEvery { onboardingRepository.isTangemPayInitialDataProduced(WALLET_ID) } returns false
+
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+            coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+            coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
+            coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
+        }
+
+    @Test
+    fun `GIVEN a Pay wallet with an expired session WHEN invoked THEN session expired is resolved`() = runTest {
+        // Arrange
+        givenWallets(WALLET_ID to true)
+        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
+
+        // Act
+        val result = useCase(CAMPAIGN_KEY)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+        coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
+        coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
+    }
+
+    @Test
+    fun `GIVEN two wallets with expired sessions WHEN invoked THEN the first one is renewed`() = runTest {
+        // Arrange
+        givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
+        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
+        coEvery {
+            onboardingRepository.getCustomerInfo(OTHER_WALLET_ID)
+        } returns VisaApiError.RefreshTokenExpired.left()
+
+        // Act
+        val result = useCase(CAMPAIGN_KEY)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
+    }
+
+    @Test
+    fun `GIVEN missing credentials before an issuable wallet WHEN invoked THEN the issuable one issues the card`() =
+        runTest {
+            // Arrange
+            givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
+            coEvery { onboardingRepository.isTangemPayInitialDataProduced(WALLET_ID) } returns false
+            coEvery { getCustomerOffersUseCase.campaignOffer(OTHER_WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
+
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(
+                TangemPayCampaignResolution.IssueCard(
+                    userWalletId = OTHER_WALLET_ID,
+                    campaign = CAMPAIGN,
+                    offer = OFFER,
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN an expired session before a failing wallet WHEN invoked THEN the error is propagated`() = runTest {
+        // Arrange
+        givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
+        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
+        coEvery { onboardingRepository.getCustomerInfo(OTHER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
+
+        // Act
+        val result = useCase(CAMPAIGN_KEY)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
+    }
+
+    @Test
+    fun `GIVEN an expired session before an issuable wallet WHEN invoked THEN the issuable one issues the card`() =
+        runTest {
+            // Arrange
+            givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
+            coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
+            coEvery { getCustomerOffersUseCase.campaignOffer(OTHER_WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
+
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(
+                TangemPayCampaignResolution.IssueCard(
+                    userWalletId = OTHER_WALLET_ID,
+                    campaign = CAMPAIGN,
+                    offer = OFFER,
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN a wallet without Pay and one with an expired session WHEN invoked THEN session expired`() = runTest {
+        // Arrange
+        givenWallets(WALLET_ID to false, OTHER_WALLET_ID to true)
+        coEvery {
+            onboardingRepository.getCustomerInfo(OTHER_WALLET_ID)
+        } returns VisaApiError.RefreshTokenExpired.left()
+
+        // Act
+        val result = useCase(CAMPAIGN_KEY)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(OTHER_WALLET_ID))
+    }
+
     private fun givenWallets(vararg wallets: Pair<UserWalletId, Boolean>) {
         coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
             wallets.map { it.first }
         wallets.forEach { (walletId, hasPay) ->
             coEvery { onboardingRepository.hasTangemPayInWallet(walletId) } returns hasPay.right()
+            coEvery { onboardingRepository.isTangemPayInitialDataProduced(walletId) } returns true
             if (hasPay) givenKycStatus(walletId, KycStatus.APPROVED)
         }
     }

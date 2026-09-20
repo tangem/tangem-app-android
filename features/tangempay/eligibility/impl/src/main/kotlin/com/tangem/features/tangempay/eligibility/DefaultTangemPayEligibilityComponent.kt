@@ -11,6 +11,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
@@ -26,6 +27,7 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
     @Assisted private val params: TangemPayEligibilityComponent.Params,
     private val waitlistComponentFactory: TangemPayWaitlistComponent.Factory,
     private val walletSelectorComponentFactory: TangemPayWalletSelectorComponent.Factory,
+    private val analytics: AnalyticsEventHandler,
 ) : TangemPayEligibilityComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<EligibilityInnerRoute>()
@@ -65,13 +67,14 @@ internal class DefaultTangemPayEligibilityComponent @AssistedInject constructor(
         is EligibilityInnerRoute.RegionUnavailable -> RegionUnavailableComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = RegionUnavailableComponent.Params(
-                userWalletId = null,
+                userWalletId = params.userWalletId,
                 product = params.product,
                 countryCode = route.countryCode,
                 regionCode = route.regionCode,
                 onSelectAnotherRegionClick = stackNavigation::pop,
             ),
             waitlistComponentFactory = waitlistComponentFactory,
+            analytics = analytics,
         )
     }
 

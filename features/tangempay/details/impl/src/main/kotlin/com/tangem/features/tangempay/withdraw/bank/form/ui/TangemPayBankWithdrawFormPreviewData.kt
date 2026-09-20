@@ -51,11 +51,28 @@ internal object TangemPayBankWithdrawFormPreviewData {
         ),
     )
 
-    val personalWithoutRegion: TangemPayBankWithdrawFormUM = create(
+    val personalFreeTextRegion: TangemPayBankWithdrawFormUM = create(
         draft = personalDraft,
         step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
         fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
-        state = FormState(edits = mapOf(BankWithdrawFormField.Country to "MC")),
+        state = FormState(
+            edits = mapOf(
+                BankWithdrawFormField.Country to "MC",
+                BankWithdrawFormField.Region to "Bavaria",
+            ),
+        ),
+    )
+
+    val personalUsRegion: TangemPayBankWithdrawFormUM = create(
+        draft = personalDraft,
+        step = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        fields = BankWithdrawFormFields.recipientDetails(isBusiness = false),
+        state = FormState(
+            edits = mapOf(
+                BankWithdrawFormField.Country to "US",
+                BankWithdrawFormField.Region to "CA",
+            ),
+        ),
     )
 
     val businessBank: TangemPayBankWithdrawFormUM = create(

@@ -18,7 +18,7 @@ internal class DefaultOnboardMoneyAccountDeepLinkHandler @AssistedInject constru
     init {
         val userWalletId = userWalletsListRepository.selectedUserWallet.value?.walletId
         if (userWalletId == null) {
-            TangemLogger.e("Can not open virtual account onboarding deeplink: no selected wallet")
+            TangemLogger.e("Can not open money account onboarding deeplink: no selected wallet")
         } else {
             val mode = AppRoute.MoneyAccountOnboarding.Mode.Deeplink(
                 userWalletId = userWalletId,

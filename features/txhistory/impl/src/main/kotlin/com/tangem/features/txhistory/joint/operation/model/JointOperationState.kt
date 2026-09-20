@@ -29,8 +29,17 @@ internal data class JointOperationState(
     val isSending: Boolean = false,
 ) {
 
-    /** The initiator deletes the operation, every other member declines it */
-    val isInitiator: Boolean = ownAddress != null && ownAddress.equals(initiator, ignoreCase = true)
+    /**
+     * The initiator deletes the operation, every other member declines it. The backend tells them apart by the
+     * caller, so a member whose role this screen cannot tell is offered neither action.
+     */
+    val role: Role = when {
+        ownAddress == null || initiator == null -> Role.UNKNOWN
+        ownAddress.equals(initiator, ignoreCase = true) -> Role.INITIATOR
+        else -> Role.MEMBER
+    }
+
+    enum class Role { INITIATOR, MEMBER, UNKNOWN }
 
     /** The initiator signed on creation, so their answer counts towards the threshold */
     val collected: Int = signers.count { signer ->
@@ -48,6 +57,14 @@ internal data class JointOperationState(
 
     /** `null` while this member has not answered or their owner address is not resolvable here */
     val ownAnswer: JointOperationSignerState.Answer? = ownSigner?.answer
+
+    /**
+     * The backend answers a caller outside the roster with `NotAMember`, and [signers] carries every member of the
+     * account, so a missing [ownAnswer] also means this owner address is not one of them.
+     */
+    val canRefuse: Boolean = role != Role.UNKNOWN &&
+        ownAnswer != null &&
+        ownAnswer != JointOperationSignerState.Answer.DECLINED
 
     /**
      * The sign and reject use cases tolerate a failed refresh, so [signers] can still carry this member as waiting

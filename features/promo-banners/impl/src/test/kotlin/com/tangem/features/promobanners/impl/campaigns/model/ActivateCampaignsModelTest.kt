@@ -30,7 +30,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.component.ActivateCampaignBottomSheetComponent
 import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,7 +39,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -283,17 +282,6 @@ internal class ActivateCampaignsModelTest {
             getPromoCampaignStateUseCase = getPromoCampaignStateUseCase,
             predefinedTokenResolver = predefinedTokenResolver,
             getWalletsUseCase = getWalletsUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 
