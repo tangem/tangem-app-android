@@ -26,7 +26,6 @@ import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -67,7 +66,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
 ) : PaymentAccountStatusFetcher {
 
@@ -204,15 +202,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val isApproved = customerInfo.kycStatus == KycStatus.APPROVED
         val userWalletId = account.userWalletId
         val tariffPlan = customerInfo.tariffPlan
-
-        if (!tangemPayFeatureToggles.isTiersPlusPlanEnabled) {
-            if (isIssuing && isApproved) {
-                // If order id wasn't saved -> start order creation and get customer info
-                onboardingRepository.createOrder(userWalletId)
-                    .onLeft { logger.e("createOrder failed: $it") }
-            }
-            return status
-        }
 
         if (!isIssuing || !isApproved) {
             return status
@@ -436,11 +425,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val multichainNetworkStatuses by lazy {
-            if (tangemPayFeatureToggles.isAccountMultichainEnabled) {
-                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
-            } else {
-                emptyList()
-            }
+            tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
         }
         return when {
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
@@ -588,10 +573,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     ): PaymentAccountStatusValue {
         val tangemPayCards = resolveCards(userWalletId)
 
-        if (!tangemPayFeatureToggles.isTiersPlusPlanEnabled && tangemPayCards.isEmpty()) {
-            return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
-        }
-
         // Additional-card issuance: the backend omits the new card until it is provisioned, so surface a
         // placeholder for every locally tracked in-flight issuance order alongside the real cards.
         val issuingCards = buildIssuingCards(
@@ -622,7 +603,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return PaymentAccountStatusValue.Loaded(
             source = source,
             customerId = customerId,
-            depositAddress = balance?.cryptoBalance?.depositAddress,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             networks = networks,
             fiatRate = fiatRate,

@@ -10,20 +10,20 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.VirtualAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Virtual, MoneyAccountMainUM> {
+internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Money, MoneyAccountMainUM> {
 
-    override fun convert(value: AccountStatus.Virtual): MoneyAccountMainUM {
+    override fun convert(value: AccountStatus.Money): MoneyAccountMainUM {
         return when (val statusValue = value.value) {
-            is VirtualAccountStatusValue.Empty -> MoneyAccountMainUM.Empty
-            is VirtualAccountStatusValue.NotCreated -> MoneyAccountMainUM.Empty
-            is VirtualAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
-            is VirtualAccountStatusValue.UnderReview -> MoneyAccountMainUM.UnderReview(
+            is MoneyAccountStatusValue.Empty -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.NotCreated -> MoneyAccountMainUM.Empty
+            is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
+            is MoneyAccountStatusValue.UnderReview -> MoneyAccountMainUM.UnderReview(
                 subtitle = when (statusValue.kycStatus) {
                     KycStatus.REJECTED -> TextReference.Res(R.string.tangempay_kyc_has_failed)
                     else -> TextReference.Res(R.string.tangempay_kyc_in_progress)
@@ -32,17 +32,17 @@ internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Virtual,
                     // TODO([REDACTED_TASK_KEY]): navigate to VA screen
                 },
             )
-            is VirtualAccountStatusValue.Provisioning -> MoneyAccountMainUM.Provisioning(
+            is MoneyAccountStatusValue.Provisioning -> MoneyAccountMainUM.Provisioning(
                 onClick = {
                     // TODO([REDACTED_TASK_KEY]): navigate to VA screen
                 },
             )
-            is VirtualAccountStatusValue.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
+            is MoneyAccountStatusValue.CountryNotSupported -> MoneyAccountMainUM.CountryNotSupported(
                 onClick = {
                     // TODO([REDACTED_TASK_KEY]): navigate to VA screen
                 },
             )
-            is VirtualAccountStatusValue.Active -> MoneyAccountMainUM.Content(
+            is MoneyAccountStatusValue.Active -> MoneyAccountMainUM.Content(
                 subtitle = stringReference(statusValue.cryptoCurrency.symbol),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(
@@ -55,9 +55,9 @@ internal class MoneyAccountMainBlockConverter : Converter<AccountStatus.Virtual,
                     // TODO([REDACTED_TASK_KEY]): navigate to VA screen
                 },
             )
-            is VirtualAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
-            is VirtualAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
-            is VirtualAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
+            is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.TemporaryUnavailable
+            is MoneyAccountStatusValue.Error.NotSynced -> MoneyAccountMainUM.SyncNeeded
+            is MoneyAccountStatusValue.Error.ExposedDevice -> MoneyAccountMainUM.ExposedDevice
         }
     }
 

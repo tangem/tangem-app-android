@@ -23,6 +23,8 @@ interface JointCosignRequestsComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        /** Operation to open on landing, e.g. from a `joint_tx` push notification. Consumed once. */
+        val pendingOperationId: String? = null,
     )
 
     interface Factory : ComponentFactory<Params, JointCosignRequestsComponent>

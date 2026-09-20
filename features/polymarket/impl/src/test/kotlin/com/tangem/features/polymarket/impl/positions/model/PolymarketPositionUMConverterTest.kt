@@ -1,13 +1,21 @@
 package com.tangem.features.polymarket.impl.positions.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_checkmark_16
+import com.tangem.core.ui.res.generated.icons.ic_heart_broken_16
+import com.tangem.core.ui.res.generated.icons.ic_arrow_split_top_16
 import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import org.junit.jupiter.api.Test
@@ -72,22 +80,58 @@ internal class PolymarketPositionUMConverterTest {
 
         // Assert
         assertThat(actual.result).isEqualTo(
-            TangemBadgeUM(text = stringReference(model.text), status = model.status, size = TangemBadge.Size.X6),
+            model.badge,
         )
     }
 
     private fun provideTestModels() = listOf(
-        ResultModel(PolymarketPositionResult.WON, "Won $9.97", TangemBadge.Status.Success),
-        ResultModel(PolymarketPositionResult.LOST, "Lost", TangemBadge.Status.Error),
-        ResultModel(PolymarketPositionResult.SPLIT, "Split", TangemBadge.Status.Neutral),
-        ResultModel(PolymarketPositionResult.UNKNOWN, "Unknown", TangemBadge.Status.Neutral),
+        ResultModel(
+            PolymarketPositionResult.WON,
+            TangemBadgeUM(
+                text = resourceReference(
+                    R.string.prediction_positions_result_amount,
+                    wrappedList(resourceReference(R.string.prediction_positions_won), "$9.97"),
+                ),
+                status = TangemBadge.Status.Success,
+                variant = TangemBadge.Variant.Solid,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_checkmark_16),
+            ),
+        ),
+        ResultModel(
+            PolymarketPositionResult.LOST,
+            TangemBadgeUM(
+                text = resourceReference(
+                    R.string.prediction_positions_result_amount,
+                    wrappedList(resourceReference(R.string.prediction_positions_lost), "$9.97"),
+                ),
+                status = TangemBadge.Status.Error,
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_heart_broken_16),
+            ),
+        ),
+        ResultModel(
+            PolymarketPositionResult.SPLIT,
+            TangemBadgeUM(
+                text = resourceReference(
+                    R.string.prediction_positions_result_amount,
+                    wrappedList(resourceReference(R.string.prediction_positions_split), "$9.97"),
+                ),
+                size = TangemBadge.Size.X6,
+                iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_split_top_16),
+            ),
+        ),
+        ResultModel(
+            PolymarketPositionResult.UNKNOWN,
+            TangemBadgeUM(text = resourceReference(R.string.prediction_positions_unknown), size = TangemBadge.Size.X6),
+        ),
     )
 
     @ParameterizedTest
     @EnumSource(PolymarketResolutionStatus::class)
     fun `GIVEN resolution state WHEN card tapped THEN only unresolved positions open details`(status: PolymarketResolutionStatus) {
         // Arrange
-        val onClick: (PolymarketPositionId) -> Unit = mockk(relaxed = true)
+        val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
         val position = createPolymarketPosition(resolutionStatus = status)
 
         // Act
@@ -95,13 +139,13 @@ internal class PolymarketPositionUMConverterTest {
         card.onClick?.invoke()
 
         // Assert
-        verify(exactly = if (status == PolymarketResolutionStatus.RESOLVED) 0 else 1) { onClick(position.id) }
+        verify(exactly = if (status == PolymarketResolutionStatus.RESOLVED) 0 else 1) { onClick(position) }
     }
 
     @Test
     fun `GIVEN finished history WHEN converted with callback THEN has no details action`() {
         // Arrange
-        val onClick: (PolymarketPositionId) -> Unit = mockk(relaxed = true)
+        val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
 
         // Act
         val card = PolymarketPositionUMConverter(onClick).convert(createClosedPolymarketPosition())
@@ -110,5 +154,20 @@ internal class PolymarketPositionUMConverterTest {
         assertThat(card.onClick).isNull()
     }
 
-    data class ResultModel(val result: PolymarketPositionResult, val text: String, val status: TangemBadge.Status)
+    @ParameterizedTest
+    @EnumSource(PolymarketPositionResult::class)
+    fun `GIVEN redeemable position WHEN card tapped THEN passes known result and real data`(result: PolymarketPositionResult) {
+        // Arrange
+        val onClick: (PolymarketPosition.Open) -> Unit = mockk(relaxed = true)
+        val position = createPolymarketPosition(result = result, resolutionStatus = PolymarketResolutionStatus.RESOLVED)
+            .copy(isRedeemable = true)
+
+        // Act
+        val card = PolymarketPositionUMConverter(onClick).convert(position)
+        card.onClick?.invoke()
+
+        // Assert
+        verify(exactly = if (result == PolymarketPositionResult.UNKNOWN) 0 else 1) { onClick(position) }
+    }
+    data class ResultModel(val result: PolymarketPositionResult, val badge: TangemBadgeUM)
 }

@@ -214,16 +214,16 @@ sealed interface Account {
     }
 
     @Serializable
-    data class Virtual private constructor(
+    data class Money private constructor(
         override val accountId: AccountId,
     ) : Account {
-        override val accountName: AccountName.Custom = AccountName.Custom("Virtual").getOrElse {
-            error("Can not create account name for Virtual account with userWalletId = ${accountId.userWalletId}")
+        override val accountName: AccountName.Custom = AccountName.Custom("Money").getOrElse {
+            error("Can not create account name for Money account with userWalletId = ${accountId.userWalletId}")
         }
 
         companion object {
-            operator fun invoke(userWalletId: UserWalletId): Virtual {
-                return Virtual(accountId = AccountId.forVirtualAccount(userWalletId = userWalletId))
+            operator fun invoke(userWalletId: UserWalletId): Money {
+                return Money(accountId = AccountId.forMoneyAccount(userWalletId = userWalletId))
             }
         }
     }

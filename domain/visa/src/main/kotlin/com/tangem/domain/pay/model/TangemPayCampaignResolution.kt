@@ -12,5 +12,7 @@ sealed interface TangemPayCampaignResolution {
 
     data class Landing(val campaign: TangemPayCampaign) : TangemPayCampaignResolution
 
+    data class SessionExpired(val userWalletId: UserWalletId) : TangemPayCampaignResolution
+
     data object Unavailable : TangemPayCampaignResolution
 }

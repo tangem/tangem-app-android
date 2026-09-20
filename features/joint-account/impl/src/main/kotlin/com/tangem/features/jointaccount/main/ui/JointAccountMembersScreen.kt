@@ -7,8 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,32 +20,20 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenuItem
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
-import com.tangem.core.ui.ds2.row.TangemRow
-import com.tangem.core.ui.ds2.row.TangemRowContentLead
-import com.tangem.core.ui.ds2.row.TangemRowText
-import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
-import com.tangem.core.ui.ds.contextmenu.TangemContextMenuItem
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
-import com.tangem.core.ui.res.generated.icons.ic_info_24
-import com.tangem.core.ui.res.generated.icons.ic_shield_checkmark_24_filled
-import com.tangem.core.ui.res.generated.icons.ic_user_24
+import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
 import com.tangem.features.jointaccount.main.JointAccountMembersUM.MemberUM
@@ -210,7 +197,7 @@ private fun MembersHeader(title: TextReference, progress: TextReference, modifie
 
         Text(
             text = progress.resolveReference(),
-            style = TangemTheme.typography3.body.medium,
+            style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
         )
     }

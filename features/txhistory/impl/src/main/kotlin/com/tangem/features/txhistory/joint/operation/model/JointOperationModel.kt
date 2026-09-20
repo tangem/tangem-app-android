@@ -19,6 +19,7 @@ import com.tangem.features.txhistory.joint.operation.converter.JointOperationUMC
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.features.txhistory.joint.operation.signers.converter.JointOperationSignersUMConverter
 import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
+import com.tangem.features.txhistory.joint.operation.model.JointOperationState.Role
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -84,7 +87,15 @@ internal class JointOperationModel @Inject constructor(
     private val isBusy: Boolean
         get() = isSigning.value || isRefusing.value
 
-    private val canCreateContact = delegate.canCreateContact(userWalletId = params.userWalletId)
+    private val canCreateContact = operationState.flatMapLatest { state ->
+        if (state == null) return@flatMapLatest flowOf(false)
+
+        delegate.canCreateContact(
+            userWalletId = params.userWalletId,
+            recipient = state.displayed.recipient,
+            network = params.currency.network,
+        )
+    }
 
     private val operationConverter = JointOperationUMConverter(
         currency = params.currency,
@@ -95,7 +106,10 @@ internal class JointOperationModel @Inject constructor(
         onRefuseClick = ::onRefuseClick,
     )
 
-    private val refusalMessages = JointOperationRefusalMessages(onConfirm = ::refuse)
+    private val refusalMessages = JointOperationRefusalMessages(
+        onConfirm = ::refuse,
+        onOperationGone = params.onDismiss,
+    )
 
     private val signersConverter = JointOperationSignersUMConverter()
 
@@ -159,9 +173,9 @@ internal class JointOperationModel @Inject constructor(
 
     fun onRefuseClick() {
         val operation = currentState ?: return
-        if (isBusy) return
+        if (isBusy || !operation.canRefuse) return
 
-        uiMessageSender.send(refusalMessages.confirmation(isInitiator = operation.isInitiator))
+        uiMessageSender.send(refusalMessages.confirmation(isInitiator = operation.role == Role.INITIATOR))
     }
 
     fun onCreateContactClick() {
@@ -209,11 +223,13 @@ internal class JointOperationModel @Inject constructor(
     }
 
     private fun onRefused(operation: JointOperationState) {
-        if (operation.isInitiator) {
-            isGoneLocally.value = true
-            showDeleted()
-        } else {
-            localAnswer.value = Answer.DECLINED
+        when (operation.role) {
+            Role.INITIATOR -> {
+                isGoneLocally.value = true
+                showDeleted()
+            }
+            Role.MEMBER -> localAnswer.value = Answer.DECLINED
+            Role.UNKNOWN -> Unit
         }
     }
 

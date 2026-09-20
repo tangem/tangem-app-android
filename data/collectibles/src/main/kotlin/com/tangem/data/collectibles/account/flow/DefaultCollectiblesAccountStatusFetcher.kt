@@ -1,14 +1,19 @@
 package com.tangem.data.collectibles.account.flow
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
+import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.account.isAccountCreated
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -20,49 +25,57 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     private val collectiblesAccountStatusStore: CollectiblesAccountStatusStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val collectiblesOwnerDeriver: CollectiblesOwnerDeriver,
+    private val gachaVaultRepository: GachaVaultRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesAccountStatusFetcher {
 
     override suspend fun invoke(params: CollectiblesAccountStatusFetcher.Params): Either<Throwable, Unit> {
-        return Either.catchOn(dispatchers.default) {
-            when (resolve(userWalletId = params.userWalletId)) {
-                Resolution.NotDerived -> collectiblesAccountStatusStore.store(
-                    userWalletId = params.userWalletId,
-                    value = CollectiblesAccountStatusValue.MissedDerivation,
-                )
-                Resolution.Unreadable -> markUnrefreshed(userWalletId = params.userWalletId)
+        val userWalletId = params.userWalletId
+
+        return Either.catchOn(dispatchers.default) { refresh(userWalletId = userWalletId) }
+            .onLeft { error ->
+                logger.e("Failed to refresh the collectibles vault of $userWalletId", error)
+                markUnrefreshed(userWalletId = userWalletId)
             }
-        }.onLeft { error ->
-            logger.e("Failed to refresh the collectibles vault of ${params.userWalletId}", error)
-            markUnrefreshed(userWalletId = params.userWalletId)
+    }
+
+    private suspend fun refresh(userWalletId: UserWalletId) {
+        val stored = collectiblesAccountStatusStore.getSyncOrNull(userWalletId)
+
+        if (!stored.isAccountCreated) return markUnrefreshed(userWalletId = userWalletId)
+
+        val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)
+            ?: return markUnrefreshed(userWalletId = userWalletId)
+
+        if (userWallet.isLocked) return markUnrefreshed(userWalletId = userWalletId)
+
+        // TODO check whether this branch is still needed once accounts are synced from the backend
+        if (collectiblesOwnerDeriver.storedOwner(userWalletId) == null) {
+            return collectiblesAccountStatusStore.store(
+                userWalletId = userWalletId,
+                value = CollectiblesAccountStatusValue.MissedDerivation,
+            )
         }
+
+        val balance = resolveBalance(userWallet, stored?.balance?.usdcToken)
+            ?: return markUnrefreshed(userWalletId = userWalletId)
+
+        collectiblesAccountStatusStore.storeBalance(userWalletId = userWalletId, balance = balance)
     }
 
-    private suspend fun resolve(userWalletId: UserWalletId): Resolution {
-        if (!collectiblesAccountStatusStore.getSyncOrNull(userWalletId).isAccountCreated) return Resolution.Unreadable
-
-        val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return Resolution.Unreadable
-        if (userWallet.isLocked) return Resolution.Unreadable
-
-        if (collectiblesOwnerDeriver.storedOwner(userWalletId) == null) return Resolution.NotDerived
-
-        // TODO: the vault's USDC waits on `getCollectiblesVaultUsdcBalance()` in the blockchain SDK — nothing in
-        //  the app can read it, so the amount stays unknown and the row shows a dash rather than a zero
-        return Resolution.Unreadable
-    }
+    /** The vault's own amount, which for an empty vault is an honest zero. `null` is a read that did not answer. */
+    private suspend fun resolveBalance(
+        userWallet: UserWallet,
+        cachedToken: CryptoCurrency.Token?,
+    ): CollectiblesVaultBalance? = gachaVaultRepository.getVaultBalance(userWallet, cachedToken = cachedToken)
+        .getOrElse { error ->
+            logger.e("Failed to read the collectibles vault balance of ${userWallet.walletId}: $error")
+            null
+        }
 
     private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
         runSuspendCatching { collectiblesAccountStatusStore.markUnrefreshed(userWalletId = userWalletId) }
             .onFailure { logger.e("Failed to mark the collectibles vault of $userWalletId as un-refreshed", it) }
-    }
-
-    private sealed interface Resolution {
-
-        /** The vault exists but its owner key is not on this device, so there is no address to read. */
-        data object NotDerived : Resolution
-
-        /** Nothing could be found out — whatever is cached stays, marked stale. */
-        data object Unreadable : Resolution
     }
 
     private companion object {
