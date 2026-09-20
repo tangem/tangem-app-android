@@ -56,7 +56,6 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.common)
     implementation(projects.domain.card)
-    implementation(projects.domain.swap)
     implementation(projects.data.wallets)
     implementation(projects.domain.models)
     // endregion

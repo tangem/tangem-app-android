@@ -15,7 +15,7 @@ import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
+import com.tangem.domain.wallets.usecase.DeriveCurrencyAndOwnerKeysUseCase
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -23,12 +23,11 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNaviga
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -44,7 +43,7 @@ internal class AddressSyncModelTest {
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
     private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher = mockk()
     private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
-    private val derivePublicKeysUseCase: DerivePublicKeysUseCase = mockk()
+    private val deriveCurrencyAndOwnerKeysUseCase: DeriveCurrencyAndOwnerKeysUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher = mockk()
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
@@ -74,7 +73,7 @@ internal class AddressSyncModelTest {
         coEvery { shouldShowAskBiometryUseCase() } returns false
         coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
         coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Right(Unit)
-        coEvery { derivePublicKeysUseCase(any(), any()) } returns Either.Right(Unit)
+        coEvery { deriveCurrencyAndOwnerKeysUseCase(any(), any()) } returns Either.Right(Unit)
         every { multiAccountListSupplier() } returns flowOf(
             listOf(AccountList.empty(userWalletId = walletId)),
         )
@@ -262,7 +261,7 @@ internal class AddressSyncModelTest {
                 ),
             ),
         )
-        coEvery { derivePublicKeysUseCase(walletId, currencies) } returns Either.Right(Unit)
+        coEvery { deriveCurrencyAndOwnerKeysUseCase(walletId, currencies) } returns Either.Right(Unit)
         coEvery { multiNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
         coEvery {
             stakingIdFactory.create(userWalletId = walletId, cryptoCurrency = any())
@@ -275,7 +274,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Sync)
         advanceUntilIdle()
 
-        coVerify { derivePublicKeysUseCase(walletId, currencies) }
+        coVerify { deriveCurrencyAndOwnerKeysUseCase(walletId, currencies) }
         coVerify { multiNetworkStatusFetcher.invoke(any()) }
         coVerify { multiStakingBalanceFetcher(any()) }
         Assertions.assertEquals(expected, model.state.value)
@@ -292,7 +291,7 @@ internal class AddressSyncModelTest {
                 ),
             ),
         )
-        coEvery { derivePublicKeysUseCase(walletId, currencies) } returns Either.Left(
+        coEvery { deriveCurrencyAndOwnerKeysUseCase(walletId, currencies) } returns Either.Left(
             value = IllegalStateException("Test"),
         )
 
@@ -302,7 +301,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Sync)
         advanceUntilIdle()
 
-        coVerify { derivePublicKeysUseCase(walletId, currencies) }
+        coVerify { deriveCurrencyAndOwnerKeysUseCase(walletId, currencies) }
         Assertions.assertEquals(
             AddressSyncState.Success(currencies = currencies, isButtonLoading = false),
             model.state.value,
@@ -339,22 +338,11 @@ internal class AddressSyncModelTest {
             shouldAskPermissionUseCase = shouldAskPermissionUseCase,
             multiWalletAccountListFetcher = multiWalletAccountListFetcher,
             multiAccountListSupplier = multiAccountListSupplier,
-            derivePublicKeysUseCase = derivePublicKeysUseCase,
+            deriveCurrencyAndOwnerKeysUseCase = deriveCurrencyAndOwnerKeysUseCase,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
             paramsContainer = paramsContainer,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

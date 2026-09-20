@@ -17,7 +17,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -28,7 +28,6 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -196,17 +195,6 @@ internal class CollectiblesOnboardingModelTest {
             userWalletsListRepository = userWalletsListRepository,
             createOrReactivateCollectiblesAccountUseCase = createOrReactivateCollectiblesAccountUseCase,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

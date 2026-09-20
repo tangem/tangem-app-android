@@ -13,6 +13,8 @@ android {
 
 dependencies {
     /** Core */
+    api(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     api(projects.core.decompose)
     api(projects.core.navigation)
     api(projects.core.ui)
@@ -23,7 +25,6 @@ dependencies {
 
     /** Features api */
     api(projects.features.tangempay.eligibility.api)
-    implementation(projects.features.tangempay.details.api)
     implementation(projects.features.commonFeatures.api)
 
     /** Domain */

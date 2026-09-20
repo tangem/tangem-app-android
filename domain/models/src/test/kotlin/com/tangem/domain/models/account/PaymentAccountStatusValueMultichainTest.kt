@@ -31,7 +31,6 @@ internal class PaymentAccountStatusValueMultichainTest {
     ) = PaymentAccountStatusValue.Loaded(
         source = StatusSource.ACTUAL,
         customerId = "c1",
-        depositAddress = "0xDEPOSIT",
         balance = balance,
         cryptoCurrency = primaryCurrency,
         networks = networks,
@@ -44,15 +43,15 @@ internal class PaymentAccountStatusValueMultichainTest {
     )
 
     @Test
-    fun `GIVEN no networks WHEN read statuses THEN falls back to single legacy status`() {
+    fun `GIVEN no networks WHEN read statuses THEN empty`() {
         val loaded = loaded(networks = emptyList())
 
         assertThat(loaded.networks).isEmpty()
-        assertThat(loaded.cryptoCurrencyStatuses).containsExactly(loaded.cryptoCurrencyStatus)
+        assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
     }
 
     @Test
-    fun `GIVEN only non-Available networks WHEN read statuses THEN falls back to single legacy status`() {
+    fun `GIVEN only non-Available networks WHEN read statuses THEN empty`() {
         val loaded = loaded(
             networks = listOf(
                 PaymentNetworkStatus.NotIssued(network = mockk()),
@@ -60,7 +59,7 @@ internal class PaymentAccountStatusValueMultichainTest {
             ),
         )
 
-        assertThat(loaded.cryptoCurrencyStatuses).containsExactly(loaded.cryptoCurrencyStatus)
+        assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
     }
 
     @Test
@@ -93,7 +92,6 @@ internal class PaymentAccountStatusValueMultichainTest {
     fun `GIVEN no balance and no networks WHEN read statuses THEN empty and total balance failed`() {
         val loaded = loaded(networks = emptyList(), balance = null)
 
-        assertThat(loaded.cryptoCurrencyStatus).isNull()
         assertThat(loaded.cryptoCurrencyStatuses).isEmpty()
         assertThat(loaded.totalFiatBalance).isEqualTo(TotalFiatBalance.Failed)
     }

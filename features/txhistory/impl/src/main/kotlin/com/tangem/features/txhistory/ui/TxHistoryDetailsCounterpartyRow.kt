@@ -22,6 +22,7 @@ import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.PaymentAccountIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
@@ -30,6 +31,7 @@ import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.components.transactions.state.asImageVector
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -63,7 +65,17 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
             contentLead = TangemRowContentLead.Start,
             startSlot = { CounterpartyAvatar(counterparty.avatar) },
             titleSlot = { TangemRowText(text = counterparty.label, role = TangemRowTextRole.Subtitle) },
-            subtitleSlot = { TangemRowText(text = counterparty.title, role = TangemRowTextRole.Title) },
+            subtitleSlot = {
+                TangemRowText(text = counterparty.title, role = TangemRowTextRole.Title)
+                counterparty.titleIcon?.let { icon ->
+                    CurrencyIcon(
+                        state = icon,
+                        shouldDisplayNetwork = false,
+                        withFixedSize = false,
+                        modifier = Modifier.size(17.dp),
+                    )
+                }
+            },
             onClick = counterparty.onCopyClick,
         )
     }
@@ -77,6 +89,19 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
             address = avatar.rawAddress,
             modifier = avatarModifier.clip(CircleShape),
         )
+        is CounterpartyAvatar.Glyph -> Box(
+            modifier = avatarModifier
+                .clip(CircleShape)
+                .background(TangemTheme.colors3.bg.opaque.secondary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = avatar.icon.asImageVector(),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.primary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
         is CounterpartyAvatar.Account -> Box(
             modifier = avatarModifier
                 .clip(CircleShape)
