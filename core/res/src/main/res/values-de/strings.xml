@@ -1053,7 +1053,6 @@
   <string name="joint_account_activation_account_button_title">Konto aktivieren</string>
   <string name="joint_account_activation_subtitle">Alle Nutzer dieses Kontos teilen sich ein gemeinsames Guthaben. Jedes Mitglied kann das Guthaben jederzeit ausgeben oder abheben – auch ohne Ihre Zustimmung</string>
   <string name="joint_account_activation_title">Sie aktivieren ein gemeinsam genutztes Konto</string>
-  <string name="joint_account_coming_soon_description">Wir arbeiten daran. Die Unterstützung wird in einem der nächsten Updates verfügbar sein.</string>
   <string name="joint_account_coming_soon_title">Demnächst für Gemeinschaftskonten verfügbar</string>
   <string name="joint_account_invite_invalid_subtitle">Prüfen Sie, ob Sie den vollständigen Link geöffnet haben, oder bitten Sie den Kontoinhaber, ihn erneut zu senden.</string>
   <string name="joint_account_invite_invalid_title">Der Einladungslink ist ungültig</string>
@@ -2744,7 +2743,6 @@
   <string name="tangempay_withdraw_bank_field_account_number">Kontonummer</string>
   <string name="tangempay_withdraw_bank_field_bank_address_line1">Bankadresszeile 1</string>
   <string name="tangempay_withdraw_bank_field_bank_city">Bankstadt</string>
-  <string name="tangempay_withdraw_bank_field_bank_country">Bankland</string>
   <string name="tangempay_withdraw_bank_field_bank_name">Name der Bank</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Bankregion / Bundesland</string>
   <string name="tangempay_withdraw_bank_field_business_name">Firmenname</string>
