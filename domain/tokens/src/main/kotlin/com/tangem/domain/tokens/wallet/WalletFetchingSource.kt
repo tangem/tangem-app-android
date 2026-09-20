@@ -19,11 +19,11 @@ sealed class WalletFetchingSource {
     data object TangemPay : WalletFetchingSource()
 
     /**
-     * Virtual account fetching source.
+     * Money account fetching source.
      * Handled separately from standard balance sources via
-     * [com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher].
+     * [com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher].
      */
-    data object VirtualAccount : WalletFetchingSource()
+    data object Money : WalletFetchingSource()
 
     /**
      * Prediction account fetching source.

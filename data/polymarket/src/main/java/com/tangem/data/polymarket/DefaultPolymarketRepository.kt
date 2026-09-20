@@ -28,6 +28,7 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.clob.PolymarketClobApi
+import com.tangem.grow.datasource.polymarket.clob.PolymarketClobPriceFormat
 import com.tangem.grow.datasource.polymarket.geo.PolymarketGeoApi
 import com.tangem.grow.datasource.polymarket.models.PolymarketWalletDeployRequest
 import com.tangem.grow.datasource.polymarket.relayer.PolymarketRelayerApi
@@ -279,9 +280,21 @@ internal class DefaultPolymarketRepository @Inject constructor(
                         TangemLogger.e("Unreadable book price", error)
                         PredictionPriceError.Unknown(httpCode = null, detail = error.message)
                     }
+                    .flatMap { price ->
+                        if (price.compareTo(side.emptyBookSentinel()) == 0) {
+                            PredictionPriceError.EmptyBook.left()
+                        } else {
+                            price.right()
+                        }
+                    }
             },
             onError = { it.toPriceError().left() },
         )
+    }
+
+    private fun PredictionOrderSide.emptyBookSentinel(): BigDecimal = when (this) {
+        PredictionOrderSide.BUY -> PolymarketClobPriceFormat.EMPTY_BID_PRICE
+        PredictionOrderSide.SELL -> PolymarketClobPriceFormat.EMPTY_ASK_PRICE
     }
 
     override suspend fun getOrderQuote(

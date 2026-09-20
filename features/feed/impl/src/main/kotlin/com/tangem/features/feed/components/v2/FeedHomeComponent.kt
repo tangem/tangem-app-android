@@ -30,6 +30,7 @@ import com.tangem.features.feed.analytics.FeedSectionAnalyticsEvent
 import com.tangem.features.feed.components.v2.model.FeedHomeModel
 import com.tangem.features.feed.nav.*
 import com.tangem.features.feed.ui.v2.FeedV2Content
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -46,6 +47,7 @@ internal class FeedHomeComponent(
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
     analyticsEventHandler: AnalyticsEventHandler,
+    requestedTab: Flow<FeedTabId>,
 ) : FeedScreenComponent, AppComponentContext by context {
 
     override val isPartialExpansionSupported: Boolean = true
@@ -54,6 +56,7 @@ internal class FeedHomeComponent(
 
     private val topBlocksComponent = FeedTopBlocksComponent(
         context = child("feedTopBlocks"),
+        params = FeedTopBlocksComponent.Params(callbacks = model.topBlocksCallbacks),
         portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
         addAccountTypeComponentFactory = addAccountTypeComponentFactory,
     )
@@ -73,6 +76,10 @@ internal class FeedHomeComponent(
     private val sheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
 
     init {
+        requestedTab
+            .onEach(model::selectSection)
+            .launchIn(componentScope)
+
         sheetState
             .filter { state -> state == BottomSheetState.EXPANDED }
             .onEach {
@@ -104,6 +111,7 @@ internal class FeedHomeComponent(
             isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED,
             contentPadding = contentPadding,
             onExpandSheet = onExpandSheet,
+            collapseTopBlocksRequests = model.topBlocksCollapseRequests,
             modifier = modifier,
             topBlocks = { blockModifier -> topBlocksComponent.Content(modifier = blockModifier) },
             tabContent = { tabModifier, tabContentPadding ->

@@ -15,8 +15,8 @@ import com.tangem.grow.datasource.yield.models.incentives.YieldAprHistoryRespons
 import com.tangem.grow.datasource.yield.models.incentives.YieldClaimCalldataResponse
 import com.tangem.grow.datasource.yield.models.incentives.YieldClaimHistoryResponse
 import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesResponse
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -26,7 +26,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
@@ -300,17 +299,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             isMerklIncentivesEnabled = isMerklIncentivesEnabled,
         )
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
-        )
-    }
 
     private fun incentivesResponse(lastUpdatedAt: String = TIMESTAMP) = YieldIncentivesResponse(
         chainId = CHAIN_ID,

@@ -17,6 +17,7 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.express)
     api(projects.domain.quotes)
+    api(projects.domain.moneyAccount)
     api(projects.domain.models)
     api(projects.domain.networks)
     api(projects.domain.nft)

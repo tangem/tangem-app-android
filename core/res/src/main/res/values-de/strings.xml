@@ -2713,7 +2713,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">USD per ACH/FedWire von einem Bankkonto empfangen</string>
   <string name="tangempay_topup_bank_transfer_title">Von einem Bankkonto</string>
-  <string name="tangempay_topup_receive_body">Senden Sie USDC Polygon an die Adresse Ihres Kontos</string>
   <string name="tangempay_topup_receive_body_multichain">USDC oder USDT an Ihre Kontoadresse senden</string>
   <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>
   <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
