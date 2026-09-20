@@ -145,7 +145,9 @@ internal class JointOperationUMConverter(
         isRefusing: Boolean,
         hasAnswered: Boolean,
     ): TxHistoryDetailsUM.CosignActionUM {
-        val hasSigned = hasAnswered || state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED
+        // The model overlays a local answer into the state, so the answer alone says whether this member signed;
+        // [hasAnswered] also covers a local decline and only blocks a second tap
+        val hasSigned = state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED
         if (state.isSending) return sentAction(state = state, hasSigned = hasSigned)
 
         val canSign = state.canSign && !hasAnswered && !isRefusing
