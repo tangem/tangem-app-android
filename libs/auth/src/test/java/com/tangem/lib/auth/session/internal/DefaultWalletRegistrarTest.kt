@@ -38,6 +38,8 @@ import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.AfterEach
@@ -65,6 +67,7 @@ class DefaultWalletRegistrarTest {
         preferencesDataStore = preferencesDataStore,
     )
 
+    private lateinit var locks: WalletRegistrationLocks
     private lateinit var registrar: DefaultWalletRegistrar
 
     private val mobileSigner = WalletSigner {
@@ -90,6 +93,8 @@ class DefaultWalletRegistrarTest {
     @BeforeEach
     fun setup() {
         clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider)
+        // the store answers with the set that ends up in effect
+        coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
         mockkStatic(android.util.Base64::class)
         every { android.util.Base64.encodeToString(any(), any()) } answers {
@@ -102,6 +107,7 @@ class DefaultWalletRegistrarTest {
         // Default to an active session so the happy-path tests reach the nonce/register flow;
         // the no-session tests override this with None.
         coEvery { store.get() } returns Some(sessionTokens())
+        locks = WalletRegistrationLocks()
         registrar = DefaultWalletRegistrar(
             authApi = authApi,
             store = store,
@@ -112,6 +118,7 @@ class DefaultWalletRegistrarTest {
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             nonceRequestPerformanceTracker = { it() },
+            locks = locks,
             dispatchers = dispatchers,
         )
     }
@@ -139,6 +146,26 @@ class DefaultWalletRegistrarTest {
         assertThat(request.cardSignatureSalt).isNull()
         assertThat(request.walletStatus).isNull()
         assertThat(request.attestationToken).isNull()
+    }
+
+    @Test
+    fun `register holds off posting while another call is rotating the session tokens`() = runTest {
+        stubHappyPath()
+        coEvery { authApi.registerWallet(any()) } returns tokenSuccess()
+        // stands for a social binding (or another wallet's registration) already reissuing the session
+        locks.sessionRotation.lock()
+
+        val registration = launch { registrar.register(WALLET_ID, mobileSigner) }
+        runCurrent()
+
+        // the nonce is fetched meanwhile — only the token-rotating POST waits
+        coVerify { authApi.requestWalletNonce(any()) }
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+
+        locks.sessionRotation.unlock()
+        registration.join()
+        coVerify(exactly = 1) { authApi.registerWallet(any()) }
+        coVerify(exactly = 1) { store.save(any()) }
     }
 
     @Test
