@@ -16,7 +16,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -28,7 +28,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -315,7 +314,7 @@ internal class OnrampMainComponentModelTest {
             openRedirectPage = {},
         )
         return OnrampMainComponentModel(
-            dispatchers = createTestingCoroutineDispatcherProvider(scheduler),
+            dispatchers = scheduler.createTestingCoroutineDispatcherProvider(),
             analyticsEventHandler = analyticsEventHandler,
             router = mockk(relaxed = true),
             checkOnrampAvailabilityUseCase = mockk(relaxed = true) {
@@ -335,19 +334,6 @@ internal class OnrampMainComponentModelTest {
             featureTogglesManager = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,
-        )
-    }
-
-    private fun createTestingCoroutineDispatcherProvider(
-        scheduler: TestCoroutineScheduler,
-    ): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(scheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 

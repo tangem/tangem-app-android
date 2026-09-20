@@ -15,9 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feed.search.model.RecentFeedSearchItem
 import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
-import com.tangem.domain.feed.search.usecase.SaveRecentFeedSearchItemUseCase
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
@@ -50,7 +48,7 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -66,7 +64,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -96,7 +93,6 @@ internal class RwaFeedSearchTabModelTest {
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val saveRecentFeedSearchItemUseCase: SaveRecentFeedSearchItemUseCase = mockk(relaxed = true)
     private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
 
@@ -117,7 +113,6 @@ internal class RwaFeedSearchTabModelTest {
             getSearchResultsUseCase,
             router,
             analyticsEventHandler,
-            saveRecentFeedSearchItemUseCase,
             saveFeedSearchQueryUseCase,
         )
         actions.clear()
@@ -430,7 +425,7 @@ internal class RwaFeedSearchTabModelTest {
     }
 
     @Test
-    fun `GIVEN an asset row WHEN it is clicked THEN the token and the query are written to search history`() =
+    fun `GIVEN an asset row WHEN it is clicked THEN the query is written to search history`() =
         runTest {
             // Arrange
             val query = MutableStateFlow("")
@@ -446,11 +441,6 @@ internal class RwaFeedSearchTabModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) {
-                saveRecentFeedSearchItemUseCase(
-                    match<RecentFeedSearchItem> { it is RecentFeedSearchItem.MarketToken && it.id == "tsla" },
-                )
-            }
             coVerify(exactly = 1) { saveFeedSearchQueryUseCase("tsla") }
             verify { router.push(route = any<FeedRoute.MarketsTokenDetails>(), onComplete = any()) }
 
@@ -619,20 +609,8 @@ internal class RwaFeedSearchTabModelTest {
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
             analyticsEventHandler = analyticsEventHandler,
-            saveRecentFeedSearchItemUseCase = saveRecentFeedSearchItemUseCase,
             saveFeedSearchQueryUseCase = saveFeedSearchQueryUseCase,
             router = router,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 

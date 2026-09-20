@@ -1,7 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PolymarketPositionId
+import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketPositionsPreviewUM
@@ -13,12 +13,14 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 internal class PolymarketPositionsPreviewLoader @Inject constructor(
     private val repository: PolymarketPositionsRepository,
@@ -35,7 +37,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     fun resume(
         scope: CoroutineScope,
         userWalletId: UserWalletId,
-        onPositionClick: ((PolymarketPositionId) -> Unit)? = null,
+        onPositionClick: ((PolymarketPosition.Open) -> Unit)? = null,
     ) {
         isResumed = true
         val converter = PolymarketPositionUMConverter(onPositionClick)
@@ -44,7 +46,10 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
             }
-            refresh(userWalletId, onRetry, converter)
+            while (true) {
+                refresh(userWalletId, onRetry, converter)
+                delay(POLL_INTERVAL)
+            }
         }.saveIn(refreshJob)
     }
 
@@ -88,5 +93,6 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
 
     private companion object {
         const val PREVIEW_SIZE = 3
+        val POLL_INTERVAL = 20.seconds
     }
 }

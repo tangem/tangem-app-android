@@ -24,6 +24,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.joint.ownJointAccount
+import com.tangem.features.txhistory.model.ContactCandidate
+import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
+import com.tangem.features.txhistory.model.isSavableAsContact
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,10 +50,20 @@ internal class JointOperationDelegate @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val rejectJointOperationUseCase: RejectJointOperationUseCase,
     private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
+    private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) {
 
-    /** An address book stored by a newer build cannot be written to, so creating a contact is not offered */
-    fun canCreateContact(userWalletId: UserWalletId): Flow<Boolean> = isAddressBookCompatibleUseCase(userWalletId)
+    /**
+     * Creating a contact is offered for a foreign [recipient] this wallet has not saved yet — never for one of the
+     * user's own addresses — and only while the address book can be written to: one stored by a newer build cannot.
+     */
+    fun canCreateContact(userWalletId: UserWalletId, recipient: String, network: Network): Flow<Boolean> = combine(
+        flow = ownerLookupProducer(userWalletId),
+        flow2 = isAddressBookCompatibleUseCase(userWalletId),
+    ) { lookup, isCompatible ->
+        isCompatible &&
+            lookup.isSavableAsContact(ContactCandidate(address = recipient, networkId = network.id.rawId))
+    }
 
     fun openContactCreation(address: String, network: Network) {
         router.push(

@@ -5,6 +5,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -23,6 +24,12 @@ interface DerivationsRepository {
     @Throws
     suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>)
 
+    /** Finds the derivation paths missing for [currencies], without deriving them (no NFC/hot-wallet access) */
+    suspend fun findMissingDerivations(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): Map<ByteArrayKey, List<DerivationPath>>
+
     @Throws
     suspend fun derivePublicKeys(
         userWalletId: UserWalletId,
@@ -39,6 +46,12 @@ interface DerivationsRepository {
 
     /** Returns already derived extended public keys for the given [seedKey] */
     suspend fun getExistingDerivedKeys(userWalletId: UserWalletId, seedKey: ByteArrayKey): ExtendedPublicKeysMap
+
+    /**
+     * Returns already derived extended public keys for [seedKey], read directly from [userWallet] instead of
+     * re-fetching it from the repository — use this when the caller already holds the wallet it cares about.
+     */
+    suspend fun getExistingDerivedKeys(userWallet: UserWallet, seedKey: ByteArrayKey): ExtendedPublicKeysMap
 
     /** Check if user [userWalletId] has missed derivations using map of [Network.ID] with extraDerivationPath */
     suspend fun hasMissedDerivations(
