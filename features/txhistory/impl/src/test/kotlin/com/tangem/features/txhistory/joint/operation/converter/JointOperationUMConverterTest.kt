@@ -65,11 +65,23 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.joint_operation_signed))
     }
 
-    private fun input(state: JointOperationState) = JointOperationUMConverter.Input(
+    @Test
+    fun `GIVEN this member declined WHEN the operation is sent THEN the button does not say signed`() {
+        // Arrange
+        val declinedLocally = input(state(isSending = true, ownAnswer = Answer.DECLINED), hasAnswered = true)
+
+        // Act
+        val actual = converter.convert(declinedLocally)
+
+        // Assert
+        assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.common_sign))
+    }
+
+    private fun input(state: JointOperationState, hasAnswered: Boolean = false) = JointOperationUMConverter.Input(
         state = state,
         isSigning = false,
         isRefusing = false,
-        hasAnswered = false,
+        hasAnswered = hasAnswered,
         canCreateContact = true,
         isBalanceHidden = false,
     )
