@@ -24,8 +24,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, buy,
- * sell and stake are held back with [ScenarioUnavailabilityReason.JointAccount], and send and swap keep their
+ * A joint token belongs to a Safe: the set mirrors what a personal account would offer in the same context, sell
+ * and stake are held back with [ScenarioUnavailabilityReason.JointAccount], and send, swap and buy keep their
  * natural availability.
  */
 internal class JointAccountActionsFactoryTest {
@@ -47,7 +47,7 @@ internal class JointAccountActionsFactoryTest {
     }
 
     @Test
-    fun `GIVEN everything a personal account offers WHEN create THEN buy sell and stake are held back`() =
+    fun `GIVEN everything a personal account offers WHEN create THEN sell and stake are held back and buy is open`() =
         runTest {
             // Arrange
             val status = statusWithAddress(SAFE)
@@ -68,7 +68,7 @@ internal class JointAccountActionsFactoryTest {
                 ActionState.Stake(ScenarioUnavailabilityReason.JointAccount, option = null),
                 ActionState.Send(ScenarioUnavailabilityReason.None),
                 ActionState.Swap(ScenarioUnavailabilityReason.None, shouldShowBadge = false),
-                ActionState.Buy(ScenarioUnavailabilityReason.JointAccount),
+                ActionState.Buy(ScenarioUnavailabilityReason.None),
                 ActionState.Sell(ScenarioUnavailabilityReason.JointAccount),
                 ActionState.HideToken(ScenarioUnavailabilityReason.None),
             ).inOrder()
