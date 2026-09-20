@@ -214,7 +214,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
         // AppsFlyer deep links (referral, tpay_mobileonboard) are routed reactively by AppsFlyerDeeplinkRouter
-        // once we settle on an idle screen — not resolved here.
+        // once we settle on a screen a deep link may leave — not resolved here.
         val afterEmptyRoute = AppRoute.Home(launchMode = launchMode)
 
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
