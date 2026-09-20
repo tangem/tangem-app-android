@@ -60,7 +60,6 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.yieldSupply.models)
-    implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
 
     /** Compose */

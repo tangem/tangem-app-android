@@ -54,7 +54,7 @@ import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
-import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
@@ -97,7 +97,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val singleJointAccountListSupplier: SingleJointAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-    private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
+    private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
@@ -116,8 +116,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val logger = TangemLogger.withTag(TAG)
     private val Account.Payment.errorPaymentAccountStatus: AccountStatus.Payment
         get() = AccountStatus.Payment(this, PaymentAccountStatusValue.Error.Unavailable)
-    private val Account.Virtual.errorVirtualAccountStatus: AccountStatus.Virtual
-        get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
+    private val Account.Money.errorMoneyAccountStatus: AccountStatus.Money
+        get() = AccountStatus.Money(this, MoneyAccountStatusValue.Error.Unavailable)
     private val Account.Prediction.errorPredictionAccountStatus: AccountStatus.Prediction
         get() = AccountStatus.Prediction(this, PredictionAccountStatusValue.Error.Unavailable)
     private val Account.Collectibles.errorCollectiblesAccountStatus: AccountStatus.Collectibles
@@ -193,10 +193,10 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 
         val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = combine(
             flow = paymentAccountStatusSupplier.invoke(userWalletId = walletId),
-            flow2 = virtualAccountStatusSupplier.invoke(userWalletId = walletId),
+            flow2 = moneyAccountStatusSupplier.invoke(userWalletId = walletId),
             flow3 = predictionStatusFlow(userWallet = userWallet),
             flow4 = collectiblesStatusFlow(walletId = walletId),
-        ) { paymentStatus, virtualStatus, predictionValue, collectiblesValue ->
+        ) { paymentStatus, moneyAccountStatus, predictionValue, collectiblesValue ->
             val predictionStatus = AccountStatus.Prediction(
                 account = Account.Prediction(userWalletId = walletId),
                 value = predictionValue,
@@ -208,7 +208,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 
             mapOf(
                 paymentStatus.accountId to paymentStatus,
-                virtualStatus.accountId to virtualStatus,
+                moneyAccountStatus.accountId to moneyAccountStatus,
                 predictionStatus.accountId to predictionStatus,
                 collectiblesStatus.accountId to collectiblesStatus,
             )
@@ -231,7 +231,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 when (account) {
                     is Account.Personal -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
                     is Account.Payment -> specialStatuses[account.accountId] ?: account.errorPaymentAccountStatus
-                    is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
+                    is Account.Money -> specialStatuses[account.accountId] ?: account.errorMoneyAccountStatus
                     is Account.Prediction ->
                         specialStatuses[account.accountId] ?: account.errorPredictionAccountStatus
                     is Account.Collectibles ->
@@ -518,7 +518,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
-                is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
+                is AccountStatus.Money -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Prediction -> accountStatus.value.totalFiatBalance
                 is AccountStatus.Collectibles -> accountStatus.value.totalFiatBalance
             }
@@ -546,7 +546,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                         )
                     }
                     is Account.Payment -> null
-                    is Account.Virtual -> null
+                    is Account.Money -> null
                     is Account.Prediction -> null
                     is Account.Collectibles -> account.loadingCollectiblesAccountStatus
                     is Account.Joint -> account.loadingJointAccountStatus

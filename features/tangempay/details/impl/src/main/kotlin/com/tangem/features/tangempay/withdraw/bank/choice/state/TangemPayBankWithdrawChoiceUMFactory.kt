@@ -13,7 +13,7 @@ internal class TangemPayBankWithdrawChoiceUMFactory(
     private val callbacks: Callbacks,
 ) {
 
-    fun create(draft: BankWithdrawDraft, selectedId: String): TangemPayBankWithdrawChoiceUM =
+    fun create(draft: BankWithdrawDraft, selectedId: String?): TangemPayBankWithdrawChoiceUM =
         TangemPayBankWithdrawChoiceUM(
             header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
             sectionTitle = config.sectionTitle,
@@ -26,6 +26,7 @@ internal class TangemPayBankWithdrawChoiceUMFactory(
                     )
                 }
                 .toImmutableList(),
+            isContinueEnabled = selectedId != null,
             onBackClick = callbacks.onBackClick,
             onContinueClick = callbacks.onContinueClick,
         )

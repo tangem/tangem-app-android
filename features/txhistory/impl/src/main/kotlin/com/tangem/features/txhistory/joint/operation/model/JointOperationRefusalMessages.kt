@@ -10,7 +10,10 @@ import com.tangem.core.ui.R as CoreUiR
  * The initiator deletes the operation for everyone, any other member only declines it — two different questions
  * before the same request.
  */
-internal class JointOperationRefusalMessages(private val onConfirm: () -> Unit) {
+internal class JointOperationRefusalMessages(
+    private val onConfirm: () -> Unit,
+    private val onOperationGone: () -> Unit,
+) {
 
     fun confirmation(isInitiator: Boolean): DialogMessage {
         val (title, message, action) = if (isInitiator) {
@@ -37,13 +40,20 @@ internal class JointOperationRefusalMessages(private val onConfirm: () -> Unit) 
         )
     }
 
-    /** An operation the backend has already lost needs no dialog: the model closes the sheet */
+    /**
+     * An operation the backend has already lost needs no dialog: the model closes the sheet. One past the threshold
+     * is explained first, then the sheet closes the same way — there is nothing left to refuse.
+     */
     fun error(error: JointOperationRejectError): DialogMessage? = when (error) {
         JointOperationRejectError.OperationNotFound -> null
         JointOperationRejectError.ThresholdReached -> DialogMessage(
             title = resourceReference(CoreUiR.string.joint_operation_threshold_reached_title),
             message = resourceReference(CoreUiR.string.joint_operation_threshold_reached_subtitle),
-            firstActionBuilder = { okAction() },
+            // The dialog runs onDismissRequest itself once the button is tapped, so the action only carries the title
+            onDismissRequest = onOperationGone,
+            firstActionBuilder = {
+                EventMessageAction(title = resourceReference(CoreUiR.string.common_got_it), onClick = {})
+            },
         )
         JointOperationRejectError.NotAMember,
         is JointOperationRejectError.Failed,

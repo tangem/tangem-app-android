@@ -122,19 +122,91 @@ internal class JointOperationStateTest {
         val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), initiator = OWN.uppercase())
 
         // Act
-        val actual = state.isInitiator
+        val actual = state.role
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationState.Role.INITIATOR)
+    }
+
+    @Test
+    fun `GIVEN another member created the operation WHEN state built THEN this member is a plain member`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN)), initiator = OTHER)
+
+        // Act
+        val actual = state.role
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationState.Role.MEMBER)
+    }
+
+    @Test
+    fun `GIVEN the owner address is not resolvable WHEN state built THEN the role is unknown`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), ownAddress = null)
+
+        // Act
+        val actual = state.role
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationState.Role.UNKNOWN)
+    }
+
+    @Test
+    fun `GIVEN the backend named no initiator WHEN state built THEN the role is unknown`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), initiator = null)
+
+        // Act
+        val actual = state.role
+
+        // Assert
+        assertThat(actual).isEqualTo(JointOperationState.Role.UNKNOWN)
+    }
+
+    @Test
+    fun `GIVEN this member waits for their turn WHEN state built THEN they may refuse the operation`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.WAITING)))
+
+        // Act
+        val actual = state.canRefuse
 
         // Assert
         assertThat(actual).isTrue()
     }
 
     @Test
-    fun `GIVEN the owner address is not resolvable WHEN state built THEN this member is not the initiator`() {
+    fun `GIVEN this owner address is outside the roster WHEN state built THEN they may not refuse the operation`() {
         // Arrange
-        val state = state(signers = listOf(signer(address = OWN, answer = Answer.CREATED)), ownAddress = null)
+        val state = state(signers = listOf(signer(address = OTHER, answer = Answer.CREATED)))
 
         // Act
-        val actual = state.isInitiator
+        val actual = state.canRefuse
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN this member already declined WHEN state built THEN they may not refuse the operation again`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN, answer = Answer.DECLINED)))
+
+        // Act
+        val actual = state.canRefuse
+
+        // Assert
+        assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the backend named no initiator WHEN state built THEN they may not refuse the operation`() {
+        // Arrange
+        val state = state(signers = listOf(signer(address = OWN)), initiator = null)
+
+        // Act
+        val actual = state.canRefuse
 
         // Assert
         assertThat(actual).isFalse()

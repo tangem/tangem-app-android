@@ -23,35 +23,22 @@ internal class GetPaymentAccountCryptoCurrencyStatusUseCaseTest {
     )
 
     @Test
-    fun `GIVEN loaded with account level balance WHEN invoke THEN emits account level status`() = runTest {
+    fun `GIVEN loaded with issued networks WHEN invoke THEN emits the first network status`() = runTest {
         // Arrange
-        val accountStatus = accountLevelStatus()
+        val accountStatus = statusWith(FIRST_NETWORK_STATUS, SECOND_NETWORK_STATUS)
         every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(accountStatus)
 
         // Act
         val emitted = useCase(USER_WALLET_ID).toList()
 
         // Assert
-        assertThat(emitted).containsExactly(accountStatus to ACCOUNT_LEVEL_STATUS)
-    }
-
-    @Test
-    fun `GIVEN loaded without balance but with network statuses WHEN invoke THEN emits network status`() = runTest {
-        // Arrange
-        val accountStatus = networkOnlyStatus()
-        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(accountStatus)
-
-        // Act
-        val emitted = useCase(USER_WALLET_ID).toList()
-
-        // Assert — a response without account-level balances must not starve swap / tx history
-        assertThat(emitted).containsExactly(accountStatus to NETWORK_STATUS)
+        assertThat(emitted).containsExactly(accountStatus to FIRST_NETWORK_STATUS)
     }
 
     @Test
     fun `GIVEN loaded without any status WHEN invoke THEN emits nothing`() = runTest {
         // Arrange
-        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(statusWithoutCurrency())
+        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(statusWith())
 
         // Act
         val emitted = useCase(USER_WALLET_ID).toList()
@@ -61,23 +48,22 @@ internal class GetPaymentAccountCryptoCurrencyStatusUseCaseTest {
     }
 
     @Test
-    fun `GIVEN loaded without balance but with network statuses WHEN invokeSync THEN returns network status`() =
-        runTest {
-            // Arrange
-            val accountStatus = networkOnlyStatus()
-            every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(accountStatus)
+    fun `GIVEN loaded with issued networks WHEN invokeSync THEN returns the first network status`() = runTest {
+        // Arrange
+        val accountStatus = statusWith(FIRST_NETWORK_STATUS, SECOND_NETWORK_STATUS)
+        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(accountStatus)
 
-            // Act
-            val result = useCase.invokeSync(USER_WALLET_ID)
+        // Act
+        val result = useCase.invokeSync(USER_WALLET_ID)
 
-            // Assert
-            assertThat(result.getOrNull()).isEqualTo(accountStatus to NETWORK_STATUS)
-        }
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo(accountStatus to FIRST_NETWORK_STATUS)
+    }
 
     @Test
     fun `GIVEN loaded without any status WHEN invokeSync THEN returns none`() = runTest {
         // Arrange
-        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(statusWithoutCurrency())
+        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(statusWith())
 
         // Act
         val result = useCase.invokeSync(USER_WALLET_ID)
@@ -86,24 +72,9 @@ internal class GetPaymentAccountCryptoCurrencyStatusUseCaseTest {
         assertThat(result.isNone()).isTrue()
     }
 
-    private fun accountLevelStatus() = paymentStatus(
+    private fun statusWith(vararg statuses: CryptoCurrencyStatus) = paymentStatus(
         value = mockk(relaxed = true) {
-            every { cryptoCurrencyStatus } returns ACCOUNT_LEVEL_STATUS
-            every { cryptoCurrencyStatuses } returns listOf(ACCOUNT_LEVEL_STATUS)
-        },
-    )
-
-    private fun networkOnlyStatus() = paymentStatus(
-        value = mockk(relaxed = true) {
-            every { cryptoCurrencyStatus } returns null
-            every { cryptoCurrencyStatuses } returns listOf(NETWORK_STATUS)
-        },
-    )
-
-    private fun statusWithoutCurrency() = paymentStatus(
-        value = mockk(relaxed = true) {
-            every { cryptoCurrencyStatus } returns null
-            every { cryptoCurrencyStatuses } returns emptyList()
+            every { cryptoCurrencyStatuses } returns statuses.toList()
         },
     )
 
@@ -114,7 +85,7 @@ internal class GetPaymentAccountCryptoCurrencyStatusUseCaseTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
-        val ACCOUNT_LEVEL_STATUS: CryptoCurrencyStatus = mockk()
-        val NETWORK_STATUS: CryptoCurrencyStatus = mockk()
+        val FIRST_NETWORK_STATUS: CryptoCurrencyStatus = mockk()
+        val SECOND_NETWORK_STATUS: CryptoCurrencyStatus = mockk()
     }
 }

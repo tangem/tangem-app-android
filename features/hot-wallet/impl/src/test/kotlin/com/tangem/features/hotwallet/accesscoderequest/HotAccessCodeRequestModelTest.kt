@@ -12,7 +12,7 @@ import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attem
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester.AttemptRequest
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.hot.sdk.model.HotWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,7 +21,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -148,17 +147,6 @@ internal class HotAccessCodeRequestModelTest {
             canUseBiometryUseCase = canUseBiometryUseCase,
             analyticsEventHandler = analyticsEventHandler,
             startAssetsDiscoveryUseCase = startAssetsDiscoveryUseCase,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 }

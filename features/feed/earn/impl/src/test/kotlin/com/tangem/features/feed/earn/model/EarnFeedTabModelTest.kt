@@ -11,12 +11,17 @@ import com.tangem.domain.earn.usecase.*
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnTopToken
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.earn.*
 import com.tangem.features.feed.earn.model.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.earn.model.state.EarnStateController
 import com.tangem.features.feed.earn.ui.state.EarnBestOpportunitiesUM
 import com.tangem.features.feed.earn.ui.state.EarnListUM
+import com.tangem.features.feed.nav.FeedTabId
+import com.tangem.features.feed.v2.FeedEntryController
+import com.tangem.features.feed.v2.FeedEntryFilter
+import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.pagination.*
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -46,9 +51,18 @@ internal class EarnFeedTabModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk(relaxed = true)
 
+    private val specificNetwork = EarnFilterNetwork.Specific(
+        isSelected = true,
+        id = "ethereum",
+        symbol = "ETH",
+        fullName = "Ethereum",
+    )
+
     private val networksFlow = MutableStateFlow<EarnNetworks?>(null)
     private val topTokensFlow = MutableStateFlow<EarnTopToken?>(null)
     private val filterFlow = MutableSharedFlow<EarnFilter>(replay = 1)
+    private val pendingFilter = MutableStateFlow<FeedEntryFilter?>(null)
+    private val feedEntryController = FakeFeedEntryController(pendingFilter)
 
     private val batchState = MutableStateFlow(
         BatchListState<Int, List<EarnTokenWithCurrency>>(data = emptyList(), status = PaginationStatus.None),
@@ -267,6 +281,55 @@ internal class EarnFeedTabModelTest {
         }
     }
 
+    @Test
+    fun `GIVEN a deeplink type WHEN the stored filter is known THEN only the type changes`() = runTest {
+        // Arrange
+        val stored = createEarnFilter(network = specificNetwork, type = EarnFilterType.ALL)
+        createModel(testScope = this)
+        filterFlow.emit(stored)
+        advanceUntilIdle()
+
+        // Act
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, earnType = PreselectedEarnType.Staking)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { setEarnFilterUseCase(stored.copy(earnFilterType = EarnFilterType.STAKING)) }
+        assertThat(pendingFilter.value).isNull()
+    }
+
+    @Test
+    fun `GIVEN a deeplink type before the stored filter arrives WHEN it does THEN the network is kept`() = runTest {
+        // Arrange
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Earn, earnType = PreselectedEarnType.Yield)
+        createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert - writing now would fall back to the default filter and drop the user's network
+        coVerify(exactly = 0) { setEarnFilterUseCase(any()) }
+
+        // Act
+        val stored = createEarnFilter(network = specificNetwork, type = EarnFilterType.ALL)
+        filterFlow.emit(stored)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { setEarnFilterUseCase(stored.copy(earnFilterType = EarnFilterType.YIELD)) }
+    }
+
+    @Test
+    fun `GIVEN a deeplink for another tab WHEN it lands THEN the filter is left for that tab`() = runTest {
+        // Arrange
+        pendingFilter.value = FeedEntryFilter(tabId = FeedTabId.Crypto, categoryId = "layer-1")
+        createModel(testScope = this)
+        filterFlow.emit(createEarnFilter())
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { setEarnFilterUseCase(any()) }
+        assertThat(pendingFilter.value).isNotNull()
+    }
+
     private fun createModel(testScope: TestScope): EarnFeedTabModel {
         coEvery { fetchEarnNetworksUseCase() } returns Unit.right()
         coEvery { fetchTopEarnTokensUseCase(any()) } returns Unit.right()
@@ -313,7 +376,25 @@ internal class EarnFeedTabModelTest {
             stateController = EarnStateController(),
             analyticsEventHandler = analyticsEventHandler,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
+            feedEntryController = feedEntryController,
         ).also { model = it }
+    }
+
+    private class FakeFeedEntryController(
+        override val pendingFilter: MutableStateFlow<FeedEntryFilter?>,
+    ) : FeedEntryController {
+
+        override val pendingEntry = MutableStateFlow<FeedEntryRequest?>(null)
+
+        override fun request(request: FeedEntryRequest) = Unit
+
+        override fun consumeEntry() {
+            pendingEntry.value = null
+        }
+
+        override fun consumeFilter() {
+            pendingFilter.value = null
+        }
     }
 
     private fun paginating(currencyId: String): BatchListState<Int, List<EarnTokenWithCurrency>> = BatchListState(

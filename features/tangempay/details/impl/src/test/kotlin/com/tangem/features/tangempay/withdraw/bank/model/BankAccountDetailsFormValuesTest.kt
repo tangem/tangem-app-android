@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
@@ -32,7 +33,6 @@ internal class BankAccountDetailsFormValuesTest {
                 BankWithdrawFormField.AddressLine1 to "1 Main St",
                 BankWithdrawFormField.PostalCode to "10001",
                 BankWithdrawFormField.BankName to "Test Bank",
-                BankWithdrawFormField.BankCountry to "US",
                 BankWithdrawFormField.BankRegion to "NY",
                 BankWithdrawFormField.BankCity to "New York",
                 BankWithdrawFormField.BankAddressLine1 to "1 Main St",
@@ -69,13 +69,17 @@ internal class BankAccountDetailsFormValuesTest {
             BankWithdrawFormField.AddressLine1 to "Megatower H10, 322F",
             BankWithdrawFormField.PostalCode to "90001",
             BankWithdrawFormField.BankName to "Arasaka Bank",
-            BankWithdrawFormField.BankCountry to "US",
             BankWithdrawFormField.BankRegion to "CA",
             BankWithdrawFormField.BankCity to "Night City",
             BankWithdrawFormField.BankAddressLine1 to "Ebunike st., 32A",
             BankWithdrawFormField.BankPostalCode to "90002",
         )
-        val details = NewRecipientDraft(fields = values).toBankAccountDetails(rail = BankRail.ACH, isBusiness = false)
+        val draft = NewRecipientDraft(
+            isThirdParty = false,
+            accountType = BankAccountType.CHECKING,
+            fields = values,
+        )
+        val details = draft.toBankAccountDetails(rail = BankRail.ACH, isBusiness = false)
 
         // Act
         val actual = details.toFormValues()
