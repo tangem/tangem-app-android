@@ -39,6 +39,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
             onValueChange = ::onValueChange,
             onFocusChange = ::onFocusChange,
             onSelectorClick = ::onSelectorClick,
+            onSuggestionClick = form.onSavedRecipientSelected,
             onContinueClick = ::onContinueClick,
         ),
     )
@@ -46,10 +47,18 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     private val state = MutableStateFlow(FormState())
 
     val uiState: StateFlow<TangemPayBankWithdrawFormUM>
-        field = MutableStateFlow(umFactory.create(draft = form.draft.value, state = state.value))
+        field = MutableStateFlow(
+            umFactory.create(
+                draft = form.draft.value,
+                state = state.value,
+                accounts = form.savedAccounts.value,
+            ),
+        )
 
     init {
-        combine(form.draft, state) { draft, formState -> umFactory.create(draft = draft, state = formState) }
+        combine(form.draft, state, form.savedAccounts) { draft, formState, accounts ->
+            umFactory.create(draft = draft, state = formState, accounts = accounts)
+        }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
     }
@@ -104,7 +113,12 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     }
 
     private fun onFocusChange(field: BankWithdrawFormField, isFocused: Boolean) {
-        if (isFocused) return
+        if (isFocused) {
+            state.update { it.copy(focusedField = field) }
+            return
+        }
+        // A blur can arrive after the next field has already reported focus, so only its own field is cleared.
+        state.update { if (it.focusedField == field) it.copy(focusedField = null) else it }
         val error = BankWithdrawFormValidator.validate(field = field, values = currentValues())
         // An empty field is only reported on Continue, so tabbing through the form stays quiet.
         if (error == null || error == BankWithdrawFieldError.Required) return
