@@ -7,10 +7,8 @@ import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Wraps [inner] and, once it succeeds, performs best-effort COLD wallet registration on the
@@ -18,10 +16,11 @@ import kotlinx.coroutines.launch
  * Applied only to the card operations that should bind the card (scan / wallet creation / signing /
  * key derivation) — the call sites decide when to wrap — so a cold card is bound on those taps.
  *
- * The wallet nonce is prefetched at the start of [run] (the card is already read by then, so
- * [WalletRegistrationLauncher.requestColdNonce] can skip the request for an already-registered card)
- * and its network round-trip overlaps the wrapped card command. Registration then runs only if the
- * nonce has already arrived; otherwise this tap skips it (the card binds on a later one).
+ * The wallet nonce is prefetched in [prepare], which runs *before* the NFC session (no card needed
+ * for the nonce), and [prepare] blocks up to [NONCE_PREFETCH_BUDGET_MS] for it. The nonce round-trip
+ * is much slower than the wrapped card command, so fetching it before the tap is what lets it be
+ * ready in time. Registration then runs only if the nonce has arrived; otherwise this tap skips it
+ * (the card binds on a later one).
  *
  * On success the inner result is forwarded only **after** the in-session registration attempt
  * completes, so it can extend the operation slightly — but it never changes the outcome: the inner
@@ -34,52 +33,63 @@ internal class RegisterColdWalletRunnable<T>(
     private val launcher: WalletRegistrationLauncher,
 ) : CardSessionRunnable<T> by inner {
 
-    override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
-        // Preflight has already read the card by the time run() starts, so requestColdNonce can
-        // identify it and skip the network request for an already-registered card. Kicked off here so
-        // the nonce round-trip overlaps the wrapped command. A wallet-creating task replaces the first
-        // wallet, so its preflight id is stale — don't gate registration on it.
-        val shouldCheckRegistered = inner !is CreateProductWalletTask
-        val nonceDeferred = session.environment.card?.let { card ->
-            session.scope.async { launcher.requestColdNonce(card, shouldCheckRegistered) }
-        }
+    @Volatile
+    private var nonce: WalletNonce? = null
 
+    override fun prepare(session: CardSession, callback: (result: CompletionResult<Unit>) -> Unit) {
+        inner.prepare(session) { innerResult ->
+            when (innerResult) {
+                is CompletionResult.Success -> prefetchNonceThenPrepare(session, innerResult, callback)
+                is CompletionResult.Failure -> callback(innerResult)
+            }
+        }
+    }
+
+    private fun prefetchNonceThenPrepare(
+        session: CardSession,
+        innerResult: CompletionResult<Unit>,
+        callback: (result: CompletionResult<Unit>) -> Unit,
+    ) {
+        // prepare() runs before the NFC session starts, so there is no card yet — but the nonce is
+        // card-independent. Fetch it here (blocking up to the budget) so its slow round-trip overlaps
+        // the "tap your card" wait instead of the fast card command; a null/timed-out nonce simply
+        // skips registration in run(). runSuspendCatching keeps a stray throw from failing the child.
+        val job = session.scope.launch {
+            nonce = runSuspendCatching {
+                withTimeoutOrNull(NONCE_PREFETCH_BUDGET_MS) { launcher.prefetchColdNonce() }
+            }.getOrNull()
+        }
+        // Always forward prepare's result — even if the fetch was cancelled — so the session never hangs.
+        job.invokeOnCompletion { callback(innerResult) }
+    }
+
+    override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         inner.run(session) { result ->
             when (result) {
-                is CompletionResult.Success -> registerColdThenComplete(
-                    session = session,
-                    nonceDeferred = nonceDeferred,
-                    result = result,
-                    callback = callback,
-                )
-                is CompletionResult.Failure -> {
-                    nonceDeferred?.cancel()
-                    callback(result)
-                }
+                is CompletionResult.Success -> registerColdThenComplete(session, result, callback)
+                is CompletionResult.Failure -> callback(result)
             }
         }
     }
 
     private fun registerColdThenComplete(
         session: CardSession,
-        nonceDeferred: Deferred<WalletNonce?>?,
         result: CompletionResult.Success<T>,
         callback: (result: CompletionResult<T>) -> Unit,
     ) {
         val card = session.environment.card
-        val nonce = nonceDeferred?.completedNonceOrNull()
-        // Register only when the prefetched nonce has already arrived — never hold the card waiting
-        // for a slow nonce. If it isn't ready (or there's no card), skip: the card binds on a later tap.
-        if (card == null || nonce == null) {
-            // Drop a still-in-flight prefetch — its result won't be used on this tap.
-            nonceDeferred?.cancel()
+        val prefetchedNonce = nonce
+        // Register only when the nonce prefetched in prepare() is ready; otherwise skip (the card binds
+        // on a later tap). The card is never held waiting for the nonce here — that wait already happened
+        // before the tap, in prepare().
+        if (card == null || prefetchedNonce == null) {
             callback(result)
             return
         }
         // Launch on the card session's own scope so the in-session registration is bound to the tap
         // (cancelled when the session ends) and can't outlive it.
         val job = session.scope.launch {
-            runSuspendCatching { launcher.registerColdInSession(session, card, nonce) }
+            runSuspendCatching { launcher.registerColdInSession(session, card, prefetchedNonce) }
                 .onFailure { TangemLogger.e("Cold wallet registration failed", it) }
         }
         // invokeOnCompletion fires even if the job was cancelled or never started (e.g. the session
@@ -88,9 +98,7 @@ internal class RegisterColdWalletRunnable<T>(
         job.invokeOnCompletion { callback(result) }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun Deferred<WalletNonce?>.completedNonceOrNull(): WalletNonce? =
-        // getCompleted() throws if the deferred was cancelled or completed exceptionally, so guard it:
-        // a prefetch failure must never escape here and break forwarding the wrapped result.
-        if (isCompleted) runCatching { getCompleted() }.getOrNull() else null
+    private companion object {
+        const val NONCE_PREFETCH_BUDGET_MS = 5_000L
+    }
 }
