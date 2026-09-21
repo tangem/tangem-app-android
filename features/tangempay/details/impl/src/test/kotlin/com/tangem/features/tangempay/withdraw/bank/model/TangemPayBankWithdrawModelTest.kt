@@ -21,6 +21,7 @@ import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponen
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -238,15 +239,82 @@ internal class TangemPayBankWithdrawModelTest {
     fun `GIVEN filled recipient details WHEN bank details filled THEN draft merges both forms`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.NewPersonal)
-        model.onDetailsFilled(mapOf(BankWithdrawFormField.AccountNumber to "4830019271"))
+        model.onDetailsFilled(formResult(BankWithdrawFormField.AccountNumber to "4830019271"))
 
         // Act
-        model.onDetailsFilled(mapOf(BankWithdrawFormField.BankName to "Test Bank"))
+        model.onDetailsFilled(formResult(BankWithdrawFormField.BankName to "Test Bank"))
 
         // Assert
         assertThat(model.draft.value.newRecipient.fields).containsExactly(
             BankWithdrawFormField.AccountNumber, "4830019271",
             BankWithdrawFormField.BankName, "Test Bank",
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN two form steps WHEN details filled THEN draft merges codes and names`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onDetailsFilled(
+            BankWithdrawFormResult(
+                values = mapOf(
+                    BankWithdrawFormField.Country to "US",
+                    BankWithdrawFormField.Region to "CA",
+                ),
+                displayNames = mapOf(
+                    BankWithdrawFormField.Country to "United States",
+                    BankWithdrawFormField.Region to "California",
+                ),
+            ),
+        )
+
+        // Act
+        model.onDetailsFilled(
+            BankWithdrawFormResult(
+                values = mapOf(BankWithdrawFormField.BankRegion to "NY"),
+                displayNames = mapOf(BankWithdrawFormField.BankRegion to "New York"),
+            ),
+        )
+
+        // Assert
+        assertThat(model.draft.value.newRecipient).isEqualTo(
+            NewRecipientDraft(
+                fields = mapOf(
+                    BankWithdrawFormField.Country to "US",
+                    BankWithdrawFormField.Region to "CA",
+                    BankWithdrawFormField.BankRegion to "NY",
+                ),
+                displayNames = mapOf(
+                    BankWithdrawFormField.Country to "United States",
+                    BankWithdrawFormField.Region to "California",
+                    BankWithdrawFormField.BankRegion to "New York",
+                ),
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN named field WHEN the same step reports it typed THEN the stale name is dropped`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onDetailsFilled(
+            BankWithdrawFormResult(
+                values = mapOf(BankWithdrawFormField.Region to "CA"),
+                displayNames = mapOf(BankWithdrawFormField.Region to "California"),
+            ),
+        )
+
+        // Act
+        model.onDetailsFilled(formResult(BankWithdrawFormField.Region to "Bavaria"))
+
+        // Assert
+        assertThat(model.draft.value.newRecipient).isEqualTo(
+            NewRecipientDraft(
+                fields = mapOf(BankWithdrawFormField.Region to "Bavaria"),
+                displayNames = mapOf(BankWithdrawFormField.Region to ""),
+            ),
         )
         model.onDestroy()
     }
@@ -300,6 +368,13 @@ internal class TangemPayBankWithdrawModelTest {
         coVerify(exactly = 0) { getTangemPayRegionsUseCase(any()) }
         model.onDestroy()
     }
+
+    /** A step that reports typed values: every field carries a code and a blank name, as the form model does. */
+    private fun formResult(vararg values: Pair<BankWithdrawFormField, String>): BankWithdrawFormResult =
+        BankWithdrawFormResult(
+            values = values.toMap(),
+            displayNames = values.associate { (field, _) -> field to "" },
+        )
 
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
