@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.positions.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
+import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
@@ -446,7 +446,7 @@ internal class PolymarketPositionsLoaderTest {
             createSession = CreatePolymarketPositionsSessionUseCase(
                 repository = repository,
                 deriveAddresses = deriveAddresses,
-                invalidator = PredictionPositionsInvalidator(),
+                updateListener = DefaultPredictionPositionsUpdater(),
                 dispatchers = dispatchers,
             ),
             dispatchers = dispatchers,
