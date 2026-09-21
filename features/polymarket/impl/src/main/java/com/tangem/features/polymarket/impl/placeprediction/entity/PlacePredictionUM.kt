@@ -110,10 +110,19 @@ internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
 
 internal fun PlacePredictionUM.canShowFeeBreakdown(): Boolean = feeBreakdownQuote() != null
 
+internal fun PlacePredictionUM.isFullClose(): Boolean {
+    val order = order as? OrderSideUM.Sell ?: return false
+    val available = (order.position as? SellPositionUM.Held)?.available ?: return false
+    val entered = enteredAmount() ?: return false
+
+    return entered.compareTo(available) == 0
+}
+
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
     val entered = enteredAmount() ?: return false
     val minAmount = minAmount ?: return false
-    return entered < minAmount
+
+    return entered < minAmount && !isFullClose()
 }
 
 @Immutable

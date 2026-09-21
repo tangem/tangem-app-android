@@ -81,7 +81,9 @@ private fun SignerRow(signer: JointOperationSignersUM.SignerUM, modifier: Modifi
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        subtitleSlot = { TangemRowText(text = signer.statusText, role = TangemRowTextRole.Subtitle) },
+        subtitleSlot = signer.statusText.takeIf { it != TextReference.EMPTY }?.let { status ->
+            { TangemRowText(text = status, role = TangemRowTextRole.Subtitle) }
+        },
         endSlot = {
             signer.mark?.let { mark ->
                 AnswerMark(mark = mark, namesTheAnswer = signer.statusText == TextReference.EMPTY)
