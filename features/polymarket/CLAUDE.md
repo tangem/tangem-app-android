@@ -77,9 +77,12 @@ feature was opened with, so children never read it from the feature params.
    status); `Reconnect` shows its own screen (`PolymarketOnboardingUM.Reconnect`, "Reconnect" button) for a
    ready account whose credentials are not on this device. **Opening the gate prompts for nothing** — no
    NFC, no biometrics.
-2. The button runs `CheckNewPolymarketAccountAllowedInteractor` (region) only when a *new* account would be
-   deployed; `REGION_BLOCKED` shows the region-restrictions screen, `UNDETERMINED` (check failed) refuses a
-   new account but never an existing one.
+2. The button always runs `CheckNewPolymarketAccountAllowedInteractor`. It reads the status by wallet id and
+   lets a deployed account through without a region check; only a wallet that still needs a deploy asks the
+   geoblock: `REGION_BLOCKED` shows the region-restrictions screen, `UNDETERMINED` (geoblock unreadable)
+   refuses with a snackbar. When the status read itself fails the interactor falls back to the geoblock
+   anyway, so during a BFF outage an existing account without a local confirmation record is gated like a
+   new one — fail-closed by design.
 3. Then `RunPolymarketOnboardingInteractor` — one signing session (card for Cold, unlock for Hot), progress
    collapsed into the button spinner; a failure leaves the screen idle and reports through a snackbar. The
    screen's button is the only retry.
@@ -172,8 +175,8 @@ and [REDACTED_TASK_KEY] (the claim action on the result screen).
 - **`Undetermined` is not "no account".** A wallet onboarded on another device lands on Welcome too;
   pressing Start derives the address and finds the account. Don't add copy that says "create".
 - **`READ_ONLY` explains itself as a region restriction.** Reuse it for another cause and the UI lies.
-- **Quotes and prices are BFF-formatted strings**; price-guard tolerance depends on how the BFF formatted
-  the number. Parse with `BigDecimal`, compare with `compareTo`, never `==`.
+- **Quotes (BFF `POST /orders/quote`) and prices (CLOB `GET price`) arrive as decimal strings.** Parse
+  with `BigDecimal`, compare with `compareTo`, never `==`.
 - **Times are Eastern** (`PolymarketConst.EASTERN_TIME_ZONE`) for market end dates.
 - **`PolymarketMainModelTest` and `PlacePredictionModelTest` are the reference tests** for a model in this
   module: `ParamsContainer` fed by hand, Turbine over `uiState`, relaxed mocks only for router, message
