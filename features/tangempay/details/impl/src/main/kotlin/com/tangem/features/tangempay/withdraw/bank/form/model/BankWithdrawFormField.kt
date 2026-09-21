@@ -55,12 +55,12 @@ internal enum class BankWithdrawFormField(
     ),
     Country(
         label = resourceReference(R.string.tangempay_order_data_country),
-        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_country),
+        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_not_selected),
         kind = BankWithdrawFieldKind.SelectorField,
     ),
     Region(
         label = resourceReference(R.string.tangempay_order_data_region),
-        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_region),
+        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_not_selected),
         kind = BankWithdrawFieldKind.SelectorField,
         contentType = ContentType.AddressRegion,
     ),
@@ -89,7 +89,7 @@ internal enum class BankWithdrawFormField(
     ),
     BankRegion(
         label = resourceReference(R.string.tangempay_withdraw_bank_field_bank_region),
-        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_region),
+        placeholder = resourceReference(R.string.tangempay_withdraw_bank_placeholder_not_selected),
         kind = BankWithdrawFieldKind.SelectorField,
     ),
     BankCity(
