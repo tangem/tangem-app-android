@@ -43,13 +43,29 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
 
+    /** Every saved account of the wallet: the recipient forms suggest from it while an account number is typed. */
+    val savedAccounts: StateFlow<List<BankAccount>>
+        field = MutableStateFlow(emptyList<BankAccount>())
+
     init {
-        loadSavedRecipient()
+        loadSavedAccounts()
         prefetchResidency()
     }
 
     fun onRecipientSelected(account: BankAccount) {
         draft.update { it.copy(recipient = account) }
+    }
+
+    /**
+     * A suggested account replaces the recipient being typed, so it also moves to the top of the recents. The typed
+     * forms leave the stack with it, and their values and picked names go too: the preview would otherwise show
+     * them next to the saved account's details.
+     */
+    fun onSavedRecipientSelected(account: BankAccount) {
+        modelScope.launch {
+            markBankAccountUsedUseCase(userWalletId = params.userWalletId, bankAccountId = account.id)
+        }
+        draft.update { it.copy(recipient = account, newRecipient = NewRecipientDraft.forEntry(it.entry)) }
     }
 
     fun onTransferTypeSelected(isThirdParty: Boolean) {
@@ -104,18 +120,22 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         }
     }
 
-    private fun loadSavedRecipient() {
-        val entry = params.entry as? BankWithdrawEntry.Saved ?: return
+    /** One request per wizard: the suggestions and the recipient of a [BankWithdrawEntry.Saved] entry share it. */
+    private fun loadSavedAccounts() {
         modelScope.launch {
             getBankAccountsUseCase(params.userWalletId).fold(
                 ifLeft = { error -> TangemLogger.withTag(TAG).e("Failed to load saved bank accounts: $error") },
                 ifRight = { accounts ->
-                    accounts.firstOrNull { it.id == entry.bankAccountId }?.let { recipient ->
-                        draft.update { it.copy(recipient = recipient) }
-                    }
+                    savedAccounts.value = accounts
+                    selectEntryRecipient(accounts)
                 },
             )
         }
+    }
+
+    private fun selectEntryRecipient(accounts: List<BankAccount>) {
+        val entry = params.entry as? BankWithdrawEntry.Saved ?: return
+        accounts.firstOrNull { it.id == entry.bankAccountId }?.let(::onRecipientSelected)
     }
 }
 
