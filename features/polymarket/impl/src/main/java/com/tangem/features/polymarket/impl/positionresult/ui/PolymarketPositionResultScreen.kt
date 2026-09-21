@@ -16,6 +16,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
@@ -26,19 +28,23 @@ import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.positionresult.ui.preview.PolymarketPositionResultPreviewProvider
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
+import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM.Action
 
-/**
- * Settlement result layout. The parent claim flow owns navigation and the bottom action; this screen renders the
- * same status-screen structure as the order result.
- */
 @Composable
-internal fun PolymarketPositionResultScreen(state: PolymarketPositionResultUM, modifier: Modifier = Modifier) {
+internal fun PolymarketPositionResultScreen(
+    state: PolymarketPositionResultUM,
+    onActionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     TangemStatusScreen(
         modifier = modifier,
         variant = state.result.variant(),
@@ -49,7 +55,7 @@ internal fun PolymarketPositionResultScreen(state: PolymarketPositionResultUM, m
             PredictionMarketBlock(state = state.market)
             ResultRows(state = state)
         },
-        footer = { ResultFooter(note = state.footerNote) },
+        footer = { ResultFooter(note = state.footerNote, action = state.action, onActionClick = onActionClick) },
     )
 }
 
@@ -113,7 +119,7 @@ private fun ResultMetric(
 }
 
 @Composable
-private fun ResultFooter(note: TextReference?) {
+private fun ResultFooter(note: TextReference?, action: PolymarketPositionResultUM.Action, onActionClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -133,8 +139,23 @@ private fun ResultFooter(note: TextReference?) {
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
-            text = stringReference(""),
-            onClick = {},
+            isLoading = action is Action.Claim && action.isInProgress,
+            contentDescription = if (action is Action.Claim && action.isInProgress) {
+                stringResourceSafe(R.string.common_in_progress)
+            } else {
+                null
+            },
+            iconEnd = when (action) {
+                is Action.Claim -> TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
+                Action.Dismiss -> null
+            },
+            text = resourceReference(
+                when (action) {
+                    is Action.Claim -> R.string.prediction_position_result_claim_action
+                    Action.Dismiss -> R.string.prediction_position_result_dismiss_action
+                },
+            ),
+            onClick = onActionClick,
         )
     }
 }
@@ -152,6 +173,6 @@ private fun PolymarketPositionResultScreenPreview(
     @PreviewParameter(PolymarketPositionResultPreviewProvider::class) state: PolymarketPositionResultUM,
 ) {
     TangemThemePreviewRedesign(alwaysShowBottomSheets = false) {
-        PolymarketPositionResultScreen(state = state)
+        PolymarketPositionResultScreen(state = state, onActionClick = {})
     }
 }
