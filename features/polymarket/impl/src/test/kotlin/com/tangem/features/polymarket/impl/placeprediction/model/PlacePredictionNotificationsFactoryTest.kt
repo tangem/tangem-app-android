@@ -379,6 +379,17 @@ internal class PlacePredictionNotificationsFactoryTest {
                 expectedButtonEnabled = false,
             ),
             SellGateModel(
+                amountValue = "3",
+                available = "3",
+                quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+                minAmount = BigDecimal("5"),
+                expectedProceeds = SharesProceedsUM.Content(
+                    expected = BigDecimal("23.8"),
+                    guaranteed = BigDecimal("23.2"),
+                ),
+                expectedButtonEnabled = true,
+            ),
+            SellGateModel(
                 amountValue = "12.80",
                 quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
                 expectedProceeds = SharesProceedsUM.Unavailable,
