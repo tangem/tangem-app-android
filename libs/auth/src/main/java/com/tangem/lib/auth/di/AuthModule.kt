@@ -285,8 +285,12 @@ internal object AuthModule {
     @Provides
     @Singleton
     @SessionAuthInterceptor
-    fun provideDpopAuthorizationInterceptor(store: SessionTokensStore, proofFactory: DpopProofFactory): Interceptor {
-        return DpopAuthorizationInterceptor(store, proofFactory)
+    fun provideDpopAuthorizationInterceptor(
+        store: SessionTokensStore,
+        proofFactory: DpopProofFactory,
+        refresher: Lazy<SessionTokenRefresher>,
+    ): Interceptor {
+        return DpopAuthorizationInterceptor(store, proofFactory, refresher)
     }
 
     @Provides
