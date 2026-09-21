@@ -50,11 +50,12 @@ data class JointOperationDto(
     )
 
     /**
+     * The signature bytes the backend also sends are not read: the client never verifies other members' votes.
+     *
      * @property address the responding member's owner address
-     * @property state   `signed` | `declined`. Raw string, same reasoning as [JointOperationDto.status]
-     * @property at      when the member responded, ISO-8601
+     * @property vote    `approve` | `reject`. Raw string, same reasoning as [JointOperationDto.status]
+     * @property votedAt when the member responded, ISO-8601
      */
-    /** The signature bytes the backend also sends are not read: the client never verifies other members' votes */
     @JsonClass(generateAdapter = true)
     data class VoteDto(
         @Json(name = "address") val address: String,
