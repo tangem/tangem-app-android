@@ -26,7 +26,12 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
 ) {
 
-    suspend fun createAndOpen(source: AnalyticsParam.ScreensSources, onFailed: () -> Unit) {
+    /** [beforeOpen] runs once the wallet exists and before the stack swaps, for whatever the screen must settle. */
+    suspend fun createAndOpen(
+        source: AnalyticsParam.ScreensSources,
+        beforeOpen: suspend () -> Unit,
+        onFailed: () -> Unit,
+    ) {
         analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started(source = source))
         // No mobile wallet screen opens any more, but the funnel the analysts read still starts with these two.
         analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = source))
@@ -54,6 +59,7 @@ internal class IntroductionMobileWalletCreator @Inject constructor(
                         referralId = referralId,
                     ),
                 )
+                beforeOpen()
                 router.replaceAll(AppRoute.Wallet)
             },
         )
