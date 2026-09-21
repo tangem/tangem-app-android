@@ -35,8 +35,8 @@ sealed interface PredictionClaimFailure {
     data class Failed(val receipt: PredictionClaimReceipt) : PredictionClaimFailure
 
     /**
-     * The claim did not settle within the screen's waiting window. It may still land — refresh the
-     * positions before telling the user anything.
+     * The claim was accepted but did not settle within the screen's waiting window, or the backend stopped
+     * answering for it. It may still land — refresh the positions before telling the user anything.
      */
     data class Unconfirmed(val receipt: PredictionClaimReceipt) : PredictionClaimFailure
 }
@@ -114,7 +114,7 @@ class SubmitPredictionClaimInteractor(
                 walletId = params.walletId,
                 transactionId = submitted.transactionId,
             ).getOrElse { error ->
-                if (error.endsPolling()) raise(PredictionClaimFailure.Rejected(error))
+                if (error.endsPolling()) raise(PredictionClaimFailure.Unconfirmed(latest))
                 return@repeat
             }
         }
