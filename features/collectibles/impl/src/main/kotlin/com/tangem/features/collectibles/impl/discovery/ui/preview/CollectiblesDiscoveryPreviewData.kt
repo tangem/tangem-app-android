@@ -42,11 +42,14 @@ internal object CollectiblesDiscoveryPreviewData {
             pack.copy(id = "legendary_2", title = stringReference("Legendary 2")),
         ),
         search = searchState(query = "", isActive = false),
+        hasSearchableCatalogue = true,
     )
 
+    // The catalogue's size comes with the categories, so both states that have none also have no search.
     val loading = default.copy(
         tabs = CollectiblesDiscoveryUM.TabsUM.Loading,
         content = CollectiblesDiscoveryUM.ContentUM.Loading,
+        hasSearchableCatalogue = false,
     )
 
     val listError = default.copy(
@@ -55,6 +58,7 @@ internal object CollectiblesDiscoveryPreviewData {
             message = stringReference("Failed to load cards list.\nTap to reload"),
             onReloadClick = {},
         ),
+        hasSearchableCatalogue = false,
     )
 
     val searchActive = default.copy(
