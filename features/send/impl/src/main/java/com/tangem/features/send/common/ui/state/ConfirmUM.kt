@@ -18,6 +18,7 @@ internal sealed class ConfirmUM {
         val sendingFooter: TextReference,
         val notifications: ImmutableList<NotificationUM>,
         val signaturesUM: SendSignaturesUM? = null,
+        val setupFeeNote: TextReference? = null,
     ) : ConfirmUM()
 
     data class Success(

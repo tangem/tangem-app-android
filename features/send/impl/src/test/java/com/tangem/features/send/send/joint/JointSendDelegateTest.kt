@@ -7,6 +7,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeInnerCall
@@ -35,6 +36,7 @@ internal class JointSendDelegateTest {
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
     private val gasBuilder: SafeTxGasBuilder = mockk()
     private val createJointOperationUseCase: CreateJointOperationUseCase = mockk()
+    private val networkReader: JointNetworkReader = mockk()
 
     private val payloadCodec: JointTransferPayloadCodec = mockk {
         every { encode(any()) } returns SafeInnerCall(to = FIXTURE_RECIPIENT, value = BigInteger.ONE, data = "0x")
@@ -46,6 +48,7 @@ internal class JointSendDelegateTest {
         gasBuilder = gasBuilder,
         createJointOperationUseCase = createJointOperationUseCase,
         payloadCodec = payloadCodec,
+        networkReader = networkReader,
     )
 
     private val userWalletId = UserWalletId("0011223344556677")
