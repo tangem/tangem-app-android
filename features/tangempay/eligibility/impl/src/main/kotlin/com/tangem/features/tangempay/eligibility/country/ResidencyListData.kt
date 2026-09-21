@@ -18,8 +18,8 @@ internal sealed interface ResidencyListData {
 
 internal fun ResidencyListData.toContent(
     query: String,
-    suggestedTitle: TextReference,
-    allTitle: TextReference,
+    suggestedTitle: TextReference?,
+    allTitle: TextReference?,
 ): ResidencyListUM.Content {
     val loaded = when (this) {
         ResidencyListData.Loading -> return ResidencyListUM.Content.Loading
@@ -27,8 +27,9 @@ internal fun ResidencyListData.toContent(
         is ResidencyListData.Loaded -> this
     }
 
-    if (query.isNotBlank()) {
-        val found = loaded.all.filter { item -> item.name.contains(query.trim(), ignoreCase = true) }
+    val trimmedQuery = query.trim()
+    if (trimmedQuery.isNotEmpty()) {
+        val found = loaded.all.filter { item -> item.matches(trimmedQuery) }
         return if (found.isEmpty()) {
             ResidencyListUM.Content.Empty
         } else {
@@ -69,3 +70,10 @@ internal fun ResidencyListData.toContent(
 private const val SUGGESTED_SECTION_ID = "suggested"
 private const val ALL_SECTION_ID = "all"
 private const val SEARCH_SECTION_ID = "search"
+
+/** A code prefix finds the row the way a name substring does: "us" → United States, "ny" → New York. */
+private fun ResidencyListUM.ItemUM.matches(query: String): Boolean =
+    name.contains(query, ignoreCase = true) || subdivisionCode.startsWith(query, ignoreCase = true)
+
+/** Regions arrive as ISO 3166-2 ("US-NY"), so the country part never shadows the subdivision. */
+private val ResidencyListUM.ItemUM.subdivisionCode: String get() = id.substringAfterLast(delimiter = '-')

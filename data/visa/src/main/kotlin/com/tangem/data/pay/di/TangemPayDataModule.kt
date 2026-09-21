@@ -573,13 +573,15 @@ internal interface TangemPayDataModule {
         @Singleton
         fun provideBankOfframpOrderRepository(): BankOfframpOrderRepository = MockBankOfframpOrderRepository()
 
-        // Geo endpoints are mocked while their country list is filled in; bind the default repository directly to
-        // go live. Eligibility checks still reach the backend through the delegate.
+        // Geo endpoints are mocked while their country list is filled in; to go live, make the default repository
+        // the origin of the cache. Eligibility checks still reach the backend through the delegate.
         @Provides
         @Singleton
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
-        ): TangemPayResidencyRepository = MockTangemPayResidencyRepository(origin = repository)
+        ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(
+            origin = MockTangemPayResidencyRepository(origin = repository),
+        )
 
         @Provides
         @Singleton
