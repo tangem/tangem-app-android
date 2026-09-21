@@ -18,11 +18,11 @@ import javax.inject.Inject
 internal class PredefinedTokenResolver @Inject constructor() {
 
     fun resolve(payoutTokens: List<PromoPayoutToken>): List<PredefinedTokenToAdd> = payoutTokens
-        .map { payoutToken -> payoutToken.toPredefinedToken() }
+        .mapNotNull { payoutToken -> payoutToken.toPredefinedToken() }
         .distinctBy { it.token.id.value to it.network.networkId }
 
-    private fun PromoPayoutToken.toPredefinedToken(): PredefinedTokenToAdd {
-        val rawId = CryptoCurrency.RawID(tokenId)
+    private fun PromoPayoutToken.toPredefinedToken(): PredefinedTokenToAdd? {
+        val rawId = tokenId?.let { CryptoCurrency.RawID(it) } ?: return null
         return PredefinedTokenToAdd(
             token = RawMarketToken(
                 id = rawId,
