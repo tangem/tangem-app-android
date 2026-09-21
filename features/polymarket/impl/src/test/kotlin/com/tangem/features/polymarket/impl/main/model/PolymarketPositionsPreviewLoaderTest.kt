@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
@@ -34,6 +35,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
     private val repository: PolymarketPositionsRepository = mockk()
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val addresses: PolymarketAddresses = mockk()
+    private val positionsUpdater = DefaultPredictionPositionsUpdater()
     private val userWalletId = UserWalletId("011")
     private val page = PolymarketPositionsPage(listOf(createPolymarketPosition()), hasNext = false)
 
@@ -159,6 +161,59 @@ internal class PolymarketPositionsPreviewLoaderTest {
     }
 
     @Test
+    fun `GIVEN a resumed preview WHEN the positions are invalidated THEN they are read again`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+
+        // Act
+        positionsUpdater.triggerUpdate(userWalletId)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
+    }
+
+    @Test
+    fun `GIVEN the positions changed while paused WHEN the preview resumes THEN it is read once, not twice`() =
+        runTest {
+            // Arrange
+            val loader = createLoader()
+            coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+            loader.pause()
+
+            // Act
+            positionsUpdater.triggerUpdate(userWalletId)
+            runCurrent()
+            loader.resume(backgroundScope, userWalletId)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
+        }
+
+    @Test
+    fun `GIVEN a paused preview WHEN the positions are invalidated THEN nothing is read`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.right()
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        loader.pause()
+
+        // Act
+        positionsUpdater.triggerUpdate(userWalletId)
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { repository.getOpenPositions(addresses, 3, 0) }
+    }
+
+    @Test
     fun `GIVEN visible positions WHEN reload on resume fails THEN keeps cards until manual retry succeeds`() = runTest {
         // Arrange
         val loader = createLoader()
@@ -267,12 +322,37 @@ internal class PolymarketPositionsPreviewLoaderTest {
         assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
     }
 
+    @Test
+    fun `GIVEN a read in flight WHEN the positions are invalidated THEN the stale response is dropped`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        val delayed = CompletableDeferred<Unit>()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+            withContext(NonCancellable) { delayed.await() }
+            page.right()
+        }
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.copy(positions = emptyList()).right()
+
+        // Act
+        positionsUpdater.triggerUpdate(userWalletId)
+        runCurrent()
+        delayed.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
+        coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
+    }
+
     private fun TestScope.createLoader(): PolymarketPositionsPreviewLoader {
         coEvery { deriveAddresses.stored(userWalletId) } returns addresses
         val dispatcher = StandardTestDispatcher(testScheduler)
         return PolymarketPositionsPreviewLoader(
             repository = repository,
             deriveAddresses = deriveAddresses,
+            updateListener = positionsUpdater,
             dispatchers = TestingCoroutineDispatcherProvider(
                 main = dispatcher,
                 mainImmediate = dispatcher,
