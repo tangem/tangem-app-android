@@ -153,6 +153,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             PredictionAccountStatusValue.Active(
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal("40"),
+                positionsValue = null,
                 fiatRate = null,
                 depositCurrency = COLLATERAL,
                 depositAddress = null,
@@ -546,6 +547,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         val ACTIVE = PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal("40"),
+            positionsValue = null,
             fiatRate = null,
             depositCurrency = COLLATERAL,
             depositAddress = BRIDGE_ADDRESS,
