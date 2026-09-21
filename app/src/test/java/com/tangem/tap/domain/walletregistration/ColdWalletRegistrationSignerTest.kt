@@ -5,7 +5,6 @@ import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.CryptoUtils.generatePublicKey
 import com.tangem.crypto.sign
@@ -64,7 +63,7 @@ internal class ColdWalletRegistrationSignerTest {
 
         // Assert — registration is aborted and the anomaly is reported.
         assertThat(error).isInstanceOf(ColdWalletUnexpectedCurveException::class.java)
-        verify(exactly = 1) { analyticsEventHandler.send(any<TechAnalyticsEvent.UnexpectedWalletCurve>()) }
+        verify(exactly = 1) { analyticsEventHandler.send(any<BackendAuthAnalyticsEvent.UnexpectedWalletCurve>()) }
     }
 
     @Test
