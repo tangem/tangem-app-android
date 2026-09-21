@@ -75,15 +75,19 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideDefaultPredictionPositionsUpdater(): DefaultPredictionPositionsUpdater = DefaultPredictionPositionsUpdater()
+    fun providePredictionPositionsUpdater(): DefaultPredictionPositionsUpdater = DefaultPredictionPositionsUpdater()
 
     @Provides
     @Singleton
-    fun providePredictionPositionsUpdateEmitter(impl: DefaultPredictionPositionsUpdater): PredictionPositionsUpdateEmitter = impl
+    fun providePredictionPositionsUpdateEmitter(
+        impl: DefaultPredictionPositionsUpdater,
+    ): PredictionPositionsUpdateEmitter = impl
 
     @Provides
     @Singleton
-    fun providePredictionPositionsUpdateListener(impl: DefaultPredictionPositionsUpdater): PredictionPositionsUpdateListener = impl
+    fun providePredictionPositionsUpdateListener(
+        impl: DefaultPredictionPositionsUpdater,
+    ): PredictionPositionsUpdateListener = impl
 
     @Provides
     @Singleton
