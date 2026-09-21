@@ -19,4 +19,13 @@ internal class DefaultWalletRegistrationTrigger @Inject constructor(
             launcher.registerMobile(userWallet)
         }
     }
+
+    override fun onMobileWalletsUnlocked(userWallets: List<UserWallet.Hot>) {
+        if (userWallets.isEmpty()) return
+        // Same application-scope dispatch as creation: unlock happens from a screen model whose scope
+        // dies on navigation. registerMobile is idempotent, so already-registered wallets are skipped.
+        appCoroutineScope.launch {
+            userWallets.forEach { launcher.registerMobile(it) }
+        }
+    }
 }

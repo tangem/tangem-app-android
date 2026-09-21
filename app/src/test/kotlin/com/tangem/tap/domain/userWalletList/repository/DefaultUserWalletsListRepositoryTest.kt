@@ -20,10 +20,13 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
+import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import dagger.Lazy
@@ -58,6 +61,7 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val userWalletSelectedHandler: UserWalletSelectedHandler = mockk(relaxed = true)
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk(relaxed = true)
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase = mockk(relaxed = true)
+    private val walletRegistrationTrigger: WalletRegistrationTrigger = mockk(relaxed = true)
 
     private val walletA = MockUserWalletFactory.create().copy(walletId = UserWalletId("0011"), name = "Wallet A")
     private val walletB = MockUserWalletFactory.create().copy(walletId = UserWalletId("0022"), name = "Wallet B")
@@ -74,6 +78,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             trackingContextProxy,
             clearReferralInstallUseCase,
             userWalletSelectedHandler,
+            walletRegistrationTrigger,
         )
 
         coEvery { publicInformationRepository.delete(any()) } returns CompletionResult.Success(Unit)
@@ -98,6 +103,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             userWalletSelectedHandler = Lazy { userWalletSelectedHandler },
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
+            walletRegistrationTrigger = Lazy { walletRegistrationTrigger },
         )
     }
 
@@ -298,6 +304,73 @@ internal class DefaultUserWalletsListRepositoryTest {
         assertThat(result.isLeft()).isTrue()
         assertThat(repository.userWallets.value).containsExactly(storedWallet)
         coVerify(exactly = 0) { publicInformationRepository.save(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN new hot wallet WHEN saved THEN mobile registration triggered`() = runTest {
+        // Arrange
+        val walletId = UserWalletId("00aa")
+        val hotWallet = mockk<UserWallet.Hot>(relaxed = true) {
+            every { this@mockk.walletId } returns walletId
+            every { isLocked } returns false
+        }
+        repository.userWallets.value = listOf(walletB)
+        coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+        coEvery { sensitiveInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+        // Act
+        val result = repository.saveWithoutLock(hotWallet, canOverride = true)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        verify(exactly = 1) { walletRegistrationTrigger.onMobileWalletCreated(hotWallet) }
+    }
+
+    @Test
+    fun `GIVEN new cold wallet WHEN saved THEN no mobile registration trigger`() = runTest {
+        // Arrange
+        val newCold = MockUserWalletFactory.create().copy(walletId = UserWalletId("00aa"))
+        repository.userWallets.value = listOf(walletB)
+        coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+        coEvery { sensitiveInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+        // Act
+        val result = repository.saveWithoutLock(newCold, canOverride = true)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        verify(exactly = 0) { walletRegistrationTrigger.onMobileWalletCreated(any()) }
+    }
+
+    @Test
+    fun `GIVEN locked hot wallet WHEN unlockAllWallets THEN mobile registration retried for it`() = runTest {
+        // Arrange
+        val walletId = UserWalletId("00aa")
+        val lockedHot = UserWallet.Hot(
+            name = "Hot",
+            walletId = walletId,
+            hotWalletId = mockk(relaxed = true),
+            wallets = null, // locked
+            backedUp = false,
+        )
+        repository.userWallets.value = listOf(lockedHot)
+        val key = UserWalletEncryptionKey(walletId = walletId, encryptionKey = ByteArray(size = 32) { 1 })
+        coEvery { userWalletEncryptionKeysRepository.getAllBiometric() } returns listOf(key)
+        coEvery { userWalletEncryptionKeysRepository.getAllUnsecured() } returns emptyList()
+        coEvery { sensitiveInformationRepository.getAll(any()) } returns CompletionResult.Success(
+            mapOf(walletId to UserWalletSensitiveInformation(wallets = null, mobileWallets = emptyList())),
+        )
+
+        // Act
+        val result = repository.unlockAllWallets()
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        verify(exactly = 1) {
+            walletRegistrationTrigger.onMobileWalletsUnlocked(
+                match { wallets -> wallets.singleOrNull()?.walletId == walletId },
+            )
+        }
     }
 
     private companion object {
