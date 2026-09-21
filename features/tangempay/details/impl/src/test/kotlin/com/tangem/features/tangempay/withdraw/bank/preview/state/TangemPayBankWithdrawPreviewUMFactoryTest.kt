@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankRail
@@ -19,13 +20,16 @@ import com.tangem.features.tangempay.withdraw.bank.personalFormValues
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewState
 import com.tangem.features.tangempay.withdraw.bank.preview.model.SendState
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.DetailRowUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Failed
+import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.RecipientCardUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.Summary
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -98,6 +102,25 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     }
 
     @Test
+    fun `GIVEN rail named by the catalog WHEN create THEN that name in the route and the summary`() {
+        // Arrange
+        val draft = savedDraft().copy(destination = offrampDestination(rail = BankRail.WIRE, feeName = "FedWire"))
+
+        // Act
+        val actual = factory.create(draft = draft, state = PreviewState()) as Summary
+
+        // Assert
+        val transfer = requireNotNull(actual.transfer)
+        assertThat(transfer.route.title).isEqualTo(stringReference("FedWire"))
+        assertThat(transfer.sendingSummary).isEqualTo(
+            resourceReference(
+                R.string.tangempay_withdraw_bank_sending_summary,
+                wrappedList("$501", stringReference("FedWire"), "$1"),
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN business recipient WHEN create THEN person card starts with business name`() {
         // Arrange
         val draft = savedDraft().copy(recipient = bankAccount(beneficiary = Beneficiary.Business(name = "Arasaka")))
@@ -153,6 +176,40 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         // Assert
         assertThat(actual.recipientCards[1].rows.map { it.label }).doesNotContain(BankWithdrawFormField.Region.label)
         assertThat(actual.recipientCards[1].rows).hasSize(6)
+    }
+
+    @Test
+    fun `GIVEN saved recipient without bank details WHEN create THEN no empty card shown`() {
+        // Arrange
+        val recipient = bankAccount(id = "acc-1").let { account ->
+            account.copy(details = account.details.copy(bankName = null, bankAddress = null))
+        }
+
+        // Act
+        val actual = factory.create(draft = savedDraft().copy(recipient = recipient), state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.recipientCards).containsExactly(
+            RecipientCardUM(
+                rows = persistentListOf(
+                    DetailRowUM(BankWithdrawFormField.AccountNumber.label, "0000000000"),
+                    DetailRowUM(BankWithdrawFormField.RoutingNumber.label, "021000021"),
+                ),
+                onClick = null,
+            ),
+            RecipientCardUM(
+                rows = persistentListOf(
+                    DetailRowUM(BankWithdrawFormField.FirstName.label, "Andrei"),
+                    DetailRowUM(BankWithdrawFormField.LastName.label, "Melnikov"),
+                    DetailRowUM(BankWithdrawFormField.Country.label, "US"),
+                    DetailRowUM(BankWithdrawFormField.Region.label, "NY"),
+                    DetailRowUM(BankWithdrawFormField.City.label, "New York"),
+                    DetailRowUM(BankWithdrawFormField.AddressLine1.label, "1 Main St"),
+                    DetailRowUM(BankWithdrawFormField.PostalCode.label, "10001"),
+                ),
+                onClick = null,
+            ),
+        ).inOrder()
     }
 
     @Test
