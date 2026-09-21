@@ -6,14 +6,13 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
-import com.tangem.features.collectibles.impl.discovery.createBatchListState
-import com.tangem.features.collectibles.impl.discovery.createMachine
+import com.tangem.features.collectibles.impl.createBatchListState
+import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.features.collectibles.impl.discovery.model.converter.CollectiblesDiscoveryPackConverter
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.ProvideTestModels
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -320,7 +319,8 @@ internal class CollectiblesDiscoveryContentTransformerTest {
         )
     }
 
-    private fun emptyBatch() = CollectibleGachaMachinesBatch(collectibleGachaMachines = emptyList(), requestCursor = null)
+    private fun emptyBatch() =
+        CollectibleGachaMachinesBatch(collectibleGachaMachines = emptyList(), requestCursor = null)
 
     private fun CollectiblesDiscoveryUM.ContentUM.packIds(): List<String> =
         (this as CollectiblesDiscoveryUM.ContentUM.Content).rows.flatMap { row -> row.packs.map { it.id } }

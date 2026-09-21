@@ -1,5 +1,7 @@
 package com.tangem.domain.collectibles
 
+import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
+import com.tangem.domain.collectibles.models.CollectibleGachaMachineNftsListConfig
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesListConfig
 import com.tangem.pagination.BatchAction
@@ -14,3 +16,12 @@ typealias CollectibleGachaMachinesBatchAction = BatchAction<Int, CollectibleGach
 typealias CollectibleGachaMachinesBatchFlow = BatchFlow<Int, CollectibleGachaMachinesBatch, Nothing>
 
 typealias CollectibleGachaMachinesBatchListState = BatchListState<Int, CollectibleGachaMachinesBatch>
+
+typealias CollectibleGachaMachineNftsBatchingContext =
+    BatchingContext<Int, CollectibleGachaMachineNftsListConfig, Nothing>
+
+typealias CollectibleGachaMachineNftsBatchAction = BatchAction<Int, CollectibleGachaMachineNftsListConfig, Nothing>
+
+typealias CollectibleGachaMachineNftsBatchFlow = BatchFlow<Int, List<CollectibleGachaMachineNft>, Nothing>
+
+typealias CollectibleGachaMachineNftsBatchListState = BatchListState<Int, List<CollectibleGachaMachineNft>>
