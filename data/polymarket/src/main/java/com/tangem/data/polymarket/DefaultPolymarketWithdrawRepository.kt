@@ -12,8 +12,8 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
 import com.tangem.domain.polymarket.model.PredictionWithdrawalState
 import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.grow.datasource.polymarket.models.PolymarketApprovalCallDto
-import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawRequest
-import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -54,7 +54,7 @@ internal class DefaultPolymarketWithdrawRepository @Inject constructor(
         )
     }
 
-    private fun PredictionWithdrawalBatch.toRequest() = PolymarketWithdrawRequest(
+    private fun PredictionWithdrawalBatch.toRequest() = PolymarketRelayedBatchRequest(
         ownerAddress = ownerAddress,
         depositWalletAddress = depositWalletAddress,
         nonce = nonce,
@@ -63,7 +63,7 @@ internal class DefaultPolymarketWithdrawRepository @Inject constructor(
         signature = signature,
     )
 
-    private fun PolymarketWithdrawResponse.toReceipt() = PredictionWithdrawalReceipt(
+    private fun PolymarketRelayedBatchResponse.toReceipt() = PredictionWithdrawalReceipt(
         transactionId = transactionId,
         state = PredictionWithdrawalState.fromRaw(state),
         transactionHash = transactionHash,
