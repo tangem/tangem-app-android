@@ -100,13 +100,14 @@ internal class PolymarketPositionResultModel @Inject constructor(
             }
             is PredictionClaimFailure.Rejected -> {
                 TangemLogger.e("The backend refused the claim: ${failure.error}")
-                showError(
-                    when (failure.error) {
-                        is PolymarketRedeemError.RelayerRejected -> R.string.prediction_claim_error_rejected
-                        PolymarketRedeemError.RelayerUnavailable -> R.string.prediction_claim_error_unavailable
-                        else -> R.string.prediction_claim_error_generic
-                    },
-                )
+                when (failure.error) {
+                    is PolymarketRedeemError.RelayerRejected -> {
+                        positionsUpdateEmitter.triggerUpdate(params.userWalletId)
+                        showError(R.string.prediction_claim_error_rejected)
+                    }
+                    PolymarketRedeemError.RelayerUnavailable -> showError(R.string.prediction_claim_error_unavailable)
+                    else -> showError(R.string.prediction_claim_error_generic)
+                }
             }
             PredictionClaimFailure.CallUnavailable,
             PredictionClaimFailure.NonceUnavailable,
