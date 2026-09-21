@@ -584,6 +584,138 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
+    fun `GIVEN iso subdivision code WHEN region selected THEN bare code stored`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = californiaIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lowercase prefixed region code WHEN region selected THEN bare code stored`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = californiaLowercaseIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bare region code WHEN region selected THEN code stored unchanged`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = texas)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "TX",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "Texas",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN us bank region WHEN region selected THEN us prefix stripped`() {
+        // Arrange
+        val model = createModel(formFields = bankAddressFields)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = newYorkIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(BankWithdrawFormField.BankRegion to "NY"),
+                    displayNames = mapOf(BankWithdrawFormField.BankRegion to "New York"),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country with a region WHEN country selected THEN region code stripped too`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = californiaIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN free-text region typed WHEN continue clicked THEN region name is blank`() {
         // Arrange
         setDraftWithPickedCalifornia()
@@ -763,5 +895,8 @@ internal class TangemPayBankWithdrawFormModelTest {
         val california = TangemPayRegion(code = "CA", name = "California", isSuggested = true)
         val texas = TangemPayRegion(code = "TX", name = "Texas", isSuggested = false)
         val newYork = TangemPayRegion(code = "NY", name = "New York", isSuggested = false)
+        val californiaIso = TangemPayRegion(code = "US-CA", name = "California", isSuggested = true)
+        val californiaLowercaseIso = TangemPayRegion(code = "us-CA", name = "California", isSuggested = true)
+        val newYorkIso = TangemPayRegion(code = "US-NY", name = "New York", isSuggested = false)
     }
 }
