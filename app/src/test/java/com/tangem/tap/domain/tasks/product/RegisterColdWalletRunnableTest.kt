@@ -20,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -41,18 +42,18 @@ internal class RegisterColdWalletRunnableTest {
         clearMocks(launcher, inner)
         every { session.environment.card } returns card
         coEvery { launcher.registerColdInSession(any(), any(), any()) } just Runs
+        stubInnerPrepare()
     }
 
     @Test
-    fun `GIVEN nonce ready and inner succeeds WHEN run THEN registers cold and forwards result`() = runTest {
+    fun `GIVEN nonce ready WHEN prepare then run THEN registers cold and forwards result`() = runTest {
         // Arrange
         every { session.scope } returns unconfinedScope()
-        stubInner(CompletionResult.Success("ok"))
-        coEvery { launcher.requestColdNonce(card, checkRegistered = true) } returns nonce
-        val runnable = RegisterColdWalletRunnable(inner, launcher)
+        stubInnerRun(CompletionResult.Success("ok"))
+        coEvery { launcher.prefetchColdNonce() } returns nonce
 
         // Act
-        val forwarded = runAndCapture(runnable)
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
         coVerify(exactly = 1) { launcher.registerColdInSession(session, card, nonce) }
@@ -60,18 +61,17 @@ internal class RegisterColdWalletRunnableTest {
     }
 
     @Test
-    fun `GIVEN nonce slower than the card command WHEN run THEN skips registration`() = runTest {
-        // Arrange — the nonce is still loading when the wrapped command completes.
+    fun `GIVEN nonce slower than the budget WHEN prepare then run THEN skips registration`() = runTest {
+        // Arrange — the nonce is still loading when the prefetch budget elapses, so prepare gives up.
         every { session.scope } returns unconfinedScope()
-        stubInner(CompletionResult.Success("ok"))
-        coEvery { launcher.requestColdNonce(card, checkRegistered = true) } coAnswers {
-            delay(timeMillis = 10_000)
+        stubInnerRun(CompletionResult.Success("ok"))
+        coEvery { launcher.prefetchColdNonce() } coAnswers {
+            delay(timeMillis = 30_000)
             nonce
         }
-        val runnable = RegisterColdWalletRunnable(inner, launcher)
 
         // Act
-        val forwarded = runAndCapture(runnable)
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
         coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
@@ -82,12 +82,11 @@ internal class RegisterColdWalletRunnableTest {
     fun `GIVEN inner fails WHEN run THEN forwards failure without registering`() = runTest {
         // Arrange
         every { session.scope } returns unconfinedScope()
-        stubInner(CompletionResult.Failure(TangemSdkError.UserCancelled()))
-        coEvery { launcher.requestColdNonce(card, checkRegistered = true) } returns nonce
-        val runnable = RegisterColdWalletRunnable(inner, launcher)
+        stubInnerRun(CompletionResult.Failure(TangemSdkError.UserCancelled()))
+        coEvery { launcher.prefetchColdNonce() } returns nonce
 
         // Act
-        val forwarded = runAndCapture(runnable)
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
         coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
@@ -95,18 +94,17 @@ internal class RegisterColdWalletRunnableTest {
     }
 
     @Test
-    fun `GIVEN session has no card WHEN run THEN forwards result without prefetching or registering`() = runTest {
+    fun `GIVEN session has no card WHEN run THEN forwards result without registering`() = runTest {
         // Arrange
         every { session.scope } returns unconfinedScope()
         every { session.environment.card } returns null
-        stubInner(CompletionResult.Success("ok"))
-        val runnable = RegisterColdWalletRunnable(inner, launcher)
+        stubInnerRun(CompletionResult.Success("ok"))
+        coEvery { launcher.prefetchColdNonce() } returns nonce
 
         // Act
-        val forwarded = runAndCapture(runnable)
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
-        coVerify(exactly = 0) { launcher.requestColdNonce(any(), any()) }
         coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
@@ -115,28 +113,26 @@ internal class RegisterColdWalletRunnableTest {
     fun `GIVEN registration throws WHEN run THEN the result is still forwarded`() = runTest {
         // Arrange — registration must never break the wrapped operation.
         every { session.scope } returns unconfinedScope()
-        stubInner(CompletionResult.Success("ok"))
-        coEvery { launcher.requestColdNonce(card, checkRegistered = true) } returns nonce
+        stubInnerRun(CompletionResult.Success("ok"))
+        coEvery { launcher.prefetchColdNonce() } returns nonce
         coEvery { launcher.registerColdInSession(any(), any(), any()) } throws IllegalStateException("boom")
-        val runnable = RegisterColdWalletRunnable(inner, launcher)
 
         // Act
-        val forwarded = runAndCapture(runnable)
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
         assertThat((forwarded as CompletionResult.Success).data).isEqualTo("ok")
     }
 
     @Test
-    fun `GIVEN nonce prefetch throws WHEN run THEN result is still forwarded without registering`() = runTest {
-        // Arrange — a throwing prefetch completes the Deferred exceptionally; it must not escape run().
+    fun `GIVEN nonce prefetch throws WHEN prepare THEN result forwarded without registering`() = runTest {
+        // Arrange — a throwing prefetch must not escape prepare or block forwarding.
         every { session.scope } returns unconfinedScope()
-        stubInner(CompletionResult.Success("ok"))
-        coEvery { launcher.requestColdNonce(card, checkRegistered = true) } throws IllegalStateException("mapping failed")
-        val runnable = RegisterColdWalletRunnable(inner, launcher)
+        stubInnerRun(CompletionResult.Success("ok"))
+        coEvery { launcher.prefetchColdNonce() } throws IllegalStateException("boom")
 
         // Act
-        val forwarded = runAndCapture(runnable)
+        val forwarded = prepareThenRunAndCapture(RegisterColdWalletRunnable(inner, launcher))
 
         // Assert
         coVerify(exactly = 0) { launcher.registerColdInSession(any(), any(), any()) }
@@ -144,36 +140,48 @@ internal class RegisterColdWalletRunnableTest {
     }
 
     @Test
-    fun `GIVEN a wallet-creating inner WHEN run THEN prefetch skips the already-registered gate`() = runTest {
-        // Arrange — a create/import task replaces the first wallet, so the preflight id must not gate.
+    fun `GIVEN inner prepare fails WHEN prepare THEN failure forwarded without prefetching`() = runTest {
+        // Arrange
         every { session.scope } returns unconfinedScope()
-        val createInner = mockk<CreateProductWalletTask>()
-        every { createInner.run(any(), any()) } just Runs
-        coEvery { launcher.requestColdNonce(any(), any()) } returns null
-        val runnable = RegisterColdWalletRunnable(createInner, launcher)
+        stubInnerPrepare(CompletionResult.Failure(TangemSdkError.UserCancelled()))
 
         // Act
-        runnable.run(session) {}
+        var prepared: CompletionResult<Unit>? = null
+        RegisterColdWalletRunnable(inner, launcher).prepare(session) { prepared = it }
+        advanceUntilIdle()
 
         // Assert
-        coVerify { launcher.requestColdNonce(card, checkRegistered = false) }
+        coVerify(exactly = 0) { launcher.prefetchColdNonce() }
+        assertThat(prepared).isInstanceOf(CompletionResult.Failure::class.java)
     }
 
-    /** Makes [inner] invoke its callback synchronously with [result]. */
-    private fun stubInner(result: CompletionResult<String>) {
+    /** Makes [inner] invoke its run callback synchronously with [result]. */
+    private fun stubInnerRun(result: CompletionResult<String>) {
         every { inner.run(any(), any()) } answers {
             secondArg<(CompletionResult<String>) -> Unit>().invoke(result)
         }
     }
 
-    // Unconfined dispatcher runs the session.scope launches inline (registration mock never suspends),
-    // so the forwarding callback fires synchronously within run().
+    /** Makes [inner] invoke its prepare callback synchronously with [result]. */
+    private fun stubInnerPrepare(result: CompletionResult<Unit> = CompletionResult.Success(Unit)) {
+        every { inner.prepare(any(), any()) } answers {
+            secondArg<(CompletionResult<Unit>) -> Unit>().invoke(result)
+        }
+    }
+
+    // Unconfined dispatcher runs the session.scope launches inline (mocks never suspend unless told to),
+    // so the prefetch and the forwarding callback resolve on the shared test scheduler.
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun TestScope.unconfinedScope() = CoroutineScope(UnconfinedTestDispatcher(testScheduler))
 
-    private fun runAndCapture(runnable: RegisterColdWalletRunnable<String>): CompletionResult<String> {
+    private fun TestScope.prepareThenRunAndCapture(
+        runnable: RegisterColdWalletRunnable<String>,
+    ): CompletionResult<String> {
+        runnable.prepare(session) {}
+        advanceUntilIdle()
         var captured: CompletionResult<String>? = null
         runnable.run(session) { captured = it }
+        advanceUntilIdle()
         return requireNotNull(captured) { "callback was not invoked" }
     }
 }
