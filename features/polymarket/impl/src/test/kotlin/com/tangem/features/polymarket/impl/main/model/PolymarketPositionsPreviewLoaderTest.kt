@@ -5,7 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
+import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
@@ -35,7 +35,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
     private val repository: PolymarketPositionsRepository = mockk()
     private val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     private val addresses: PolymarketAddresses = mockk()
-    private val invalidator = PredictionPositionsInvalidator()
+    private val positionsUpdater = DefaultPredictionPositionsUpdater()
     private val userWalletId = UserWalletId("011")
     private val page = PolymarketPositionsPage(listOf(createPolymarketPosition()), hasNext = false)
 
@@ -169,7 +169,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
         runCurrent()
 
         // Act
-        invalidator.invalidate(userWalletId)
+        positionsUpdater.triggerUpdate(userWalletId)
         runCurrent()
 
         // Assert
@@ -187,7 +187,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
             loader.pause()
 
             // Act
-            invalidator.invalidate(userWalletId)
+            positionsUpdater.triggerUpdate(userWalletId)
             runCurrent()
             loader.resume(backgroundScope, userWalletId)
             runCurrent()
@@ -206,7 +206,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
         loader.pause()
 
         // Act
-        invalidator.invalidate(userWalletId)
+        positionsUpdater.triggerUpdate(userWalletId)
         runCurrent()
 
         // Assert
@@ -336,7 +336,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
         coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.copy(positions = emptyList()).right()
 
         // Act
-        invalidator.invalidate(userWalletId)
+        positionsUpdater.triggerUpdate(userWalletId)
         runCurrent()
         delayed.complete(Unit)
         runCurrent()
@@ -352,7 +352,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
         return PolymarketPositionsPreviewLoader(
             repository = repository,
             deriveAddresses = deriveAddresses,
-            invalidator = invalidator,
+            updateListener = positionsUpdater,
             dispatchers = TestingCoroutineDispatcherProvider(
                 main = dispatcher,
                 mainImmediate = dispatcher,
