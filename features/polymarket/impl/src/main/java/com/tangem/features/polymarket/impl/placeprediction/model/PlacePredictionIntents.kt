@@ -14,6 +14,8 @@ internal interface PlacePredictionIntents {
 
     fun onSlippageConfirmClick()
 
+    fun onFeeClick()
+
     fun onAddFundsClick()
 
     fun onQuoteRetryClick()
