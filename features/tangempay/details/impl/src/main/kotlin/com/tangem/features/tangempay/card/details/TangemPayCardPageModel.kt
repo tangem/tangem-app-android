@@ -64,7 +64,9 @@ import com.tangem.features.tangempay.card.reissue.ReissueCardListener
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayDropDownItemUM
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.common.availableForWithdrawalOrZero
 import com.tangem.features.tangempay.common.balanceOrNull
+import com.tangem.features.tangempay.common.firstDepositAddress
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.common.userWalletId
@@ -617,8 +619,10 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onClickAddFunds() {
         bottomSheetNavigation.dismiss()
         modelScope.launch {
-            val balance = currentStatus.value.balanceOrNull()
-            if (balance == null) {
+            val status = currentStatus.value
+            val balance = status.balanceOrNull()
+            val depositAddress = status.networksOrNull().orEmpty().firstDepositAddress()
+            if (balance == null || depositAddress == null) {
                 val message = TangemPayMessagesFactory.createErrorMessage(TangemPayDetailsErrorType.Receive)
                 uiMessageSender.send(message)
             } else {
@@ -626,10 +630,10 @@ internal class TangemPayCardPageModel @Inject constructor(
                     TangemPayCardNavigation.AddFunds(
                         walletId = userWalletId,
                         fiatBalance = balance.fiatBalance.availableBalance,
-                        cryptoBalance = balance.cryptoBalance.balance,
-                        depositAddress = balance.cryptoBalance.depositAddress,
+                        cryptoBalance = status.value.availableForWithdrawalOrZero,
+                        depositAddress = depositAddress,
                         cryptoCurrency = cryptoCurrency,
-                        virtualAccountOnramp = currentStatus.value.ifLoadedOrNull { it.virtualAccount },
+                        virtualAccountOnramp = status.ifLoadedOrNull { it.virtualAccount },
                     ),
                 )
             }
@@ -680,7 +684,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
         bottomSheetNavigation.dismiss()
-        val paymentAccountAddress = loaded.balance?.cryptoBalance?.depositAddress
+        val paymentAccountAddress = loaded.paymentAccountAddress
         if (paymentAccountAddress == null) {
             uiMessageSender.send(TangemPayMessagesFactory.createErrorMessage(TangemPayDetailsErrorType.Receive))
             return

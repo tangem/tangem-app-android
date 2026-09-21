@@ -88,15 +88,10 @@ internal class TangemPayMainBlockConverter(
         }
     }
 
-    /**
-     * A multichain account aggregates several stablecoins, so no single token symbol describes the
-     * balance — it is denominated in USD instead.
-     */
     private fun getBalanceSubtitle(currencySymbol: String): TextReference {
         return stringReference(if (isAccountMultichainEnabled) USD_CURRENCY_CODE else currencySymbol)
     }
 
-    /** Balance figure, or a dash when the account exists but its balances are unavailable. */
     private fun getBalanceText(balance: PaymentAccountStatusValue.Balance?): TextReference {
         if (balance == null) return stringReference(DASH_SIGN)
         val currency = Currency.getInstance(balance.fiatBalance.currency)
