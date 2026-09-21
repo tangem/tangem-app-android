@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.common.card.EllipticCurve
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.models.account.AccountId
@@ -36,45 +37,19 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
 @Singleton
 internal class DefaultCollectiblesHotDelegate @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
-    private val store: CollectiblesHotDelegateStore,
+    private val accountStore: CollectiblesAccountStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesHotDelegate {
 
     private val lock = Mutex()
 
-    override suspend fun getPublicKey(accountId: AccountId): HotDelegatePublicKey? {
-        return withContext(dispatchers.io) {
-            store.get(accountId)?.let { HotDelegatePublicKey(it.publicKeyBase58) }
-        }
-    }
-
     override suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, HotDelegatePublicKey> {
         return withContext(dispatchers.io) {
             lock.withLock {
-                val stored = store.get(accountId)
-
-                if (stored != null) return@withLock HotDelegatePublicKey(stored.publicKeyBase58).right()
-
                 runSuspendCatching {
-                    val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, MnemonicType.Words12)
+                    val stored = storedDelegate(accountId)
 
-                    runSuspendCatching {
-                        val publicKey = derivePublicKey(hotWalletId)
-
-                        store.put(
-                            accountId = accountId,
-                            record = CollectiblesHotDelegateRecord(
-                                hotWalletId = hotWalletId.value,
-                                authType = hotWalletId.authType.name,
-                                publicKeyBase58 = publicKey.base58,
-                            ),
-                        )
-
-                        publicKey
-                    }
-                        // A keystore entry no record points at is unreachable: drop it before reporting the failure.
-                        .onFailure { deleteQuietly(hotWalletId) }
-                        .getOrThrow()
+                    if (stored != null) derivePublicKey(stored.hotWalletId) else create(accountId)
                 }.fold(
                     onSuccess = { it.right() },
                     onFailure = { CollectiblesAccountError.DelegateKeyCreationFailed(it).left() },
@@ -83,14 +58,32 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
         }
     }
 
+    private suspend fun create(accountId: AccountId): HotDelegatePublicKey {
+        val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, MnemonicType.Words12)
+
+        return runSuspendCatching {
+            val publicKey = derivePublicKey(hotWalletId)
+
+            accountStore.storeDelegate(userWalletId = accountId.userWalletId, hotWalletId = hotWalletId.value)
+
+            publicKey
+        }
+            // A keystore entry no record points at is unreachable: drop it before reporting the failure.
+            .onFailure { deleteQuietly(hotWalletId) }
+            .getOrThrow()
+    }
+
     override suspend fun sign(accountId: AccountId, message: ByteArray): Either<CollectiblesAccountError, ByteArray> {
         return withContext(dispatchers.io) {
-            val record = store.get(accountId)
+            val delegate = storedDelegate(accountId)
                 ?: return@withContext CollectiblesAccountError.DelegateNotProvisioned.left()
 
             runSuspendCatching {
                 val signed = tangemHotSdk.signHashes(
-                    unlockHotWallet = record.toUnlock(),
+                    unlockHotWallet = UnlockHotWallet(
+                        walletId = delegate.hotWalletId,
+                        auth = HotAuth.NoAuth,
+                    ),
                     dataToSign = listOf(
                         DataToSign(curve = CURVE, derivationPath = derivationPath, hashes = listOf(message)),
                     ),
@@ -110,13 +103,13 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
     override suspend fun forget(accountId: AccountId) {
         withContext(dispatchers.io) {
             lock.withLock {
-                val record = store.get(accountId)
+                val delegate = storedDelegate(accountId)
 
-                if (record != null) {
-                    // Keystore entry goes first: while the record survives, a failed delete stays retryable.
-                    runSuspendCatching { tangemHotSdk.delete(record.toHotWalletId()) }
-                        .onSuccess { store.remove(accountId) }
-                        .onFailure { TangemLogger.e("Failed to delete collectibles hot delegate", it) }
+                if (delegate != null) {
+                    runSuspendCatching {
+                        tangemHotSdk.delete(delegate.hotWalletId)
+                        accountStore.removeDelegate(accountId.userWalletId)
+                    }.onFailure { TangemLogger.e("Failed to delete collectibles hot delegate", it) }
                 }
             }
         }
@@ -145,15 +138,10 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
         return HotDelegatePublicKey(publicKey.encodeBase58())
     }
 
-    private fun CollectiblesHotDelegateRecord.toHotWalletId() = HotWalletId(
-        value = hotWalletId,
-        authType = HotWalletId.AuthType.valueOf(authType),
-    )
-
-    private fun CollectiblesHotDelegateRecord.toUnlock() = UnlockHotWallet(
-        walletId = toHotWalletId(),
-        auth = HotAuth.NoAuth,
-    )
+    private suspend fun storedDelegate(accountId: AccountId): CollectiblesHotWalletId? {
+        return accountStore.getDelegate(accountId.userWalletId)
+            ?.let { CollectiblesHotWalletId(accountId = accountId, keystoreId = it) }
+    }
 
     private companion object {
 
