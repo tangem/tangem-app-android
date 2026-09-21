@@ -10,8 +10,8 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawalBatch
 import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
 import com.tangem.domain.polymarket.model.PredictionWithdrawalState
 import com.tangem.grow.datasource.polymarket.PolymarketApi
-import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawRequest
-import com.tangem.grow.datasource.polymarket.models.PolymarketWithdrawResponse
+import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchRequest
+import com.tangem.grow.datasource.polymarket.models.PolymarketRelayedBatchResponse
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -40,9 +40,9 @@ internal class DefaultPolymarketWithdrawRepositoryTest {
     @Test
     fun `GIVEN a signed batch WHEN submitted THEN calls carries exactly one entry sent verbatim`() = runTest {
         // Arrange
-        val body = slot<PolymarketWithdrawRequest>()
+        val body = slot<PolymarketRelayedBatchRequest>()
         coEvery { polymarketApi.submitWithdraw(any(), capture(body)) } returns ApiResponse.Success(
-            PolymarketWithdrawResponse(transactionId = TX_ID, state = "IN_PROGRESS", transactionHash = null),
+            PolymarketRelayedBatchResponse(transactionId = TX_ID, state = "IN_PROGRESS", transactionHash = null),
         )
 
         // Act
@@ -66,7 +66,7 @@ internal class DefaultPolymarketWithdrawRepositoryTest {
     fun `GIVEN a confirmed withdrawal without a hash WHEN state read THEN the hash stays null`() = runTest {
         // Arrange
         coEvery { polymarketApi.getWithdrawState(any(), any()) } returns ApiResponse.Success(
-            PolymarketWithdrawResponse(transactionId = TX_ID, state = "CONFIRMED", transactionHash = null),
+            PolymarketRelayedBatchResponse(transactionId = TX_ID, state = "CONFIRMED", transactionHash = null),
         )
 
         // Act
@@ -86,7 +86,7 @@ internal class DefaultPolymarketWithdrawRepositoryTest {
     fun `GIVEN an unknown state WHEN state read THEN polling continues rather than reporting a terminal`() = runTest {
         // Arrange
         coEvery { polymarketApi.getWithdrawState(any(), any()) } returns ApiResponse.Success(
-            PolymarketWithdrawResponse(transactionId = TX_ID, state = "SOMETHING_NEW", transactionHash = null),
+            PolymarketRelayedBatchResponse(transactionId = TX_ID, state = "SOMETHING_NEW", transactionHash = null),
         )
 
         // Act
