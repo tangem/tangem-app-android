@@ -128,7 +128,16 @@ internal fun Modifier.shtorkaLayout(state: TangemShtorkaState, windowInsets: Win
             .roundToInt()
             .coerceIn(0, layoutWidth)
             .coerceAtMost(maxCardWidth)
-        state.chromeScale = if (fullCardWidth > 0) cardWidth.toFloat() / fullCardWidth else 1f
+
+        // Floored at the floating-inset scale: haze anchors an effect at its scaled on-screen
+        // position but sizes it by the unscaled measure and truncates the blur layer at the window
+        // edge — at the collapsed inset that overhang would cut the chrome's right side.
+        val chromeInset = baseInset.coerceAtMost(ShtorkaFloatingInset.toPx())
+        val chromeCardWidth = (layoutWidth - 2 * chromeInset)
+            .roundToInt()
+            .coerceIn(0, layoutWidth)
+            .coerceAtMost(maxCardWidth)
+        state.chromeScale = if (fullCardWidth > 0) chromeCardWidth.toFloat() / fullCardWidth else 1f
 
         val contentOffset = if (geometry.size >= 2) {
             offset.coerceAtMost(geometry[geometry.size - 2].position)
@@ -200,8 +209,13 @@ private fun resolveGeometry(
                 }
             }
             val height = when (detent) {
-                is TangemShtorka.Detent.Height ->
-                    rawHeights.getValue(detent) * cardContentScale(layoutWidth, baseInset, fullCardWidth)
+                is TangemShtorka.Detent.Height -> {
+                    // The chrome never scales below the floating-inset scale (see chromeScale in
+                    // shtorkaLayout), and the collapsed card must still show exactly its header —
+                    // the detent height follows the same floor.
+                    val chromeInset = baseInset.coerceAtMost(with(density) { ShtorkaFloatingInset.toPx() })
+                    rawHeights.getValue(detent) * cardContentScale(layoutWidth, chromeInset, fullCardWidth)
+                }
                 else -> rawHeights.getValue(detent)
             }
             val bottomInset = if (detent is TangemShtorka.Detent.Full) 0f else baseInset + bottomSafeInset
