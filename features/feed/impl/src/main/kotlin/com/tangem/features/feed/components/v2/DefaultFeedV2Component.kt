@@ -167,6 +167,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 if (screen == null) {
                     FeedSearchBarHeader(
                         searchBarController = searchBarController,
+                        sheetExpansion = sheetExpansion,
                         onExpandSheet = onExpandSheet,
                         modifier = Modifier,
                     )
