@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
@@ -37,6 +38,7 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
@@ -50,6 +52,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 @Composable
 internal fun PlacePredictionStatusContent(
     result: PlaceResultUM,
+    viewPosition: ViewPositionUM,
     market: MarketHeaderUM,
     side: PredictionOrderSide,
     intents: PlacePredictionIntents,
@@ -66,17 +69,41 @@ internal fun PlacePredictionStatusContent(
             PredictionMarketBlock(state = market)
             ResultRows(result = result, market = market, side = side)
         },
-        footer = {
-            TangemButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.prediction_place_result_to_main),
-                onClick = intents::onToMainClick,
-            )
-        },
+        footer = { ResultFooter(viewPosition = viewPosition, intents = intents) },
     )
+}
+
+@Composable
+private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionIntents) {
+    TangemButtonGroup(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(all = 16.dp),
+        orientation = TangemButtonGroup.Orientation.Vertical,
+    ) {
+        when (viewPosition) {
+            ViewPositionUM.Hidden -> Unit
+            ViewPositionUM.Awaiting,
+            ViewPositionUM.Available,
+            -> TangemButton(
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.prediction_place_result_view_position),
+                isEnabled = viewPosition == ViewPositionUM.Available,
+                onClick = intents::onViewPositionClick,
+            )
+        }
+        TangemButton(
+            variant = when (viewPosition) {
+                ViewPositionUM.Hidden -> TangemButton.Variant.Primary
+                ViewPositionUM.Awaiting,
+                ViewPositionUM.Available,
+                -> TangemButton.Variant.Secondary
+            },
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.prediction_place_result_to_main),
+            onClick = intents::onToMainClick,
+        )
+    }
 }
 
 @Composable
@@ -229,6 +256,7 @@ private fun PlacePredictionStatusContentPreview(
     TangemThemePreviewRedesign {
         PlacePredictionStatusContent(
             result = result,
+            viewPosition = if (result is PlaceResultUM.Filled) ViewPositionUM.Available else ViewPositionUM.Hidden,
             side = PredictionOrderSide.BUY,
             market = MarketHeaderUM(
                 title = "Will Uzbekistan win the 2026 FIFA World Cup?",

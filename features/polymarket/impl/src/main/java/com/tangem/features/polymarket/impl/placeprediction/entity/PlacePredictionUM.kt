@@ -267,5 +267,8 @@ internal sealed interface SubmitUM {
 
     data object AwaitingFill : SubmitUM
 
-    data class Result(val result: PlaceResultUM) : SubmitUM
+    data class Result(
+        val result: PlaceResultUM,
+        val viewPosition: ViewPositionUM = ViewPositionUM.Hidden,
+    ) : SubmitUM
 }
