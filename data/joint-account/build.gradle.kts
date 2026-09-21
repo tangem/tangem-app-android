@@ -20,6 +20,7 @@ dependencies {
     // region Other libraries
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
+    implementation(deps.moshi)
     // endregion
 
     // region Tangem SDK
