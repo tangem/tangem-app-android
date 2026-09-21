@@ -90,6 +90,8 @@ sealed class VisaApiError(
     data object CardReissuePlasticInvalidShippingAddress : VisaApiError(104140136)
     data object CardReissuePlasticInvalidEmbossName : VisaApiError(104140143)
 
+    data object BankOfframpUnsupportedConfiguration : VisaApiError(104140141)
+
     data object WaitlistInvalidEmail : VisaApiError(-1)
 
     companion object {
@@ -126,6 +128,7 @@ sealed class VisaApiError(
                 CardReissuePlasticNotAvailable.errorCode -> CardReissuePlasticNotAvailable
                 CardReissuePlasticInvalidShippingAddress.errorCode -> CardReissuePlasticInvalidShippingAddress
                 CardReissuePlasticInvalidEmbossName.errorCode -> CardReissuePlasticInvalidEmbossName
+                BankOfframpUnsupportedConfiguration.errorCode -> BankOfframpUnsupportedConfiguration
                 else -> Unknown(universalErrorCode)
             }
         }
