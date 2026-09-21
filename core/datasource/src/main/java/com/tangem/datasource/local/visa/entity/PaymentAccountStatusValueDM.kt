@@ -38,20 +38,14 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "issuing_card") val marker: Boolean = true,
     ) : PaymentAccountStatusValueDM
 
-    /**
-     * Balance fields are nullable: an operational account can be delivered by `customer/me` without balances,
-     * and the status is still worth caching for its cards and customer id.
-     */
     @NameLabel("active_account")
     data class ActiveAccount(
         @Json(name = "active_account") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
         @Json(name = "currency_code") val currencyCode: String?,
-        @Json(name = "deposit_address") val depositAddress: String?,
+        @Json(name = "payment_account_address") val paymentAccountAddress: String?,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
-        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM?,
         @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
-        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal?,
         @Json(name = "cards") val cards: List<TangemPayCard>,
     ) : PaymentAccountStatusValueDM
 
@@ -63,38 +57,24 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "balance") val balance: BalanceDM? = null,
     ) : PaymentAccountStatusValueDM
 
-    /** Balance fields are nullable for the same reason as in [ActiveAccount]. */
     @NameLabel("deactivated_account")
     data class DeactivatedAccount(
         @Json(name = "deactivated_account") val marker: Boolean = true,
         @Json(name = "customer_id") val customerId: String,
         @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM?,
-        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM?,
-        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal?,
     ) : PaymentAccountStatusValueDM
 
     /** @see [com.tangem.domain.models.account.PaymentAccountStatusValue.Balance] */
     @JsonClass(generateAdapter = true)
     data class BalanceDM(
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
-        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
-        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal,
     )
 
     @JsonClass(generateAdapter = true)
     data class FiatBalanceDM(
         @Json(name = "available_balance") val availableBalance: BigDecimal,
         @Json(name = "currency") val currency: String,
-    )
-
-    @JsonClass(generateAdapter = true)
-    data class CryptoBalanceDM(
-        @Json(name = "id") val id: String,
-        @Json(name = "chain_id") val chainId: Long,
-        @Json(name = "deposit_address") val depositAddress: String,
-        @Json(name = "token_contract_address") val tokenContractAddress: String,
-        @Json(name = "balance") val balance: BigDecimal,
     )
 
     @JsonClass(generateAdapter = true)
