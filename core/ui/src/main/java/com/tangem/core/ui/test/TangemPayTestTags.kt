@@ -114,6 +114,13 @@ object TangemPayTestTags {
     // Daily limit success screen
     const val DAILY_LIMIT_DONE_BUTTON = "TANGEM_PAY_DAILY_LIMIT_DONE_BUTTON"
 
+    // Add funds bottom sheet: one tag per option row, addressed by position to assert their order.
+    const val ADD_FUNDS_OPTION = "TANGEM_PAY_ADD_FUNDS_OPTION"
+
+    // Choose-network bottom sheet sections, split by network status
+    const val CHOOSE_NETWORK_FAST_SECTION = "TANGEM_PAY_CHOOSE_NETWORK_FAST_SECTION"
+    const val CHOOSE_NETWORK_OTHER_SECTION = "TANGEM_PAY_CHOOSE_NETWORK_OTHER_SECTION"
+
     // Multichain receive sheet (Add funds -> From another wallet or exchange -> network).
     // Its address view and its QR view never compose together, so they share the address and action tags.
     const val RECEIVE_ADDRESS = "TANGEM_PAY_RECEIVE_ADDRESS"

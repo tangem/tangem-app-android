@@ -29,6 +29,8 @@ import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.core.ui.test.TangemPayTestTags
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.screens.*
 import com.tangem.screens.tangempay.*
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -37,6 +39,12 @@ import org.junit.Assert
 
 /** A fiat balance rendered with a currency symbol and two decimals, e.g. `$1,234.00`. */
 private val FIAT_BALANCE_REGEX = """^\D\d[\d,]*\.\d{2}$""".toRegex()
+
+/** Token pickers label the Pay account row with `Account.accountName`, not with the 'Payment account' UI string. */
+private val PAY_ACCOUNT_ROW_NAME: String
+    get() = Account.Payment(UserWalletId(stringValue = PAY_ACCOUNT_WALLET_ID_STUB)).accountName.value
+
+private const val PAY_ACCOUNT_WALLET_ID_STUB = "00"
 
 /** Endpoint the app calls to disable Tangem Pay for the wallet — the account-removal request. */
 private const val PAY_ENABLED_ENDPOINT = "/bff-v2/v1/customer/pay-enabled"
@@ -119,6 +127,58 @@ fun BaseTestCase.setTangemPayWithTwoAccountsScenarios() {
     }
     step("Set WireMock scenario '$ethBalanceScenario' to '$startedState'") {
         setWireMockScenarioState(ethBalanceScenario, startedState)
+    }
+}
+
+/**
+ * WireMock state shared by every multichain-deposit test: an eligible Pay customer whose account spans
+ * five networks — two issued, one issuable on demand and two disabled.
+ */
+fun BaseTestCase.setTangemPayMultiNetworkScenarios() {
+    val eligibilityPaeraCustomerState = "PaeraCustomer"
+    val balanceScenario = "tangem_pay_balance_update"
+    val balanceMultiNetworkState = "MultiNetworkStatuses"
+    val historyScenario = "tangem_pay_transaction_history"
+    val historyEmptyState = "InitialEmpty"
+
+    step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityPaeraCustomerState'") {
+        setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityPaeraCustomerState)
+    }
+    step("Set WireMock scenario '$balanceScenario' to '$balanceMultiNetworkState'") {
+        setWireMockScenarioState(balanceScenario, balanceMultiNetworkState)
+    }
+    step("Set WireMock scenario '$historyScenario' to '$historyEmptyState'") {
+        setWireMockScenarioState(historyScenario, historyEmptyState)
+    }
+}
+
+/**
+ * WireMock state shared by the multichain withdraw tests: the multichain account plus the Express pair
+ * set that takes its BSC USDT to Bitcoin. The quotes fixture is the USDT one on purpose — the default
+ * prices no USDT, and a zero rate makes the quote loader divide by zero.
+ */
+fun BaseTestCase.setTangemPayMultiNetworkWithdrawScenarios() {
+    val bitcoinScenario = "bitcoin_utxo"
+    val bitcoinStartedState = "Started"
+    val expressAssetsScenario = "express_api_assets"
+    val expressAssetsMultiNetworkState = "BitcoinExchangeEnabledMultinetwork"
+    val exchangeStatusScenario = "exchange_status_provider"
+    val exchangeStatusChangellyState = "Changelly"
+    val quotesScenario = "quotes_api"
+    val quotesWithUsdtState = "USDTHotWalletSvS"
+
+    setTangemPayMultiNetworkScenarios()
+    step("Set WireMock scenario '$bitcoinScenario' to '$bitcoinStartedState'") {
+        setWireMockScenarioState(bitcoinScenario, bitcoinStartedState)
+    }
+    step("Set WireMock scenario '$expressAssetsScenario' to '$expressAssetsMultiNetworkState'") {
+        setWireMockScenarioState(expressAssetsScenario, expressAssetsMultiNetworkState)
+    }
+    step("Set WireMock scenario '$exchangeStatusScenario' to '$exchangeStatusChangellyState'") {
+        setWireMockScenarioState(exchangeStatusScenario, exchangeStatusChangellyState)
+    }
+    step("Set WireMock scenario '$quotesScenario' to '$quotesWithUsdtState'") {
+        setWireMockScenarioState(quotesScenario, quotesWithUsdtState)
     }
 }
 
@@ -525,10 +585,10 @@ fun BaseTestCase.openReissueSheet() {
 }
 
 /** Imports the hot wallet, opens Withdraw, dismisses the stories, and lands on the Withdraw swap screen. */
-fun BaseTestCase.openTangemPayWithdrawSwapScreen() {
+fun BaseTestCase.openTangemPayWithdrawSwapScreen(expectedBalance: String = "10") {
     openTangemPay()
-    step("Assert initial balance contains '10'") {
-        onTangemPayMainScreen { balance.assertTextContainsSafe("10", substring = true) }
+    step("Assert initial balance contains '$expectedBalance'") {
+        onTangemPayMainScreen { balance.assertTextContainsSafe(expectedBalance, substring = true) }
     }
     step("Click on 'Withdraw' action chip") {
         onTangemPayMainScreen { withdrawButton.clickWithAssertion() }
@@ -553,6 +613,32 @@ fun BaseTestCase.chooseWithdrawReceiveToken(tokenName: String) {
     step("Click on token '$tokenName'") {
         waitForIdle()
         onSwapSelectTokenScreen { tokenWithName(tokenName).clickWithAssertion() }
+    }
+}
+
+/** On the withdraw Swap screen, opens the source token selector and expands the 'Payment' account. */
+fun BaseTestCase.openWithdrawSourceTokenSelector() {
+    step("Click on the source token in the 'From' block") {
+        onSwapTokenScreen { swapSelectTokenIcon.clickWithAssertion() }
+    }
+    step("Click on the '$PAY_ACCOUNT_ROW_NAME' account") {
+        awaitSuccess { onSwapSelectTokenScreen { tokenWithName(PAY_ACCOUNT_ROW_NAME).assertIsDisplayed() } }
+        onSwapSelectTokenScreen { tokenWithName(PAY_ACCOUNT_ROW_NAME).performClick() }
+    }
+}
+
+/**
+ * On the withdraw Swap screen, picks [tokenName] on [networkName] as the source token out of the
+ * 'Payment' account — a multichain account holds the same symbol on several networks, so the network
+ * is what makes the pick deterministic.
+ */
+fun BaseTestCase.chooseWithdrawSourceToken(tokenName: String, networkName: String) {
+    openWithdrawSourceTokenSelector()
+    step("Click on token '$tokenName' on '$networkName'") {
+        awaitSuccess {
+            onSwapSelectTokenScreen { tokenWithNameAndNetwork(tokenName, networkName).assertIsDisplayed() }
+        }
+        onSwapSelectTokenScreen { tokenWithNameAndNetwork(tokenName, networkName).performClick() }
     }
 }
 
@@ -820,17 +906,38 @@ fun BaseTestCase.assertTangemPayAccountRemoved(countBefore: Int, packageName: St
  * the receive sheet of [network], and returns the deposit address it shows.
  */
 fun BaseTestCase.openTangemPayReceiveSheet(network: String): String {
-    var depositAddress = ""
+    openTangemPayChooseNetworkSheet()
+    step("Click on the '$network' network") {
+        awaitSuccess { onTangemPayChooseNetworkSheet { networkItem(network).assertIsDisplayed() } }
+        onTangemPayChooseNetworkSheet { networkItem(network).performClick() }
+    }
+    return readTangemPayDepositAddress()
+}
 
+/** From Main, opens the payment account, its 'Add funds' sheet and the multichain 'Choose network' sheet. */
+fun BaseTestCase.openTangemPayChooseNetworkSheetFromMain() {
+    openTangemPay()
+    openTangemPayAddFunds()
+    openTangemPayChooseNetworkSheet()
+}
+
+/** From the open 'Add funds' sheet, opens the multichain 'Choose network' bottom sheet. */
+fun BaseTestCase.openTangemPayChooseNetworkSheet() {
     step("Click on 'From another wallet or exchange' option") {
         onTangemPayAddFundsSheet { receiveOption.clickWithAssertion() }
     }
-    step("Click on the '$network' network") {
-        awaitSuccess { onChooseNetworkBottomSheet { networkItem(network).assertIsDisplayed() } }
-        onChooseNetworkBottomSheet { networkItem(network).performClick() }
+    step("Assert 'Choose network' sheet is displayed") {
+        awaitSuccess { onTangemPayChooseNetworkSheet { title.assertIsDisplayed() } }
     }
-    // The sheet renders before the network status arrives, and an address-less sheet keeps its actions
-    // disabled — so the wait is on the address itself, not on the node being on screen.
+}
+
+/**
+ * Reads the deposit address off the open Pay receive sheet. The sheet renders before the network status
+ * arrives, and an address-less sheet keeps its actions disabled — so the wait is on the address itself,
+ * not on the node being on screen.
+ */
+fun BaseTestCase.readTangemPayDepositAddress(): String {
+    var depositAddress = ""
     step("Read the deposit address on the receive sheet") {
         awaitSuccess {
             onTangemPayReceiveSheet { depositAddress = address.extractText() }
@@ -838,6 +945,26 @@ fun BaseTestCase.openTangemPayReceiveSheet(network: String): String {
         }
     }
     return depositAddress
+}
+
+/**
+ * Asserts the receive sheet of a just-activated network opened by itself and carries its deposit address.
+ * The order behind the activation is polled every 5s and only its terminal status refreshes the account
+ * status, so the sheet is several polls away from the tap.
+ */
+fun BaseTestCase.assertTangemPayActivatedNetworkReceiveSheet(
+    networkName: String,
+    tokensLabel: String,
+    depositAddress: String,
+) {
+    step("Assert the receive sheet for '$networkName' is displayed once the network is issued") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
+            onTangemPayReceiveSheet {
+                tokensOnNetworkHeading(tokensLabel, networkName).assertIsDisplayed()
+            }
+        }
+        onTangemPayReceiveSheet { address.assertTextEquals(depositAddress) }
+    }
 }
 
 /** Asserts the QR code on the Tangem Pay receive sheet encodes [expectedAddress]. */
