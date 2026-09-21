@@ -217,6 +217,22 @@ internal class StoryPlaybackControllerTest {
     }
 
     @Test
+    fun `GIVEN a slide replayed by an automatic loop WHEN the position crosses a marker THEN it fires again`() {
+        // Arrange — a full automatic round leaves every slide already viewed.
+        val controller = openController(composition = videoStory(haptics = listOf(haptic(1_000L))))
+        controller.onProgress(positionMs = 1_500L, elapsedMs = 16L)
+        repeat(times = 3) { controller.onPlayerEnded() }
+        val afterFirstRound = hapticCount
+
+        // Act
+        controller.onProgress(positionMs = 1_500L, elapsedMs = 16L)
+
+        // Assert
+        assertThat(afterFirstRound).isEqualTo(1)
+        assertThat(hapticCount).isEqualTo(2)
+    }
+
+    @Test
     fun `GIVEN a held story WHEN the position crosses a marker THEN no haptic fires`() {
         // Arrange
         val controller = openController(composition = videoStory(haptics = listOf(haptic(1_000L))))
