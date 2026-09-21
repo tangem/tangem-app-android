@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.discovery.ui
+package com.tangem.features.collectibles.impl.common.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
@@ -24,11 +24,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_binoculars_20
 
 @Composable
-internal fun CollectiblesDiscoveryStatus(
-    message: TextReference,
-    onReloadClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
+internal fun CollectiblesStatus(message: TextReference, onReloadClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -71,14 +67,14 @@ internal fun CollectiblesDiscoveryStatus(
 @Preview(widthDp = 360, showBackground = true)
 @Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CollectiblesDiscoveryStatusPreview() {
+private fun CollectiblesStatusPreview() {
     TangemThemePreviewRedesign {
         Column {
-            CollectiblesDiscoveryStatus(
+            CollectiblesStatus(
                 message = stringReference("Failed to load cards list.\nTap to reload"),
                 onReloadClick = {},
             )
-            CollectiblesDiscoveryStatus(
+            CollectiblesStatus(
                 message = stringReference("No results. Try to change your wording\nor explore from the list"),
                 onReloadClick = null,
             )
