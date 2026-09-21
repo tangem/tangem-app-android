@@ -118,7 +118,7 @@ private fun previewState(
         outcomePriceCents = 85,
         resolutionDateMillis = RESOLUTION_AT,
     ),
-    collateral = CollateralUM(tokenSymbol = "USDC", iconState = CurrencyIconState.Empty()),
+    collateral = CollateralUM(tokenSymbol = "pUSD", iconState = CurrencyIconState.Empty()),
     order = order,
     amountValue = amountValue,
     slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
