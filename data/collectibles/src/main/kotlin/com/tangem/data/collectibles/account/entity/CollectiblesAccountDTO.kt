@@ -5,6 +5,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
+ * Everything a wallet's collectibles account persists, in one entry.
+ *
+
+ * device has no delegate of ours.
+ *
+ * Of the delegate only its keystore id is kept — the auth type is always `NoAuth`, and the public key is cheaper
+ * to re-derive than to risk serving one whose keystore entry is already gone.
+ */
+@Serializable
+internal data class CollectiblesAccountDTO(
+    @SerialName("status") val status: CollectiblesAccountStatusValueDTO? = null,
+    @SerialName("delegate_hot_wallet_id") val delegateHotWalletId: String? = null,
+)
+
+/**
  * On-disk representation of the collectibles account status, kept separate from the
  * [com.tangem.domain.models.account.CollectiblesAccountStatusValue] domain model.
  *
