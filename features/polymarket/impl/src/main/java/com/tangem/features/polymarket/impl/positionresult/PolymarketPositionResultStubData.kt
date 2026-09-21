@@ -29,7 +29,7 @@ internal object PolymarketPositionResultStubData {
             value = stringReference("▲ $245.00 (2.08%)"),
         ),
         footerNote = resourceReference(R.string.prediction_position_result_balance_note),
-        action = PolymarketPositionResultUM.Action.Claim(inProgress = false),
+        action = PolymarketPositionResultUM.Action.Claim(isInProgress = false),
     )
 
     val lost = won.copy(

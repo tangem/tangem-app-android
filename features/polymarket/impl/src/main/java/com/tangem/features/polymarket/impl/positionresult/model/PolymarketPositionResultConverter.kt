@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.positionresult.model
 
 import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -44,20 +45,7 @@ internal class PolymarketPositionResultConverter(
                 resolutionDateMillis = null,
             ),
             result = result,
-            title = when (result) {
-                PolymarketPositionResultUM.Result.Won -> resourceReference(
-                    R.string.prediction_position_result_won_title,
-                    wrappedList(value.currentValue.formatPolymarketMoney()),
-                )
-                PolymarketPositionResultUM.Result.Lost -> resourceReference(
-                    R.string.prediction_position_result_loss_title,
-                    wrappedList(value.initialValue.formatPolymarketMoney()),
-                )
-                PolymarketPositionResultUM.Result.Split -> resourceReference(
-                    R.string.prediction_position_result_split_title,
-                    wrappedList(value.currentValue.formatPolymarketMoney()),
-                )
-            },
+            title = title(value = value, result = result),
             resolvedAt = value.endDate?.let { stringReference(dateFormatter.format(it)) },
             invested = if (hasPayout) {
                 PolymarketPositionResultUM.Metric(
@@ -68,17 +56,35 @@ internal class PolymarketPositionResultConverter(
                 null
             },
             profit = if (shouldShowProfit) profit(value) else null,
-            footerNote = when {
-                isClaimable -> resourceReference(R.string.prediction_position_result_balance_note)
-                hasPayout -> resourceReference(R.string.prediction_position_result_payout_pending_note)
-                else -> null
-            },
+            footerNote = footerNote(isClaimable = isClaimable, hasPayout = hasPayout),
             action = if (isClaimable) {
-                PolymarketPositionResultUM.Action.Claim(inProgress = false)
+                PolymarketPositionResultUM.Action.Claim(isInProgress = false)
             } else {
                 PolymarketPositionResultUM.Action.Dismiss
             },
         )
+    }
+
+    private fun title(value: PolymarketPosition.Open, result: PolymarketPositionResultUM.Result): TextReference =
+        when (result) {
+            PolymarketPositionResultUM.Result.Won -> resourceReference(
+                R.string.prediction_position_result_won_title,
+                wrappedList(value.currentValue.formatPolymarketMoney()),
+            )
+            PolymarketPositionResultUM.Result.Lost -> resourceReference(
+                R.string.prediction_position_result_loss_title,
+                wrappedList(value.initialValue.formatPolymarketMoney()),
+            )
+            PolymarketPositionResultUM.Result.Split -> resourceReference(
+                R.string.prediction_position_result_split_title,
+                wrappedList(value.currentValue.formatPolymarketMoney()),
+            )
+        }
+
+    private fun footerNote(isClaimable: Boolean, hasPayout: Boolean): TextReference? = when {
+        isClaimable -> resourceReference(R.string.prediction_position_result_balance_note)
+        hasPayout -> resourceReference(R.string.prediction_position_result_payout_pending_note)
+        else -> null
     }
 
     private fun profit(value: PolymarketPosition.Open): PolymarketPositionResultUM.Metric {
