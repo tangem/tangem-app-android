@@ -64,6 +64,8 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
             current.copy(
                 edits = current.edits + (field to country.code) +
                     listOfNotNull(regionField?.to(region?.code.orEmpty())),
+                displayNameEdits = current.displayNameEdits + (field to country.name) +
+                    listOfNotNull(regionField?.to(region?.name.orEmpty())),
                 errors = current.errors - staleFields.toSet(),
             )
         }
@@ -71,7 +73,11 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     fun onRegionSelected(field: BankWithdrawFormField, region: TangemPayRegion) {
         state.update { current ->
-            current.copy(edits = current.edits + (field to region.code), errors = current.errors - field)
+            current.copy(
+                edits = current.edits + (field to region.code),
+                displayNameEdits = current.displayNameEdits + (field to region.name),
+                errors = current.errors - field,
+            )
         }
     }
 
@@ -86,7 +92,15 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
 
     private fun onValueChange(field: BankWithdrawFormField, value: String) {
         val staleFields = BankWithdrawFormValidator.dependentFieldsOf(field) + field
-        state.update { it.copy(edits = it.edits + (field to value), errors = it.errors - staleFields) }
+        // Typing replaces whatever was picked, so the name is blanked instead of dropped: a dropped key would
+        // fall through to the draft and resurface the previous pick's name.
+        state.update { current ->
+            current.copy(
+                edits = current.edits + (field to value),
+                displayNameEdits = current.displayNameEdits + (field to ""),
+                errors = current.errors - staleFields,
+            )
+        }
     }
 
     private fun onFocusChange(field: BankWithdrawFormField, isFocused: Boolean) {
@@ -119,15 +133,18 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors) }
         } else {
-            form.onContinue(values.mapValues { (_, value) -> value.trim() })
-            state.update { it.copy(edits = emptyMap(), errors = emptyMap()) }
+            form.onContinue(result())
+            state.update { it.copy(edits = emptyMap(), displayNameEdits = emptyMap(), errors = emptyMap()) }
         }
     }
 
     /** This screen's fields, the user's local edits layered over the draft's current values. */
     private fun currentValues(): Map<BankWithdrawFormField, String> = state.value.values(form.fields, form.draft.value)
 
-    private fun result(): Map<BankWithdrawFormField, String> = currentValues().mapValues { (_, value) -> value.trim() }
+    private fun result(): BankWithdrawFormResult = BankWithdrawFormResult(
+        values = currentValues().mapValues { (_, value) -> value.trim() },
+        displayNames = state.value.displayNames(form.fields, form.draft.value),
+    )
 
     private fun regionConfig(
         field: BankWithdrawFormField,

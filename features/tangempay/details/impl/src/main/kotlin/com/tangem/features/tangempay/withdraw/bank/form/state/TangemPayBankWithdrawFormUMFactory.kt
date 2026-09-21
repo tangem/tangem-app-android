@@ -26,6 +26,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
 
     fun create(draft: BankWithdrawDraft, state: FormState): TangemPayBankWithdrawFormUM {
         val values = state.values(fields, draft)
+        val displayNames = state.displayNames(fields, draft)
         return TangemPayBankWithdrawFormUM(
             header = BankWithdrawHeaderFactory.create(draft = draft, step = step),
             fields = fields
@@ -33,6 +34,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
                     createField(
                         field = field,
                         values = values,
+                        displayNames = displayNames,
                         error = state.errors[field]?.toText(),
                         isLast = index == fields.lastIndex,
                     )
@@ -47,6 +49,7 @@ internal class TangemPayBankWithdrawFormUMFactory(
     private fun createField(
         field: BankWithdrawFormField,
         values: Map<BankWithdrawFormField, String>,
+        displayNames: Map<BankWithdrawFormField, String>,
         error: TextReference?,
         isLast: Boolean,
     ): FieldUM = when (val kind = field.kindIn(values)) {
@@ -66,7 +69,8 @@ internal class TangemPayBankWithdrawFormUMFactory(
         )
         BankWithdrawFieldKind.SelectorField -> FieldUM.Selector(
             field = field,
-            value = values[field].orEmpty(),
+            // A picked country or state is shown by name; the code is the fallback so the field never goes blank.
+            value = displayNames[field].orEmpty().ifBlank { values[field].orEmpty() },
             placeholder = field.placeholderIn(values),
             error = error,
             onClick = { callbacks.onSelectorClick(field) },

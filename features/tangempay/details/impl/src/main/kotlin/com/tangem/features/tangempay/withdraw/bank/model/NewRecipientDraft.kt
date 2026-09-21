@@ -15,6 +15,12 @@ internal data class NewRecipientDraft(
     val isThirdParty: Boolean? = null,
     val accountType: BankAccountType? = null,
     val fields: Map<BankWithdrawFormField, String> = emptyMap(),
+    /**
+     * What a picked country or state is called; [fields] keeps the code Rain's payload needs. The map always has
+     * the same keys as [fields], and an empty name means the value has none — typed by hand, or nothing picked —
+     * so a later step's blank entry overrides a stale name when the two maps are merged with `+`.
+     */
+    val displayNames: Map<BankWithdrawFormField, String> = emptyMap(),
 ) {
 
     companion object {
