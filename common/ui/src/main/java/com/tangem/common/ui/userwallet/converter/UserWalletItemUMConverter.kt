@@ -2,7 +2,10 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -45,6 +48,7 @@ class UserWalletItemUMConverter(
             UserWalletItemUM(
                 id = walletId.stringValue,
                 name = stringReference(name),
+                titleBadge = getTitleBadge(userWallet = this),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
                 isEnabled = isEnabled(userWallet = this),
@@ -52,6 +56,22 @@ class UserWalletItemUMConverter(
                 onClick = { onClick(value.walletId) },
                 imageState = artwork,
             )
+        }
+    }
+
+    private fun getTitleBadge(userWallet: UserWallet): TangemBadgeUM? {
+        val isSeedPhraseWallet = when (userWallet) {
+            is UserWallet.Cold -> userWallet.isImported
+            is UserWallet.Hot -> userWallet.backedUp
+        }
+
+        return if (isSeedPhraseWallet) {
+            TangemBadgeUM(
+                text = resourceReference(R.string.details_wallet_seed_badge),
+                size = TangemBadge.Size.X4,
+            )
+        } else {
+            null
         }
     }
 
