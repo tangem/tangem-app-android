@@ -44,6 +44,7 @@ data class PolymarketOpenPositionDto(
     @Json(name = "eventId") val eventId: String? = null,
     @Json(name = "eventTitle") val eventTitle: String? = null,
     @Json(name = "status") val status: String? = null,
+    @Json(name = "outcomeIndex") val outcomeIndex: Int? = null,
 )
 
 @JsonClass(generateAdapter = true)
@@ -60,4 +61,5 @@ data class PolymarketClosedPositionDto(
     @Json(name = "status") val status: String,
     @Json(name = "icon") val icon: String? = null,
     @Json(name = "endDate") val endDate: String? = null,
+    @Json(name = "outcomeIndex") val outcomeIndex: Int? = null,
 )

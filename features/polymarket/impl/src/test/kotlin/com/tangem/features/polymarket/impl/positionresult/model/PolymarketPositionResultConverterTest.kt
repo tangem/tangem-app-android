@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.positionresult.ui.state.PolymarketPositionResultUM
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
@@ -41,6 +42,7 @@ internal class PolymarketPositionResultConverterTest {
                 title = "Will the event happen?",
                 imageUrl = "https://example.com/market.png",
                 outcomeTitle = "Yes",
+                outcomeAccent = PolymarketOutcomeAccent.Info,
                 outcomePriceCents = 36,
                 resolutionDateMillis = null,
             ),
