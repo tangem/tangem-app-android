@@ -194,6 +194,7 @@ internal class PolymarketEventDetailsModelTest {
         markets = listOf(
             PolymarketMarket(
                 id = "market-1",
+                conditionId = null,
                 eventId = "event-1",
                 title = "Market question",
                 slug = "market-slug",
