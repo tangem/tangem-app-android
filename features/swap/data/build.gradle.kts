@@ -13,6 +13,7 @@ android {
     namespace = "com.tangem.feature.swap.data"
 }
 dependencies {
+    implementation(projects.core.remote)
 
     /** AndroidX */
     implementation(deps.androidx.datastore)
