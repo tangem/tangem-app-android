@@ -8,6 +8,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
 @ModelScoped
 internal class JointOperationModel @Inject constructor(
@@ -124,7 +127,8 @@ internal class JointOperationModel @Inject constructor(
         flow4 = isBalanceHidden,
     ) { state, actions, canCreateContact, isBalanceHidden ->
         val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
-        if (answered == null || actions.isGone || !answered.isReachable) return@combine JointOperationUM.Gone
+        val isGone = answered == null || actions.isGone || !answered.isReachable && !answered.isSending
+        if (isGone) return@combine JointOperationUM.Gone
 
         JointOperationUM.Content(
             operation = operationConverter.convert(
@@ -220,10 +224,22 @@ internal class JointOperationModel @Inject constructor(
 
     private fun onRefused(operation: JointOperationState) {
         when (operation.role) {
-            Role.INITIATOR -> isGoneLocally.value = true
+            Role.INITIATOR -> {
+                isGoneLocally.value = true
+                showDeleted()
+            }
             Role.MEMBER -> localAnswer.value = Answer.DECLINED
             Role.UNKNOWN -> Unit
         }
+    }
+
+    private fun showDeleted() {
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(CoreUiR.string.joint_operation_deleted_snackbar),
+                startIconId = CoreUiR.drawable.ic_trash_24,
+            ),
+        )
     }
 
     private fun showSignError(error: JointOperationSignError) {
