@@ -246,16 +246,17 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun openAddFunds() {
         val status = currentStatus.value
         val balance = status.balanceOrNull()
-        if (balance == null || !status.value.canAddFunds(tangemPayFeatureToggles.isAccountMultichainEnabled)) {
+        val depositAddress = status.networksOrNull().orEmpty().firstDepositAddress()
+        if (balance == null || depositAddress == null || !status.value.canAddFunds()) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
             return
         }
         bottomSheetNavigation.activate(
             TangemPayDetailsNavigation.AddFunds(
                 walletId = userWalletId,
-                fiatBalance = balance.availableForWithdrawal,
-                cryptoBalance = balance.availableForWithdrawal,
-                depositAddress = balance.cryptoBalance.depositAddress,
+                fiatBalance = balance.fiatBalance.availableBalance,
+                cryptoBalance = status.value.availableForWithdrawalOrZero,
+                depositAddress = depositAddress,
                 cryptoCurrency = cryptoCurrency,
                 virtualAccountOnramp = status.ifLoadedOrNull { it.virtualAccount },
             ),
@@ -507,7 +508,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
         bottomSheetNavigation.dismiss()
-        val paymentAccountAddress = loaded.balance?.cryptoBalance?.depositAddress
+        val paymentAccountAddress = loaded.paymentAccountAddress
         if (paymentAccountAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
             return
