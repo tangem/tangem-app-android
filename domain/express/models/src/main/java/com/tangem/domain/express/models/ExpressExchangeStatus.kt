@@ -53,6 +53,33 @@ enum class ExpressExchangeStatus(val raw: String) {
             -> false
         }
 
+    /**
+     * Whether the user may rate the provider for this deal. Narrower than [isTerminal] on purpose: a deal
+     * that stalled ([Paused]) or whose outcome is not known ([Unknown]) expects no further update, but
+     * rating the provider for it carries no signal.
+     */
+    val isRateable: Boolean
+        get() = when (this) {
+            Finished,
+            Refunded,
+            Expired,
+            TxFailed,
+            -> true
+            Preview,
+            Created,
+            ExchangeTxSent,
+            Waiting,
+            WaitingTxHash,
+            Confirming,
+            Exchanging,
+            Sending,
+            Failed,
+            Verifying,
+            Paused,
+            Unknown,
+            -> false
+        }
+
     val isFinished: Boolean
         get() = when (this) {
             Finished,

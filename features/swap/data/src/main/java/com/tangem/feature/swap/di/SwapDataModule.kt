@@ -11,6 +11,8 @@ import com.tangem.grow.datasource.crypto.DataSignatureVerifier
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.create
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.swap.DefaultSwapFeedbackRepository
@@ -18,6 +20,7 @@ import com.tangem.feature.swap.DefaultSwapRepository
 import com.tangem.feature.swap.DefaultSwapTransactionRepository
 import com.tangem.feature.swap.NoOpSwapFeedbackRemoteSource
 import com.tangem.feature.swap.SurveySparrowSwapFeedbackRemoteSource
+import com.tangem.feature.swap.SwapRatingsDTO
 import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
@@ -90,6 +93,8 @@ internal class SwapDataModule {
     internal fun provideSwapFeedbackRepository(
         api: SurveySparrowApi,
         environmentConfig: EnvironmentConfig,
+        dataStoreFactory: AppDataStoreFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SwapFeedbackRepository {
         val config = environmentConfig.surveySparrowSwapRating
         val remoteSource = if (config != null) {
@@ -97,6 +102,10 @@ internal class SwapDataModule {
         } else {
             NoOpSwapFeedbackRemoteSource()
         }
-        return DefaultSwapFeedbackRepository(remoteSource)
+        return DefaultSwapFeedbackRepository(
+            remoteSource = remoteSource,
+            store = dataStoreFactory.create(defaultValue = SwapRatingsDTO(), fileName = "swap_ratings"),
+            dispatchers = dispatchers,
+        )
     }
 }

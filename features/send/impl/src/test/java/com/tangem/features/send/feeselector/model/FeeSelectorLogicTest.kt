@@ -65,6 +65,16 @@ internal class FeeSelectorLogicTest {
     private val testUserWalletId = UserWalletId("1234567890ABCDEF")
     private val coinStatus: CryptoCurrencyStatus = loadedStatus(mockk<CryptoCurrency.Coin>(relaxed = true))
     private val tokenStatus: CryptoCurrencyStatus = loadedStatus(mockk<CryptoCurrency.Token>(relaxed = true))
+    private val tronTokenStatus: CryptoCurrencyStatus = loadedStatus(
+        mockk<CryptoCurrency.Token>(relaxed = true) {
+            every { network.rawId } returns "tron"
+        },
+    )
+    private val trxCoinStatus: CryptoCurrencyStatus = loadedStatus(
+        mockk<CryptoCurrency.Coin>(relaxed = true) {
+            every { network.rawId } returns "tron"
+        },
+    )
 
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk(relaxed = true)
@@ -261,7 +271,7 @@ internal class FeeSelectorLogicTest {
                 )
                 coEvery { onLoadFeeExtended(any()) } returns feeExtended.right()
                 every { getUserWalletUseCase(any<UserWalletId>()) } returns mockk<UserWallet>(relaxed = true).right()
-                coEvery { getAvailableFeeTokensUseCase(any(), any(), any()) } returns AvailableFeeTokens(
+                coEvery { getAvailableFeeTokensUseCase(any(), any(), any(), any()) } returns AvailableFeeTokens(
                     tokens = listOf(coinStatus, tokenStatus),
                     notEnoughForFeeIds = setOf(coinStatus.currency.id),
                 ).right()
@@ -389,6 +399,35 @@ internal class FeeSelectorLogicTest {
         )
     }
 
+    @Nested
+    inner class TronGaslessFlowSupport {
+
+        @Test
+        fun `GIVEN a flow without tron gasless WHEN load fee THEN use basic onLoadFee only`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Act — init triggers loadFee()
+                val sut = buildTronModel()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.isGaslessEnabled).isFalse()
+                coVerify(exactly = 1) { onLoadFee() }
+                coVerify(exactly = 0) { onLoadFeeExtended(any()) }
+            }
+
+        @Test
+        fun `GIVEN a flow with tron gasless WHEN load fee THEN use the extended loader`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Act
+                val sut = buildTronModel(isTronGaslessSupported = true)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.isGaslessEnabled).isTrue()
+                coVerify(exactly = 1) { onLoadFeeExtended(any()) }
+            }
+    }
+
     // region fixtures
 
     private fun TestScope.buildModel(
@@ -409,23 +448,45 @@ internal class FeeSelectorLogicTest {
             analyticsCategoryName = "test_fee",
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send,
         )
-        return FeeSelectorLogic(
-            params = params,
-            modelScope = backgroundScope,
-            isFeeApproximateUseCase = isFeeApproximateUseCase,
-            getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-            feeSelectorReloadListener = feeSelectorReloadListener,
-            feeSelectorCheckReloadListener = feeSelectorCheckReloadListener,
-            feeSelectorCheckReloadTrigger = feeSelectorCheckReloadTrigger,
-            feeSelectorAlertFactory = feeSelectorAlertFactory,
-            analyticsEventHandler = analyticsEventHandler,
-            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-            getUserWalletUseCase = getUserWalletUseCase,
-            getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
-            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-            sendFeatureToggles = sendFeatureToggles,
-        )
+        return createLogic(params)
     }
+
+    /** A Tron token transfer. */
+    private fun TestScope.buildTronModel(isTronGaslessSupported: Boolean = false): FeeSelectorLogic {
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
+        every { sendFeatureToggles.isTronGaslessEnabled } returns true
+        val params = FeeSelectorParams.FeeSelectorBlockParams(
+            state = FeeSelectorUM.Loading,
+            userWalletId = testUserWalletId,
+            onLoadFeeExtended = onLoadFeeExtended,
+            onLoadFee = onLoadFee,
+            cryptoCurrencyStatus = tronTokenStatus,
+            feeCryptoCurrencyStatus = trxCoinStatus,
+            feeStateConfiguration = FeeStateConfiguration.None,
+            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
+            analyticsCategoryName = "test_fee",
+            analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send,
+            isTronGaslessSupported = isTronGaslessSupported,
+        )
+        return createLogic(params)
+    }
+
+    private fun TestScope.createLogic(params: FeeSelectorParams) = FeeSelectorLogic(
+        params = params,
+        modelScope = backgroundScope,
+        isFeeApproximateUseCase = isFeeApproximateUseCase,
+        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+        feeSelectorReloadListener = feeSelectorReloadListener,
+        feeSelectorCheckReloadListener = feeSelectorCheckReloadListener,
+        feeSelectorCheckReloadTrigger = feeSelectorCheckReloadTrigger,
+        feeSelectorAlertFactory = feeSelectorAlertFactory,
+        analyticsEventHandler = analyticsEventHandler,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        getUserWalletUseCase = getUserWalletUseCase,
+        getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
+        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        sendFeatureToggles = sendFeatureToggles,
+    )
 
     private fun contentState(
         selected: FeeItem,

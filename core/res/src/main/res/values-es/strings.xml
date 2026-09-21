@@ -2193,15 +2193,15 @@
   <string name="tangempay_newonboard_title">Consigue tu tarjeta Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">1 USDC = 1 USD</string>
   <string name="tangempay_newonboard_topleft_title">Sin comisiones por compra</string>
-  <string name="tangempay_newonboard_topright_body">Sin sorpresas</string>
-  <string name="tangempay_newonboard_topright_title">$0 al mes,\n$0 de recarga</string>
+  <string name="tangempay_newonboard_topright_body">En USDC, no en tokens desconocidos</string>
+  <string name="tangempay_newonboard_topright_title">Hasta un 2% de cashback</string>
   <string name="tangempay_onboarding_banner_description">Tarjeta Tangem Pay gratis con hasta un 2% de cashback</string>
   <string name="tangempay_onboarding_banner_title">Gaste sus criptos en el día a día</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtener tarjeta</string>
-  <string name="tangempay_onboarding_pay_description">Con tarjeta digital que funciona con Apple Pay y Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">Tarjeta digital con Apple Pay o Google Pay, sin comisiones por compras</string>
   <string name="tangempay_onboarding_pay_title">Gasta tus activos en cualquier lugar</string>
-  <string name="tangempay_onboarding_purchases_description">No hay comisiones adicionales por compras</string>
-  <string name="tangempay_onboarding_purchases_title">Paga exactamente lo que ves</string>
+  <string name="tangempay_onboarding_purchases_description">En todas las compras, en USDC, sin puntos ni tokens desconocidos</string>
+  <string name="tangempay_onboarding_purchases_title">Hasta un 2% de cashback</string>
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
   <string name="tangempay_onboarding_setup_wallet_description">Y vincularemos Tangem Pay a esta wallet</string>
