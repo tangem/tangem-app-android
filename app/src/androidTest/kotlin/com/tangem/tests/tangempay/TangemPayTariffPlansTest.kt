@@ -10,7 +10,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -67,7 +66,6 @@ class TangemPayTariffPlansTest : BaseTestCase() {
 
     @AllureId("10382")
     @DisplayName("Tangem Pay: comparing plans during onboarding lists both plans")
-    @Ignore("[REDACTED_TASK_KEY]: onboarding comparison drops the ACTIVATION transitions, so only Basic is listed")
     @Test
     fun comparePlansDuringOnboardingTest() {
         setupHooks(
