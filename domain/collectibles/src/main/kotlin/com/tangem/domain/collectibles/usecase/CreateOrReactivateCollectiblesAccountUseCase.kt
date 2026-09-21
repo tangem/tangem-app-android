@@ -3,7 +3,6 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
@@ -39,7 +38,8 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
         if (accountStatus is CollectiblesAccountStatusValue.Onboarded) return@either
 
         val limits = GachaVaultLimits.Default
-        val delegate = resolveDelegate(userWallet).bind()
+        val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
+        val delegate = hotDelegate.provision(accountId).bind()
 
         if (ownerDeriver.storedOwner(userWallet.walletId) == null) {
             gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, delegate, limits).bind()
@@ -55,15 +55,5 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
         appScope.launch {
             accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId))
         }
-    }
-
-    /** Costs no card tap either way: the delegate is a local ed25519 keypair, created on first use. */
-    private suspend fun resolveDelegate(
-        userWallet: UserWallet,
-    ): Either<CollectiblesAccountError, HotDelegatePublicKey> = either {
-        val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
-
-        hotDelegate.getPublicKey(accountId)
-            ?: hotDelegate.provision(accountId).bind()
     }
 }
