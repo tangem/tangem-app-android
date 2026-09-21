@@ -9,6 +9,7 @@ import com.tangem.data.collectibles.account.DefaultCollectiblesAccountRepository
 import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountDTO
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
+import com.tangem.data.collectibles.store.CollectiblesMachineStore
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerDeriver
 import com.tangem.data.collectibles.account.flow.DefaultCollectiblesAccountStatusFetcher
@@ -80,6 +81,12 @@ internal interface CollectiblesDataModule {
     ): CollectiblesAccountStatusFetcher
 
     companion object {
+
+        @Provides
+        @Singleton
+        fun provideCollectiblesMachineStore(): CollectiblesMachineStore {
+            return CollectiblesMachineStore(store = RuntimeSharedStore())
+        }
 
         @Provides
         @Singleton
