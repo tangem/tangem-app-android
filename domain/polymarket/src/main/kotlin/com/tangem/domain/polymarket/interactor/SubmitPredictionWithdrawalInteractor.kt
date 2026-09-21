@@ -108,7 +108,7 @@ class SubmitPredictionWithdrawalInteractor(
     ): Either<PredictionWithdrawalFailure, PredictionWithdrawalReceipt> = either {
         ensure(!PolymarketRelayerDeadline.isExpired(prepared.deadline)) { PredictionWithdrawalFailure.Expired }
 
-        val signature = signer.signWithdrawal(
+        val signature = signer.signRelayedBatch(
             userWalletId = prepared.userWalletId,
             payload = PolymarketApprovalsPayload(
                 depositWalletAddress = prepared.depositWalletAddress,
