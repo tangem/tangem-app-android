@@ -50,6 +50,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             title = "Will it happen?",
             iconUrl = null,
             outcome = "Over",
+            outcomeIndex = null,
             endDate = null,
             avgPrice = BigDecimal("0.3157"),
             curPrice = BigDecimal("0.5"),
@@ -89,6 +90,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
             title = "Will it happen?",
             iconUrl = null,
             outcome = "No",
+            outcomeIndex = 1,
             endDate = null,
             avgPrice = BigDecimal("0.5"),
             curPrice = BigDecimal.ZERO,
@@ -218,7 +220,7 @@ internal class DefaultPolymarketPositionsRepositoryTest {
         moshi.adapter(PolymarketClosedPositionsResponse::class.java).fromJson(
             """
                 {"positions":[{"conditionId":"condition","assetId":"asset","title":"Will it happen?",
-                "outcome":"No","avgPrice":"0.5","curPrice":"0","totalBought":"10",
+                "outcome":"No","outcomeIndex":1,"avgPrice":"0.5","curPrice":"0","totalBought":"10",
                 "realizedPnl":"2.75","closedAt":"$closedAt","status":"LOST"}],"hasNext":false}
             """.trimIndent(),
         )!!
