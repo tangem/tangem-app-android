@@ -93,6 +93,14 @@ enum class ExchangeStatus {
             this == Paused ||
             this == Unknown
 
+    /**
+     * Whether the user may rate the provider for this deal. Narrower than [isTerminal] on purpose: a deal
+     * that stalled ([Paused]), was cancelled or whose outcome is not known ([Unknown]) expects no further
+     * update, but rating the provider for it carries no signal.
+     */
+    val isRateable: Boolean
+        get() = this == Finished || this == Refunded || this == TxFailed
+
     val isAutoDisposable: Boolean
         get() = this == Finished
 

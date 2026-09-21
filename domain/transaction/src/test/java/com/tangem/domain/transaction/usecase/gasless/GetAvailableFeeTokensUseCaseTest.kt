@@ -100,6 +100,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
                 network = network,
+                sentCurrencyStatus = usdc.status(),
                 nativeFeeAmount = NATIVE_FEE,
             )
 
@@ -117,6 +118,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
                 network = network,
+                sentCurrencyStatus = usdc.status(),
                 nativeFeeAmount = NATIVE_FEE,
             )
 
@@ -131,7 +133,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             givenAccountStatusList(nativeBalance = BigDecimal.ZERO, tokenBalance = BigDecimal("20"))
 
             // Act
-            val actual = createUseCase().invoke(userWallet = userWallet, network = network)
+            val actual = createUseCase().invoke(userWallet = userWallet, network = network, sentCurrencyStatus = usdc.status())
 
             // Assert
             assertThat(actual.offeredCurrencies()).containsExactly(nativeCoin, usdc).inOrder()
@@ -147,6 +149,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
                 network = network,
+                sentCurrencyStatus = usdc.status(),
                 nativeFeeAmount = NATIVE_FEE,
             )
 
@@ -164,6 +167,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
                 network = network,
+                sentCurrencyStatus = usdc.status(),
                 nativeFeeAmount = NATIVE_FEE,
             )
 
@@ -181,6 +185,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
                 network = network,
+                sentCurrencyStatus = usdc.status(),
                 nativeFeeAmount = NATIVE_FEE,
             )
 
@@ -199,6 +204,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
             val actual = createUseCase().invoke(
                 userWallet = userWallet,
                 network = network,
+                sentCurrencyStatus = usdc.status(),
                 nativeFeeAmount = NATIVE_FEE,
             )
 
@@ -223,6 +229,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
                 listOf(
                     CryptoCurrencyStatus(currency = trx, value = loadedValue(BigDecimal.ZERO)),
                     CryptoCurrencyStatus(currency = usdtTron, value = loadedValue(BigDecimal("20"))),
+                    CryptoCurrencyStatus(currency = usdcTron, value = loadedValue(BigDecimal("30"))),
                 ),
             )
         }
@@ -233,10 +240,31 @@ internal class GetAvailableFeeTokensUseCaseTest {
             coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
 
             // Act
-            val actual = createUseCase().invoke(userWallet = userWallet, network = tronNetwork)
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = tronNetwork,
+                sentCurrencyStatus = usdtTron.status(),
+            )
 
             // Assert
             assertThat(actual.offeredCurrencies()).containsExactly(trx, usdtTron).inOrder()
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN a non-gasless token is sent WHEN invoke THEN only native coin is offered`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = tronNetwork,
+                sentCurrencyStatus = usdcTron.status(),
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(trx)
             assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
 
@@ -246,7 +274,65 @@ internal class GetAvailableFeeTokensUseCaseTest {
             coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns false
 
             // Act
-            val actual = createUseCase().invoke(userWallet = userWallet, network = tronNetwork)
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = tronNetwork,
+                sentCurrencyStatus = usdtTron.status(),
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).containsExactly(trx)
+            assertThat(actual.notEnoughForFeeIds()).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN a fresher status in the account list WHEN invoke THEN the offered token carries it`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = tronNetwork,
+                sentCurrencyStatus = usdtTron.status(BigDecimal.ONE),
+            )
+
+            // Assert
+            assertThat(actual.offeredAmounts()).containsExactly(BigDecimal.ZERO, BigDecimal("20")).inOrder()
+        }
+
+        @Test
+        fun `GIVEN the sent token is missing from the account list WHEN invoke THEN the given status is offered`() =
+            runTest {
+                // Arrange
+                coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
+                coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(
+                    listOf(CryptoCurrencyStatus(currency = trx, value = loadedValue(BigDecimal.ZERO))),
+                )
+
+                // Act
+                val actual = createUseCase().invoke(
+                    userWallet = userWallet,
+                    network = tronNetwork,
+                    sentCurrencyStatus = usdtTron.status(BigDecimal("7")),
+                )
+
+                // Assert
+                assertThat(actual.offeredCurrencies()).containsExactly(trx, usdtTron).inOrder()
+                assertThat(actual.offeredAmounts()).containsExactly(BigDecimal.ZERO, BigDecimal("7")).inOrder()
+            }
+
+        @Test
+        fun `GIVEN the native coin is sent WHEN invoke THEN only native coin is offered`() = runTest {
+            // Arrange
+            coEvery { walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork) } returns true
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = tronNetwork,
+                sentCurrencyStatus = trx.status(),
+            )
 
             // Assert
             assertThat(actual.offeredCurrencies()).containsExactly(trx)
@@ -265,14 +351,22 @@ internal class GetAvailableFeeTokensUseCaseTest {
     private fun createUseCase() = GetAvailableFeeTokensUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         gaslessTransactionRepository = gaslessTransactionRepository,
-        tronGaslessTransactionRepository = tronGaslessTransactionRepository,
         currencyChecksRepository = currencyChecksRepository,
-        walletManagersFacade = walletManagersFacade,
+        isTronGaslessSupportedUseCase = IsTronGaslessSupportedUseCase(
+            repository = tronGaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+        ),
         isYieldWithdrawEnabled = true,
     )
 
+    private fun CryptoCurrency.status(balance: BigDecimal = BigDecimal.TEN) =
+        CryptoCurrencyStatus(currency = this, value = loadedValue(balance))
+
     private fun Either<GetFeeError, AvailableFeeTokens>.offeredCurrencies(): List<CryptoCurrency>? =
         getOrNull()?.tokens?.map { it.currency }
+
+    private fun Either<GetFeeError, AvailableFeeTokens>.offeredAmounts(): List<BigDecimal?>? =
+        getOrNull()?.tokens?.map { it.value.amount }
 
     private fun Either<GetFeeError, AvailableFeeTokens>.notEnoughForFeeIds(): Set<CryptoCurrency.ID>? =
         getOrNull()?.notEnoughForFeeIds
@@ -408,6 +502,16 @@ internal class GetAvailableFeeTokensUseCaseTest {
         contractAddress = USDT_TRON_CONTRACT,
     )
 
+    private val usdcTron = usdc.copy(
+        id = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(rawId = "tron"),
+            suffix = CryptoCurrency.ID.Suffix.ContractAddress(contractAddress = USDC_TRON_CONTRACT),
+        ),
+        network = tronNetwork,
+        contractAddress = USDC_TRON_CONTRACT,
+    )
+
     internal data class EligibilityModel(
         val yieldSupplyStatus: YieldSupplyStatus?,
         val isYieldWithdrawEnabled: Boolean,
@@ -419,6 +523,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
     private companion object {
         const val USDC_CONTRACT = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
         const val USDT_TRON_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        const val USDC_TRON_CONTRACT = "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8"
         const val EOA = "0xEoa"
 
         val NATIVE_FEE: BigDecimal = BigDecimal("0.000004")

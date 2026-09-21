@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
@@ -496,6 +497,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
         val (testCryptoCurrencyStatus, testAccountCurrencyStatus) = createMockedAccountCurrencyStatus()
         every { testCryptoCurrencyStatus.currency.symbol } returns "SOL"
         every { testCryptoCurrencyStatus.currency.network.name } returns "solana"
+        every { testCryptoCurrencyStatus.value.amount } returns BigDecimal.ZERO
         every {
             getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency)
         } returns flowOf(testAccountCurrencyStatus)
@@ -516,6 +518,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
                 StakingAnalyticsEvent.NotEnoughFee(
                     token = "SOL",
                     blockchain = "solana",
+                    balance = AnalyticsParam.TokenBalanceState.Empty,
                 )
             )
         }
