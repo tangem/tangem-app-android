@@ -19,10 +19,11 @@ internal class PlacePredictionStatusComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val result = (state.submit as? SubmitUM.Result)?.result ?: return
+        val submit = state.submit as? SubmitUM.Result ?: return
 
         PlacePredictionStatusContent(
-            result = result,
+            result = submit.result,
+            viewPosition = submit.viewPosition,
             market = state.market,
             side = state.order.side,
             intents = model,
