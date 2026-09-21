@@ -29,7 +29,6 @@ import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -435,11 +434,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val multichainNetworkStatuses by lazy {
-            if (tangemPayFeatureToggles.isAccountMultichainEnabled) {
-                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
-            } else {
-                emptyList()
-            }
+            tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
         }
         return when {
             customerId.isNullOrEmpty() -> PaymentAccountStatusValue.IssuingCard(
@@ -497,24 +492,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         )
     }
 
-    /**
-     * Balances of the payment account, degrading to the cached ones when `customer/me` delivers none.
-     *
-     * The backend can answer with `balance.fiat` / `balance.crypto` set to `null` for an operational account
-     * (provider outage, partial response). Reusing the cached balances keeps the account readable instead of
-     * showing a fabricated zero; [StatusSource.ONLY_CACHE] tells the UI the figures are stale. When there is no
-     * cache either, the balance stays `null` and the UI renders a placeholder.
-     */
     private suspend fun CustomerInfo.resolveBalance(userWalletId: UserWalletId): ResolvedBalance {
         val fiat = fiatBalance
-        val crypto = cryptoBalance
-        if (fiat != null && crypto != null) {
+        if (fiat != null) {
             return ResolvedBalance(
-                balance = PaymentAccountStatusValue.Balance(
-                    fiatBalance = fiat,
-                    cryptoBalance = crypto,
-                    availableForWithdrawal = availableForWithdrawal.orZero(),
-                ),
+                balance = PaymentAccountStatusValue.Balance(fiatBalance = fiat),
                 source = StatusSource.ACTUAL,
             )
         }
@@ -620,7 +602,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return PaymentAccountStatusValue.Loaded(
             source = source,
             customerId = customerId,
-            depositAddress = balance?.cryptoBalance?.depositAddress,
+            paymentAccountAddress = paymentAccount?.address,
             cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
             networks = networks,
             fiatRate = fiatRate,

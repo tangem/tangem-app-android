@@ -415,8 +415,8 @@ internal class SendDestinationModel @Inject constructor(
         val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
         val (paymentAccountAddress, currency) = when (val status = this.value) {
             is PaymentAccountStatusValue.Loaded -> {
-                val balance = status.balance ?: return null
-                balance.cryptoBalance.depositAddress to status.cryptoCurrency
+                val address = status.paymentAccountAddress ?: return null
+                address to status.cryptoCurrency
             }
             else -> return null
         }
