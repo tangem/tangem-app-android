@@ -91,7 +91,8 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    store already holds a value.
 8. **A ready backend status is not enough to trade.** L2 credentials live only on this device. Reinstall,
    new phone, deleted-and-re-added wallet → status `READY_TO_TRADE`, nothing to sign with →
-   `PolymarketEntry.Reconnect`: one signature re-derives the credentials, nothing is deployed.
+   `PolymarketEntry.Reconnect`: the same onboarding run signs both digests in one session, uses only the
+   ClobAuth signature to re-derive the credentials, and deploys and approves nothing.
 9. **Withdrawal is persisted before it is submitted.** `SubmitPredictionWithdrawalInteractor` stores the
    signed batch, then posts it; the relayer keys submissions on `(deposit wallet, nonce)`, so a resend of the
    same batch returns the same receipt. `prepare()` refuses while a record is in flight (`AlreadyInFlight`).
@@ -128,7 +129,7 @@ asked: the confirmation record alone answers `Reconnect`, its absence `Undetermi
 | Call | Domain | Notes |
 |---|---|---|
 | `signOnboarding` | `ClobAuth` (no `verifyingContract`) + `DepositWallet` batch | Two digests, one session |
-| `signClobAuth` | `ClobAuth` | Re-issuing L2 credentials (`Reconnect`) |
+| `signClobAuth` | `ClobAuth` | ClobAuth alone; no production caller — `Reconnect` goes through `signOnboarding` |
 | `signWithdrawal` | `DepositWallet` batch | Same `Batch` envelope as approvals, one `transfer` call |
 | `signOrder` | CTF Exchange (`name "Polymarket CTF Exchange"`, `version "2"`, chain 137) wrapped in **ERC-7739** for the deposit wallet | `signatureType = 3` (`SIGNATURE_TYPE_DEPOSIT_WALLET`) |
 
