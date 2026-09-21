@@ -4,8 +4,8 @@ package com.tangem.domain.sociallogin.models
  * The plaintext encrypted into `social-backup.json`.
  *
  * The BIP39 passphrase itself is never backed up; only the fact that the wallet needs one travels
-
- * for forward compatibility of the format.
+ * along. Social login never creates such a wallet and cannot ask for the passphrase on restore, so a
+ * backup carrying the flag is refused ([SocialLoginError.PassphraseNotSupported]).
  *
  * @property mnemonic space-separated BIP39 words, held as a [CharArray] so it can be wiped
  */
