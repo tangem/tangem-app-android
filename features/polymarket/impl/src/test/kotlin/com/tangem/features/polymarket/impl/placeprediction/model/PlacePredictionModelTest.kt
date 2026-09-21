@@ -1981,6 +1981,7 @@ internal class PlacePredictionModelTest {
         markets = listOf(
             PolymarketMarket(
                 id = MARKET_ID,
+                conditionId = null,
                 eventId = EVENT_ID,
                 title = "Market question",
                 slug = "market-slug",
