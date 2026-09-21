@@ -118,7 +118,7 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
             is SharesProceedsUM.Content -> Text(
                 text = state.expected.formatPolymarketMoney(),
                 style = figureStyle,
-                color = TangemTheme.colors3.text.primary,
+                color = TangemTheme.colors3.text.status.success,
                 textAlign = TextAlign.Center,
             )
             is SharesProceedsUM.Unavailable,
@@ -142,16 +142,6 @@ private fun ProceedsCaption(proceeds: SharesProceedsUM) {
         label = "proceedsCaption",
     ) { state ->
         when (state) {
-            is SharesProceedsUM.Content -> Text(
-                modifier = Modifier.padding(top = CAPTION_GAP),
-                text = stringResourceSafe(
-                    R.string.prediction_place_at_least,
-                    state.guaranteed.formatPolymarketMoney(),
-                ),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.secondary,
-                textAlign = TextAlign.Center,
-            )
             is SharesProceedsUM.BelowMinimum -> Text(
                 modifier = Modifier.padding(top = CAPTION_GAP),
                 text = stringResourceSafe(
@@ -162,6 +152,7 @@ private fun ProceedsCaption(proceeds: SharesProceedsUM) {
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,
             )
+            is SharesProceedsUM.Content,
             is SharesProceedsUM.Loading,
             is SharesProceedsUM.Unavailable,
             -> Unit
@@ -272,10 +263,7 @@ private class PredictionSharesBlockPreviewProvider : PreviewParameterProvider<Pr
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("51.23"),
             position = SellPositionUM.Held(available = BigDecimal("51.23")),
-            proceeds = SharesProceedsUM.Content(
-                expected = BigDecimal("43.54"),
-                guaranteed = BigDecimal("43.11"),
-            ),
+            proceeds = SharesProceedsUM.Content(expected = BigDecimal("43.54")),
         ),
         PredictionSharesBlockPreviewState(
             selected = BigDecimal("0.50"),

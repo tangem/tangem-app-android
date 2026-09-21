@@ -139,7 +139,7 @@ internal data class MarketHeaderUM(
 @Immutable
 internal sealed interface AmountCaptionUM {
 
-    data class ToWin(val payout: PayoutUM) : AmountCaptionUM
+    data class ToWin(val payout: BigDecimal) : AmountCaptionUM
 
     data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
 
@@ -230,12 +230,10 @@ internal sealed interface QuoteUM {
 
     /**
      * @property expected the leg the user receives at the average price — shares on a buy, collateral on a sell
-     * @property guaranteed the same leg at the worst-case price
      */
     data class Content(
         val status: PredictionQuoteStatus,
         val expected: BigDecimal,
-        val guaranteed: BigDecimal,
         val feeTotal: BigDecimal,
         val total: BigDecimal,
         val signable: SignableQuoteUM,
@@ -251,11 +249,7 @@ internal enum class QuoteErrorUM { Network, Unknown }
 @Immutable
 internal data class SignableQuoteUM(val quote: PredictionOrderQuote, val receivedAtMillis: Long)
 
-@Immutable
-internal data class PayoutUM(val expected: BigDecimal, val guaranteed: BigDecimal)
-
-internal fun QuoteUM.payout(): PayoutUM? = (this as? QuoteUM.Content)
-    ?.let { PayoutUM(expected = it.expected, guaranteed = it.guaranteed) }
+internal fun QuoteUM.payout(): BigDecimal? = (this as? QuoteUM.Content)?.expected
 
 internal fun QuoteUM.isMarketClosed(): Boolean =
     (this as? QuoteUM.Unavailable)?.status == PredictionQuoteStatus.MARKET_CLOSED
