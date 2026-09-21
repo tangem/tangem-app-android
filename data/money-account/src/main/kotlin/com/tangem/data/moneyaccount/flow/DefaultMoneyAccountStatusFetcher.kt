@@ -20,6 +20,7 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import javax.inject.Inject
 
 internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
@@ -41,13 +42,15 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                 ),
             )
         }.onLeft {
-            moneyAccountStatusesStore.store(
-                userWalletId = params.userWalletId,
-                status = AccountStatus.Money(
-                    account = account,
-                    value = MoneyAccountStatusValue.Error.Unavailable,
-                ),
-            )
+            runSuspendCatching {
+                moneyAccountStatusesStore.store(
+                    userWalletId = params.userWalletId,
+                    status = AccountStatus.Money(
+                        account = account,
+                        value = MoneyAccountStatusValue.Error.Unavailable,
+                    ),
+                )
+            }
         }
     }
 
