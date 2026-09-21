@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.squareup.moshi.Moshi
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.common.account.WalletAccountsFetcher
@@ -26,11 +27,9 @@ import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountReque
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
-import com.tangem.store.datasource.jointaccount.models.RejectJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
-import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
@@ -70,6 +69,7 @@ internal class DefaultJointAccountRepositoryTest {
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
         dispatchers = TestingCoroutineDispatcherProvider(),
+        moshi = Moshi.Builder().build(),
     )
 
     @BeforeEach
@@ -517,7 +517,7 @@ internal class DefaultJointAccountRepositoryTest {
         ),
         CreateErrorModel(
             code = ApiResponseError.HttpException.Code.BAD_REQUEST,
-            errorBody = """{"error":"NONCE_MISMATCH"}""",
+            errorBody = """{"statusCode":400,"error":"Bad Request","code":"NONCE_MISMATCH"}""",
             expected = JointOperationCreateError.NetworkStateMoved::class.java,
         ),
         CreateErrorModel(
@@ -577,49 +577,31 @@ internal class DefaultJointAccountRepositoryTest {
         return ApiResponse.Error(cause = cause) as ApiResponse<JointAccountInvitePreviewDto>
     }
 
-    @Suppress("UNCHECKED_CAST")
     @Test
-    fun `GIVEN payload WHEN reject THEN the refused operation is sent verbatim`() = runTest {
+    fun `GIVEN an operation WHEN reject THEN the call carries the id and no body`() = runTest {
         // Arrange
-        val bodySlot = slot<RejectJointOperationRequest>()
-        val safeTx = createSafeTx()
         coEvery {
-            jointAccountApi.rejectJointOperation(
-                walletId = WALLET_ID.stringValue,
-                operationId = OPERATION_ID,
-                body = capture(bodySlot),
-            )
+            jointAccountApi.rejectJointOperation(walletId = WALLET_ID.stringValue, operationId = OPERATION_ID)
         } returns ApiResponse.Success(Unit)
 
         // Act
-        val actual = repository.rejectOperation(
-            userWalletId = WALLET_ID,
-            payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = safeTx),
-        )
+        val actual = repository.rejectOperation(userWalletId = WALLET_ID, operationId = OPERATION_ID)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        assertThat(bodySlot.captured).isEqualTo(
-            RejectJointOperationRequest(
-                payload = RejectJointOperationRequest.Payload(
-                    operationId = OPERATION_ID,
-                    safeTx = SafeTxConverter().convertBack(safeTx),
-                ),
-            ),
-        )
+        coVerify(exactly = 1) {
+            jointAccountApi.rejectJointOperation(walletId = WALLET_ID.stringValue, operationId = OPERATION_ID)
+        }
     }
 
     @Test
     fun `GIVEN the threshold was reached first WHEN reject THEN ThresholdReached`() = runTest {
         // Arrange
-        coEvery { jointAccountApi.rejectJointOperation(any(), any(), any()) } returns
+        coEvery { jointAccountApi.rejectJointOperation(any(), any()) } returns
             errorResponse(ApiResponseError.HttpException.Code.CONFLICT)
 
         // Act
-        val actual = repository.rejectOperation(
-            userWalletId = WALLET_ID,
-            payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = createSafeTx()),
-        )
+        val actual = repository.rejectOperation(userWalletId = WALLET_ID, operationId = OPERATION_ID)
 
         // Assert
         assertThat(actual).isEqualTo(JointOperationRejectError.ThresholdReached.left())
