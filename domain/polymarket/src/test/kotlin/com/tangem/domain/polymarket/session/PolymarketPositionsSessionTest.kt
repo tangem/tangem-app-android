@@ -100,6 +100,48 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
     }
 
     @Test
+    fun `GIVEN the positions changed before the first resume WHEN the session resumes THEN it fetches them once`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            fetch = { page(listOf(position())) }
+            invalidator.invalidate(wallet)
+
+            // Act
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Assert
+            assertThat(requests.map { it.second }).containsExactly(0)
+        }
+
+    @Test
+    fun `GIVEN loaded pages changed while paused WHEN the session resumes THEN it reloads from the start only`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            fetch = { offset -> page(listOf(position(assetId = "at$offset")), last = offset == 30) }
+            session.resume(backgroundScope)
+            runCurrent()
+            session.loadMore()
+            runCurrent()
+            session.pause()
+            val reloaded = position(assetId = "reloaded")
+            fetch = { page(listOf(reloaded)) }
+
+            // Act
+            invalidator.invalidate(wallet)
+            runCurrent()
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Assert
+            assertThat(session.state.value)
+                .isEqualTo(PolymarketPositionsState(listOf(reloaded), PaginationStatus.EndOfPagination))
+            assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+        }
+
+    @Test
     fun `GIVEN a paused session WHEN the positions are invalidated THEN nothing is fetched`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
