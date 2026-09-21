@@ -65,7 +65,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
 
         // Act
         isReloaded = true
-        invalidator.invalidate(wallet)
+        positionsUpdater.triggerUpdate(wallet)
         runCurrent()
 
         // Assert
@@ -88,7 +88,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
 
         // Act
         isReloaded = true
-        invalidator.invalidate(wallet)
+        positionsUpdater.triggerUpdate(wallet)
         runCurrent()
         session.resume(backgroundScope)
         runCurrent()
@@ -105,7 +105,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             // Arrange
             val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
             fetch = { page(listOf(position())) }
-            invalidator.invalidate(wallet)
+            positionsUpdater.triggerUpdate(wallet)
 
             // Act
             session.resume(backgroundScope)
@@ -130,7 +130,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             fetch = { page(listOf(reloaded)) }
 
             // Act
-            invalidator.invalidate(wallet)
+            positionsUpdater.triggerUpdate(wallet)
             runCurrent()
             session.resume(backgroundScope)
             runCurrent()
@@ -151,7 +151,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         session.pause()
 
         // Act
-        invalidator.invalidate(wallet)
+        positionsUpdater.triggerUpdate(wallet)
         runCurrent()
 
         // Assert
