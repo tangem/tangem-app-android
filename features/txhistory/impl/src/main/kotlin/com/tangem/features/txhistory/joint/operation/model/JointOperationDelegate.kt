@@ -34,8 +34,8 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 /**
- * Only an operation in [JointOperation.Status.AWAITING_SIGNATURES] is exposed: one past the threshold is already an
- * ordinary unconfirmed transaction with nothing left to sign.
+ * An operation is exposed while the backend lists it: awaiting signatures, or past the threshold and on its way to
+ * the network. A status this build does not know is hidden rather than guessed at.
  */
 @Suppress("LongParameterList")
 internal class JointOperationDelegate @Inject constructor(
@@ -134,7 +134,7 @@ internal class JointOperationDelegate @Inject constructor(
 
         val operation = jointAccount.inFlightOperations.values
             .firstOrNull { it.operationId == operationId }
-            ?.takeIf { it.status == JointOperation.Status.AWAITING_SIGNATURES }
+            ?.takeIf { it.status != JointOperation.Status.UNKNOWN }
             ?: return null
 
         val safeAddress = jointAccount.safeAddress ?: return null
@@ -167,6 +167,7 @@ internal class JointOperationDelegate @Inject constructor(
             ),
             ownAddress = ownerAddress,
             initiator = operation.initiator,
+            isSending = operation.status == JointOperation.Status.PENDING,
         )
     }
 }
