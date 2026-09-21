@@ -22,6 +22,7 @@ import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.DeviceRegistrationError
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -43,6 +44,7 @@ internal class DefaultDeviceRegistrar(
     // Lazy to break the DeviceRegistrar ↔ SessionTokenRefresher DI cycle (the refresher depends on
     // Lazy<DeviceRegistrar> for its "device not found" re-registration path).
     private val sessionTokenRefresher: Lazy<SessionTokenRefresher>,
+    private val walletRegistrar: WalletRegistrar,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DeviceRegistrar {
 
@@ -65,9 +67,19 @@ internal class DefaultDeviceRegistrar(
     override suspend fun reregister(): Either<DeviceRegistrationError, Unit> = withContext(dispatchers.io) {
         mutex.withLock {
             either {
-                // The local flag is stale (backend lost the device record). Clear it up front so
-                // runRegister doesn't short-circuit, and so a failed attempt self-heals on the next
-                // launch's register() call.
+                // The old device record — and every wallet binding on it — is gone server-side, so the
+                // local wallet-registration markers are stale. Drop them FIRST, as a required step: bail on
+                // failure BEFORE resetting the device flag, so the device stays marked registered and this
+                // reregister (with the clear) is re-attempted on the next "device not found" refresh —
+                // instead of a later register() recovering the device while these markers stay stale and
+                // keep the wallets skipped as "already registered".
+                runSuspendCatching { walletRegistrar.clearRegistrations() }
+                    .onFailure { e ->
+                        TangemLogger.e("Failed to clear wallet registrations on re-register", e)
+                        raise(DeviceRegistrationError.PersistenceFailed(e))
+                    }
+                // The local flag is stale (backend lost the device record). Clear it so runRegister
+                // doesn't short-circuit and re-runs the actual device registration.
                 runSuspendCatching {
                     appPreferencesStore.store(key = AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY, value = false)
                 }.onFailure { e ->
