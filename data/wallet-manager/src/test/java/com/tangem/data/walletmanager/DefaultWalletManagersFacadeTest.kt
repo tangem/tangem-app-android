@@ -9,15 +9,16 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * A joint account is a Safe contract: the facade never derives a key or builds a wallet manager for its network.
- * An update attempt crashes a tester build and is refused quietly in a release one — that test follows the build
- * it runs in; a read-only lookup gets `null` in every build, so that staking or WalletConnect cannot bring the app down.
+ * A joint network reads through the Safe wallet manager, so without the wallet behind it there is nothing to build:
+ * an update is unreachable and a lookup gets `null`, in every build.
  */
 internal class DefaultWalletManagersFacadeTest {
 
@@ -26,7 +27,6 @@ internal class DefaultWalletManagersFacadeTest {
 
     private val facade = DefaultWalletManagersFacade(
         walletManagersStore = walletManagersStore,
-        externalAddressBalanceProvidersStore = ExternalAddressBalanceProvidersStore(),
         userWalletsListRepository = userWalletsListRepository,
         assetLoader = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -47,35 +47,29 @@ internal class DefaultWalletManagersFacadeTest {
     }
 
     @Test
-    fun `GIVEN joint network WHEN update THEN refused before any lookup`() = runTest {
-        // Act
-        val actual = runCatching {
-            facade.update(userWalletId = userWalletId, network = jointNetwork, extraTokens = emptySet(), xpub = null)
-        }
+    fun `GIVEN joint network of a wallet the app does not hold WHEN update THEN unreachable without a manager`() =
+        runTest {
+            // Arrange
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
 
-        // Assert
-        if (BuildConfig.TESTER_MENU_ENABLED) {
-            assertThat(actual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
-        } else {
-            assertThat(actual.getOrNull()).isEqualTo(UpdateWalletManagerResult.Unreachable())
+            // Act
+            val actual = facade.update(userWalletId = userWalletId, network = jointNetwork, extraTokens = emptySet())
+
+            // Assert
+            assertThat(actual).isEqualTo(UpdateWalletManagerResult.Unreachable())
+            verify { walletManagersStore wasNot Called }
         }
-        verify {
-            userWalletsListRepository wasNot Called
-            walletManagersStore wasNot Called
-        }
-    }
 
     @Suppress("DEPRECATION")
     @Test
-    fun `GIVEN joint network WHEN getOrCreateWalletManager THEN null without a lookup in any build`() = runTest {
+    fun `GIVEN joint network of a wallet the app does not hold WHEN getOrCreateWalletManager THEN null`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
+
         // Act
         val actual = facade.getOrCreateWalletManager(userWalletId = userWalletId, network = jointNetwork)
 
         // Assert
         assertThat(actual).isNull()
-        verify {
-            userWalletsListRepository wasNot Called
-            walletManagersStore wasNot Called
-        }
     }
 }
