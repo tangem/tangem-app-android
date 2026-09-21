@@ -45,6 +45,7 @@ class SubmitPredictionClaimInteractor(
     private val redeemRepository: PolymarketRedeemRepository,
     private val polymarketRepository: PolymarketRepository,
     private val signer: PolymarketTypedDataSigner,
+    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
 
     /**
@@ -66,8 +67,7 @@ class SubmitPredictionClaimInteractor(
             .getOrElse { raise(PredictionClaimFailure.NonceUnavailable) }
             .toString()
 
-        val deadline = PolymarketRelayerDeadline.fromNow()
-        ensure(!PolymarketRelayerDeadline.isExpired(deadline)) { PredictionClaimFailure.Expired }
+        val deadline = PolymarketRelayerDeadline.fromNow(nowMillis = currentTimeMillis())
 
         val signature = signer.signRelayedBatch(
             userWalletId = params.userWalletId,
@@ -78,6 +78,9 @@ class SubmitPredictionClaimInteractor(
                 calls = listOf(call),
             ),
         ).getOrElse { raise(PredictionClaimFailure.SigningFailed(it)) }
+        ensure(!PolymarketRelayerDeadline.isExpired(deadline, nowMillis = currentTimeMillis())) {
+            PredictionClaimFailure.Expired
+        }
 
         val batch = PredictionClaimBatch(
             ownerAddress = params.ownerAddress,
