@@ -57,6 +57,7 @@ import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
@@ -69,6 +70,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceeds
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -389,7 +392,7 @@ internal class PlacePredictionModelTest {
 
         // Assert
         assertThat((model.uiState.value.order as OrderSideUM.Buy).balance).isNull()
-        assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
+        assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
         assertThat(model.uiState.value.amountCaption).isNotInstanceOf(AmountCaptionUM.Shortfall::class.java)
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
@@ -532,7 +535,7 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN quote loaded WHEN read THEN headline is the expectation AND floor is the guarantee`() = runTest {
+    fun `GIVEN quote loaded WHEN read THEN headline is the expectation`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
@@ -544,7 +547,6 @@ internal class PlacePredictionModelTest {
         // Assert
         val quote = model.uiState.value.quote as QuoteUM.Content
         assertThat(quote.expected).isEqualTo(BigDecimal("23.8"))
-        assertThat(quote.guaranteed).isEqualTo(BigDecimal("23.2"))
 
         model.onDestroy()
     }
@@ -1286,6 +1288,122 @@ internal class PlacePredictionModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FeeSheet {
+
+        @Test
+        fun `GIVEN a priced quote WHEN fee clicked THEN fee sheet opens with the breakdown`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            val expected = PredictionFeeSheetUMConverter.convert(
+                quote = createQuote(),
+                slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
+                tokenSymbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+            )
+
+            // Act
+            model.onFeeClick()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(Unit)
+            assertThat(model.feeSheetState.value).isEqualTo(expected)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no quote WHEN fee clicked THEN fee sheet stays closed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeClick()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a submission in flight WHEN fee clicked THEN fee sheet stays closed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onScreenShown()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+                // Act
+                model.onFeeClick()
+                createPlaceResult().right()
+            }
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee sheet open WHEN order submission starts THEN fee sheet closes`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onScreenShown()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            model.onFeeClick()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee sheet open WHEN the quote stops being priced THEN fee sheet closes`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+                createQuote().right(),
+                createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
+            )
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            model.onFeeClick()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            assertThat(model.feeSheetState.value).isNull()
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class TradingAllowance {
 
         @Test
@@ -1352,7 +1470,7 @@ internal class PlacePredictionModelTest {
             assertThat(model.uiState.value.market.title).isEqualTo("Will the event happen?")
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
             assertThat(model.uiState.value.market.entryPriceCents).isEqualTo(35)
-            assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("USDC")
+            assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
             coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
 
             model.onDestroy()
@@ -1413,12 +1531,41 @@ internal class PlacePredictionModelTest {
             }
             val order = model.uiState.value.order as OrderSideUM.Sell
             assertThat(order.proceeds).isEqualTo(
-                SharesProceedsUM.Content(expected = BigDecimal("11.01"), guaranteed = BigDecimal("10.88")),
+                SharesProceedsUM.Content(expected = BigDecimal("11.01")),
             )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
 
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN the whole position below the minimum WHEN quoted THEN it is priced AND signed as a full close`() =
+            runTest {
+                // Arrange
+                coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
+                    createPosition(size = BigDecimal("3")).right()
+                coEvery { getQuoteUseCase(request = any()) } returns
+                    createSellQuote(shares = BigDecimal("3")).copy(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onScreenShown()
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val request = slot<PredictionSignRequest>()
+                coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
+
+                // Act
+                val quoted = model.uiState.value
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(quoted.amountValue).isEqualTo("3.00")
+                assertThat(quoted.isPrimaryButtonEnabled).isTrue()
+                assertThat(quoted.market.outcomePriceCents).isEqualTo(42)
+                assertThat(request.captured.isFullClose).isTrue()
+
+                model.onDestroy()
+            }
 
         @Test
         fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read AND the order is signed as a sell`() =
@@ -1764,8 +1911,8 @@ internal class PlacePredictionModelTest {
                 ),
             ),
             network = network,
-            name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
-            symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
+            name = PolymarketCollateralCurrencyFactory.COLLATERAL_NAME,
+            symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,
             iconUrl = null,
             isCustom = false,

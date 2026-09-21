@@ -15,6 +15,7 @@ import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -213,6 +214,28 @@ internal class DefaultGoogleDriveTokenProviderTest {
     }
 
     @Test
+    fun `GIVEN cached token WHEN switchAccount THEN token dropped before the account is pinned`() = runTest {
+        // Arrange — a token cached for the previous account must not survive the switch
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        coEvery { authorizer.clearToken(TOKEN) } just Runs
+        every { authorizer.clearAuthorization() } just Runs
+        every { authorizer.selectAccount(ACCOUNT_NAME) } just Runs
+        provider.getAccessToken()
+
+        // Act
+        provider.switchAccount(ACCOUNT_NAME)
+        provider.getAccessToken()
+
+        // Assert
+        coVerifyOrder {
+            authorizer.clearToken(TOKEN)
+            authorizer.clearAuthorization()
+            authorizer.selectAccount(ACCOUNT_NAME)
+        }
+        coVerify(exactly = 2) { authorizer.authorize(any(), any()) }
+    }
+
+    @Test
     fun `GIVEN cached token WHEN signOut THEN token revoked AND dropped AND state cleared`() = runTest {
         // Arrange
         coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
@@ -253,6 +276,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
 
     private companion object {
         const val TOKEN = "ya29.access-token"
+        const val ACCOUNT_NAME = "user@gmail.com"
         val DRIVE_FILE_SCOPE = GoogleAuthScope("https://www.googleapis.com/auth/drive.file")
     }
 }

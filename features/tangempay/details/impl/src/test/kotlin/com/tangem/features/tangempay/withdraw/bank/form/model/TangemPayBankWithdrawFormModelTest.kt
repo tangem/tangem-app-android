@@ -29,8 +29,8 @@ import org.junit.jupiter.api.Test
 internal class TangemPayBankWithdrawFormModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val onBack: (Map<BankWithdrawFormField, String>) -> Unit = mockk(relaxed = true)
-    private val onContinue: (Map<BankWithdrawFormField, String>) -> Unit = mockk(relaxed = true)
+    private val onBack: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
+    private val onContinue: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onOpenSelector: (CountrySelectorConfig) -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
@@ -190,10 +190,17 @@ internal class TangemPayBankWithdrawFormModelTest {
         // Assert
         verify(exactly = 1) {
             onContinue(
-                mapOf(
-                    BankWithdrawFormField.AccountNumber to "4830019271",
-                    BankWithdrawFormField.RoutingNumber to "021000021",
-                    BankWithdrawFormField.FirstName to "Basit",
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.AccountNumber to "4830019271",
+                        BankWithdrawFormField.RoutingNumber to "021000021",
+                        BankWithdrawFormField.FirstName to "Basit",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.AccountNumber to "",
+                        BankWithdrawFormField.RoutingNumber to "",
+                        BankWithdrawFormField.FirstName to "",
+                    ),
                 ),
             )
         }
@@ -223,10 +230,17 @@ internal class TangemPayBankWithdrawFormModelTest {
         // Assert
         verify(exactly = 1) {
             onBack(
-                mapOf(
-                    BankWithdrawFormField.AccountNumber to "",
-                    BankWithdrawFormField.RoutingNumber to "",
-                    BankWithdrawFormField.FirstName to "Basit",
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.AccountNumber to "",
+                        BankWithdrawFormField.RoutingNumber to "",
+                        BankWithdrawFormField.FirstName to "Basit",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.AccountNumber to "",
+                        BankWithdrawFormField.RoutingNumber to "",
+                        BankWithdrawFormField.FirstName to "",
+                    ),
                 ),
             )
         }
@@ -320,8 +334,8 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onRegionSelected(field = BankWithdrawFormField.Region, region = texas)
 
         // THEN
-        assertThat(selectorField(model, BankWithdrawFormField.Country).value).isEqualTo("US")
-        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("TX")
+        assertThat(selectorField(model, BankWithdrawFormField.Country).value).isEqualTo("United States")
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("Texas")
         model.onDestroy()
     }
 
@@ -348,9 +362,9 @@ internal class TangemPayBankWithdrawFormModelTest {
 
         // THEN
         assertThat(anyField(model, BankWithdrawFormField.Region)).isInstanceOf(FieldUM.Selector::class.java)
-        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("CA")
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("California")
         assertThat(anyField(model, BankWithdrawFormField.Region).placeholder)
-            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_placeholder_region))
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_placeholder_not_selected))
         model.onDestroy()
     }
 
@@ -393,9 +407,15 @@ internal class TangemPayBankWithdrawFormModelTest {
         // THEN
         verify(exactly = 1) {
             onContinue(
-                mapOf(
-                    BankWithdrawFormField.Country to "MC",
-                    BankWithdrawFormField.Region to "Bavaria",
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "MC",
+                        BankWithdrawFormField.Region to "Bavaria",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "Monaco",
+                        BankWithdrawFormField.Region to "",
+                    ),
                 ),
             )
         }
@@ -413,7 +433,7 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
 
         // THEN
-        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("CA")
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("California")
         model.onDestroy()
     }
 
@@ -463,6 +483,217 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN US picked WHEN country selected THEN country field shows the country name`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // Assert
+        assertThat(selectorField(model, BankWithdrawFormField.Country).value).isEqualTo("United States")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN region picked WHEN region selected THEN region field shows the region name`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = texas)
+
+        // Assert
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("Texas")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bank region picked WHEN region selected THEN bank region field shows the state name`() {
+        // Arrange
+        val model = createModel(formFields = bankAddressFields)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = newYork)
+
+        // Assert
+        assertThat(selectorField(model, BankWithdrawFormField.BankRegion).value).isEqualTo("New York")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft code without a name WHEN model created THEN the code is shown`() {
+        // Arrange
+        draft.value = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            newRecipient = NewRecipientDraft(fields = mapOf(BankWithdrawFormField.Country to "US")),
+        )
+
+        // Act
+        val model = createModel(formFields = addressFields)
+
+        // Assert
+        assertThat(selectorField(model, BankWithdrawFormField.Country).value).isEqualTo("US")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN draft with names WHEN model recreated THEN names still shown`() {
+        // Arrange
+        setDraftWithPickedCalifornia()
+
+        // Act
+        val model = createModel(formFields = addressFields)
+
+        // Assert
+        assertThat(selectorField(model, BankWithdrawFormField.Country).value).isEqualTo("United States")
+        assertThat(selectorField(model, BankWithdrawFormField.Region).value).isEqualTo("California")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN picked country WHEN continue clicked THEN codes and names reported`() {
+        // Arrange
+        val model = createModel(formFields = usAddressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+        fill(model, BankWithdrawFormField.PostalCode, "90001")
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                        BankWithdrawFormField.PostalCode to "90001",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                        BankWithdrawFormField.PostalCode to "",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN free-text region typed WHEN continue clicked THEN region name is blank`() {
+        // Arrange
+        setDraftWithPickedCalifornia()
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
+        fill(model, BankWithdrawFormField.Region, "Bavaria")
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "MC",
+                        BankWithdrawFormField.Region to "Bavaria",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "Monaco",
+                        BankWithdrawFormField.Region to "",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN picked US region WHEN country changed to a country without regions THEN region name cleared`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = california)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
+        model.uiState.value.onBackClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onBack(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "MC",
+                        BankWithdrawFormField.Region to "",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "Monaco",
+                        BankWithdrawFormField.Region to "",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN picked US region WHEN region typed by hand THEN the old name is gone`() {
+        // Arrange
+        setDraftWithPickedCalifornia()
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = monaco, region = null)
+
+        // Act
+        fill(model, BankWithdrawFormField.Region, "Bavaria")
+
+        // Assert
+        assertThat(anyField(model, BankWithdrawFormField.Region).value).isEqualTo("Bavaria")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN stale region name in draft WHEN region typed THEN the name is cleared`() {
+        // Arrange
+        draft.value = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            newRecipient = NewRecipientDraft(
+                fields = mapOf(
+                    BankWithdrawFormField.Country to "MC",
+                    BankWithdrawFormField.Region to "CA",
+                ),
+                displayNames = mapOf(BankWithdrawFormField.Region to "California"),
+            ),
+        )
+        val model = createModel(formFields = addressFields)
+
+        // Act
+        fill(model, BankWithdrawFormField.Region, "Bavaria")
+        val typedRegion = textField(model, BankWithdrawFormField.Region).value
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        assertThat(typedRegion).isEqualTo("Bavaria")
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "MC",
+                        BankWithdrawFormField.Region to "Bavaria",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "",
+                        BankWithdrawFormField.Region to "",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
     private fun fill(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField, value: String) {
         textField(model, field).onValueChange(value)
     }
@@ -475,6 +706,22 @@ internal class TangemPayBankWithdrawFormModelTest {
 
     private fun selectorField(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField) =
         model.uiState.value.fields.filterIsInstance<FieldUM.Selector>().first { it.field == field }
+
+    private fun setDraftWithPickedCalifornia() {
+        draft.value = BankWithdrawDraft(
+            entry = BankWithdrawEntry.NewPersonal,
+            newRecipient = NewRecipientDraft(
+                fields = mapOf(
+                    BankWithdrawFormField.Country to "US",
+                    BankWithdrawFormField.Region to "CA",
+                ),
+                displayNames = mapOf(
+                    BankWithdrawFormField.Country to "United States",
+                    BankWithdrawFormField.Region to "California",
+                ),
+            ),
+        )
+    }
 
     private fun setDraftFirstName(value: String) {
         val draftFields = mapOf(BankWithdrawFormField.FirstName to value)
@@ -515,5 +762,6 @@ internal class TangemPayBankWithdrawFormModelTest {
         val monaco = TangemPayCountry("MC", "Monaco", null, isSuggested = false, hasRegions = false)
         val california = TangemPayRegion(code = "CA", name = "California", isSuggested = true)
         val texas = TangemPayRegion(code = "TX", name = "Texas", isSuggested = false)
+        val newYork = TangemPayRegion(code = "NY", name = "New York", isSuggested = false)
     }
 }

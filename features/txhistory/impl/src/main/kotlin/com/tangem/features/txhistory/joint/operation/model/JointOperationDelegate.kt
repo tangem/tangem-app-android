@@ -1,23 +1,32 @@
 package com.tangem.features.txhistory.joint.operation.model
 
 import arrow.core.Either
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AddressBookOpenMode
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
+import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.joint.ownJointAccount
+import com.tangem.features.txhistory.model.ContactCandidate
+import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
+import com.tangem.features.txhistory.model.isSavableAsContact
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,11 +34,12 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 /**
- * Only an operation in [JointOperation.Status.AWAITING_SIGNATURES] is exposed: one past the threshold is already an
- * ordinary unconfirmed transaction with nothing left to sign.
+ * An operation is exposed while the backend lists it: awaiting signatures, or past the threshold and on its way to
+ * the network. A status this build does not know is hidden rather than guessed at.
  */
 @Suppress("LongParameterList")
 internal class JointOperationDelegate @Inject constructor(
+    private val router: Router,
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val transferResolver: JointOperationTransferResolver,
@@ -38,7 +48,34 @@ internal class JointOperationDelegate @Inject constructor(
     private val signJointOperationUseCase: SignJointOperationUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val rejectJointOperationUseCase: RejectJointOperationUseCase,
+    private val isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
+    private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
 ) {
+
+    /**
+     * Creating a contact is offered for a foreign [recipient] this wallet has not saved yet — never for one of the
+     * user's own addresses — and only while the address book can be written to: one stored by a newer build cannot.
+     */
+    fun canCreateContact(userWalletId: UserWalletId, recipient: String, network: Network): Flow<Boolean> = combine(
+        flow = ownerLookupProducer(userWalletId),
+        flow2 = isAddressBookCompatibleUseCase(userWalletId),
+    ) { lookup, isCompatible ->
+        isCompatible &&
+            lookup.isSavableAsContact(ContactCandidate(address = recipient, networkId = network.id.rawId))
+    }
+
+    fun openContactCreation(address: String, network: Network) {
+        router.push(
+            AppRoute.AddressBook(
+                AddressBookOpenMode.WithContactCreation(
+                    address = address,
+                    networkId = network.rawId,
+                    source = AddressBookOpenMode.ContactCreationSource.TransactionDetails,
+                ),
+            ),
+        )
+    }
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointOperationState?> {
         if (currency.network.derivationPath !is Network.DerivationPath.Joint) return flowOf(null)
@@ -76,6 +113,14 @@ internal class JointOperationDelegate @Inject constructor(
         sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
     }
 
+    suspend fun reject(
+        state: JointOperationState,
+        network: Network,
+        operationId: String,
+    ): Either<JointOperationRejectError, Unit> {
+        return rejectJointOperationUseCase(account = state.account, network = network, operationId = operationId)
+    }
+
     private suspend fun resolve(
         account: Account.Joint?,
         currency: CryptoCurrency,
@@ -89,7 +134,7 @@ internal class JointOperationDelegate @Inject constructor(
 
         val operation = jointAccount.inFlightOperations.values
             .firstOrNull { it.operationId == operationId }
-            ?.takeIf { it.status == JointOperation.Status.AWAITING_SIGNATURES }
+            ?.takeIf { it.status != JointOperation.Status.UNKNOWN }
             ?: return null
 
         val safeAddress = jointAccount.safeAddress ?: return null
@@ -121,6 +166,8 @@ internal class JointOperationDelegate @Inject constructor(
                 ownerAddress = ownerAddress,
             ),
             ownAddress = ownerAddress,
+            initiator = operation.initiator,
+            isSending = operation.status == JointOperation.Status.PENDING,
         )
     }
 }

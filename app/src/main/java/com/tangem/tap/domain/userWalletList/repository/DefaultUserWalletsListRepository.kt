@@ -32,6 +32,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
@@ -72,6 +73,7 @@ internal class DefaultUserWalletsListRepository(
     private val userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+    private val walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -163,6 +165,12 @@ internal class DefaultUserWalletsListRepository(
         updateWallets { currentWallets ->
             val wallets = currentWallets.orEmpty()
             wallets.addOrReplace(userWallet) { it.walletId == userWallet.walletId }
+        }
+
+        if (oldUserWallet == null && userWallet is UserWallet.Hot) {
+            // A newly added hot wallet is registered with the Tangem Auth Service right away, while its
+            // unlock context is fresh (fire-and-forget, idempotent per walletId).
+            walletRegistrationTrigger.get().onMobileWalletCreated(userWallet)
         }
 
         if (isFirstWallet) {
@@ -307,6 +315,7 @@ internal class DefaultUserWalletsListRepository(
                     .doOnSuccess { sensitiveInfo ->
                         updateWallets { it?.updateWith(sensitiveInfo) }
                         trackSignInEvent(userWallet, AnalyticsParam.SignInType.AccessCode)
+                        registerUnlockedMobileWallets(listOf(userWallet.walletId))
                     }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
@@ -390,6 +399,7 @@ internal class DefaultUserWalletsListRepository(
                 selectedUserWallet.value?.let {
                     trackSignInEvent(it, AnalyticsParam.SignInType.Biometric)
                 }
+                registerUnlockedMobileWallets(unlockedWalletsIds)
             }
             .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
     }
@@ -532,6 +542,21 @@ internal class DefaultUserWalletsListRepository(
         hotWalletsToDelete.forEach { wallet ->
             hotWalletRepository.setAccessCodeSkipped(wallet.walletId, false) // In case the wallet is added again
             tangemHotSdk.delete(wallet.hotWalletId)
+        }
+    }
+
+    /**
+     * Retries mobile registration for the now-unlocked hot wallets among [unlockedWalletIds]. Unlock
+     * is the only point where Password/Biometry wallets gain a silent signing context, so a
+     * registration that failed at creation is re-attempted here. Fire-and-forget, idempotent per wallet.
+     */
+    private fun registerUnlockedMobileWallets(unlockedWalletIds: Collection<UserWalletId>) {
+        val unlockedHotWallets = userWallets.value
+            ?.filterIsInstance<UserWallet.Hot>()
+            ?.filter { it.walletId in unlockedWalletIds && !it.isLocked }
+            .orEmpty()
+        if (unlockedHotWallets.isNotEmpty()) {
+            walletRegistrationTrigger.get().onMobileWalletsUnlocked(unlockedHotWallets)
         }
     }
 

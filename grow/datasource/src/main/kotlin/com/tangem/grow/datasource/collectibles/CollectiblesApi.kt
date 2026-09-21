@@ -5,6 +5,7 @@ import com.tangem.grow.datasource.collectibles.models.request.GenerateTxRequestB
 import com.tangem.grow.datasource.collectibles.models.request.SubmitTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.response.GenerateTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
+import com.tangem.grow.datasource.collectibles.models.response.MachineNftsResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachinesResponse
 import com.tangem.grow.datasource.collectibles.models.response.SubmitTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.model.MachineDTO
@@ -37,6 +38,18 @@ interface CollectiblesApi {
     @RequiresSessionAuth
     @GET("api/v1/machine/{externalId}")
     suspend fun getMachine(@Path("externalId") externalId: String): ApiResponse<MachineDTO>
+
+    /**
+     * Collectibles currently in the prize pool of the machine [externalId], paged by [page] (1-based).
+     */
+    @RequiresSessionAuth
+    @GET("api/v1/machine/{externalId}/nfts")
+    suspend fun getMachineNfts(
+        @Header("user-id") userWalletId: String,
+        @Path("externalId") externalId: String,
+        @Query("page") page: Int? = null,
+        @Query("limit") limit: Int? = null,
+    ): ApiResponse<MachineNftsResponse>
 
     @RequiresSessionAuth
     @POST("api/v1/collectible/generateTx")
