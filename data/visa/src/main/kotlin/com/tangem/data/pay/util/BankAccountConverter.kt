@@ -10,8 +10,9 @@ import com.tangem.spend.datasource.pay.models.response.BankAccountsResponse
 import com.tangem.utils.converter.Converter
 
 /**
- * Converts a saved recipient, or `null` when the backend describes it too partially to send money to — a
- * missing routing number or an unknown rail would only surface as a failed order at the very end of the wizard.
+ * Converts a saved recipient, or `null` when the backend describes it too partially to tell it apart from another
+ * one — without a name or an account number there is nothing to show in the list. Everything else is kept as sent:
+ * the customer picks such a recipient by name, and the backend is the one that validates the transfer.
  */
 internal object BankAccountConverter : Converter<BankAccountsResponse.BankAccount, BankAccount?> {
 
@@ -29,21 +30,21 @@ internal object BankAccountConverter : Converter<BankAccountsResponse.BankAccoun
     private fun convertDetails(value: BankAccountsResponse.Details): BankAccountDetails? {
         val beneficiary = value.beneficiary?.let(::convertBeneficiary) ?: return null
         return BankAccountDetails(
-            currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
-            rail = convertRail(value.rail) ?: return null,
+            currency = value.currency?.takeIf(String::isNotBlank),
+            rail = convertRail(value.rail),
             isThirdParty = value.isThirdParty == true,
             beneficiary = beneficiary,
-            beneficiaryAddress = value.beneficiaryAddress?.let(::convertAddress) ?: return null,
-            bankName = value.bankName?.takeIf(String::isNotBlank) ?: return null,
-            bankAddress = value.bankAddress?.let(::convertAddress) ?: return null,
+            beneficiaryAddress = value.beneficiaryAddress?.let(::convertAddress),
+            bankName = value.bankName?.takeIf(String::isNotBlank),
+            bankAddress = value.bankAddress?.let(::convertAddress),
             accountNumber = value.accountNumber?.takeIf(String::isNotBlank) ?: return null,
-            routingNumber = value.routingNumber?.takeIf(String::isNotBlank) ?: return null,
+            routingNumber = value.routingNumber?.takeIf(String::isNotBlank),
             accountType = convertAccountType(value.bankAccountType),
         )
     }
 
     private fun convertBeneficiary(value: BankAccountsResponse.Beneficiary): Beneficiary? {
-        val business = value.name?.takeIf(String::isNotBlank)
+        val business = value.businessName?.takeIf(String::isNotBlank)
         if (value.type.equalsIgnoringCase(BUSINESS_TYPE)) {
             return business?.let(Beneficiary::Business)
         }
@@ -56,6 +57,7 @@ internal object BankAccountConverter : Converter<BankAccountsResponse.BankAccoun
         }
     }
 
+    /** An address the app cannot fill completely is no address at all: the order payload needs every line of it. */
     private fun convertAddress(value: BankAccountsResponse.Address): PostalAddress? {
         return PostalAddress(
             line1 = value.line1?.takeIf(String::isNotBlank) ?: return null,
@@ -73,10 +75,10 @@ internal object BankAccountConverter : Converter<BankAccountsResponse.BankAccoun
         else -> null
     }
 
-    /** Wire transfers carry no account type; the backend contract treats a missing one as a checking account. */
-    private fun convertAccountType(value: String?): BankAccountType = when {
+    private fun convertAccountType(value: String?): BankAccountType? = when {
+        value.equalsIgnoringCase(BankAccountType.CHECKING.name) -> BankAccountType.CHECKING
         value.equalsIgnoringCase(BankAccountType.SAVINGS.name) -> BankAccountType.SAVINGS
-        else -> BankAccountType.CHECKING
+        else -> null
     }
 
     private fun displayName(beneficiary: Beneficiary): String = when (beneficiary) {

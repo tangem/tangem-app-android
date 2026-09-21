@@ -2,7 +2,10 @@ package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.pay.model.bankofframp.OfframpFee
+import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.domain.pay.model.bankofframp.OfframpToken
 import com.tangem.spend.datasource.pay.models.response.BankOfframpOptionsResponse
 import org.junit.jupiter.api.Test
@@ -16,17 +19,26 @@ internal class BankOfframpOptionsConverterTest {
         val actual = BankOfframpOptionsConverter.convert(result())
 
         // Assert
-        val source = actual.sources.single()
-        val destination = actual.destinations.single()
-        assertThat(source.networkName).isEqualTo("polygon-pos")
-        assertThat(source.chainId).isEqualTo(137L)
-        assertThat(source.isTestnet).isFalse()
-        assertThat(source.tokens).containsExactly(OfframpToken(symbol = "USDC", contractAddress = CONTRACT))
-        assertThat(destination.rail).isEqualTo(BankRail.ACH)
-        assertThat(destination.fee.amount).isEqualTo(BigDecimal("1.50"))
-        assertThat(destination.fee.currency).isEqualTo("USD")
-        assertThat(destination.fee.description).isEqualTo("ACH offramp fee")
-        assertThat(destination.eta).isEqualTo(OfframpEta(minDays = 1, maxDays = 3))
+        assertThat(actual.sources).containsExactly(
+            OfframpSource(
+                networkName = "polygon-pos",
+                isTestnet = false,
+                chainId = 137L,
+                tokens = listOf(OfframpToken(symbol = "USDC", contractAddress = CONTRACT)),
+            ),
+        )
+        assertThat(actual.destinations).containsExactly(
+            OfframpDestination(
+                rail = BankRail.ACH,
+                fee = OfframpFee(
+                    name = "ACH",
+                    amount = BigDecimal("1.50"),
+                    currency = "USD",
+                    description = "ACH offramp fee",
+                ),
+                eta = OfframpEta(minDays = 1, maxDays = 3),
+            ),
+        )
     }
 
     @Test
@@ -36,6 +48,47 @@ internal class BankOfframpOptionsConverterTest {
 
         // Assert
         assertThat(actual.destinations.single().rail).isEqualTo(BankRail.WIRE)
+    }
+
+    @Test
+    fun `GIVEN FEDWIRE rail WHEN convert THEN mapped to WIRE`() {
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = listOf(destination(rail = "FEDWIRE"))))
+
+        // Assert
+        assertThat(actual.destinations.single().rail).isEqualTo(BankRail.WIRE)
+    }
+
+    @Test
+    fun `GIVEN WIRE and FEDWIRE destinations WHEN convert THEN a single wire destination kept`() {
+        // Arrange
+        val destinations = listOf(destination(rail = "WIRE", feeName = "Wire"), destination(rail = "FEDWIRE"))
+
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = destinations))
+
+        // Assert
+        assertThat(actual.destinations).containsExactly(
+            OfframpDestination(
+                rail = BankRail.WIRE,
+                fee = OfframpFee(
+                    name = "Wire",
+                    amount = BigDecimal("1.50"),
+                    currency = "USD",
+                    description = "ACH offramp fee",
+                ),
+                eta = OfframpEta(minDays = 1, maxDays = 3),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN blank fee name WHEN convert THEN fee name is null`() {
+        // Act
+        val actual = BankOfframpOptionsConverter.convert(result(destinations = listOf(destination(feeName = " "))))
+
+        // Assert
+        assertThat(actual.destinations.single().fee.name).isNull()
     }
 
     @Test
@@ -107,18 +160,22 @@ internal class BankOfframpOptionsConverterTest {
         tokens = tokens,
     )
 
-    private fun destination(rail: String? = "ACH", hasFee: Boolean = true, hasEta: Boolean = true) =
-        BankOfframpOptionsResponse.Destination(
-            rail = rail,
-            fee = BankOfframpOptionsResponse.Fee(
-                name = "ACH",
-                calculationType = "FIXED",
-                amount = BigDecimal("1.50"),
-                currency = "USD",
-                description = "ACH offramp fee",
-            ).takeIf { hasFee },
-            eta = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3).takeIf { hasEta },
-        )
+    private fun destination(
+        rail: String? = "ACH",
+        feeName: String? = "ACH",
+        hasFee: Boolean = true,
+        hasEta: Boolean = true,
+    ) = BankOfframpOptionsResponse.Destination(
+        rail = rail,
+        fee = BankOfframpOptionsResponse.Fee(
+            name = feeName,
+            calculationType = "FIXED",
+            amount = BigDecimal("1.50"),
+            currency = "USD",
+            description = "ACH offramp fee",
+        ).takeIf { hasFee },
+        eta = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3).takeIf { hasEta },
+    )
 
     private companion object {
         const val CONTRACT = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"

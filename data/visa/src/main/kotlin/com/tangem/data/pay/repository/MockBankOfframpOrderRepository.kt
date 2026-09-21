@@ -112,7 +112,7 @@ internal class MockBankOfframpOrderRepository(
         val beneficiary = beneficiary
         return when {
             routingNumber == INVALID_ROUTING_NUMBER -> BankOfframpError.Validation
-            beneficiaryAddress.countryCode != SUPPORTED_COUNTRY_CODE -> BankOfframpError.RecipientRegionUnsupported
+            beneficiaryAddress?.countryCode != SUPPORTED_COUNTRY_CODE -> BankOfframpError.RecipientRegionUnsupported
             beneficiary is Beneficiary.Business && beneficiary.name.equals(BLOCKED_BUSINESS_NAME, ignoreCase = true) ->
                 BankOfframpError.BusinessUnsupported
             else -> null

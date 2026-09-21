@@ -87,4 +87,23 @@ internal class BankAccountDetailsFormValuesTest {
         // Assert
         assertThat(actual).containsExactlyEntriesIn(values)
     }
+
+    @Test
+    fun `GIVEN details without a bank address WHEN toFormValues THEN bank rows absent`() {
+        // Arrange
+        val details = bankAccount().details.copy(bankName = null, bankAddress = null)
+
+        // Act
+        val actual = details.toFormValues()
+
+        // Assert
+        assertThat(actual.keys).containsNoneOf(
+            BankWithdrawFormField.BankName,
+            BankWithdrawFormField.BankRegion,
+            BankWithdrawFormField.BankCity,
+            BankWithdrawFormField.BankAddressLine1,
+            BankWithdrawFormField.BankPostalCode,
+        )
+        assertThat(actual).containsEntry(BankWithdrawFormField.AccountNumber, "0000000000")
+    }
 }

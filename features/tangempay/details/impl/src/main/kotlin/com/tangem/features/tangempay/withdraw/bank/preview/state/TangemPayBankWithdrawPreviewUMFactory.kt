@@ -64,7 +64,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val source = draft.source ?: return null
         val destination = draft.destination ?: return null
         val currency = Currency.getInstance(destination.fee.currency)
-        val railTitle = destination.rail.toTitleReference()
+        val railTitle = destination.toTitleReference()
         val fee = destination.fee.toText()
         return TransferUM(
             amount = AmountCardUM(
@@ -105,16 +105,19 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
             recipientFields.filterNot { it in ACCOUNT_FIELDS } to BankWithdrawEditTarget.RecipientDetails,
             BankWithdrawFormFields.bankDetails to BankWithdrawEditTarget.BankDetails,
         )
-        return cards.map { (fields, target) ->
+        return cards.mapNotNull { (fields, target) ->
+            val rows = fields.mapNotNull { field ->
+                // Only a recipient added here carries names; a saved one comes back with codes and keeps them.
+                val shown = displayNames[field]?.takeIf(String::isNotBlank) ?: values[field]
+                // A saved recipient can come back missing a value, and an empty row reads as missing data.
+                shown
+                    ?.takeIf(String::isNotBlank)
+                    ?.let { value -> DetailRowUM(label = field.label, value = value) }
+            }
+            // A saved recipient can miss every value of a card, and a rowless card only adds a gap to the screen.
+            if (rows.isEmpty()) return@mapNotNull null
             RecipientCardUM(
-                rows = fields.mapNotNull { field ->
-                    // Only a recipient added here carries names; a saved one comes back with codes and keeps them.
-                    val shown = displayNames[field]?.takeIf(String::isNotBlank) ?: values[field]
-                    // A saved recipient can come back missing a value, and an empty row reads as missing data.
-                    shown
-                        ?.takeIf(String::isNotBlank)
-                        ?.let { value -> DetailRowUM(label = field.label, value = value) }
-                }.toImmutableList(),
+                rows = rows.toImmutableList(),
                 onClick = if (isEditable) {
                     { callbacks.onEditClick(target) }
                 } else {
