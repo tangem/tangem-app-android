@@ -7,7 +7,6 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -56,7 +55,7 @@ internal class ColdWalletRegistrationSigner @Inject constructor(
 
         if (wallet.curve != EllipticCurve.Secp256k1) {
             analyticsEventHandler.send(
-                TechAnalyticsEvent.UnexpectedWalletCurve(
+                BackendAuthAnalyticsEvent.UnexpectedWalletCurve(
                     userWalletId = UserWalletIdBuilder.card(card).build()?.stringValue.orEmpty(),
                     cardId = card.cardId,
                 ),
