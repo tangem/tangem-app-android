@@ -52,11 +52,18 @@ internal class TangemPayOnboardingStarterTest {
     private val loadingChanges = mutableListOf<Boolean>()
     private var exitCount = 0
     private var requestedWalletsIds: List<UserWalletId>? = null
+    private val approvedCustomers = mutableListOf<UserWalletId>()
 
     private val callbacks = TangemPayOnboardingStarter.Callbacks(
         onLoadingChange = { isLoading -> loadingChanges += isLoading },
         onExit = { exitCount++ },
         onWalletSelectorRequested = { walletsIds -> requestedWalletsIds = walletsIds },
+        onCustomerAlreadyApproved = { userWalletId -> approvedCustomers += userWalletId },
+    )
+
+    private val callbacksWithoutApprovedHandler = TangemPayOnboardingStarter.Callbacks(
+        onLoadingChange = { isLoading -> loadingChanges += isLoading },
+        onExit = { exitCount++ },
     )
 
     private val starter = TangemPayOnboardingStarter(
@@ -85,6 +92,7 @@ internal class TangemPayOnboardingStarterTest {
         loadingChanges.clear()
         exitCount = 0
         requestedWalletsIds = null
+        approvedCustomers.clear()
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns Unit.right()
         coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.PENDING).right()
@@ -213,18 +221,83 @@ internal class TangemPayOnboardingStarterTest {
                 }
             }
 
+    }
+
+    @Nested
+    inner class ApprovedCustomer {
+
         @Test
-        fun `GIVEN KYC approved WHEN startOnboarding with campaign THEN exit AND no order`() = runTest {
+        fun `GIVEN approved customer and a handler WHEN checkCustomerInfo THEN handler invoked instead of exit`() =
+            runTest {
+                // Arrange
+                givenApprovedCustomer()
+
+                // Act
+                starter.checkCustomerInfo(
+                    userWalletId = USER_WALLET_ID,
+                    mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                    campaignKey = CAMPAIGN_KEY,
+                    callbacks = callbacks,
+                )
+
+                // Assert
+                assertThat(approvedCustomers).containsExactly(USER_WALLET_ID)
+                assertThat(exitCount).isEqualTo(0)
+                coVerify(exactly = 0) { produceInitialDataUseCase(any()) }
+                coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN approved customer and a handler WHEN startOnboarding THEN handler invoked after re-auth`() =
+            runTest {
+                // Arrange
+                givenApprovedCustomer()
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+
+                // Assert
+                assertThat(approvedCustomers).containsExactly(USER_WALLET_ID)
+                assertThat(exitCount).isEqualTo(0)
+                coVerify(exactly = 1) { produceInitialDataUseCase(USER_WALLET_ID) }
+                coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
+                coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN approved customer and no handler WHEN checkCustomerInfo THEN exit`() = runTest {
             // Arrange
-            coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.APPROVED).right()
+            givenApprovedCustomer()
 
             // Act
-            starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
+            starter.checkCustomerInfo(
+                userWalletId = USER_WALLET_ID,
+                mode = TangemPayOnboardingStarter.Mode.StartOnboarding,
+                campaignKey = null,
+                callbacks = callbacksWithoutApprovedHandler,
+            )
 
             // Assert
             assertThat(exitCount).isEqualTo(1)
-            coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-            coVerify(exactly = 0) { repository.createOrder(any(), any(), any(), any()) }
+            assertThat(approvedCustomers).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN approved customer and no handler WHEN startOnboarding THEN exit`() = runTest {
+            // Arrange
+            givenApprovedCustomer()
+
+            // Act
+            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacksWithoutApprovedHandler)
+
+            // Assert
+            assertThat(exitCount).isEqualTo(1)
+            assertThat(approvedCustomers).isEmpty()
+        }
+
+        private fun givenApprovedCustomer() {
+            coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.APPROVED).right()
         }
     }
 
@@ -246,17 +319,34 @@ internal class TangemPayOnboardingStarterTest {
             }
 
         @Test
-        fun `GIVEN initial data fails WHEN startOnboarding THEN loading reset AND KYC not opened`() = runTest {
-            // Arrange
-            coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns RuntimeException("boom").left()
+        fun `GIVEN initial data fails WHEN startOnboarding THEN snackbar shown AND loading reset AND KYC not opened`() =
+            runTest {
+                // Arrange
+                coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns RuntimeException("boom").left()
 
-            // Act
-            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
 
-            // Assert
-            assertThat(loadingChanges).containsExactly(true, false).inOrder()
-            verify(exactly = 0) { router.replaceAll(*anyVararg()) }
-        }
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+                assertThat(loadingChanges).containsExactly(true, false).inOrder()
+                verify(exactly = 0) { router.replaceAll(*anyVararg()) }
+            }
+
+        @Test
+        fun `GIVEN customer info fails after re-auth WHEN startOnboarding THEN snackbar shown AND KYC not opened`() =
+            runTest {
+                // Arrange
+                coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
+
+                // Act
+                starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
+
+                // Assert
+                verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+                assertThat(loadingChanges).containsExactly(true, false).inOrder()
+                verify(exactly = 0) { router.replaceAll(*anyVararg()) }
+            }
     }
 
     @Nested
