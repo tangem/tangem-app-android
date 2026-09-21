@@ -1,6 +1,6 @@
 # Polymarket — data
 
-Implementations behind the `domain/polymarket` interfaces: four remote services, the signer that talks to
+Implementations behind the `domain/polymarket` interfaces: five remote services, the signer that talks to
 the card / hot wallet, the stores, and the error resolvers that turn HTTP into typed domain errors. One
 Android-library module (`:data:polymarket`), Hilt, Moshi via `grow/datasource`.
 
@@ -15,12 +15,12 @@ signing) and `features/polymarket/CLAUDE.md` (screens, routes, flows).
 Retrofit interfaces and DTOs are **not** here — they live in `grow/datasource`
 (`com.tangem.grow.datasource.polymarket.*`), base URLs in `grow/datasource/.../config/Polymarket*.kt`.
 
-## The four remote services
+## The five remote services
 
 | Service | Retrofit interface | Base URL | Auth | Repository |
 |---|---|---|---|---|
-| **BFF** (Tangem backend, `api/predictions/v1/…`) | `PolymarketApi` | Tangem API | `wallet-id` header where a wallet is involved | `DefaultPolymarketRepository`, `DefaultPolymarketPositionsRepository`, `DefaultPolymarketWithdrawRepository` |
-| **CLOB** (`clob.polymarket.com`) | `PolymarketClobApi` | `PolymarketClob` | L1 (`POLY_ADDRESS/SIGNATURE/TIMESTAMP/NONCE`) for `auth/*`; L2 HMAC (`POLY_*` ×5) for everything else | `DefaultPolymarketRepository` |
+| **BFF** (Tangem backend, `api/predictions/v1/…`) | `PolymarketApi` | Tangem API | wallet identity per endpoint: `wallet-id` header on `/positions*` and `/withdraw*`, `walletId` query on `GET /wallet` / `GET /configuration`, `walletId` in the `/wallet/deploy` body, `ownerAddress` / `depositWalletAddress` elsewhere | `DefaultPolymarketRepository`, `DefaultPolymarketPositionsRepository`, `DefaultPolymarketWithdrawRepository` |
+| **CLOB** (`clob.polymarket.com`) | `PolymarketClobApi` | `PolymarketClob` | L1 (`POLY_ADDRESS/SIGNATURE/TIMESTAMP/NONCE`) for `auth/*`; L2 HMAC (`POLY_*` ×5) for balance and orders; `GET price` is public, no headers | `DefaultPolymarketRepository` |
 | **Bridge** (`bridge.polymarket.com`) | `PolymarketBridgeApi` | `PolymarketBridge` | none | `DefaultPolymarketBridgeRepository` |
 | **Relayer** (`relayer-v2.polymarket.com`) | `PolymarketRelayerApi` | `PolymarketRelayer` | none | `DefaultPolymarketRepository.getRelayerNonce` |
 | **Web** (`polymarket.com/api/geoblock`) | `PolymarketGeoApi` | `PolymarketWeb` | none | `DefaultPolymarketRepository.checkGeoblock` |
@@ -65,8 +65,11 @@ date here; when you ingest a change, update this table in the same PR.
   `DW_BEACON_INIT_PREFIX + beacon + DW_BEACON_INIT_SUFFIX` as the CREATE2 init code; verified against 60
   consecutive real factory deployments. `POST /wallet/deploy` answers `400 "depositWalletAddress does not
   match the derived deposit wallet"` when this is wrong.
-- **`walletId` is `UserWalletId.stringValue`** (64 hex, no `0x`) everywhere: `/wallet/deploy`, the
-  `wallet-id` header, bridge `deposit`/`withdraw`, `/withdraw`. It is a correlation key, not a derivation input.
+- **`walletId` is `UserWalletId.stringValue`** (64 hex, no `0x`) wherever the BFF takes it: the `/wallet/deploy`
+  body, `GET /wallet?walletId`, `GET /configuration`, the `wallet-id` header on `/positions*` and `/withdraw*`.
+  It is a correlation key, not a derivation input. The bridge never receives it: `deposit` / `withdraw`
+  carry addresses plus the `X-Builder-Code` header, and that builder code is what `GET /configuration`
+  returns for the wallet id.
 - **L2 HMAC signs `timestamp + method + requestPath [+ body]`** with the base64url-decoded secret
   (`PolymarketHmacSigner`, mirrors `py-clob-client`). `requestPath` is signed verbatim — leading slash, no
   query string for the endpoints checked so far (`PolymarketL2HeaderBuilder`). The passphrase travels in
@@ -101,7 +104,10 @@ date here; when you ingest a change, update this table in the same PR.
 | | `404` | `NotFound` | tracker stops, record kept |
 
 Network and timeout exceptions map to the `Network` variant of each hierarchy; anything unmapped becomes an
-`Unknown`/`Unexpected` carrying the numeric code and body. All resolvers are total — repositories never throw.
+`Unknown`/`Unexpected` carrying the numeric code and body. Every `Either`-returning call is total. Two
+deliberate exceptions: the pagination fetchers (events, positions) throw into the pagination layer, which is
+that layer's contract; and `POST order` maps network / timeout to `Ambiguous`, not `Network`, because the
+order may have been placed.
 
 ## Stores and what survives a restart
 
@@ -144,8 +150,8 @@ withdrawal, encoded and then decoded back so the signed calldata is proven to ma
 that never opened the feature. It reads only stored addresses (invariant 1 in the domain file), maps
 `PolymarketWalletStatus` to `PredictionAccountStatusValue`, and on any failure leaves the cached value in
 place and marks it un-refreshed — it never writes "empty" on the strength of a failed question. The
-`byWalletId` read (`GET /wallet` with `wallet-id` header) serves a wallet whose owner address this device has
-never derived. `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting
+`byWalletId` read (`GET /wallet?walletId`, `getWalletStatusByWalletId`) serves a wallet whose owner address
+this device has never derived. `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting
 with `Pending` so the combined account list is never stalled by this account.
 
 ## DI
