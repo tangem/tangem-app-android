@@ -6,6 +6,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.interactor.PredictionClaimFailure
@@ -109,7 +111,12 @@ internal class PolymarketPositionResultModelTest {
 
             // Assert
             assertThat(model.uiState.value.action)
-                .isEqualTo(PolymarketPositionResultUM.Action.Claim(isInProgress = false))
+                .isEqualTo(
+                    PolymarketPositionResultUM.Action.Claim(
+                        isInProgress = false,
+                        label = resourceReference(R.string.prediction_position_result_claim_action),
+                    ),
+                )
             verify(exactly = 0) { messageSender.send(any()) }
             verify(exactly = 0) { router.pop() }
         }
