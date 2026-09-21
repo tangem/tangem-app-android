@@ -89,7 +89,7 @@ internal class PolymarketPositionResultModel @Inject constructor(
                     showError(R.string.prediction_claim_error_generic)
                 }
             is PredictionClaimFailure.Unconfirmed -> {
-                TangemLogger.i("The claim ${failure.receipt.transactionId} did not settle in the screen's window")
+                TangemLogger.i("The claim ${failure.receipt.transactionId} was accepted but is unconfirmed")
                 positionsUpdateEmitter.triggerUpdate(params.userWalletId)
                 showError(R.string.prediction_claim_error_unconfirmed)
             }
