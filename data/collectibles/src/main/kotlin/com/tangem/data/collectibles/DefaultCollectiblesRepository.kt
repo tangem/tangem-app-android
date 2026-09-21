@@ -2,9 +2,14 @@ package com.tangem.data.collectibles
 
 import com.tangem.data.collectibles.converter.MachineCategoriesConverter
 import com.tangem.data.collectibles.converter.MachineConverter
+import com.tangem.data.collectibles.converter.MachineNftConverter
 import com.tangem.data.collectibles.converter.TurboModeConverter
+import com.tangem.data.collectibles.pagination.CollectibleGachaMachineNftsBatchFetcher
 import com.tangem.data.collectibles.pagination.CollectibleGachaMachinesBatchFetcher
+import com.tangem.data.collectibles.store.CollectiblesMachineStore
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchFlow
+import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchingContext
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchFlow
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchingContext
 import com.tangem.domain.collectibles.models.*
@@ -21,6 +26,7 @@ import javax.inject.Inject
 
 internal class DefaultCollectiblesRepository @Inject constructor(
     private val collectiblesApi: CollectiblesApi,
+    private val machineStore: CollectiblesMachineStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesRepository {
 
@@ -28,8 +34,11 @@ internal class DefaultCollectiblesRepository @Inject constructor(
         MachineCategoriesConverter.convert(collectiblesApi.getCategories().getOrThrow())
     }
 
-    override suspend fun getMachine(externalId: String) = withContext(dispatchers.io) {
-        MachineConverter.convert(collectiblesApi.getMachine(externalId).getOrThrow())
+    override suspend fun getMachine(externalId: String, skipCache: Boolean) = withContext(dispatchers.io) {
+        val cached = if (skipCache) null else machineStore.getSyncOrNull(externalId)
+
+        cached ?: MachineConverter.convert(collectiblesApi.getMachine(externalId).getOrThrow())
+            .also { machineStore.store(machines = listOf(it)) }
     }
 
     override fun getMachinesBatchFlow(
@@ -41,6 +50,29 @@ internal class DefaultCollectiblesRepository @Inject constructor(
             context = context,
             generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
             batchFetcher = CollectibleGachaMachinesBatchFetcher(batchSize = batchSize, fetchPage = ::fetchMachinesPage),
+        ).toBatchFlow()
+    }
+
+    override fun getMachineNftsBatchFlow(
+        context: CollectibleGachaMachineNftsBatchingContext,
+        batchSize: Int,
+        userWalletId: UserWalletId,
+    ): CollectibleGachaMachineNftsBatchFlow {
+        return BatchListSource(
+            fetchDispatcher = dispatchers.io,
+            context = context,
+            generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+            batchFetcher = CollectibleGachaMachineNftsBatchFetcher(
+                batchSize = batchSize,
+                fetchPage = { config, page, limit ->
+                    fetchMachineNftsPage(
+                        config = config,
+                        page = page,
+                        limit = limit,
+                        userWalletId = userWalletId,
+                    )
+                },
+            ),
         ).toBatchFlow()
     }
 
@@ -81,10 +113,33 @@ internal class DefaultCollectiblesRepository @Inject constructor(
             cursor = cursor,
         ).getOrThrow()
 
+        val machines = response.machines.map(MachineConverter::convert)
+        machineStore.store(machines = machines)
+
         return CollectibleGachaMachinesPage(
-            collectibleGachaMachines = response.machines.map(MachineConverter::convert),
+            collectibleGachaMachines = machines,
             cursor = response.cursor,
             hasNext = response.hasNext,
+        )
+    }
+
+    private suspend fun fetchMachineNftsPage(
+        config: CollectibleGachaMachineNftsListConfig,
+        page: Int,
+        limit: Int,
+        userWalletId: UserWalletId,
+    ): CollectibleGachaMachineNftsPage {
+        val response = collectiblesApi.getMachineNfts(
+            userWalletId = userWalletId.stringValue,
+            externalId = config.externalId,
+            page = page,
+            limit = limit,
+        ).getOrThrow()
+
+        return CollectibleGachaMachineNftsPage(
+            nfts = response.nfts.map(MachineNftConverter::convert),
+            page = response.page,
+            hasMore = response.hasMore,
         )
     }
 }
