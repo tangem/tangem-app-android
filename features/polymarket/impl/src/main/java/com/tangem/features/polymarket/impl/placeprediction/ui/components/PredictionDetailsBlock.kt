@@ -23,13 +23,10 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 
-/**
- * Fee and slippage, both read-only here: the fee breakdown popup and the slippage sheet belong to the
- * amount step, so this screen states the figures the order will be placed with and nothing else.
- */
 @Composable
-internal fun PredictionDetailsBlock(state: PlacePredictionUM, modifier: Modifier = Modifier) {
+internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             TangemRow(
@@ -51,6 +48,7 @@ internal fun PredictionDetailsBlock(state: PlacePredictionUM, modifier: Modifier
                     }
                 },
                 endSlot = { DetailChevron() },
+                onClick = onFeeClick.takeIf { state.canShowFeeBreakdown() },
             )
             PredictionSlippageRow(slippage = state.slippage)
         }
