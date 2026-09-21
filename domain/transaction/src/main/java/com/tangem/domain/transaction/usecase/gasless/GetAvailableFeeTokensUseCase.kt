@@ -12,26 +12,25 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.raiseIllegalStateError
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.lib.crypto.BlockchainUtils.isTron
-import com.tangem.utils.coroutines.runSuspendCatching
 import java.math.BigDecimal
 
 class GetAvailableFeeTokensUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
-    private val tronGaslessTransactionRepository: TronGaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
-    private val walletManagersFacade: WalletManagersFacade,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     /**
      * Retrieves available tokens for gasless fee payment.
+     *
+     * @param sentCurrencyStatus currency the transaction transfers. Read by the Tron path only, whose
+     * compensation is charged in the sent token itself.
      *
      * @param nativeFeeAmount fee the transaction would cost when paid in the native coin, as reported by
      * [com.tangem.domain.transaction.models.TransactionFeeExtended.nativeFee]. When it is known and the
@@ -43,6 +42,7 @@ class GetAvailableFeeTokensUseCase(
     suspend operator fun invoke(
         userWallet: UserWallet,
         network: Network,
+        sentCurrencyStatus: CryptoCurrencyStatus,
         nativeFeeAmount: BigDecimal? = null,
     ): Either<GetFeeError, AvailableFeeTokens> {
         return either {
@@ -66,7 +66,14 @@ class GetAvailableFeeTokensUseCase(
                         return@either AvailableFeeTokens(
                             tokens = buildList {
                                 add(nativeCurrencyStatus)
-                                addAll(getTronGaslessTokens(userWallet, network, userCurrenciesStatuses))
+                                addAll(
+                                    getTronGaslessTokens(
+                                        userWallet = userWallet,
+                                        network = network,
+                                        sentCurrencyStatus = sentCurrencyStatus,
+                                        userCurrenciesStatuses = userCurrenciesStatuses,
+                                    ),
+                                )
                             },
                         )
                     }
@@ -124,27 +131,32 @@ class GetAvailableFeeTokensUseCase(
             .toList()
     }
 
+    /**
+     * The Tron gasless backend compensates the fee out of the sent token, so [sentCurrencyStatus] is the
+     * only token that can pay. Sponsorability is decided by [isTronGaslessSupportedUseCase] — the one the
+     * quote path uses — so the offered list and the quote cannot disagree.
+     */
     private suspend fun getTronGaslessTokens(
         userWallet: UserWallet,
         network: Network,
+        sentCurrencyStatus: CryptoCurrencyStatus,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
     ): List<CryptoCurrencyStatus> {
-        val isAccountActivated = walletManagersFacade.isTronAccountActivated(
+        val sentCurrency = sentCurrencyStatus.currency
+        if (sentCurrency.network.id != network.id) return emptyList()
+
+        val isSupported = isTronGaslessSupportedUseCase(
             userWalletId = userWallet.walletId,
             network = network,
+            currency = sentCurrency,
         )
-        if (!isAccountActivated) return emptyList()
+        if (!isSupported) return emptyList()
 
-        val supportedContracts = runSuspendCatching { tronGaslessTransactionRepository.getSupportedTokens() }
-            .getOrDefault(emptyList())
-            .map { it.contractAddress }
-            .toSet()
-        return userCurrenciesStatuses.filter { status ->
-            val token = status.currency
-            token is CryptoCurrency.Token &&
-                token.network.id == network.id &&
-                supportedContracts.contains(token.contractAddress)
-        }
+        // The caller's status is a screen-entry snapshot, so prefer the account list — but fall back to
+        // it, or the fee would be quoted in a token absent from the selector.
+        val freshStatus = userCurrenciesStatuses.firstOrNull { it.currency.id == sentCurrency.id }
+
+        return listOf(freshStatus ?: sentCurrencyStatus)
     }
 
     internal companion object {

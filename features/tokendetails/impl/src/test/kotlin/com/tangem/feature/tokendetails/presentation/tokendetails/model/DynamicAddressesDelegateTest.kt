@@ -359,6 +359,7 @@ internal class DynamicAddressesDelegateTest {
             assertThat(notEnoughFee.params).containsEntry("Source", "Dynamic Addresses")
             assertThat(notEnoughFee.params).containsEntry("Token", TOKEN_SYMBOL)
             assertThat(notEnoughFee.params).containsEntry("Blockchain", BLOCKCHAIN_NAME)
+            assertThat(notEnoughFee.params).containsEntry("Balance", "Full")
         }
 
     @Test
