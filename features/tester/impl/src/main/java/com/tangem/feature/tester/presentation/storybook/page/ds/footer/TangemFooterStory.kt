@@ -150,7 +150,7 @@ private fun Footer(state: TangemFooterStory, modifier: Modifier = Modifier) {
             extraTop = extraTop,
             buttonStart = {
                 TangemButton(
-                    variant = TangemButton.Variant.Material,
+                    variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X11,
                     iconStart = TangemIconUM.Icon(Icons.ic_arrow_left_20),
                     onClick = {},
@@ -198,11 +198,10 @@ private fun ActionsContent(actions: Actions) {
     }
 }
 
-/** Material variant on purpose: it blurs its backdrop, which is what the fade has to provide. */
 @Composable
 private fun SecondaryButton() {
     TangemButton(
-        variant = TangemButton.Variant.Material,
+        variant = TangemButton.Variant.Secondary,
         size = TangemButton.Size.X12,
         text = stringReference("Cancel"),
         onClick = {},
