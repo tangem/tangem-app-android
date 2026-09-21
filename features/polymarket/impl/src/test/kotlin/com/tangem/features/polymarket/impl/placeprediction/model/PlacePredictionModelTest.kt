@@ -1439,6 +1439,35 @@ internal class PlacePredictionModelTest {
         }
 
         @Test
+        fun `GIVEN the whole position below the minimum WHEN quoted THEN it is priced AND signed as a full close`() =
+            runTest {
+                // Arrange
+                coEvery { positionsRepository.getPosition(addresses = any(), id = any()) } returns
+                    createPosition(size = BigDecimal("3")).right()
+                coEvery { getQuoteUseCase(request = any()) } returns
+                    createSellQuote(shares = BigDecimal("3")).copy(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
+                val model = createModel(testScope = this, params = SELL_PARAMS)
+                advanceUntilIdle()
+                model.onScreenShown()
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val request = slot<PredictionSignRequest>()
+                coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
+
+                // Act
+                val quoted = model.uiState.value
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(quoted.amountValue).isEqualTo("3.00")
+                assertThat(quoted.isPrimaryButtonEnabled).isTrue()
+                assertThat(quoted.market.outcomePriceCents).isEqualTo(42)
+                assertThat(request.captured.isFullClose).isTrue()
+
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read AND the order is signed as a sell`() =
             runTest {
                 // Arrange
