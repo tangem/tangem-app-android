@@ -2892,7 +2892,6 @@
   <string name="tangempay_withdraw_bank_field_account_number">Account number</string>
   <string name="tangempay_withdraw_bank_field_bank_address_line1">Bank address line 1</string>
   <string name="tangempay_withdraw_bank_field_bank_city">Bank city</string>
-  <string name="tangempay_withdraw_bank_field_bank_country">Bank country</string>
   <string name="tangempay_withdraw_bank_field_bank_name">Bank name</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Bank region / state</string>
   <string name="tangempay_withdraw_bank_field_business_name">Business name</string>
@@ -2907,6 +2906,7 @@
   <string name="tangempay_withdraw_bank_placeholder_country">Eg., US</string>
   <string name="tangempay_withdraw_bank_placeholder_first_name">John</string>
   <string name="tangempay_withdraw_bank_placeholder_last_name">Doe</string>
+  <string name="tangempay_withdraw_bank_placeholder_not_selected">Not selected</string>
   <string name="tangempay_withdraw_bank_placeholder_region">Eg., CA</string>
   <string name="tangempay_withdraw_bank_placeholder_region_name">Eg., Bavaria</string>
   <string name="tangempay_withdraw_bank_recipient_business">Business</string>

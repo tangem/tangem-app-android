@@ -14,8 +14,8 @@ import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
-import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -60,8 +60,15 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         draft.update { it.copy(newRecipient = it.newRecipient.copy(accountType = accountType)) }
     }
 
-    fun onDetailsFilled(values: Map<BankWithdrawFormField, String>) {
-        draft.update { it.copy(newRecipient = it.newRecipient.copy(fields = it.newRecipient.fields + values)) }
+    fun onDetailsFilled(result: BankWithdrawFormResult) {
+        draft.update { current ->
+            current.copy(
+                newRecipient = current.newRecipient.copy(
+                    fields = current.newRecipient.fields + result.values,
+                    displayNames = current.newRecipient.displayNames + result.displayNames,
+                ),
+            )
+        }
     }
 
     fun onAmountConfirmed(result: BankWithdrawAmountResult) {
