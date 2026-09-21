@@ -103,7 +103,7 @@ fun TangemMessageBanner(
             TangemGlowRing(
                 modifier = Modifier.matchParentSize(),
                 variant = tokens.glowRing,
-                cornerRadius = 28.dp,
+                cornerRadius = if (isClickable) 24.dp else 28.dp,
             )
         }
     }
