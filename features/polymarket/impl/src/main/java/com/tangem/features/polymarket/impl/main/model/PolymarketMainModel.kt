@@ -375,7 +375,14 @@ internal class PolymarketMainModel @Inject constructor(
         modelScope.launch {
             listOf(
                 async { tradingAllowance.refresh() },
-                async { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(params.userWalletId)) },
+                async {
+                    predictionAccountStatusFetcher(
+                        PredictionAccountStatusFetcher.Params(
+                            userWalletId = params.userWalletId,
+                            mode = PredictionAccountStatusFetcher.Mode.FULL,
+                        ),
+                    )
+                },
             ).awaitAll()
             fundingRequisites.refresh()
 
