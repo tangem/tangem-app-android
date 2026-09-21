@@ -57,6 +57,7 @@ import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
+import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
@@ -69,6 +70,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceeds
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -1283,6 +1286,122 @@ internal class PlacePredictionModelTest {
         model.onDestroy()
     }
 
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FeeSheet {
+
+        @Test
+        fun `GIVEN a priced quote WHEN fee clicked THEN fee sheet opens with the breakdown`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            val expected = PredictionFeeSheetUMConverter.convert(
+                quote = createQuote(),
+                slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
+                tokenSymbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
+            )
+
+            // Act
+            model.onFeeClick()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(Unit)
+            assertThat(model.feeSheetState.value).isEqualTo(expected)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no quote WHEN fee clicked THEN fee sheet stays closed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+
+            // Act
+            model.onFeeClick()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a submission in flight WHEN fee clicked THEN fee sheet stays closed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onScreenShown()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+                // Act
+                model.onFeeClick()
+                createPlaceResult().right()
+            }
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee sheet open WHEN order submission starts THEN fee sheet closes`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onScreenShown()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            model.onFeeClick()
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN fee sheet open WHEN the quote stops being priced THEN fee sheet closes`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+                createQuote().right(),
+                createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
+            )
+            val model = createModel(testScope = this)
+            val slot = FakeSlotHost(model.feeSheetNavigation)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            model.onFeeClick()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            assertThat(model.feeSheetState.value).isNull()
+            assertThat(slot.configuration).isNull()
+
+            model.onDestroy()
+        }
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

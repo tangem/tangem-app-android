@@ -3,7 +3,6 @@ package com.tangem.features.polymarket.impl.placeprediction.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,12 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,12 +34,9 @@ import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.common.PolymarketLegalLine
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionIntents
-import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionDetailsBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
@@ -58,11 +51,6 @@ internal fun PlacePredictionSummaryContent(
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
-    var isFeeShown by rememberSaveable { mutableStateOf(false) }
-    val feeSheet = rememberFeeSheet(state)
-    LaunchedEffect(feeSheet == null) {
-        if (feeSheet == null) isFeeShown = false
-    }
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -80,14 +68,31 @@ internal fun PlacePredictionSummaryContent(
             )
         },
         overlay = { contentPadding ->
-            SummaryFooter(
-                state = state,
-                intents = intents,
+            OnboardingFooter(
                 contentPadding = contentPadding,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .onSizeChanged { footerHeight = it.height },
-            )
+            ) {
+                PolymarketLegalLine(
+                    onPolymarketTermsClick = intents::onPolymarketTermsClick,
+                    onTangemTermsClick = intents::onTangemTermsClick,
+                )
+                TangemButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    size = TangemButton.Size.X12,
+                    isLoading = state.submit !is SubmitUM.Idle,
+                    iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
+                    text = resourceReference(
+                        when (state.order) {
+                            is OrderSideUM.Buy -> R.string.prediction_place_button
+                            is OrderSideUM.Sell -> R.string.prediction_close_button
+                        },
+                    ),
+                    isEnabled = state.isPrimaryButtonEnabled,
+                    onClick = intents::onPlaceClick,
+                )
+            }
         },
     ) { contentPadding ->
         Column(
@@ -104,62 +109,13 @@ internal fun PlacePredictionSummaryContent(
                 order = state.order,
             )
             PredictionMarketBlock(state = state.market)
-            PredictionDetailsBlock(
-                state = state,
-                onFeeClick = if (feeSheet != null && state.submit is SubmitUM.Idle) {
-                    { isFeeShown = true }
-                } else {
-                    null
-                },
-            )
+            PredictionDetailsBlock(state = state, onFeeClick = intents::onFeeClick)
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
             )
             Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
         }
-    }
-    PredictionFeeSheet(state = feeSheet.takeIf { isFeeShown }, onDismiss = { isFeeShown = false })
-}
-
-@Composable
-private fun rememberFeeSheet(state: PlacePredictionUM): PredictionFeeSheetUM? =
-    remember(state.quote, state.slippage, state.collateral.tokenSymbol) {
-        (state.quote as? QuoteUM.Content)?.let { content ->
-            PredictionFeeSheetUMConverter.convert(
-                quote = content.signable.quote,
-                slippage = state.slippage,
-                tokenSymbol = state.collateral.tokenSymbol,
-            )
-        }
-    }
-
-@Composable
-private fun SummaryFooter(
-    state: PlacePredictionUM,
-    intents: PlacePredictionIntents,
-    contentPadding: PaddingValues,
-    modifier: Modifier = Modifier,
-) {
-    OnboardingFooter(contentPadding = contentPadding, modifier = modifier) {
-        PolymarketLegalLine(
-            onPolymarketTermsClick = intents::onPolymarketTermsClick,
-            onTangemTermsClick = intents::onTangemTermsClick,
-        )
-        TangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            size = TangemButton.Size.X12,
-            isLoading = state.submit !is SubmitUM.Idle,
-            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
-            text = resourceReference(
-                when (state.order) {
-                    is OrderSideUM.Buy -> R.string.prediction_place_button
-                    is OrderSideUM.Sell -> R.string.prediction_close_button
-                },
-            ),
-            isEnabled = state.isPrimaryButtonEnabled,
-            onClick = intents::onPlaceClick,
-        )
     }
 }
 
