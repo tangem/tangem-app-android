@@ -322,6 +322,30 @@ internal class PolymarketPositionsPreviewLoaderTest {
         assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
     }
 
+    @Test
+    fun `GIVEN a read in flight WHEN the positions are invalidated THEN the stale response is dropped`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        val delayed = CompletableDeferred<Unit>()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } coAnswers {
+            withContext(NonCancellable) { delayed.await() }
+            page.right()
+        }
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        coEvery { repository.getOpenPositions(addresses, 3, 0) } returns page.copy(positions = emptyList()).right()
+
+        // Act
+        invalidator.invalidate(userWalletId)
+        runCurrent()
+        delayed.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertThat(loader.state.value).isEqualTo(PolymarketPositionsPreviewUM.Content(persistentListOf()))
+        coVerify(exactly = 2) { repository.getOpenPositions(addresses, 3, 0) }
+    }
+
     private fun TestScope.createLoader(): PolymarketPositionsPreviewLoader {
         coEvery { deriveAddresses.stored(userWalletId) } returns addresses
         val dispatcher = StandardTestDispatcher(testScheduler)
