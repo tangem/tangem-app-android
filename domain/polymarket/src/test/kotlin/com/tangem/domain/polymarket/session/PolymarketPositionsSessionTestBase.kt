@@ -2,7 +2,7 @@ package com.tangem.domain.polymarket.session
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
-import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
+import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
@@ -36,7 +36,7 @@ internal abstract class PolymarketPositionsSessionTestBase {
     protected val deriveAddresses: DerivePolymarketAddressesUseCase = mockk()
     protected val wallet = UserWalletId("011")
     protected val addresses: PolymarketAddresses = mockk()
-    protected val invalidator = PredictionPositionsInvalidator()
+    protected val positionsUpdater = DefaultPredictionPositionsUpdater()
     protected val requests = mutableListOf<Pair<PolymarketPositionsListConfig, Int>>()
     protected var fetch: suspend (Int) -> BatchFetchResult<List<PolymarketPosition>> = { page() }
 
@@ -66,7 +66,7 @@ internal abstract class PolymarketPositionsSessionTestBase {
         return CreatePolymarketPositionsSessionUseCase(
             repository,
             deriveAddresses,
-            invalidator,
+            positionsUpdater,
             TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
         )
     }

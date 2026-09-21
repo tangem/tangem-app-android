@@ -11,7 +11,9 @@ import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.derivation.PolymarketDepositWalletDeriver
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
+import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
+import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
+import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateListener
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -62,18 +64,26 @@ internal object PolymarketDomainModule {
     fun provideCreatePolymarketPositionsSessionUseCase(
         repository: PolymarketPositionsRepository,
         deriveAddresses: DerivePolymarketAddressesUseCase,
-        invalidator: PredictionPositionsInvalidator,
+        updateListener: PredictionPositionsUpdateListener,
         dispatchers: CoroutineDispatcherProvider,
     ): CreatePolymarketPositionsSessionUseCase = CreatePolymarketPositionsSessionUseCase(
         repository = repository,
         deriveAddresses = deriveAddresses,
-        invalidator = invalidator,
+        updateListener = updateListener,
         dispatchers = dispatchers,
     )
 
     @Provides
     @Singleton
-    fun providePredictionPositionsInvalidator(): PredictionPositionsInvalidator = PredictionPositionsInvalidator()
+    fun provideDefaultPredictionPositionsUpdater(): DefaultPredictionPositionsUpdater = DefaultPredictionPositionsUpdater()
+
+    @Provides
+    @Singleton
+    fun providePredictionPositionsUpdateEmitter(impl: DefaultPredictionPositionsUpdater): PredictionPositionsUpdateEmitter = impl
+
+    @Provides
+    @Singleton
+    fun providePredictionPositionsUpdateListener(impl: DefaultPredictionPositionsUpdater): PredictionPositionsUpdateListener = impl
 
     @Provides
     @Singleton
