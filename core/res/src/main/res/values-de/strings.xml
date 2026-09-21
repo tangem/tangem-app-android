@@ -2744,7 +2744,6 @@
   <string name="tangempay_withdraw_bank_field_account_number">Kontonummer</string>
   <string name="tangempay_withdraw_bank_field_bank_address_line1">Bankadresszeile 1</string>
   <string name="tangempay_withdraw_bank_field_bank_city">Bankstadt</string>
-  <string name="tangempay_withdraw_bank_field_bank_country">Bankland</string>
   <string name="tangempay_withdraw_bank_field_bank_name">Name der Bank</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Bankregion / Bundesland</string>
   <string name="tangempay_withdraw_bank_field_business_name">Firmenname</string>
