@@ -12,6 +12,7 @@ import com.tangem.domain.polymarket.interactor.PredictionClaimFailure
 import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionResult
+import com.tangem.domain.polymarket.model.PolymarketRedeemError
 import com.tangem.domain.polymarket.model.PolymarketResolutionStatus
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionClaimReceipt
@@ -130,6 +131,41 @@ internal class PolymarketPositionResultModelTest {
             verify(exactly = 1) { messageSender.send(any()) }
             verify(exactly = 0) { router.pop() }
         }
+
+    @Test
+    fun `GIVEN the relayer refuses the claim WHEN it returns THEN the positions are invalidated and an alert is shown`() =
+        runTest {
+            // Arrange
+            val model = createModel()
+            coEvery { claimInteractor.claim(any()) } returns
+                PredictionClaimFailure.Rejected(PolymarketRedeemError.RelayerRejected(detail = "not claimable")).left()
+
+            // Act
+            model.onActionClick()
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { positionsUpdateEmitter.triggerUpdate(WALLET) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            verify(exactly = 0) { router.pop() }
+        }
+
+    @Test
+    fun `GIVEN the relayer is unreachable WHEN the claim returns THEN only an alert is shown`() = runTest {
+        // Arrange
+        val model = createModel()
+        coEvery { claimInteractor.claim(any()) } returns
+            PredictionClaimFailure.Rejected(PolymarketRedeemError.RelayerUnavailable).left()
+
+        // Act
+        model.onActionClick()
+        runCurrent()
+
+        // Assert
+        verify(exactly = 0) { positionsUpdateEmitter.triggerUpdate(any()) }
+        verify(exactly = 1) { messageSender.send(any()) }
+        verify(exactly = 0) { router.pop() }
+    }
 
     @Test
     fun `GIVEN a dismiss action WHEN tapped THEN the screen pops without claiming`() = runTest {
