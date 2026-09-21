@@ -134,7 +134,7 @@ internal class CommonNetworkStatusFetcherTest {
     }
 
     @Test
-    fun `GIVEN joint network with a Safe address WHEN fetch THEN updateJoint result is stored`() = runTest {
+    fun `GIVEN joint network with a Safe manager WHEN fetch THEN the update result is stored`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("011")
         val network = jointNetwork
@@ -160,42 +160,60 @@ internal class CommonNetworkStatusFetcherTest {
                 source = com.tangem.domain.models.StatusSource.ACTUAL,
             ),
         )
-        coEvery { walletManagersFacade.updateJoint(userWalletId, network, emptySet(), safeAddress) } returns updateResult
+        coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, network) } returns mockk()
+        coEvery { walletManagersFacade.update(userWalletId, network, emptySet()) } returns updateResult
         coEvery { networksStatusesStore.storeStatus(userWalletId = userWalletId, status = expectedStatus) } returns Unit
 
         // Act
-        val actual = fetcher.fetch(
-            userWalletId = userWalletId,
-            network = network,
-            networkCurrencies = setOf(coin),
-            safeAddress = safeAddress,
-        )
+        val actual = fetcher.fetch(userWalletId = userWalletId, network = network, networkCurrencies = setOf(coin))
 
         // Assert
         Truth.assertThat(actual).isEqualTo(Either.Right(Unit))
         coVerifyOrder {
-            walletManagersFacade.updateJoint(userWalletId, network, emptySet(), safeAddress)
+            walletManagersFacade.update(userWalletId, network, emptySet())
             networksStatusesStore.storeStatus(userWalletId = userWalletId, status = expectedStatus)
         }
-        coVerify(inverse = true) { walletManagersFacade.update(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN joint network without a Safe address WHEN fetch THEN nothing is fetched or stored`() = runTest {
+    fun `GIVEN joint network without a Safe manager yet WHEN fetch THEN nothing is fetched or stored`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("011")
         val coin = cryptoCurrencyFactory.ethereum.copy(network = jointNetwork)
+        coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, jointNetwork) } returns null
 
         // Act
         val actual = fetcher.fetch(userWalletId = userWalletId, network = jointNetwork, networkCurrencies = setOf(coin))
 
         // Assert
         Truth.assertThat(actual).isEqualTo(Either.Right(Unit))
-        verify {
-            walletManagersFacade wasNot Called
-            networksStatusesStore wasNot Called
-        }
+        coVerify(inverse = true) { walletManagersFacade.update(any(), any(), any(), any()) }
+        verify { networksStatusesStore wasNot Called }
     }
+
+    @Test
+    fun `GIVEN the Safe manager cannot be built WHEN fetch THEN the failure is returned and the cache downgraded`() =
+        runTest {
+            // Arrange
+            val userWalletId = UserWalletId("011")
+            val coin = cryptoCurrencyFactory.ethereum.copy(network = jointNetwork)
+            val cause = IllegalArgumentException("Unable to create the Safe wallet manager")
+            coEvery { walletManagersFacade.getOrCreateWalletManager(userWalletId, jointNetwork) } throws cause
+            coEvery {
+                networksStatusesStore.setSourceAsOnlyCache(userWalletId = userWalletId, network = jointNetwork)
+            } returns Unit
+
+            // Act
+            val actual = fetcher.fetch(
+                userWalletId = userWalletId,
+                network = jointNetwork,
+                networkCurrencies = setOf(coin),
+            )
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(Either.Left(cause))
+            coVerify(inverse = true) { walletManagersFacade.update(any(), any(), any(), any()) }
+        }
 
     private val jointNetwork = cryptoCurrencyFactory.ethereum.network.let { network ->
         val derivationPath = Network.DerivationPath.Joint(value = "m/44'/60'/888888'/0/0")
