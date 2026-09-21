@@ -9,11 +9,15 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * @property search hoisted state of the search field; [TangemSearch.State.isActive] also drives whether
  *   the host lays out its leading blocks at all.
+ * @property hasSearchableCatalogue the categories report a non-empty catalogue. Read from the categories
+ *   rather than from the packs on screen, so the search field survives a tab with no packs and every trip
+ *   through [ContentUM.Loading].
  */
 internal data class CollectiblesDiscoveryUM(
     val tabs: TabsUM,
     val content: ContentUM,
     val search: TangemSearch.State,
+    val hasSearchableCatalogue: Boolean = false,
 ) {
 
     @Immutable

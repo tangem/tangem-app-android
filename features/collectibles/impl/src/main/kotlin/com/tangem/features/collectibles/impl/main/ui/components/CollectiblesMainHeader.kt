@@ -111,6 +111,7 @@ internal fun CollectiblesCollectionWidget(state: CollectiblesMainUM.CollectionUM
     TangemSurface(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp)
             .padding(bottom = 24.dp),
         color = TangemTheme.colors3.bg.secondary,
         shape = RoundedCornerShape(24.dp),
@@ -157,7 +158,7 @@ internal fun CollectiblesCollectionWidget(state: CollectiblesMainUM.CollectionUM
 private fun CollectiblesMainHeaderPreview() {
     val state = CollectiblesMainPreviewData.default
     TangemThemePreviewRedesign {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column {
             CollectiblesBalanceBlock(balance = state.balance)
             CollectiblesActionsBlock(actions = state.actions)
             state.collection?.let { CollectiblesCollectionWidget(state = it) }

@@ -83,7 +83,7 @@ internal class CollectiblesDiscoveryModelTest {
         }
 
     @Test
-    fun `GIVEN categories fail WHEN model created THEN tabs are hidden and the catalogue is still requested`() =
+    fun `GIVEN categories fail WHEN model created THEN the screen reports an error and asks for no packs`() =
         runTest {
             // Arrange
             coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
@@ -92,9 +92,47 @@ internal class CollectiblesDiscoveryModelTest {
             val fixture = startModel()
 
             // Assert
-            assertThat(fixture.model.uiState.value.tabs).isEqualTo(CollectiblesDiscoveryUM.TabsUM.Hidden)
-            assertThat(fixture.actions).containsExactly(reload())
+            val state = fixture.model.uiState.value
+            assertThat(state.tabs).isEqualTo(CollectiblesDiscoveryUM.TabsUM.Hidden)
+            assertThat(state.content).isInstanceOf(CollectiblesDiscoveryUM.ContentUM.Error::class.java)
+            assertThat(fixture.actions).isEmpty()
         }
+
+    @Test
+    fun `GIVEN a non-empty catalogue WHEN categories load THEN it is searchable`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns createCategories(totalMachinesQuantity = 19).right()
+
+        // Act
+        val fixture = startModel()
+
+        // Assert
+        assertThat(fixture.model.uiState.value.hasSearchableCatalogue).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an empty catalogue WHEN categories load THEN it is not searchable`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns createCategories(totalMachinesQuantity = 0).right()
+
+        // Act
+        val fixture = startModel()
+
+        // Assert
+        assertThat(fixture.model.uiState.value.hasSearchableCatalogue).isFalse()
+    }
+
+    @Test
+    fun `GIVEN categories fail WHEN model created THEN the catalogue is not searchable`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
+
+        // Act
+        val fixture = startModel()
+
+        // Assert
+        assertThat(fixture.model.uiState.value.hasSearchableCatalogue).isFalse()
+    }
 
     @Test
     fun `GIVEN a category tab WHEN it is clicked THEN it is highlighted before its packs arrive`() = runTest {
@@ -268,24 +306,19 @@ internal class CollectiblesDiscoveryModelTest {
     }
 
     @Test
-    fun `GIVEN categories never loaded WHEN reload is clicked THEN they are retried along with the catalogue`() =
-        runTest {
-            // Arrange
-            coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
-            val fixture = startModel()
-            batchListState.value = createBatchListState(
-                status = PaginationStatus.InitialLoadingError(throwable = IllegalStateException("boom")),
-            )
-            advanceUntilIdle()
+    fun `GIVEN categories never loaded WHEN reload is clicked THEN only they are retried`() = runTest {
+        // Arrange
+        coEvery { getCategoriesUseCase() } returns CollectiblesError.Api(IllegalStateException("boom")).left()
+        val fixture = startModel()
 
-            // Act
-            fixture.model.clickReload()
-            advanceUntilIdle()
+        // Act
+        fixture.model.clickReload()
+        advanceUntilIdle()
 
-            // Assert
-            coVerify(exactly = 2) { getCategoriesUseCase() }
-            assertThat(fixture.actions).containsExactly(reload(), reload()).inOrder()
-        }
+        // Assert
+        coVerify(exactly = 2) { getCategoriesUseCase() }
+        assertThat(fixture.actions).isEmpty()
+    }
 
     @Test
     fun `GIVEN categories loaded WHEN reload is clicked THEN only the catalogue is retried`() = runTest {

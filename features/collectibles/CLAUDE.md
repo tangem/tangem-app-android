@@ -208,9 +208,11 @@ program config names; the SOL on the vault owner key is not part of it.
 a shared flow without a replay cache silently drops what it cannot deliver yet, and the catalogue never
 loads.
 
-**Category failure degrades, it does not fail.** `reloadMachines()` sits *outside* the `onRight` block in
-`loadCategories()`, so when categories fail the tabs stay empty and the catalogue still loads unfiltered.
-Do not "fix" this by moving the call inside the success branch.
+**The categories are a precondition, not a decoration.** `reloadMachines()` sits *inside* the `onRight`
+block in `loadCategories()`: a categories failure hides the tabs and puts the screen into `ContentUM.Error`
+without requesting a single pack. They carry `totalMachinesQuantity`, which tells an empty catalogue from an
+unreachable one and drives `hasSearchableCatalogue` (the search field's visibility), so a screen without them
+cannot be rendered honestly. `reload()` retries them, and the catalogue follows on success.
 
 **The transformer must `distinctBy(id)`.** The keyset cursor pages over a shifting order, so a machine that
 moved between two page requests arrives in two batches. Duplicate lazy-list keys crash the list.
