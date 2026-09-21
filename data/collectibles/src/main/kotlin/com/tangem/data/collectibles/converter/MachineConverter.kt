@@ -11,9 +11,9 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
         externalId = value.externalId,
         name = value.name,
         shortName = value.shortName,
-        price = value.price,
-        fee = value.fee,
-        feeAmount = value.feeAmount,
+        price = value.price.movePointLeft(2),
+        fee = value.fee.movePointLeft(2),
+        feeAmount = value.feeAmount.movePointLeft(2),
         contains = value.contains,
         instantBuybackPercent = value.instantBuybackPercent,
         lowThreshold = value.lowThreshold,
@@ -27,23 +27,23 @@ internal object MachineConverter : Converter<MachineDTO, CollectibleGachaMachine
 
     private fun MachineDTO.MachineOddsDTO.toDomain() = CollectibleGachaMachine.Odds(
         common = common,
+        uncommon = uncommon,
         rare = rare,
         epic = epic,
-        legendary = legendary,
     )
 
     private fun MachineDTO.MachineStockDTO.toDomain() = CollectibleGachaMachine.Stock(
         common = common,
+        uncommon = uncommon,
         rare = rare,
         epic = epic,
-        legendary = legendary,
     )
 
     private fun MachineDTO.MachineTierRangesDTO.toDomain() = CollectibleGachaMachine.TierRanges(
         common = common.toDomain(),
+        uncommon = uncommon.toDomain(),
         rare = rare.toDomain(),
-        epic = epic.toDomain(),
-        legendary = legendary?.toDomain(),
+        epic = epic?.toDomain(),
     )
 
     private fun MachineDTO.MachineTierRangesDTO.MachineTierRangeDTO.toDomain() =
