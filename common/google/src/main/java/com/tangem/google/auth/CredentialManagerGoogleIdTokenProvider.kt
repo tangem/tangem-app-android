@@ -53,7 +53,7 @@ internal class CredentialManagerGoogleIdTokenProvider @Inject constructor(
     }
 
     @Suppress("TooGenericExceptionCaught")
-    override suspend fun getIdToken(nonce: String?): Either<GoogleIdTokenError, String> {
+    override suspend fun getIdToken(nonce: String?): Either<GoogleIdTokenError, GoogleIdToken> {
         if (!isAvailable()) {
             logger.e("Google sign-in is unavailable: no Google services or no web client id")
             return GoogleIdTokenError.Unavailable.left()
@@ -106,13 +106,14 @@ internal class CredentialManagerGoogleIdTokenProvider @Inject constructor(
 
 internal class NoForegroundActivityException : IllegalStateException("No foreground activity to show Google sign-in")
 
-internal fun extractGoogleIdToken(credential: Credential): Either<GoogleIdTokenError, String> {
+internal fun extractGoogleIdToken(credential: Credential): Either<GoogleIdTokenError, GoogleIdToken> {
     val isGoogleIdToken = credential is CustomCredential &&
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     if (!isGoogleIdToken) return GoogleIdTokenError.NoCredential.left()
 
     return try {
-        GoogleIdTokenCredential.createFrom(credential.data).idToken.right()
+        val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
+        GoogleIdToken(value = googleCredential.idToken, accountName = googleCredential.id).right()
     } catch (e: GoogleIdTokenParsingException) {
         GoogleIdTokenError.Unknown(e).left()
     }
