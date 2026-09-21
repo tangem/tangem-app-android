@@ -30,9 +30,10 @@ signs, deploys or moves funds.
 | `amount` | `PredictionCollateralAmount` — decimal ↔ base-unit conversion of pUSD (6 decimals) |
 
 Nothing in this module talks to a card, a network or a disk; those are `data/polymarket` implementations
-injected behind the interfaces above. Use cases and interactors are plain classes provided in
-`data/polymarket/di/PolymarketDataModule` or the feature's `PolymarketDomainUseCasesModule`
-(`features/polymarket/impl/di/PolymarketBindsModule.kt`).
+injected behind the interfaces above. Use cases and interactors are plain classes provided in the app's
+`di/domain/PolymarketDomainModule`, or in the feature's `PolymarketDomainUseCasesModule`
+(`features/polymarket/impl/di/PolymarketBindsModule.kt`) when they need feature-side dependencies;
+`data/polymarket/di/PolymarketDataModule` binds implementations and the long-lived flows only.
 
 ## The identities
 
@@ -43,7 +44,7 @@ the classic defect:
 |---|---|---|
 | **Owner EOA** | secp256k1 key on `m/44'/60'/999899'/0/0` (`POLYMARKET_OWNER_DERIVATION_PATH`) → ERC-55 address | Signs everything: ClobAuth, approvals batch, orders, withdrawals. Protocol identity in every request |
 | **Deposit wallet (DW)** | CREATE2 from the owner EOA — Solady ERC-1967 **beacon** proxy on Polygon, `DW_FACTORY`/`DW_BEACON`/`DW_BEACON_INIT_*` | Holds the funds; `maker`/`signer` of every order; the address funds are credited to and leave from |
-| **`walletId`** | `UserWalletId.stringValue` (64 hex, no `0x`) | Correlation key on the BFF only (`/wallet/deploy` body, `GET /wallet?walletId`, `GET /configuration`, the `wallet-id` header on positions and `/withdraw*`). The bridge never sees it. **Not** an input to any derivation |
+| **`walletId`** | `UserWalletId.stringValue` (64 hex, no `0x`) | Correlation key on the BFF only (`/wallet/deploy` body, `GET /wallet?walletId`, the `wallet-id` header on positions, `/withdraw*` and `GET /configuration`). The bridge never sees it. **Not** an input to any derivation |
 
 `PolymarketAddresses` binds the first two to the `UserWalletId` they were derived for, and its
 constructor is `internal` so a pair cannot be assembled by hand. `DerivePolymarketAddressesUseCase`
