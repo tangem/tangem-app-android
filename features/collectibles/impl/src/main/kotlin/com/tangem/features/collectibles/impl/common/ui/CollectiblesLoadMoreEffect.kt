@@ -1,4 +1,4 @@
-package com.tangem.features.collectibles.impl.discovery.ui
+package com.tangem.features.collectibles.impl.common.ui
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
