@@ -44,6 +44,7 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         val onLoadingChange: (Boolean) -> Unit,
         val onExit: () -> Unit,
         val onWalletSelectorRequested: (List<UserWalletId>) -> Unit = {},
+        val onCustomerAlreadyApproved: (suspend (UserWalletId) -> Unit)? = null,
     )
 
     suspend fun proceedWithWallets(
@@ -78,7 +79,7 @@ internal class TangemPayOnboardingStarter @Inject constructor(
                         Mode.StartOnboarding -> startOnboarding(userWalletId, campaignKey, callbacks)
                     }
                 } else {
-                    callbacks.onExit()
+                    callbacks.onCustomerAlreadyApproved?.invoke(userWalletId) ?: callbacks.onExit()
                 }
                 callbacks.onLoadingChange(false)
             }
@@ -89,17 +90,17 @@ internal class TangemPayOnboardingStarter @Inject constructor(
         callbacks.onLoadingChange(true)
         produceInitialDataUseCase(userWalletId).onLeft { error ->
             TangemLogger.e("Error producing initial data: ${error.message ?: "Unknown error"}")
-            callbacks.onLoadingChange(false)
+            showRetryableError(callbacks)
             return
         }
         repository.getCustomerInfo(userWalletId = userWalletId).fold(
             ifLeft = { error ->
                 TangemLogger.e("Error getCustomerInfo: ${error.errorCode}")
-                callbacks.onLoadingChange(false)
+                showRetryableError(callbacks)
             },
             ifRight = { customerInfo ->
                 if (customerInfo.kycStatus == KycStatus.APPROVED) {
-                    callbacks.onExit()
+                    callbacks.onCustomerAlreadyApproved?.invoke(userWalletId) ?: callbacks.onExit()
                 } else {
                     proceedToKyc(
                         userWalletId = userWalletId,
