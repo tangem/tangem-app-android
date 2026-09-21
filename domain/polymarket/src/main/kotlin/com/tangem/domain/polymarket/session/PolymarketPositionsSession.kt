@@ -62,8 +62,11 @@ class PolymarketPositionsSession internal constructor(
         val wasResumed = request.value.isResumed
         request.update { it.copy(isResumed = true) }
         this.scope = scope
+        val currentRevision = invalidator.currentRevision(userWalletId)
+        val hasChangedSinceLoaded = currentRevision != appliedRevision
+        appliedRevision = currentRevision
         when {
-            job == null -> load()
+            job == null || hasChangedSinceLoaded -> load()
             !wasResumed -> refreshLoadedPages?.invoke()
         }
         invalidationJob?.cancel()
@@ -71,7 +74,7 @@ class PolymarketPositionsSession internal constructor(
             invalidator.revisionFlow(userWalletId).collect { revision ->
                 if (revision == appliedRevision) return@collect
                 appliedRevision = revision
-                if (request.value.isResumed) load()
+                load()
             }
         }
     }
