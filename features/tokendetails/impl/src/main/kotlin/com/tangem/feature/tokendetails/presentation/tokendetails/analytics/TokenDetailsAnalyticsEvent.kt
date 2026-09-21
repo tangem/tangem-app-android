@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.utils.toAnalyticsParams
 
@@ -44,9 +45,16 @@ internal open class TokenDetailsAnalyticsEvent(
             params = currency.toAnalyticsParams(),
         )
 
-        class NotEnoughFee(currency: CryptoCurrency, source: Source) : Notice(
+        class NotEnoughFee(
+            currency: CryptoCurrency,
+            source: Source,
+            balance: AnalyticsParam.TokenBalanceState,
+        ) : Notice(
             event = "Not Enough Fee",
-            params = currency.toAnalyticsParams() + ("Source" to source.value),
+            params = currency.toAnalyticsParams() + mapOf(
+                AnalyticsParam.SOURCE to source.value,
+                AnalyticsParam.BALANCE to balance.value,
+            ),
         ) {
             enum class Source(val value: String) {
                 DetailedScreen("Detailed Screen"),
