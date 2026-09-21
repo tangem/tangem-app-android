@@ -1158,6 +1158,7 @@ internal class PolymarketMainModelTest {
         PredictionAccountStatusValue.Active(
             source = StatusSource.ACTUAL,
             balance = BigDecimal(balance),
+            positionsValue = null,
             fiatRate = BigDecimal.ONE,
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
