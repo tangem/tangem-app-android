@@ -9,7 +9,6 @@ import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
-import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -43,8 +42,7 @@ class RejectJointOperationUseCase(
             .bind()
         val operation = refusableOperation(jointAccount = jointAccount, chainId = chainId, operationId = operationId)
 
-        val payload = JointOperationRejectPayload(operationId = operation.operationId, safeTx = operation.safeTx)
-        repository.rejectOperation(userWalletId = userWalletId, payload = payload).bind()
+        repository.rejectOperation(userWalletId = userWalletId, operationId = operation.operationId).bind()
 
         // The backend has already applied the refusal, so a failed refresh must not report it as failed — the
         // list catches up on the next fetch
