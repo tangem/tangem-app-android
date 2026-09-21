@@ -105,6 +105,11 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
     }
 }
 
+internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
+    (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }
+
+internal fun PlacePredictionUM.canShowFeeBreakdown(): Boolean = feeBreakdownQuote() != null
+
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
     val entered = enteredAmount() ?: return false
     val minAmount = minAmount ?: return false
