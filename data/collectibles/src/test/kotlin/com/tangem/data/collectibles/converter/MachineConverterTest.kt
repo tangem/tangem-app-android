@@ -74,7 +74,7 @@ internal class MachineConverterTest {
     fun `GIVEN a high precision expected value WHEN convert THEN the scale is preserved`() {
         // Arrange
         val expectedValue = BigDecimal("54.578583779326468")
-        val dto = MachineFactory.createDto(price = BigDecimal("0.000000001"), expectedValue = expectedValue)
+        val dto = MachineFactory.createDto(expectedValue = expectedValue)
 
         // Act
         val actual = MachineConverter.convert(dto)
@@ -82,7 +82,21 @@ internal class MachineConverterTest {
         // Assert
         assertThat(actual.expectedValue).isEqualTo(expectedValue)
         assertThat(actual.expectedValue.scale()).isEqualTo(expectedValue.scale())
-        assertThat(actual.price).isEqualTo(BigDecimal("0.000000001"))
+    }
+
+    @Test
+    fun `GIVEN money in cents WHEN convert THEN only the price and fee fields become whole units`() {
+        // Arrange
+        val dto = MachineFactory.createDto()
+
+        // Act
+        val actual = MachineConverter.convert(dto)
+
+        // Assert
+        assertThat(actual.price).isEqualTo(BigDecimal("50.00"))
+        assertThat(actual.fee).isEqualTo(BigDecimal("2.00"))
+        assertThat(actual.feeAmount).isEqualTo(BigDecimal("1.00"))
+        assertThat(actual.expectedValue).isEqualTo(dto.expectedValue)
     }
 
     @Test
@@ -95,33 +109,33 @@ internal class MachineConverterTest {
 
         // Assert
         assertThat(actual.odds).isEqualTo(
-            CollectibleGachaMachine.Odds(common = 80, rare = 15, epic = 4, legendary = 1),
+            CollectibleGachaMachine.Odds(common = 80, uncommon = 15, rare = 4, epic = 1),
         )
         assertThat(actual.stock).isEqualTo(
-            CollectibleGachaMachine.Stock(common = 1949, rare = 3225, epic = 2375, legendary = 2628),
+            CollectibleGachaMachine.Stock(common = 1949, uncommon = 3225, rare = 2375, epic = 2628),
         )
         assertThat(actual.tierRanges).isEqualTo(
             CollectibleGachaMachine.TierRanges(
                 common = CollectibleGachaMachine.TierRange(start = 30, end = 60),
-                rare = CollectibleGachaMachine.TierRange(start = 60, end = 110),
-                epic = CollectibleGachaMachine.TierRange(start = 110, end = 250),
-                legendary = CollectibleGachaMachine.TierRange(start = 250, end = 5001),
+                uncommon = CollectibleGachaMachine.TierRange(start = 60, end = 110),
+                rare = CollectibleGachaMachine.TierRange(start = 110, end = 250),
+                epic = CollectibleGachaMachine.TierRange(start = 250, end = 5001),
             ),
         )
     }
 
     @Test
-    fun `GIVEN a dto without a legendary tier WHEN convert THEN the legendary fields are null`() {
+    fun `GIVEN a dto without an epic tier WHEN convert THEN the epic fields are null`() {
         // Arrange
-        val dto = MachineFactory.createDto(legendaryOdds = null, legendaryStock = null, legendaryRange = null)
+        val dto = MachineFactory.createDto(epicOdds = null, epicStock = null, epicRange = null)
 
         // Act
         val actual = MachineConverter.convert(dto)
 
         // Assert
-        assertThat(actual.odds.legendary).isNull()
-        assertThat(actual.stock.legendary).isNull()
-        assertThat(actual.tierRanges.legendary).isNull()
+        assertThat(actual.odds.epic).isNull()
+        assertThat(actual.stock.epic).isNull()
+        assertThat(actual.tierRanges.epic).isNull()
     }
 
     @Test
