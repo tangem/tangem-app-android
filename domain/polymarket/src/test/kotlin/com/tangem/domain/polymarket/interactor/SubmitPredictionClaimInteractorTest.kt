@@ -21,22 +21,26 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigInteger
+import kotlin.time.Duration.Companion.minutes
 
 internal class SubmitPredictionClaimInteractorTest {
 
     private val redeemRepository: PolymarketRedeemRepository = mockk()
     private val polymarketRepository: PolymarketRepository = mockk()
     private val signer: PolymarketTypedDataSigner = mockk()
+    private var nowMillis = NOW_MILLIS
 
     private val interactor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
         signer = signer,
+        currentTimeMillis = { nowMillis },
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(redeemRepository, polymarketRepository, signer)
+        nowMillis = NOW_MILLIS
         coEvery { redeemRepository.getCall(any(), any(), any()) } returns CALL.right()
         coEvery { polymarketRepository.getRelayerNonce(any()) } returns BigInteger.valueOf(9).right()
         coEvery { signer.signRelayedBatch(any(), any()) } returns SIGNATURE.right()
@@ -116,6 +120,23 @@ internal class SubmitPredictionClaimInteractorTest {
             // Assert
             assertThat(actual)
                 .isEqualTo(PredictionClaimFailure.SigningFailed(PolymarketSigningError.UserCancelled).left())
+            coVerify(exactly = 0) { redeemRepository.submit(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the signature takes longer than the deadline window WHEN claimed THEN nothing is submitted and Expired is raised`() =
+        runTest {
+            // Arrange
+            coEvery { signer.signRelayedBatch(any(), any()) } coAnswers {
+                nowMillis += 11.minutes.inWholeMilliseconds
+                SIGNATURE.right()
+            }
+
+            // Act
+            val actual = interactor.claim(params())
+
+            // Assert
+            assertThat(actual).isEqualTo(PredictionClaimFailure.Expired.left())
             coVerify(exactly = 0) { redeemRepository.submit(any(), any()) }
         }
 
@@ -284,6 +305,7 @@ internal class SubmitPredictionClaimInteractorTest {
         const val CONDITION_ID = "0x94947a23"
         const val TX_ID = "0x4f2c"
         const val SIGNATURE = "0xsignature"
+        const val NOW_MILLIS = 1_787_346_200_000L
         val CALL = PolymarketApprovalCall(
             target = "0xada2005600dec949baf300f4c6120000bdb6eaab",
             value = "0",
