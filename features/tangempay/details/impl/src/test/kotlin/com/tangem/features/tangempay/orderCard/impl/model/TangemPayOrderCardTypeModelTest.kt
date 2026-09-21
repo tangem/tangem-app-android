@@ -684,8 +684,6 @@ internal class TangemPayOrderCardTypeModelTest {
         fiatBalance = availableBalance?.let {
             PaymentAccountStatusValue.FiatBalance(availableBalance = it, currency = "USD")
         },
-        cryptoBalance = null,
-        availableForWithdrawal = BigDecimal.ZERO,
         tariffPlan = null,
         country = "US",
         email = "j.silverhand@gmail.com",
