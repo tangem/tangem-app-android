@@ -1,9 +1,12 @@
-package com.tangem.features.collectibles.impl.discovery
+package com.tangem.features.collectibles.impl
 
+import com.tangem.domain.collectibles.CollectibleGachaMachineNftsBatchListState
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchListState
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
+import com.tangem.domain.collectibles.models.CollectibleGachaMachineNft
 import com.tangem.domain.collectibles.models.CollectibleGachaMachinesBatch
+import com.tangem.domain.collectibles.models.CollectibleRarity
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
 import java.math.BigDecimal
@@ -50,38 +53,38 @@ internal fun createMachine(
 
 internal fun createOdds(
     common: Int = 70,
-    rare: Int = 20,
-    epic: Int = 9,
-    legendary: Int? = 1,
+    uncommon: Int = 20,
+    rare: Int = 9,
+    epic: Int? = 1,
 ): CollectibleGachaMachine.Odds = CollectibleGachaMachine.Odds(
     common = common,
+    uncommon = uncommon,
     rare = rare,
     epic = epic,
-    legendary = legendary,
 )
 
 internal fun createStock(
     common: Int = 100,
-    rare: Int = 50,
-    epic: Int = 10,
-    legendary: Int? = 1,
+    uncommon: Int = 50,
+    rare: Int = 10,
+    epic: Int? = 1,
 ): CollectibleGachaMachine.Stock = CollectibleGachaMachine.Stock(
     common = common,
+    uncommon = uncommon,
     rare = rare,
     epic = epic,
-    legendary = legendary,
 )
 
 internal fun createTierRanges(
     common: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 1, end = 10),
-    rare: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 11, end = 50),
-    epic: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 51, end = 200),
-    legendary: CollectibleGachaMachine.TierRange? = CollectibleGachaMachine.TierRange(start = 201, end = 1000),
+    uncommon: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 11, end = 50),
+    rare: CollectibleGachaMachine.TierRange = CollectibleGachaMachine.TierRange(start = 51, end = 200),
+    epic: CollectibleGachaMachine.TierRange? = CollectibleGachaMachine.TierRange(start = 201, end = 1000),
 ): CollectibleGachaMachine.TierRanges = CollectibleGachaMachine.TierRanges(
     common = common,
+    uncommon = uncommon,
     rare = rare,
     epic = epic,
-    legendary = legendary,
 )
 
 internal fun createCategory(
@@ -121,6 +124,42 @@ internal fun createBatchListState(
     totalCount: Int? = null,
 ): CollectibleGachaMachinesBatchListState = CollectibleGachaMachinesBatchListState(
     data = batches.mapIndexed { index, machines -> createBatch(key = index, machines = machines) },
+    status = status,
+    totalCount = totalCount,
+)
+
+internal fun createNft(
+    id: String = "nft_1",
+    nftAddress: String = "GmnqDr9HsNd7o54YksNHrTQGGpFbY7w7aBugL3heUZhZ",
+    name: String = "Raging Bolt EX",
+    description: String? = "2024 #208 Raging Bolt EX PSA 10",
+    rarity: CollectibleRarity? = CollectibleRarity.RARE,
+    grade: CollectibleGachaMachineNft.Grade? = CollectibleGachaMachineNft.Grade(company = "PSA", value = "10"),
+    imageUrl: String? = "https://tangem.com/nft.png",
+    insuredValue: BigDecimal? = BigDecimal("240"),
+): CollectibleGachaMachineNft = CollectibleGachaMachineNft(
+    id = id,
+    nftAddress = nftAddress,
+    name = name,
+    description = description,
+    rarity = rarity,
+    grade = grade,
+    imageUrl = imageUrl,
+    insuredValue = insuredValue,
+)
+
+internal fun createNftBatch(
+    key: Int = 0,
+    nfts: List<CollectibleGachaMachineNft> = listOf(createNft()),
+): Batch<Int, List<CollectibleGachaMachineNft>> = Batch(key = key, data = nfts)
+
+/** Builds the prize-pool pagination state; [batches] is one list of collectibles per page. */
+internal fun createNftsBatchListState(
+    batches: List<List<CollectibleGachaMachineNft>> = listOf(listOf(createNft())),
+    status: PaginationStatus<List<CollectibleGachaMachineNft>> = PaginationStatus.EndOfPagination,
+    totalCount: Int? = null,
+): CollectibleGachaMachineNftsBatchListState = CollectibleGachaMachineNftsBatchListState(
+    data = batches.mapIndexed { index, nfts -> createNftBatch(key = index, nfts = nfts) },
     status = status,
     totalCount = totalCount,
 )
