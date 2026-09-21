@@ -158,11 +158,13 @@ un-refreshed — it never writes "empty" on the strength of a failed question.
 
 ## DI
 
-`PolymarketDataModule` binds every repository, store, deriver and provides the long-lived flows
-(`PredictionAccountStatusSupplier`, `PredictionBalancePoller`, `PredictionWithdrawalTracker`,
-`PredictionFundingWindow`) with `PredictionBalancePollingConfig` and `PredictionWithdrawalTrackingConfig`
-defaults; use cases and interactors are provided in `app/.../di/domain/PolymarketDomainModule`; `PolymarketSignerModule` binds the signer and
-`Base64UrlCodec`; `PolymarketStorageModule` provides the `DataStore`s and `SecureStorage`-backed store.
+`PolymarketDataModule` binds every repository and deriver, the two runtime stores (bridge assets, deposit
+requisites) and provides the long-lived flows (`PredictionAccountStatusSupplier`, `PredictionBalancePoller`,
+`PredictionWithdrawalTracker`, `PredictionFundingWindow`) with `PredictionBalancePollingConfig` and
+`PredictionWithdrawalTrackingConfig` defaults; `PolymarketStorageModule` provides the four persisted stores
+(credentials, account status, onboarded, withdrawal) with their `DataStore`s and `SecureStorage`;
+`PolymarketSignerModule` binds the signer and `Base64UrlCodec`; use cases and interactors are provided in
+`app/.../di/domain/PolymarketDomainModule`.
 Anything that also needs feature-layer dependencies is provided in `features/polymarket/impl/di`.
 
 ## Logging
