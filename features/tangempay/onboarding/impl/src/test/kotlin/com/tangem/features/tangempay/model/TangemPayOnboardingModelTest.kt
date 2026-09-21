@@ -214,8 +214,6 @@ internal class TangemPayOnboardingModelTest {
         kycStatus = kycStatus,
         state = CustomerInfo.State.NEW,
         fiatBalance = null,
-        cryptoBalance = null,
-        availableForWithdrawal = BigDecimal.ZERO,
         tariffPlan = null,
     )
 
