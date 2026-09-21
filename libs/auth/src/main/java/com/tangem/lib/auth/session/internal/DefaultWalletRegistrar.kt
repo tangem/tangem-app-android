@@ -287,6 +287,12 @@ internal class DefaultWalletRegistrar(
         }
     }
 
+    override suspend fun clearRegistrations() {
+        appPreferencesStore.editData { preferences ->
+            preferences.remove(AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY)
+        }
+    }
+
     private suspend fun registeredWalletIds(): Set<String> = appPreferencesStore.getSyncOrDefault(
         key = AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY,
         default = emptySet(),
