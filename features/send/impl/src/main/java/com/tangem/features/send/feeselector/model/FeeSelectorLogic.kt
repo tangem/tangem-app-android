@@ -82,6 +82,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         params.cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
         (
             isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ||
+                params.isTronGaslessSupported &&
                 sendFeatureToggles.isTronGaslessEnabled &&
                 BlockchainUtils.isTron(params.cryptoCurrencyStatus.currency.network.rawId)
             )
@@ -341,6 +342,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             getAvailableFeeTokensUseCase.invoke(
                 userWallet = userWallet,
                 network = params.cryptoCurrencyStatus.currency.network,
+                sentCurrencyStatus = params.cryptoCurrencyStatus,
                 nativeFeeAmount = nativeFeeAmount,
             ).bind()
         }

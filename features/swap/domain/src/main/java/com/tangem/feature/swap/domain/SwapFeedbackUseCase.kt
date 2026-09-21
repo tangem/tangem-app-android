@@ -14,13 +14,13 @@ class SwapFeedbackUseCase @Inject constructor(
     private val repository: SwapFeedbackRepository,
 ) {
 
-    /** Emits null while the rating for [txExternalId] is not loaded */
+    /** Emits null while the rating for [txExternalId] is not loaded, and when the local read fails */
     fun observeRating(txExternalId: String): Flow<SwapRating?> = repository.observeRating(txExternalId)
 
-    /** Loads the rating for [txExternalId] on a cache miss; a failed load is retried on the next call */
+    /** Loads the rating for [txExternalId] once; later calls for the same transaction hit the local store */
     suspend fun ensureLoaded(txExternalId: String) = repository.fetchRatingIfNeeded(txExternalId)
 
-    /** Optimistic submit: the rating is visible via [observeRating] immediately and rolled back on error */
+    /** The rating becomes visible via [observeRating] only once the survey vendor has accepted it */
     suspend fun submit(params: SubmitParams): Either<Throwable, Unit> {
         return repository.submitFeedback(
             SwapFeedbackParams(
