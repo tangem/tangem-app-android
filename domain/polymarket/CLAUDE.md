@@ -111,8 +111,9 @@ holds credentials skips straight to waiting for `READY_TO_TRADE`) `→ GetPolyma
 SignOnboardingDigests → DeployDepositWallet` (when needed) `→ DeriveApiCredentials` (skipped when
 credentials exist; derive-api-key first, create only on "no key yet") `→` wait for `DEPLOYED` `→
 SubmitApprovals →` wait for `READY_TO_TRADE`. Finishing marks the wallet in `PolymarketOnboardedStore`,
-primes the CLOB balance cache and refreshes the account status; `RecordPolymarketConfirmationUseCase` is
-the same store write for the `Reconnect` path.
+primes the CLOB balance cache and refreshes the account status. `RecordPolymarketConfirmationUseCase`
+keeps that store in step with a backend read elsewhere (`ResolvePolymarketEntryInteractor`): `READY_TO_TRADE`
+records the wallet, `NOT_CREATED` withdraws it, every other status leaves the record alone.
 
 `ResolvePolymarketEntryInteractor` decides where the user lands (`PolymarketEntry`): `Onboarded` from local
 state alone when the confirmation record and credentials exist; `Onboard(status)` / `Reconnect` after a
