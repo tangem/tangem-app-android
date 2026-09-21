@@ -281,6 +281,8 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable data object PredictionWithdraw : AccountFlow
 
             @Serializable data object PredictionTopUp : AccountFlow
+
+            @Serializable data object CollectiblesTopUp : AccountFlow
         }
     }
 
