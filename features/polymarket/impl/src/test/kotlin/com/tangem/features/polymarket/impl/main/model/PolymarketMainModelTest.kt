@@ -88,7 +88,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
-import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.coVerify
@@ -1162,20 +1162,6 @@ internal class PolymarketMainModelTest {
             depositCurrency = COLLATERAL,
             depositAddress = depositAddress,
         )
-
-    private class FakeSlotHost<C : Any>(navigation: SlotNavigation<C>) {
-
-        var configuration: C? = null
-            private set
-
-        init {
-            navigation.subscribe { event ->
-                val old = configuration
-                configuration = event.transformer(old)
-                event.onComplete(configuration, old)
-            }
-        }
-    }
 
     @Test
     fun `GIVEN main preview WHEN see all tapped THEN opens Active for the settled wallet`() = runTest {

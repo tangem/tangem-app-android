@@ -13,6 +13,7 @@ android {
 dependencies {
     /** Api */
     api(projects.features.commonFeatures.api)
+    implementation(projects.features.jointAccount.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
 

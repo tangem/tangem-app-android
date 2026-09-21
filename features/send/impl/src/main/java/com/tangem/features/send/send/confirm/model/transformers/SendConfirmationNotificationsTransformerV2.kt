@@ -23,6 +23,9 @@ import com.tangem.features.send.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
+import com.tangem.common.ui.amountScreen.utils.getFiatString
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 
 @Suppress("LongParameterList")
 internal class SendConfirmationNotificationsTransformerV2(
@@ -41,6 +44,7 @@ internal class SendConfirmationNotificationsTransformerV2(
         val feeSelectorUM = feeSelectorUM as? FeeSelectorUM.Content ?: return prevState
         return state.copy(
             sendingFooter = getSendingFooterText(signaturesUM = state.signaturesUM),
+            setupFeeNote = getSetupFeeNote(signaturesUM = state.signaturesUM, feeSelectorUM = feeSelectorUM),
             notifications = buildList {
                 addTooHighNotification(feeSelectorUM)
                 addTooLowNotification(feeSelectorUM)
@@ -72,6 +76,25 @@ internal class SendConfirmationNotificationsTransformerV2(
         if (isFeeTooHigh) {
             add(NotificationUM.Warning.TooHigh(diff))
         }
+    }
+
+    /** The first operation in a network also deploys the Safe: its share is the deployment gas at the fee's gas price */
+    private fun getSetupFeeNote(signaturesUM: SendSignaturesUM?, feeSelectorUM: FeeSelectorUM.Content): TextReference? {
+        if (signaturesUM?.isFirstOperation != true) return null
+        val fee = feeSelectorUM.selectedFeeItem.fee as? Fee.Ethereum.Legacy ?: return null
+        val amount = fee.amount
+        val setupFee = (SafeTxGasBuilder.DEPLOY_GAS * fee.gasPrice).toBigDecimal().movePointLeft(amount.decimals)
+
+        val crypto = setupFee.format { crypto(symbol = amount.currencySymbol, decimals = amount.decimals) }
+        val fiat = feeSelectorUM.feeFiatRateUM
+            ?.takeIf { feeSelectorUM.feeExtraInfo.isFeeConvertibleToFiat }
+            ?.let { rate -> getFiatString(value = setupFee, rate = rate.rate, appCurrency = rate.appCurrency) }
+        val setupFeeText = if (fiat != null) "$fiat ($crypto)" else crypto
+
+        return resourceReference(
+            id = R.string.joint_account_send_setup_fee_note,
+            formatArgs = wrappedList(cryptoCurrency.network.name, setupFeeText),
+        )
     }
 
     private fun getSendingFooterText(signaturesUM: SendSignaturesUM?): TextReference {

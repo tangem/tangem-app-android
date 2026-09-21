@@ -44,7 +44,6 @@ dependencies {
     // region Project - Domain
     api(projects.domain.common)
     api(projects.domain.core)
-    api(projects.domain.jointAccount)
     api(projects.domain.models)
     api(projects.domain.networks)
     api(projects.domain.walletManager)

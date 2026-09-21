@@ -3,9 +3,9 @@ package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 import arrow.core.Either
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
-import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isFullClose
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
@@ -25,7 +25,7 @@ internal class SetQuoteResultTransformer(
             quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote),
             minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
         )
-        val pricedQuote = result.getOrNull()?.takeIf { it.status.isPlaceable }
+        val pricedQuote = result.getOrNull()?.takeIf { it.isPlaceable(isFullClose = updatedState.isFullClose()) }
 
         return if (pricedQuote != null) {
             SetOutcomePriceTransformer(price = pricedQuote.averagePrice).transform(updatedState)
@@ -57,10 +57,6 @@ internal class SetQuoteResultTransformer(
         -> QuoteUM.Content(
             status = quote.status,
             expected = quote.expectedExecutionAmount,
-            guaranteed = when (quote.side) {
-                PredictionOrderSide.BUY -> quote.shares
-                PredictionOrderSide.SELL -> quote.notional
-            },
             feeTotal = quote.fees.total,
             total = quote.total,
             signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis),
