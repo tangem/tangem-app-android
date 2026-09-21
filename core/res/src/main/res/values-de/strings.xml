@@ -2522,15 +2522,15 @@
   <string name="tangempay_newonboard_title">Hol dir deine Tangem Pay Karte</string>
   <string name="tangempay_newonboard_topleft_body">Zahl, was du siehst</string>
   <string name="tangempay_newonboard_topleft_title">Keine Kaufgebühren, \n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">Keine Überraschungen</string>
-  <string name="tangempay_newonboard_topright_title">$0 monatlich,\n$0 Aufladegebühr</string>
+  <string name="tangempay_newonboard_topright_body">In USDC, nicht in unbekannten Token</string>
+  <string name="tangempay_newonboard_topright_title">Bis zu 2% Cashback</string>
   <string name="tangempay_onboarding_banner_description">Kostenlose Tangem Pay Karte mit bis zu 2 % Cashback</string>
   <string name="tangempay_onboarding_banner_title">Krypto ganz einfach im Alltag ausgeben</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
-  <string name="tangempay_onboarding_pay_description">Mit digitaler Karte, die mit Apple Pay und Google Pay funktioniert</string>
+  <string name="tangempay_onboarding_pay_description">Digitalkarte mit Apple Pay oder Google Pay, ohne Kaufgebühren</string>
   <string name="tangempay_onboarding_pay_title">Geben Sie Ihre Vermögenswerte überall aus</string>
-  <string name="tangempay_onboarding_purchases_description">Es fallen keine zusätzlichen Gebühren für Käufe an</string>
-  <string name="tangempay_onboarding_purchases_title">Zahlen Sie genau das, was Sie sehen</string>
+  <string name="tangempay_onboarding_purchases_description">In USDC — keine Punkte oder unbekannten Token</string>
+  <string name="tangempay_onboarding_purchases_title">Bis zu 2% Cashback</string>
   <string name="tangempay_onboarding_security_description">Ein separates Zahlungskonto wird erstellt, ohne Ihre Adressen und Vermögenswerte offenzulegen</string>
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
   <string name="tangempay_onboarding_setup_wallet_description">Und verknüpfen Tangem Pay damit</string>
