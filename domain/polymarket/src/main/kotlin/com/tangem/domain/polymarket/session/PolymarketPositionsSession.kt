@@ -3,7 +3,7 @@ package com.tangem.domain.polymarket.session
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.converter.PolymarketPositionStatusConverter
-import com.tangem.domain.polymarket.flow.PredictionPositionsInvalidator
+import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateListener
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
@@ -41,7 +41,7 @@ class PolymarketPositionsSession internal constructor(
     private val tab: PolymarketPositionsTab,
     private val repository: PolymarketPositionsRepository,
     private val deriveAddresses: DerivePolymarketAddressesUseCase,
-    private val invalidator: PredictionPositionsInvalidator,
+    private val updateListener: PredictionPositionsUpdateListener,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -51,7 +51,7 @@ class PolymarketPositionsSession internal constructor(
     private var scope: CoroutineScope? = null
     private var job: Job? = null
     private var invalidationJob: Job? = null
-    private var appliedRevision: Long = invalidator.currentRevision(userWalletId)
+    private var appliedRevision: Long = updateListener.currentRevision(userWalletId)
     private val request = MutableStateFlow(Request())
     private var isDisposed = false
     private var requestMore: (() -> Unit)? = null
@@ -62,7 +62,7 @@ class PolymarketPositionsSession internal constructor(
         val wasResumed = request.value.isResumed
         request.update { it.copy(isResumed = true) }
         this.scope = scope
-        val currentRevision = invalidator.currentRevision(userWalletId)
+        val currentRevision = updateListener.currentRevision(userWalletId)
         val hasChangedSinceLoaded = currentRevision != appliedRevision
         appliedRevision = currentRevision
         when {
@@ -71,7 +71,7 @@ class PolymarketPositionsSession internal constructor(
         }
         invalidationJob?.cancel()
         invalidationJob = scope.launch {
-            invalidator.revisionFlow(userWalletId).collect { revision ->
+            updateListener.revisionFlow(userWalletId).collect { revision ->
                 if (revision == appliedRevision) return@collect
                 appliedRevision = revision
                 load()
