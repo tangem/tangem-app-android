@@ -222,7 +222,14 @@ class WalletBalanceFetcher internal constructor(
                 polymarketFeatureToggles.isPolymarketEnabled
             ) {
                 launch { balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(PredictionCollateral.RAW_ID)) }
-                launch { predictionAccountStatusFetcher.invoke(PredictionAccountStatusFetcher.Params(userWalletId)) }
+                launch {
+                    predictionAccountStatusFetcher.invoke(
+                        PredictionAccountStatusFetcher.Params(
+                            userWalletId = userWalletId,
+                            mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+                        ),
+                    )
+                }
             }
 
             if (
