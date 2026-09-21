@@ -31,8 +31,33 @@ internal class SharesCalculatorTest {
             AvailableModel(held = "51.239999", expected = "51.23"),
             AvailableModel(held = "51.23", expected = "51.23"),
             AvailableModel(held = "51.2", expected = "51.20"),
+            AvailableModel(held = "0.634567", expected = "0.63"),
             AvailableModel(held = "0.004567", expected = "0.00"),
             AvailableModel(held = "0", expected = "0.00"),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Minimum {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN available shares WHEN minimum THEN one share, or the whole remainder below one`(
+            model: MinimumModel,
+        ) {
+            // Act
+            val actual = SharesCalculator.minimum(available = BigDecimal(model.available))
+
+            // Assert
+            assertThat(actual).isEqualTo(BigDecimal(model.expected))
+        }
+
+        private fun provideTestModels(): List<MinimumModel> = listOf(
+            MinimumModel(available = "51.23", expected = "1"),
+            MinimumModel(available = "1.00", expected = "1.00"),
+            MinimumModel(available = "0.63", expected = "0.63"),
+            MinimumModel(available = "0.00", expected = "0.00"),
         )
     }
 
@@ -42,7 +67,7 @@ internal class SharesCalculatorTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN a percent WHEN fraction THEN truncated down and never above available`(model: FractionModel) {
+        fun `GIVEN a percent WHEN fraction THEN whole shares, never below the minimum`(model: FractionModel) {
             // Arrange
             val available = BigDecimal(model.available)
 
@@ -55,13 +80,37 @@ internal class SharesCalculatorTest {
         }
 
         private fun provideTestModels(): List<FractionModel> = listOf(
-            FractionModel(available = "51.23", percent = 25, expected = "12.80"),
-            FractionModel(available = "51.23", percent = 50, expected = "25.61"),
-            FractionModel(available = "51.23", percent = 75, expected = "38.42"),
-            FractionModel(available = "51.23", percent = 100, expected = "51.23"),
-            FractionModel(available = "1.00", percent = 75, expected = "0.75"),
-            FractionModel(available = "0.50", percent = 25, expected = "0.12"),
-            FractionModel(available = "0.00", percent = 50, expected = "0.00"),
+            FractionModel(available = "51.23", percent = 25, expected = "12"),
+            FractionModel(available = "51.23", percent = 50, expected = "25"),
+            FractionModel(available = "51.23", percent = 75, expected = "38"),
+            FractionModel(available = "3.00", percent = 25, expected = "1"),
+            FractionModel(available = "1.00", percent = 25, expected = "1.00"),
+            FractionModel(available = "0.63", percent = 25, expected = "0.63"),
+            FractionModel(available = "0.00", percent = 50, expected = "0"),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FullFraction {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the full percentage WHEN fraction THEN the position closes to its last fraction`(model: FullCloseModel) {
+            // Arrange
+            val available = BigDecimal(model.available)
+
+            // Act
+            val actual = SharesCalculator.fraction(available = available, percent = 100)
+
+            // Assert
+            assertThat(actual).isEqualTo(available)
+        }
+
+        private fun provideTestModels(): List<FullCloseModel> = listOf(
+            FullCloseModel(available = "51.23"),
+            FullCloseModel(available = "1.00"),
+            FullCloseModel(available = "0.63"),
         )
     }
 
@@ -71,7 +120,7 @@ internal class SharesCalculatorTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN a selection WHEN increased THEN one share more and clamped at available`(model: StepUpModel) {
+        fun `GIVEN a selection WHEN increased THEN one whole share more and capped at available`(model: StepModel) {
             // Arrange
             val available = BigDecimal(model.available)
 
@@ -83,12 +132,12 @@ internal class SharesCalculatorTest {
             assertThat(actual).isAtMost(available)
         }
 
-        private fun provideTestModels(): List<StepUpModel> = listOf(
-            StepUpModel(selected = "0.00", available = "51.23", expected = "1.00"),
-            StepUpModel(selected = "12.80", available = "51.23", expected = "13.80"),
-            StepUpModel(selected = "50.23", available = "51.23", expected = "51.23"),
-            StepUpModel(selected = "51.23", available = "51.23", expected = "51.23"),
-            StepUpModel(selected = "0.00", available = "0.50", expected = "0.50"),
+        private fun provideTestModels(): List<StepModel> = listOf(
+            StepModel(selected = "1.00", available = "51.23", expected = "2"),
+            StepModel(selected = "12", available = "51.23", expected = "13"),
+            StepModel(selected = "50", available = "51.23", expected = "51"),
+            StepModel(selected = "51.23", available = "51.23", expected = "51.23"),
+            StepModel(selected = "0.63", available = "0.63", expected = "0.63"),
         )
     }
 
@@ -98,20 +147,26 @@ internal class SharesCalculatorTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN a selection WHEN decreased THEN one share less and never below zero`(model: StepDownModel) {
+        fun `GIVEN a selection WHEN decreased THEN one whole share less and never below the minimum`(
+            model: StepModel,
+        ) {
+            // Arrange
+            val available = BigDecimal(model.available)
+
             // Act
-            val actual = SharesCalculator.decreased(selected = BigDecimal(model.selected))
+            val actual = SharesCalculator.decreased(selected = BigDecimal(model.selected), available = available)
 
             // Assert
             assertThat(actual).isEqualTo(BigDecimal(model.expected))
+            assertThat(actual).isAtLeast(SharesCalculator.minimum(available))
         }
 
-        private fun provideTestModels(): List<StepDownModel> = listOf(
-            StepDownModel(selected = "51.23", expected = "50.23"),
-            StepDownModel(selected = "13.80", expected = "12.80"),
-            StepDownModel(selected = "1.00", expected = "0.00"),
-            StepDownModel(selected = "0.50", expected = "0.00"),
-            StepDownModel(selected = "0.00", expected = "0.00"),
+        private fun provideTestModels(): List<StepModel> = listOf(
+            StepModel(selected = "51.23", available = "51.23", expected = "50"),
+            StepModel(selected = "13", available = "51.23", expected = "12"),
+            StepModel(selected = "1.00", available = "51.23", expected = "1"),
+            StepModel(selected = "1.00", available = "1.00", expected = "1.00"),
+            StepModel(selected = "0.63", available = "0.63", expected = "0.63"),
         )
     }
 
@@ -121,7 +176,9 @@ internal class SharesCalculatorTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN available shares WHEN isSteppable THEN a whole share fits`(model: SteppableModel) {
+        fun `GIVEN available shares WHEN isSteppable THEN more than the minimum can be selected`(
+            model: SteppableModel,
+        ) {
             // Act
             val actual = SharesCalculator.isSteppable(available = BigDecimal(model.available))
 
@@ -131,19 +188,22 @@ internal class SharesCalculatorTest {
 
         private fun provideTestModels(): List<SteppableModel> = listOf(
             SteppableModel(available = "0.00", expected = false),
-            SteppableModel(available = "0.99", expected = false),
-            SteppableModel(available = "1.00", expected = true),
+            SteppableModel(available = "0.63", expected = false),
+            SteppableModel(available = "1.00", expected = false),
+            SteppableModel(available = "2.00", expected = true),
             SteppableModel(available = "51.23", expected = true),
         )
     }
 
     internal data class AvailableModel(val held: String, val expected: String)
 
+    internal data class MinimumModel(val available: String, val expected: String)
+
+    internal data class FullCloseModel(val available: String)
+
     internal data class FractionModel(val available: String, val percent: Int, val expected: String)
 
-    internal data class StepUpModel(val selected: String, val available: String, val expected: String)
-
-    internal data class StepDownModel(val selected: String, val expected: String)
+    internal data class StepModel(val selected: String, val available: String, val expected: String)
 
     internal data class SteppableModel(val available: String, val expected: Boolean)
 }
