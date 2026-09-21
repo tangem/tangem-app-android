@@ -6,6 +6,11 @@ import java.math.BigDecimal
 
 /**
  * A gacha machine (pack) as served by GET /api/v1/machine/machines and GET /api/v1/machine/{externalId}.
+ *
+ * @property price **in cents** — 5000 means $50.00. So are [fee] and [feeAmount]; the data layer divides
+ *   them by 100 — see `MachineConverter`.
+ * @property expectedValue the exception to that rule: already served in whole currency units, so it is
+ *   carried through untouched.
  */
 @JsonClass(generateAdapter = true)
 data class MachineDTO(
@@ -51,12 +56,12 @@ data class MachineDTO(
     data class MachineStockDTO(
         @Json(name = "common")
         val common: Int,
+        @Json(name = "uncommon")
+        val uncommon: Int,
         @Json(name = "rare")
         val rare: Int,
         @Json(name = "epic")
-        val epic: Int,
-        @Json(name = "legendary")
-        val legendary: Int?,
+        val epic: Int?,
     )
 
     /** Drop chance per rarity tier, in percent. */
@@ -64,12 +69,12 @@ data class MachineDTO(
     data class MachineOddsDTO(
         @Json(name = "common")
         val common: Int,
+        @Json(name = "uncommon")
+        val uncommon: Int,
         @Json(name = "rare")
         val rare: Int,
         @Json(name = "epic")
-        val epic: Int,
-        @Json(name = "legendary")
-        val legendary: Int?,
+        val epic: Int?,
     )
 
     /** Card value range per rarity tier. */
@@ -77,12 +82,12 @@ data class MachineDTO(
     data class MachineTierRangesDTO(
         @Json(name = "common")
         val common: MachineTierRangeDTO,
+        @Json(name = "uncommon")
+        val uncommon: MachineTierRangeDTO,
         @Json(name = "rare")
         val rare: MachineTierRangeDTO,
         @Json(name = "epic")
-        val epic: MachineTierRangeDTO,
-        @Json(name = "legendary")
-        val legendary: MachineTierRangeDTO?,
+        val epic: MachineTierRangeDTO?,
     ) {
         @JsonClass(generateAdapter = true)
         data class MachineTierRangeDTO(
