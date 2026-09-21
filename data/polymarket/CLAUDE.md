@@ -147,12 +147,14 @@ withdrawal, encoded and then decoded back so the signed calldata is proven to ma
 ## Account status refresh
 
 `DefaultPredictionAccountStatusFetcher` is driven by the wallet screen for every wallet, including ones
-that never opened the feature. It reads only stored addresses (invariant 1 in the domain file), maps
-`PolymarketWalletStatus` to `PredictionAccountStatusValue`, and on any failure leaves the cached value in
-place and marks it un-refreshed — it never writes "empty" on the strength of a failed question. The
-`byWalletId` read (`GET /wallet?walletId`, `getWalletStatusByWalletId`) serves a wallet whose owner address
-this device has never derived. `DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting
-with `Pending` so the combined account list is never stalled by this account.
+that never opened the feature. It never derives (invariant 1 in the domain file): with stored addresses it
+reads by owner address, without them it falls back to the `byWalletId` read (`GET /wallet?walletId`,
+`getWalletStatusByWalletId`), which serves a wallet onboarded on another device — that path knows the
+status but has no credentials, so it yields no balance. It maps `PolymarketWalletStatus` to
+`PredictionAccountStatusValue` and on any failure leaves the cached value in place and marks it
+un-refreshed — it never writes "empty" on the strength of a failed question.
+`DefaultPredictionAccountStatusProducer` mixes the fiat rate in on every emission, starting with
+`Pending` so the combined account list is never stalled by this account.
 
 ## DI
 
