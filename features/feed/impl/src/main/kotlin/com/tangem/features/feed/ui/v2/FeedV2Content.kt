@@ -208,12 +208,12 @@ private fun BoxScope.FeedChromeOverlay(
     CompositionLocalProvider(LocalHazeState provides hazeState) {
         TangemFade(
             position = TangemFade.Position.Top,
-            variant = TangemFade.Variant.Soft,
-            blur = true,
+            variant = TangemFade.Variant.Hard,
+            blur = false,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .height(contentPadding.calculateTopPadding() + FeedV2Component.TabRowHeight)
-                .hazeSourceTangem(state = hazeState, zIndex = 1f)
+                .hazeSourceTangem(zIndex = 1f)
                 .graphicsLayer { alpha = fadeAlpha() },
         )
         FeedTabRow(
