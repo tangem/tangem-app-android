@@ -73,6 +73,10 @@ internal class RwaFeedTabComponent @AssistedInject constructor(
         )
     }
 
+    override fun resetScroll() {
+        listState.requestScrollToItem(index = 0)
+    }
+
     @AssistedFactory
     interface Factory {
         fun create(context: AppComponentContext, params: Unit): RwaFeedTabComponent

@@ -18,8 +18,8 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 /**
- * A joint account holds one operation per network at a time, so there is at most one; one past the threshold is
- * already an ordinary unconfirmed transaction with nothing left to sign.
+ * A joint account holds one operation per network at a time, so there is at most one: awaiting signatures, or past
+ * the threshold and on its way to the network until the chain reports it.
  */
 internal class JointCosignRequestsDelegate @Inject constructor(
     private val accountListSupplier: SingleAccountListSupplier,
@@ -51,7 +51,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
         val chainId = networkReader.getChainId(network = currency.network).getOrNull() ?: return null
 
         val operation = jointAccount.inFlightOperations[chainId]
-            ?.takeIf { it.status == JointOperation.Status.AWAITING_SIGNATURES }
+            ?.takeIf { it.status != JointOperation.Status.UNKNOWN }
             ?: return null
         // The row belongs to one token: an operation moving another token of the same network stays out
         val transfer = transferResolver.resolve(

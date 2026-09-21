@@ -81,6 +81,11 @@ internal class FeedHomeComponent(
             .launchIn(componentScope)
 
         sheetState
+            .filter { state -> state != BottomSheetState.EXPANDED }
+            .onEach { pages.value.items.forEach { page -> page.instance?.resetScroll() } }
+            .launchIn(componentScope)
+
+        sheetState
             .filter { state -> state == BottomSheetState.EXPANDED }
             .onEach {
                 analyticsEventHandler.send(

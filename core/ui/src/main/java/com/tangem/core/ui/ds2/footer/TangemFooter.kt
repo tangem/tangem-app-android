@@ -12,8 +12,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
@@ -55,7 +57,8 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_right_20
  * @param contentPadding Inner padding of the content column, inside [windowInsets]. Defaults to
  *   [TangemFooter.DefaultContentPadding] (vertical 8, horizontal 16). The vertical values are
  *   replaced by 12dp while the keyboard is open.
- * @param fadeEnabled Whether the fade behind the footer is shown. Alpha is animated on change, and
+ * @param fadeEnabled Whether the fade behind the footer is shown. The fade draws 16dp beyond the
+ *   footer's top edge so it starts dissolving above the actions. Alpha is animated on change, and
  *   the blur is dropped once it reaches zero so a disabled fade costs nothing.
  * @param fadeVariant Fade style behind the footer. [TangemFade.Variant.Hard] — the design default —
  *   cuts the content off with an opaque block under the actions; [TangemFade.Variant.Soft] is a
@@ -93,6 +96,7 @@ fun TangemFooter(
         Box(
             modifier = Modifier
                 .matchParentSize()
+                .exceedTop(amount = 16.dp)
                 .hazeSourceTangem(zIndex = 1f),
         ) {
             TangemFade(
@@ -177,6 +181,19 @@ fun TangemFooter(
             buttonStart()
             buttonEnd()
         }
+    }
+}
+
+private fun Modifier.exceedTop(amount: Dp): Modifier = layout { measurable, constraints ->
+    val extraPx = amount.roundToPx()
+    val placeable = measurable.measure(
+        constraints.copy(
+            minHeight = constraints.minHeight + extraPx,
+            maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight + extraPx else constraints.maxHeight,
+        ),
+    )
+    layout(placeable.width, placeable.height - extraPx) {
+        placeable.place(x = 0, y = -extraPx)
     }
 }
 

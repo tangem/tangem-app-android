@@ -21,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Currency
@@ -47,35 +48,82 @@ internal class ResolveTangemPayCampaignUseCaseTest {
         coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
     }
 
-    @Test
-    fun `GIVEN no wallets WHEN invoked THEN the campaign link is validated AND landing is resolved`() = runTest {
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
+    @Nested
+    inner class Campaign {
 
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
-        coVerify(exactly = 1) { onboardingRepository.validateDeeplink("tangem://marketing/$CAMPAIGN_KEY") }
-        coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-    }
+        @Test
+        fun `GIVEN a valid campaign WHEN invoked THEN the link is validated AND landing is resolved`() = runTest {
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
 
-    @Test
-    fun `GIVEN wallets without Pay WHEN invoked THEN landing is resolved`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to false, OTHER_WALLET_ID to false)
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
+            coVerify(exactly = 1) { onboardingRepository.validateDeeplink("tangem://marketing/$CAMPAIGN_KEY") }
+        }
 
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
-    }
-
-    @Test
-    fun `GIVEN a wallet with Pay WHEN invoked THEN the offer is requested for it AND issue card is resolved`() =
-        runTest {
+        @Test
+        fun `GIVEN a campaign without art WHEN invoked THEN landing is resolved with no art`() = runTest {
             // Arrange
-            givenWallets(WALLET_ID to false, OTHER_WALLET_ID to true)
-            coEvery { getCustomerOffersUseCase.campaignOffer(OTHER_WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
+            coEvery { campaignRepository.getCampaign(CAMPAIGN_KEY) } returns TangemPayCampaign(cardArtUrl = null).right()
+
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(
+                TangemPayCampaignResolution.Landing(TangemPayCampaign(cardArtUrl = null)),
+            )
+        }
+
+        @Test
+        fun `GIVEN an invalid campaign WHEN invoked THEN unavailable is resolved AND campaign is not loaded`() =
+            runTest {
+                // Arrange
+                coEvery { onboardingRepository.validateDeeplink(CAMPAIGN_LINK) } returns false.right()
+
+                // Act
+                val result = useCase(CAMPAIGN_KEY)
+
+                // Assert
+                assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Unavailable)
+                coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
+            }
+
+        @Test
+        fun `GIVEN validation fails WHEN invoked THEN the error is propagated AND campaign is not loaded`() = runTest {
+            // Arrange
+            coEvery { onboardingRepository.validateDeeplink(CAMPAIGN_LINK) } returns
+                VisaApiError.ServerUnavailable.left()
+
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
+            coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
+        }
+
+        @Test
+        fun `GIVEN the campaign request fails WHEN invoked THEN the error is propagated`() = runTest {
+            // Arrange
+            coEvery { campaignRepository.getCampaign(CAMPAIGN_KEY) } returns VisaApiError.Unspecified.left()
+
+            // Act
+            val result = useCase(CAMPAIGN_KEY)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
+        }
+    }
+
+    @Nested
+    inner class IssueCardFastPath {
+
+        @Test
+        fun `GIVEN a single approved wallet with a live session WHEN invoked THEN issue card is resolved`() = runTest {
+            // Arrange
+            givenIssuableWallet()
+            coEvery { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
 
             // Act
             val result = useCase(CAMPAIGN_KEY)
@@ -83,114 +131,78 @@ internal class ResolveTangemPayCampaignUseCaseTest {
             // Assert
             assertThat(result.getOrNull()).isEqualTo(
                 TangemPayCampaignResolution.IssueCard(
-                    userWalletId = OTHER_WALLET_ID,
+                    userWalletId = WALLET_ID,
                     campaign = CAMPAIGN,
                     offer = OFFER,
                 ),
             )
         }
 
-    @Test
-    fun `GIVEN a wallet with Pay and no campaign offer WHEN invoked THEN unavailable AND art is not requested`() =
-        runTest {
+        @Test
+        fun `GIVEN several compatible wallets WHEN invoked THEN landing is resolved AND no customer info requested`() =
+            runTest {
+                // Arrange
+                givenIssuableWallet()
+                coEvery {
+                    eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false)
+                } returns listOf(WALLET_ID, OTHER_WALLET_ID)
+
+                // Act
+                val result = useCase(CAMPAIGN_KEY)
+
+                // Assert
+                assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
+                coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+            }
+
+        @Test
+        fun `GIVEN the single wallet has no Pay WHEN invoked THEN landing is resolved AND no customer info`() =
+            runTest {
+                // Arrange
+                givenIssuableWallet()
+                coEvery { onboardingRepository.hasTangemPayInWallet(WALLET_ID) } returns false.right()
+
+                // Act
+                val result = useCase(CAMPAIGN_KEY)
+
+                // Assert
+                assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
+                coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+            }
+
+        @Test
+        fun `GIVEN the Pay check fails WHEN invoked THEN landing is resolved`() = runTest {
             // Arrange
-            givenWallets(WALLET_ID to true)
-            coEvery { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) } returns null.right()
+            givenIssuableWallet()
+            coEvery { onboardingRepository.hasTangemPayInWallet(WALLET_ID) } returns VisaApiError.Unspecified.left()
 
             // Act
             val result = useCase(CAMPAIGN_KEY)
 
             // Assert
-            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Unavailable)
-            coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
+            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
         }
 
-    @Test
-    fun `GIVEN a campaign without art WHEN invoked THEN landing is resolved with no art`() = runTest {
-        // Arrange
-        coEvery { campaignRepository.getCampaign(CAMPAIGN_KEY) } returns TangemPayCampaign(cardArtUrl = null).right()
+        @Test
+        fun `GIVEN missing Pay credentials WHEN invoked THEN landing is resolved AND no customer info requested`() =
+            runTest {
+                // Arrange
+                givenIssuableWallet()
+                coEvery { onboardingRepository.isTangemPayInitialDataProduced(WALLET_ID) } returns false
 
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
+                // Act
+                val result = useCase(CAMPAIGN_KEY)
 
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(
-            TangemPayCampaignResolution.Landing(TangemPayCampaign(cardArtUrl = null)),
-        )
-    }
+                // Assert
+                assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
+                coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+            }
 
-    @Test
-    fun `GIVEN an invalid campaign WHEN invoked THEN unavailable is resolved AND campaign is not loaded`() = runTest {
-        // Arrange
-        coEvery { onboardingRepository.validateDeeplink(CAMPAIGN_LINK) } returns false.right()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Unavailable)
-        coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
-    }
-
-    @Test
-    fun `GIVEN validation fails WHEN invoked THEN the error is propagated AND campaign is not loaded`() = runTest {
-        // Arrange
-        coEvery { onboardingRepository.validateDeeplink(CAMPAIGN_LINK) } returns VisaApiError.ServerUnavailable.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-        coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
-    }
-
-    @Test
-    fun `GIVEN the campaign request fails WHEN invoked THEN the error is propagated`() = runTest {
-        // Arrange
-        coEvery { campaignRepository.getCampaign(CAMPAIGN_KEY) } returns VisaApiError.Unspecified.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
-    }
-
-    @Test
-    fun `GIVEN the Pay check fails WHEN invoked THEN the error is propagated`() = runTest {
-        // Arrange
-        coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
-            listOf(WALLET_ID)
-        coEvery { onboardingRepository.hasTangemPayInWallet(WALLET_ID) } returns VisaApiError.Unspecified.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.Unspecified)
-    }
-
-    @Test
-    fun `GIVEN the offers request fails WHEN invoked THEN the error is propagated`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to true)
-        coEvery { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) } returns
-            VisaApiError.ServerUnavailable.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-    }
-
-    @Test
-    fun `GIVEN a Pay wallet with pending KYC WHEN invoked THEN landing is resolved AND no offer requested`() =
-        runTest {
+        @Test
+        fun `GIVEN an expired Pay session WHEN invoked THEN landing is resolved AND no offer requested`() = runTest {
             // Arrange
-            givenWallets(WALLET_ID to true)
-            givenKycStatus(WALLET_ID, KycStatus.PENDING)
+            givenIssuableWallet()
+            coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
 
             // Act
             val result = useCase(CAMPAIGN_KEY)
@@ -200,187 +212,62 @@ internal class ResolveTangemPayCampaignUseCaseTest {
             coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
         }
 
-    @Test
-    fun `GIVEN a Pay wallet with rejected KYC WHEN invoked THEN landing is resolved`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to true)
-        givenKycStatus(WALLET_ID, KycStatus.REJECTED)
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
-    }
-
-    @Test
-    fun `GIVEN a pending Pay wallet before an approved one WHEN invoked THEN the approved one issues the card`() =
-        runTest {
+        @Test
+        fun `GIVEN KYC is not approved WHEN invoked THEN landing is resolved AND no offer requested`() = runTest {
             // Arrange
-            givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
-            givenKycStatus(WALLET_ID, KycStatus.PENDING)
-            coEvery { getCustomerOffersUseCase.campaignOffer(OTHER_WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
+            givenIssuableWallet()
+            givenKycStatus(KycStatus.PENDING)
 
             // Act
             val result = useCase(CAMPAIGN_KEY)
 
             // Assert
-            assertThat(result.getOrNull()).isEqualTo(
-                TangemPayCampaignResolution.IssueCard(
-                    userWalletId = OTHER_WALLET_ID,
-                    campaign = CAMPAIGN,
-                    offer = OFFER,
-                ),
-            )
-        }
-
-    @Test
-    fun `GIVEN the customer info request fails WHEN invoked THEN the error is propagated`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to true)
-        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-        coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN a Pay wallet without stored credentials WHEN invoked THEN session expired AND no customer info`() =
-        runTest {
-            // Arrange
-            givenWallets(WALLET_ID to true)
-            coEvery { onboardingRepository.isTangemPayInitialDataProduced(WALLET_ID) } returns false
-
-            // Act
-            val result = useCase(CAMPAIGN_KEY)
-
-            // Assert
-            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
-            coVerify(exactly = 0) { onboardingRepository.getCustomerInfo(any()) }
+            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
             coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-            coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
         }
 
-    @Test
-    fun `GIVEN a Pay wallet with an expired session WHEN invoked THEN session expired is resolved`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to true)
-        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
-        coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
-        coVerify(exactly = 0) { campaignRepository.getCampaign(any()) }
-    }
-
-    @Test
-    fun `GIVEN two wallets with expired sessions WHEN invoked THEN the first one is renewed`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
-        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
-        coEvery {
-            onboardingRepository.getCustomerInfo(OTHER_WALLET_ID)
-        } returns VisaApiError.RefreshTokenExpired.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(WALLET_ID))
-    }
-
-    @Test
-    fun `GIVEN missing credentials before an issuable wallet WHEN invoked THEN the issuable one issues the card`() =
-        runTest {
+        @Test
+        fun `GIVEN no campaign offer WHEN invoked THEN landing is resolved`() = runTest {
             // Arrange
-            givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
-            coEvery { onboardingRepository.isTangemPayInitialDataProduced(WALLET_ID) } returns false
-            coEvery { getCustomerOffersUseCase.campaignOffer(OTHER_WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
+            givenIssuableWallet()
+            coEvery { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) } returns null.right()
 
             // Act
             val result = useCase(CAMPAIGN_KEY)
 
             // Assert
-            assertThat(result.getOrNull()).isEqualTo(
-                TangemPayCampaignResolution.IssueCard(
-                    userWalletId = OTHER_WALLET_ID,
-                    campaign = CAMPAIGN,
-                    offer = OFFER,
-                ),
-            )
+            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
         }
 
-    @Test
-    fun `GIVEN an expired session before a failing wallet WHEN invoked THEN the error is propagated`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
-        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
-        coEvery { onboardingRepository.getCustomerInfo(OTHER_WALLET_ID) } returns VisaApiError.ServerUnavailable.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.leftOrNull()).isEqualTo(VisaApiError.ServerUnavailable)
-    }
-
-    @Test
-    fun `GIVEN an expired session before an issuable wallet WHEN invoked THEN the issuable one issues the card`() =
-        runTest {
+        @Test
+        fun `GIVEN the offers request fails WHEN invoked THEN landing is resolved`() = runTest {
             // Arrange
-            givenWallets(WALLET_ID to true, OTHER_WALLET_ID to true)
-            coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns VisaApiError.RefreshTokenExpired.left()
-            coEvery { getCustomerOffersUseCase.campaignOffer(OTHER_WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
+            givenIssuableWallet()
+            coEvery {
+                getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY)
+            } returns VisaApiError.ServerUnavailable.left()
 
             // Act
             val result = useCase(CAMPAIGN_KEY)
 
             // Assert
-            assertThat(result.getOrNull()).isEqualTo(
-                TangemPayCampaignResolution.IssueCard(
-                    userWalletId = OTHER_WALLET_ID,
-                    campaign = CAMPAIGN,
-                    offer = OFFER,
-                ),
-            )
+            assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.Landing(CAMPAIGN))
         }
-
-    @Test
-    fun `GIVEN a wallet without Pay and one with an expired session WHEN invoked THEN session expired`() = runTest {
-        // Arrange
-        givenWallets(WALLET_ID to false, OTHER_WALLET_ID to true)
-        coEvery {
-            onboardingRepository.getCustomerInfo(OTHER_WALLET_ID)
-        } returns VisaApiError.RefreshTokenExpired.left()
-
-        // Act
-        val result = useCase(CAMPAIGN_KEY)
-
-        // Assert
-        assertThat(result.getOrNull()).isEqualTo(TangemPayCampaignResolution.SessionExpired(OTHER_WALLET_ID))
     }
 
-    private fun givenWallets(vararg wallets: Pair<UserWalletId, Boolean>) {
+    private fun givenIssuableWallet() {
         coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
-            wallets.map { it.first }
-        wallets.forEach { (walletId, hasPay) ->
-            coEvery { onboardingRepository.hasTangemPayInWallet(walletId) } returns hasPay.right()
-            coEvery { onboardingRepository.isTangemPayInitialDataProduced(walletId) } returns true
-            if (hasPay) givenKycStatus(walletId, KycStatus.APPROVED)
-        }
+            listOf(WALLET_ID)
+        coEvery { onboardingRepository.hasTangemPayInWallet(WALLET_ID) } returns true.right()
+        coEvery { onboardingRepository.isTangemPayInitialDataProduced(WALLET_ID) } returns true
+        givenKycStatus(KycStatus.APPROVED)
+        coEvery { getCustomerOffersUseCase.campaignOffer(WALLET_ID, CAMPAIGN_KEY) } returns OFFER.right()
     }
 
-    private fun givenKycStatus(walletId: UserWalletId, status: KycStatus) {
+    private fun givenKycStatus(status: KycStatus) {
         val customerInfo = mockk<CustomerInfo>(relaxed = true)
         every { customerInfo.kycStatus } returns status
-        coEvery { onboardingRepository.getCustomerInfo(walletId) } returns customerInfo.right()
+        coEvery { onboardingRepository.getCustomerInfo(WALLET_ID) } returns customerInfo.right()
     }
 
     private companion object {

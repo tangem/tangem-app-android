@@ -109,7 +109,7 @@ internal fun PlacePredictionSummaryContent(
                 order = state.order,
             )
             PredictionMarketBlock(state = state.market)
-            PredictionDetailsBlock(state = state)
+            PredictionDetailsBlock(state = state, onFeeClick = intents::onFeeClick)
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
