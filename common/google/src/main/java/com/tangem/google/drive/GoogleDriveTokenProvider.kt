@@ -20,6 +20,12 @@ interface GoogleDriveTokenProvider {
     /** Drops the cached token and the authorization state, so the next call authorizes from scratch. */
     suspend fun invalidate()
 
+    /**
+     * [invalidate], then pins the following authorizations to [accountName] — one operation, because in
+     * the gap between two a concurrent [getAccessToken] can cache a token for the account being left.
+     */
+    suspend fun switchAccount(accountName: String)
+
     /** Same as [invalidate], but also revokes the token remotely. */
     suspend fun signOut()
 }

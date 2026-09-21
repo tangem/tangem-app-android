@@ -55,7 +55,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         coEvery { store.get(any()) } returns null
         coEvery { bridgeRepository.createWithdrawAddress(any(), any(), any(), any(), any()) } returns BRIDGE.right()
         coEvery { polymarketRepository.getRelayerNonce(any()) } returns BigInteger.valueOf(9).right()
-        coEvery { signer.signWithdrawal(any(), any()) } returns SIGNATURE.right()
+        coEvery { signer.signRelayedBatch(any(), any()) } returns SIGNATURE.right()
         coEvery { withdrawRepository.submit(any(), any()) } returns receipt().right()
         every { codec.build(any(), any()) } returns batch().call
         every { codec.decode(any()) } returns PredictionTransferCall(
@@ -92,7 +92,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
 
             // Assert
             assertThat(result).isEqualTo(PredictionWithdrawalFailure.Expired.left())
-            coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+            coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
             coVerify(exactly = 0) { store.save(any(), any()) }
         }
 
@@ -223,7 +223,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
 
         // Assert
         assertThat(actual.getOrNull()?.decoded?.recipient).isEqualTo(BRIDGE)
-        coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+        coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
         coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
         coVerify(exactly = 0) { store.save(any(), any()) }
     }
@@ -243,7 +243,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         assertThat(actual).isEqualTo(receipt().right())
         coVerify(exactly = 1) { withdrawRepository.submit(WALLET_ID, batch()) }
         coVerify(exactly = 0) { polymarketRepository.getRelayerNonce(any()) }
-        coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+        coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
     }
 
     @Test
@@ -256,7 +256,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PredictionWithdrawalFailure.CalldataMismatch.left())
-        coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+        coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
         coVerify(exactly = 0) { withdrawRepository.submit(any(), any()) }
     }
 
@@ -273,7 +273,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PredictionWithdrawalFailure.CalldataMismatch.left())
-        coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+        coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
     }
 
     @Test
@@ -289,7 +289,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PredictionWithdrawalFailure.AlreadyInFlight.left())
-        coVerify(exactly = 0) { signer.signWithdrawal(any(), any()) }
+        coVerify(exactly = 0) { signer.signRelayedBatch(any(), any()) }
     }
 
     @Test
@@ -312,7 +312,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         runTest {
             // Arrange
             val prepared = interactor.prepare(params()).getOrNull()!!
-            coEvery { signer.signWithdrawal(any(), any()) } returns PolymarketSigningError.UserCancelled.left()
+            coEvery { signer.signRelayedBatch(any(), any()) } returns PolymarketSigningError.UserCancelled.left()
 
             // Act
             val actual = interactor.confirm(prepared)

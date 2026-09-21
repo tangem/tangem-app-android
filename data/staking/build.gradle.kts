@@ -71,7 +71,6 @@ dependencies {
     // region Domain models
     api(projects.domain.staking.models)
     implementation(projects.domain.blockaid.models)
-    implementation(projects.domain.wallets.models)
     // endregion
 
     // region Libs

@@ -1140,7 +1140,7 @@
   <string name="joint_account_activation_account_button_title">Activate account</string>
   <string name="joint_account_activation_subtitle">Everyone in this account shares one balance. Any member can spend or withdraw the funds at any time — including without your approval</string>
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
-  <string name="joint_account_coming_soon_description">We\'re working on it. Support is coming in one of the next updates.</string>
+  <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it.</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the full link, or ask the account owner to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
@@ -1778,7 +1778,12 @@
   </plurals>
   <string name="prediction_event_probability">Probability</string>
   <string name="prediction_event_total_volume">Total volume:</string>
+  <string name="prediction_fee_sheet_builder_fee">Tangem Builder Fee</string>
+  <string name="prediction_fee_sheet_buy_description">Buying %1$s shares at %2$s¢ each. Final shares count (and corresponding %3$s amount executed) may vary within your %4$s slippage limit, depending on what this market can match.</string>
+  <string name="prediction_fee_sheet_order">Prediction order</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket Fee</string>
+  <string name="prediction_fee_sheet_sell_description">Selling %1$s shares at %2$s¢ each. Final shares count (and corresponding %3$s amount executed) may vary within your %4$s slippage limit, depending on what this market can match.</string>
+  <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
   <string name="prediction_main_events_load_error">Failed to load events.\nTap to reload</string>
@@ -2892,7 +2897,6 @@
   <string name="tangempay_withdraw_bank_field_account_number">Account number</string>
   <string name="tangempay_withdraw_bank_field_bank_address_line1">Bank address line 1</string>
   <string name="tangempay_withdraw_bank_field_bank_city">Bank city</string>
-  <string name="tangempay_withdraw_bank_field_bank_country">Bank country</string>
   <string name="tangempay_withdraw_bank_field_bank_name">Bank name</string>
   <string name="tangempay_withdraw_bank_field_bank_region">Bank region / state</string>
   <string name="tangempay_withdraw_bank_field_business_name">Business name</string>
@@ -2907,6 +2911,7 @@
   <string name="tangempay_withdraw_bank_placeholder_country">Eg., US</string>
   <string name="tangempay_withdraw_bank_placeholder_first_name">John</string>
   <string name="tangempay_withdraw_bank_placeholder_last_name">Doe</string>
+  <string name="tangempay_withdraw_bank_placeholder_not_selected">Not selected</string>
   <string name="tangempay_withdraw_bank_placeholder_region">Eg., CA</string>
   <string name="tangempay_withdraw_bank_placeholder_region_name">Eg., Bavaria</string>
   <string name="tangempay_withdraw_bank_recipient_business">Business</string>

@@ -105,15 +105,24 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
-    fun `requestColdNonce is a no-op when backend auth is disabled`() = runTest {
-        // The toggle is checked before the card is mapped, so nothing is requested from the registrar.
+    fun `prefetchColdNonce is a no-op when backend auth is disabled`() = runTest {
         every { authFeatureToggles.isBackendAuthenticationEnabled } returns false
 
-        val nonce = launcher.requestColdNonce(mockk<Card>(), checkRegistered = true)
+        val nonce = launcher.prefetchColdNonce()
 
         assertThat(nonce).isNull()
-        coVerify(exactly = 0) { walletRegistrar.isRegistered(any()) }
         coVerify(exactly = 0) { walletRegistrar.requestNonce() }
+    }
+
+    @Test
+    fun `prefetchColdNonce returns the registrar nonce when enabled`() = runTest {
+        every { authFeatureToggles.isBackendAuthenticationEnabled } returns true
+        val expected = mockk<WalletNonce>()
+        coEvery { walletRegistrar.requestNonce() } returns expected.right()
+
+        val nonce = launcher.prefetchColdNonce()
+
+        assertThat(nonce).isEqualTo(expected)
     }
 
     @Test

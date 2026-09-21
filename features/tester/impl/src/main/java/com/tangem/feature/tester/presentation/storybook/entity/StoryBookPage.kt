@@ -327,11 +327,20 @@ internal data class TangemRowStory(
 internal data class TangemFadeStory(
     val variant: TangemFade.Variant,
     val position: TangemFade.Position,
+    val height: Height,
     val isBlur: Boolean,
     val onVariantChange: (TangemFade.Variant) -> Unit,
     val onPositionChange: (TangemFade.Position) -> Unit,
+    val onHeightChange: (Height) -> Unit,
     val onBlurToggle: () -> Unit,
-) : DsStoryBookPage
+) : DsStoryBookPage {
+
+    /** Fade height inside the preview box — the full backdrop or half of it, anchored to [position]. */
+    enum class Height(val label: String) {
+        MatchParent("match parent"),
+        Half("1/2"),
+    }
+}
 
 @Suppress("BooleanPropertyNaming")
 internal data class TangemTopNavigationStory(

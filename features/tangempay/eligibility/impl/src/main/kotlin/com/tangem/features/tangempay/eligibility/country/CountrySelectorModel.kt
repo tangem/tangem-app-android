@@ -6,7 +6,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.search.TangemSearch
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.Collator
 import javax.inject.Inject
 
 @Stable
@@ -49,7 +49,7 @@ internal class CountrySelectorModel @Inject constructor(
         step = Step.Countries
         uiState.update { state ->
             state.copy(
-                title = resourceReference(R.string.tangempay_residency_title_country),
+                title = resourceReference(R.string.tangempay_order_data_country),
                 search = state.search.copy(query = "", isActive = false),
                 onBackClick = null,
             )
@@ -61,7 +61,7 @@ internal class CountrySelectorModel @Inject constructor(
         step = Step.Regions(country = country, countryCode = country.code)
         uiState.update { state ->
             state.copy(
-                title = resourceReference(R.string.tangempay_residency_title_state),
+                title = resourceReference(R.string.tangempay_order_data_region),
                 search = state.search.copy(query = "", isActive = false),
                 onBackClick = ::showCountries,
             )
@@ -124,19 +124,23 @@ internal class CountrySelectorModel @Inject constructor(
 
     private fun setCountriesLoaded() {
         data = ResidencyListData.Loaded(
-            suggested = countries.filter(TangemPayCountry::isSuggested).map(::toItem),
-            all = countries.map(::toItem),
+            suggested = emptyList(),
+            all = countries.map(::toItem).sortedByName(),
         )
         updateContent()
     }
 
     private fun setRegionsLoaded(regions: List<TangemPayRegion>) {
         data = ResidencyListData.Loaded(
-            suggested = regions.filter(TangemPayRegion::isSuggested).map(::toItem),
-            all = regions.map(::toItem),
+            suggested = emptyList(),
+            all = regions.map(::toItem).sortedByName(),
         )
         updateContent()
     }
+
+    /** Names come localized, so a [Collator] keeps "Åland" and "Türkiye" in the alphabet instead of after "Z". */
+    private fun List<ResidencyListUM.ItemUM>.sortedByName(): List<ResidencyListUM.ItemUM> =
+        sortedWith(compareBy(Collator.getInstance(), ResidencyListUM.ItemUM::name))
 
     private fun setFailed(onRetry: () -> Unit) {
         data = ResidencyListData.Failed(onRetry = onRetry)
@@ -157,8 +161,9 @@ internal class CountrySelectorModel @Inject constructor(
             state.copy(
                 content = data.toContent(
                     query = state.search.query,
-                    suggestedTitle = suggestedSectionTitle(),
-                    allTitle = allSectionTitle(),
+                    // The address picker is one plain list: no Suggested block and no section headers
+                    suggestedTitle = null,
+                    allTitle = null,
                 ),
             )
         }
@@ -182,8 +187,8 @@ internal class CountrySelectorModel @Inject constructor(
 
     private fun getInitialState(): ResidencyListUM = ResidencyListUM(
         title = when (params) {
-            is Params.Countries -> resourceReference(R.string.tangempay_residency_title_country)
-            is Params.Regions -> resourceReference(R.string.tangempay_residency_title_state)
+            is Params.Countries -> resourceReference(R.string.tangempay_order_data_country)
+            is Params.Regions -> resourceReference(R.string.tangempay_order_data_region)
         },
         search = TangemSearch.State(
             placeholderText = resourceReference(R.string.common_search),
@@ -197,16 +202,6 @@ internal class CountrySelectorModel @Inject constructor(
         onBackClick = null,
         onCloseClick = params.onDismiss,
     )
-
-    private fun suggestedSectionTitle(): TextReference = when (step) {
-        Step.Countries -> resourceReference(R.string.tangempay_residency_suggested_country)
-        is Step.Regions -> resourceReference(R.string.tangempay_residency_suggested_state)
-    }
-
-    private fun allSectionTitle(): TextReference = when (step) {
-        Step.Countries -> resourceReference(R.string.tangempay_residency_all_country)
-        is Step.Regions -> resourceReference(R.string.tangempay_residency_all_state)
-    }
 
     private sealed interface Step {
 

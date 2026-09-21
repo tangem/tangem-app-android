@@ -48,8 +48,8 @@ internal object TangemPayBankWithdrawPreviewData {
     private val personCard = persistentListOf(
         DetailRowUM(label = BankWithdrawFormField.FirstName.label, value = "Saburo"),
         DetailRowUM(label = BankWithdrawFormField.LastName.label, value = "Arasaka"),
-        DetailRowUM(label = BankWithdrawFormField.Country.label, value = "US"),
-        DetailRowUM(label = BankWithdrawFormField.Region.label, value = "CA"),
+        DetailRowUM(label = BankWithdrawFormField.Country.label, value = "United States"),
+        DetailRowUM(label = BankWithdrawFormField.Region.label, value = "California"),
         DetailRowUM(label = BankWithdrawFormField.City.label, value = "Night City"),
         DetailRowUM(label = BankWithdrawFormField.AddressLine1.label, value = "Megatower H10, 322F"),
         DetailRowUM(label = BankWithdrawFormField.PostalCode.label, value = "90001"),
@@ -57,8 +57,8 @@ internal object TangemPayBankWithdrawPreviewData {
 
     private val businessCard = persistentListOf(
         DetailRowUM(label = BankWithdrawFormField.BusinessName.label, value = "Arasaka Corporation"),
-        DetailRowUM(label = BankWithdrawFormField.Country.label, value = "US"),
-        DetailRowUM(label = BankWithdrawFormField.Region.label, value = "CA"),
+        DetailRowUM(label = BankWithdrawFormField.Country.label, value = "United States"),
+        DetailRowUM(label = BankWithdrawFormField.Region.label, value = "California"),
         DetailRowUM(label = BankWithdrawFormField.City.label, value = "Night City"),
         DetailRowUM(label = BankWithdrawFormField.AddressLine1.label, value = "Megatower H10, 322F"),
         DetailRowUM(label = BankWithdrawFormField.PostalCode.label, value = "90001"),
@@ -66,7 +66,7 @@ internal object TangemPayBankWithdrawPreviewData {
 
     private val bankCard = persistentListOf(
         DetailRowUM(label = BankWithdrawFormField.BankName.label, value = "Arasaka Bank"),
-        DetailRowUM(label = BankWithdrawFormField.BankRegion.label, value = "CA"),
+        DetailRowUM(label = BankWithdrawFormField.BankRegion.label, value = "California"),
         DetailRowUM(label = BankWithdrawFormField.BankCity.label, value = "Night City"),
         DetailRowUM(label = BankWithdrawFormField.BankAddressLine1.label, value = "Ebunike st., 32A"),
         DetailRowUM(label = BankWithdrawFormField.BankPostalCode.label, value = "90002"),

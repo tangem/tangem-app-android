@@ -26,9 +26,7 @@ dependencies {
     api(deps.compose.foundation)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
-    implementation(deps.androidx.annotation)
 
     /** Other */
     api(deps.kotlin.immutable.collections)
-    implementation(deps.androidx.annotation)
 }

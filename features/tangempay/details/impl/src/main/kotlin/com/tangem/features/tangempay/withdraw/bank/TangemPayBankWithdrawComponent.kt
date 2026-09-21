@@ -204,8 +204,8 @@ internal class TangemPayBankWithdrawComponent(
             step = step,
             fields = fields,
             onBack = model::onDetailsFilled,
-            onContinue = { values ->
-                model.onDetailsFilled(values)
+            onContinue = { result ->
+                model.onDetailsFilled(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
         ),

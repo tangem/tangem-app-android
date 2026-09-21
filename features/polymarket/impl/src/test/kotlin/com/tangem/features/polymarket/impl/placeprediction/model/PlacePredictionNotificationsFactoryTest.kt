@@ -7,7 +7,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PayoutUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
@@ -338,19 +337,19 @@ internal class PlacePredictionNotificationsFactoryTest {
             SellGateModel(
                 amountValue = "12.80",
                 quote = createQuote(),
-                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = true,
             ),
             SellGateModel(
                 amountValue = "51.23",
                 quote = createQuote(),
-                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = true,
             ),
             SellGateModel(
                 amountValue = "51.24",
                 quote = createQuote(),
-                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = false,
             ),
             SellGateModel(
@@ -379,6 +378,14 @@ internal class PlacePredictionNotificationsFactoryTest {
                 expectedButtonEnabled = false,
             ),
             SellGateModel(
+                amountValue = "3",
+                available = "3",
+                quote = createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE),
+                minAmount = BigDecimal("5"),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
+                expectedButtonEnabled = true,
+            ),
+            SellGateModel(
                 amountValue = "12.80",
                 quote = QuoteUM.Unavailable(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY),
                 expectedProceeds = SharesProceedsUM.Unavailable,
@@ -387,7 +394,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             SellGateModel(
                 amountValue = "12.80",
                 quote = createQuote(status = PredictionQuoteStatus.PARTIAL),
-                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2")),
+                expectedProceeds = SharesProceedsUM.Content(expected = BigDecimal("23.8")),
                 expectedButtonEnabled = true,
             ),
             SellGateModel(
@@ -486,19 +493,17 @@ internal class PlacePredictionNotificationsFactoryTest {
     private fun createQuote(
         status: PredictionQuoteStatus = PredictionQuoteStatus.FULL,
         expected: BigDecimal = BigDecimal("23.8"),
-        guaranteed: BigDecimal = BigDecimal("23.2"),
         feeTotal: BigDecimal = BigDecimal("0.1"),
         total: BigDecimal = BigDecimal("10.1"),
     ): QuoteUM.Content = QuoteUM.Content(
         status = status,
         expected = expected,
-        guaranteed = guaranteed,
         feeTotal = feeTotal,
         total = total,
         signable = SignableQuoteUM(quote = mockk(relaxed = true), receivedAtMillis = 0),
     )
 
     private companion object {
-        val QUOTE_PAYOUT = PayoutUM(expected = BigDecimal("23.8"), guaranteed = BigDecimal("23.2"))
+        val QUOTE_PAYOUT: BigDecimal = BigDecimal("23.8")
     }
 }

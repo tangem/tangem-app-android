@@ -20,14 +20,18 @@ class BuildPredictionOrderDraftUseCase {
      *
      * @param quote the only source of the legs — the typed amount is deliberately not a parameter, since
      *  the backend normalises it onto the market's grid and only the returned figure may be signed
+     * @param isFullClose the sale covers the whole remaining position, which lifts the minimum order size
      */
     operator fun invoke(
         quote: PredictionOrderQuote,
         assetId: String,
         isNegRisk: Boolean,
         side: PredictionOrderSide,
+        isFullClose: Boolean = false,
     ): Either<PredictionOrderDraftError, PredictionOrderDraft> = either {
-        ensure(quote.status.isPlaceable) { PredictionOrderDraftError.NotPlaceable(status = quote.status) }
+        ensure(quote.isPlaceable(isFullClose = isFullClose)) {
+            PredictionOrderDraftError.NotPlaceable(status = quote.status)
+        }
         ensure(quote.side == side) {
             PredictionOrderDraftError.SideMismatch(quoted = quote.side, requested = side)
         }
