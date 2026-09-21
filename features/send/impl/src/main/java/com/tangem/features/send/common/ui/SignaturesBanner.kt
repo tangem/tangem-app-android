@@ -25,7 +25,13 @@ internal fun SignaturesBanner(signaturesUM: SendSignaturesUM, modifier: Modifier
                 id = R.string.joint_account_send_signatures_required,
                 formatArgs = wrappedList(signaturesUM.threshold.toString(), signaturesUM.membersCount.toString()),
             ),
-            subtitle = resourceReference(R.string.joint_account_send_sends_automatically),
+            subtitle = resourceReference(
+                if (signaturesUM.isFirstOperation) {
+                    R.string.joint_account_send_sends_automatically_setup_fee
+                } else {
+                    R.string.joint_account_send_sends_automatically
+                },
+            ),
             trailingIcon = TangemIconUM.Icon(
                 imageVector = Icons.ic_document_20,
                 tintReference = { TangemTheme.colors3.icon.status.warning },

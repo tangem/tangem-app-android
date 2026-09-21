@@ -1,6 +1,7 @@
 package com.tangem.features.send.send.joint
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -8,12 +9,14 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
@@ -27,6 +30,7 @@ internal class JointSendDelegate @Inject constructor(
     private val gasBuilder: SafeTxGasBuilder,
     private val createJointOperationUseCase: CreateJointOperationUseCase,
     private val payloadCodec: JointTransferPayloadCodec,
+    private val networkReader: JointNetworkReader,
 ) {
 
     suspend fun findJointAccount(userWalletId: UserWalletId, account: Account.Joint): JointAccount? {
@@ -34,6 +38,11 @@ internal class JointSendDelegate @Inject constructor(
             .firstOrNull()
             .orEmpty()
             .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
+    }
+
+    /** An unreadable chain is taken as deployed: no note beats a setup fee that is not charged */
+    suspend fun isSafeDeployed(userWalletId: UserWalletId, network: Network): Boolean {
+        return networkReader.isSafeDeployed(userWalletId = userWalletId, network = network).getOrElse { true }
     }
 
     /**
