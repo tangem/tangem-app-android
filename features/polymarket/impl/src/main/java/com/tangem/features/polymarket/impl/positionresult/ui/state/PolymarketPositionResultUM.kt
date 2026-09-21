@@ -21,7 +21,7 @@ internal data class PolymarketPositionResultUM(
     @Immutable
     sealed interface Action {
 
-        data class Claim(val isInProgress: Boolean) : Action
+        data class Claim(val isInProgress: Boolean, val label: TextReference) : Action
 
         data object Dismiss : Action
     }
