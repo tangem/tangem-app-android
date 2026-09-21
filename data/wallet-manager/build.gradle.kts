@@ -61,5 +61,6 @@ dependencies {
     // region Testing libraries
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(tangemDeps.hot.core)
     // endregion
 }
