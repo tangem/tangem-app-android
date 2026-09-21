@@ -58,6 +58,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
+import com.tangem.features.polymarket.impl.placeprediction.entity.isFullClose
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
 import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
@@ -270,10 +271,10 @@ internal class PlacePredictionModel @Inject constructor(
         }
 
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        modelScope.launch { place(frozen = frozen) }
+        modelScope.launch { place(frozen = frozen, isFullClose = state.isFullClose()) }
     }
 
-    private suspend fun place(frozen: SignableQuoteUM) {
+    private suspend fun place(frozen: SignableQuoteUM, isFullClose: Boolean) {
         val isNegRisk = isNegRiskMarket
         val addresses = withContext(dispatchers.default) {
             derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
@@ -308,6 +309,7 @@ internal class PlacePredictionModel @Inject constructor(
                     side = params.side,
                     isNegRisk = isNegRisk,
                     quoteReceivedAtMillis = frozen.receivedAtMillis,
+                    isFullClose = isFullClose,
                 ),
             )
         }.getOrElse { failure ->

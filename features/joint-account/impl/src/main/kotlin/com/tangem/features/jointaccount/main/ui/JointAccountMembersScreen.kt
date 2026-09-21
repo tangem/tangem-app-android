@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
+import com.tangem.core.ui.ds.contextmenu.TangemContextMenuItem
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
@@ -109,20 +111,13 @@ private fun MembersMenuButton(onArchiveClick: () -> Unit) {
             contentDescription = stringResourceSafe(CoreUiR.string.common_more),
             onClick = { isExpanded = true },
         )
-        DropdownMenu(
+        TangemContextMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
-            containerColor = TangemTheme.colors3.bg.secondary,
         ) {
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = stringResourceSafe(CoreUiR.string.account_details_archive),
-                        color = TangemTheme.colors3.text.status.error,
-                        style = TangemTheme.typography3.body.medium,
-                    )
-                },
-                colors = MenuDefaults.itemColors(),
+            TangemContextMenuItem(
+                title = resourceReference(CoreUiR.string.account_details_archive),
+                isDestructive = true,
                 onClick = {
                     isExpanded = false
                     onArchiveClick()
