@@ -105,10 +105,6 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
     }
 }
 
-/**
- * Selling the whole remaining position. The exchange's minimum order size does not apply to it — a position
- * below that minimum would otherwise be impossible to close.
- */
 internal fun PlacePredictionUM.isFullClose(): Boolean {
     val order = order as? OrderSideUM.Sell ?: return false
     val available = (order.position as? SellPositionUM.Held)?.available ?: return false
