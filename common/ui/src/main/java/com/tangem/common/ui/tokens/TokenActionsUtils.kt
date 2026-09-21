@@ -11,7 +11,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
  * [ScenarioUnavailabilityReason.JointAccount] carries one so far — its dialog is a designed state, not an error.
  */
 fun ScenarioUnavailabilityReason.getUnavailabilityReasonTitle(): TextReference? = when (this) {
-    ScenarioUnavailabilityReason.JointAccount -> resourceReference(id = R.string.joint_account_coming_soon_title)
+    ScenarioUnavailabilityReason.JointAccount -> resourceReference(id = R.string.common_coming_soon)
     else -> null
 }
 
