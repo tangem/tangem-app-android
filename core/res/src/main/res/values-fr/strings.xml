@@ -2109,15 +2109,15 @@
   <string name="tangempay_newonboard_title">Obtenez votre carte Tangem Pay</string>
   <string name="tangempay_newonboard_topleft_body">Payez ce que vous voyez</string>
   <string name="tangempay_newonboard_topleft_title">Aucun frais d’achat, \n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">Sans surprise</string>
-  <string name="tangempay_newonboard_topright_title">0 $ par mois,\n0 $ de recharge</string>
+  <string name="tangempay_newonboard_topright_body">Versé en USDC, pas en tokens obscurs</string>
+  <string name="tangempay_newonboard_topright_title">Jusqu’à 2 % de cashback</string>
   <string name="tangempay_onboarding_banner_description">Carte Tangem Pay gratuite avec jusqu’à 2 % de cashback</string>
   <string name="tangempay_onboarding_banner_title">Dépensez vos cryptos au quotidien</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtenir la carte</string>
-  <string name="tangempay_onboarding_pay_description">Avec carte numérique compatible Apple Pay et Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">Carte digitale avec Apple Pay ou Google Pay, achats sans frais</string>
   <string name="tangempay_onboarding_pay_title">Dépensez vos actifs partout</string>
-  <string name="tangempay_onboarding_purchases_description">Aucuns frais supplémentaires pour les achats</string>
-  <string name="tangempay_onboarding_purchases_title">Payez exactement ce que vous voyez</string>
+  <string name="tangempay_onboarding_purchases_description">Pour tous les achats, en USDC — sans points ni tokens obscurs</string>
+  <string name="tangempay_onboarding_purchases_title">Jusqu’à 2 % de cashback</string>
   <string name="tangempay_onboarding_security_description">Un compte de paiement séparé sera créé sans divulguer vos adresses et actifs</string>
   <string name="tangempay_onboarding_security_title">Confidentialité inégalée</string>
   <string name="tangempay_onboarding_setup_wallet_description">Et associerons Tangem Pay à ce wallet</string>
