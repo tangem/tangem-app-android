@@ -1,9 +1,12 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.spend.datasource.pay.models.response.BankAccountsResponse
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
@@ -19,24 +22,15 @@ internal class BankAccountConverterTest {
         val actual = BankAccountConverter.convert(response())
 
         // Assert
-        val details = requireNotNull(actual).details
-        assertThat(actual.id).isEqualTo("account-1")
-        assertThat(actual.displayName).isEqualTo("Primary checking account")
-        assertThat(details.currency).isEqualTo("USD")
-        assertThat(details.rail).isEqualTo(BankRail.ACH)
-        assertThat(details.isThirdParty).isFalse()
-        assertThat(details.beneficiary).isEqualTo(Beneficiary.Individual("John", "Doe"))
-        assertThat(details.beneficiaryAddress.line2).isEqualTo("Apt 4B")
-        assertThat(details.bankAddress.line2).isNull()
-        assertThat(details.accountNumber).isEqualTo("1234567890")
-        assertThat(details.routingNumber).isEqualTo("021000021")
-        assertThat(details.accountType).isEqualTo(BankAccountType.CHECKING)
+        assertThat(actual).isEqualTo(
+            BankAccount(id = "account-1", displayName = "Primary checking account", details = expectedDetails()),
+        )
     }
 
     @Test
-    fun `GIVEN business beneficiary WHEN convert THEN company name kept`() {
+    fun `GIVEN business beneficiary WHEN convert THEN business name read from business_name`() {
         // Arrange
-        val beneficiary = beneficiary(type = "BUSINESS", firstName = null, lastName = null, name = "Raxanax")
+        val beneficiary = beneficiary(type = "BUSINESS", firstName = null, lastName = null, businessName = "Raxanax")
 
         // Act
         val actual = BankAccountConverter.convert(response(beneficiary = beneficiary))
@@ -60,22 +54,102 @@ internal class BankAccountConverterTest {
         val actual = BankAccountConverter.convert(response(accountType = "savings"))
 
         // Assert
-        assertThat(actual?.details?.accountType).isEqualTo(BankAccountType.SAVINGS)
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(accountType = BankAccountType.SAVINGS))
     }
 
     @Test
-    fun `GIVEN wire recipient without account type WHEN convert THEN falls back to checking`() {
+    fun `GIVEN wire recipient without an account type WHEN convert THEN account type is null`() {
         // Act
         val actual = BankAccountConverter.convert(response(rail = "WIRE", accountType = null))
 
         // Assert
-        assertThat(actual?.details?.rail).isEqualTo(BankRail.WIRE)
-        assertThat(actual?.details?.accountType).isEqualTo(BankAccountType.CHECKING)
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(rail = BankRail.WIRE, accountType = null))
+    }
+
+    @Test
+    fun `GIVEN recipient without a routing number WHEN convert THEN account kept with a null routing number`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(routingNumber = null))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(routingNumber = null))
+    }
+
+    @Test
+    fun `GIVEN recipient without a rail WHEN convert THEN account kept with a null rail`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(rail = null))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(rail = null))
+    }
+
+    @Test
+    fun `GIVEN recipient with an unknown rail WHEN convert THEN account kept with a null rail`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(rail = "SEPA"))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(rail = null))
+    }
+
+    @Test
+    fun `GIVEN recipient without a currency WHEN convert THEN account kept with a null currency`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(currency = null))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(currency = null))
+    }
+
+    @Test
+    fun `GIVEN recipient with a partial bank address WHEN convert THEN address dropped and account kept`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(bankAddress = address(city = null)))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(bankAddress = null))
+    }
+
+    @Test
+    fun `GIVEN recipient with a partial beneficiary address WHEN convert THEN address dropped and account kept`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(beneficiaryAddress = address(city = null)))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(beneficiaryAddress = null))
+    }
+
+    @Test
+    fun `GIVEN recipient without a bank address WHEN convert THEN account kept with a null bank address`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(bankAddress = null))
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(expectedDetails().copy(bankAddress = null))
+    }
+
+    @Test
+    fun `GIVEN recipient without an account number WHEN convert THEN dropped`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(accountNumber = null))
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN recipient without a beneficiary name WHEN convert THEN dropped`() {
+        // Act
+        val actual = BankAccountConverter.convert(response(beneficiary = beneficiary(lastName = null)))
+
+        // Assert
+        assertThat(actual).isNull()
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN incomplete recipient WHEN convert THEN dropped`(model: IncompleteModel) {
+    fun `GIVEN unidentifiable recipient WHEN convert THEN dropped`(model: IncompleteModel) {
         // Act
         val actual = BankAccountConverter.convert(model.response)
 
@@ -87,16 +161,11 @@ internal class BankAccountConverterTest {
 
     private fun provideTestModels() = listOf(
         IncompleteModel("no details", response().copy(details = null)),
-        IncompleteModel("unknown rail", response(rail = "SEPA")),
-        IncompleteModel("no rail", response(rail = null)),
-        IncompleteModel("no currency", response(currency = null)),
-        IncompleteModel("no routing number", response(routingNumber = null)),
-        IncompleteModel("blank account number", response(accountNumber = "")),
         IncompleteModel("no beneficiary", response(beneficiary = null)),
-        IncompleteModel("nameless individual", response(beneficiary = beneficiary(lastName = null))),
-        IncompleteModel("nameless business", response(beneficiary = beneficiary(type = "BUSINESS", name = null))),
-        IncompleteModel("address without city", response(beneficiaryAddress = address(city = null))),
-        IncompleteModel("no bank address", response(bankAddress = null)),
+        IncompleteModel(
+            "nameless business",
+            response(beneficiary = beneficiary(type = "BUSINESS", firstName = null, lastName = null)),
+        ),
     )
 
     @Suppress("LongParameterList")
@@ -132,13 +201,40 @@ internal class BankAccountConverterTest {
         type: String? = "INDIVIDUAL",
         firstName: String? = "John",
         lastName: String? = "Doe",
-        name: String? = null,
-    ) = BankAccountsResponse.Beneficiary(type = type, firstName = firstName, lastName = lastName, name = name)
+        businessName: String? = null,
+    ) = BankAccountsResponse.Beneficiary(
+        type = type,
+        firstName = firstName,
+        lastName = lastName,
+        businessName = businessName,
+    )
 
     private fun address(city: String? = "New York", line2: String? = null) = BankAccountsResponse.Address(
         line1 = "123 Main St",
         line2 = line2,
         city = city,
+        region = "NY",
+        postalCode = "10001",
+        countryCode = "US",
+    )
+
+    private fun expectedDetails() = BankAccountDetails(
+        currency = "USD",
+        rail = BankRail.ACH,
+        isThirdParty = false,
+        beneficiary = Beneficiary.Individual("John", "Doe"),
+        beneficiaryAddress = postalAddress(line2 = "Apt 4B"),
+        bankName = "Chase Bank",
+        bankAddress = postalAddress(),
+        accountNumber = "1234567890",
+        routingNumber = "021000021",
+        accountType = BankAccountType.CHECKING,
+    )
+
+    private fun postalAddress(line2: String? = null) = PostalAddress(
+        line1 = "123 Main St",
+        line2 = line2,
+        city = "New York",
         region = "NY",
         postalCode = "10001",
         countryCode = "US",
