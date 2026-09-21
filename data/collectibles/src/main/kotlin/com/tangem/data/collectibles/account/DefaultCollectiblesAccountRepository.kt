@@ -1,6 +1,6 @@
 package com.tangem.data.collectibles.account
 
-import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
+import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.isAccountCreated
@@ -16,14 +16,14 @@ import javax.inject.Inject
  * a failed report for an onboarding that actually succeeded.
  */
 internal class DefaultCollectiblesAccountRepository @Inject constructor(
-    private val collectiblesAccountStatusStore: CollectiblesAccountStatusStore,
+    private val collectiblesAccountStore: CollectiblesAccountStore,
 ) : CollectiblesAccountRepository {
 
     override fun getStatus(userWalletId: UserWalletId): Flow<CollectiblesAccountStatusValue?> =
-        collectiblesAccountStatusStore.get(userWalletId)
+        collectiblesAccountStore.get(userWalletId)
 
     override suspend fun getStatusSync(userWalletId: UserWalletId): CollectiblesAccountStatusValue? =
-        runSuspendCatching { collectiblesAccountStatusStore.getSyncOrNull(userWalletId) }
+        runSuspendCatching { collectiblesAccountStore.getSyncOrNull(userWalletId) }
             .onFailure { TangemLogger.e("Failed to read the collectibles account of $userWalletId", it) }
             .getOrNull()
 
@@ -35,12 +35,12 @@ internal class DefaultCollectiblesAccountRepository @Inject constructor(
             TangemLogger.d(messageString = "Collectibles account of $userWalletId created")
         }
 
-        runSuspendCatching { collectiblesAccountStatusStore.store(userWalletId = userWalletId, value = status) }
+        runSuspendCatching { collectiblesAccountStore.store(userWalletId = userWalletId, value = status) }
             .onFailure { TangemLogger.e("Failed to record the collectibles account of $userWalletId", it) }
     }
 
     override suspend fun clearAccount(userWalletId: UserWalletId) {
-        runSuspendCatching { collectiblesAccountStatusStore.clear(userWalletId) }
+        runSuspendCatching { collectiblesAccountStore.clear(userWalletId) }
             .onFailure { TangemLogger.e("Failed to clear the collectibles account of $userWalletId", it) }
     }
 }
