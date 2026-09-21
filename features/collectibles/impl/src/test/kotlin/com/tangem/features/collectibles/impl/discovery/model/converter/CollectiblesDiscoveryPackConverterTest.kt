@@ -4,13 +4,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.features.collectibles.impl.discovery.createMachine
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.Locale
 
