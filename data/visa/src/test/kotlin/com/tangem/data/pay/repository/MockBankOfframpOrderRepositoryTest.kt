@@ -91,7 +91,7 @@ internal class MockBankOfframpOrderRepositoryTest {
         nowMillis += 1L
         assertThat(repository.getOrderState(WALLET_ID, orderId).getOrNull())
             .isInstanceOf(BankOfframpOrderState.AwaitingSignature::class.java)
-        assertThat(repository.submitSignature(WALLET_ID, orderId, "0xsig")).isEqualTo(Unit.right())
+        assertThat(repository.submitSignature(WALLET_ID, orderId, "0xsig", KEY)).isEqualTo(Unit.right())
         assertThat(repository.getOrderState(WALLET_ID, orderId)).isEqualTo(BankOfframpOrderState.Completed.right())
     }
 
@@ -101,7 +101,7 @@ internal class MockBankOfframpOrderRepositoryTest {
         val orderId = createOrderId()
 
         // Act
-        val actual = repository.submitSignature(WALLET_ID, orderId, "0xsig")
+        val actual = repository.submitSignature(WALLET_ID, orderId, "0xsig", KEY)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
@@ -162,7 +162,7 @@ internal class MockBankOfframpOrderRepositoryTest {
         // Arrange
         val orderId = createOrderId()
         nowMillis += 6_000L
-        repository.submitSignature(WALLET_ID, orderId, "0xsig")
+        repository.submitSignature(WALLET_ID, orderId, "0xsig", KEY)
 
         // Act
         val actual = repository.cancelOrder(WALLET_ID, orderId)
