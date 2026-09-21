@@ -40,7 +40,8 @@ adding any screen that can sign, prompt or move funds.
 - **DI** — `di/PolymarketBindsModule.kt` holds four modules: `PolymarketBindsModule` (component
   factories), `PolymarketModelModule` (every model `@IntoMap @ClassKey`), `PolymarketFeatureTogglesModule`,
   `PolymarketDomainUseCasesModule` (use cases / interactors that need feature-side dependencies).
-- **Analytics** — `AnalyticsParam.ScreensSources.Predictions` as the screen source of swap and receive;
+- **Analytics** — `AnalyticsParam.ScreensSources.Predictions` as the screen source of the swap routes
+  (top-up, withdraw) and of the add-funds method event; the receive sheet carries no screen source;
   `PredictionAddFundsAnalyticsEvent` is the only event hierarchy in the module. Events are an analysts'
   contract — do not invent names, leave a `TODO` with the ticket instead.
 
@@ -72,13 +73,16 @@ feature was opened with, so children never read it from the feature params.
 `PolymarketEntryModel` settles the wallet, `PolymarketOnboardingModel` decides what to show:
 
 1. `ResolvePolymarketEntryInteractor.withoutPrompting` on open → `Onboarded` goes straight to `Main`;
-   `Onboard`/`Reconnect`/`Undetermined` show Welcome with an idle button ("Start" vs "Continue" from the
-   backend status). **Opening the gate prompts for nothing** — no NFC, no biometrics.
+   `Onboard`/`Undetermined` show Welcome with an idle button ("Start" vs "Continue" from the backend
+   status); `Reconnect` shows its own screen (`PolymarketOnboardingUM.Reconnect`, "Reconnect" button) for a
+   ready account whose credentials are not on this device. **Opening the gate prompts for nothing** — no
+   NFC, no biometrics.
 2. The button runs `CheckNewPolymarketAccountAllowedInteractor` (region) only when a *new* account would be
    deployed; `REGION_BLOCKED` shows the region-restrictions screen, `UNDETERMINED` (check failed) refuses a
    new account but never an existing one.
-3. Then `RunPolymarketOnboardingInteractor` — one card tap, progress collapsed into the button spinner; a
-   failure leaves Welcome idle and reports through a snackbar. Welcome's button is the only retry.
+3. Then `RunPolymarketOnboardingInteractor` — one signing session (card for Cold, unlock for Hot), progress
+   collapsed into the button spinner; a failure leaves the screen idle and reports through a snackbar. The
+   screen's button is the only retry.
 
 Region-restricted users (`PolymarketAccessMode.READ_ONLY`) still reach `Main`, browse and withdraw; the
 place-prediction flow re-checks the region itself before an order.
@@ -121,16 +125,18 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Region.** Read by the flow itself when shown (`TradingPermissionUM`), re-read on resume only while
   `Unknown`, never carried on the route and not re-read before signing. An unreadable region keeps the
   gate shut as `Unknown` — the order is refused, the user is not told they are restricted.
-- **Placing.** `SignPredictionOrderInteractor` (one card tap) → `PlacePredictionOrderUseCase`.
+- **Placing.** `SignPredictionOrderInteractor` (one signing session: card for Cold, unlock for Hot) →
+  `PlacePredictionOrderUseCase`.
   Outcomes: filled (with the actual filled amounts); `Delayed` → `AwaitDelayedPredictionOrderUseCase` polls
   `GET data/order/{id}`; `Ambiguous` (transport failure after send) is shown as **Submitted**, never as
   failed — the order may be live; `NoLiquidity` (fill-and-kill found no match) is shown as NotFilled.
   Any result that moves the balance (`Filled` / `PartiallyFilled` / `Submitted`) opens
   `PredictionFundingWindow`, so the feed shows the awaiting-funds banner and polls faster until the balance
   settles.
-- **Position reads.** `/positions/outcome` may answer `null` until the position is indexed;
-  `PolymarketPositionDetailsModel` retries it when the details screen opens (`POSITION_INDEXING_READS`
-  reads, `POSITION_INDEXING_RETRY_MILLIS` apart). The order flow itself does not re-read after a fill; the
+- **Position reads.** `/positions/outcome` may answer `null` until the position is indexed.
+  `PolymarketPositionDetailsModel` shows Unavailable at once when the first read is `null`; the retry loop
+  (`POSITION_INDEXING_READS` reads, `POSITION_INDEXING_RETRY_MILLIS` apart) serves a position already shown
+  whose size has not caught up with the last order, and pops the screen if it disappears. The order flow itself does not re-read after a fill; the
   sell flow reads the position on open and again at signing.
 - **Sell** (`Params.Sell`) validates at signing time that the position still exists, the market accepts
   orders and enough shares remain after grid rounding. SELL legs: `makerAmount = shares`,
