@@ -78,7 +78,10 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
 6. **The region is read by the flow that commits, never carried on a route.** An unreadable region never
    locks a user out of an existing account (browse, withdraw stay open), but it does refuse what would
    *commit* them: `CheckNewPolymarketAccountAllowedInteractor` answers `UNDETERMINED` (no new deploy) and
-   the order flow keeps its gate shut as "unknown" rather than "restricted". The order flow reads the
+   the order flow keeps its gate shut as "unknown" rather than "restricted". The one fail-closed edge: that
+   interactor tells a new account from an existing one by a BFF status read, and when the read fails it asks
+   the geoblock anyway — an existing account that has no local confirmation record is then gated like a new
+   one until the BFF answers. The order flow reads the
    region when it is shown and re-reads on resume only while it is still unknown — there is no re-read
    right before signing, so a region that changes while the screen is open is not caught. A new trading
    flow needs its own read.
