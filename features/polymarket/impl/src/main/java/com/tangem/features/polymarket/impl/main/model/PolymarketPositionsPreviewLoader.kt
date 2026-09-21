@@ -47,6 +47,22 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
         val converter = PolymarketPositionUMConverter(onPositionClick)
         val onRetry = { if (isResumed) resume(scope, userWalletId, onPositionClick) }
         appliedRevision = invalidator.currentRevision(userWalletId)
+        startPolling(scope = scope, userWalletId = userWalletId, onRetry = onRetry, converter = converter)
+        scope.launch {
+            invalidator.revisionFlow(userWalletId).collect { revision ->
+                if (revision == appliedRevision) return@collect
+                appliedRevision = revision
+                startPolling(scope = scope, userWalletId = userWalletId, onRetry = onRetry, converter = converter)
+            }
+        }.saveIn(invalidationJob)
+    }
+
+    private fun startPolling(
+        scope: CoroutineScope,
+        userWalletId: UserWalletId,
+        onRetry: () -> Unit,
+        converter: PolymarketPositionUMConverter,
+    ) {
         scope.launch {
             if (state.value !is PolymarketPositionsPreviewUM.Content) {
                 state.value = PolymarketPositionsPreviewUM.Loading
@@ -56,13 +72,6 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
                 delay(POLL_INTERVAL)
             }
         }.saveIn(refreshJob)
-        scope.launch {
-            invalidator.revisionFlow(userWalletId).collect { revision ->
-                if (revision == appliedRevision) return@collect
-                appliedRevision = revision
-                if (isResumed) refresh(userWalletId, onRetry, converter)
-            }
-        }.saveIn(invalidationJob)
     }
 
     fun pause() {
