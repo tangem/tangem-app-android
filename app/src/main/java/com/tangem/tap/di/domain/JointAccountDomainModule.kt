@@ -30,7 +30,6 @@ import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
-import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.tap.domain.jointaccount.DefaultJointAccountSigner
 import dagger.Module
 import dagger.Provides
@@ -122,10 +121,8 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideJointRefundReceiverProvider(
-        gaslessTransactionRepository: GaslessTransactionRepository,
-    ): JointRefundReceiverProvider {
-        return JointRefundReceiverProvider(gaslessTransactionRepository::getTokenFeeReceiverAddress)
+    fun provideJointRefundReceiverProvider(): JointRefundReceiverProvider {
+        return JointRefundReceiverProvider { JointRefundReceiverProvider.TREASURY }
     }
 
     @Provides
