@@ -61,7 +61,8 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    that a background refresh or a screen open never asks. `null` from any of them means "not derived on this
    device", never "this wallet has no account" — a wallet onboarded on another phone answers `null` too.
 2. **One signing session per onboarding run.** `RunPolymarketOnboardingInteractor` signs ClobAuth and the
-   approvals batch in one card tap (`PolymarketTypedDataSigner.signOnboarding`) and never asks twice; a
+   approvals batch in one signing session — a card session for Cold, a seed unlock for Hot
+   (`PolymarketTypedDataSigner.signOnboarding`) — and never asks twice; a
    failure is reported retryable and the caller starts a new run.
 3. **Approvals are only ever checked on a fresh wallet.** The BFF reads on-chain allowances before it
    validates the batch we send, so an already-approved deposit wallet answers `READY_TO_TRADE` to *any*
@@ -138,8 +139,9 @@ a byte-level mistake shows up only as a CLOB rejection, so change these builders
 
 Relayer batches (approvals, withdrawal) carry a `deadline` of now + 600 s (`PolymarketRelayerDeadline`).
 `SubmitPredictionWithdrawalInteractor.confirm` refuses an expired batch (`isExpired`); `resend`, which the
-tracker uses to recover a persisted batch, submits it without that check — known gap, the relayer
-answers `DeadlineTooSoon` and the record stays.
+tracker uses to recover a persisted batch, submits it without that check — known gap. On either path a
+`RelayerRejected` (the 422s, `DeadlineTooSoon` included) or `InvalidRequest` answer to the submit clears the
+record, because the relayer recorded nothing; every other failure keeps it.
 
 Orders: `SignPredictionOrderInteractor` builds the draft from the quote (`BuildPredictionOrderDraftUseCase`),
 signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase` re-checks the signed order against the
@@ -163,9 +165,10 @@ draft, the deposit wallet, the market and the quote age before anything is sent.
   wallet's currencies but is filtered to USDC · Polygon (phase 1, owner decision 15.09.2026). Removing the
   filter is the phase-2 change.
 - **Withdrawal tracking.** `PredictionWithdrawalTracker` resends a record without `transactionId`, then
-  polls `getState` (5 s × 360). It stops on terminal states and on `NonceTaken` / `RelayerRejected` /
-  `InvalidRequest` / `Unauthorized` / `NotFound`, leaving the record in place (see invariant 9). Known gap:
-  the tracker is started from the withdraw flow only, not on cold start.
+  polls `getState` (5 s × 360). A terminal state clears the record; a `NonceTaken` / `RelayerRejected` /
+  `InvalidRequest` / `Unauthorized` / `NotFound` answer to `getState` stops polling and leaves the record in
+  place (see invariant 9) — only the submit itself clears it on a rejection, as above. Known gap: the
+  tracker is started from the withdraw flow only, not on cold start.
 
 ## Prediction account in the rest of the app
 
