@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -138,6 +139,7 @@ fun TangemShtorka(
             },
         color = color,
         isMaterial = isMaterial,
+        isMaterialBorderEnabled = false,
         materialStyle = materialStyle,
         shape = shape,
     ) {
@@ -163,17 +165,12 @@ fun TangemShtorka(
                 }
             }
             CompositionLocalProvider(LocalHazeState provides contentHazeState) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shtorkaChromeScale(state)
-                        .align(Alignment.TopCenter),
-                ) {
-                    if (showDragHandle) {
-                        DragHandle(contentDescription = dragHandleContentDescription)
-                    }
-                    header?.invoke(this)
-                }
+                ShtorkaChrome(
+                    state = state,
+                    showDragHandle = showDragHandle,
+                    dragHandleContentDescription = dragHandleContentDescription,
+                    header = header,
+                )
             }
         }
     }
@@ -210,6 +207,27 @@ object TangemShtorka {
 
         /** The entire parent height; the card is edge-to-edge at this detent. */
         data object Full : Detent
+    }
+}
+
+/** Pinned overlay at the top of the card: the grabber and the caller's [header], scaled with the card. */
+@Composable
+private fun BoxScope.ShtorkaChrome(
+    state: TangemShtorkaState,
+    showDragHandle: Boolean,
+    dragHandleContentDescription: String?,
+    header: (@Composable ColumnScope.() -> Unit)?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shtorkaChromeScale(state)
+            .align(Alignment.TopCenter),
+    ) {
+        if (showDragHandle) {
+            DragHandle(contentDescription = dragHandleContentDescription)
+        }
+        header?.invoke(this)
     }
 }
 

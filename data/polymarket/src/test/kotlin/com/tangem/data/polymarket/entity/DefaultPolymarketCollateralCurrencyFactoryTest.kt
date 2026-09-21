@@ -61,6 +61,19 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
     }
 
     @Test
+    fun `GIVEN both tokens WHEN created THEN the exchange settles in pUSD and a deposit is made in USDC`() {
+        // Act
+        val settlement = factory.create()
+        val deposit = factory.createDepositTarget()
+
+        // Assert
+        assertThat(settlement.symbol).isEqualTo("pUSD")
+        assertThat(settlement.name).isEqualTo("Polymarket USD")
+        assertThat(deposit.symbol).isEqualTo("USDC")
+        assertThat(deposit.name).isEqualTo("USDC")
+    }
+
+    @Test
     fun `GIVEN the deposit target WHEN created THEN it is the USDC the bridge accepts on Polygon`() {
         // Act
         val actual = factory.createDepositTarget()
@@ -77,8 +90,8 @@ internal class DefaultPolymarketCollateralCurrencyFactoryTest {
         val expected = CryptoCurrencyFactory(excludedBlockchains).createToken(
             network = requireNotNull(expectedNetwork),
             rawId = PredictionCollateral.RAW_ID,
-            name = PolymarketCollateralCurrencyFactory.TOKEN_NAME,
-            symbol = PolymarketCollateralCurrencyFactory.TOKEN_SYMBOL,
+            name = PolymarketCollateralCurrencyFactory.COLLATERAL_NAME,
+            symbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
             decimals = PolymarketContracts.COLLATERAL_DECIMALS,
             contractAddress = PolymarketContracts.COLLATERAL.lowercase(),
         )
