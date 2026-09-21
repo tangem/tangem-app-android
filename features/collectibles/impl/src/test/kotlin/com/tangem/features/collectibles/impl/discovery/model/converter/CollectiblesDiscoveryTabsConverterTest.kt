@@ -4,8 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.collectibles.models.CollectibleGachaMachineCategories
-import com.tangem.features.collectibles.impl.discovery.createCategories
-import com.tangem.features.collectibles.impl.discovery.createCategory
+import com.tangem.features.collectibles.impl.createCategories
+import com.tangem.features.collectibles.impl.createCategory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

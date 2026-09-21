@@ -1,9 +1,11 @@
 package com.tangem.data.collectibles
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.collectibles.CollectibleGachaMachinesBatchAction
+import com.tangem.data.collectibles.store.CollectiblesMachineStore
 import com.tangem.domain.collectibles.models.CollectibleTransaction
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.GenerateTxParams
@@ -35,18 +37,23 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 internal class DefaultCollectiblesRepositoryTest {
 
     private val collectiblesApi: CollectiblesApi = mockk()
 
-    private val repository = DefaultCollectiblesRepository(
-        collectiblesApi = collectiblesApi,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-    )
+    // The repository caches machines in memory, so both it and its store are rebuilt per test — a machine
+    // stored by one test would otherwise satisfy the next one without reaching the api.
+    private lateinit var repository: DefaultCollectiblesRepository
 
     @BeforeEach
     fun resetMocks() {
+        repository = DefaultCollectiblesRepository(
+            collectiblesApi = collectiblesApi,
+            machineStore = CollectiblesMachineStore(store = RuntimeSharedStore()),
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
         clearMocks(collectiblesApi)
     }
 
@@ -100,6 +107,79 @@ internal class DefaultCollectiblesRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(MachineFactory.create())
             coVerify(exactly = 1) { collectiblesApi.getMachine("pokemon_50") }
+        }
+
+        @Test
+        fun `GIVEN a machine already read WHEN getMachine THEN the api is not called again`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getMachine(any()) } returns ApiResponse.Success(MachineFactory.createDto())
+            repository.getMachine(externalId = "pokemon_50")
+
+            // Act
+            val actual = repository.getMachine(externalId = "pokemon_50")
+
+            // Assert
+            assertThat(actual).isEqualTo(MachineFactory.create())
+            coVerify(exactly = 1) { collectiblesApi.getMachine("pokemon_50") }
+        }
+
+        @Test
+        fun `GIVEN a cached machine WHEN getMachine with skipCache THEN the api is called again`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getMachine(any()) } returnsMany listOf(
+                ApiResponse.Success(MachineFactory.createDto()),
+                ApiResponse.Success(MachineFactory.createDto(price = BigDecimal("7500"))),
+            )
+            repository.getMachine(externalId = "pokemon_50")
+
+            // Act
+            val actual = repository.getMachine(externalId = "pokemon_50", skipCache = true)
+
+            // Assert
+            assertThat(actual).isEqualTo(MachineFactory.create(price = BigDecimal("75.00")))
+            coVerify(exactly = 2) { collectiblesApi.getMachine("pokemon_50") }
+        }
+
+        @Test
+        fun `GIVEN a refreshed machine WHEN getMachine THEN the refreshed one is served from the cache`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.getMachine(any()) } returnsMany listOf(
+                ApiResponse.Success(MachineFactory.createDto()),
+                ApiResponse.Success(MachineFactory.createDto(price = BigDecimal("7500"))),
+            )
+            repository.getMachine(externalId = "pokemon_50")
+            repository.getMachine(externalId = "pokemon_50", skipCache = true)
+
+            // Act
+            val actual = repository.getMachine(externalId = "pokemon_50")
+
+            // Assert
+            assertThat(actual).isEqualTo(MachineFactory.create(price = BigDecimal("75.00")))
+            coVerify(exactly = 2) { collectiblesApi.getMachine("pokemon_50") }
+        }
+
+        @Test
+        fun `GIVEN the catalogue was browsed WHEN getMachine THEN it is served without a request`() = runTest {
+            // Arrange
+            coEvery {
+                collectiblesApi.getMachines(categoryId = null, search = null, limit = 20, cursor = null)
+            } returns ApiResponse.Success(MachineFactory.createMachinesResponse())
+            val actions = MutableSharedFlow<CollectibleGachaMachinesBatchAction>(replay = 1)
+            val sourceScope = testSourceScope()
+            repository.getMachinesBatchFlow(
+                context = BatchingContext(actionsFlow = actions, coroutineScope = sourceScope),
+                batchSize = 20,
+            )
+            actions.emit(BatchAction.Reload(requestParams = MachineFactory.createListConfig()))
+            advanceUntilIdle()
+
+            // Act
+            val actual = repository.getMachine(externalId = "pokemon_50")
+
+            // Assert
+            assertThat(actual).isEqualTo(MachineFactory.create())
+            coVerify(exactly = 0) { collectiblesApi.getMachine(any()) }
+            sourceScope.cancel()
         }
 
         @Test
