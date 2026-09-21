@@ -23,13 +23,10 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 
 @Composable
-internal fun PredictionDetailsBlock(
-    state: PlacePredictionUM,
-    modifier: Modifier = Modifier,
-    onFeeClick: (() -> Unit)? = null,
-) {
+internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             TangemRow(
@@ -51,7 +48,7 @@ internal fun PredictionDetailsBlock(
                     }
                 },
                 endSlot = { DetailChevron() },
-                onClick = onFeeClick,
+                onClick = onFeeClick.takeIf { state.canShowFeeBreakdown() },
             )
             PredictionSlippageRow(slippage = state.slippage)
         }
