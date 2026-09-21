@@ -31,5 +31,8 @@ internal interface PlacePredictionIntents {
     fun onBackClick()
 
     fun onCloseClick()
+
     fun onToMainClick()
+
+    fun onViewPositionClick()
 }
