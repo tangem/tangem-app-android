@@ -106,9 +106,13 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
 `RunPolymarketOnboardingInteractor` resumes from whatever status the backend reports, emits
 `PolymarketOnboardingProgress` (`Deriving → AwaitingSignature → Working → Ready | Failed`), and has no
 deadline: it polls while the status is non-terminal. Steps, each its own use case:
-`DerivePolymarketAddresses → GetPolymarketWalletStatus → GetPolymarketRelayerNonce →
-SignOnboardingDigests → DeployDepositWallet → SubmitApprovals → DeriveApiCredentials
-(derive-api-key first, create only on "no key yet") → RecordPolymarketConfirmation`.
+`DerivePolymarketAddresses → GetPolymarketWalletStatus` (a wallet that owes no approvals and already
+holds credentials skips straight to waiting for `READY_TO_TRADE`) `→ GetPolymarketRelayerNonce →
+SignOnboardingDigests → DeployDepositWallet` (when needed) `→ DeriveApiCredentials` (skipped when
+credentials exist; derive-api-key first, create only on "no key yet") `→` wait for `DEPLOYED` `→
+SubmitApprovals →` wait for `READY_TO_TRADE`. Finishing marks the wallet in `PolymarketOnboardedStore`,
+primes the CLOB balance cache and refreshes the account status; `RecordPolymarketConfirmationUseCase` is
+the same store write for the `Reconnect` path.
 
 `ResolvePolymarketEntryInteractor` decides where the user lands (`PolymarketEntry`): `Onboarded` from local
 state alone when the confirmation record and credentials exist; `Onboard(status)` / `Reconnect` after a
@@ -131,8 +135,10 @@ The exchange domain is the same name/version for CTF and neg-risk — only `veri
 pin `PolymarketOrderDigestTest`, `PolymarketErc7739SignatureBuilderTest`, `PolymarketTypedDataDigestTest`;
 a byte-level mistake shows up only as a CLOB rejection, so change these builders vector-first.
 
-Relayer batches (approvals, withdrawal) carry a `deadline` of now + 600 s (`PolymarketRelayerDeadline`);
-`isExpired` is checked before a stored batch is resent.
+Relayer batches (approvals, withdrawal) carry a `deadline` of now + 600 s (`PolymarketRelayerDeadline`).
+`SubmitPredictionWithdrawalInteractor.confirm` refuses an expired batch (`isExpired`); `resend`, which the
+tracker uses to recover a persisted batch, submits it without that check — known gap, the relayer
+answers `DeadlineTooSoon` and the record stays.
 
 Orders: `SignPredictionOrderInteractor` builds the draft from the quote (`BuildPredictionOrderDraftUseCase`),
 signs with a 52-bit random salt, then `ValidatePredictionOrderUseCase` re-checks the signed order against the
