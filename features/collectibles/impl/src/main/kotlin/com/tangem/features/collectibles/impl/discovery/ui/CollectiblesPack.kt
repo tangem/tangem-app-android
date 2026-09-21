@@ -9,12 +9,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.SpacerH
@@ -31,6 +34,8 @@ import com.tangem.features.collectibles.impl.discovery.ui.preview.CollectiblesDi
 import com.tangem.features.collectibles.impl.discovery.ui.state.CollectiblesDiscoveryUM
 
 internal const val PACK_CARD_ASPECT_RATIO = 180f / 228f
+
+private val GLOW_BLUR_RADIUS = 24.dp
 
 @Composable
 internal fun CollectiblesPackCard(state: CollectiblesDiscoveryUM.PackUM, modifier: Modifier = Modifier) {
@@ -68,6 +73,11 @@ internal fun CollectiblesPackCard(state: CollectiblesDiscoveryUM.PackUM, modifie
 
 @Composable
 private fun PackImage(imageUrl: String, modifier: Modifier = Modifier) {
+    val model = ImageRequest.Builder(LocalContext.current)
+        .data(imageUrl)
+        .crossfade(true)
+        .build()
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -81,12 +91,17 @@ private fun PackImage(imageUrl: String, modifier: Modifier = Modifier) {
             ),
         contentAlignment = Alignment.Center,
     ) {
+        AsyncImage(
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(radius = GLOW_BLUR_RADIUS, edgeTreatment = BlurredEdgeTreatment.Unbounded),
+            model = model,
+            contentScale = ContentScale.Fit,
+            contentDescription = null,
+        )
         SubcomposeAsyncImage(
             modifier = Modifier.fillMaxSize(),
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageUrl)
-                .crossfade(true)
-                .build(),
+            model = model,
             error = { PackImagePlaceholder() },
             contentScale = ContentScale.Fit,
             contentDescription = null,
