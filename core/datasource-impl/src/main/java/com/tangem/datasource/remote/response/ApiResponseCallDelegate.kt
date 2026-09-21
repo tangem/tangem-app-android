@@ -11,9 +11,11 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/** @property isBodyOptional the call is declared as `ApiResponse<Unit>`, so a 204 with no body is a success */
 internal class ApiResponseCallDelegate<T : Any>(
     private val wrappedCall: Call<T>,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
+    private val isBodyOptional: Boolean = false,
 ) : Call<ApiResponse<T>> {
 
     override fun enqueue(callback: Callback<ApiResponse<T>>) {
@@ -21,7 +23,8 @@ internal class ApiResponseCallDelegate<T : Any>(
     }
 
     override fun execute(): Response<ApiResponse<T>> = throw NotImplementedError()
-    override fun clone(): Call<ApiResponse<T>> = ApiResponseCallDelegate(wrappedCall.clone(), analyticsErrorHandler)
+    override fun clone(): Call<ApiResponse<T>> =
+        ApiResponseCallDelegate(wrappedCall.clone(), analyticsErrorHandler, isBodyOptional)
     override fun request(): Request = wrappedCall.request()
     override fun timeout(): Timeout = wrappedCall.timeout()
     override fun isExecuted(): Boolean = wrappedCall.isExecuted
@@ -35,7 +38,7 @@ internal class ApiResponseCallDelegate<T : Any>(
     ) : Callback<T> {
 
         override fun onResponse(call: Call<T>, response: Response<T>) {
-            val safeResponse = response.toSafeApiResponse(analyticsErrorHandler)
+            val safeResponse = response.toSafeApiResponse(analyticsErrorHandler, isBodyOptional)
 
             responseCallback.onResponse(this@ApiResponseCallDelegate, Response.success(safeResponse))
         }
