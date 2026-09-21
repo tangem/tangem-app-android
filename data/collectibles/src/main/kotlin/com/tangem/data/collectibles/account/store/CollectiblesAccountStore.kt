@@ -3,7 +3,7 @@ package com.tangem.data.collectibles.account.store
 import androidx.datastore.core.DataStore
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
-import com.tangem.data.collectibles.account.entity.CollectiblesAccountStatusValueDTO
+import com.tangem.data.collectibles.account.entity.CollectiblesAccountDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
@@ -18,14 +18,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal typealias WalletIdWithCollectiblesStatus = Map<String, CollectiblesAccountStatusValue>
-internal typealias WalletIdWithCollectiblesStatusDTO = Map<String, CollectiblesAccountStatusValueDTO>
+internal typealias WalletIdWithCollectiblesAccountDTO = Map<String, CollectiblesAccountDTO>
 
 /**
- * Store of collectibles account statuses, one entry per wallet, with dual storage (runtime + persistence).
+ * Store of collectibles accounts, one entry per wallet, with dual storage (runtime + persistence).
  *
- * Holds the value only, never the account itself. What reaches the disk is [CollectiblesAccountStatusValueDTO] —
- * see its documentation for which states are persisted at all, and why the source and the rates are not among
- * them.
+ * An entry has two halves, written independently. Only the status half is mirrored in the runtime store —
+ * nothing observes the delegate. Holding both in one entry is what makes [clear] drop them together.
  *
  * [get] emits on subscription even when nothing has ever been stored. That is not a convenience: the status is
  * combined with the other accounts' statuses, and `combine` withholds every value until all of its sources have
@@ -35,35 +34,31 @@ internal typealias WalletIdWithCollectiblesStatusDTO = Map<String, CollectiblesA
  * @property persistenceDataStore persistence store for caching across app restarts
  * @property converter            maps the status half between its domain and storage shapes
  */
-internal class CollectiblesAccountStatusStore(
+internal class CollectiblesAccountStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithCollectiblesStatus>,
-    private val persistenceDataStore: DataStore<WalletIdWithCollectiblesStatusDTO>,
+    private val persistenceDataStore: DataStore<WalletIdWithCollectiblesAccountDTO>,
     private val converter: CollectiblesAccountStatusValueDTOConverter,
     scope: AppCoroutineScope,
 ) {
 
-    /**
-     * Completed once the persisted statuses have been loaded. Writes and synchronous reads wait for it — a
-     * wallet deleted during startup cannot be resurrected by the preload, and a caller asking what is stored
-     * cannot be told "nothing" while the disk is still being read. [get] does not wait: it must stay immediate.
-     */
+    /** Completed once the disk has been read. Writes and synchronous reads wait for it; [get] must stay immediate. */
     private val preloaded = CompletableDeferred<Unit>()
 
-    /**
-     * Holds the runtime and the disk halves of a write together. Without it a [clear] can land between them, and
-     * the write's second half then puts a deleted wallet's account back on disk, where nothing will remove it
-     * again. Taken after [preloaded], never nested — [Mutex] is not reentrant.
-     */
+    /** Holds both halves of a write together, so a [clear] cannot land between them. Never nested — not reentrant. */
     private val writeMutex = Mutex()
 
     init {
         scope.launch {
             try {
                 val cached = runSuspendCatching { persistenceDataStore.data.first() }
-                    .onFailure { logger.e("Failed to read the cached collectibles account statuses", it) }
+                    .onFailure { logger.e("Failed to read the cached collectibles accounts", it) }
                     .getOrDefault(emptyMap())
 
-                runtimeStore.store(cached.mapValues { (_, dto) -> converter.convertBack(dto) })
+                runtimeStore.store(
+                    cached.mapNotNull { (walletId, dto) ->
+                        dto.status?.let { walletId to converter.convertBack(it) }
+                    }.toMap(),
+                )
             } finally {
                 preloaded.complete(Unit)
             }
@@ -120,6 +115,33 @@ internal class CollectiblesAccountStatusStore(
         }
     }
 
+    suspend fun getDelegate(userWalletId: UserWalletId): String? {
+        preloaded.await()
+
+        return runSuspendCatching {
+            persistenceDataStore.data.first()[userWalletId.stringValue]?.delegateHotWalletId
+        }
+            .onFailure { logger.e("Failed to read the collectibles delegate of $userWalletId", it) }
+            .getOrNull()
+    }
+
+    /** Throws when the write does not reach the disk: an unrecorded key is a keystore entry nothing can reach. */
+    suspend fun storeDelegate(userWalletId: UserWalletId, hotWalletId: String) {
+        preloaded.await()
+
+        writeMutex.withLock {
+            persist(userWalletId) { stored -> stored.copy(delegateHotWalletId = hotWalletId) }.getOrThrow()
+        }
+    }
+
+    suspend fun removeDelegate(userWalletId: UserWalletId) {
+        preloaded.await()
+
+        writeMutex.withLock {
+            persist(userWalletId) { stored -> stored.copy(delegateHotWalletId = null) }.getOrThrow()
+        }
+    }
+
     suspend fun clear(userWalletId: UserWalletId) {
         preloaded.await()
 
@@ -150,13 +172,25 @@ internal class CollectiblesAccountStatusStore(
 
             val dto = written?.let(converter::convert) ?: return@withLock
 
-            runSuspendCatching {
-                persistenceDataStore.updateData { stored -> stored + (userWalletId.stringValue to dto) }
-            }.onFailure { logger.e("Failed to persist the collectibles account of $userWalletId", it) }
+            persist(userWalletId) { stored -> stored.copy(status = dto) }
         }
     }
 
+    /** Must be called under [writeMutex]: a [clear] landing mid-write would otherwise be undone by it. */
+    private suspend fun persist(
+        userWalletId: UserWalletId,
+        update: (CollectiblesAccountDTO) -> CollectiblesAccountDTO,
+    ): Result<WalletIdWithCollectiblesAccountDTO> {
+        return runSuspendCatching {
+            persistenceDataStore.updateData { stored ->
+                val entry = update(stored[userWalletId.stringValue] ?: CollectiblesAccountDTO())
+
+                stored + (userWalletId.stringValue to entry)
+            }
+        }.onFailure { logger.e("Failed to persist the collectibles account of $userWalletId", it) }
+    }
+
     private companion object {
-        val logger = TangemLogger.withTag("CollectiblesAccountStatusStore")
+        val logger = TangemLogger.withTag("CollectiblesAccountStore")
     }
 }

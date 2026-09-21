@@ -104,6 +104,7 @@ private fun TxHistoryDetailsOverflowMenu(
     Box(modifier = modifier) {
         TangemButton(
             variant = TangemButton.Variant.Ghost,
+            size = TangemButton.Size.X9,
             iconStart = TangemIconUM.Icon(Icons.ic_dots_horizontal_20),
             contentDescription = resourceReference(R.string.common_more).resolveReference(),
             onClick = { isMenuExpanded = true },
