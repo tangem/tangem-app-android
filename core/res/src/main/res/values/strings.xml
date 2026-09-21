@@ -444,6 +444,7 @@
     <item>December</item>
   </string-array>
   <string name="common_more">More</string>
+  <string name="common_more_info">More info</string>
   <string name="common_negative">Negative</string>
   <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>
@@ -771,6 +772,13 @@
   <string name="fee_selector_choose_token_description">Choose which token to use to pay\nthe network fee. %s</string>
   <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
+  <string name="feed_promo_earn_active_description">Earn up to %1$s APY on your %2$s</string>
+  <string name="feed_promo_earn_description">Put your crypto to work and earn up to %1$s APY</string>
+  <string name="feed_promo_earn_title">Start earning</string>
+  <string name="feed_promo_referral_description">Earn %1$s per friend</string>
+  <string name="feed_promo_referral_title">Invite friends to Tangem</string>
+  <string name="feed_promo_tangem_pay_description">Get cashback on everyday spending</string>
+  <string name="feed_promo_tangem_pay_title">Pay with crypto</string>
   <string name="feed_search_recent_clear">Clear</string>
   <string name="feed_search_recent_title">Recent</string>
   <string name="feed_search_show_all_user_assets">Show All</string>
@@ -1083,6 +1091,7 @@
   <string name="joint_account_join_load_failed">Failed to load invite page. Tap to reload</string>
   <string name="joint_account_join_subtitle">This is a joint account. Every transaction from this account will require %1$s to sign</string>
   <string name="joint_account_join_subtitle_value">%1$s members of %2$s</string>
+  <string name="joint_account_join_success_message">Account added</string>
   <string name="joint_account_join_title">You’ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join to account</string>
   <plurals name="joint_account_members_count">
@@ -1679,6 +1688,14 @@
   <string name="prediction_onboarding_reconnect_subtitle">Your deposit account, balance and open positions are safe. This device just needs to be re-linked — tap your card once to restore access.</string>
   <string name="prediction_onboarding_reconnect_title">Reconnect your Polymarket account</string>
   <string name="prediction_onboarding_start_button">Start predicting</string>
+  <string name="prediction_onboarding_story_first_subtitle">An Event (like the FIFA World Cup) holds Markets — the possible outcomes (France to win, Brazil to win…). Each outcome has a price in cents, and that price is the crowd\'s odds: 65¢ ≈ a 65% chance.</string>
+  <string name="prediction_onboarding_story_first_title">How to read a prediction</string>
+  <string name="prediction_onboarding_story_fourth_subtitle">Open predictions appear right on your main screen. Even after an event settles, Tangem keeps the position there so you can tap to acknowledge your win or loss — nothing clears without you seeing it.</string>
+  <string name="prediction_onboarding_story_fourth_title">Track it from your home screen</string>
+  <string name="prediction_onboarding_story_second_subtitle">Every share is a token tied to one outcome. When the event settles, winning shares are worth $1 each and losing shares $0. Your profit is the gap between what you paid and that final value.</string>
+  <string name="prediction_onboarding_story_second_title">Win = $1, lose = $0</string>
+  <string name="prediction_onboarding_story_third_subtitle">During live events, prices move by the second. Tangem lets you set how much price movement you\'ll accept (slippage), so your order still goes through when the odds shift fast.</string>
+  <string name="prediction_onboarding_story_third_title">Built for live markets</string>
   <string name="prediction_onboarding_subtitle">Forecast real-world events — from politics, sports to crypto, culture and more — right from Tangem. You buy shares in the outcome you believe in. Get it right and receive a payout. Close out position anytime while outcome is still non-resolved</string>
   <string name="prediction_onboarding_title">Open your Polymarket account</string>
   <string name="prediction_place_at_least">At least %s</string>
@@ -1765,6 +1782,12 @@
   <string name="prediction_search_initial_subtitle">Search events or your predictions</string>
   <string name="prediction_search_initial_title">Start typing to search</string>
   <string name="prediction_search_results_title">Search results</string>
+  <string name="prediction_withdraw_confirm_fee_footer">No network fee is charged for this withdrawal. The amount you receive may differ slightly due to bridge conversion.</string>
+  <string name="prediction_withdraw_confirm_title">Confirm withdrawal</string>
+  <string name="prediction_withdraw_status_failed_description">Something went wrong while processing your withdrawal. Please try again or contact support.</string>
+  <string name="prediction_withdraw_status_failed_title">Withdrawal failed</string>
+  <string name="prediction_withdraw_status_sent_description">Delivery may take up to %1$d minutes</string>
+  <string name="prediction_withdraw_status_sent_title">Withdrawal sent</string>
   <string name="promo_campaign_already_activated_subtitle">Eligible cashback will be distributed to:</string>
   <string name="promo_campaign_already_activated_title">You\'re already enrolled in %1$s</string>
   <string name="promo_campaign_eligible_tokens">Eligible tokens</string>
@@ -2565,15 +2588,15 @@
   <string name="tangempay_newonboard_title">Get your Tangem Pay Card</string>
   <string name="tangempay_newonboard_topleft_body">Pay what you see</string>
   <string name="tangempay_newonboard_topleft_title">No purchase fees, \n1 USDC = 1 USD</string>
-  <string name="tangempay_newonboard_topright_body">No surprises</string>
-  <string name="tangempay_newonboard_topright_title">$0 monthly fee\n$0 topup fee</string>
+  <string name="tangempay_newonboard_topright_body">Paid in USDC, not obscure tokens</string>
+  <string name="tangempay_newonboard_topright_title">Cashback up to 2%</string>
   <string name="tangempay_onboarding_banner_description">Free Tangem Pay card with up to 2% cashback</string>
   <string name="tangempay_onboarding_banner_title">Spend crypto anywhere in real life</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
-  <string name="tangempay_onboarding_pay_description">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">With digital card via Apple Pay or Google Pay, no additional fees for purchases</string>
   <string name="tangempay_onboarding_pay_title">Spend your assets anywhere</string>
-  <string name="tangempay_onboarding_purchases_description">There are no additional fees for purchases</string>
-  <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
+  <string name="tangempay_onboarding_purchases_description">For all purchases. Paid in USDC — not in points or obscure tokens</string>
+  <string name="tangempay_onboarding_purchases_title">Cashback up to 2%</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
@@ -2753,6 +2776,8 @@
   <string name="tangempay_withdraw_bank_sending_summary">You are sending %1$s including a %2$s fee of %3$s</string>
   <string name="tangempay_withdraw_bank_source_subtitle">%1$s · %2$s</string>
   <string name="tangempay_withdraw_bank_step_counter">%1$d of %2$d</string>
+  <string name="tangempay_withdraw_bank_success_description">The transfer is on its way to the recipient\'s bank account.</string>
+  <string name="tangempay_withdraw_bank_success_title">Sending %s</string>
   <string name="tangempay_withdraw_bank_title_to_recipient">To %s</string>
   <string name="tangempay_withdraw_bank_transfer_type_own">Your account</string>
   <string name="tangempay_withdraw_bank_transfer_type_third_party">3rd-party account</string>
@@ -2840,6 +2865,8 @@
   <string name="transaction_history_earned_from_stake">Earned from stake</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
+  <string name="transaction_history_fee_for_sending">For sending</string>
+  <string name="transaction_history_fee_sending_asset">Send %%image%% %s</string>
   <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
@@ -3383,6 +3410,21 @@
   <string name="yield_module_balance_info_sheet_subtitle">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is supplied to Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
+  <string name="yield_module_claim_button_title">Claim %1$@</string>
+  <string name="yield_module_claim_destination_aave_title">Will be added to your active Aave position</string>
+  <string name="yield_module_claim_destination_module_title">Will remain in Yield Mode</string>
+  <string name="yield_module_claim_destination_owner_title">Will be sent to your wallet</string>
+  <string name="yield_module_claim_destination_unsupported_title">Can\'t be claimed right now</string>
+  <string name="yield_module_claim_error_message">We couldn\'t claim rewards. Please try again later.</string>
+  <string name="yield_module_claim_estimated_amounts_note">Token amounts are estimates. The final values are set by the claim transaction.</string>
+  <string name="yield_module_claim_footer_note">You will claim all available reward tokens</string>
+  <string name="yield_module_claim_rewards_unavailable_notification_description">The service didn\'t confirm a claim for these rewards. Try again in a few minutes.</string>
+  <string name="yield_module_claim_rewards_unavailable_notification_title">Claiming isn\'t available right now</string>
+  <string name="yield_module_claim_service_fee_note">Tangem takes %1$@ of the claimed rewards.</string>
+  <string name="yield_module_claim_service_fee_title">Service fee</string>
+  <string name="yield_module_claim_sheet_subtitle">To receive</string>
+  <string name="yield_module_claim_sheet_title">Claim reward</string>
+  <string name="yield_module_claim_success_toast">Rewards claimed</string>
   <string name="yield_module_deposit_error_notification_title">Supplying %1$s %2$s to Aave.</string>
   <string name="yield_module_disable_button">Disable Yield Mode</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>

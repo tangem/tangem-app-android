@@ -318,18 +318,16 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetAvailableFeeTokensUseCase(
         gaslessTransactionRepository: GaslessTransactionRepository,
-        tronGaslessTransactionRepository: TronGaslessTransactionRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
-        walletManagersFacade: WalletManagersFacade,
+        isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
         featureTogglesManager: FeatureTogglesManager,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
-            tronGaslessTransactionRepository = tronGaslessTransactionRepository,
             currencyChecksRepository = currencyChecksRepository,
-            walletManagersFacade = walletManagersFacade,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
             isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
                 toggle = FeatureToggles.TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED,
             ),
