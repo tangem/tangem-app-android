@@ -1,0 +1,177 @@
+# Polymarket — feature
+
+"Predictions" in the app: a prediction account on the wallet screen, an entry gate that onboards a
+Polymarket deposit wallet, a discovery feed of events, event details, order placement (buy) and position
+close (sell), positions, funds in and out. API/impl split: `:features:polymarket:api` holds
+`PolymarketComponent`, `PolymarketWalletBlockComponent` and `PolymarketFeatureToggles`; everything else is
+`:features:polymarket:impl`.
+
+The other halves of the module knowledge base: `domain/polymarket/CLAUDE.md` (identities, invariants,
+signing) and `data/polymarket/CLAUDE.md` (contracts, wire traps, stores). Read the domain invariants before
+adding any screen that can sign, prompt or move funds.
+
+```bash
+./gradlew :features:polymarket:impl:testDebugUnitTest
+./gradlew :features:polymarket:impl:detekt
+```
+
+**Toggle:** `AND_16204_POLYMARKET_ENABLED` (`PolymarketFeatureToggles.isPolymarketEnabled`), `"version":
+"undefined"` in `feature_toggles_config.json` — dev builds only until release.
+
+## How it plugs in
+
+- **Entry points** — `AppRoute.Polymarket(userWalletId?)` built in `app/.../ChildFactory` from
+  `PolymarketComponent.Factory`. Pushed from the wallet screen's prediction account row
+  (`DefaultWalletRouter`) with a wallet, and from the feed's Predictions block (`PredictionsBlockComponent`)
+  without one — then the entry step asks which wallet.
+- **Wallet screen row** — `PolymarketWalletBlockComponent` renders one lazy-list item
+  (`PREDICTION_ACCOUNT_ROW_ID`); `features/wallet/impl` converts `PredictionAccountStatusValue` into
+  `PolymarketWalletBlockUM` (`PolymarketWalletBlockConverter`) and owns the click. The balance arrives
+  formatted because formatting needs the app currency.
+- **Swap flow** — Add funds (swap) and Withdraw are `AppRoute.Swap` with
+  `accountFlow = AccountFlow.PredictionTopUp` / `PredictionWithdraw`; the Polymarket-specific branches
+  live in `features/swap/impl` (`SwapModel`, `InitialCurrenciesResolver`, `AccountFlowPresentation`,
+  `SwapTransferStateBuilder`). Withdraw is signed there through `SubmitPredictionWithdrawalInteractor` and
+  ends on `SwapRoute.Success` with `PredictionWithdrawalTracker` polling in the background — there is no
+  status screen. A top-up sent from swap opens `PredictionFundingWindow`.
+- **Receive** — `TokenReceiveComponent` (`features/tokenrecieve`) in a slot of `PolymarketMainComponent`,
+  configured by `PolymarketReceiveConfigFactory` with the bridge deposit address and the `minCheckoutUsd`
+  limits notification.
+- **DI** — `PolymarketFeatureModule`: component factories, every model `@IntoMap @ClassKey`, the toggles,
+  and the use cases / interactors that need feature-side dependencies.
+- **Analytics** — `AnalyticsParam.ScreensSources.Predictions` as the screen source of swap and receive;
+  `PredictionAddFundsAnalyticsEvent` is the only event hierarchy in the module. Events are an analysts'
+  contract — do not invent names, leave a `TODO` with the ticket instead.
+
+## Navigation
+
+`DefaultPolymarketComponent` owns a `childStack<PolymarketRoute>` (`serializer = null`) behind an
+`InnerRouter`; unknown routes fall through to the app router. Every child is created directly (no assisted
+factory) with `childByContext(componentContext, router = innerRouter)`.
+
+```
+Entry                       PolymarketEntryComponent      settles the wallet (PortfolioSelector sheet when none given)
+└─ Onboarding(wallet)       PolymarketOnboardingComponent the gate: Welcome screen, onboarding run, region restrictions
+   └─ Main(wallet)          PolymarketMainComponent       feed + balance header + positions preview; slots: AddFunds, Receive
+      ├─ Search             PolymarketSearchComponent     search-as-you-type, 500 ms debounce, min length
+      ├─ EventDetails       PolymarketEventDetailsComponent all markets of one event
+      │  └─ PlacePrediction PlacePredictionComponent      Params.Buy — its own childStack: Amount → Slippage? → Summary → Status
+      ├─ Positions(tab)     PolymarketPositionsComponent  ACTIVE | FINISHED, PolymarketPositionsSession per visit
+      │  ├─ PositionDetails PolymarketPositionDetailsComponent open position, close gate, buy-more gate
+      │  │  ├─ ClosePosition PlacePredictionComponent     Params.Sell — same flow, side fixed to SELL
+      │  │  └─ PlacePrediction PlacePredictionComponent   Params.Buy — buy more of the same outcome
+      │  └─ PositionResult  PolymarketPositionResultComponent resolved position (won/lost)
+```
+
+Routes carry `userWalletId` on purpose: the entry gate may settle a *different* wallet than the one the
+feature was opened with, so children never read it from the feature params.
+
+## The entry gate
+
+`PolymarketEntryModel` settles the wallet, `PolymarketOnboardingModel` decides what to show:
+
+1. `ResolvePolymarketEntryInteractor.withoutPrompting` on open → `Onboarded` goes straight to `Main`;
+   `Onboard`/`Reconnect`/`Undetermined` show Welcome with an idle button ("Start" vs "Continue" from the
+   backend status). **Opening the gate prompts for nothing** — no NFC, no biometrics.
+2. The button runs `CheckNewPolymarketAccountAllowedInteractor` (region) only when a *new* account would be
+   deployed; `REGION_BLOCKED` shows the region-restrictions screen, `UNDETERMINED` (check failed) refuses a
+   new account but never an existing one.
+3. Then `RunPolymarketOnboardingInteractor` — one card tap, progress collapsed into the button spinner; a
+   failure leaves Welcome idle and reports through a snackbar. Welcome's button is the only retry.
+
+Region-restricted users (`PolymarketAccessMode.READ_ONLY`) still reach `Main`, browse and withdraw; the
+place-prediction flow re-checks the region itself before an order.
+
+## Main screen
+
+`PolymarketMainModel` composes: categories + paginated events (`GetPolymarketEventsBatchFlowUseCase`,
+a failed or empty first page is retried once silently), the balance header from
+`PredictionAccountStatusSupplier` (`PredictionBalanceUMConverter`), the deposit requisites
+(`PredictionFundingRequisites` wrapper over `RefreshPredictionDepositRequisitesInteractor`), the
+positions preview (`PolymarketPositionsPreviewLoader`), and `PredictionBalancePoller.subscribe` for as
+long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
+
+- **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`
+  opens the sheet — swap (`AccountFlow.PredictionTopUp`) or receive. Both need a confirmed address
+  (`activeStatus.cryptoCurrencyStatus`); without it a snackbar reports an unknown error rather than
+  offering an address that may be wrong.
+- **Withdraw** pushes swap with the collateral as FROM (`AccountFlow.PredictionWithdraw`), available in
+  read-only mode too.
+- **Awaiting-funds banner** follows `PredictionFundingWindow.isOpen`; the poller drops to 5 s while open.
+- A position row opens `PositionResult` when resolved (`canOpenPositionResult`), `PositionDetails` when
+  still open (`canOpenPositionDetails`), nothing otherwise.
+
+## Order flow (`placeprediction/`)
+
+`PlacePredictionModel` (~750 lines, the largest model) drives Amount → Slippage → Summary → Status:
+
+- **Quote loop.** Amount entry is debounced 500 ms, then `GetPredictionOrderQuoteUseCase` is polled every
+  15 s (3 s for a live market); an empty amount polls `GetPredictionPriceUseCase` instead. The quote is
+  never cached. Two independent gates decide whether it is placeable: `quote.status.isPlaceable` (market
+  state) and `isBelowMinAmount` (side-specific: BUY is price-weighted, SELL is the flat `minOrderSize`).
+  A below-minimum amount skips the request entirely.
+- **Shares.** `SharesCalculator` rounds to the 2-decimal share grid (`PolymarketConst.SHARES_DECIMALS`).
+  Known consequence ([REDACTED_TASK_KEY]): a position cannot always be closed in full — sub-grid dust is a dead end.
+  Notion "Close Position Flow" (16.09.2026) asks for integer-floored presets and "full close below minimum
+  is allowed"; neither platform implements it yet, ask analytics which is primary before changing it.
+- **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
+- **Region.** Read by the flow itself when shown (`TradingPermissionUM`), never carried on the route. An
+  unreadable region keeps the gate shut as `Unknown` — the order is refused, the user is not told they are
+  restricted.
+- **Placing.** `SignPredictionOrderInteractor` (one card tap) → `PlacePredictionOrderUseCase`.
+  Outcomes: filled; `Delayed` → `AwaitDelayedPredictionOrderUseCase` polls
+  `GET data/order/{id}`; `Ambiguous` (transport failure after send) is shown as **Submitted**, never as
+  failed — the order may be live; `NoLiquidity` (fill-and-kill found no match) is shown as NotFilled.
+  Any result that moves the balance (`Filled` / `PartiallyFilled` / `Submitted`) opens
+  `PredictionFundingWindow`, so the feed shows the awaiting-funds banner and polls faster until the balance
+  settles.
+- **After a fill** the position is read back through `/positions/outcome`, which may be `null` until
+  indexed: `POSITION_INDEXING_READS` reads, `POSITION_INDEXING_RETRY_MILLIS` apart.
+- **Sell** (`Params.Sell`) validates at signing time that the position still exists, the market accepts
+  orders and enough shares remain after grid rounding. SELL legs: `makerAmount = shares`,
+  `takerAmount = collateral`.
+
+## Positions
+
+`PolymarketPositionsSession` (domain) is one visit: pages are retained across pause/resume, a filter change
+restarts from page one, disposal ends it. `PolymarketPositionsLoader` renders it; `PolymarketPositionsFilter`
+(`ALL/ACTIVE/WON/LOST/DISPUTED`) maps to BFF `status`. A position is identified by
+`PolymarketPositionId(conditionId, assetId)`.
+
+The close gate (`PolymarketPositionDetailsConverter.canClosePosition`): not resolved, no result, not
+redeemable, `marketId` known, `isAcceptingOrders`, `size > 0`. A row whose market lookup failed has no
+`marketId` and must not build `ClosePosition`. iOS gates on `isAcceptingOrders` + market ids only.
+Buy more (`PolymarketPositionDetailsModel.buyableMarket`) needs the position `OPEN`, its event loaded and
+the market holding that outcome still `isAcceptingOrders`; it pushes the ordinary `PlacePrediction` route.
+
+**Claim / redeem of a won position is not implemented** — [REDACTED_TASK_KEY] (transaction) and [REDACTED_TASK_KEY] (result
+screen); `isRedeemable` is read but only excludes the position from details.
+
+## Gotchas
+
+- **Never pass `this` as a child context.** Every child gets `child(key)` or `childByContext(...)`; models
+  are keyed by class in the `InstanceKeeper`, and two children on one context collide.
+- **The feed's `userWalletId` is the route's, not the params'.** `PolymarketComponent.Params.userWalletId`
+  is nullable and may be a wallet the gate rejected.
+- **`Undetermined` is not "no account".** A wallet onboarded on another device lands on Welcome too;
+  pressing Start derives the address and finds the account. Don't add copy that says "create".
+- **`READ_ONLY` explains itself as a region restriction.** Reuse it for another cause and the UI lies.
+- **Quotes and prices are BFF-formatted strings**; price-guard tolerance depends on how the BFF formatted
+  the number. Parse with `BigDecimal`, compare with `compareTo`, never `==`.
+- **Times are Eastern** (`PolymarketConst.EASTERN_TIME_ZONE`) for market end dates.
+- **`PolymarketMainModelTest` and `PlacePredictionModelTest` are the reference tests** for a model in this
+  module: `ParamsContainer` fed by hand, Turbine over `uiState`, relaxed mocks only for router, message
+  sender and the flows the test is not about.
+- Pull-to-refresh on the feed refreshes the region, the account status and the requisites together; the
+  feed pages are not re-requested — they are kept per visited category and updated by `PolymarketFeedPoller`.
+
+## Not implemented / open
+
+| Item | Ticket |
+|---|---|
+| Claim (redeem) of a won position + result screen | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
+| Full close below minimum, integer-floored presets (Notion cases 5/7/8) | [REDACTED_TASK_KEY] (partial) |
+| Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
+| Tradezone `/value` (In Bets / Total) and PnL | not ticketed |
+| Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
+| Prediction-withdraw analytics event | waiting for analysts |
