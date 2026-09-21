@@ -1,6 +1,9 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -43,6 +46,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionCompon
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
@@ -53,11 +57,14 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
 import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
+import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
@@ -77,7 +84,13 @@ import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -118,6 +131,12 @@ internal class PlacePredictionModel @Inject constructor(
     val uiState: StateFlow<PlacePredictionUM>
         field = MutableStateFlow(PlacePredictionUM.initial(side = params.side))
 
+    val feeSheetNavigation = SlotNavigation<Unit>()
+
+    val feeSheetState: StateFlow<PredictionFeeSheetUM?> = uiState
+        .map(::createFeeSheet)
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = null)
+
     private val quoteJobHolder = JobHolder()
 
     private val tradingAllowanceJobHolder = JobHolder()
@@ -136,6 +155,7 @@ internal class PlacePredictionModel @Inject constructor(
         }
         loadBalance()
         loadTradingAllowance()
+        dismissFeeSheetWhenUnavailable()
     }
 
     /**
@@ -202,6 +222,27 @@ internal class PlacePredictionModel @Inject constructor(
         uiState.update { it.copy(slippage = SlippageUM.of(percent = percent)) }
         restartQuoteLoop(withDebounce = false)
         router.pop()
+    }
+
+    override fun onFeeClick() {
+        if (uiState.value.canShowFeeBreakdown()) feeSheetNavigation.activate(Unit)
+    }
+
+    private fun createFeeSheet(state: PlacePredictionUM): PredictionFeeSheetUM? {
+        val content = state.feeBreakdownQuote() ?: return null
+
+        return PredictionFeeSheetUMConverter.convert(
+            quote = content.signable.quote,
+            slippage = state.slippage,
+            tokenSymbol = state.collateral.tokenSymbol,
+        )
+    }
+
+    private fun dismissFeeSheetWhenUnavailable() {
+        feeSheetState
+            .filter { it == null }
+            .onEach { feeSheetNavigation.dismiss() }
+            .launchIn(modelScope)
     }
 
     override fun onAddFundsClick() {
