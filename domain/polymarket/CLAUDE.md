@@ -31,7 +31,8 @@ signs, deploys or moves funds.
 
 Nothing in this module talks to a card, a network or a disk; those are `data/polymarket` implementations
 injected behind the interfaces above. Use cases and interactors are plain classes provided in
-`data/polymarket/di/PolymarketDataModule` or the feature's `PolymarketFeatureModule`.
+`data/polymarket/di/PolymarketDataModule` or the feature's `PolymarketDomainUseCasesModule`
+(`features/polymarket/impl/di/PolymarketBindsModule.kt`).
 
 ## The identities
 
@@ -42,7 +43,7 @@ the classic defect:
 |---|---|---|
 | **Owner EOA** | secp256k1 key on `m/44'/60'/999899'/0/0` (`POLYMARKET_OWNER_DERIVATION_PATH`) → ERC-55 address | Signs everything: ClobAuth, approvals batch, orders, withdrawals. Protocol identity in every request |
 | **Deposit wallet (DW)** | CREATE2 from the owner EOA — Solady ERC-1967 **beacon** proxy on Polygon, `DW_FACTORY`/`DW_BEACON`/`DW_BEACON_INIT_*` | Holds the funds; `maker`/`signer` of every order; the address funds are credited to and leave from |
-| **`walletId`** | `UserWalletId.stringValue` (64 hex, no `0x`) | Correlation key on the BFF (`POST /wallet/deploy`, bridge, withdraw). **Not** an input to any derivation |
+| **`walletId`** | `UserWalletId.stringValue` (64 hex, no `0x`) | Correlation key on the BFF only (`/wallet/deploy` body, `GET /wallet?walletId`, `GET /configuration`, the `wallet-id` header on positions and `/withdraw*`). The bridge never sees it. **Not** an input to any derivation |
 
 `PolymarketAddresses` binds the first two to the `UserWalletId` they were derived for, and its
 constructor is `internal` so a pair cannot be assembled by hand. `DerivePolymarketAddressesUseCase`
@@ -72,11 +73,13 @@ onboarded. It must match iOS and the SDK byte for byte; `PolymarketDerivationCon
    settlement token every order spends and `getBalanceAllowance` reports. Deposits are made in native USDC
    on Polygon (`USDC_TOKEN_ADDRESS`, `0x3c499c…`); `PolymarketCollateralCurrencyFactory.createDepositTarget()`
    is that token, `create()` is pUSD. The bridge converts.
-6. **The region is read per action, never carried on a route.** An unreadable region never locks a user
-   out of an existing account (browse, withdraw stay open), but it does refuse what would *commit* them:
-   `CheckNewPolymarketAccountAllowedInteractor` answers `UNDETERMINED` (no new deploy) and the order flow
-   keeps its gate shut as "unknown" rather than "restricted". Every trading action re-reads the region
-   right before it happens; a new trading action needs its own check.
+6. **The region is read by the flow that commits, never carried on a route.** An unreadable region never
+   locks a user out of an existing account (browse, withdraw stay open), but it does refuse what would
+   *commit* them: `CheckNewPolymarketAccountAllowedInteractor` answers `UNDETERMINED` (no new deploy) and
+   the order flow keeps its gate shut as "unknown" rather than "restricted". The order flow reads the
+   region when it is shown and re-reads on resume only while it is still unknown — there is no re-read
+   right before signing, so a region that changes while the screen is open is not caught. A new trading
+   flow needs its own read.
    `PolymarketAccessMode.READ_ONLY` (browse + withdraw only) is sourced from the geoblock alone — a second
    reason to restrict access needs its own signal, or the UI explains the restriction wrongly.
 7. **The prediction account never blocks the other accounts.** `PredictionAccountStatusSupplier` is combined
