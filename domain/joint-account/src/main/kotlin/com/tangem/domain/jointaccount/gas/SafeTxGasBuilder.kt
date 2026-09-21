@@ -13,7 +13,7 @@ import java.math.BigInteger
 /**
  * Assembles the [SafeTx] around an inner call. Everything the backend validates against the chain
  * (nonce, deployment state, gas estimate, gas price) is read right before signing — a stale value
- * earns a `NONCE_MISMATCH` / `GAS_PRICE_TOO_LOW` and a second tap.
+ * earns a `NONCE_MISMATCH` / `GAS_PRICE_TOO_LOW` / `GAS_PRICE_TOO_HIGH` and a second tap.
  */
 class SafeTxGasBuilder(
     private val networkReader: JointNetworkReader,
@@ -58,7 +58,7 @@ class SafeTxGasBuilder(
                 operation = SafeTx.OPERATION_CALL,
                 safeTxGas = estimate.withSafeTxGasMargin(),
                 baseGas = if (isDeployed) SAFE_BASE_GAS else SAFE_BASE_GAS + DEPLOY_GAS,
-                gasPrice = gasPrice * GAS_PRICE_CAP_MULTIPLIER,
+                gasPrice = gasPrice.withGasPriceMargin(),
                 gasToken = NATIVE_GAS_TOKEN,
                 refundReceiver = refundReceiver,
                 nonce = nonce,
@@ -66,9 +66,14 @@ class SafeTxGasBuilder(
         }
 
     /** Rounded up, so an odd estimate never lands below the margin */
-    private fun BigInteger.withSafeTxGasMargin(): BigInteger {
-        val (quotient, remainder) = (this * SAFE_TX_GAS_MARGIN_NUMERATOR)
-            .divideAndRemainder(SAFE_TX_GAS_MARGIN_DENOMINATOR)
+    private fun BigInteger.withSafeTxGasMargin(): BigInteger =
+        withMargin(numerator = SAFE_TX_GAS_MARGIN_NUMERATOR, denominator = SAFE_TX_GAS_MARGIN_DENOMINATOR)
+
+    private fun BigInteger.withGasPriceMargin(): BigInteger =
+        withMargin(numerator = GAS_PRICE_MARGIN_NUMERATOR, denominator = GAS_PRICE_MARGIN_DENOMINATOR)
+
+    private fun BigInteger.withMargin(numerator: BigInteger, denominator: BigInteger): BigInteger {
+        val (quotient, remainder) = (this * numerator).divideAndRemainder(denominator)
         return if (remainder.signum() == 0) quotient else quotient + BigInteger.ONE
     }
 
@@ -92,8 +97,14 @@ class SafeTxGasBuilder(
         private val SAFE_TX_GAS_MARGIN_NUMERATOR = BigInteger.valueOf(3)
         private val SAFE_TX_GAS_MARGIN_DENOMINATOR = BigInteger.valueOf(2)
 
-        /** ×2 over the network estimate: the backend accepts down to 70 % of its own estimate */
-        private val GAS_PRICE_CAP_MULTIPLIER = BigInteger.valueOf(2)
+        /**
+         * +100 % over the network estimate, by requirement. The backend re-estimates the price itself when the
+         * operation arrives and refuses a value outside its corridor around that estimate, so a price that moved
+         * far enough between the two readings is answered with `GAS_PRICE_TOO_LOW` / `GAS_PRICE_TOO_HIGH` and the
+         * operation is rebuilt on a fresh reading.
+         */
+        private val GAS_PRICE_MARGIN_NUMERATOR = BigInteger.TWO
+        private val GAS_PRICE_MARGIN_DENOMINATOR = BigInteger.ONE
 
         private const val EMPTY_CODE = "0x"
         private val EVM_ADDRESS = Regex(pattern = "^0x[0-9a-f]{40}$")

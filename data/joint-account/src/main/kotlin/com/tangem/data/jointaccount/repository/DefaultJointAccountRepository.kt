@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import com.squareup.moshi.Moshi
+import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
 import com.tangem.data.common.account.WalletAccountsFetcher
@@ -19,7 +21,6 @@ import com.tangem.data.jointaccount.converter.JointOperationRejectErrorConverter
 import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
-import com.tangem.store.datasource.jointaccount.models.RejectJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
@@ -31,7 +32,6 @@ import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountJoinResult
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
-import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -52,10 +52,11 @@ internal class DefaultJointAccountRepository @Inject constructor(
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val safeTxConverter: SafeTxConverter,
     private val dispatchers: CoroutineDispatcherProvider,
+    @NetworkMoshi private val moshi: Moshi,
 ) : JointAccountRepository {
 
     private val logger = TangemLogger.withTag(tag = TAG)
-    private val createErrorConverter = JointOperationCreateErrorConverter()
+    private val createErrorConverter = JointOperationCreateErrorConverter(moshi)
     private val signErrorConverter = JointOperationSignErrorConverter()
     private val rejectErrorConverter = JointOperationRejectErrorConverter()
 
@@ -281,23 +282,13 @@ internal class DefaultJointAccountRepository @Inject constructor(
 
     override suspend fun rejectOperation(
         userWalletId: UserWalletId,
-        payload: JointOperationRejectPayload,
+        operationId: String,
     ): Either<JointOperationRejectError, Unit> = withContext(dispatchers.io) {
-        val safeTxDto = Either
-            .catch { safeTxConverter.convertBack(payload.safeTx) }
-            .getOrElse { return@withContext JointOperationRejectError.Failed(cause = it).left() }
-
         safeApiCall(
             call = {
                 jointAccountApi.rejectJointOperation(
                     walletId = userWalletId.stringValue,
-                    operationId = payload.operationId,
-                    body = RejectJointOperationRequest(
-                        payload = RejectJointOperationRequest.Payload(
-                            operationId = payload.operationId,
-                            safeTx = safeTxDto,
-                        ),
-                    ),
+                    operationId = operationId,
                 ).bind()
 
                 Unit.right()
