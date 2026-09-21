@@ -282,6 +282,10 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         UnavailableModel(PreviewFailure.RecipientRegion, R.string.tangempay_withdraw_bank_error_recipient_region),
         UnavailableModel(PreviewFailure.SenderRegion, R.string.tangempay_withdraw_bank_error_sender_region),
         UnavailableModel(PreviewFailure.Business, R.string.tangempay_withdraw_bank_error_business),
+        UnavailableModel(
+            failure = PreviewFailure.UnsupportedConfiguration,
+            titleRes = R.string.tangempay_withdraw_bank_error_unsupported_configuration,
+        ),
     )
 
     internal data class UnavailableModel(val failure: PreviewFailure, val titleRes: Int)
