@@ -143,6 +143,22 @@ interface TangemPayApi {
         @Body body: VirtualAccountOrderRequest,
     ): ApiResponse<OrderResponse>
 
+    @POST("v1/order")
+    suspend fun createBankOfframpOrder(
+        @Header("Authorization") authHeader: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+        @Body body: BankOfframpPlaceOrderRequest,
+    ): ApiResponse<OrderResponse>
+
+    /** Hands the backend the card's signature over the hash the order is waiting for. */
+    @POST("v1/order/{order_id}/bank-offramp/signature")
+    suspend fun submitBankOfframpSignature(
+        @Header("Authorization") authHeader: String,
+        @Header("Idempotency-Key") idempotencyKey: String,
+        @Path("order_id") orderId: String,
+        @Body body: BankOfframpSignatureRequest,
+    ): ApiResponse<Unit>
+
     @POST("v1/order/{order_id}/cancel")
     suspend fun cancelOrder(
         @Header("Authorization") authHeader: String,
