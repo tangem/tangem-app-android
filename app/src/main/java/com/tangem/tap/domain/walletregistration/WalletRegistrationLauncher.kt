@@ -51,40 +51,22 @@ class WalletRegistrationLauncher @Inject internal constructor(
     }
 
     /**
-     * COLD prefetch from a [Card] already read off the session (preflight): requests and deciphers
-     * the wallet nonce so its round-trip can overlap the wrapped card command.
+     * COLD nonce prefetch used from `CardSessionRunnable.prepare`, which runs before preflight — so no
+     * card is available yet. Requests and deciphers the wallet nonce so its (seconds-long) round-trip
+     * can complete before the wrapped card command finishes and the in-session signing needs it.
      *
-     * When [checkRegistered] is true, skips the request entirely — returning `null` — for a card we
-     * can identify as already registered (e.g. every subsequent scan of a known card). It must be
-     * false for wallet-creating/importing taps: those replace the first wallet, so the preflight id
-     * is stale and a registered *old* wallet would wrongly skip the *new* one. Twin and Visa cards are
-     * never a cold-registration target. All failures are log-only; the caller simply skips
-     * registration on this tap.
+     * No card-based gating here (already-registered / twin / Visa): those need the card and are still
+     * enforced later in [registerColdInSession] and by the registrar's own idempotency check, so at
+     * worst an ineligible or already-registered card wastes a nonce.
+     *
+     * A registrar-side failure is logged and returns `null`; [WalletRegistrar.requestNonce] is total
+     * (routes every failure to a `Left`), so this consumes the `Either` directly rather than wrapping it.
      */
-    suspend fun requestColdNonce(card: Card, checkRegistered: Boolean): WalletNonce? {
+    suspend fun prefetchColdNonce(): WalletNonce? {
         if (!authFeatureToggles.isBackendAuthenticationEnabled) return null
 
-        // Total by contract: this runs in a session-scope child, so an unexpected throw (card mapping,
-        // wallet-id build, a Retrofit failure that escapes the ApiResponse wrapper) must not surface as
-        // a failed child and cancel the tap. runSuspendCatching still rethrows CancellationException.
-        return runSuspendCatching {
-            val cardDto = CardDTO(card)
-            if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return@runSuspendCatching null
-
-            if (checkRegistered) {
-                // A stable-wallet tap on a walletless card has nothing to register, so don't waste a
-                // one-time nonce on it; create/import (checkRegistered = false) still fetch, as they add one.
-                val walletId = UserWalletIdBuilder.card(cardDto).build()?.toBase64()
-                    ?: return@runSuspendCatching null
-                if (walletRegistrar.isRegistered(walletId)) return@runSuspendCatching null
-            }
-
-            walletRegistrar.requestNonce().getOrElse { error ->
-                TangemLogger.e("Cold wallet nonce prefetch deferred: $error")
-                null
-            }
-        }.getOrElse { e ->
-            TangemLogger.e("Cold wallet nonce prefetch failed", e)
+        return walletRegistrar.requestNonce().getOrElse { error ->
+            TangemLogger.e("Cold wallet nonce prefetch deferred: $error")
             null
         }
     }

@@ -32,6 +32,7 @@ dependencies {
     // region Domain models
     api(projects.domain.models)
     api(projects.domain.moneyAccount.models)
+    api(projects.domain.visa.models)
     // endregion
 
     // region Tests
@@ -42,6 +43,5 @@ dependencies {
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.domain.card)
-    testImplementation(projects.domain.visa.models)
     // endregion
 }

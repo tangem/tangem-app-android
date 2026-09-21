@@ -12,6 +12,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isBelowMinAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isFullClose
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
@@ -85,7 +86,7 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         notifications = notifications,
         isPrimaryButtonEnabled = notifications.none { it.isBlocking } &&
             quote is QuoteUM.Content &&
-            quote.status.isPlaceable &&
+            quote.status.isPlaceableForSell(isFullClose = isFullClose()) &&
             !isBelowMinAmount &&
             submit is SubmitUM.Idle &&
             tradingPermission == TradingPermissionUM.Allowed &&
@@ -132,7 +133,7 @@ private fun PlacePredictionUM.sharesProceeds(isBelowMinAmount: Boolean): SharesP
     return when {
         isBelowMinAmount && minAmount != null -> SharesProceedsUM.BelowMinimum(minShares = minAmount)
         quote is QuoteUM.Loading -> SharesProceedsUM.Loading
-        quote is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected, guaranteed = quote.guaranteed)
+        quote is QuoteUM.Content -> SharesProceedsUM.Content(expected = quote.expected)
         else -> SharesProceedsUM.Unavailable
     }
 }

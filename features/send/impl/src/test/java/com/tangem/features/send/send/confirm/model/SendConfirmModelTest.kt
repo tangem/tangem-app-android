@@ -474,6 +474,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             val onSendTransaction: () -> Unit = mockk(relaxed = true)
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery { jointSendDelegate.createOperation(jointAccount, any(), any(), any()) } returns Unit.right()
             val sut = createSendConfirmModel(this, jointConfirmParams(onSendTransaction))
             advanceUntilIdle()
@@ -496,6 +497,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         fun `GIVEN busy slot WHEN onSendClick THEN the slot alert is shown and the step stays editable`() = runTest {
             // Arrange
             coEvery { jointSendDelegate.findJointAccount(any(), jointAccount) } returns storedJointAccount
+            coEvery { jointSendDelegate.isSafeDeployed(any(), any()) } returns true
             coEvery {
                 jointSendDelegate.createOperation(jointAccount, any(), any(), any())
             } returns JointOperationCreateError.SlotBusy.left()
