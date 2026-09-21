@@ -92,6 +92,7 @@ internal object PlacePredictionPreviewIntents : PlacePredictionIntents {
     override fun onSlippageValueChange(value: String) = Unit
     override fun onSlippagePresetClick(percent: BigDecimal) = Unit
     override fun onSlippageConfirmClick() = Unit
+    override fun onFeeClick() = Unit
     override fun onAddFundsClick() = Unit
     override fun onQuoteRetryClick() = Unit
     override fun onPolymarketTermsClick() = Unit

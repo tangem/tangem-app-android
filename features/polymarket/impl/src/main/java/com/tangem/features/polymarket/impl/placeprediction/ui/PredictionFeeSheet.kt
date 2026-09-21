@@ -19,7 +19,6 @@ import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -29,15 +28,14 @@ import com.tangem.features.polymarket.impl.placeprediction.model.converter.Predi
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
 
 @Composable
-internal fun PredictionFeeSheet(state: PredictionFeeSheetUM?, onDismiss: () -> Unit) {
-    val displayedState = rememberLastNonNull(state) ?: return
-
+internal fun PredictionFeeSheet(state: PredictionFeeSheetUM, onDismiss: () -> Unit) {
     TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
-            isShown = state != null,
+            isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
+        onBack = onDismiss,
         title = {
             TangemTopNavigation(
                 title = resourceReference(R.string.prediction_place_fee),
@@ -49,8 +47,8 @@ internal fun PredictionFeeSheet(state: PredictionFeeSheetUM?, onDismiss: () -> U
         },
     ) {
         Column(modifier = Modifier.padding(bottom = 16.dp)) {
-            displayedState.rows.forEachIndexed { index, row ->
-                FeeRow(row = row, divider = index < displayedState.rows.lastIndex)
+            state.rows.forEachIndexed { index, row ->
+                FeeRow(row = row, divider = index < state.rows.lastIndex)
             }
         }
     }
