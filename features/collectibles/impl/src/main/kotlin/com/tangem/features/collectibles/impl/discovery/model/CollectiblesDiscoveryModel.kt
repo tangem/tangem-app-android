@@ -97,11 +97,25 @@ internal class CollectiblesDiscoveryModel @Inject constructor(
             getCategoriesUseCase()
                 .onRight { loaded ->
                     categories = loaded
-                    uiState.update { it.copy(tabs = buildTabs()) }
+                    uiState.update { state ->
+                        state.copy(
+                            tabs = buildTabs(),
+                            hasSearchableCatalogue = loaded.totalMachinesQuantity > 0,
+                        )
+                    }
+                    reloadMachines()
                 }
-                .onLeft { uiState.update { state -> state.copy(tabs = CollectiblesDiscoveryUM.TabsUM.Hidden) } }
-
-            reloadMachines()
+                .onLeft {
+                    uiState.update { state ->
+                        state.copy(
+                            tabs = CollectiblesDiscoveryUM.TabsUM.Hidden,
+                            content = CollectiblesDiscoveryUM.ContentUM.Error(
+                                message = resourceReference(R.string.collectibles_main_search_load_error),
+                                onReloadClick = ::reload,
+                            ),
+                        )
+                    }
+                }
         }.saveIn(categoriesJob)
     }
 
