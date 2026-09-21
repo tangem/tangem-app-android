@@ -118,7 +118,8 @@ records the wallet, `NOT_CREATED` withdraws it, every other status leaves the re
 
 `ResolvePolymarketEntryInteractor` decides where the user lands (`PolymarketEntry`): `Onboarded` from local
 state alone when the confirmation record and credentials exist; `Onboard(status)` / `Reconnect` after a
-backend read; `Undetermined` when the addresses are not stored here and prompting is not allowed.
+backend read when the addresses are stored. Without stored addresses and without prompting, no backend is
+asked: the confirmation record alone answers `Reconnect`, its absence `Undetermined`.
 
 ## Signing
 
