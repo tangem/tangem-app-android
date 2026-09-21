@@ -108,6 +108,18 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
+    val currentPlanMenuItem: KNode = child {
+        hasTestTag(TangemPayTestTags.CONTEXT_MENU_ITEM)
+        hasAnyDescendant(withText(getResourceString(CoreResR.string.tangempay_current_plan_title)))
+        useUnmergedTree = true
+    }
+
+    fun awaitingDepositBannerTitle(planFee: String): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(CoreResR.string.tangempay_card_details_awaiting_deposit_title, planFee))
+        useUnmergedTree = true
+    }
+
     val sessionExpiredBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_sync_needed_title)
 
     val sessionExpiredBannerMessage: KNode = bannerMessage(CoreResR.string.tangempay_sync_needed_body)
