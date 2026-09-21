@@ -6,6 +6,8 @@ import java.math.BigDecimal
  * A single Polymarket prediction market nested inside a [PolymarketEvent] (BFF `Market`).
  *
  * @property id unique market id
+ * @property conditionId on-chain condition the market settles on; with an outcome's asset id it names the
+ *  position a filled order creates, so it is known before the position exists
  * @property eventId id of the [PolymarketEvent] the market belongs to
  * @property title the market question (e.g. "Will X happen by 2026?")
  * @property slug url-friendly market identifier
@@ -30,6 +32,7 @@ import java.math.BigDecimal
  */
 data class PolymarketMarket(
     val id: String,
+    val conditionId: String?,
     val eventId: String,
     val title: String,
     val slug: String,
