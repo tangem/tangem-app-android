@@ -1,12 +1,13 @@
 package com.tangem.features.polymarket.impl.positiondetails.model
 
 import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketClosedPositionStatus
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.outcomeAccent
+import com.tangem.features.polymarket.impl.common.toBubbleVariant
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketFinishedPositionUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Summary
 import com.tangem.features.polymarket.impl.positions.model.PolymarketPositionBadgeConverter
@@ -43,11 +44,7 @@ internal class PolymarketFinishedPositionConverter(
                 ),
                 currentValue = null,
                 outcomeLabel = stringReference(value.outcome),
-                outcomeVariant = when {
-                    value.outcome.equals("Yes", ignoreCase = true) -> TangemMessageBubble.Variant.Info
-                    value.outcome.equals("No", ignoreCase = true) -> TangemMessageBubble.Variant.Error
-                    else -> TangemMessageBubble.Variant.Neutral
-                },
+                outcomeVariant = value.outcomeAccent.toBubbleVariant(),
                 payout = null,
                 result = result,
             ),
