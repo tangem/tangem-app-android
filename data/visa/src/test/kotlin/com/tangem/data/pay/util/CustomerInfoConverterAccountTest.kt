@@ -3,7 +3,6 @@ package com.tangem.data.pay.util
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.spend.datasource.pay.models.response.BalanceResponse
-import com.tangem.spend.datasource.pay.models.response.CryptoBalance
 import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.FiatBalance
 import org.junit.jupiter.api.Test
@@ -55,7 +54,7 @@ internal class CustomerInfoConverterAccountTest {
         // Arrange
         val result = result(
             paymentAccount = null,
-            balance = BalanceResponse(fiat = null, crypto = null, availableForWithdrawal = null),
+            balance = BalanceResponse(fiat = null),
             cards = listOf(card(id = "card_1")),
         )
 
@@ -65,7 +64,6 @@ internal class CustomerInfoConverterAccountTest {
         // Assert — an empty balance no longer erases the card payload
         assertThat(info.cards.map { it.cardId }).containsExactly("card_1")
         assertThat(info.fiatBalance).isNull()
-        assertThat(info.cryptoBalance).isNull()
     }
 
     @Test
@@ -107,14 +105,6 @@ internal class CustomerInfoConverterAccountTest {
                     postedCharges = BigDecimal.ZERO,
                     balanceDue = BigDecimal.ZERO,
                 ),
-                crypto = CryptoBalance(
-                    id = "usdc",
-                    chainId = 137,
-                    depositAddress = "0xdeposit",
-                    tokenContractAddress = "0xcontract",
-                    balance = BigDecimal.TEN,
-                ),
-                availableForWithdrawal = null,
             ),
         )
 
@@ -127,7 +117,7 @@ internal class CustomerInfoConverterAccountTest {
 
     private fun result(
         paymentAccount: CustomerMeResponse.PaymentAccount?,
-        balance: BalanceResponse? = BalanceResponse(fiat = null, crypto = null, availableForWithdrawal = null),
+        balance: BalanceResponse? = BalanceResponse(fiat = null),
         productInstances: List<CustomerMeResponse.ProductInstance> = emptyList(),
         cards: List<CustomerMeResponse.Card> = emptyList(),
     ) = CustomerMeResponse.Result(
