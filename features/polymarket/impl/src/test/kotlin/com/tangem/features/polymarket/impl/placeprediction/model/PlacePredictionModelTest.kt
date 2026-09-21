@@ -73,6 +73,8 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -1455,6 +1457,203 @@ internal class PlacePredictionModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ViewPosition {
+
+        @Test
+        fun `GIVEN a buy fills on a market with a condition id WHEN the position is indexed THEN view position is available`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Available)
+                coVerify(exactly = 1) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+            }
+
+        @Test
+        fun `GIVEN the position is not indexed yet WHEN a buy fills THEN the button waits AND the read is retried`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany listOf(
+                    null.right(),
+                    createPosition().right(),
+                )
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                runCurrent()
+                val whileIndexing = viewPosition(model)
+                advanceTimeBy(delayTimeMillis = PolymarketConst.POSITION_INDEXING_RETRY_MILLIS + 1)
+
+                // Assert
+                assertThat(whileIndexing).isEqualTo(ViewPositionUM.Awaiting)
+                assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Available)
+                coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+            }
+
+        @Test
+        fun `GIVEN the position never indexes WHEN the reads run out THEN view position is hidden`() = runTest {
+            // Arrange
+            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Hidden)
+            coVerify(exactly = PolymarketConst.POSITION_INDEXING_READS) {
+                positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID)
+            }
+        }
+
+        @Test
+        fun `GIVEN the position read fails WHEN a buy fills THEN the read is retried like a missing position`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany listOf(
+                    PolymarketPositionsError.Unknown(httpCode = 502, detail = null).left(),
+                    createPosition().right(),
+                )
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Available)
+            }
+
+        @Test
+        fun `GIVEN the market has no condition id WHEN a buy fills THEN view position is hidden AND nothing is read`() =
+            runTest {
+                // Arrange
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+                assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Hidden)
+                coVerify(exactly = 0) { positionsRepository.getPosition(addresses = any(), id = any()) }
+            }
+
+        @Test
+        fun `GIVEN the exchange found no match WHEN place clicked THEN view position is hidden`() = runTest {
+            // Arrange
+            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Hidden)
+            coVerify(exactly = 0) { positionsRepository.getPosition(addresses = any(), id = any()) }
+        }
+
+        @Test
+        fun `GIVEN a sell fills WHEN place clicked THEN view position is hidden`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            val model = createModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            model.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+            assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Hidden)
+        }
+
+        @Test
+        fun `GIVEN the position is indexed WHEN view position clicked THEN main and the position details replace the stack`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Act
+                model.onViewPositionClick()
+
+                // Assert
+                verify {
+                    router.replaceAll(
+                        PolymarketRoute.Main(userWalletId = USER_WALLET_ID),
+                        PolymarketRoute.PositionDetails(userWalletId = USER_WALLET_ID, positionId = POSITION_ID),
+                        onComplete = any(),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN the position is still indexing WHEN view position clicked THEN nothing navigates`() = runTest {
+            // Arrange
+            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            model.onPlaceClick()
+            runCurrent()
+
+            // Act
+            model.onViewPositionClick()
+
+            // Assert
+            verify(exactly = 0) { router.replaceAll(any<PolymarketRoute.Main>(), any(), onComplete = any()) }
+        }
+
+        private fun viewPosition(model: PlacePredictionModel): ViewPositionUM =
+            (model.uiState.value.submit as SubmitUM.Result).viewPosition
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Sell {
 
         @Test
@@ -1961,7 +2160,7 @@ internal class PlacePredictionModelTest {
         total = BigDecimal("10.48"),
     )
 
-    private fun createEvent(isAcceptingOrders: Boolean = true): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(isAcceptingOrders: Boolean = true, conditionId: String? = null): PolymarketEvent = PolymarketEvent(
         id = EVENT_ID,
         slug = "event-slug",
         title = "Event title",
@@ -1981,7 +2180,7 @@ internal class PlacePredictionModelTest {
         markets = listOf(
             PolymarketMarket(
                 id = MARKET_ID,
-                conditionId = null,
+                conditionId = conditionId,
                 eventId = EVENT_ID,
                 title = "Market question",
                 slug = "market-slug",
@@ -2014,7 +2213,8 @@ internal class PlacePredictionModelTest {
         const val ASSET_ID = "asset-1"
         const val NETWORK_RAW_ID = "polygon-ecosystem-token"
         val USER_WALLET_ID = UserWalletId("011")
-        val POSITION_ID = PolymarketPositionId(conditionId = "condition-1", assetId = ASSET_ID)
+        const val CONDITION_ID = "condition-1"
+        val POSITION_ID = PolymarketPositionId(conditionId = CONDITION_ID, assetId = ASSET_ID)
         val SELL_PARAMS = PlacePredictionComponent.Params.Sell(
             userWalletId = USER_WALLET_ID,
             positionId = POSITION_ID,
