@@ -601,10 +601,16 @@ internal class TokenDetailsModel @Inject constructor(
             )
             return
         }
-        analyticsEventsHandler.send(
-            TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
-        )
-        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
+        modelScope.launch {
+            if (isJointOperationSlotBusy()) {
+                showJointOperationSlotBusy()
+                return@launch
+            }
+            analyticsEventsHandler.send(
+                TransferAnalyticsEvent.MethodScreenOpened(source = AnalyticsParam.ScreensSources.Token),
+            )
+            bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
+        }
     }
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -717,11 +723,7 @@ internal class TokenDetailsModel @Inject constructor(
         }
         modelScope.launch {
             if (isJointOperationSlotBusy()) {
-                bottomSheetNavigation.activate(
-                    configuration = TokenDetailsBottomSheetConfig.JointOperationSlotBusy(
-                        networkName = cryptoCurrency.network.name,
-                    ),
-                )
+                showJointOperationSlotBusy()
             } else if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
                 bottomSheetNavigation.activate(
                     configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
@@ -735,11 +737,22 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    /** A joint account runs one operation per network at a time, so a busy slot stops the send at the button */
+    /**
+     * A joint account runs one operation per network at a time, so a busy slot stops the transfer at its button.
+     * The send row checks again: the slot can fill while the transfer sheet is open.
+     */
     private suspend fun isJointOperationSlotBusy(): Boolean {
         val jointAccount = account as? Account.Joint ?: return false
 
         return isJointOperationSlotBusyUseCase(account = jointAccount, network = cryptoCurrency.network)
+    }
+
+    private fun showJointOperationSlotBusy() {
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.JointOperationSlotBusy(
+                networkName = cryptoCurrency.network.name,
+            ),
+        )
     }
 
     private fun sendCurrency() {
