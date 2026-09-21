@@ -637,7 +637,12 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.addFunds.isEnabled).isFalse()
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             coVerify(exactly = 1) {
-                accountStatusFetcher(PredictionAccountStatusFetcher.Params(USER_WALLET_ID))
+                accountStatusFetcher(
+                    PredictionAccountStatusFetcher.Params(
+                        userWalletId = USER_WALLET_ID,
+                        mode = PredictionAccountStatusFetcher.Mode.FULL,
+                    ),
+                )
             }
         }
 
