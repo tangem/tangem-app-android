@@ -853,7 +853,10 @@ internal class RunPolymarketOnboardingInteractorTest {
             coVerifyOrder {
                 onboardedStore.markOnboarded(USER_WALLET_ID)
                 syncBalanceAllowance(OWNER, CREDENTIALS)
-                predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(USER_WALLET_ID))
+                predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(
+                    userWalletId = USER_WALLET_ID,
+                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+                ))
             }
         }
 
@@ -870,7 +873,10 @@ internal class RunPolymarketOnboardingInteractorTest {
                 assertThat(awaitItem()).isEqualTo(PolymarketOnboardingProgress.Ready)
                 awaitComplete()
             }
-            coVerify(exactly = 1) { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(USER_WALLET_ID)) }
+            coVerify(exactly = 1) { predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(
+                    userWalletId = USER_WALLET_ID,
+                    mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+                )) }
         }
 
         @Test

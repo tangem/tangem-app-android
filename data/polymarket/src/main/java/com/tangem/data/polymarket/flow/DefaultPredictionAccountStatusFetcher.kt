@@ -10,18 +10,26 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher.Mode
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.RecordPolymarketConfirmationUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.async
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.coroutineScope
+import java.math.BigDecimal
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -44,24 +52,29 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketWalletStatusUseCase: GetPolymarketWalletStatusUseCase,
     private val polymarketRepository: PolymarketRepository,
+    private val positionsRepository: PolymarketPositionsRepository,
     private val recordPolymarketConfirmation: RecordPolymarketConfirmationUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
     private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusFetcher {
 
-    override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
-        return Either.catchOn(dispatchers.default) {
-            val value = resolve(userWalletId = params.userWalletId)
+    private val mutexes = ConcurrentHashMap<UserWalletId, Mutex>()
 
-            if (value == null) {
+    override suspend fun invoke(params: PredictionAccountStatusFetcher.Params): Either<Throwable, Unit> {
+        return mutexOf(userWalletId = params.userWalletId).withLock {
+            Either.catchOn(dispatchers.default) {
+                val value = resolve(userWalletId = params.userWalletId, mode = params.mode)
+
+                if (value == null) {
+                    markUnrefreshed(userWalletId = params.userWalletId)
+                } else {
+                    statusStore.store(userWalletId = params.userWalletId, value = value)
+                }
+            }.onLeft { error ->
+                logger.e("Failed to refresh the prediction account of ${params.userWalletId}", error)
                 markUnrefreshed(userWalletId = params.userWalletId)
-            } else {
-                statusStore.store(userWalletId = params.userWalletId, value = value)
             }
-        }.onLeft { error ->
-            logger.e("Failed to refresh the prediction account of ${params.userWalletId}", error)
-            markUnrefreshed(userWalletId = params.userWalletId)
         }
     }
 
@@ -69,7 +82,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
      * The status if it could be established, `null` if it could not — in which case the caller keeps whatever is
      * cached instead of replacing it with a state that claims the account is empty or absent.
      */
-    private suspend fun resolve(userWalletId: UserWalletId): PredictionAccountStatusValue? {
+    private suspend fun resolve(userWalletId: UserWalletId, mode: Mode): PredictionAccountStatusValue? {
         val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return null
         // A locked wallet holds no keys to read the addresses from, which says nothing about the account behind them
         if (userWallet.isLocked) return null
@@ -83,7 +96,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
             ?: return null
 
         return toStatusValue(userWalletId = userWalletId, status = state.status) {
-            active(userWalletId = userWalletId, addresses = addresses)
+            active(userWalletId = userWalletId, addresses = addresses, mode = mode)
         }
     }
 
@@ -128,9 +141,15 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
     private suspend fun active(
         userWalletId: UserWalletId,
         addresses: PolymarketAddresses,
-    ): PredictionAccountStatusValue? {
-        return getPolymarketBalanceInteractor(addresses = addresses).fold(
+        mode: Mode,
+    ): PredictionAccountStatusValue? = coroutineScope {
+        val readPositionsValue = async {
+            if (mode == Mode.FULL) readPositionsValue(addresses = addresses) else null
+        }
+
+        getPolymarketBalanceInteractor(addresses = addresses).fold(
             ifLeft = { error ->
+                readPositionsValue.cancel()
                 when (error) {
                     is PolymarketAuthError.KeyNotFound -> PredictionAccountStatusValue.Onboarded(
                         source = StatusSource.ACTUAL,
@@ -143,27 +162,37 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                 }
             },
             ifRight = { balanceAllowance ->
+                val positionsValue = readPositionsValue.await()
+                val stored = storedActive(userWalletId = userWalletId)
+
                 PredictionAccountStatusValue.Active(
                     source = StatusSource.ACTUAL,
                     balance = balanceAllowance.balance,
-                    positionsValue = null,
+                    positionsValue = when (mode) {
+                        Mode.FULL -> positionsValue
+                        Mode.AVAILABLE_ONLY -> stored?.positionsValue
+                    },
                     fiatRate = null,
                     depositCurrency = collateralCurrencyFactory.createDepositTarget(),
-                    depositAddress = storedDepositAddress(userWalletId = userWalletId),
+                    depositAddress = stored?.depositAddress,
                 )
             },
         )
     }
 
-    /**
-     * The address a previous funding flow confirmed, carried over so a balance refresh does not drop it. This
-     * fetcher never asks the bridge itself: it runs on the wallet screen's cadence, while the address is only
-     * acted on right after a refresh on screen open confirmed it.
-     */
-    private suspend fun storedDepositAddress(userWalletId: UserWalletId): String? {
-        val stored = statusStore.getSyncOrNull(userWalletId = userWalletId)
+    private suspend fun readPositionsValue(addresses: PolymarketAddresses): BigDecimal? =
+        positionsRepository.getPositionsValue(addresses = addresses)
+            .onLeft { logger.e("Prediction positions value is unavailable: $it") }
+            .getOrNull()
 
-        return (stored as? PredictionAccountStatusValue.Active)?.depositAddress
+    /**
+     * The state a previous refresh left, carried over for what this one does not re-read: the deposit address a
+     * funding flow confirmed — this fetcher never asks the bridge itself, it runs on the wallet screen's cadence,
+     * while the address is only acted on right after a refresh on screen open confirmed it — and, outside a full
+     * refresh, the positions value.
+     */
+    private suspend fun storedActive(userWalletId: UserWalletId): PredictionAccountStatusValue.Active? {
+        return statusStore.getSyncOrNull(userWalletId = userWalletId) as? PredictionAccountStatusValue.Active
     }
 
     /** A wallet this device never derived an address for: the backend still knows it by its Tangem wallet id. */
@@ -180,6 +209,8 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
 
     private fun onboarding(stage: PredictionAccountStatusValue.Onboarding.Stage) =
         PredictionAccountStatusValue.Onboarding(source = StatusSource.ACTUAL, stage = stage)
+
+    private fun mutexOf(userWalletId: UserWalletId): Mutex = mutexes.computeIfAbsent(userWalletId) { Mutex() }
 
     /** Guarded: the likeliest reason to be here is that the store itself failed, and this asks it to write again. */
     private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
