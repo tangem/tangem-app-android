@@ -98,7 +98,7 @@ internal class DefaultPolymarketTypedDataSignerWithdrawTest {
         }
 
         // Act
-        signer.signWithdrawal(userWalletId = USER_WALLET_ID, payload = payload())
+        signer.signRelayedBatch(userWalletId = USER_WALLET_ID, payload = payload())
 
         // Assert
         assertThat(hashes.captured).hasSize(1)
@@ -115,7 +115,7 @@ internal class DefaultPolymarketTypedDataSignerWithdrawTest {
         }
 
         // Act
-        val actual = signer.signWithdrawal(userWalletId = USER_WALLET_ID, payload = payload())
+        val actual = signer.signRelayedBatch(userWalletId = USER_WALLET_ID, payload = payload())
 
         // Assert
         val expectedDigest = EthereumUtils.makeTypedDataHash(

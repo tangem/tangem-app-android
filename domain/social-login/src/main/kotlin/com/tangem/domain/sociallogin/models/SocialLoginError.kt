@@ -45,6 +45,9 @@ sealed interface SocialLoginError {
     /** The file declares a format version this app cannot read (CPR-05) */
     data class UnsupportedBackupVersion(val version: Int) : SocialLoginError
 
+    /** The backup needs a passphrase a social restore cannot ask for; the seed alone builds another wallet */
+    data object PassphraseNotSupported : SocialLoginError
+
     
     data class BackupWriteFailed(val cause: Throwable? = null) : SocialLoginError
 

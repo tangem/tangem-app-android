@@ -17,6 +17,7 @@ import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
@@ -63,6 +64,7 @@ internal object UserWalletsListRepositoryModule {
         userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
         isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
+        walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -118,6 +120,7 @@ internal object UserWalletsListRepositoryModule {
             userWalletSelectedHandler = userWalletSelectedHandler,
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
+            walletRegistrationTrigger = walletRegistrationTrigger,
         )
     }
 

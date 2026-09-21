@@ -40,14 +40,12 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
      * @param network           network
      * @param networkCurrencies network currencies
      * @param xpub              XPUB to restore dynamic addresses mode
-     * @param safeAddress       the Safe address of a joint account's network; `null` while the account is pending
      */
     suspend fun fetch(
         userWalletId: UserWalletId,
         network: Network,
         networkCurrencies: Set<CryptoCurrency>,
         xpub: String? = null,
-        safeAddress: String? = null,
     ): Either<Throwable, Unit> {
         // Guard: empty networkCurrencies would result in NetworkStatus.Verified(amounts=emptyMap()),
         // which overwrites any valid cached status and leaves all currencies in this network as Loading.
@@ -56,37 +54,27 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
             return Unit.right()
         }
 
-        // A pending joint account has no Safe yet: there is nothing to read and no error to store
-        val jointSafeAddress = if (network.derivationPath is Network.DerivationPath.Joint) {
-            safeAddress ?: run {
+        return Either.catchOn(dispatchers.default) {
+            // A pending joint account has no Safe yet, so no wallet manager: there is nothing to read and no error
+            // to store. Building the manager can fail, so the lookup stays inside the catch
+            if (network.derivationPath is Network.DerivationPath.Joint &&
+                walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network) == null
+            ) {
                 TangemLogger.i(
                     "Skipping fetch for $userWalletId [${network.id}]: the joint account has no Safe address yet",
                 )
-                return Unit.right()
+                return@catchOn
             }
-        } else {
-            null
-        }
 
-        return Either.catchOn(dispatchers.default) {
             val extraTokens = networkCurrencies.filterIsInstance<CryptoCurrency.Token>().toSet()
 
             val result = withContext(dispatchers.io) {
-                if (jointSafeAddress != null) {
-                    walletManagersFacade.updateJoint(
-                        userWalletId = userWalletId,
-                        network = network,
-                        extraTokens = extraTokens,
-                        safeAddress = jointSafeAddress,
-                    )
-                } else {
-                    walletManagersFacade.update(
-                        userWalletId = userWalletId,
-                        network = network,
-                        extraTokens = extraTokens,
-                        xpub = xpub,
-                    )
-                }
+                walletManagersFacade.update(
+                    userWalletId = userWalletId,
+                    network = network,
+                    extraTokens = extraTokens,
+                    xpub = xpub,
+                )
             }
 
             val status = NetworkStatusFactory.create(

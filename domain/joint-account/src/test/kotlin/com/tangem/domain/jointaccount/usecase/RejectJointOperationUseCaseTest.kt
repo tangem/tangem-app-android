@@ -7,7 +7,6 @@ import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
-import com.tangem.domain.jointaccount.model.JointOperationRejectPayload
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
@@ -62,10 +61,7 @@ internal class RejectJointOperationUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerifyOrder {
-            repository.rejectOperation(
-                userWalletId = MockAccounts.userWalletId,
-                payload = JointOperationRejectPayload(operationId = OPERATION_ID, safeTx = operation().safeTx),
-            )
+            repository.rejectOperation(userWalletId = MockAccounts.userWalletId, operationId = OPERATION_ID)
             fetcher.invoke(params = SingleJointAccountListFetcher.Params(userWalletId = MockAccounts.userWalletId))
         }
     }

@@ -43,4 +43,7 @@ sealed class TokenDetailsBottomSheetConfig : Route {
 
     @Serializable
     data object RegionUnavailable : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data class JointOperationSlotBusy(val networkName: String) : TokenDetailsBottomSheetConfig()
 }

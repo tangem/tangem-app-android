@@ -45,7 +45,11 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
             header = BankWithdrawHeaderFactory.create(draft = draft, step = TangemPayBankWithdrawInnerRoute.Preview),
             transfer = createTransfer(draft = draft, isSending = state.isSending),
             recipientCards = draft.recipientDetails()?.let { details ->
-                createRecipientCards(details = details, isEditable = draft.recipient == null && !state.isSending)
+                createRecipientCards(
+                    details = details,
+                    displayNames = draft.newRecipient.displayNames,
+                    isEditable = draft.recipient == null && !state.isSending,
+                )
             } ?: persistentListOf(),
             isSending = state.isSending,
             isSendEnabled = draft.toOrderRequest() != null,
@@ -89,6 +93,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
 
     private fun createRecipientCards(
         details: BankAccountDetails,
+        displayNames: Map<BankWithdrawFormField, String>,
         isEditable: Boolean,
     ): ImmutableList<RecipientCardUM> {
         val values = details.toFormValues()
@@ -103,8 +108,10 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         return cards.map { (fields, target) ->
             RecipientCardUM(
                 rows = fields.mapNotNull { field ->
+                    // Only a recipient added here carries names; a saved one comes back with codes and keeps them.
+                    val shown = displayNames[field]?.takeIf(String::isNotBlank) ?: values[field]
                     // A saved recipient can come back missing a value, and an empty row reads as missing data.
-                    values[field]
+                    shown
                         ?.takeIf(String::isNotBlank)
                         ?.let { value -> DetailRowUM(label = field.label, value = value) }
                 }.toImmutableList(),
