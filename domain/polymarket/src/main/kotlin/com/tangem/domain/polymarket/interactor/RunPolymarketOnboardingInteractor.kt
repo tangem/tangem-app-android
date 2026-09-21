@@ -187,7 +187,12 @@ class RunPolymarketOnboardingInteractor(
     }
 
     private suspend fun refreshAccountStatus(userWalletId: UserWalletId) {
-        predictionAccountStatusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId))
+        predictionAccountStatusFetcher(
+            PredictionAccountStatusFetcher.Params(
+                userWalletId = userWalletId,
+                mode = PredictionAccountStatusFetcher.Mode.AVAILABLE_ONLY,
+            ),
+        )
             .onLeft { error -> TangemLogger.e("Prediction account refresh after onboarding failed", error) }
     }
 
