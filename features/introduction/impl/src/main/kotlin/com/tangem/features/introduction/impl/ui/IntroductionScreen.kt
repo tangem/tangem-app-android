@@ -27,10 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -46,6 +49,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.features.introduction.impl.model.welcomeScenes
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
+import com.tangem.features.introduction.impl.R as IntroductionR
 import com.tangem.core.ui.R as CoreUiR
 
 /** Vertical stops of the darkening gradient, each paired with the scrim opacity it reaches. */
@@ -82,23 +86,10 @@ internal fun IntroductionScreen(
                     .fillMaxSize()
                     .background(TangemTheme.colors3.bg.base),
             ) {
-                // A SurfaceView punches a hole through the window, erasing whatever is composed before it,
-                // so the shutter below has to come after it.
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { context -> SurfaceView(context).also(onSurfaceAvailable) },
-                    onRelease = onSurfaceRelease,
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = if (state.isVideoReady) 0f else 1f }
-                        .background(TangemTheme.colors3.bg.base),
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(rememberBottomScrimBrush()),
+                VideoBackground(
+                    state = state,
+                    onSurfaceAvailable = onSurfaceAvailable,
+                    onSurfaceRelease = onSurfaceRelease,
                 )
                 Image(
                     modifier = Modifier
@@ -141,6 +132,42 @@ internal fun IntroductionScreen(
             state.haveWalletBottomSheetConfig?.let { HaveWalletBottomSheet(config = it) }
         }
     }
+}
+
+@Composable
+private fun VideoBackground(
+    state: IntroductionUM,
+    onSurfaceAvailable: (SurfaceView) -> Unit,
+    onSurfaceRelease: (SurfaceView) -> Unit,
+) {
+    // A SurfaceView punches a hole through the window, erasing whatever is composed before it, so the shutter
+    // below has to come after it.
+    AndroidView(
+        modifier = Modifier.videoSurfaceSize(aspectRatio = state.videoAspectRatio),
+        factory = { context -> SurfaceView(context).also(onSurfaceAvailable) },
+        onRelease = onSurfaceRelease,
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer { alpha = if (state.isVideoReady) 0f else 1f }
+            .background(TangemTheme.colors3.bg.base),
+    ) {
+        // The video's own first frame, framed the way the surface frames it: the cut to playback lands on the
+        // same picture, and a surface with nothing in it yet shows this instead of the hole it punches through
+        // the window.
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = IntroductionR.drawable.img_introduction_background_poster),
+            contentScale = ContentScale.Crop,
+            contentDescription = null,
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(rememberBottomScrimBrush()),
+    )
 }
 
 /**
@@ -214,6 +241,29 @@ private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) 
     }
 }
 
+/**
+ * Lays the surface out with the frame's own shape, large enough to cover the screen and centred on it.
+ *
+ * The crop the player asks the decoder for is a request: vendor decoders are free to ignore it and stretch the
+ * frame into whatever shape the surface has, which on a screen taller than the video is what squeezes the
+ * picture. A surface that already has the frame's shape renders the same either way.
+ */
+private fun Modifier.videoSurfaceSize(aspectRatio: Float?): Modifier = if (aspectRatio == null) {
+    fillMaxSize()
+} else {
+    layout { measurable, constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val isCoveredByHeight = width < height * aspectRatio
+        val coverWidth = if (isCoveredByHeight) (height * aspectRatio).roundToInt() else width
+        val coverHeight = if (isCoveredByHeight) height else (width / aspectRatio).roundToInt()
+        val placeable = measurable.measure(Constraints.fixed(width = coverWidth, height = coverHeight))
+        layout(width = width, height = height) {
+            placeable.place(x = (width - coverWidth) / 2, y = (height - coverHeight) / 2)
+        }
+    }
+}
+
 // region Preview
 @Preview(showBackground = true, widthDp = 360, heightDp = 780)
 @Composable
@@ -225,6 +275,7 @@ private fun IntroductionScreenPreview() {
             videoPositionMs = { 0L },
             state = IntroductionUM(
                 isVideoReady = true,
+                videoAspectRatio = null,
                 isVideoFailed = false,
                 isVideoRunning = false,
                 isMotionEnabled = false,
