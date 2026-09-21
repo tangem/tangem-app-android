@@ -29,6 +29,7 @@ import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -139,6 +140,11 @@ private fun ResultFooter(note: TextReference?, action: PolymarketPositionResultU
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             isLoading = action is Action.Claim && action.isInProgress,
+            contentDescription = if (action is Action.Claim && action.isInProgress) {
+                stringResourceSafe(R.string.common_in_progress)
+            } else {
+                null
+            },
             iconEnd = when (action) {
                 is Action.Claim -> TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24)
                 Action.Dismiss -> null
