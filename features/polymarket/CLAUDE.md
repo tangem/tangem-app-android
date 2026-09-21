@@ -34,11 +34,12 @@ adding any screen that can sign, prompt or move funds.
   `SwapTransferStateBuilder`). Withdraw is signed there through `SubmitPredictionWithdrawalInteractor` and
   ends on `SwapRoute.Success` with `PredictionWithdrawalTracker` polling in the background — there is no
   status screen. A top-up sent from swap opens `PredictionFundingWindow`.
-- **Receive** — `TokenReceiveComponent` (`features/tokenrecieve`) in a slot of `PolymarketMainComponent`,
+- **Receive** — `TokenReceiveComponent` (`features/token-recieve`, package `tokenreceive`) in a slot of `PolymarketMainComponent`,
   configured by `PolymarketReceiveConfigFactory` with the bridge deposit address and the `minCheckoutUsd`
   limits notification.
-- **DI** — `PolymarketFeatureModule`: component factories, every model `@IntoMap @ClassKey`, the toggles,
-  and the use cases / interactors that need feature-side dependencies.
+- **DI** — `di/PolymarketBindsModule.kt` holds four modules: `PolymarketBindsModule` (component
+  factories), `PolymarketModelModule` (every model `@IntoMap @ClassKey`), `PolymarketFeatureTogglesModule`,
+  `PolymarketDomainUseCasesModule` (use cases / interactors that need feature-side dependencies).
 - **Analytics** — `AnalyticsParam.ScreensSources.Predictions` as the screen source of swap and receive;
   `PredictionAddFundsAnalyticsEvent` is the only event hierarchy in the module. Events are an analysts'
   contract — do not invent names, leave a `TODO` with the ticket instead.
@@ -88,8 +89,8 @@ place-prediction flow re-checks the region itself before an order.
 a failed or empty first page is retried once silently), the balance header from
 `PredictionAccountStatusSupplier` (`PredictionBalanceUMConverter`), the deposit requisites
 (`PredictionFundingRequisites` wrapper over `RefreshPredictionDepositRequisitesInteractor`), the
-positions preview (`PolymarketPositionsPreviewLoader`), and `PredictionBalancePoller.subscribe` for as
-long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
+positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
+`PredictionBalancePoller.subscribe` for as long as the screen is shown. Pull-to-refresh refreshes status and requisites together.
 
 - **Add funds** is gated: `RequisitesState.Loading` ignores the tap, `Failed` shows a dialog, `Ready`
   opens the sheet — swap (`AccountFlow.PredictionTopUp`) or receive. Both need a confirmed address
@@ -105,36 +106,41 @@ long as the screen is shown. Pull-to-refresh refreshes status and requisites tog
 
 `PlacePredictionModel` (~750 lines, the largest model) drives Amount → Slippage → Summary → Status:
 
-- **Quote loop.** Amount entry is debounced 500 ms, then `GetPredictionOrderQuoteUseCase` is polled every
-  15 s (3 s for a live market); an empty amount polls `GetPredictionPriceUseCase` instead. The quote is
-  never cached. Two independent gates decide whether it is placeable: `quote.status.isPlaceable` (market
-  state) and `isBelowMinAmount` (side-specific: BUY is price-weighted, SELL is the flat `minOrderSize`).
-  A below-minimum amount skips the request entirely.
-- **Shares.** `SharesCalculator` rounds to the 2-decimal share grid (`PolymarketConst.SHARES_DECIMALS`).
-  Known consequence ([REDACTED_TASK_KEY]): a position cannot always be closed in full — sub-grid dust is a dead end.
-  Notion "Close Position Flow" (16.09.2026) asks for integer-floored presets and "full close below minimum
-  is allowed"; neither platform implements it yet, ask analytics which is primary before changing it.
+- **Quote loop.** Amount entry is debounced 500 ms, then one loop runs every 3 s
+  (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
+  for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
+  while it is empty or below the minimum. The quote is never cached. Two independent gates decide whether
+  it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
+  price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
+  `isFullClose`).
+- **Shares.** `SharesCalculator`: the sellable size is the position floored to the 2-decimal exchange grid
+  (`PolymarketConst.SHARES_DECIMALS`); presets and ± steps move in whole shares with a floor of one share
+  (or the whole position when smaller), and 100 % is the position itself, so a full close reaches the
+  last fraction.
 - **Slippage.** Default 3 %, range 0.1–30 % (`SlippagePickerUM`); a fill at the worst-case price counts as filled.
-- **Region.** Read by the flow itself when shown (`TradingPermissionUM`), never carried on the route. An
-  unreadable region keeps the gate shut as `Unknown` — the order is refused, the user is not told they are
-  restricted.
+- **Region.** Read by the flow itself when shown (`TradingPermissionUM`), re-read on resume only while
+  `Unknown`, never carried on the route and not re-read before signing. An unreadable region keeps the
+  gate shut as `Unknown` — the order is refused, the user is not told they are restricted.
 - **Placing.** `SignPredictionOrderInteractor` (one card tap) → `PlacePredictionOrderUseCase`.
-  Outcomes: filled; `Delayed` → `AwaitDelayedPredictionOrderUseCase` polls
+  Outcomes: filled (with the actual filled amounts); `Delayed` → `AwaitDelayedPredictionOrderUseCase` polls
   `GET data/order/{id}`; `Ambiguous` (transport failure after send) is shown as **Submitted**, never as
   failed — the order may be live; `NoLiquidity` (fill-and-kill found no match) is shown as NotFilled.
   Any result that moves the balance (`Filled` / `PartiallyFilled` / `Submitted`) opens
   `PredictionFundingWindow`, so the feed shows the awaiting-funds banner and polls faster until the balance
   settles.
-- **After a fill** the position is read back through `/positions/outcome`, which may be `null` until
-  indexed: `POSITION_INDEXING_READS` reads, `POSITION_INDEXING_RETRY_MILLIS` apart.
+- **Position reads.** `/positions/outcome` may answer `null` until the position is indexed;
+  `PolymarketPositionDetailsModel` retries it when the details screen opens (`POSITION_INDEXING_READS`
+  reads, `POSITION_INDEXING_RETRY_MILLIS` apart). The order flow itself does not re-read after a fill; the
+  sell flow reads the position on open and again at signing.
 - **Sell** (`Params.Sell`) validates at signing time that the position still exists, the market accepts
   orders and enough shares remain after grid rounding. SELL legs: `makerAmount = shares`,
   `takerAmount = collateral`.
 
 ## Positions
 
-`PolymarketPositionsSession` (domain) is one visit: pages are retained across pause/resume, a filter change
-restarts from page one, disposal ends it. `PolymarketPositionsLoader` renders it; `PolymarketPositionsFilter`
+`PolymarketPositionsSession` (domain) is one visit: pages are retained across pause/resume and refreshed
+in place on resume (`refreshLoadedPages`); a filter change keeps the retained pages, re-filters them and
+requests more only to fill a page (`selectFilter`); disposal ends it. `PolymarketPositionsLoader` renders it; `PolymarketPositionsFilter`
 (`ALL/ACTIVE/WON/LOST/DISPUTED`) maps to BFF `status`. A position is identified by
 `PolymarketPositionId(conditionId, assetId)`.
 
@@ -170,7 +176,6 @@ screen); `isRedeemable` is read but only excludes the position from details.
 | Item | Ticket |
 |---|---|
 | Claim (redeem) of a won position + result screen | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
-| Full close below minimum, integer-floored presets (Notion cases 5/7/8) | [REDACTED_TASK_KEY] (partial) |
 | Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
 | Tradezone `/value` (In Bets / Total) and PnL | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
