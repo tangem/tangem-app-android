@@ -4,11 +4,15 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.models.pay.TangemPayCountry
+import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
@@ -16,6 +20,7 @@ import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -34,12 +39,22 @@ internal class TangemPayBankWithdrawModelTest {
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase = mockk(relaxed = true)
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
+    private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
+    private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getBankAccountsUseCase, markBankAccountUsedUseCase, paymentAccountStatusFetcher)
+        clearMocks(
+            getBankAccountsUseCase,
+            markBankAccountUsedUseCase,
+            paymentAccountStatusFetcher,
+            getTangemPayCountriesUseCase,
+            getTangemPayRegionsUseCase,
+        )
         coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
+        coEvery { getTangemPayCountriesUseCase() } returns emptyList<TangemPayCountry>().right()
+        coEvery { getTangemPayRegionsUseCase(any()) } returns emptyList<TangemPayRegion>().right()
     }
 
     @Test
@@ -250,6 +265,42 @@ internal class TangemPayBankWithdrawModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN new personal entry WHEN model created THEN countries and us regions prefetched`() {
+        // Act
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+
+        // Assert
+        coVerify(exactly = 1) { getTangemPayCountriesUseCase() }
+        coVerify(exactly = 1) { getTangemPayRegionsUseCase(BankWithdrawFormFields.US_COUNTRY_CODE) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN new business entry WHEN model created THEN countries and us regions prefetched`() {
+        // Act
+        val model = createModel(BankWithdrawEntry.NewBusiness)
+
+        // Assert
+        coVerify(exactly = 1) { getTangemPayCountriesUseCase() }
+        coVerify(exactly = 1) { getTangemPayRegionsUseCase(BankWithdrawFormFields.US_COUNTRY_CODE) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN saved entry WHEN model created THEN nothing prefetched`() {
+        // Arrange
+        coEvery { getBankAccountsUseCase(userWalletId) } returns listOf(bankAccount(id = "acc-2")).right()
+
+        // Act
+        val model = createModel(BankWithdrawEntry.Saved("acc-2"))
+
+        // Assert
+        coVerify(exactly = 0) { getTangemPayCountriesUseCase() }
+        coVerify(exactly = 0) { getTangemPayRegionsUseCase(any()) }
+        model.onDestroy()
+    }
+
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawComponent.Params(
@@ -262,5 +313,7 @@ internal class TangemPayBankWithdrawModelTest {
         getBankAccountsUseCase = getBankAccountsUseCase,
         markBankAccountUsedUseCase = markBankAccountUsedUseCase,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
+        getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,
     )
 }

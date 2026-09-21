@@ -8,11 +8,15 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
+import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawModel @Inject constructor(
@@ -29,6 +34,8 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
+    private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawComponent.Params>()
@@ -38,6 +45,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     init {
         loadSavedRecipient()
+        prefetchResidency()
     }
 
     fun onRecipientSelected(account: BankAccount) {
@@ -77,6 +85,15 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
             paymentAccountStatusFetcher(params.userWalletId).onLeft { error ->
                 TangemLogger.withTag(TAG).e("Failed to refresh the payment account after a bank withdraw: $error")
             }
+        }
+    }
+
+    /** The wizard's address steps open two pickers; warming them here keeps the first tap instant. */
+    private fun prefetchResidency() {
+        if (TangemPayBankWithdrawInnerRoute.RecipientDetails !in BankWithdrawFlow.steps(params.entry)) return
+        modelScope.launch {
+            getTangemPayCountriesUseCase()
+            getTangemPayRegionsUseCase(BankWithdrawFormFields.US_COUNTRY_CODE)
         }
     }
 
