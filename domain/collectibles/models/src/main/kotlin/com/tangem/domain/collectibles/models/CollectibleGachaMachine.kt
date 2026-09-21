@@ -30,25 +30,25 @@ data class CollectibleGachaMachine(
     /** Drop chance per rarity tier, in percent. */
     data class Odds(
         val common: Int,
+        val uncommon: Int,
         val rare: Int,
-        val epic: Int,
-        val legendary: Int?,
+        val epic: Int?,
     )
 
     /** Remaining card count per rarity tier. */
     data class Stock(
         val common: Int,
+        val uncommon: Int,
         val rare: Int,
-        val epic: Int,
-        val legendary: Int?,
+        val epic: Int?,
     )
 
     /** Card value range per rarity tier. */
     data class TierRanges(
         val common: TierRange,
+        val uncommon: TierRange,
         val rare: TierRange,
-        val epic: TierRange,
-        val legendary: TierRange?,
+        val epic: TierRange?,
     )
 
     data class TierRange(val start: Int, val end: Int)
