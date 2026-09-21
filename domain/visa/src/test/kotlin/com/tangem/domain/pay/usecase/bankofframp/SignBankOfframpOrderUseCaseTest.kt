@@ -47,14 +47,14 @@ internal class SignBankOfframpOrderUseCaseTest {
         // Arrange
         coEvery { authDataSource.getWithdrawalSignature(userWallet, HASH) } returns
             WithdrawalSignatureResult.Success(signature = "0xsig").right()
-        coEvery { repository.submitSignature(TEST_USER_WALLET_ID, ORDER_ID, "0xsig") } returns Unit.right()
+        coEvery { repository.submitSignature(TEST_USER_WALLET_ID, ORDER_ID, "0xsig", KEY) } returns Unit.right()
 
         // Act
-        val actual = useCase(userWalletId = TEST_USER_WALLET_ID, orderId = ORDER_ID, payloadHash = HASH)
+        val actual = sign()
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpSignResult.Signed.right())
-        coVerify(exactly = 1) { repository.submitSignature(TEST_USER_WALLET_ID, ORDER_ID, "0xsig") }
+        coVerify(exactly = 1) { repository.submitSignature(TEST_USER_WALLET_ID, ORDER_ID, "0xsig", KEY) }
     }
 
     @Test
@@ -63,11 +63,11 @@ internal class SignBankOfframpOrderUseCaseTest {
         coEvery { authDataSource.getWithdrawalSignature(userWallet, HASH) } returns WithdrawalSignatureResult.Cancelled.right()
 
         // Act
-        val actual = useCase(userWalletId = TEST_USER_WALLET_ID, orderId = ORDER_ID, payloadHash = HASH)
+        val actual = sign()
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpSignResult.Cancelled.right())
-        coVerify(exactly = 0) { repository.submitSignature(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.submitSignature(any(), any(), any(), any()) }
     }
 
     @Test
@@ -77,11 +77,11 @@ internal class SignBankOfframpOrderUseCaseTest {
         coEvery { authDataSource.getWithdrawalSignature(userWallet, HASH) } returns cause.left()
 
         // Act
-        val actual = useCase(userWalletId = TEST_USER_WALLET_ID, orderId = ORDER_ID, payloadHash = HASH)
+        val actual = sign()
 
         // Assert
         assertThat(actual).isEqualTo(BankOfframpError.Unknown(cause = cause).left())
-        coVerify(exactly = 0) { repository.submitSignature(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.submitSignature(any(), any(), any(), any()) }
     }
 
     @Test
@@ -90,16 +90,24 @@ internal class SignBankOfframpOrderUseCaseTest {
         wallets.value = emptyList()
 
         // Act
-        val actual = useCase(userWalletId = TEST_USER_WALLET_ID, orderId = ORDER_ID, payloadHash = HASH)
+        val actual = sign()
 
         // Assert
         assertThat(actual.isLeft()).isTrue()
         coVerify(exactly = 0) { authDataSource.getWithdrawalSignature(any(), any()) }
-        coVerify(exactly = 0) { repository.submitSignature(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.submitSignature(any(), any(), any(), any()) }
     }
+
+    private suspend fun sign() = useCase(
+        userWalletId = TEST_USER_WALLET_ID,
+        orderId = ORDER_ID,
+        payloadHash = HASH,
+        idempotencyKey = KEY,
+    )
 
     private companion object {
         const val ORDER_ID = "order-1"
         const val HASH = "0xhash"
+        const val KEY = "idempotency-key"
     }
 }
