@@ -23,6 +23,7 @@ import com.tangem.lib.auth.session.DeviceRegistrationError
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
@@ -54,6 +55,7 @@ class DefaultDeviceRegistrarTest {
     private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
     private val attestationProvider: AttestationProvider = mockk()
     private val sessionTokenRefresher: SessionTokenRefresher = mockk()
+    private val walletRegistrar: WalletRegistrar = mockk(relaxed = true)
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -68,7 +70,10 @@ class DefaultDeviceRegistrarTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokenRefresher)
+        clearMocks(
+            authApi, store, deviceKeyManager, nonceDecryptor, attestationProvider, sessionTokenRefresher,
+            walletRegistrar,
+        )
         // the store answers with the set that ends up in effect
         coEvery { store.save(any()) } answers { firstArg() }
         preferencesDataStore.reset()
@@ -90,6 +95,7 @@ class DefaultDeviceRegistrarTest {
             errorConverter = errorConverter,
             appPreferencesStore = appPreferencesStore,
             sessionTokenRefresher = Lazy { sessionTokenRefresher },
+            walletRegistrar = walletRegistrar,
             dispatchers = dispatchers,
         )
     }
@@ -347,6 +353,35 @@ class DefaultDeviceRegistrarTest {
         coVerify { authApi.registerDevice(any<RegisterApiRequest>()) }
         coVerify { store.save(any()) }
         assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+    }
+
+    @Test
+    fun `reregister clears local wallet registrations so previously bound wallets re-register`() = runTest {
+        // Arrange — the backend lost the device record, so its wallet bindings are gone too.
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        stubHappyPath()
+
+        // Act
+        val result = registrar.reregister()
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { walletRegistrar.clearRegistrations() }
+    }
+
+    @Test
+    fun `reregister fails without touching the device flag when clearing wallet registrations fails`() = runTest {
+        // Arrange
+        preferencesDataStore.edit { it[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY] = true }
+        coEvery { walletRegistrar.clearRegistrations() } throws IllegalStateException("DataStore I/O")
+
+        // Act
+        val result = registrar.reregister()
+
+        // Assert — bail before resetting the flag / re-registering, so recovery is retried.
+        assertThat(result.leftOrNull()).isInstanceOf(DeviceRegistrationError.PersistenceFailed::class.java)
+        assertThat(preferencesDataStore.current()[AuthPreferenceKeys.IS_DEVICE_REGISTERED_KEY]).isTrue()
+        coVerify(exactly = 0) { authApi.registerDevice(any<RegisterApiRequest>()) }
     }
 
     @Test
