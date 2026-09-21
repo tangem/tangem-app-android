@@ -140,8 +140,10 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 
 `PolymarketPositionsSession` (domain) is one visit: pages are retained across pause/resume and refreshed
 in place on resume (`refreshLoadedPages`); a filter change keeps the retained pages, re-filters them and
-requests more only to fill a page (`selectFilter`); disposal ends it. `PolymarketPositionsLoader` renders it; `PolymarketPositionsFilter`
-(`ALL/ACTIVE/WON/LOST/DISPUTED`) maps to BFF `status`. A position is identified by
+requests more only to fill a page (`selectFilter`); disposal ends it. `PolymarketPositionsLoader` renders
+it. The BFF only distinguishes the ACTIVE and FINISHED endpoints (`PolymarketPositionsTab`); no status
+parameter is sent, and `PolymarketPositionsFilter` (`ALL/ACTIVE/WON/LOST/DISPUTED/PENDING/SPLIT`) is applied
+locally to the fetched pages through `PolymarketPositionStatusConverter`. A position is identified by
 `PolymarketPositionId(conditionId, assetId)`.
 
 The close gate (`PolymarketPositionDetailsConverter.canClosePosition`): not resolved, no result, not
@@ -150,8 +152,10 @@ redeemable, `marketId` known, `isAcceptingOrders`, `size > 0`. A row whose marke
 Buy more (`PolymarketPositionDetailsModel.buyableMarket`) needs the position `OPEN`, its event loaded and
 the market holding that outcome still `isAcceptingOrders`; it pushes the ordinary `PlacePrediction` route.
 
-**Claim / redeem of a won position is not implemented** — [REDACTED_TASK_KEY] (transaction) and [REDACTED_TASK_KEY] (result
-screen); `isRedeemable` is read but only excludes the position from details.
+`PolymarketPositionResultComponent` renders a resolved position (WON / LOST / SPLIT); `canOpenPositionResult`
+requires `RESOLVED` and, for WON / SPLIT, `isRedeemable`, so a position already redeemed elsewhere opens
+nothing. **Claiming (redeeming) a won position is not implemented** — [REDACTED_TASK_KEY] (the redeem transaction)
+and [REDACTED_TASK_KEY] (the claim action on the result screen).
 
 ## Gotchas
 
@@ -175,7 +179,7 @@ screen); `isRedeemable` is read but only excludes the position from details.
 
 | Item | Ticket |
 |---|---|
-| Claim (redeem) of a won position + result screen | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
+| Claim (redeem) of a won position: transaction and claim action | [REDACTED_TASK_KEY], [REDACTED_TASK_KEY] |
 | Drop L2 credentials on CLOB `401` and route to the gate | [REDACTED_TASK_KEY] |
 | Tradezone `/value` (In Bets / Total) and PnL | not ticketed |
 | Withdraw beyond USDC · Polygon (phase 2), withdrawal tracker on cold start, explorer link on withdraw | not ticketed |
