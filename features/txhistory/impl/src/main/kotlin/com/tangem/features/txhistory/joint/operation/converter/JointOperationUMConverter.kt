@@ -47,7 +47,7 @@ internal class JointOperationUMConverter(
         val state = value.state
 
         return TxHistoryDetailsUM.SingleAsset(
-            header = header(menu = menu(state = state, canCreateContact = value.canCreateContact)),
+            header = header(state = state, menu = menu(state = state, canCreateContact = value.canCreateContact)),
             isBalanceHidden = value.isBalanceHidden,
             amountBlock = TxHistoryDetailsUM.AmountBlockUM(
                 icon = TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency)),
@@ -61,14 +61,7 @@ internal class JointOperationUMConverter(
                 onCopyClick = onCopyRecipientClick,
             ),
             rows = listOfNotNull(feeRow(state)).toImmutableList(),
-            cosign = CosignRequestRowUM(
-                title = resourceReference(
-                    id = CoreUiR.string.joint_operation_signatures_progress,
-                    formatArgs = wrappedList(state.collected, state.membersCount),
-                ),
-                progress = SignatureProgressUM(collected = state.collected, total = state.membersCount),
-                onInfoClick = onSignersClick,
-            ),
+            cosign = if (state.isSending) null else cosignRow(state),
             cosignAction = action(
                 state = state,
                 isSigning = value.isSigning,
@@ -78,14 +71,41 @@ internal class JointOperationUMConverter(
         )
     }
 
-    /** Neutral icon and title by design: the warning-coloured subtitle alone says the operation is pending */
-    private fun header(menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>) = TxHistoryDetailsUM.HeaderUM(
-        icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-        status = TransactionItemUM.Content.Status.Confirmed,
-        title = resourceReference(R.string.common_send),
-        subtitle = resourceReference(CoreUiR.string.transaction_history_pending),
-        subtitleStyle = TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning,
-        menu = menu,
+    /**
+     * While signatures are collected the icon and title stay neutral by design, the warning-coloured subtitle alone
+     * says the operation is pending; once sent it reads like any unconfirmed transaction.
+     */
+    private fun header(
+        state: JointOperationState,
+        menu: ImmutableList<TxHistoryDetailsUM.MenuItemUM>,
+    ): TxHistoryDetailsUM.HeaderUM {
+        return if (state.isSending) {
+            TxHistoryDetailsUM.HeaderUM(
+                icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+                status = TransactionItemUM.Content.Status.Unconfirmed,
+                title = resourceReference(CoreUiR.string.common_sending),
+                subtitle = resourceReference(CoreUiR.string.joint_operation_sending_to_network),
+                menu = menu,
+            )
+        } else {
+            TxHistoryDetailsUM.HeaderUM(
+                icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+                status = TransactionItemUM.Content.Status.Confirmed,
+                title = resourceReference(R.string.common_send),
+                subtitle = resourceReference(CoreUiR.string.transaction_history_pending),
+                subtitleStyle = TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning,
+                menu = menu,
+            )
+        }
+    }
+
+    private fun cosignRow(state: JointOperationState) = CosignRequestRowUM(
+        title = resourceReference(
+            id = CoreUiR.string.joint_operation_signatures_progress,
+            formatArgs = wrappedList(state.collected, state.membersCount),
+        ),
+        progress = SignatureProgressUM(collected = state.collected, total = state.membersCount),
+        onInfoClick = onSignersClick,
     )
 
     private fun menu(state: JointOperationState, canCreateContact: Boolean) = buildList {
@@ -105,7 +125,7 @@ internal class JointOperationUMConverter(
                 ),
             )
         }
-        if (!state.canRefuse) return@buildList
+        if (state.isSending || !state.canRefuse) return@buildList
         val isInitiator = state.role == Role.INITIATOR
         add(
             TxHistoryDetailsUM.MenuItemUM(
@@ -125,13 +145,17 @@ internal class JointOperationUMConverter(
         isRefusing: Boolean,
         hasAnswered: Boolean,
     ): TxHistoryDetailsUM.CosignActionUM {
+        // The model overlays a local answer into the state, so the answer alone says whether this member signed;
+        // [hasAnswered] also covers a local decline and only blocks a second tap
+        val hasSigned = state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED
+        if (state.isSending) return sentAction(state = state, hasSigned = hasSigned)
+
         val canSign = state.canSign && !hasAnswered && !isRefusing
 
         val (buttonText, caption) = when {
             state.ownAnswer == Answer.DECLINED ->
                 CoreUiR.string.joint_operation_declined to CoreUiR.string.joint_operation_declined_footer
-            hasAnswered || state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED ->
-                CoreUiR.string.joint_operation_signed to CoreUiR.string.joint_operation_signed_footer
+            hasSigned -> CoreUiR.string.joint_operation_signed to CoreUiR.string.joint_operation_signed_footer
             else -> CoreUiR.string.common_sign to CoreUiR.string.joint_operation_auto_sends_footer
         }
 
@@ -144,6 +168,21 @@ internal class JointOperationUMConverter(
             isEnabled = canSign,
             isLoading = isSigning || isRefusing,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_20).takeIf { canSign },
+            onClick = onSignClick,
+        )
+    }
+
+    /** Nothing left to do once the threshold is reached: the button only records whether this member signed */
+    private fun sentAction(state: JointOperationState, hasSigned: Boolean): TxHistoryDetailsUM.CosignActionUM {
+        val buttonText = if (hasSigned) CoreUiR.string.joint_operation_signed else CoreUiR.string.common_sign
+
+        return TxHistoryDetailsUM.CosignActionUM(
+            buttonText = resourceReference(buttonText),
+            caption = resourceReference(
+                id = CoreUiR.string.joint_operation_sent_footer,
+                formatArgs = wrappedList(state.collected, state.membersCount),
+            ),
+            isEnabled = false,
             onClick = onSignClick,
         )
     }
