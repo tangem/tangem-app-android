@@ -2,7 +2,7 @@ package com.tangem.data.collectibles.account.flow
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
+import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
@@ -22,7 +22,7 @@ import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
-    private val collectiblesAccountStatusStore: CollectiblesAccountStatusStore,
+    private val collectiblesAccountStore: CollectiblesAccountStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val collectiblesOwnerDeriver: CollectiblesOwnerDeriver,
     private val gachaVaultRepository: GachaVaultRepository,
@@ -40,7 +40,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun refresh(userWalletId: UserWalletId) {
-        val stored = collectiblesAccountStatusStore.getSyncOrNull(userWalletId)
+        val stored = collectiblesAccountStore.getSyncOrNull(userWalletId)
 
         if (!stored.isAccountCreated) return markUnrefreshed(userWalletId = userWalletId)
 
@@ -51,7 +51,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
 
         // TODO check whether this branch is still needed once accounts are synced from the backend
         if (collectiblesOwnerDeriver.storedOwner(userWalletId) == null) {
-            return collectiblesAccountStatusStore.store(
+            return collectiblesAccountStore.store(
                 userWalletId = userWalletId,
                 value = CollectiblesAccountStatusValue.MissedDerivation,
             )
@@ -60,7 +60,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
         val balance = resolveBalance(userWallet, stored?.balance?.usdcToken)
             ?: return markUnrefreshed(userWalletId = userWalletId)
 
-        collectiblesAccountStatusStore.storeBalance(userWalletId = userWalletId, balance = balance)
+        collectiblesAccountStore.storeBalance(userWalletId = userWalletId, balance = balance)
     }
 
     /** The vault's own amount, which for an empty vault is an honest zero. `null` is a read that did not answer. */
@@ -74,7 +74,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
         }
 
     private suspend fun markUnrefreshed(userWalletId: UserWalletId) {
-        runSuspendCatching { collectiblesAccountStatusStore.markUnrefreshed(userWalletId = userWalletId) }
+        runSuspendCatching { collectiblesAccountStore.markUnrefreshed(userWalletId = userWalletId) }
             .onFailure { logger.e("Failed to mark the collectibles vault of $userWalletId as un-refreshed", it) }
     }
 
