@@ -17,6 +17,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.form.model.CountrySelectorConfig
 import com.tangem.features.tangempay.withdraw.bank.form.model.TangemPayBankWithdrawFormModel
 import com.tangem.features.tangempay.withdraw.bank.form.ui.TangemPayBankWithdrawFormScreen
@@ -87,7 +88,7 @@ internal class TangemPayBankWithdrawFormComponent(
         val draft: StateFlow<BankWithdrawDraft>,
         val step: TangemPayBankWithdrawInnerRoute,
         val fields: ImmutableList<BankWithdrawFormField>,
-        val onBack: (values: Map<BankWithdrawFormField, String>) -> Unit,
-        val onContinue: (values: Map<BankWithdrawFormField, String>) -> Unit,
+        val onBack: (result: BankWithdrawFormResult) -> Unit,
+        val onContinue: (result: BankWithdrawFormResult) -> Unit,
     )
 }

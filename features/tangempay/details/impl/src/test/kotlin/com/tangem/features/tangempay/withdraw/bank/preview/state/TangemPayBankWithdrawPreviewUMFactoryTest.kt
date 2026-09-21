@@ -277,6 +277,74 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual.recipientCards.map { it.onClick }).containsExactly(null, null, null)
     }
 
+    @Test
+    fun `GIVEN new recipient with names WHEN create THEN recipient card shows names`() {
+        // Arrange
+        val draft = newRecipientDraft(
+            displayNames = mapOf(
+                BankWithdrawFormField.Country to "United States",
+                BankWithdrawFormField.Region to "California",
+                BankWithdrawFormField.BankRegion to "California",
+            ),
+        )
+
+        // Act
+        val actual = factory.create(draft = draft, state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.recipientCards[1].rows.map { it.value })
+            .containsExactly(
+                "Saburo",
+                "Arasaka",
+                "United States",
+                "California",
+                "Night City",
+                "Megatower H10, 322F",
+                "90001",
+            )
+            .inOrder()
+        assertThat(actual.recipientCards[2].rows.map { it.value })
+            .containsExactly("Arasaka Bank", "California", "Night City", "Ebunike st., 32A", "90002")
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN saved recipient WHEN create THEN recipient card shows codes`() {
+        // Act
+        val actual = factory.create(draft = savedDraft(), state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.recipientCards[1].rows.map { it.value })
+            .containsExactly("Andrei", "Melnikov", "US", "NY", "New York", "1 Main St", "10001")
+            .inOrder()
+        assertThat(actual.recipientCards[2].rows.map { it.value })
+            .containsExactly("Test Bank", "NY", "New York", "1 Main St", "10001")
+            .inOrder()
+    }
+
+    @Test
+    fun `GIVEN new recipient with a typed region WHEN create THEN the typed text shown`() {
+        // Arrange
+        val draft = newRecipientDraft(
+            fields = personalFormValues + mapOf(
+                BankWithdrawFormField.Country to "MC",
+                BankWithdrawFormField.Region to "Bavaria",
+            ),
+            displayNames = mapOf(
+                BankWithdrawFormField.Country to "Monaco",
+                BankWithdrawFormField.Region to "",
+            ),
+        )
+
+        // Act
+        val actual = factory.create(draft = draft, state = PreviewState()) as Summary
+
+        // Assert
+        assertThat(actual.recipientCards[1].rows.map { it.value })
+            .containsExactly("Saburo", "Arasaka", "Monaco", "Bavaria", "Night City", "Megatower H10, 322F", "90001")
+            .inOrder()
+    }
+
     private fun savedDraft() = BankWithdrawDraft(
         entry = BankWithdrawEntry.Saved("acc-1"),
         recipient = bankAccount(id = "acc-1"),
@@ -285,13 +353,17 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         destination = offrampDestination(),
     )
 
-    private fun newRecipientDraft() = BankWithdrawDraft(
+    private fun newRecipientDraft(
+        fields: Map<BankWithdrawFormField, String> = personalFormValues,
+        displayNames: Map<BankWithdrawFormField, String> = emptyMap(),
+    ) = BankWithdrawDraft(
         entry = BankWithdrawEntry.NewPersonal,
         recipient = null,
         newRecipient = NewRecipientDraft(
             isThirdParty = false,
             accountType = BankAccountType.CHECKING,
-            fields = personalFormValues,
+            fields = fields,
+            displayNames = displayNames,
         ),
         amount = BigDecimal("500"),
         source = bankWithdrawSource(),

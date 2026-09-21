@@ -72,6 +72,10 @@ internal object TangemPayBankWithdrawFormPreviewData {
                 BankWithdrawFormField.Country to "US",
                 BankWithdrawFormField.Region to "CA",
             ),
+            displayNameEdits = mapOf(
+                BankWithdrawFormField.Country to "United States",
+                BankWithdrawFormField.Region to "California",
+            ),
         ),
     )
 
