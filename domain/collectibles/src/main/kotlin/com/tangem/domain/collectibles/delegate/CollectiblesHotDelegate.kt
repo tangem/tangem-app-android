@@ -14,9 +14,6 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
  */
 interface CollectiblesHotDelegate {
 
-    /** Key of an already provisioned delegate, or null when this account has none. Creates nothing. */
-    suspend fun getPublicKey(accountId: AccountId): HotDelegatePublicKey?
-
     /** Returns the existing delegate, creating one on first call. Idempotent. */
     suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, HotDelegatePublicKey>
 
