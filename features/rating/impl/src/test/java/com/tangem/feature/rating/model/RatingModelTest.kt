@@ -1,8 +1,12 @@
 package com.tangem.feature.rating.model
 
+import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.rating.ui.RatingFeedbackBS
 import com.tangem.feature.rating.ui.RatingUM
@@ -16,6 +20,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,28 +40,26 @@ internal class RatingModelTest {
         override val coroutineContext: CoroutineContext = Dispatchers.Unconfined
     }
 
+    private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
+
     @BeforeEach
     fun reset() {
-        clearMocks(swapFeedbackUseCase)
+        clearMocks(swapFeedbackUseCase, uiMessageSender)
         cacheFlow.value = null
     }
 
     private fun buildModel(
         onEnsureLoaded: suspend () -> Unit = { cacheFlow.value = SwapRating.NotRated },
-        onSubmit: suspend (SwapFeedbackUseCase.SubmitParams) -> Unit = {
-            cacheFlow.value = SwapRating.Rated(it.rating)
-        },
+        onSubmit: suspend (SwapFeedbackUseCase.SubmitParams) -> Either<Throwable, Unit> = { Unit.right() },
     ): RatingModel {
         every { swapFeedbackUseCase.observeRating(TX_EXTERNAL_ID) } returns cacheFlow
         coEvery { swapFeedbackUseCase.ensureLoaded(TX_EXTERNAL_ID) } coAnswers { onEnsureLoaded() }
-        coEvery { swapFeedbackUseCase.submit(any()) } coAnswers {
-            onSubmit(firstArg())
-            Unit.right()
-        }
+        coEvery { swapFeedbackUseCase.submit(any()) } coAnswers { onSubmit(firstArg()) }
         return RatingModel(
             dispatchers = TestingCoroutineDispatcherProvider(),
             paramsContainer = MutableParamsContainer(params()),
             swapFeedbackUseCase = swapFeedbackUseCase,
+            uiMessageSender = uiMessageSender,
             appCoroutineScope = appCoroutineScope,
         )
     }
@@ -194,13 +197,13 @@ internal class RatingModelTest {
     }
 
     @Test
-    fun `GIVEN submitted rating WHEN repository rolls the entry back THEN state returns to Unrated`() = runTest {
+    fun `GIVEN AlreadyRated WHEN the stored entry disappears THEN state returns to Unrated`() = runTest {
         // Arrange
         val model = buildModel()
         model.onRatingSelected(4)
         model.feedbackContent!!.onSubmit()
 
-        // Act — POST failed, the repository removed the optimistic entry
+        // Act — the entry was evicted from the store once it hit its cap
         cacheFlow.value = null
 
         // Assert
@@ -216,6 +219,7 @@ internal class RatingModelTest {
             onSubmit = {
                 deferred.await()
                 delivered = true
+                Unit.right()
             },
         )
         model.onRatingSelected(5)
@@ -227,6 +231,63 @@ internal class RatingModelTest {
 
         // Assert
         assertThat(delivered).isTrue()
+    }
+
+    @Test
+    fun `GIVEN submit fails WHEN onSubmit THEN sheet stays open with the typed text and an error is shown`() =
+        runTest {
+            // Arrange
+            val model = buildModel(onSubmit = { RuntimeException("HTTP 429").left() })
+            model.onRatingSelected(4)
+            model.feedbackContent!!.onFeedbackChanged("Too slow")
+
+            // Act
+            model.feedbackContent!!.onSubmit()
+
+            // Assert
+            assertThat(model.state.value.feedbackBottomSheet.isShown).isTrue()
+            assertThat(model.feedbackContent!!.feedbackText).isEqualTo("Too slow")
+            assertThat(model.feedbackContent!!.isSubmitting).isFalse()
+            assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.Unrated(selectedRating = 4))
+            verify(exactly = 1) { uiMessageSender.send(any<SnackbarMessage>()) }
+        }
+
+    @Test
+    fun `GIVEN POST in flight WHEN onSubmit called again THEN button shows progress and use case called once`() =
+        runTest {
+            // Arrange
+            val deferred = CompletableDeferred<Unit>()
+            val model = buildModel(
+                onSubmit = {
+                    deferred.await()
+                    Unit.right()
+                },
+            )
+            model.onRatingSelected(5)
+            model.feedbackContent!!.onSubmit()
+
+            // Act
+            val isSubmittingInFlight = model.feedbackContent!!.isSubmitting
+            model.feedbackContent!!.onSubmit()
+            deferred.complete(Unit)
+
+            // Assert
+            assertThat(isSubmittingInFlight).isTrue()
+            coVerify(exactly = 1) { swapFeedbackUseCase.submit(any()) }
+        }
+
+    @Test
+    fun `GIVEN submit succeeds but nothing is stored WHEN onSubmit THEN state is AlreadyRated anyway`() = runTest {
+        // Arrange — the repository accepted the rating but its persistence produced no emission
+        val model = buildModel(onSubmit = { Unit.right() })
+        model.onRatingSelected(4)
+
+        // Act
+        model.feedbackContent!!.onSubmit()
+
+        // Assert
+        assertThat(model.ratingState).isEqualTo(RatingUM.RatingState.AlreadyRated(rating = 4))
+        assertThat(model.state.value.feedbackBottomSheet.isShown).isFalse()
     }
 
     @Test

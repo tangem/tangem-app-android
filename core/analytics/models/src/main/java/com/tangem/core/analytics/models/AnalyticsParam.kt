@@ -3,6 +3,7 @@ package com.tangem.core.analytics.models
 import com.tangem.core.analytics.models.AnalyticsParam.Key.REFERRAL
 import com.tangem.core.analytics.models.AnalyticsParam.Key.REFERRAL_ID
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 const val IS_NOT_HTTP_ERROR = "Is not http error"
 
@@ -244,6 +245,21 @@ sealed class AnalyticsParam {
     enum class EmptyFull(val value: String) {
         Empty("Empty"),
         Full("Full"),
+    }
+
+    enum class TokenBalanceState(val value: String) {
+        Empty("Empty"),
+        Full("Full"),
+        Unavailable("Unavailable"),
+        ;
+
+        companion object {
+            fun fromAmount(amount: BigDecimal?): TokenBalanceState = when {
+                amount == null -> Unavailable
+                amount.signum() == 0 -> Empty
+                else -> Full
+            }
+        }
     }
 
     enum class ProductType(val value: String) {
