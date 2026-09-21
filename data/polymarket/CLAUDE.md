@@ -19,7 +19,7 @@ Retrofit interfaces and DTOs are **not** here — they live in `grow/datasource`
 
 | Service | Retrofit interface | Base URL | Auth | Repository |
 |---|---|---|---|---|
-| **BFF** (Tangem backend, `api/predictions/v1/…`) | `PolymarketApi` | Tangem API | wallet identity per endpoint: `wallet-id` header on `/positions*` and `/withdraw*`, `walletId` query on `GET /wallet` / `GET /configuration`, `walletId` in the `/wallet/deploy` body, `ownerAddress` / `depositWalletAddress` elsewhere | `DefaultPolymarketRepository`, `DefaultPolymarketPositionsRepository`, `DefaultPolymarketWithdrawRepository` |
+| **BFF** (Tangem backend, `api/predictions/v1/…`) | `PolymarketApi` | Tangem API | wallet identity per endpoint: `wallet-id` header on `/positions*`, `/withdraw*` and `GET /configuration`, `walletId` query on `GET /wallet`, `walletId` in the `/wallet/deploy` body, `ownerAddress` / `depositWalletAddress` elsewhere | `DefaultPolymarketRepository`, `DefaultPolymarketPositionsRepository`, `DefaultPolymarketWithdrawRepository` |
 | **CLOB** (`clob.polymarket.com`) | `PolymarketClobApi` | `PolymarketClob` | L1 (`POLY_ADDRESS/SIGNATURE/TIMESTAMP/NONCE`) for `auth/*`; L2 HMAC (`POLY_*` ×5) for balance and orders; `GET price` is public, no headers | `DefaultPolymarketRepository` |
 | **Bridge** (`bridge.polymarket.com`) | `PolymarketBridgeApi` | `PolymarketBridge` | none | `DefaultPolymarketBridgeRepository` |
 | **Relayer** (`relayer-v2.polymarket.com`) | `PolymarketRelayerApi` | `PolymarketRelayer` | none | `DefaultPolymarketRepository.getRelayerNonce` |
@@ -66,7 +66,7 @@ date here; when you ingest a change, update this table in the same PR.
   consecutive real factory deployments. `POST /wallet/deploy` answers `400 "depositWalletAddress does not
   match the derived deposit wallet"` when this is wrong.
 - **`walletId` is `UserWalletId.stringValue`** (64 hex, no `0x`) wherever the BFF takes it: the `/wallet/deploy`
-  body, `GET /wallet?walletId`, `GET /configuration`, the `wallet-id` header on `/positions*` and `/withdraw*`.
+  body, `GET /wallet?walletId`, the `wallet-id` header on `/positions*`, `/withdraw*` and `GET /configuration`.
   It is a correlation key, not a derivation input. The bridge never receives it: `deposit` / `withdraw`
   carry addresses plus the `X-Builder-Code` header, and that builder code is what `GET /configuration`
   returns for the wallet id.
@@ -156,9 +156,10 @@ with `Pending` so the combined account list is never stalled by this account.
 
 ## DI
 
-`PolymarketDataModule` binds every repository, store, deriver and provides the use cases / interactors that
-need only data-layer dependencies plus `PredictionBalancePollingConfig` (defaults) and
-`PredictionWithdrawalTrackingConfig` (defaults); `PolymarketSignerModule` binds the signer and
+`PolymarketDataModule` binds every repository, store, deriver and provides the long-lived flows
+(`PredictionAccountStatusSupplier`, `PredictionBalancePoller`, `PredictionWithdrawalTracker`,
+`PredictionFundingWindow`) with `PredictionBalancePollingConfig` and `PredictionWithdrawalTrackingConfig`
+defaults; use cases and interactors are provided in `app/.../di/domain/PolymarketDomainModule`; `PolymarketSignerModule` binds the signer and
 `Base64UrlCodec`; `PolymarketStorageModule` provides the `DataStore`s and `SecureStorage`-backed store.
 Anything that also needs feature-layer dependencies is provided in `features/polymarket/impl/di`.
 
