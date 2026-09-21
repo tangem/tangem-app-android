@@ -5,8 +5,8 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusValueDTOConverter
-import com.tangem.data.collectibles.account.store.CollectiblesAccountStatusStore
-import com.tangem.data.collectibles.account.store.WalletIdWithCollectiblesStatusDTO
+import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
+import com.tangem.data.collectibles.account.store.WalletIdWithCollectiblesAccountDTO
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
@@ -129,18 +129,18 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
     }
 
     private suspend fun createStore(testScope: TestScope, recorded: CollectiblesAccountStatusValue?) =
-        CollectiblesAccountStatusStore(
+        CollectiblesAccountStore(
             runtimeStore = RuntimeSharedStore(),
-            persistenceDataStore = MockStateDataStore<WalletIdWithCollectiblesStatusDTO>(default = emptyMap()),
+            persistenceDataStore = MockStateDataStore<WalletIdWithCollectiblesAccountDTO>(default = emptyMap()),
             converter = CONVERTER,
             scope = TestAppCoroutineScope(testScope),
         ).apply {
             recorded?.let { store(userWalletId = WALLET, value = it) }
         }
 
-    private fun createFetcher(store: CollectiblesAccountStatusStore, userWallet: UserWallet = USER_WALLET) =
+    private fun createFetcher(store: CollectiblesAccountStore, userWallet: UserWallet = USER_WALLET) =
         DefaultCollectiblesAccountStatusFetcher(
-            collectiblesAccountStatusStore = store,
+            collectiblesAccountStore = store,
             userWalletsListRepository = mockk {
                 every { userWallets } returns MutableStateFlow<List<UserWallet>?>(listOf(userWallet))
             },

@@ -34,7 +34,7 @@ interface PolymarketTypedDataSigner {
      *
      * @return the formatted `r+s+v` signature
      */
-    suspend fun signWithdrawal(
+    suspend fun signRelayedBatch(
         userWalletId: UserWalletId,
         payload: PolymarketApprovalsPayload,
     ): Either<PolymarketSigningError, String>
