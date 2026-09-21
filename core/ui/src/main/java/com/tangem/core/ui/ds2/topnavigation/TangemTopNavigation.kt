@@ -78,7 +78,9 @@ private fun Modifier.revealFromBehindGroup(progress: () -> Float): Modifier = la
  * @param contentPadding Inner padding applied to the row, inside [windowInsets]. Defaults to
  *   [TangemTopNavigation.DefaultContentPadding] (top 8, bottom 16, horizontal 16). Override a single
  *   edge via [com.tangem.core.ui.extensions.copy], e.g. `DefaultContentPadding.copy(top = 16.dp)`.
- * @param blurBackground Whether the fade behind the row should blur the content below.
+ * @param blurBackground Whether the fade behind the row should blur the content below. Place the bar
+ *   as a sibling of the haze-source content, not inside it — nested in the source, the bar's material
+ *   buttons have no area left to sample.
  * @param fadeEnabled Whether the fade behind the row is shown. Alpha is animated on change. Defaults to true.
  * @param startButton Leading slot. Typically a back button (see [TangemButton.Back]).
  * @param endButtonsGroup Optional secondary actions placed just before [endButton], grouped in a
@@ -111,14 +113,22 @@ fun TangemTopNavigation(
     )
 
     Box(modifier) {
-        TangemFade(
+        // Own haze source, above the screen content's: without it the material buttons sample only
+        // the content and punch a hole through the fade they sit on.
+        Box(
             modifier = Modifier
-                .graphicsLayer { alpha = fadeAlpha }
-                .matchParentSize(),
-            position = TangemFade.Position.Top,
-            variant = TangemFade.Variant.Soft,
-            blur = blurBackground,
-        )
+                .matchParentSize()
+                .hazeSourceTangem(zIndex = 1f),
+        ) {
+            TangemFade(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = fadeAlpha },
+                position = TangemFade.Position.Top,
+                variant = TangemFade.Variant.Soft,
+                blur = blurBackground,
+            )
+        }
 
         Layout(
             modifier = Modifier
