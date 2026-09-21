@@ -26,6 +26,15 @@ class YieldSupplyAlertFactory @Inject constructor(
     private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
 ) {
 
+    fun showJointAccountComingSoon() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.common_coming_soon),
+                message = resourceReference(id = R.string.joint_account_coming_soon_description),
+            ),
+        )
+    }
+
     fun getGenericErrorState(onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
         uiMessageSender.send(
             DialogMessage(
