@@ -39,6 +39,7 @@ import com.tangem.hot.sdk.android.PassphraseValidator
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
+import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.preflightread.PreflightReadFilter
@@ -50,7 +51,6 @@ import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.domain.tasks.DerivePublicKeysTask
 import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
@@ -276,7 +276,7 @@ internal class DefaultTangemSdkManager(
         preflightReadFilter: PreflightReadFilter?,
     ): CompletionResult<DerivationTaskResponse> {
         return runTaskAsyncReturnOnMain(
-            runnable = DerivePublicKeysTask(derivations),
+            runnable = DeriveMultipleWalletPublicKeysTask(derivations),
             cardId = cardId,
             preflightReadFilter = preflightReadFilter,
             registerColdWallet = true,
