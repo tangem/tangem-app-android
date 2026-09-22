@@ -26,7 +26,9 @@ data class OfframpDestination(
     val eta: OfframpEta,
 )
 
+/** [name] is how the backend labels the rail ("ACH", "FedWire"); the app names it itself when it is absent. */
 data class OfframpFee(
+    val name: String?,
     val amount: BigDecimal,
     val currency: String,
     val description: String?,
