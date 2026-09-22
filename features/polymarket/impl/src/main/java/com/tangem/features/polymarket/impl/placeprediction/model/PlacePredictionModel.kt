@@ -103,7 +103,7 @@ internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 
-@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -146,9 +146,7 @@ internal class PlacePredictionModel @Inject constructor(
 
     private var isNegRiskMarket: Boolean? = null
 
-    private var isScreenShown = false
-
-    private var isSummaryOpen = false
+    private var isAmountShown = false
 
     init {
         uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
@@ -185,30 +183,20 @@ internal class PlacePredictionModel @Inject constructor(
     }
 
     /**
-     * The flow polls the market every few seconds, so it must not keep doing that off-screen: the loop is
-     * suspended with the screen and resumed with it, rather than living as long as the model.
+     * The quote loop lives with the amount step, not with the flow: every step after it shows the figures it was
+     * opened with, and the summary signs that same quote.
      */
-    fun onScreenShown() {
-        isScreenShown = true
+    fun onAmountShown() {
+        isAmountShown = true
         if (uiState.value.tradingPermission == TradingPermissionUM.Unknown) loadTradingAllowance()
         if (reloadPositionIfLost()) return
 
         restartQuoteLoop(withDebounce = false)
     }
 
-    fun onScreenHidden() {
-        isScreenShown = false
+    fun onAmountHidden() {
+        isAmountShown = false
         quoteJobHolder.cancel()
-    }
-
-    fun onSummaryOpenChange(isOpen: Boolean) {
-        isSummaryOpen = isOpen
-
-        if (isOpen) {
-            quoteJobHolder.cancel()
-        } else if (isScreenShown && uiState.value.submit is SubmitUM.Idle) {
-            restartQuoteLoop(withDebounce = false)
-        }
     }
 
     override fun onAmountChange(value: String) {
@@ -233,7 +221,6 @@ internal class PlacePredictionModel @Inject constructor(
         val percent = uiState.value.slippagePicker.value.toBigDecimalOrNull() ?: return
 
         uiState.update { it.copy(slippage = SlippageUM.of(percent = percent)) }
-        restartQuoteLoop(withDebounce = false)
         router.pop()
     }
 
@@ -556,8 +543,6 @@ internal class PlacePredictionModel @Inject constructor(
 
     private fun returnToIdle() {
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
-
-        if (isScreenShown) restartQuoteLoop(withDebounce = false)
     }
 
     private fun onSupportClick() {
@@ -625,7 +610,7 @@ internal class PlacePredictionModel @Inject constructor(
 
             uiState.update(SetMarketTransformer(market = market, outcome = outcome))
 
-            if (isScreenShown) restartQuoteLoop(withDebounce = false)
+            restartQuoteLoop(withDebounce = false)
         }
     }
 
@@ -701,14 +686,14 @@ internal class PlacePredictionModel @Inject constructor(
 
             uiState.update(SetPositionTransformer(position = position))
 
-            if (isScreenShown) restartQuoteLoop(withDebounce = false)
+            restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
     }
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (isSummaryOpen || !uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
+        if (!isAmountShown || !uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         modelScope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
