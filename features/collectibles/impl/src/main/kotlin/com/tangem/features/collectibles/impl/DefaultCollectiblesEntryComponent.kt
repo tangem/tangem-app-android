@@ -42,7 +42,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     private val stack = childStack(
         key = "collectiblesStack",
         source = stackNavigation,
-        serializer = null,
+        serializer = CollectiblesRoute.serializer(),
         initialConfiguration = resolveStartRoute(),
         handleBackButton = true,
         childFactory = { route, factoryContext ->
