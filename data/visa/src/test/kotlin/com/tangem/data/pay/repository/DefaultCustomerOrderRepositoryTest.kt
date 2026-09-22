@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.pay.model.PlasticCardOrder
 import com.tangem.domain.pay.model.ShippingAddress
 import com.tangem.domain.visa.error.VisaApiError
@@ -201,6 +202,35 @@ internal class DefaultCustomerOrderRepositoryTest {
             // Assert
             assertThat(body.captured.data.shippingAddress?.line2).isNull()
         }
+
+    @Test
+    fun `GIVEN a deeplink value WHEN createOrder THEN it is sent next to the specification`() = runTest {
+        // Arrange
+        val body = captureCreateOrderBody()
+        val repository = createRepository()
+
+        // Act
+        repository.createOrder(
+            userWalletId = userWalletId,
+            type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC_V2,
+            specificationName = "SP_000009",
+            idempotencyKey = IDEMPOTENCY_KEY,
+            deeplinkValue = "tpay_for_oxford",
+        )
+
+        // Assert
+        assertThat(body.captured).isEqualTo(
+            OrderRequest(
+                data = OrderRequest.Data(
+                    customerWalletAddress = WALLET_ADDRESS,
+                    specificationName = "SP_000009",
+                    type = "CARD_ISSUE_VIRTUAL_RAIN_KYC_V2",
+                    deeplinkValue = "tpay_for_oxford",
+                ),
+                idempotencyKey = IDEMPOTENCY_KEY,
+            ),
+        )
+    }
 
     private fun captureCreateOrderBody(): CapturingSlot<OrderRequest> {
         val body = slot<OrderRequest>()

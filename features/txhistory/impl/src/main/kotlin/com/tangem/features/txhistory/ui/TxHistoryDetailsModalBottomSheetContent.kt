@@ -21,6 +21,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.cosign.CosignRequestRowUM
+import com.tangem.common.ui.cosign.SignatureProgressUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -28,6 +30,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
@@ -38,6 +41,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
+import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -81,6 +85,15 @@ internal fun TxHistoryDetailsModalBottomSheetContent(
 private fun TxHistoryDetailsModalBottomSheetContentPreview() {
     TangemThemePreviewRedesign {
         TxHistoryDetailsModalBottomSheetContent(state = previewSingleAsset(), onDismiss = {})
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun TxHistoryDetailsModalBottomSheetContentCosignSignedPreview() {
+    TangemThemePreviewRedesign {
+        TxHistoryDetailsModalBottomSheetContent(state = previewCosignSigned(), onDismiss = {})
     }
 }
 
@@ -209,6 +222,29 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         ),
     ),
 )
+
+/** Joint-account transaction I already signed: disabled "Signed" CTA, `Signatures 2 of 5`. */
+private fun previewCosignSigned(): TxHistoryDetailsUM.SingleAsset {
+    val base = previewSingleAsset()
+    return base.copy(
+        header = base.header.copy(
+            subtitle = stringReference("Pending"),
+            subtitleStyle = TxHistoryDetailsUM.HeaderUM.SubtitleStyle.Warning,
+        ),
+        cosign = CosignRequestRowUM(
+            title = stringReference("Signatures 2 of 5"),
+            progress = SignatureProgressUM(collected = 2, total = 5),
+            onInfoClick = {},
+        ),
+        cosignAction = TxHistoryDetailsUM.CosignActionUM(
+            buttonText = stringReference("Sign"),
+            caption = stringReference("Sends automatically after 3 of 5 sign"),
+            isEnabled = true,
+            onClick = {},
+            iconEnd = TangemIconUM.Icon(Icons.ic_logo_tangem_20),
+        ),
+    )
+}
 
 /** Failed swap exercising the two-asset body: both legs, the error status banner, provider link row and the CTA. */
 private fun previewTwoAssets() = TxHistoryDetailsUM.TwoAssets(

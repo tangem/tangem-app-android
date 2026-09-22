@@ -9,6 +9,8 @@ import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
+import com.tangem.common.ui.markets.action.QuickActions
+import com.tangem.common.ui.markets.action.QuickActionUM
 import com.tangem.common.ui.markets.action.QuickActionsConverter.quickActions
 import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
@@ -21,11 +23,14 @@ import com.tangem.core.ui.ds.badge.TangemBadgeShape
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -34,6 +39,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.PortfolioBadgeUM
 import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
+import kotlinx.collections.immutable.toImmutableSet
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -80,13 +86,15 @@ internal class TokenActionsUiBuilder @Inject constructor(
             onItemClick = null,
             onItemLongClick = null,
         )
+        val actions = quickActions(
+            cryptoData = cryptoCurrencyData,
+            tokenActionsHandler = tokenActionsHandler,
+            context = params.context,
+        )
+
         return TokenActionsUM(
             token = tokenUM,
-            quickActions = quickActions(
-                cryptoData = cryptoCurrencyData,
-                tokenActionsHandler = tokenActionsHandler,
-                context = params.context,
-            ),
+            quickActions = actions.withRegionRestriction(),
             bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {
                 params.callbacks.onBottomActionClick(bottomAction)
@@ -94,6 +102,30 @@ internal class TokenActionsUiBuilder @Inject constructor(
             isBalancesHidden = isBalanceHidden,
             portfolioBadge = createPortfolioBadge(cryptoCurrencyData = cryptoCurrencyData),
             isCompact = params.isCompact,
+            regionRestriction = regionRestrictionBanner(),
+        )
+    }
+
+    /** A blocked region closes buying and swapping; receiving the asset and holding it stay untouched. */
+    private fun QuickActions.withRegionRestriction(): QuickActions {
+        if (!params.isRegionRestricted) return this
+
+        val blocked = actions.filter { it.isTrading() }
+
+        return copy(disabledActions = (disabledActions + blocked).toImmutableSet())
+    }
+
+    private fun regionRestrictionBanner(): TangemMessageBanner.State? {
+        if (!params.isRegionRestricted) return null
+
+        return TangemMessageBanner.State(
+            title = resourceReference(R.string.buy_swap_region_restriction_title),
+            description = resourceReference(R.string.buy_swap_region_restriction_description),
+            variant = TangemMessageBanner.Variant.Warning,
+            iconEnd = TangemIconUM.Icon(
+                imageVector = Icons.ic_info_20,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
         )
     }
 
@@ -206,4 +238,16 @@ internal class TokenActionsUiBuilder @Inject constructor(
             )
         }
     }
+}
+
+/** Rows that trade the asset, as opposed to receiving or holding it. */
+private fun QuickActionUM.isTrading(): Boolean = when (this) {
+    is QuickActionUM.V1.Buy,
+    is QuickActionUM.V2.Buy,
+    is QuickActionUM.V1.Exchange,
+    is QuickActionUM.V2.Exchange,
+    is QuickActionUM.V1.SwapAndSend,
+    is QuickActionUM.V2.SwapAndSend,
+    -> true
+    else -> false
 }

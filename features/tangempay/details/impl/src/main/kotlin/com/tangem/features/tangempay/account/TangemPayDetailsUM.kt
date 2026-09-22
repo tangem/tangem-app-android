@@ -3,10 +3,10 @@ package com.tangem.features.tangempay.account
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.TangemPayCardType
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(
@@ -14,8 +14,7 @@ internal data class TangemPayDetailsUM(
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val isBalanceHidden: Boolean,
-    val errorNotificationConfig: NotificationConfig?,
-    val statusBannerState: MessageBannerUM?,
+    val messageBanner: MessageBannerUM?,
     val cashbackBlockState: CashbackBlockUM? = null,
 )
 
@@ -88,6 +87,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     data class Card(
         val lastDigits: String,
         val imageUrl: String?,
+        val cardType: TangemPayCardType,
         val onClick: () -> Unit,
         val state: TangemPayCardUiState,
         val isFrozen: Boolean,

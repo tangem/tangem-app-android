@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -115,6 +116,80 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
                 isGroupedByNetwork = false,
                 isSortedByBalance = false,
             )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateMultiWalletWithJointAccount {
+
+        private val ownerPath = Network.DerivationPath.Joint("m/44'/60'/888888'/0/0")
+        private val jointNetwork = ethereum.network.copy(
+            id = Network.ID(rawId = ethereum.network.id.rawId, derivationPath = ownerPath),
+            derivationPath = ownerPath,
+        )
+
+        @Test
+        fun `GIVEN a joint account with ETH WHEN create for its network THEN the coin sits on the joint network`() =
+            runTest {
+                // Arrange
+                val userWallet = createMultiWallet()
+                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+                coEvery { walletAccountsFetcher.getSaved(userWallet.walletId) } returns createJointAccountsResponse(
+                    personalCurrencies = listOf(ethereum),
+                    jointCurrencies = listOf(ethereum),
+                )
+
+                // Act
+                val actual = factory.create(userWalletId = userWallet.walletId, networks = setOf(jointNetwork))
+
+                // Assert
+                val jointCurrencies = actual.getValue(jointNetwork)
+                Truth.assertThat(actual.keys).containsExactly(jointNetwork)
+                Truth.assertThat(jointCurrencies).hasSize(1)
+                Truth.assertThat(jointCurrencies.single().network).isEqualTo(jointNetwork)
+                Truth.assertThat(jointCurrencies.single().id).isNotEqualTo(ethereum.id)
+            }
+
+        @Test
+        fun `GIVEN a joint account with ETH WHEN create for the personal network THEN the joint coin does not leak`() =
+            runTest {
+                // Arrange
+                val userWallet = createMultiWallet()
+                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+                coEvery { walletAccountsFetcher.getSaved(userWallet.walletId) } returns createJointAccountsResponse(
+                    personalCurrencies = listOf(ethereum),
+                    jointCurrencies = listOf(ethereum),
+                )
+
+                // Act
+                val actual = factory.create(userWalletId = userWallet.walletId, networks = setOf(ethereum.network))
+
+                // Assert
+                Truth.assertThat(actual).isEqualTo(mapOf(ethereum.network to listOf(ethereum)))
+            }
+
+        private fun createJointAccountsResponse(
+            personalCurrencies: List<CryptoCurrency>,
+            jointCurrencies: List<CryptoCurrency>,
+        ): GetWalletAccountsResponse {
+            val personal = createWalletAccountsResponse(personalCurrencies, false, false)
+            val jointTokens = jointCurrencies.map { currency ->
+                userTokensResponseFactory.createResponseToken(currency = currency, accountId = null)
+            }
+            val joint = WalletAccountDTO(
+                id = "joint_0",
+                name = "Family",
+                derivationIndex = 0,
+                icon = "Family",
+                iconColor = "#000000",
+                type = WalletAccountDTO.Type.JOINT,
+                tokens = jointTokens,
+                totalTokens = jointTokens.size,
+                totalNetworks = jointCurrencies.map { it.network }.distinct().size,
+            )
+
+            return personal.copy(accounts = personal.accounts + joint)
         }
     }
 

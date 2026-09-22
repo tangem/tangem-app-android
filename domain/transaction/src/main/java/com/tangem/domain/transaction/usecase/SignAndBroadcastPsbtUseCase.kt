@@ -10,6 +10,7 @@ import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
@@ -28,6 +29,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 class SignAndBroadcastPsbtUseCase(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val getHotTransactionSigner: (UserWallet.Hot) -> TransactionSigner,
 ) {
 
@@ -36,11 +38,10 @@ class SignAndBroadcastPsbtUseCase(
         userWallet: UserWallet,
         network: Network,
     ): Either<SendTransactionError, String> {
-        walletManagersFacade.update(
-            userWalletId = userWallet.walletId,
-            network = network,
-            extraTokens = emptySet(),
+        singleNetworkStatusFetcher(
+            params = SingleNetworkStatusFetcher.Params(userWalletId = userWallet.walletId, network = network),
         )
+            .onLeft { return SendTransactionError.DataError(message = it.message).left() }
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
             ?: return SendTransactionError.UnknownError().left()

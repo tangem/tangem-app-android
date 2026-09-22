@@ -11,6 +11,8 @@ internal sealed interface PlacePredictionRoute : Route {
 
     data object Amount : PlacePredictionRoute
 
+    data object Slippage : PlacePredictionRoute
+
     data object Summary : PlacePredictionRoute
 
     /** Terminal: must be entered via `replaceAll`, so back never returns to [Summary]. */

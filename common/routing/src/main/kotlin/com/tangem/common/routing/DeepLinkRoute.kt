@@ -68,7 +68,7 @@ sealed class DeepLinkRoute {
         override val host: String = "onboard-visa"
     }
 
-    data object OnboardVirtualAccounts : DeepLinkRoute() {
+    data object OnboardMoneyAccount : DeepLinkRoute() {
         override val host: String = "onboard-virtual-account"
     }
 
@@ -86,6 +86,11 @@ sealed class DeepLinkRoute {
 
     data object Yield : DeepLinkRoute() {
         override val host: String = "yield"
+    }
+
+    /** Feed hub ("shtorka") of the wallet screen — a section of it, optionally pre-filtered. */
+    data object Shtorka : DeepLinkRoute() {
+        override val host: String = "shtorka"
     }
 
     data object PayAppMain : DeepLinkRoute() {

@@ -6,7 +6,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.launchApp
 import com.tangem.common.extensions.stopApp
 import com.tangem.screens.onDisclaimerScreen
-import com.tangem.screens.onStoriesScreen
+import com.tangem.screens.onIntroductionScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -37,9 +37,9 @@ class TermsOfServiceTest : BaseTestCase() {
             step("Click on 'Accept' button") {
                 onDisclaimerScreen { acceptButton.clickWithAssertion() }
             }
-            step("Assert 'Stories' screen is opened") {
-                onStoriesScreen {
-                    getStartedButton.assertIsDisplayed()
+            step("Assert 'Welcome' screen is opened") {
+                onIntroductionScreen {
+                    createWalletButton.assertIsDisplayed()
                 }
             }
         }
@@ -91,9 +91,9 @@ class TermsOfServiceTest : BaseTestCase() {
                     acceptButton.clickWithAssertion()
                 }
             }
-            step("Assert 'Stories' screen is opened") {
-                onStoriesScreen {
-                    getStartedButton.assertIsDisplayed()
+            step("Assert 'Welcome' screen is opened") {
+                onIntroductionScreen {
+                    createWalletButton.assertIsDisplayed()
                 }
             }
             step("Stop app") {
@@ -102,9 +102,9 @@ class TermsOfServiceTest : BaseTestCase() {
             step("Launch app") {
                 launchApp(packageName)
             }
-            step("Assert 'Stories' screen is opened") {
-                onStoriesScreen {
-                    getStartedButton.assertIsDisplayed()
+            step("Assert 'Welcome' screen is opened") {
+                onIntroductionScreen {
+                    createWalletButton.assertIsDisplayed()
                 }
             }
         }

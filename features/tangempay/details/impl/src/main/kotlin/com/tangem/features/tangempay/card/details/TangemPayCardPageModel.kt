@@ -54,7 +54,6 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
@@ -109,7 +108,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
     private val biometricAuthManager: BiometricAuthManager,
     private val settingsManager: SettingsManager,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
@@ -483,26 +481,28 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickChangePIN(isPinSet: Boolean) {
         val card = selectedCard() ?: return
-        when {
-            !isPinSet -> router.push(TangemPayCardDetailsInnerRoute.ChangePIN(card))
-            tangemPayFeatureToggles.isPinBiometryGateEnabled -> {
-                if (viewPinAuthJobHolder.isActive) return
-                modelScope.launch {
-                    val result = biometricAuthManager.authenticate(
-                        BiometricAuthManager.Config(
-                            title = resourceReference(R.string.tangempay_card_details_view_pin_code_title),
-                            subtitle = null,
-                        ),
-                    )
-                    when (result) {
-                        is BiometricAuthManager.Result.Success -> showPinCode(cardId = card.id)
-                        is BiometricAuthManager.Result.Cancelled -> Unit
-                        is BiometricAuthManager.Result.Failure -> onViewPinAuthFailure(result)
-                    }
-                }.saveIn(viewPinAuthJobHolder)
-            }
-            else -> showPinCode(cardId = card.id)
+        if (isPinSet) {
+            viewPinCodeWithBiometry(card)
+        } else {
+            router.push(TangemPayCardDetailsInnerRoute.ChangePIN(card))
         }
+    }
+
+    private fun viewPinCodeWithBiometry(card: TangemPayCard) {
+        if (viewPinAuthJobHolder.isActive) return
+        modelScope.launch {
+            val result = biometricAuthManager.authenticate(
+                BiometricAuthManager.Config(
+                    title = resourceReference(R.string.tangempay_card_details_view_pin_code_title),
+                    subtitle = null,
+                ),
+            )
+            when (result) {
+                is BiometricAuthManager.Result.Success -> showPinCode(cardId = card.id)
+                is BiometricAuthManager.Result.Cancelled -> Unit
+                is BiometricAuthManager.Result.Failure -> onViewPinAuthFailure(result)
+            }
+        }.saveIn(viewPinAuthJobHolder)
     }
 
     private fun showPinCode(cardId: String) {
@@ -643,7 +643,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onClickReceive(data: TangemPayTopUpData) {
         bottomSheetNavigation.dismiss()
         val networks = currentStatus.value.networksOrNull().orEmpty()
-        if (shouldUseChooseNetwork(tangemPayFeatureToggles.isAccountMultichainEnabled, networks)) {
+        if (shouldUseChooseNetwork(networks)) {
             bottomSheetNavigation.activate(TangemPayCardNavigation.ChooseNetwork(walletId = data.walletId))
         } else {
             val config = TokenReceiveConfig(

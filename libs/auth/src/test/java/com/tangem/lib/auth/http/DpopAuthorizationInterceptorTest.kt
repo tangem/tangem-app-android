@@ -2,13 +2,16 @@ package com.tangem.lib.auth.http
 
 import arrow.core.None
 import arrow.core.Some
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.lib.auth.api.RequiresDpopProof
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.lib.auth.api.RequiresSessionRefresh
 import com.tangem.lib.auth.dpop.DpopProofFactory
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
+import dagger.Lazy
 import io.mockk.CapturingSlot
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -32,12 +35,13 @@ class DpopAuthorizationInterceptorTest {
 
     private val store: SessionTokensStore = mockk()
     private val proofFactory: DpopProofFactory = mockk()
+    private val refresher: SessionTokenRefresher = mockk()
 
-    private val interceptor = DpopAuthorizationInterceptor(store, proofFactory)
+    private val interceptor = DpopAuthorizationInterceptor(store, proofFactory, Lazy { refresher })
 
     @BeforeEach
     fun setup() {
-        clearMocks(store, proofFactory)
+        clearMocks(store, proofFactory, refresher)
     }
 
     private val storedTokens = SessionTokens(
@@ -63,8 +67,8 @@ class DpopAuthorizationInterceptorTest {
     }
 
     @Test
-    fun `@RequiresSessionAuth (umbrella) method gets headers — covers proof path transitively`() {
-        coEvery { store.get() } returns Some(storedTokens)
+    fun `@RequiresSessionAuth (umbrella) method gets headers — token resolved via ensureSession`() {
+        coEvery { refresher.ensureSession() } returns storedTokens.right()
         coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("proof-jwt")
 
         val proceeded = slot<Request>()
@@ -73,6 +77,25 @@ class DpopAuthorizationInterceptorTest {
         interceptor.intercept(chain)
 
         assertThat(proceeded.captured.header("Authorization")).isEqualTo("DPoP old-access")
+        assertThat(proceeded.captured.header("DPoP")).isEqualTo("proof-jwt")
+        // Session-protected endpoints must not read the store directly (that's what sent a stale token
+        // while a refresh was in flight); they go through ensureSession, which joins any in-flight refresh.
+        coVerify(exactly = 0) { store.get() }
+    }
+
+    @Test
+    fun `@RequiresSessionAuth method sends the freshly refreshed token, not the stale stored one`() {
+        // ensureSession refreshed a stale/in-flight token and returns the new one.
+        val refreshed = storedTokens.copy(accessToken = "new-access")
+        coEvery { refresher.ensureSession() } returns refreshed.right()
+        coEvery { proofFactory.create(any(), any(), "new-access") } returns Some("proof-jwt")
+
+        val proceeded = slot<Request>()
+        val chain = chain(request(sessionAuth = true), proceeded)
+
+        interceptor.intercept(chain)
+
+        assertThat(proceeded.captured.header("Authorization")).isEqualTo("DPoP new-access")
         assertThat(proceeded.captured.header("DPoP")).isEqualTo("proof-jwt")
     }
 
