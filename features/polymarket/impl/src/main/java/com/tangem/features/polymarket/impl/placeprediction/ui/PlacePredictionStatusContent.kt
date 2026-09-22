@@ -75,34 +75,33 @@ internal fun PlacePredictionStatusContent(
 
 @Composable
 private fun ResultFooter(viewPosition: ViewPositionUM, intents: PlacePredictionIntents) {
-    TangemButtonGroup(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp),
-        orientation = TangemButtonGroup.Orientation.Vertical,
-    ) {
-        when (viewPosition) {
-            ViewPositionUM.Hidden -> Unit
-            ViewPositionUM.Awaiting,
-            ViewPositionUM.Available,
-            -> TangemButton(
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.prediction_place_result_view_position),
-                isEnabled = viewPosition == ViewPositionUM.Available,
-                onClick = intents::onViewPositionClick,
-            )
-        }
-        TangemButton(
-            variant = when (viewPosition) {
-                ViewPositionUM.Hidden -> TangemButton.Variant.Primary
-                ViewPositionUM.Awaiting,
-                ViewPositionUM.Available,
-                -> TangemButton.Variant.Secondary
-            },
+    val modifier = Modifier
+        .fillMaxWidth()
+        .padding(all = 16.dp)
+
+    when (viewPosition) {
+        ViewPositionUM.Hidden -> TangemButton(
+            modifier = modifier,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.prediction_place_result_to_main),
             onClick = intents::onToMainClick,
         )
+        ViewPositionUM.Awaiting,
+        ViewPositionUM.Available,
+        -> TangemButtonGroup(modifier = modifier, orientation = TangemButtonGroup.Orientation.Horizontal) {
+            TangemButton(
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.prediction_place_result_to_main),
+                onClick = intents::onToMainClick,
+            )
+            TangemButton(
+                size = TangemButton.Size.X12,
+                text = resourceReference(R.string.prediction_place_result_view_position),
+                isLoading = viewPosition == ViewPositionUM.Awaiting,
+                onClick = intents::onViewPositionClick,
+            )
+        }
     }
 }
 
@@ -256,7 +255,13 @@ private fun PlacePredictionStatusContentPreview(
     TangemThemePreviewRedesign {
         PlacePredictionStatusContent(
             result = result,
-            viewPosition = if (result is PlaceResultUM.Filled) ViewPositionUM.Available else ViewPositionUM.Hidden,
+            viewPosition = when (result) {
+                is PlaceResultUM.Filled -> ViewPositionUM.Available
+                is PlaceResultUM.PartiallyFilled -> ViewPositionUM.Awaiting
+                is PlaceResultUM.NotFilled,
+                is PlaceResultUM.Submitted,
+                -> ViewPositionUM.Hidden
+            },
             side = PredictionOrderSide.BUY,
             market = MarketHeaderUM(
                 title = "Will Uzbekistan win the 2026 FIFA World Cup?",
