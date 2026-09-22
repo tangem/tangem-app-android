@@ -240,6 +240,9 @@ internal class SwapModel @Inject constructor(
     private val isPredictionTopUpFlow: Boolean
         get() = accountFlow is AccountFlow.PredictionTopUp
 
+    private val isCollectiblesTopUpFlow: Boolean
+        get() = accountFlow is AccountFlow.CollectiblesTopUp
+
     val isGaslessWithdrawal: Boolean
         get() = isTangemPayWithdrawal() || isPredictionWithdrawFlow
 
@@ -330,6 +333,7 @@ internal class SwapModel @Inject constructor(
         get() = isAccountFlowActive ||
             isPredictionWithdrawFlow ||
             isPredictionTopUpFlow ||
+            isCollectiblesTopUpFlow ||
             dataState.fromSwapCurrencyStatus?.account is Account.Prediction ||
             isTargetOnlyDestination
 
