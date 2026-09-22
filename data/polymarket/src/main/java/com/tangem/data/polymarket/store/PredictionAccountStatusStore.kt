@@ -11,9 +11,10 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal typealias WalletIdWithPredictionStatus = Map<String, PredictionAccountStatusValue>
 internal typealias WalletIdWithPredictionStatusDTO = Map<String, PredictionAccountStatusValueDTO>
@@ -51,6 +52,8 @@ internal class PredictionAccountStatusStore(
      * Reads deliberately do not wait: [get] must stay immediate.
      */
     private val preloaded = CompletableDeferred<Unit>()
+
+    private val commits = Mutex()
 
     init {
         scope.launch {
@@ -92,18 +95,20 @@ internal class PredictionAccountStatusStore(
     ) {
         preloaded.await()
 
-        var committed: PredictionAccountStatusValue? = null
+        commits.withLock {
+            var committed: PredictionAccountStatusValue? = null
 
-        runtimeStore.update(default = emptyMap()) { stored ->
-            val updated = transform(stored[userWalletId.stringValue]) ?: return@update stored
-            committed = updated
+            runtimeStore.update(default = emptyMap()) { stored ->
+                val updated = transform(stored[userWalletId.stringValue]) ?: return@update stored
+                committed = updated
 
-            stored + (userWalletId.stringValue to updated)
+                stored + (userWalletId.stringValue to updated)
+            }
+
+            val value = committed ?: return
+
+            storeInPersistence(userWalletId = userWalletId, value = value)
         }
-
-        val value = committed ?: return
-
-        storeInPersistence(userWalletId = userWalletId, value = value)
     }
 
     /**
@@ -125,9 +130,9 @@ internal class PredictionAccountStatusStore(
     suspend fun clear(userWalletId: UserWalletId) {
         preloaded.await()
 
-        coroutineScope {
-            launch { runtimeStore.update(default = emptyMap()) { it - userWalletId.stringValue } }
-            launch { persistenceDataStore.updateData { it - userWalletId.stringValue } }
+        commits.withLock {
+            runtimeStore.update(default = emptyMap()) { it - userWalletId.stringValue }
+            persistenceDataStore.updateData { it - userWalletId.stringValue }
         }
     }
 
