@@ -25,7 +25,7 @@ class StartTangemPayOrderPollingUseCase(
         order: TangemPayOrderInfo,
         userWalletId: UserWalletId,
         onOrderStateChange: (suspend (TangemPayOrderInfo) -> Unit)? = null,
-        onTerminalRefresh: (suspend (UserWalletId) -> Unit) = { paymentAccountStatusFetcher.invoke(userWalletId) },
+        onTerminalRefresh: (suspend (UserWalletId) -> Unit)? = null,
         timeout: Duration? = null,
     ): Boolean {
         val key = "${userWalletId.stringValue}:${order.orderId}"
@@ -54,7 +54,7 @@ class StartTangemPayOrderPollingUseCase(
         order: TangemPayOrderInfo,
         userWalletId: UserWalletId,
         onOrderStateChange: (suspend (TangemPayOrderInfo) -> Unit)?,
-        onTerminalRefresh: (suspend (UserWalletId) -> Unit),
+        onTerminalRefresh: (suspend (UserWalletId) -> Unit)?,
     ): Boolean {
         var currentOrder: TangemPayOrderInfo? = null
         while (true) {
@@ -70,7 +70,11 @@ class StartTangemPayOrderPollingUseCase(
             }
 
             if (newOrder != null && newOrder.orderStatus.isTerminal) {
-                onTerminalRefresh(userWalletId)
+                if (onTerminalRefresh != null) {
+                    onTerminalRefresh(userWalletId)
+                } else {
+                    paymentAccountStatusFetcher.invoke(userWalletId)
+                }
                 return newOrder.orderStatus == OrderStatus.COMPLETED
             }
 
