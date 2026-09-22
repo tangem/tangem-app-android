@@ -18,8 +18,9 @@ import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.features.collectibles.impl.createMachine
 import com.tangem.features.collectibles.impl.createNft
 import com.tangem.features.collectibles.impl.createNftsBatchListState
-import com.tangem.features.collectibles.impl.packdetails.CollectiblesPackDetailsComponent
-import com.tangem.features.collectibles.impl.packdetails.ui.state.CollectiblesPackDetailsUM
+import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
+import com.tangem.features.collectibles.impl.machinedetails.model.CollectiblesMachineDetailsModel
+import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchUpdateResult
@@ -58,7 +59,7 @@ internal class CollectiblesMachineDetailsModelTest {
 
     private val batchingContextSlot = slot<CollectibleGachaMachineNftsBatchingContext>()
 
-    private var model: CollectiblesPackDetailsModel? = null
+    private var model: CollectiblesMachineDetailsModel? = null
 
     @BeforeEach
     fun setUp() {
@@ -87,8 +88,8 @@ internal class CollectiblesMachineDetailsModelTest {
 
         // Assert
         val state = fixture.model.uiState.value
-        assertThat(state).isInstanceOf(CollectiblesPackDetailsUM.Content::class.java)
-        assertThat((state as CollectiblesPackDetailsUM.Content).tiers).hasSize(4)
+        assertThat(state).isInstanceOf(CollectiblesMachineDetailsUM.Content::class.java)
+        assertThat((state as CollectiblesMachineDetailsUM.Content).tiers).hasSize(4)
         coVerify(exactly = 1) { getMachineUseCase(externalId = EXTERNAL_ID, skipCache = false) }
     }
 
@@ -101,7 +102,7 @@ internal class CollectiblesMachineDetailsModelTest {
         val fixture = startModel()
 
         // Assert
-        assertThat(fixture.model.uiState.value).isInstanceOf(CollectiblesPackDetailsUM.Error::class.java)
+        assertThat(fixture.model.uiState.value).isInstanceOf(CollectiblesMachineDetailsUM.Error::class.java)
     }
 
     @Test
@@ -116,7 +117,7 @@ internal class CollectiblesMachineDetailsModelTest {
         val fixture = startModel()
 
         // Assert
-        val footer = (fixture.model.uiState.value as CollectiblesPackDetailsUM.Content).footer
+        val footer = (fixture.model.uiState.value as CollectiblesMachineDetailsUM.Content).footer
         assertThat(footer.buyButtonText).isEqualTo(stringReference("Open for 50 USDC"))
         assertThat(footer.expectedValue).isEqualTo(stringReference("$53.95"))
     }
@@ -138,13 +139,13 @@ internal class CollectiblesMachineDetailsModelTest {
     fun `GIVEN a loaded pool WHEN turbo toggled THEN only the flag changes`() = runTest {
         // Arrange
         val fixture = startModel()
-        val before = fixture.model.uiState.value as CollectiblesPackDetailsUM.Content
+        val before = fixture.model.uiState.value as CollectiblesMachineDetailsUM.Content
 
         // Act
         before.footer.onTurboCheckedChange(true)
 
         // Assert
-        val after = fixture.model.uiState.value as CollectiblesPackDetailsUM.Content
+        val after = fixture.model.uiState.value as CollectiblesMachineDetailsUM.Content
         assertThat(after.footer.isTurboEnabled).isTrue()
         assertThat(after.copy(footer = before.footer)).isEqualTo(before)
     }
@@ -214,7 +215,7 @@ internal class CollectiblesMachineDetailsModelTest {
         fixture.model.uiState.value.onBackClick()
 
         // Assert
-        io.mockk.verify(exactly = 1) { router.pop() }
+        verify(exactly = 1) { router.pop() }
     }
 
     /**
@@ -226,12 +227,12 @@ internal class CollectiblesMachineDetailsModelTest {
      * see only that replayed action and silently miss every later one.
      */
     private fun TestScope.startModel(): Fixture {
-        val model = CollectiblesPackDetailsModel(
+        val model = CollectiblesMachineDetailsModel(
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             router = router,
             paramsContainer = MutableParamsContainer(
-                CollectiblesPackDetailsComponent.Params(externalId = EXTERNAL_ID),
+                CollectiblesMachineDetailsComponent.Params(externalId = EXTERNAL_ID),
             ),
             getPrizePoolBatchFlowUseCase = getPrizePoolBatchFlowUseCase,
         ).also { this@CollectiblesMachineDetailsModelTest.model = it }
@@ -246,7 +247,7 @@ internal class CollectiblesMachineDetailsModelTest {
     }
 
     private data class Fixture(
-        val model: CollectiblesPackDetailsModel,
+        val model: CollectiblesMachineDetailsModel,
         val actions: List<CollectibleGachaMachineNftsBatchAction>,
     )
 

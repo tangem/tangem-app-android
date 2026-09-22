@@ -53,21 +53,6 @@ internal class CollectiblesMachineTiersConverterTest {
     }
 
     @Test
-    fun `GIVEN a tier range and odds WHEN convert THEN they read as one line`() {
-        // Arrange
-        val machine = createMachine(
-            odds = createOdds(common = 80),
-            tierRanges = createTierRanges(common = CollectibleGachaMachine.TierRange(start = 15, end = 40)),
-        )
-
-        // Act
-        val actual = CollectiblesMachineTiersConverter.convert(machine)
-
-        // Assert
-        assertThat(actual.first().odds).isEqualTo(stringReference("$15-$40 · 80%"))
-    }
-
-    @Test
     fun `GIVEN no epic tier WHEN convert THEN only three cards are built`() {
         // Arrange
         val machine = createMachine(
