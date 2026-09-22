@@ -102,6 +102,7 @@ internal fun PolymarketMainScreen(
     state: PolymarketMainUM,
     onBackClick: () -> Unit,
     onSearchClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     onLoadMore: () -> Unit,
     onVisibleEventsChange: (Set<String>) -> Unit,
     onScrollIdle: (index: Int, offset: Int) -> Unit,
@@ -145,6 +146,7 @@ internal fun PolymarketMainScreen(
                 tabRowState = tabRowState,
                 isTabBandPinned = isTabBandPinned,
                 onBackClick = onBackClick,
+                onHistoryClick = onHistoryClick,
             )
 
             // Outside the scaffold: glass inside its own haze source has nothing to sample.
@@ -168,6 +170,7 @@ private fun PolymarketMainScaffold(
     tabRowState: LazyListState,
     isTabBandPinned: Boolean,
     onBackClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TangemTopBarScaffold(
@@ -180,6 +183,7 @@ private fun PolymarketMainScaffold(
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
                 fadeEnabled = false,
                 onBack = onBackClick,
+                endButton = { PolymarketMainMenu(onHistoryClick = onHistoryClick) },
             )
         },
         overlay = { contentPadding ->
@@ -487,6 +491,7 @@ private fun PolymarketMainScreenContentPreview() {
             ),
             onBackClick = {},
             onSearchClick = {},
+            onHistoryClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
@@ -518,6 +523,7 @@ private fun PolymarketMainScreenAwaitingFundsPreview() {
             ),
             onBackClick = {},
             onSearchClick = {},
+            onHistoryClick = {},
             onLoadMore = {},
             onVisibleEventsChange = {},
             onScrollIdle = { _, _ -> },
