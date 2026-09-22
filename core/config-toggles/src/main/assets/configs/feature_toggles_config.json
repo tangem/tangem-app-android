@@ -32,10 +32,6 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1602_STAKING_TRANSACTION_VALIDATION",
-        "version": "6.2"
-    },
-    {
         "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
         "version": "undefined"
     },
@@ -48,20 +44,12 @@
         "version": "undefined"
     },
     {
-        "name": "TWI_1749_XRP_TX_HISTORY_ENABLED",
-        "version": "6.3"
-    },
-    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
     {
         "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "TWI_1327_GASLESS_YIELD_WITHDRAW_ENABLED",
-        "version": "6.2"
     },
     {
         "name": "AND_15767_NEW_TX_HISTORY_ENABLED",
