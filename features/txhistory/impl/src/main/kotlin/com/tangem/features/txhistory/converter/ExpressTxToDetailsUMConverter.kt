@@ -522,7 +522,7 @@ private const val OUTGOING_SIGN = "${StringsSigns.MINUS} "
  */
 private fun Status.incomingSign(): String = when (this) {
     is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
-    is Status.Confirmed -> "${StringsSigns.PLUS} "
+    is Status.Confirmed, is Status.PendingSignature -> "${StringsSigns.PLUS} "
     is Status.Failed -> ""
 }
 
@@ -533,6 +533,7 @@ private fun Status.incomingSign(): String = when (this) {
 private fun Status.onrampIncomingSign(): String = when (this) {
     is Status.Unconfirmed -> "${StringsSigns.TILDE_SIGN} "
     is Status.Confirmed,
+    is Status.PendingSignature,
     is Status.Failed,
     -> ""
 }
