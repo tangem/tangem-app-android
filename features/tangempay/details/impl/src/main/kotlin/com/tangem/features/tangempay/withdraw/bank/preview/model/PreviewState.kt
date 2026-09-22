@@ -25,4 +25,4 @@ internal sealed interface SendState {
 }
 
 /** Outcomes that replace the summary with a full-screen result; only [General] offers Retry. */
-internal enum class PreviewFailure { RecipientRegion, SenderRegion, Business, General }
+internal enum class PreviewFailure { RecipientRegion, SenderRegion, Business, UnsupportedConfiguration, General }

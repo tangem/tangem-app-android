@@ -326,7 +326,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         // Arrange
         orderCreated()
         coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
-        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH) } returns
+        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Signed.right()
         val model = createModel()
 
@@ -336,7 +336,30 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         // Assert
         assertThat(signedCount).isEqualTo(1)
         assertThat(summary(model).isSending).isFalse()
-        coVerify(exactly = 1) { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH) }
+        coVerify(exactly = 1) { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN order created WHEN signature submitted THEN the same idempotency key used`() {
+        // Arrange
+        orderCreated()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
+        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
+            BankOfframpSignResult.Signed.right()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        val keys = mutableListOf<String>()
+        coVerify(exactly = 1) { createBankOfframpOrderUseCase(userWalletId, any(), capture(keys)) }
+        coVerify(exactly = 1) {
+            signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, capture(keys))
+        }
+        assertThat(keys).hasSize(2)
+        assertThat(keys.toSet()).hasSize(1)
         model.onDestroy()
     }
 
@@ -345,7 +368,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         // Arrange
         orderCreated()
         coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns PAYLOAD_HASH.right()
-        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH) } returns
+        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Cancelled.right()
         val model = createModel()
 
@@ -367,7 +390,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         orderCreated()
         coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) }
             .returnsMany(listOf(BankOfframpError.PollingTimeout.left(), PAYLOAD_HASH.right()))
-        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH) } returns
+        coEvery { signBankOfframpOrderUseCase(userWalletId, ORDER_ID, PAYLOAD_HASH, any()) } returns
             BankOfframpSignResult.Signed.right()
         val model = createModel()
         summary(model).onSendClick()
@@ -379,6 +402,39 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         coVerify(exactly = 1) { createBankOfframpOrderUseCase(userWalletId, any(), any()) }
         coVerify(exactly = 2) { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) }
         assertThat(signedCount).isEqualTo(1)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN order fails after creation WHEN not a timeout THEN the order is cancelled`() {
+        // Arrange
+        orderCreated()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+            BankOfframpError.Unknown(null).left()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        coVerify(exactly = 1) { cancelBankOfframpOrderUseCase(userWalletId, ORDER_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN polling times out WHEN failure shown THEN the order is kept for retry`() {
+        // Arrange
+        orderCreated()
+        coEvery { awaitBankOfframpSignatureUseCase(userWalletId, ORDER_ID, any()) } returns
+            BankOfframpError.PollingTimeout.left()
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        coVerify(exactly = 0) { cancelBankOfframpOrderUseCase(any(), any()) }
+        assertThat((model.uiState.value as Failed).onRetryClick).isNotNull()
         model.onDestroy()
     }
 
@@ -416,6 +472,10 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         UnavailableModel(
             error = BankOfframpError.BusinessUnsupported,
             titleRes = R.string.tangempay_withdraw_bank_error_business,
+        ),
+        UnavailableModel(
+            error = BankOfframpError.UnsupportedConfiguration,
+            titleRes = R.string.tangempay_withdraw_bank_error_unsupported_configuration,
         ),
     )
 

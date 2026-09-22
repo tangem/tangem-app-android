@@ -155,6 +155,51 @@ fun getWireMockRequestCountByQueryParam(
 }
 
 /**
+ * Returns the JSON bodies of the requests matching [method] and [urlPath] in the WireMock journal
+ * (`/__admin/requests/find`).
+ *
+ * Use it when the assertion is about *what* the app sent rather than how often — e.g. that a withdrawal
+ * named the chain and the token contract the user picked.
+ *
+ * @param method HTTP method to match (e.g. "POST")
+ * @param urlPath Exact request path, without the query string
+ * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
+ * @return the matching request bodies in journal order, or an empty list if the journal could not be queried
+ */
+fun findWireMockRequestBodies(
+    method: String,
+    urlPath: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> {
+    val json = JSONObject()
+        .put("method", method)
+        .put("urlPath", urlPath)
+        .toString()
+    val mediaType = "application/json".toMediaType()
+
+    val request = Request.Builder()
+        .url("$baseUrl/__admin/requests/find")
+        .post(json.toRequestBody(mediaType))
+        .build()
+
+    return try {
+        adminClient.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            TangemLogger.d("WireMock request find response: ${response.code}")
+            if (!response.isSuccessful) return emptyList()
+            val requests = JSONObject(body).getJSONArray("requests")
+            List(requests.length()) { index -> requests.getJSONObject(index).optString("body") }
+        }
+    } catch (e: IOException) {
+        TangemLogger.e("WireMock request find error", e)
+        emptyList()
+    } catch (e: JSONException) {
+        TangemLogger.e("WireMock request find: unexpected response body", e)
+        emptyList()
+    }
+}
+
+/**
  * Method checks accessibility of WireMock
  * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  */

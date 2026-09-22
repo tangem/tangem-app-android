@@ -5,11 +5,13 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.captureToImage
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.TangemPayTestTags
 import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 /**
  * Pay-specific multi-token receive sheet reached from 'Add funds' → 'From another wallet or exchange'
@@ -41,6 +43,29 @@ class TangemPayReceiveSheetPageObject(semanticsProvider: SemanticsNodeInteractio
 
     val qrCode: KNode = child {
         hasTestTag(TangemPayTestTags.RECEIVE_QR_CODE)
+        useUnmergedTree = true
+    }
+
+    /** "Send only {tokens} on the {network} network" headline of the warning banner. */
+    fun warningTitle(tokensLabel: String, networkName: String): KNode = child {
+        hasText(getResourceString(CoreResR.string.receive_bottom_sheet_warning_title, tokensLabel, networkName))
+        useUnmergedTree = true
+    }
+
+    val warningDescription: KNode = child {
+        hasText(getResourceString(CoreResR.string.receive_bottom_sheet_warning_message_description))
+        useUnmergedTree = true
+    }
+
+    /** "{tokens} on {network} network" heading above the deposit address. */
+    fun tokensOnNetworkHeading(tokensLabel: String, networkName: String): KNode = child {
+        hasText(
+            getResourceString(
+                CoreResR.string.receive_bottom_sheet_warning_message_compact,
+                tokensLabel,
+                networkName,
+            ),
+        )
         useUnmergedTree = true
     }
 
