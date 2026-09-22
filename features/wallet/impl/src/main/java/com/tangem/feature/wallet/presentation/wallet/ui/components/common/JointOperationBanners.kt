@@ -20,9 +20,7 @@ internal fun LazyListScope.jointOperationBanners(
         itemContent = { index, item ->
             CosignRequestBanner(
                 state = item.banner,
-                modifier = modifier
-                    .padding(top = if (index == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x2)
-                    .animateItem(fadeInSpec = null, fadeOutSpec = null),
+                modifier = modifier.padding(top = if (index == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x2),
             )
         },
     )
