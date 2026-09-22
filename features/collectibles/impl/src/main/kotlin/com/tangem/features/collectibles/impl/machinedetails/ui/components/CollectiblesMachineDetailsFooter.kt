@@ -7,12 +7,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
@@ -54,7 +56,7 @@ private fun FooterMeta(state: CollectiblesMachineDetailsUM.FooterUM, modifier: M
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = "Expected value",
+                text = stringResourceSafe(R.string.collectibles_machine_expected_value),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.End,
