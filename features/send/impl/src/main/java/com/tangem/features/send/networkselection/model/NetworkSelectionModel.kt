@@ -28,7 +28,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.R
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -155,7 +154,7 @@ internal class NetworkSelectionModel @Inject constructor(
     private fun buildStatusMap(statusList: AccountStatusList?): Map<CryptoCurrency.ID, CryptoCurrencyStatus> {
         if (statusList == null) return emptyMap()
         return statusList.accountStatuses
-            .filterIsInstance<AccountStatus.Personal>()
+            .filterCryptoPortfolio()
             .flatMap { it.flattenCurrencies() }
             .associateBy { it.currency.id }
     }
