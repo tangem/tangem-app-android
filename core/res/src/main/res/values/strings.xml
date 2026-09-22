@@ -1786,6 +1786,13 @@
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket Fee</string>
   <string name="prediction_fee_sheet_sell_description">Selling %1$s shares at %2$s¢ each. Final shares count (and corresponding %3$s amount executed) may vary within your %4$s slippage limit, depending on what this market can match.</string>
   <string name="prediction_fee_sheet_total">Total</string>
+  <string name="prediction_history_bought">Bought</string>
+  <string name="prediction_history_download_csv">Download .csv</string>
+  <string name="prediction_history_empty">You don\'t have any operations yet</string>
+  <string name="prediction_history_funds_added">Funds Added</string>
+  <string name="prediction_history_redeemed">Redeemed</string>
+  <string name="prediction_history_sold">Sold</string>
+  <string name="prediction_history_title">History</string>
   <string name="prediction_main_available_balance">Available Balance</string>
   <string name="prediction_main_data_outdated">Data may be outdated.</string>
   <string name="prediction_main_empty_events">No events yet</string>
@@ -1854,6 +1861,7 @@
   <string name="prediction_place_notification_partial_title">Order may fill partially</string>
   <string name="prediction_place_notification_quote_error_description">Couldn\'t get the current price. Check your connection and try again</string>
   <string name="prediction_place_notification_quote_error_title">Price unavailable</string>
+  <string name="prediction_place_price_changed_description">The price moved on while you were deciding. Check the amount and confirm again.</string>
   <string name="prediction_place_result_no_fill_banner_description">No shares available on Polymarket exchange — your order might not execute if placed</string>
   <string name="prediction_place_result_no_fill_banner_title">No fill</string>
   <string name="prediction_place_result_no_fill_title">No liquidity for placing</string>
@@ -2910,6 +2918,9 @@
   <string name="tangempay_withdraw_bank_field_error_invalid_format">Invalid text format</string>
   <string name="tangempay_withdraw_bank_field_error_routing_number">The routing number is incorrect</string>
   <string name="tangempay_withdraw_bank_field_routing_number">Routing number</string>
+  <string name="tangempay_withdraw_bank_geo_country_selected">Selected country</string>
+  <string name="tangempay_withdraw_bank_geo_state_selected">Selected state</string>
+  <string name="tangempay_withdraw_bank_geo_state_title">State</string>
   <string name="tangempay_withdraw_bank_offramp_unavailable">Off-ramp unavailable</string>
   <string name="tangempay_withdraw_bank_placeholder_address_line1">Eg., Ebunike st., Apt. 32</string>
   <string name="tangempay_withdraw_bank_placeholder_bank_name">Eg., Goldman Sachs</string>
@@ -2923,6 +2934,8 @@
   <string name="tangempay_withdraw_bank_placeholder_region_name">Eg., Bavaria</string>
   <string name="tangempay_withdraw_bank_recipient_business">Business</string>
   <string name="tangempay_withdraw_bank_recipient_info">Recipient info</string>
+  <string name="tangempay_withdraw_bank_recipients_recents_title">Recents</string>
+  <string name="tangempay_withdraw_bank_recipients_search_empty">Nothing found. Try something else</string>
   <string name="tangempay_withdraw_bank_recipients_title">Bank transfers</string>
   <string name="tangempay_withdraw_bank_select_route">Select route</string>
   <string name="tangempay_withdraw_bank_sending_summary">You are sending %1$s including a %2$s fee of %3$s</string>
@@ -2935,10 +2948,13 @@
   <string name="tangempay_withdraw_bank_transfer_type_third_party">3rd-party account</string>
   <string name="tangempay_withdraw_bank_transfer_type_title">Type of transfer</string>
   <string name="tangempay_withdraw_hub_bank_section_subtitle">Send to another bank using ACH or FedWire</string>
+  <string name="tangempay_withdraw_hub_bank_section_subtitle_unavailable">Available only for USDC on Polygon, Base, Arbitrum</string>
   <string name="tangempay_withdraw_hub_bank_section_title">Bank transfer</string>
+  <string name="tangempay_withdraw_hub_recent_badge">Recent</string>
   <string name="tangempay_withdraw_hub_recents_empty">Your recent transfers will be here</string>
   <string name="tangempay_withdraw_hub_swap_section_subtitle">From your payment account</string>
   <string name="tangempay_withdraw_hub_swap_section_title">Transfer or swap</string>
+  <string name="tangempay_withdraw_hub_title">Withdraw</string>
   <string name="tangempay_withdraw_hub_to_business_account">To business account</string>
   <string name="tangempay_withdraw_hub_to_personal_account">To personal account</string>
   <string name="tangempay_withdraw_hub_within_portfolio">Within your portfolio</string>
