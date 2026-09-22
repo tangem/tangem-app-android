@@ -79,13 +79,31 @@ internal class PredictionAccountStatusStore(
         return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
     }
 
-    suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
+    suspend fun store(userWalletId: UserWalletId, value: PredictionAccountStatusValue) =
+        update(userWalletId = userWalletId) { value }
+
+    /**
+     * @param userWalletId the wallet whose entry is merged
+     * @param transform    applied to the value held at the moment of the commit; `null` leaves the entry alone
+     */
+    suspend fun update(
+        userWalletId: UserWalletId,
+        transform: (PredictionAccountStatusValue?) -> PredictionAccountStatusValue?,
+    ) {
         preloaded.await()
 
-        coroutineScope {
-            launch { storeInRuntime(userWalletId = userWalletId, value = value) }
-            launch { storeInPersistence(userWalletId = userWalletId, value = value) }
+        var committed: PredictionAccountStatusValue? = null
+
+        runtimeStore.update(default = emptyMap()) { stored ->
+            val updated = transform(stored[userWalletId.stringValue]) ?: return@update stored
+            committed = updated
+
+            stored + (userWalletId.stringValue to updated)
         }
+
+        val value = committed ?: return
+
+        storeInPersistence(userWalletId = userWalletId, value = value)
     }
 
     /**
@@ -110,12 +128,6 @@ internal class PredictionAccountStatusStore(
         coroutineScope {
             launch { runtimeStore.update(default = emptyMap()) { it - userWalletId.stringValue } }
             launch { persistenceDataStore.updateData { it - userWalletId.stringValue } }
-        }
-    }
-
-    private suspend fun storeInRuntime(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
-        runtimeStore.update(default = emptyMap()) { stored ->
-            stored + (userWalletId.stringValue to value)
         }
     }
 

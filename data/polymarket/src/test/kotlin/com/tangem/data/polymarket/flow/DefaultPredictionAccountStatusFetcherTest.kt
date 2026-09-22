@@ -253,7 +253,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN a refresh in flight WHEN another one starts for the same wallet THEN it waits for the first`() =
+    fun `GIVEN a refresh in flight WHEN another one starts for the same wallet THEN neither waits for the other`() =
         runTest {
             // Arrange
             val store = createStore(testScope = this)
@@ -263,6 +263,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             coEvery { getBalance.invoke(ADDRESSES) } coAnswers {
                 inFlight.await()
                 PolymarketBalanceAllowance(balance = BigDecimal("40"), allowances = null).right()
+            } andThenAnswer {
+                PolymarketBalanceAllowance(balance = BigDecimal("41"), allowances = null).right()
             }
             val fetcher = createFetcher(store)
 
@@ -274,15 +276,14 @@ internal class DefaultPredictionAccountStatusFetcherTest {
             }
             runCurrent()
 
-            // Assert — the second refresh has not read or written anything while the first holds the wallet
-            assertThat(second.isCompleted).isFalse()
-            coVerify(exactly = 1) { getBalance.invoke(ADDRESSES) }
+            // Assert
+            assertThat(second.isCompleted).isTrue()
+            coVerify(exactly = 2) { getBalance.invoke(ADDRESSES) }
+            assertThat((store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active).balance)
+                .isEqualTo(BigDecimal("41"))
 
             inFlight.complete(Unit)
             first.await()
-            second.await()
-            val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.positionsValue).isEqualTo(BigDecimal("9"))
         }
 
     @Test
@@ -313,7 +314,7 @@ internal class DefaultPredictionAccountStatusFetcherTest {
         }
 
     @Test
-    fun `GIVEN a failing refresh WHEN a newer one stores a value THEN the failure does not downgrade it`() =
+    fun `GIVEN a refresh fails after a concurrent one succeeded WHEN it lands THEN only the source is flagged`() =
         runTest {
             // Arrange
             val store = createStore(testScope = this)
@@ -340,7 +341,8 @@ internal class DefaultPredictionAccountStatusFetcherTest {
 
             // Assert
             val stored = store.getSyncOrNull(WALLET) as PredictionAccountStatusValue.Active
-            assertThat(stored.source).isEqualTo(StatusSource.ACTUAL)
+            assertThat(stored.source).isEqualTo(StatusSource.ONLY_CACHE)
+            assertThat(stored.balance).isEqualTo(BigDecimal("40"))
             assertThat(stored.positionsValue).isEqualTo(BigDecimal("9"))
         }
 
