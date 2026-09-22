@@ -38,6 +38,7 @@ internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
     private val path = DerivationPath(rawPath = COLLECTIBLES_OWNER_DERIVATION_PATH)
 
     override fun run(session: CardSession, callback: CompletionCallback<Unit>) {
+        TangemLogger.d("cardTask: card session opened, deriving the Solana address from the main key")
         scope.launch { deriveAndSetUpVault(session, callback) }
     }
 
@@ -49,8 +50,14 @@ internal class DeriveCollectiblesOwnerAndSetUpVaultTask(
             }
 
         when (derivation) {
-            is CompletionResult.Failure -> callback(CompletionResult.Failure(derivation.error))
-            is CompletionResult.Success -> setUpVault(session, callback)
+            is CompletionResult.Failure -> {
+                TangemLogger.d("cardTask: owner key derivation failed: ${derivation.error.customMessage}")
+                callback(CompletionResult.Failure(derivation.error))
+            }
+            is CompletionResult.Success -> {
+                TangemLogger.d("cardTask: owner key derived and saved, continuing in the same session")
+                setUpVault(session, callback)
+            }
         }
     }
 
