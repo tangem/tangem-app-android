@@ -159,9 +159,10 @@ un-refreshed — it never writes "empty" on the strength of a failed question.
 `PredictionAccountStatusValue.Active` is written by two parties — the fetcher owns the balance and the
 positions value, `DefaultPredictionDepositAddressWriter` owns the deposit address — so neither writes a
 whole value it read earlier. Both commit through `PredictionAccountStatusStore.update`, whose
-non-suspending transform runs under the runtime store's lock and receives the value current at that
-moment; `store` is the same call with a transform that ignores it, for the states that are facts about
-the whole account (`NotOnboarded`, `Onboarding`, `Onboarded`, `Error`). A refresh therefore carries over
+non-suspending transform receives the value current at that moment; `store` is the same call with a
+transform that ignores it, for the states that are facts about the whole account (`NotOnboarded`,
+`Onboarding`, `Onboarded`, `Error`). One lock spans the runtime commit and the disk write, so the disk
+cannot end up holding a value the runtime already superseded. A refresh therefore carries over
 what it did not re-read instead of snapshotting it before the network, and two refreshes of one wallet run
 in parallel. What this accepts: the slower of two overlapping refreshes commits the older balance, and a
 failing one flags a value a concurrent success has just written as `ONLY_CACHE`. Both correct themselves

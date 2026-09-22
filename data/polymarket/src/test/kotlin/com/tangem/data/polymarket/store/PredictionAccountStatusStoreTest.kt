@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.store
 
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 
+import androidx.datastore.core.DataStore
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
@@ -12,9 +13,12 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import io.mockk.every
 import io.mockk.mockk
@@ -245,9 +249,57 @@ internal class PredictionAccountStatusStoreTest {
             .isEqualTo(ACTIVE.copy(source = StatusSource.CACHE, balance = BigDecimal("99")))
     }
 
+    @Test
+    fun `GIVEN an update stalled on the disk WHEN a newer one commits THEN the disk keeps the newer value`() =
+        runTest {
+            // Arrange
+            val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+            val stalled = CompletableDeferred<Unit>()
+            val store = createStore(
+                testScope = this,
+                persistenceDataStore = StallingDataStore(delegate = persisted, firstWrite = stalled),
+            )
+            advanceUntilIdle()
+
+            // Act
+            val slow = async { store.update(userWalletId = WALLET_A) { ACTIVE.copy(balance = BigDecimal("1")) } }
+            runCurrent()
+            val fast = async { store.update(userWalletId = WALLET_A) { ACTIVE.copy(balance = BigDecimal("2")) } }
+            runCurrent()
+            stalled.complete(Unit)
+            slow.await()
+            fast.await()
+
+            // Assert
+            assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE.copy(balance = BigDecimal("2")))
+            assertThat(persisted.data.first()[WALLET_A.stringValue])
+                .isEqualTo(ACTIVE_DTO.copy(balance = BigDecimal("2")))
+        }
+
+    private class StallingDataStore(
+        private val delegate: MockStateDataStore<WalletIdWithPredictionStatusDTO>,
+        private val firstWrite: CompletableDeferred<Unit>,
+    ) : DataStore<WalletIdWithPredictionStatusDTO> {
+
+        private var stalls = true
+
+        override val data = delegate.data
+
+        override suspend fun updateData(
+            transform: suspend (WalletIdWithPredictionStatusDTO) -> WalletIdWithPredictionStatusDTO,
+        ): WalletIdWithPredictionStatusDTO {
+            if (stalls) {
+                stalls = false
+                firstWrite.await()
+            }
+
+            return delegate.updateData(transform)
+        }
+    }
+
     private fun createStore(
         testScope: TestScope,
-        persistenceDataStore: MockStateDataStore<WalletIdWithPredictionStatusDTO> = MockStateDataStore(emptyMap()),
+        persistenceDataStore: DataStore<WalletIdWithPredictionStatusDTO> = MockStateDataStore(emptyMap()),
     ) = PredictionAccountStatusStore(
         dtoConverter = PredictionAccountStatusValueDTOConverter(
             collateralCurrencyFactory = mockk { every { createDepositTarget() } returns COLLATERAL },
