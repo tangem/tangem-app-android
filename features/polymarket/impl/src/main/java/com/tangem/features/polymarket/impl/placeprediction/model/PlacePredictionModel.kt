@@ -103,7 +103,7 @@ internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @ModelScoped
 internal class PlacePredictionModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -147,6 +147,8 @@ internal class PlacePredictionModel @Inject constructor(
     private var isNegRiskMarket: Boolean? = null
 
     private var isScreenShown = false
+
+    private var isSummaryOpen = false
 
     init {
         uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
@@ -197,6 +199,16 @@ internal class PlacePredictionModel @Inject constructor(
     fun onScreenHidden() {
         isScreenShown = false
         quoteJobHolder.cancel()
+    }
+
+    fun onSummaryOpenChange(isOpen: Boolean) {
+        isSummaryOpen = isOpen
+
+        if (isOpen) {
+            quoteJobHolder.cancel()
+        } else if (isScreenShown && uiState.value.submit is SubmitUM.Idle) {
+            restartQuoteLoop(withDebounce = false)
+        }
     }
 
     override fun onAmountChange(value: String) {
@@ -696,7 +708,7 @@ internal class PlacePredictionModel @Inject constructor(
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
+        if (isSummaryOpen || !uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         modelScope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)

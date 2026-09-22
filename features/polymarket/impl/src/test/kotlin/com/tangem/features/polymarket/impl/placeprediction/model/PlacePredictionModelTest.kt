@@ -1072,22 +1072,137 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN a failed attempt WHEN the flow returns to idle THEN the quote starts refreshing again`() = runTest {
+    fun `GIVEN the summary is up WHEN a failed attempt returns to idle THEN the quote is not refreshed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onScreenShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        model.onSummaryOpenChange(isOpen = true)
         coEvery { signOrderInteractor(request = any()) } returns
             PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
 
         // Act
         model.onPlaceClick()
-        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
-        coVerify(atLeast = 2) { getQuoteUseCase(request = any()) }
+        assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a priced quote WHEN the summary opens THEN the quote is not refreshed while it is up`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScreenShown()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        val shown = model.uiState.value.quote
+
+        // Act
+        model.onSummaryOpenChange(isOpen = true)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        assertThat(model.uiState.value.quote).isEqualTo(shown)
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a refresh in flight WHEN the summary opens THEN the figures shown stay AND the answer never lands`() =
+        runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createQuote().right() coAndThen {
+                delay(timeMillis = 1_000)
+                createQuote(total = BigDecimal("99")).right()
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onScreenShown()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val shown = model.uiState.value.quote
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Act
+            model.onSummaryOpenChange(isOpen = true)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.quote).isEqualTo(shown)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the summary is up WHEN the screen is shown again THEN the quote is not refreshed`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScreenShown()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        model.onSummaryOpenChange(isOpen = true)
+
+        // Act
+        model.onScreenHidden()
+        model.onScreenShown()
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the summary is up WHEN it closes THEN the quote refreshes again at once`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScreenShown()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        model.onSummaryOpenChange(isOpen = true)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Act
+        model.onSummaryOpenChange(isOpen = false)
+        advanceTimeBy(delayTimeMillis = 1)
+
+        // Assert
+        coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN the order fills WHEN the summary gives way to the status THEN nothing is quoted again`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        model.onScreenShown()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        model.onSummaryOpenChange(isOpen = true)
+        model.onPlaceClick()
+        advanceUntilIdle()
+
+        // Act
+        model.onSummaryOpenChange(isOpen = false)
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
+        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
 
         model.onDestroy()
     }
