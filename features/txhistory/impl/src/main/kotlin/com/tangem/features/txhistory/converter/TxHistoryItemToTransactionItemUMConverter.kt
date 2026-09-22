@@ -104,6 +104,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         tx: TxInfo,
         uiStatus: TransactionItemUM.Content.Status,
     ): TransactionItemUM.Content? {
+        if (tx !is TxInfo.Single) return null
         val address = tx.counterpartyAddress() ?: return null
         val direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM
         val ownSubtitle = resolveOwnSubtitle(
@@ -298,8 +299,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 // region Content building helpers
 
 private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
-    // A network-fee transaction moved no coin of its own, so the row shows the fee instead of its own amount.
-    val value = if (type is TransactionType.NetworkFee) fee?.value ?: amount else amount
+    val value = amountOrFee()
     val prefix = when {
         status is TxInfo.TransactionStatus.Failed -> ""
         value.isZero() -> ""
