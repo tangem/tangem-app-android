@@ -144,7 +144,6 @@ internal class SendDestinationModel @Inject constructor(
 
     private val validationJobHolder = JobHolder()
 
-
     init {
         syncAddressBooks()
         subscribeOnQRScannerResult()
