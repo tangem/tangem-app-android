@@ -36,6 +36,7 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.*
+import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -85,6 +86,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase,
     private val setCashbackDeactivationDismissedUseCase: SetCashbackDeactivationDismissedUseCase,
+    private val findActiveBankOfframpOrderUseCase: FindActiveBankOfframpOrderUseCase,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
 ) : Model(),
     TangemPayTxHistoryUiActions,
@@ -230,7 +232,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onClickWithdraw() {
         analytics.send(TangemPayAnalyticsEvents.WithdrawClicked())
         if (tangemPayFeatureToggles.isBankOfframpEnabled && isBankOfframpAvailable()) {
-            openWithdrawHub()
+            modelScope.launch { openWithdrawHubUnlessOrderInFlight() }
             return
         }
         modelScope.launch {
@@ -245,11 +247,30 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     /**
      * The hub only makes sense while a bank transfer is on offer: without the channel it would hold a single
-     * option. An unknown channel — a status served from the cache, or a failed lookup — keeps the hub rather than
-     * quietly taking the feature away from a customer who is entitled to it.
+     * option, so an account the backend does not list the channel for goes straight to the swap.
+     *
+     * The channel is not persisted with the status, so it is still unknown right after a cold start — while the
+     * screen is served from the cache — and Withdraw leads to the swap until the fetcher has read the channels.
      */
     private fun isBankOfframpAvailable(): Boolean =
-        currentStatus.value.ifLoadedOrNull { it.isBankOfframpAvailable } != false
+        currentStatus.value.ifLoadedOrNull { it.isBankOfframpAvailable } == true
+
+    private suspend fun openWithdrawHubUnlessOrderInFlight() {
+        // The backend refuses a second bank order while one is live, so the hub is gated on the lookup. A lookup
+        // that itself fails must not take withdrawals away — the backend still refuses the order on Send.
+        val activeOrder = findActiveBankOfframpOrderUseCase(userWalletId)
+            .onLeft { error ->
+                TangemLogger.withTag("TangemPayDetailsModel")
+                    .e("Failed to look up an active bank off-ramp order: $error")
+            }
+            .getOrNull()
+
+        if (activeOrder == null) {
+            openWithdrawHub()
+        } else {
+            showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
+        }
+    }
 
     private fun openAddFunds() {
         val status = currentStatus.value
