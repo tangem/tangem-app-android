@@ -868,6 +868,15 @@ internal class TokenDetailsModel @Inject constructor(
         handleSwap(unavailabilityReason, checkYieldSupply = true)
     }
 
+    override fun onAddFundsSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        val gatedReason = if (unavailabilityReason == ScenarioUnavailabilityReason.JointAccount) {
+            ScenarioUnavailabilityReason.None
+        } else {
+            unavailabilityReason
+        }
+        handleSwap(gatedReason, checkYieldSupply = true)
+    }
+
     /**
      * Routes a tapped marketing-banner deeplink contextually for the current token, reusing the
      * regular swap/buy intents (availability checks, yield-supply warning, analytics). Returns
