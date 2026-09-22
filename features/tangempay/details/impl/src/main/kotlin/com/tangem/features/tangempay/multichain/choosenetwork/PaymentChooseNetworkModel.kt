@@ -1,13 +1,16 @@
 package com.tangem.features.tangempay.multichain.choosenetwork
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CreatePaymentNetworkContractUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.networksOrNull
+import com.tangem.features.tangempay.multichain.isOtherWay
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
@@ -27,14 +30,15 @@ internal class PaymentChooseNetworkModel @Inject constructor(
     paramsContainer: ParamsContainer,
     paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val createPaymentNetworkContractUseCase: CreatePaymentNetworkContractUseCase,
+    private val analytics: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
     private val params = paramsContainer.require<PaymentChooseNetworkComponent.Params>()
 
     private val converter = PaymentChooseNetworkUMConverter(
-        listener = params.listener,
-        onSelectNotIssued = ::onNotIssuedClick,
+        onNetworkClick = ::onNetworkClick,
+        onDismiss = ::onDismiss,
     )
 
     /**
@@ -49,6 +53,8 @@ internal class PaymentChooseNetworkModel @Inject constructor(
         field = MutableStateFlow(converter.convert(emptyList()))
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.Multichain.ChooseNetworkPopupShowed())
+
         val accountStatuses = paymentAccountStatusSupplier.invoke(params.walletId)
 
         accountStatuses
@@ -68,6 +74,29 @@ internal class PaymentChooseNetworkModel @Inject constructor(
 
     fun onDismiss() {
         params.listener.onDismiss()
+    }
+
+    private fun onNetworkClick(status: PaymentNetworkStatus) {
+        analytics.send(clickEvent(status))
+        when (status) {
+            is PaymentNetworkStatus.Available -> params.listener.onSelectAvailable(
+                networkRawId = status.network.rawId,
+            )
+            is PaymentNetworkStatus.NotIssued -> onNotIssuedClick(status)
+            is PaymentNetworkStatus.Disabled -> params.listener.onSelectDisabled()
+        }
+    }
+
+    private fun clickEvent(status: PaymentNetworkStatus): TangemPayAnalyticsEvents = if (status.isOtherWay()) {
+        TangemPayAnalyticsEvents.Multichain.OtherWayNetworkClicked(
+            blockchain = status.network.name,
+            chainId = status.chainId,
+        )
+    } else {
+        TangemPayAnalyticsEvents.Multichain.FastWayNetworkClicked(
+            blockchain = status.network.name,
+            chainId = status.chainId,
+        )
     }
 
     /**
@@ -119,6 +148,12 @@ internal class PaymentChooseNetworkModel @Inject constructor(
     }
 
     private fun markFailed(rowId: String, status: PaymentNetworkStatus.NotIssued) {
+        analytics.send(
+            TangemPayAnalyticsEvents.Multichain.AddressFetchErrorShowed(
+                blockchain = status.network.name,
+                chainId = status.chainId,
+            ),
+        )
         val override = RowOverride(
             state = PaymentNetworkItemUM.State.Error,
             onRetry = { onNotIssuedClick(status) },
