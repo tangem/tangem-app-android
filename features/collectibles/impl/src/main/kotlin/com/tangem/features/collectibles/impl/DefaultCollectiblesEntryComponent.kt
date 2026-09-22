@@ -17,6 +17,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.collectibles.api.CollectiblesEntryComponent
+import com.tangem.features.collectibles.impl.machinedetails.CollectiblesMachineDetailsComponent
 import com.tangem.features.collectibles.impl.main.CollectiblesMainComponent
 import com.tangem.features.collectibles.impl.onboarding.CollectiblesOnboardingComponent
 import com.tangem.features.collectibles.impl.stories.CollectiblesStoriesComponent
@@ -24,12 +25,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("LongParameterList")
 internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: CollectiblesEntryComponent.Params,
     private val onboardingComponentFactory: CollectiblesOnboardingComponent.Factory,
     private val storiesComponentFactory: CollectiblesStoriesComponent.Factory,
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
+    private val machineDetailsComponentFactory: CollectiblesMachineDetailsComponent.Factory,
 ) : CollectiblesEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<CollectiblesRoute>()
@@ -81,6 +84,10 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             is CollectiblesRoute.Main -> mainComponentFactory.create(
                 context = childContext,
                 params = CollectiblesMainComponent.Params(userWalletId = route.userWalletId),
+            )
+            is CollectiblesRoute.MachineDetails -> machineDetailsComponentFactory.create(
+                context = childContext,
+                params = CollectiblesMachineDetailsComponent.Params(externalId = route.externalId),
             )
         }
     }

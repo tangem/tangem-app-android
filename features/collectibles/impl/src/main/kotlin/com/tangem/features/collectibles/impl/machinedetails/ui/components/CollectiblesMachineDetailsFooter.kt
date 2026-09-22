@@ -13,9 +13,11 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
+import com.tangem.features.collectibles.api.R
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
 
 @Composable
@@ -54,7 +56,7 @@ private fun FooterMeta(state: CollectiblesMachineDetailsUM.FooterUM, modifier: M
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = "Expected value",
+                text = stringResourceSafe(R.string.collectibles_machine_expected_value),
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.End,

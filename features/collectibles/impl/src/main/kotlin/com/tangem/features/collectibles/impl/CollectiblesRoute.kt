@@ -10,4 +10,6 @@ internal sealed interface CollectiblesRoute : Route {
     data object Stories : CollectiblesRoute
 
     data class Main(val userWalletId: UserWalletId) : CollectiblesRoute
+
+    data class MachineDetails(val externalId: String) : CollectiblesRoute
 }
