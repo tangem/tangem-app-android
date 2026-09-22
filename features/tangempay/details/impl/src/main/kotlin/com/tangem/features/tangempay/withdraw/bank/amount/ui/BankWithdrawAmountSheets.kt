@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.ui
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -9,11 +8,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -54,11 +53,8 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
 
 @Composable
 private fun SheetHeader(title: Int, onClose: () -> Unit) {
-    TangemTopNavigation(
+    TangemModal.TopNavigation(
         title = resourceReference(title),
-        contentAlign = TangemTopNavigation.ContentAlign.Center,
-        windowInsets = WindowInsets(0.dp),
-        fadeEnabled = false,
         onClose = onClose,
     )
 }
