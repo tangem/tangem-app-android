@@ -113,13 +113,15 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
         blockchain: Blockchain,
         id: String = "NEVER-MIND",
         contractAddress: String = "NEVER-MIND",
+        symbol: String = "NEVER-MIND",
+        decimals: Int = 8,
     ): CryptoCurrency.Token {
         return factory.createToken(
             sdkToken = Token(
                 name = "NEVER-MIND",
-                symbol = "NEVER-MIND",
+                symbol = symbol,
                 contractAddress = contractAddress,
-                decimals = 8,
+                decimals = decimals,
                 id = id,
             ),
             blockchain = blockchain,

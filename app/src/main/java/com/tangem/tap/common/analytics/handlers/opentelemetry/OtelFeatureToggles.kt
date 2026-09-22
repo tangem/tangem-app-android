@@ -12,5 +12,5 @@ internal class DefaultOtelFeatureToggles(
 ) : OtelFeatureToggles {
 
     override val isMetricsEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_16115_OTEL_METRICS_ENABLED)
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1627_OTEL_METRICS_ENABLED)
 }

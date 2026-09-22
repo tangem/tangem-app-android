@@ -468,6 +468,12 @@ val LocalCanScrollBackward = compositionLocalOf { false }
 val LocalMaterialShadowEnabled = compositionLocalOf { true }
 
 /**
+ * Whether material surfaces ([com.tangem.core.ui.ds2.surface.TangemSurface] with `isMaterial = true`)
+ * render their material chrome at all — the translucent fill, the gradient stroke and the shadow.
+ */
+val LocalMaterialRenderingEnabled = compositionLocalOf { true }
+
+/**
  * Determines whether the dark theme should be used based on the given [AppThemeMode].
  *
  * @param appThemeMode The application theme mode.

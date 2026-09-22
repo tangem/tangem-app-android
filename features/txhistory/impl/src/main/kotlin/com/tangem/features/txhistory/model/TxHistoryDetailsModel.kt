@@ -5,10 +5,13 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
@@ -17,6 +20,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset
@@ -34,6 +38,7 @@ import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.model.idToCopy
+import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
@@ -56,6 +61,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -83,6 +89,9 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
+    private val router: Router,
+    isAddressBookCompatibleUseCase: IsAddressBookCompatibleUseCase,
+    getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -143,13 +152,31 @@ internal class TxHistoryDetailsModel @Inject constructor(
         }
     }
 
+    private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
+        emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
+    }
+        .onStart { emit(emptySet()) }
+        .flowOn(dispatchers.io)
+
+    /**
+     * The owner/contact lookup, whether saving a contact is possible at all (an address book stored by a newer build
+     * cannot be written to, so "Add contact" must not be offered), and the wallet's cached tokens. Combined here
+     * rather than in the [uiState] `combine` below, which is already at the five-source overload.
+     */
+    private val lookupWithAddressBook: Flow<Triple<TxHistoryLookupContext, Boolean, Set<CryptoCurrency.Token>>> =
+        combine(
+            flow = ownerLookupProducer(params.userWalletId),
+            flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
+            flow3 = networkTokensFlow,
+        ) { lookup, isCompatible, tokens -> Triple(lookup, isCompatible, tokens) }
+
     val uiState: StateFlow<TxHistoryDetailsUM?> = combine(
         flow = txHistoryInfo,
-        flow2 = ownerLookupProducer(),
+        flow2 = lookupWithAddressBook,
         flow3 = targetsByAddress,
         flow4 = refundCurrency,
         flow5 = balanceHidingSettings.isBalanceHidden(),
-    ) { txInfo, lookup, stakingTargets, refundToken, isBalanceHidden ->
+    ) { txInfo, (lookup, isAddressBookCompatible, networkTokens), stakingTargets, refundToken, isBalanceHidden ->
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops "Transaction ID".
@@ -160,6 +187,9 @@ internal class TxHistoryDetailsModel @Inject constructor(
             isScreenOpenedAnalyticsSent = true
             sendScreenOpenedAnalytics(txInfo)
         }
+        val contactCandidate = txInfo
+            .contactCandidate(currency = params.currency, lookup = lookup)
+            .takeIf { isAddressBookCompatible }
         TxHistoryInfoToTxHistoryDetailsUMConverter(
             currency = params.currency,
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
@@ -175,10 +205,25 @@ internal class TxHistoryDetailsModel @Inject constructor(
             targetsByAddress = stakingTargets,
             isBalanceHidden = isBalanceHidden,
             onOpenValidator = urlOpener::openUrl,
+            onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
+            networkTokens = networkTokens,
         ).convert(txInfo)
     }
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.WhileSubscribed(), initialValue = null)
+
+    /** Opens the contact editor prefilled with the counterparty address and its network. */
+    private fun openContactCreation(candidate: ContactCandidate) {
+        router.push(
+            AppRoute.AddressBook(
+                AddressBookOpenMode.WithContactCreation(
+                    address = candidate.address,
+                    networkId = candidate.networkId.value,
+                    source = AddressBookOpenMode.ContactCreationSource.TransactionDetails,
+                ),
+            ),
+        )
+    }
 
     /**
      * Activates the rating slot for an express swap. The rating key is the provider-side deal id when present, the

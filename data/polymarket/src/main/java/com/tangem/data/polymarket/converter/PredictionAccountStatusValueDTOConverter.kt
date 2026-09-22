@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.converter
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 
 /**
  * Maps between the [PredictionAccountStatusValue] domain model and the [PredictionAccountStatusValueDTO]
@@ -15,7 +16,9 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
  * [convertBack] always restores the value as [StatusSource.CACHE]: whatever it was when it was written, it has
  * not been refreshed in this session, and the wallet total is flagged from this source.
  */
-internal object PredictionAccountStatusValueDTOConverter {
+internal class PredictionAccountStatusValueDTOConverter(
+    private val collateralCurrencyFactory: PolymarketCollateralCurrencyFactory,
+) {
 
     fun convert(value: PredictionAccountStatusValue): PredictionAccountStatusValueDTO? = when (value) {
         is PredictionAccountStatusValue.NotOnboarded -> PredictionAccountStatusValueDTO.NotOnboarded
@@ -25,7 +28,7 @@ internal object PredictionAccountStatusValueDTOConverter {
         )
         is PredictionAccountStatusValue.Active -> PredictionAccountStatusValueDTO.Active(
             balance = value.balance,
-            isTradingAllowed = value.isTradingAllowed,
+            depositAddress = value.depositAddress,
         )
         is PredictionAccountStatusValue.Loading,
         is PredictionAccountStatusValue.Error,
@@ -45,7 +48,8 @@ internal object PredictionAccountStatusValueDTOConverter {
             source = StatusSource.CACHE,
             balance = value.balance,
             fiatRate = null,
-            isTradingAllowed = value.isTradingAllowed,
+            depositCurrency = collateralCurrencyFactory.createDepositTarget(),
+            depositAddress = value.depositAddress,
         )
     }
 

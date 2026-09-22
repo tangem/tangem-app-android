@@ -1,7 +1,6 @@
 package com.tangem.tests.swap
 
 import com.tangem.common.BaseTestCase
-import com.tangem.core.res.R as CommonR
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
@@ -20,6 +19,7 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
+import com.tangem.core.res.R as CommonR
 
 @HiltAndroidTest
 class SwapRatingTest : BaseTestCase() {
@@ -34,6 +34,9 @@ class SwapRatingTest : BaseTestCase() {
     private val assetsExchangeEnabledState = "BitcoinExchangeEnabled"
     private val exchangeStatusScenario = "exchange_status_provider"
     private val changellyStatusState = "Changelly"
+    // The stars are offered only for a rateable (final) deal, so the deal is finished before its status is
+    // opened; auto-disposal of a finished deal only happens once the sheet is closed, so the row stays.
+    private val changellyFinishedState = "Finished"
     private val nativeBalanceScenario = "polygon_coin_balance"
     private val zeroBalanceState = "ZeroBalance"
     // Stories auto-advance forever, which keeps Compose non-idle and flakes everything after them.
@@ -96,6 +99,9 @@ class SwapRatingTest : BaseTestCase() {
             }
             step("Click on 'Close' button") {
                 onSwapSuccessScreen { closeButton.performClick() }
+            }
+            step("Switch WireMock scenario '$exchangeStatusScenario' to '$changellyFinishedState'") {
+                setWireMockScenarioState(scenarioName = exchangeStatusScenario, state = changellyFinishedState)
             }
             step("Assert 'Express status' item with title '$expressStatusItemTitle' is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {

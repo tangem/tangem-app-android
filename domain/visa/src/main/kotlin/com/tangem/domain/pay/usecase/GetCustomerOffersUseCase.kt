@@ -3,7 +3,9 @@ package com.tangem.domain.pay.usecase
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CardIssueOffers
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
+import com.tangem.domain.pay.model.deeplinkOffer
 import com.tangem.domain.pay.model.plasticOffer
 import com.tangem.domain.pay.model.plasticReissueOffer
 import com.tangem.domain.pay.model.virtualOffer
@@ -19,13 +21,28 @@ import com.tangem.domain.visa.error.VisaApiError
 class GetCustomerOffersUseCase(
     private val customerOffersRepository: CustomerOffersRepository,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, List<Offer>> {
-        return customerOffersRepository.getOffers(userWalletId)
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        deeplinkValue: String? = null,
+    ): Either<VisaApiError, List<Offer>> {
+        return customerOffersRepository
+            .getOffers(userWalletId = userWalletId, deeplinkValue = deeplinkValue)
+            .map(CustomerOffers::orderable)
+    }
+
+    suspend fun campaignOffer(userWalletId: UserWalletId, deeplinkValue: String): Either<VisaApiError, Offer?> {
+        return customerOffersRepository
+            .getOffers(userWalletId = userWalletId, deeplinkValue = deeplinkValue)
+            .map { offers -> offers.orderable.deeplinkOffer() }
     }
 
     suspend fun cardIssueOffers(userWalletId: UserWalletId): Either<VisaApiError, CardIssueOffers> {
         return customerOffersRepository.getOffers(userWalletId).map { offers ->
-            CardIssueOffers(virtual = offers.virtualOffer(), plastic = offers.plasticOffer())
+            CardIssueOffers(
+                virtual = offers.orderable.virtualOffer(),
+                plastic = offers.orderable.plasticOffer(),
+                plasticArtworkUrl = offers.artwork[Offer.Type.CARD_ISSUE_PLASTIC_RAIN],
+            )
         }
     }
 
@@ -39,6 +56,6 @@ class GetCustomerOffersUseCase(
     ): Either<VisaApiError, Offer?> {
         return customerOffersRepository
             .getProductInstanceOffers(userWalletId = userWalletId, productInstanceId = productInstanceId)
-            .map { offers -> offers.plasticReissueOffer() }
+            .map { offers -> offers.orderable.plasticReissueOffer() }
     }
 }

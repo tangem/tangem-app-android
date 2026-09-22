@@ -2,10 +2,10 @@ package com.tangem.features.addressbook.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.Contact
-import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.addressbook.model.portfolioIcon
 import com.tangem.features.addressbook.MatchedContact
 import kotlinx.collections.immutable.toImmutableList
 
@@ -24,7 +24,7 @@ internal object ContactMatcher {
                 contactId = contact.id.value,
                 walletId = contact.walletId.stringValue,
                 name = contact.name.value,
-                icon = contact.toAvatarIcon(),
+                icon = CryptoPortfolioIconConverter.convert(contact.portfolioIcon()),
                 networkId = networkId,
                 entries = entries.map { entry ->
                     MatchedContact.ContactAddress(
@@ -36,13 +36,6 @@ internal object ContactMatcher {
             )
         }
     }
-
-    /** Builds the contact avatar from the domain [Contact.icon] / [Contact.iconColor] (enum names), with fallbacks. */
-    private fun Contact.toAvatarIcon(): AccountIconUM.CryptoPortfolio = AccountIconUM.CryptoPortfolio(
-        value = CryptoPortfolioIcon.Icon.entries.firstOrNull { it.name == icon } ?: CryptoPortfolioIcon.Icon.Letter,
-        color = CryptoPortfolioIcon.Color.entries.firstOrNull { it.name == iconColor }
-            ?: CryptoPortfolioIcon.Color.Azure,
-    )
 
     /** Display network name is derived from [AddressEntry.networkId] — it is not stored in the encrypted payload. */
     private fun AddressEntry.displayNetworkName(): String =
