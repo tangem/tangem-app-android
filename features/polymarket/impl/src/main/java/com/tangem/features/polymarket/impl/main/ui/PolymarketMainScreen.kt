@@ -255,11 +255,8 @@ private fun FeedList(
     ) {
         item(key = KEY_HEADER) {
             PolymarketMainHeader(
-                balance = state.balance.balance,
-                addFunds = state.balance.addFunds,
-                withdraw = state.balance.withdraw,
+                balance = state.balance,
                 isAwaitingFunds = state.isAwaitingFunds,
-                onBalanceClick = {},
                 positions = state.positions,
                 onActivePositionsClick = state.onActivePositionsClick,
                 onFinishedPositionsClick = state.onFinishedPositionsClick,
