@@ -291,7 +291,7 @@ internal class TxHistoryStatusPillConverterTest {
         type: TransactionType,
         amount: BigDecimal = BigDecimal.ONE,
         interactionAddressType: TxInfo.InteractionAddressType? = null,
-    ): TxInfo = TxInfo(
+    ): TxInfo.Single = TxInfo.Single(
         txHash = TX_HASH,
         timestampInMillis = TIMESTAMP,
         isOutgoing = false,
