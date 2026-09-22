@@ -3,6 +3,7 @@ package com.tangem.features.jointaccount.deeplink
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.Runs
@@ -71,9 +72,13 @@ internal class DefaultJointAccountInviteDeepLinkHandlerTest {
     }
 
     @Test
-    fun `GIVEN the same invite already on top WHEN handle deeplink THEN nothing is pushed`() = runTest {
+    fun `GIVEN the same invite already in the stack WHEN handle deeplink THEN nothing is pushed`() = runTest {
         // Arrange
-        every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.JointAccountJoin(inviteId = "test-invite-id"))
+        every { appRouter.stack } returns listOf(
+            AppRoute.Wallet,
+            AppRoute.JointAccountJoin(inviteId = "test-invite-id"),
+            AppRoute.Details(userWalletId = UserWalletId("011")),
+        )
         val uri = fakeUri(listOf("joint-account", "join", "test-invite-id"))
 
         // Act
