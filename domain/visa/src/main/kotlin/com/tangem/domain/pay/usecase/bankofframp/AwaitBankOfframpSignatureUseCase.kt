@@ -11,7 +11,6 @@ import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /** Polls the order until the backend asks for a card signature and returns the payload hash to sign. */
@@ -48,7 +47,7 @@ class AwaitBankOfframpSignatureUseCase(
     }
 
     private companion object {
-        val POLL_INTERVAL = 5.seconds
-        val DEFAULT_TIMEOUT = 2.minutes
+        val POLL_INTERVAL = 3.seconds
+        val DEFAULT_TIMEOUT = 60.seconds
     }
 }

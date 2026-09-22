@@ -7,6 +7,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
@@ -16,6 +18,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.model.NewRecipientDraft
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
+import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
@@ -32,8 +35,10 @@ internal class TangemPayBankWithdrawFormModelTest {
     private val onBack: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onContinue: (BankWithdrawFormResult) -> Unit = mockk(relaxed = true)
     private val onOpenSelector: (CountrySelectorConfig) -> Unit = mockk(relaxed = true)
+    private val onSavedRecipientSelected: (BankAccount) -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
+    private val savedAccounts = MutableStateFlow<List<BankAccount>>(emptyList())
 
     private val fields = persistentListOf(
         BankWithdrawFormField.AccountNumber,
@@ -43,8 +48,9 @@ internal class TangemPayBankWithdrawFormModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onBack, onContinue, onOpenSelector)
+        clearMocks(router, onBack, onContinue, onOpenSelector, onSavedRecipientSelected)
         draft.value = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal)
+        savedAccounts.value = emptyList()
     }
 
     @Test
@@ -584,6 +590,138 @@ internal class TangemPayBankWithdrawFormModelTest {
     }
 
     @Test
+    fun `GIVEN iso subdivision code WHEN region selected THEN bare code stored`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = californiaIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN lowercase prefixed region code WHEN region selected THEN bare code stored`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = californiaLowercaseIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bare region code WHEN region selected THEN code stored unchanged`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = null)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.Region, region = texas)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "TX",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "Texas",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN us bank region WHEN region selected THEN us prefix stripped`() {
+        // Arrange
+        val model = createModel(formFields = bankAddressFields)
+
+        // Act
+        model.onRegionSelected(field = BankWithdrawFormField.BankRegion, region = newYorkIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(BankWithdrawFormField.BankRegion to "NY"),
+                    displayNames = mapOf(BankWithdrawFormField.BankRegion to "New York"),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN country with a region WHEN country selected THEN region code stripped too`() {
+        // Arrange
+        val model = createModel(formFields = addressFields)
+
+        // Act
+        model.onCountrySelected(field = BankWithdrawFormField.Country, country = usa, region = californiaIso)
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 1) {
+            onContinue(
+                BankWithdrawFormResult(
+                    values = mapOf(
+                        BankWithdrawFormField.Country to "US",
+                        BankWithdrawFormField.Region to "CA",
+                    ),
+                    displayNames = mapOf(
+                        BankWithdrawFormField.Country to "United States",
+                        BankWithdrawFormField.Region to "California",
+                    ),
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN free-text region typed WHEN continue clicked THEN region name is blank`() {
         // Arrange
         setDraftWithPickedCalifornia()
@@ -694,9 +832,163 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN account number focused and typed WHEN saved account matches THEN suggestion shown`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp, saburo)
+        val model = createModel()
+
+        // Act
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "48")
+
+        // Assert
+        assertThat(suggestions(model)).containsExactly(
+            Suggestion(id = "acc-2", matchedPrefix = "48", accountNumberSuffix = "30555555", name = "Arasaka Corp"),
+            Suggestion(id = "acc-1", matchedPrefix = "48", accountNumberSuffix = "30019271", name = "Basit D."),
+        ).inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account number not focused WHEN value matches THEN no suggestions`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp)
+        val model = createModel()
+
+        // Act
+        fill(model, BankWithdrawFormField.AccountNumber, "48")
+
+        // Assert
+        assertThat(suggestions(model)).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN suggestions shown WHEN field cleared THEN suggestions hidden`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp)
+        val model = createModel()
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "48")
+
+        // Act
+        fill(model, BankWithdrawFormField.AccountNumber, "")
+
+        // Assert
+        assertThat(suggestions(model)).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN suggestions shown WHEN focus leaves the field THEN suggestions hidden`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp)
+        val model = createModel()
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "48")
+
+        // Act
+        textField(model, BankWithdrawFormField.AccountNumber).onFocusChange(false)
+
+        // Assert
+        assertThat(suggestions(model)).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account number focused WHEN a previously focused field reports blur THEN suggestions stay`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp)
+        val model = createModel()
+        focus(model, BankWithdrawFormField.RoutingNumber)
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+
+        // Act
+        textField(model, BankWithdrawFormField.RoutingNumber).onFocusChange(false)
+
+        // Assert
+        assertThat(suggestions(model)).containsExactly(
+            Suggestion(id = "acc-1", matchedPrefix = "4830019271", accountNumberSuffix = "", name = "Basit D."),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN fields without account number WHEN typed THEN no suggestions`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp)
+        val model = createModel(formFields = cityFields)
+
+        // Act
+        focus(model, BankWithdrawFormField.City)
+        fill(model, BankWithdrawFormField.City, "48")
+
+        // Assert
+        assertThat(suggestions(model)).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN suggestion WHEN clicked THEN account reported once`() {
+        // Arrange
+        savedAccounts.value = listOf(didenko, arasakaCorp, saburo)
+        val model = createModel()
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "48")
+
+        // Act
+        model.uiState.value.suggestions.first().onClick()
+
+        // Assert
+        verify(exactly = 1) { onSavedRecipientSelected(arasakaCorp) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN accounts arrive later WHEN field already focused and typed THEN suggestions appear`() {
+        // Arrange
+        val model = createModel()
+        focus(model, BankWithdrawFormField.AccountNumber)
+        fill(model, BankWithdrawFormField.AccountNumber, "48")
+        assertThat(suggestions(model)).isEmpty()
+
+        // Act
+        savedAccounts.value = listOf(didenko)
+
+        // Assert
+        assertThat(suggestions(model)).containsExactly(
+            Suggestion(id = "acc-1", matchedPrefix = "48", accountNumberSuffix = "30019271", name = "Basit D."),
+        )
+        model.onDestroy()
+    }
+
     private fun fill(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField, value: String) {
         textField(model, field).onValueChange(value)
     }
+
+    private fun focus(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField) {
+        textField(model, field).onFocusChange(true)
+    }
+
+    /** The shown suggestions without their callbacks, so a whole suggestion can be compared. */
+    private fun suggestions(model: TangemPayBankWithdrawFormModel): List<Suggestion> =
+        model.uiState.value.suggestions.map {
+            Suggestion(
+                id = it.id,
+                matchedPrefix = it.matchedPrefix,
+                accountNumberSuffix = it.accountNumberSuffix,
+                name = it.name,
+            )
+        }
+
+    private data class Suggestion(
+        val id: String,
+        val matchedPrefix: String,
+        val accountNumberSuffix: String,
+        val name: String,
+    )
 
     private fun anyField(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField) =
         model.uiState.value.fields.first { it.field == field }
@@ -738,8 +1030,10 @@ internal class TangemPayBankWithdrawFormModelTest {
                     draft = draft,
                     step = step,
                     fields = formFields,
+                    savedAccounts = savedAccounts,
                     onBack = onBack,
                     onContinue = onContinue,
+                    onSavedRecipientSelected = onSavedRecipientSelected,
                 ),
                 onOpenSelector = onOpenSelector,
             ),
@@ -760,8 +1054,26 @@ internal class TangemPayBankWithdrawFormModelTest {
         val usa = TangemPayCountry("US", "United States", null, isSuggested = true, hasRegions = true)
         val greatBritain = TangemPayCountry("GB", "United Kingdom", null, isSuggested = false, hasRegions = true)
         val monaco = TangemPayCountry("MC", "Monaco", null, isSuggested = false, hasRegions = false)
+        val didenko = bankAccount(
+            id = "acc-1",
+            beneficiary = Beneficiary.Individual(firstName = "Basit", lastName = "Didenko"),
+            accountNumber = "4830019271",
+        )
+        val arasakaCorp = bankAccount(
+            id = "acc-2",
+            beneficiary = Beneficiary.Business(name = "Arasaka Corp"),
+            accountNumber = "4830555555",
+        )
+        val saburo = bankAccount(
+            id = "acc-3",
+            beneficiary = Beneficiary.Individual(firstName = "Saburo", lastName = "Arasaka"),
+            accountNumber = "7719004432",
+        )
         val california = TangemPayRegion(code = "CA", name = "California", isSuggested = true)
         val texas = TangemPayRegion(code = "TX", name = "Texas", isSuggested = false)
         val newYork = TangemPayRegion(code = "NY", name = "New York", isSuggested = false)
+        val californiaIso = TangemPayRegion(code = "US-CA", name = "California", isSuggested = true)
+        val californiaLowercaseIso = TangemPayRegion(code = "us-CA", name = "California", isSuggested = true)
+        val newYorkIso = TangemPayRegion(code = "US-NY", name = "New York", isSuggested = false)
     }
 }
