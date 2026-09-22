@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -28,6 +29,9 @@ import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_clock_16
+import com.tangem.core.ui.res.generated.icons.ic_user_plus_16
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -62,15 +66,8 @@ private fun JointAccountWaitingMembers(
         balance = state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
         priceChange = state.priceChange,
         onClick = state.onClick,
-        extraBottom = if (state.canInvite) {
-            {
-                JointAccountBanner(
-                    text = resourceReference(CoreUiR.string.joint_account_invite_members_to_join),
-                    onClick = state.onInviteClick,
-                )
-            }
-        } else {
-            null
+        extraBottom = state.banner?.let { banner ->
+            { JointAccountBanner(text = banner.text, icon = banner.icon, onClick = banner.onClick) }
         },
     )
 }
@@ -89,7 +86,6 @@ private fun JointAccountBlocked(
         balance = state.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
         priceChange = state.priceChange,
         onClick = state.onClick,
-        extraBottom = { JointAccountBanner(text = state.warning) },
     )
 }
 
@@ -158,7 +154,12 @@ private fun JointAccountLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun JointAccountBanner(text: TextReference, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+private fun JointAccountBanner(
+    text: TextReference,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -171,7 +172,7 @@ private fun JointAccountBanner(text: TextReference, modifier: Modifier = Modifie
     ) {
         Icon(
             modifier = Modifier.size(16.dp),
-            painter = painterResource(CoreUiR.drawable.ic_group_24),
+            imageVector = icon,
             tint = TangemTheme.colors3.icon.status.warning,
             contentDescription = null,
         )
@@ -224,9 +225,25 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
-            canInvite = true,
+            banner = JointAccountMainUM.BannerUM(
+                text = stringReference("Invite members to join"),
+                icon = Icons.ic_user_plus_16,
+                onClick = {},
+            ),
             onClick = {},
-            onInviteClick = {},
+        ),
+        JointAccountMainUM.WaitingMembers(
+            title = stringReference("Joint account"),
+            subtitle = stringReference("Waiting for activation"),
+            icon = previewIcon,
+            balance = stringReference("$0.00"),
+            priceChange = previewNeutralPriceChange,
+            banner = JointAccountMainUM.BannerUM(
+                text = stringReference("Activate account"),
+                icon = Icons.ic_clock_16,
+                onClick = {},
+            ),
+            onClick = {},
         ),
         JointAccountMainUM.WaitingMembers(
             title = stringReference("Joint account"),
@@ -234,9 +251,8 @@ private class JointAccountMainPreviewProvider : CollectionPreviewParameterProvid
             icon = previewIcon,
             balance = stringReference("$0.00"),
             priceChange = previewNeutralPriceChange,
-            canInvite = false,
+            banner = null,
             onClick = {},
-            onInviteClick = {},
         ),
         JointAccountMainUM.Blocked(
             title = stringReference("Family savings"),

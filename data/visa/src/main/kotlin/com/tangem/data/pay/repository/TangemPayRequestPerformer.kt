@@ -72,6 +72,17 @@ internal class TangemPayRequestPerformer @Inject constructor(
         ).onLeft { visaApiError -> TangemLogger.withTag(TAG).e(visaApiError.toString()) }
     }
 
+    suspend fun <T : Any> performWithOptionalToken(
+        userWalletId: UserWalletId?,
+        requestBlock: suspend (header: String?) -> ApiResponse<T>,
+    ): Either<VisaApiError, T> {
+        return if (userWalletId != null && hasAuthTokens(userWalletId)) {
+            performRequest(userWalletId, requestBlock)
+        } else {
+            performWithStaticToken { requestBlock(null) }
+        }
+    }
+
     suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String {
         val existingAddress = customerWalletAddresses[userWalletId]
         if (existingAddress != null) {
@@ -91,6 +102,11 @@ internal class TangemPayRequestPerformer @Inject constructor(
      */
     fun removeCachedCustomerWalletAddresses(userWalletIds: List<UserWalletId>) {
         userWalletIds.forEach(customerWalletAddresses::remove)
+    }
+
+    private suspend fun hasAuthTokens(userWalletId: UserWalletId): Boolean {
+        val customerWalletAddress = tangemPayStorage.getCustomerWalletAddress(userWalletId) ?: return false
+        return tangemPayStorage.getAuthTokens(customerWalletAddress) != null
     }
 
     private suspend fun getAccessTokens(userWalletId: UserWalletId): Either<VisaApiError, TangemPayAuthTokens> {

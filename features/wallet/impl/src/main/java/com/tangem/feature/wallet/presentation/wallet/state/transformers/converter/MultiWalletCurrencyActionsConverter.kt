@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.common.ui.tokens.rendersActionAsEnabled
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.AccountId
@@ -61,7 +62,7 @@ internal class MultiWalletCurrencyActionsConverter(
         if (actionsState is TokenActionsState.ActionState.Send && cryptoCurrencyStatus.value.amount.isNullOrZero()) {
             return null
         }
-        val noneReason = ScenarioUnavailabilityReason.None
+        val reason = actionsState.unavailabilityReason
         val title: TextReference
         val icon: Int
         val action: () -> Unit
@@ -69,7 +70,7 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.Buy -> {
                 title = resourceReference(R.string.common_buy)
                 icon = R.drawable.ic_plus_24
-                action = { clickIntents.onBuyClick(accountId, cryptoCurrencyStatus, noneReason) }
+                action = { clickIntents.onBuyClick(accountId, cryptoCurrencyStatus, reason) }
             }
             is TokenActionsState.ActionState.Receive -> {
                 title = resourceReference(R.string.common_receive)
@@ -79,17 +80,19 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.Stake -> {
                 title = resourceReference(R.string.common_stake)
                 icon = R.drawable.ic_staking_24
-                action = { clickIntents.onStakeClick(accountId, cryptoCurrencyStatus, actionsState.option) }
+                action = unavailableAwareAction(reason) {
+                    clickIntents.onStakeClick(accountId, cryptoCurrencyStatus, actionsState.option)
+                }
             }
             is TokenActionsState.ActionState.Sell -> {
                 title = resourceReference(R.string.common_sell)
                 icon = R.drawable.ic_currency_24
-                action = { clickIntents.onSellClick(cryptoCurrencyStatus, noneReason) }
+                action = { clickIntents.onSellClick(cryptoCurrencyStatus, reason) }
             }
             is TokenActionsState.ActionState.Send -> {
                 title = resourceReference(R.string.common_send)
                 icon = R.drawable.ic_arrow_up_24
-                action = { clickIntents.onSendClick(accountId, cryptoCurrencyStatus, noneReason) }
+                action = { clickIntents.onSendClick(accountId, cryptoCurrencyStatus, reason) }
             }
             is TokenActionsState.ActionState.Swap -> {
                 title = resourceReference(R.string.swapping_swap_action)
@@ -98,7 +101,7 @@ internal class MultiWalletCurrencyActionsConverter(
                     clickIntents.onSwapClick(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         accountId = accountId,
-                        unavailabilityReason = noneReason,
+                        unavailabilityReason = reason,
                     )
                 }
             }
@@ -120,7 +123,7 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.YieldMode -> {
                 title = resourceReference(R.string.yield_module_start_earning)
                 icon = R.drawable.ic_analytics_up_mini_24
-                action = { /* no-op */ }
+                action = unavailableAwareAction(reason) { /* no-op */ }
             }
         }
 
@@ -130,7 +133,15 @@ internal class MultiWalletCurrencyActionsConverter(
             iconResId = icon,
             onClick = action,
             isWarning = actionsState is TokenActionsState.ActionState.HideToken,
-            isEnabled = actionsState.unavailabilityReason == noneReason,
+            isEnabled = reason.rendersActionAsEnabled(),
         )
+    }
+
+    private fun unavailableAwareAction(reason: ScenarioUnavailabilityReason, action: () -> Unit): () -> Unit {
+        return if (reason == ScenarioUnavailabilityReason.None) {
+            action
+        } else {
+            { clickIntents.onUnavailableTokenActionClick(reason) }
+        }
     }
 }

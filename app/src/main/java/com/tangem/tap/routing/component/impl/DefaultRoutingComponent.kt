@@ -44,7 +44,9 @@ import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.features.introduction.IntroductionFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
@@ -99,6 +101,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
+    private val introductionFeatureToggles: IntroductionFeatureToggles,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
 ) : RoutingComponent,
@@ -214,9 +217,16 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
         // AppsFlyer deep links (referral, tpay_mobileonboard) are routed reactively by AppsFlyerDeeplinkRouter
-        // once we settle on an idle screen — not resolved here.
+        // once we settle on a screen a deep link may leave — not resolved here.
         val afterEmptyRoute = AppRoute.Home(launchMode = launchMode)
 
+        // The redesign asks where the wallet is registered, so the launch-time ask is dropped and the
+        // wallet-screen reminder stays armed until that later ask is answered.
+        if (introductionFeatureToggles.isIntroductionRedesignEnabled) {
+            return afterEmptyRoute
+        }
+
+        @RemoveWithToggle("TWI_1747_INTRODUCTION_REDESIGN_ENABLED")
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
             ?: return afterEmptyRoute
         return if (shouldAskPushPermission) {

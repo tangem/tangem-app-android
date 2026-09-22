@@ -30,6 +30,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_magic_ball_24
 
 enum class AccountIconSize {
     Default,
@@ -53,6 +55,46 @@ enum class AccountIconSize {
  */
 @Composable
 fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountGlyphIcon(
+        imageVector = ImageVector.vectorResource(id = resId),
+        glyphTint = TangemTheme.colors.text.constantWhite,
+        color = color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Displays a portfolio icon using a design-system [ImageVector].
+ *
+ * The background color is defined by [color]; the glyph is tinted white at the same 80 % opacity the account
+ * drawables carry in their own paths. The icon size and container shape are adapted based on the provided [size].
+ *
+ * @param imageVector The vector to display.
+ * @param color The background color of the icon container.
+ * @param size The size of the icon, defined by [AccountIconSize].
+ */
+@Composable
+fun AccountResIcon(imageVector: ImageVector, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
+    AccountGlyphIcon(
+        imageVector = imageVector,
+        glyphTint = TangemTheme.colors.text.constantWhite.copy(alpha = ACCOUNT_GLYPH_ALPHA),
+        color = color,
+        size = size,
+        modifier = modifier,
+    )
+}
+
+private const val ACCOUNT_GLYPH_ALPHA = 0.8f
+
+@Composable
+private fun AccountGlyphIcon(
+    imageVector: ImageVector,
+    glyphTint: Color,
+    color: Color,
+    size: AccountIconSize,
+    modifier: Modifier = Modifier,
+) {
     val boxSize by animateDpAsState(
         targetValue = size.toBoxSize(),
         animationSpec = animation(),
@@ -75,8 +117,8 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
     ) {
         Icon(
             modifier = Modifier.size(iconSize),
-            tint = TangemTheme.colors.text.constantWhite,
-            imageVector = ImageVector.vectorResource(id = resId),
+            tint = glyphTint,
+            imageVector = imageVector,
             contentDescription = null,
         )
     }
@@ -131,7 +173,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
         animationSpec = animation(),
     )
     val textStyle = when (size) {
-        AccountIconSize.Default -> TangemTheme.typography2.headingSemibold28
+        AccountIconSize.Default -> TangemTheme.typography3.body.medium
         AccountIconSize.Large -> TangemTheme.typography.h1
         AccountIconSize.Medium -> TangemTheme.typography.subtitle1
         AccountIconSize.Small -> TangemTheme.typography.subtitle2
@@ -177,10 +219,19 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
 /** Art of the Prediction account, shared by the account icon and the wallet row, so both change together. */
 object PredictionAccountIcon {
 
-    // TODO([REDACTED_TASK_KEY]): replace the placeholder icon and color with the final prediction account asset
+    val imageVector: ImageVector
+        get() = Icons.ic_magic_ball_24
+    val color: Color
+        @Composable get() = TangemTheme.colors3.bg.accent.violet
+}
+
+/** Art of the Collectibles account, shared by the account icon and the wallet row, so both change together. */
+object CollectiblesAccountIcon {
+
+    // TODO([REDACTED_TASK_KEY]): replace the placeholder icon and color with the final collectibles account asset
     @DrawableRes
-    val resId: Int = R.drawable.ic_analytics_up_24
-    val color: Color = Color(color = 0xFF5A5AF0)
+    val resId: Int = R.drawable.ic_gift_24
+    val color: Color = Color(color = 0xFFE2A400)
 }
 
 fun AccountIconSize.toBoxSize(): Dp = when (this) {

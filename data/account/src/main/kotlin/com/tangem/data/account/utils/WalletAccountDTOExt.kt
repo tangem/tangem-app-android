@@ -10,4 +10,4 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
  * space: index 0 there means the first joint account of the wallet, never the main account.
  */
 internal val WalletAccountDTO.isJoint: Boolean
-    get() = WalletAccountDTO.Type.of(raw = type) == WalletAccountDTO.Type.JOINT
+    get() = type == WalletAccountDTO.Type.JOINT

@@ -102,14 +102,26 @@ internal class SwapProviderListItemConverter(
         -> ProviderChooseUM.ExtraUM.Empty
     }
 
-    private fun getLabel(value: SwapQuoteUM) = when (val diff = (value as? SwapQuoteUM.Content)?.diffPercent) {
-        SwapQuoteUM.Content.DifferencePercent.Best -> LabelUM.Info(
-            AuditLabelUM(
-                text = resourceReference(R.string.express_provider_best_rate),
-                type = AuditLabelUM.Type.Info,
-            ),
-        )
-        is SwapQuoteUM.Content.DifferencePercent.Diff -> LabelUM.Text(diff.percent)
-        else -> null
+    private fun getLabel(value: SwapQuoteUM): LabelUM? {
+        val content = value as? SwapQuoteUM.Content
+        if (content?.isRestricted == true) {
+            return LabelUM.Info(
+                AuditLabelUM(
+                    text = resourceReference(R.string.common_not_available),
+                    type = AuditLabelUM.Type.General,
+                ),
+            )
+        }
+
+        return when (val diff = content?.diffPercent) {
+            SwapQuoteUM.Content.DifferencePercent.Best -> LabelUM.Info(
+                AuditLabelUM(
+                    text = resourceReference(R.string.express_provider_best_rate),
+                    type = AuditLabelUM.Type.Info,
+                ),
+            )
+            is SwapQuoteUM.Content.DifferencePercent.Diff -> LabelUM.Text(diff.percent)
+            else -> null
+        }
     }
 }

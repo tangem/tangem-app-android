@@ -30,5 +30,6 @@ internal sealed class SwapProviderState {
         data object BestTrade : AdditionalBadge()
         data object Empty : AdditionalBadge()
         data object PermissionRequired : AdditionalBadge()
+        data object Unavailable : AdditionalBadge()
     }
 }

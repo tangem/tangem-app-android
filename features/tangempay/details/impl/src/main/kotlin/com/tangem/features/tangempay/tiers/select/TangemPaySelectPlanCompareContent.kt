@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,16 +24,21 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.formatAnnotatedWithLinks
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun ComparePlansBottomSheet(compare: TangemPaySelectPlanUM.ComparePlans?) {
+internal fun ComparePlansBottomSheet(
+    compare: TangemPaySelectPlanUM.ComparePlans?,
+    onLinkClick: (url: String) -> Unit,
+) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = compare != null,
@@ -61,17 +67,18 @@ internal fun ComparePlansBottomSheet(compare: TangemPaySelectPlanUM.ComparePlans
         },
         content = {
             if (compare != null) {
-                ComparePlansContent(compare)
+                ComparePlansContent(compare = compare, onLinkClick = onLinkClick)
             }
         },
     )
 }
 
 @Composable
-private fun ComparePlansContent(compare: TangemPaySelectPlanUM.ComparePlans) {
+private fun ComparePlansContent(compare: TangemPaySelectPlanUM.ComparePlans, onLinkClick: (url: String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(TangemPayTestTags.COMPARE_PLANS_CONTENT)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
@@ -82,6 +89,7 @@ private fun ComparePlansContent(compare: TangemPaySelectPlanUM.ComparePlans) {
                 title = attribute,
                 plans = compare.plans,
                 attributeIndex = attributeIndex,
+                onLinkClick = onLinkClick,
             )
         }
     }
@@ -92,11 +100,14 @@ private fun CompareSection(
     title: TextReference,
     plans: List<TangemPaySelectPlanUM.ComparePlans.Plan>,
     attributeIndex: Int,
+    onLinkClick: (url: String) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            text = title.resolveReference(),
+            modifier = Modifier
+                .testTag(TangemPayTestTags.COMPARE_PLANS_SECTION_TITLE)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            text = formatAnnotatedWithLinks(rawString = title.resolveReference(), onLinkClick = onLinkClick),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
         )
@@ -111,6 +122,7 @@ private fun CompareSection(
                     name = plan.name,
                     value = plan.values.getOrNull(attributeIndex) ?: stringReference(""),
                     divider = planIndex != plans.lastIndex,
+                    onLinkClick = onLinkClick,
                 )
             }
         }
@@ -118,8 +130,14 @@ private fun CompareSection(
 }
 
 @Composable
-private fun CompareRow(name: TextReference, value: TextReference, divider: Boolean) {
+private fun CompareRow(
+    name: TextReference,
+    value: TextReference,
+    divider: Boolean,
+    onLinkClick: (url: String) -> Unit,
+) {
     TangemRow(
+        modifier = Modifier.testTag(TangemPayTestTags.COMPARE_PLANS_ROW),
         divider = divider,
         contentLead = TangemRowContentLead.End,
         verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -134,7 +152,7 @@ private fun CompareRow(name: TextReference, value: TextReference, divider: Boole
         },
         valueSlot = {
             TangemRowText(
-                text = value,
+                text = formatAnnotatedWithLinks(rawString = value.resolveReference(), onLinkClick = onLinkClick),
                 role = TangemRowTextRole.Value,
                 maxLines = Int.MAX_VALUE,
             )
@@ -152,7 +170,7 @@ private fun ComparePlansContentPreview() {
                 .fillMaxWidth()
                 .background(TangemTheme.colors3.bg.primary),
         ) {
-            ComparePlansContent(compare = previewCompare())
+            ComparePlansContent(compare = previewCompare(), onLinkClick = {})
         }
     }
 }
@@ -164,6 +182,7 @@ private fun previewCompare() = TangemPaySelectPlanUM.ComparePlans(
         stringReference("Plan fee"),
         stringReference("FX fee (for non-USD purchases)"),
         stringReference("Daily spending limit, per card"),
+        stringReference("Additional benefits"),
     ),
     plans = persistentListOf(
         TangemPaySelectPlanUM.ComparePlans.Plan(
@@ -174,6 +193,7 @@ private fun previewCompare() = TangemPaySelectPlanUM.ComparePlans(
                 stringReference("$0"),
                 stringReference("1%"),
                 stringReference("$10,000"),
+                stringReference("—"),
             ),
         ),
         TangemPaySelectPlanUM.ComparePlans.Plan(
@@ -184,6 +204,7 @@ private fun previewCompare() = TangemPaySelectPlanUM.ComparePlans(
                 stringReference("$29.99/month"),
                 stringReference("1%\n2%\n3%"),
                 stringReference("$50,000"),
+                stringReference("Airport perks and other [Visa benefits](https://tangem.com)"),
             ),
         ),
     ),

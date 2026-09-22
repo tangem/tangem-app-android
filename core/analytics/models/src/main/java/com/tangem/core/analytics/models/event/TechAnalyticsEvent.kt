@@ -50,4 +50,21 @@ sealed class TechAnalyticsEvent(
             "Patch" to patch,
         ),
     )
+
+    class ShaderCrashDetected(
+        model: String,
+        manufacturer: String,
+        hardware: String,
+        androidVersion: String,
+        crashCount: String,
+    ) : TechAnalyticsEvent(
+        event = "Shader Crash Detected",
+        params = mapOf(
+            "Model" to model,
+            "Manufacturer" to manufacturer,
+            "Hardware" to hardware,
+            "Android Version" to androidVersion,
+            "Crash Count" to crashCount,
+        ),
+    )
 }

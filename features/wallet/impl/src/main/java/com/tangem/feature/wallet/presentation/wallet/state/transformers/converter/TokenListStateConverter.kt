@@ -14,7 +14,6 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
@@ -137,12 +136,8 @@ internal class TokenListStateConverter(
         }
 
         val accountItems = accountList.accountStatuses
-            .filterCryptoPortfolio()
-            .map { accountStatus ->
-                when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.map()
-                }
-            }
+            .filterIsInstance<AccountStatus.Personal>()
+            .map { accountStatus -> accountStatus.map() }
         return WalletTokensListState.ContentState.PortfolioContent(
             items = accountItems.toPersistentList(),
             organizeTokensButtonConfig = getOrganizeTokensButtonStateV2(accountList = accountList),
