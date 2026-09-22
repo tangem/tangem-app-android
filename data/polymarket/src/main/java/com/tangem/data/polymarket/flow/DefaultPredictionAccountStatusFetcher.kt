@@ -146,6 +146,7 @@ internal class DefaultPredictionAccountStatusFetcher @Inject constructor(
                 PredictionAccountStatusValue.Active(
                     source = StatusSource.ACTUAL,
                     balance = balanceAllowance.balance,
+                    positionsValue = null,
                     fiatRate = null,
                     depositCurrency = collateralCurrencyFactory.createDepositTarget(),
                     depositAddress = storedDepositAddress(userWalletId = userWalletId),

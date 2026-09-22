@@ -7,17 +7,32 @@ data class BankAccount(
     val details: BankAccountDetails,
 )
 
+/**
+ * The hub's view of the saved recipients, taken from a single `GET /account/bank-accounts`: [recents] is the
+ * usage-ordered shortlist, while [hasSavedAccounts] tells whether anything is saved at all — recipients added
+ * earlier or on another device are reachable only through "See all", and that needs no second request.
+ */
+data class RecentBankAccounts(
+    val recents: List<BankAccount>,
+    val hasSavedAccounts: Boolean,
+)
+
+/**
+ * Only the beneficiary and the account number are guaranteed: a recipient saved through another Rain client can
+ * come back described as partially as the backend has it. A recipient added in the wizard carries every field,
+ * because the order the app sends requires them all.
+ */
 data class BankAccountDetails(
-    val currency: String,
-    val rail: BankRail,
+    val currency: String?,
+    val rail: BankRail?,
     val isThirdParty: Boolean,
     val beneficiary: Beneficiary,
-    val beneficiaryAddress: PostalAddress,
-    val bankName: String,
-    val bankAddress: PostalAddress,
+    val beneficiaryAddress: PostalAddress?,
+    val bankName: String?,
+    val bankAddress: PostalAddress?,
     val accountNumber: String,
-    val routingNumber: String,
-    val accountType: BankAccountType,
+    val routingNumber: String?,
+    val accountType: BankAccountType?,
 )
 
 sealed interface Beneficiary {
