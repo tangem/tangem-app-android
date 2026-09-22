@@ -3,8 +3,6 @@ package com.tangem.features.collectibles.impl.machinedetails.model.converter
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.R
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
@@ -41,7 +39,7 @@ internal object CollectiblesMachineDetailRowsConverter :
                     label = resourceReference(R.string.collectibles_machine_detail_instant_buyback),
                     value = resourceReference(
                         R.string.collectibles_machine_buyback_value,
-                        wrappedList(value.instantBuybackPercent.toBigDecimal().format { percent() }),
+                        wrappedList("${value.instantBuybackPercent}%"),
                     ),
                 ),
             )

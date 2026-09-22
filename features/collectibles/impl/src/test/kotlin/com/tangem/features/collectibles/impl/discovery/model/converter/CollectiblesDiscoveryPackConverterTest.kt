@@ -120,14 +120,14 @@ internal class CollectiblesDiscoveryPackConverterTest {
     }
 
     @Test
-    fun `GIVEN a pack WHEN it is clicked THEN its id is reported`() {
+    fun `GIVEN a pack WHEN it is clicked THEN its external id is reported`() {
         // Arrange
-        val pack = converter.convert(createMachine(id = "machine_42"))
+        val pack = converter.convert(createMachine(id = "machine_42", externalId = "pokemon_50"))
 
         // Act
         pack.onClick()
 
         // Assert
-        assertThat(clickedPackIds).containsExactly("machine_42")
+        assertThat(clickedPackIds).containsExactly("pokemon_50")
     }
 }
