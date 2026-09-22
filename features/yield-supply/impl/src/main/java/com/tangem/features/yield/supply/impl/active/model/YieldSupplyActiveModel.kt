@@ -32,8 +32,6 @@ import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.routing.deeplink.toContextualRoute
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
@@ -80,7 +78,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
     private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -165,11 +162,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     fun onMarketingBannerDeeplink(deeplink: String): Boolean {
         val marketing = resolveMarketingDeeplink(deeplink)
-        if (marketing == MarketingDeeplink.SWAP &&
-            featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1636_SWAP_DEEPLINK_ENABLED)
-        ) {
-            return false
-        }
+        if (marketing == MarketingDeeplink.SWAP) return false
         val route = marketing.toContextualRoute(
             userWalletId = userWalletId,
             currency = cryptoCurrency,

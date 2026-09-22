@@ -34,7 +34,6 @@ import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.tron.toTransactionExtras
 import com.tangem.feature.swap.domain.tron.tronSwapPayload
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
@@ -70,7 +69,6 @@ class DexSwapFeeCalculator(
     private val walletManagersFacade: WalletManagersFacade,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
 ) {
 
     suspend fun calculate(
@@ -98,7 +96,7 @@ class DexSwapFeeCalculator(
                 transaction = transaction,
                 otherNativeFee = otherNativeFee,
             )
-            isTron(networkRawId) && swapFeatureToggles.isTronDexSwapEnabled -> calculateTronFee(
+            isTron(networkRawId) -> calculateTronFee(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 otherNativeFee = otherNativeFee,
@@ -203,7 +201,7 @@ class DexSwapFeeCalculator(
     }
 
     /**
-     * TRON DEX swap fee ([REDACTED_TASK_KEY], gated by [SwapFeatureToggles.isTronDexSwapEnabled]).
+     * TRON DEX swap fee.
      *
      * The provider ships a whole serialized transaction in `txData` rather than the plain call data
      * an EVM payload carries, and it is either a router call or a deposit transfer — [tronSwapPayload]
