@@ -11,30 +11,26 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class SetLoadingAccountTokenListTransformer(
     appCurrency: AppCurrency,
-    private val accountList: List<AccountStatus>,
+    private val accountList: List<AccountStatus.CryptoPortfolio>,
     private val isAccountsMode: Boolean,
 ) : TokenListUMTransformer {
 
     private val accountListItemConverter = LoadingAccountTokenItemConverter(appCurrency)
 
     override fun transform(prevState: TokenListUM): TokenListUM {
-        val totalTokensCount = accountList
-            .filterIsInstance<AccountStatus.Personal>()
-            .sumOf { account -> account.tokenList.flattenCurrencies().size }
+        val totalTokensCount = accountList.sumOf { account -> account.tokenList.flattenCurrencies().size }
 
         return prevState.copy(
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
             tokensListData = if (isAccountsMode) {
                 TokenListUMData.AccountList(
-                    tokensList = accountListItemConverter.convertList(
-                        accountList.filterIsInstance<AccountStatus.Personal>(),
-                    ).toPersistentList(),
+                    tokensList = accountListItemConverter.convertList(accountList).toPersistentList(),
                     totalTokensCount = totalTokensCount,
                 )
             } else {
                 TokenListUMData.TokenList(
-                    tokensList = accountList.filterIsInstance<AccountStatus.Personal>().flatMap { account ->
+                    tokensList = accountList.flatMap { account ->
                         LoadingTokenListItemConverter.convertList(
                             account.tokenList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
                         )
