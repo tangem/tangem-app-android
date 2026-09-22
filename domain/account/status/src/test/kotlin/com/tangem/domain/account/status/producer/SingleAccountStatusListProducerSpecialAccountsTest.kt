@@ -65,6 +65,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
             val value = PredictionAccountStatusValue.Active(
                 source = StatusSource.ACTUAL,
                 balance = BigDecimal.TEN,
+                positionsValue = null,
                 fiatRate = BigDecimal.ONE,
                 depositCurrency = mockk(relaxed = true),
                 depositAddress = "0xbridge0000000000000000000000000000000001",
