@@ -15,7 +15,8 @@ internal fun BankWithdrawDraft.toOrderRequest(): BankOfframpOrderRequest? {
         ?: toNewBankAccountDetails()?.let(BankOfframpRecipient::New)
         ?: return null
     return BankOfframpOrderRequest(
-        amountInCents = amount.movePointRight(CENTS_SCALE).setScale(0, RoundingMode.HALF_UP).longValueExact(),
+        // Truncated, not rounded: the balance check runs on the raw amount, so rounding up could overcharge.
+        amountInCents = amount.movePointRight(CENTS_SCALE).setScale(0, RoundingMode.DOWN).longValueExact(),
         chainId = source.chainId,
         tokenContractAddress = source.token.contractAddress,
         rail = destination.rail,

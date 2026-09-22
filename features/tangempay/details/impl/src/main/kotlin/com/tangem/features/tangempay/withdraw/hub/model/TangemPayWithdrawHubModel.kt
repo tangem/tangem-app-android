@@ -13,7 +13,6 @@ import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
-import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
@@ -54,7 +53,6 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val uiMessageSender: UiMessageSender,
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase,
-    private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val markBankAccountUsedUseCase: MarkBankAccountUsedUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
@@ -98,22 +96,11 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         modelScope.launch {
             val recents = getRecentBankAccountsUseCase(params.userWalletId).fold(
                 ifLeft = { RecentsState.Failed },
-                ifRight = { accounts ->
-                    RecentsState.Loaded(
-                        accounts = accounts,
-                        hasSavedAccounts = accounts.isNotEmpty() || hasSavedAccounts(),
-                    )
-                },
+                ifRight = { RecentsState.Loaded(accounts = it.recents, hasSavedAccounts = it.hasSavedAccounts) },
             )
             state.update { it.copy(recents = recents) }
         }.saveIn(recentsJobHolder)
     }
-
-    /** With an empty usage log "See all" is the only way to reach recipients saved earlier or on another device. */
-    private suspend fun hasSavedAccounts(): Boolean = getBankAccountsUseCase(params.userWalletId).fold(
-        ifLeft = { false },
-        ifRight = { accounts -> accounts.isNotEmpty() },
-    )
 
     private fun loadOptions() {
         state.update { it.copy(options = OptionsState.Loading) }
