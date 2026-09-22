@@ -118,6 +118,49 @@ internal class PredictionAccountStatusValueTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class TotalBalanceOf {
+
+        @Test
+        fun `GIVEN positions value known WHEN totalBalance THEN it is the collateral plus the positions`() {
+            // Arrange
+            val value = active(balance = BigDecimal("10.5"), fiatRate = null, positionsValue = BigDecimal("2.25"))
+
+            // Act
+            val actual = value.totalBalance
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(BigDecimal("12.75"))
+        }
+
+        @Test
+        fun `GIVEN positions value unknown WHEN totalBalance THEN it is unknown too`() {
+            // Arrange
+            val value = active(balance = BigDecimal("10.5"), fiatRate = null, positionsValue = null)
+
+            // Act
+            val actual = value.totalBalance
+
+            // Assert
+            Truth.assertThat(actual).isNull()
+        }
+
+        @Test
+        fun `GIVEN positions value known WHEN totalFiatBalance THEN the wallet total counts the collateral only`() {
+            // Arrange
+            val value = active(balance = BigDecimal("10"), fiatRate = BigDecimal("2"), positionsValue = BigDecimal("5"))
+
+            // Act
+            val actual = value.totalFiatBalance
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(
+                TotalFiatBalance.Loaded(amount = BigDecimal("20"), source = StatusSource.ACTUAL),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class CopySealed {
 
         @ParameterizedTest
@@ -193,9 +236,11 @@ internal class PredictionAccountStatusValueTest {
             balance: BigDecimal,
             fiatRate: BigDecimal?,
             source: StatusSource = StatusSource.ACTUAL,
+            positionsValue: BigDecimal? = null,
         ) = PredictionAccountStatusValue.Active(
             source = source,
             balance = balance,
+            positionsValue = positionsValue,
             fiatRate = fiatRate,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge",
