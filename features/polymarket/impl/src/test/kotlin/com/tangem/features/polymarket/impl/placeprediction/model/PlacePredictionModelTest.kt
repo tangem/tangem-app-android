@@ -178,6 +178,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "1")
@@ -206,6 +207,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -224,6 +226,7 @@ internal class PlacePredictionModelTest {
         coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "10")
@@ -243,7 +246,7 @@ internal class PlacePredictionModelTest {
             // Arrange
             coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
             val model = createModel(testScope = this)
-            model.onScreenShown()
+            model.onAmountShown()
 
             // Act
             model.onAmountChange(value = "10")
@@ -261,6 +264,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         coEvery { getQuoteUseCase(request = any()) } returns
             createQuote(status = PredictionQuoteStatus.MARKET_CLOSED).right()
 
@@ -281,6 +285,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -305,8 +310,10 @@ internal class PlacePredictionModelTest {
 
         // Act
         model.onSlippageClick()
+        model.onAmountHidden()
         model.onSlippageValueChange(value = "1.5")
         model.onSlippageConfirmClick()
+        model.onAmountShown()
         advanceTimeBy(delayTimeMillis = 1)
 
         // Assert
@@ -323,6 +330,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -344,6 +352,7 @@ internal class PlacePredictionModelTest {
         coEvery { getQuoteUseCase(request = any()) } returns createQuote(total = BigDecimal("120")).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "100")
@@ -365,6 +374,7 @@ internal class PlacePredictionModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -387,6 +397,7 @@ internal class PlacePredictionModelTest {
         // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -423,6 +434,7 @@ internal class PlacePredictionModelTest {
             createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "10")
@@ -443,6 +455,7 @@ internal class PlacePredictionModelTest {
             createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "10")
@@ -462,6 +475,7 @@ internal class PlacePredictionModelTest {
             createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "10")
@@ -482,6 +496,7 @@ internal class PlacePredictionModelTest {
                 createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
 
             // Act
             model.onAmountChange(value = "1")
@@ -500,6 +515,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -522,6 +538,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "0.001")
@@ -539,6 +556,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "10")
@@ -560,6 +578,7 @@ internal class PlacePredictionModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         assertThat(model.uiState.value.isPrimaryButtonEnabled).isTrue()
@@ -580,6 +599,7 @@ internal class PlacePredictionModelTest {
         coEvery { getQuoteUseCase(request = any()) } returns createQuote(total = BigDecimal("120")).right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
 
         // Act
         model.onAmountChange(value = "100")
@@ -598,11 +618,12 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
         // Act
-        model.onScreenHidden()
+        model.onAmountHidden()
         advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
@@ -663,6 +684,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -683,6 +705,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         var submitWhilePosting: SubmitUM? = null
@@ -710,6 +733,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -728,6 +752,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any(), any()) } returns
@@ -748,6 +773,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any(), any()) } returns
@@ -768,11 +794,12 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { signOrderInteractor(request = any()) } returns
             PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
-        model.onScreenHidden()
+        model.onAmountHidden()
 
         // Act
         model.onPlaceClick()
@@ -790,11 +817,12 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { signOrderInteractor(request = any()) } returns
                 PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Act
             model.onPlaceClick()
@@ -813,13 +841,14 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { signOrderInteractor(request = any()) } returns
             PredictionOrderFailure.Invalid(
                 error = PredictionOrderValidationError.StaleQuote(ageMillis = 120_000),
             ).left()
-        model.onScreenHidden()
+        model.onAmountHidden()
 
         // Act
         model.onPlaceClick()
@@ -839,6 +868,7 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } returns
@@ -863,11 +893,12 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any(), any()) } returns
             createPlaceResult(takingAmount = BigDecimal.ZERO).right()
-        model.onScreenHidden()
+        model.onAmountHidden()
 
         // Act
         model.onPlaceClick()
@@ -887,6 +918,7 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } returns
@@ -911,6 +943,7 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
@@ -951,12 +984,13 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
             coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
                 DelayedPredictionOrderOutcome.Failed(detail = "ORDER_STATUS_CANCELED")
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Act
             model.onPlaceClick()
@@ -976,12 +1010,13 @@ internal class PlacePredictionModelTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
             coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID) } returns
                 DelayedPredictionOrderOutcome.Unconfirmed
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Act
             model.onPlaceClick()
@@ -1001,6 +1036,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult(status = "delayed").right()
@@ -1008,7 +1044,7 @@ internal class PlacePredictionModelTest {
             delay(timeMillis = 30_000)
             DelayedPredictionOrderOutcome.Unconfirmed
         }
-        model.onScreenHidden()
+        model.onAmountHidden()
         model.onPlaceClick()
         advanceTimeBy(delayTimeMillis = 1_000)
         clearMocks(router)
@@ -1032,11 +1068,12 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("1"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
-        model.onScreenHidden()
+        model.onAmountHidden()
 
         // Act
         model.onPlaceClick()
@@ -1054,6 +1091,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         val request = slot<PredictionSignRequest>()
@@ -1072,14 +1110,14 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN the summary is up WHEN a failed attempt returns to idle THEN the quote is not refreshed`() = runTest {
+    fun `GIVEN the amount step is left WHEN a failed attempt returns to idle THEN the quote is not refreshed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        model.onSummaryOpenChange(isOpen = true)
+        model.onAmountHidden()
         coEvery { signOrderInteractor(request = any()) } returns
             PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
 
@@ -1095,17 +1133,17 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN a priced quote WHEN the summary opens THEN the quote is not refreshed while it is up`() = runTest {
+    fun `GIVEN a priced quote WHEN the amount step is left THEN the quote is not refreshed`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         val shown = model.uiState.value.quote
 
         // Act
-        model.onSummaryOpenChange(isOpen = true)
+        model.onAmountHidden()
         advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
@@ -1116,7 +1154,7 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN a refresh in flight WHEN the summary opens THEN the figures shown stay AND the answer never lands`() =
+    fun `GIVEN a refresh in flight WHEN the amount step is left THEN the figures shown stay AND the answer never lands`() =
         runTest {
             // Arrange
             coEvery { getQuoteUseCase(request = any()) } returns createQuote().right() coAndThen {
@@ -1125,14 +1163,14 @@ internal class PlacePredictionModelTest {
             }
             val model = createModel(testScope = this)
             advanceUntilIdle()
-            model.onScreenShown()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val shown = model.uiState.value.quote
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
             // Act
-            model.onSummaryOpenChange(isOpen = true)
+            model.onAmountHidden()
             advanceUntilIdle()
 
             // Assert
@@ -1143,39 +1181,18 @@ internal class PlacePredictionModelTest {
         }
 
     @Test
-    fun `GIVEN the summary is up WHEN the screen is shown again THEN the quote is not refreshed`() = runTest {
+    fun `GIVEN the amount step was left WHEN it is shown again THEN the quote refreshes again at once`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        model.onSummaryOpenChange(isOpen = true)
-
-        // Act
-        model.onScreenHidden()
-        model.onScreenShown()
-        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
-
-        // Assert
-        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
-
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN the summary is up WHEN it closes THEN the quote refreshes again at once`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        model.onScreenShown()
-        model.onAmountChange(value = "10")
-        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        model.onSummaryOpenChange(isOpen = true)
+        model.onAmountHidden()
         advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Act
-        model.onSummaryOpenChange(isOpen = false)
+        model.onAmountShown()
         advanceTimeBy(delayTimeMillis = 1)
 
         // Assert
@@ -1185,39 +1202,16 @@ internal class PlacePredictionModelTest {
     }
 
     @Test
-    fun `GIVEN the order fills WHEN the summary gives way to the status THEN nothing is quoted again`() = runTest {
-        // Arrange
-        val model = createModel(testScope = this)
-        advanceUntilIdle()
-        model.onScreenShown()
-        model.onAmountChange(value = "10")
-        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        model.onSummaryOpenChange(isOpen = true)
-        model.onPlaceClick()
-        advanceUntilIdle()
-
-        // Act
-        model.onSummaryOpenChange(isOpen = false)
-        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
-
-        // Assert
-        assertThat(model.uiState.value.submit).isInstanceOf(SubmitUM.Result::class.java)
-        coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
-
-        model.onDestroy()
-    }
-
-    @Test
     fun `GIVEN the screen is hidden WHEN an attempt returns to idle THEN nothing is polled off-screen`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { signOrderInteractor(request = any()) } returns
             PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
-        model.onScreenHidden()
+        model.onAmountHidden()
 
         // Act
         model.onPlaceClick()
@@ -1234,7 +1228,7 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
@@ -1261,11 +1255,11 @@ internal class PlacePredictionModelTest {
         // Arrange
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns PolymarketAuthError.KeyNotFound.left()
-        model.onScreenHidden()
+        model.onAmountHidden()
 
         // Act
         model.onPlaceClick()
@@ -1286,7 +1280,7 @@ internal class PlacePredictionModelTest {
         advanceUntilIdle()
 
         // Act
-        model.onScreenShown()
+        model.onAmountShown()
         advanceTimeBy(delayTimeMillis = 1)
 
         // Assert
@@ -1307,7 +1301,7 @@ internal class PlacePredictionModelTest {
         advanceUntilIdle()
 
         // Act
-        model.onScreenShown()
+        model.onAmountShown()
         advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
 
         // Assert
@@ -1329,7 +1323,7 @@ internal class PlacePredictionModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         advanceTimeBy(delayTimeMillis = 1)
 
         // Act
@@ -1354,7 +1348,7 @@ internal class PlacePredictionModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
-        model.onScreenShown()
+        model.onAmountShown()
         advanceTimeBy(delayTimeMillis = 1)
 
         // Act
@@ -1388,6 +1382,7 @@ internal class PlacePredictionModelTest {
         )
         val model = createModel(testScope = this)
         advanceUntilIdle()
+        model.onAmountShown()
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -1411,6 +1406,7 @@ internal class PlacePredictionModelTest {
             val model = createModel(testScope = this)
             val slot = FakeSlotHost(model.feeSheetNavigation)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -1452,7 +1448,7 @@ internal class PlacePredictionModelTest {
             val model = createModel(testScope = this)
             val slot = FakeSlotHost(model.feeSheetNavigation)
             advanceUntilIdle()
-            model.onScreenShown()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
@@ -1477,7 +1473,7 @@ internal class PlacePredictionModelTest {
             val model = createModel(testScope = this)
             val slot = FakeSlotHost(model.feeSheetNavigation)
             advanceUntilIdle()
-            model.onScreenShown()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             model.onFeeClick()
@@ -1502,6 +1498,7 @@ internal class PlacePredictionModelTest {
             val model = createModel(testScope = this)
             val slot = FakeSlotHost(model.feeSheetNavigation)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             model.onFeeClick()
@@ -1544,7 +1541,7 @@ internal class PlacePredictionModelTest {
             advanceUntilIdle()
 
             // Act
-            model.onScreenShown()
+            model.onAmountShown()
             runCurrent()
 
             // Assert
@@ -1559,7 +1556,7 @@ internal class PlacePredictionModelTest {
             advanceUntilIdle()
 
             // Act
-            model.onScreenShown()
+            model.onAmountShown()
             runCurrent()
 
             // Assert
@@ -1600,7 +1597,7 @@ internal class PlacePredictionModelTest {
             advanceUntilIdle()
 
             // Act
-            model.onScreenShown()
+            model.onAmountShown()
             runCurrent()
 
             // Assert
@@ -1627,6 +1624,7 @@ internal class PlacePredictionModelTest {
             coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
+            model.onAmountShown()
 
             // Act
             model.onAmountChange(value = "12.80")
@@ -1663,7 +1661,7 @@ internal class PlacePredictionModelTest {
                     createSellQuote(shares = BigDecimal("3")).copy(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
                 val model = createModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
-                model.onScreenShown()
+                model.onAmountShown()
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val request = slot<PredictionSignRequest>()
                 coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
@@ -1689,6 +1687,7 @@ internal class PlacePredictionModelTest {
                 coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
                 val model = createModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
+                model.onAmountShown()
                 model.onAmountChange(value = "12.80")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 val request = slot<PredictionSignRequest>()
@@ -1714,11 +1713,12 @@ internal class PlacePredictionModelTest {
                 coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = BigDecimal("12.8")).right()
                 val model = createModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
+                model.onAmountShown()
                 model.onAmountChange(value = "12.80")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
                     createPosition(size = BigDecimal("12.799")).right()
-                model.onScreenHidden()
+                model.onAmountHidden()
 
                 // Act
                 model.onPlaceClick()
@@ -1743,11 +1743,12 @@ internal class PlacePredictionModelTest {
                 createSellQuote(shares = BigDecimal("40")).copy(total = BigDecimal("0.5")).right()
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "40")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
                 createPosition(size = BigDecimal("39.99")).right()
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Act
             model.onPlaceClick()
@@ -1767,11 +1768,12 @@ internal class PlacePredictionModelTest {
                 coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
                 val model = createModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
+                model.onAmountShown()
                 model.onAmountChange(value = "12.80")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
                     createPosition().copy(isAcceptingOrders = false).right()
-                model.onScreenHidden()
+                model.onAmountHidden()
 
                 // Act
                 model.onPlaceClick()
@@ -1792,10 +1794,11 @@ internal class PlacePredictionModelTest {
             coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "12.80")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Act
             model.onPlaceClick()
@@ -1817,11 +1820,12 @@ internal class PlacePredictionModelTest {
             coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "12.80")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
                 PolymarketPositionsError.Network.left()
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Act
             model.onPlaceClick()
@@ -1843,6 +1847,7 @@ internal class PlacePredictionModelTest {
             // Act
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
+            model.onAmountShown()
             model.onAmountChange(value = "1")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
@@ -1862,10 +1867,11 @@ internal class PlacePredictionModelTest {
                 coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
                 val model = createModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
+                model.onAmountShown()
                 model.onAmountChange(value = "12.80")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
                 coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
-                model.onScreenHidden()
+                model.onAmountHidden()
 
                 // Act
                 model.onPlaceClick()
@@ -1890,9 +1896,9 @@ internal class PlacePredictionModelTest {
                 createPosition().right()
 
             // Act
-            model.onScreenShown()
+            model.onAmountShown()
             runCurrent()
-            model.onScreenHidden()
+            model.onAmountHidden()
 
             // Assert
             val order = model.uiState.value.order as OrderSideUM.Sell
@@ -1933,7 +1939,7 @@ internal class PlacePredictionModelTest {
             advanceUntilIdle()
 
             // Act
-            model.onScreenShown()
+            model.onAmountShown()
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
@@ -1953,7 +1959,7 @@ internal class PlacePredictionModelTest {
             // Act
             val model = createModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
-            model.onScreenShown()
+            model.onAmountShown()
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
