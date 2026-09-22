@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
+import java.math.BigDecimal
 
 /** Read-only portfolio. Every request carries the Tangem wallet id and its deposit-wallet address. */
 interface PolymarketPositionsRepository {
@@ -34,4 +35,7 @@ interface PolymarketPositionsRepository {
         addresses: PolymarketAddresses,
         id: PolymarketPositionId,
     ): Either<PolymarketPositionsError, PolymarketPosition.Open?>
+
+    /** The current value of every open holding, read from the data API without a wallet id. Zero when there are none. */
+    suspend fun getPositionsValue(addresses: PolymarketAddresses): Either<PolymarketPositionsError, BigDecimal>
 }
