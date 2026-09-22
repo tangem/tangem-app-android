@@ -210,6 +210,29 @@ class SendConfirmationNotificationsTransformerV2Test {
     }
 
     @Test
+    fun `GIVEN joint signatures and total over balance WHEN transform THEN there is no footer`() = runTest {
+        // Arrange
+        val feeSelectorUM = createFiatConvertibleFeeSelectorUM(feeValue = BigDecimal("0.001"))
+        val transformer = SendConfirmationNotificationsTransformerV2(
+            feeSelectorUM = feeSelectorUM,
+            amountUM = createTestAmountUM(),
+            analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrency = cryptoCurrency,
+            appCurrency = appCurrency,
+            analyticsCategoryName = analyticsCategoryName,
+            isFeeSubtractedFromAmount = true,
+            isFeeExceedingBalance = false,
+        )
+        val initialState = createTestConfirmUM().copy(signaturesUM = SendSignaturesUM(threshold = 2, membersCount = 3))
+
+        // Act
+        val actual = transformer.transform(initialState) as ConfirmUM.Content
+
+        // Assert
+        Truth.assertThat(actual.sendingFooter).isEqualTo(TextReference.EMPTY)
+    }
+
+    @Test
     fun `GIVEN the first joint operation WHEN transform THEN the note names the deployment share of the fee`() = runTest {
         // Arrange — 300 000 deployment gas at 2 gwei = 0.0006 ETH, worth $1.20 at $2000
         val fee = Fee.Ethereum.Legacy(
