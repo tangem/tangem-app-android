@@ -504,7 +504,6 @@ dependencies {
     testImplementation(projects.common.test)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
-    androidTestImplementation(projects.core.remote)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)
