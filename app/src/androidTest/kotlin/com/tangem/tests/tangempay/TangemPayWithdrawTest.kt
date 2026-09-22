@@ -6,6 +6,7 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
+import com.tangem.common.utils.findWireMockRequestBodies
 import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
@@ -15,7 +16,9 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -338,6 +341,124 @@ class TangemPayWithdrawTest : BaseTestCase() {
                         transactionRowWithText(withdrawalRowTitle).assertIsDisplayed()
                         transactionRowWithText(withdrawalAmountText).assertIsDisplayed()
                     }
+                }
+            }
+        }
+    }
+
+    @AllureId("11386")
+    @DisplayName("Tangem Pay: the withdrawal is addressed to the payment-account token that was picked")
+    @Test
+    fun withdrawFromSelectedPaymentAccountTokenTest() {
+        val balanceScenario = "tangem_pay_balance_update"
+        val balanceAfterState = "MultiNetworkStatusesAfterWithdraw"
+        val initialBalanceText = "17.00"
+        val balanceAfterText = "12.00"
+        val sourceToken = "USDT"
+        val sourceNetwork = "BNB Smart Chain"
+        val receiveToken = "Bitcoin"
+        val withdrawAmount = "5"
+        val withdrawEndpoint = "/bff-v2/v1/customer/card/withdraw"
+        val bscChainId = 56
+        val usdtBscContractAddress = "0x55d398326f99059ff775485246999027b3197955"
+
+        setupHooks().run {
+            step("Set WireMock scenarios for a multichain Tangem Pay withdrawal") {
+                setTangemPayMultiNetworkWithdrawScenarios()
+            }
+            step("Open Tangem Pay withdraw Swap screen") {
+                openTangemPayWithdrawSwapScreen(expectedBalance = initialBalanceText)
+            }
+            step("Choose source token '$sourceToken' on '$sourceNetwork'") {
+                chooseWithdrawSourceToken(tokenName = sourceToken, networkName = sourceNetwork)
+            }
+            step("Choose receive token '$receiveToken'") { chooseWithdrawReceiveToken(receiveToken) }
+            step("Enter withdraw amount '$withdrawAmount'") { enterWithdrawAmount(withdrawAmount) }
+            step("Wait for the receive amount to load (quote ready, HoldToConfirm enabled)") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { receiveAmount.assertIsDisplayed() }
+                }
+            }
+            val withdrawalsBefore = findWireMockRequestBodies("POST", withdrawEndpoint).size
+            step("Confirm swap by holding the button") {
+                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+            }
+            step("Wait for 'Swap in progress' screen") {
+                onSwapSuccessScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) { title.assertIsDisplayed() }
+                }
+            }
+            step("Assert the withdrawal names '$sourceToken' on '$sourceNetwork'") {
+                val withdrawals = findWireMockRequestBodies("POST", withdrawEndpoint)
+                assertEquals(
+                    "Exactly one withdrawal should be submitted",
+                    1,
+                    withdrawals.size - withdrawalsBefore,
+                )
+                val body = JSONObject(withdrawals.last())
+                assertEquals("Withdrawal should name the BNB Smart Chain id", bscChainId, body.getInt("chain_id"))
+                assertEquals(
+                    "Withdrawal should name the selected USDT contract",
+                    usdtBscContractAddress,
+                    body.getString("token_contract_address").lowercase(),
+                )
+            }
+            step("Click on 'Close' button") {
+                onSwapSuccessScreen { closeButton.performClick() }
+            }
+            step("Switch WireMock scenario '$balanceScenario' to '$balanceAfterState'") {
+                setWireMockScenarioState(balanceScenario, balanceAfterState)
+            }
+            step("Pull to refresh Tangem Pay") { pullToRefreshTangemPay() }
+            step("Assert the balance '$balanceAfterText' is displayed") {
+                onTangemPayMainScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        balance.assertTextContainsSafe(balanceAfterText, substring = true)
+                    }
+                }
+            }
+        }
+    }
+
+    @AllureId("11385")
+    @DisplayName("Tangem Pay: the withdraw source selector hides zero-balance payment-account tokens")
+    @Ignore("[REDACTED_JIRA]")
+    @Test
+    fun withdrawSourceSelectorHidesZeroBalanceTokensTest() {
+        val initialBalanceText = "17.00"
+        val usdcToken = "USDC"
+        val usdtToken = "USDT"
+        val polygonNetwork = "Polygon"
+        val bscNetwork = "BNB Smart Chain"
+        val allFilterLabel = getResourceString(com.tangem.core.res.R.string.common_all)
+
+        setupHooks().run {
+            step("Set WireMock scenarios for a multichain Tangem Pay withdrawal") {
+                setTangemPayMultiNetworkWithdrawScenarios()
+            }
+            step("Open Tangem Pay withdraw Swap screen") {
+                openTangemPayWithdrawSwapScreen(expectedBalance = initialBalanceText)
+            }
+            step("Open the source token selector on the 'Payment' account") {
+                openWithdrawSourceTokenSelector()
+            }
+            step("Assert only the funded payment-account tokens are displayed") {
+                onSwapSelectTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        tokenWithNameAndNetwork(usdcToken, polygonNetwork).assertIsDisplayed()
+                    }
+                    tokenWithNameAndNetwork(usdtToken, bscNetwork).assertIsDisplayed()
+                    tokenWithNameAndNetwork(usdcToken, bscNetwork).assertDoesNotExist()
+                }
+            }
+            step("Select the '$allFilterLabel' balance filter") { selectBalanceFilter(allFilterLabel) }
+            step("Assert the zero-balance token is displayed too") {
+                onSwapSelectTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        tokenWithNameAndNetwork(usdcToken, bscNetwork).assertIsDisplayed()
+                    }
+                    tokenWithNameAndNetwork(usdcToken, polygonNetwork).assertIsDisplayed()
+                    tokenWithNameAndNetwork(usdtToken, bscNetwork).assertIsDisplayed()
                 }
             }
         }

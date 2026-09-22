@@ -69,6 +69,45 @@ internal class BankWithdrawHeaderFactoryTest {
     }
 
     @Test
+    fun `GIVEN new personal entry with a saved recipient WHEN create THEN title shows the recipient`() {
+        // Arrange
+        val recipient = bankAccount(
+            id = "acc-1",
+            beneficiary = Beneficiary.Individual(firstName = "Andrei", lastName = "Melnikov"),
+        )
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal, recipient = recipient)
+
+        // Act
+        val actual = BankWithdrawHeaderFactory.create(draft, TangemPayBankWithdrawInnerRoute.Amount)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankWithdrawHeaderUM(
+                title = resourceReference(R.string.tangempay_withdraw_bank_title_to_recipient, wrappedList("Andrei M.")),
+                subtitle = null,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN new business entry with a saved recipient WHEN create THEN title shows the recipient`() {
+        // Arrange
+        val recipient = bankAccount(id = "acc-2", beneficiary = Beneficiary.Business(name = "Arasaka"))
+        val draft = BankWithdrawDraft(entry = BankWithdrawEntry.NewBusiness, recipient = recipient)
+
+        // Act
+        val actual = BankWithdrawHeaderFactory.create(draft, TangemPayBankWithdrawInnerRoute.Amount)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankWithdrawHeaderUM(
+                title = resourceReference(R.string.tangempay_withdraw_bank_title_to_recipient, wrappedList("Arasaka")),
+                subtitle = null,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN see all entry without recipient WHEN create THEN generic withdraw title`() {
         // Arrange
         val draft = BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll)

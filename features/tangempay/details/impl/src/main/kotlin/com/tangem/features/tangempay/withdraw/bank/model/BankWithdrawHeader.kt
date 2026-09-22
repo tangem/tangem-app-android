@@ -16,7 +16,7 @@ internal data class BankWithdrawHeaderUM(
 internal object BankWithdrawHeaderFactory {
 
     fun create(draft: BankWithdrawDraft, step: TangemPayBankWithdrawInnerRoute): BankWithdrawHeaderUM {
-        val counter = BankWithdrawFlow.stepCounter(entry = draft.entry, step = step)
+        val counter = BankWithdrawFlow.stepCounter(draft = draft, step = step)
         return BankWithdrawHeaderUM(
             title = title(draft = draft, step = step),
             subtitle = counter?.let {
@@ -34,21 +34,20 @@ internal object BankWithdrawHeaderFactory {
         else -> recipientTitle(draft)
     }
 
-    private fun recipientTitle(draft: BankWithdrawDraft): TextReference = when (draft.entry) {
-        BankWithdrawEntry.NewPersonal -> resourceReference(R.string.tangempay_withdraw_hub_to_personal_account)
-        BankWithdrawEntry.NewBusiness -> resourceReference(R.string.tangempay_withdraw_hub_to_business_account)
-        is BankWithdrawEntry.Saved,
-        BankWithdrawEntry.SeeAll,
-        -> {
-            val recipient = draft.recipient
-            if (recipient == null) {
-                resourceReference(R.string.tangempay_card_details_withdraw)
-            } else {
-                resourceReference(
-                    R.string.tangempay_withdraw_bank_title_to_recipient,
-                    wrappedList(recipient.details.beneficiary.toShortName()),
-                )
-            }
+    private fun recipientTitle(draft: BankWithdrawDraft): TextReference {
+        val recipient = draft.recipient
+        if (recipient != null) {
+            return resourceReference(
+                R.string.tangempay_withdraw_bank_title_to_recipient,
+                wrappedList(recipient.details.beneficiary.toShortName()),
+            )
+        }
+        return when (draft.entry) {
+            BankWithdrawEntry.NewPersonal -> resourceReference(R.string.tangempay_withdraw_hub_to_personal_account)
+            BankWithdrawEntry.NewBusiness -> resourceReference(R.string.tangempay_withdraw_hub_to_business_account)
+            is BankWithdrawEntry.Saved,
+            BankWithdrawEntry.SeeAll,
+            -> resourceReference(R.string.tangempay_card_details_withdraw)
         }
     }
 }
