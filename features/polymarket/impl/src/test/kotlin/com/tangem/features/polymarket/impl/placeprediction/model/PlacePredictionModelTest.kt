@@ -1520,10 +1520,31 @@ internal class PlacePredictionModelTest {
 
             // Assert
             assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Hidden)
-            coVerify(exactly = PolymarketConst.POSITION_INDEXING_READS) {
+            coVerify(exactly = PolymarketConst.CREATED_POSITION_READS) {
                 positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID)
             }
         }
+
+        @Test
+        fun `GIVEN the position indexes on the twelfth read WHEN a buy fills THEN view position is still available`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany
+                    List(size = 11) { null.right() } + createPosition().right()
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(viewPosition(model)).isEqualTo(ViewPositionUM.Available)
+                coVerify(exactly = 12) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+            }
 
         @Test
         fun `GIVEN the position read fails WHEN a buy fills THEN the read is retried like a missing position`() =
