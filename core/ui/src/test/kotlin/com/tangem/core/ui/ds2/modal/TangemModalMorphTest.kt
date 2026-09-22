@@ -2,10 +2,16 @@ package com.tangem.core.ui.ds2.modal
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Density
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -104,6 +110,67 @@ internal class TangemModalMorphTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ContentHeightCache {
+
+        private val measurable: IntrinsicMeasurable = mockk()
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(measurable)
+        }
+
+        @Test
+        fun `GIVEN a running morph WHEN heightOf repeats THEN the content is probed once`() {
+            // Arrange
+            val cache = ModalContentHeightCache()
+            every { measurable.minIntrinsicHeight(any()) } returns PROBED_HEIGHT
+
+            // Act
+            val first = cache.heightOf(measurable = measurable, width = PROBE_WIDTH, isMorphing = true)
+            val second = cache.heightOf(measurable = measurable, width = PROBE_WIDTH, isMorphing = true)
+
+            // Assert
+            assertThat(first).isEqualTo(PROBED_HEIGHT)
+            assertThat(second).isEqualTo(PROBED_HEIGHT)
+            verify(exactly = 1) { measurable.minIntrinsicHeight(PROBE_WIDTH) }
+        }
+
+        @Test
+        fun `GIVEN a settled morph WHEN heightOf repeats THEN the content is re-probed`() {
+            // Arrange
+            val cache = ModalContentHeightCache()
+            every { measurable.minIntrinsicHeight(any()) } returnsMany listOf(PROBED_HEIGHT, GROWN_HEIGHT)
+
+            // Act
+            val first = cache.heightOf(measurable = measurable, width = PROBE_WIDTH, isMorphing = false)
+            val second = cache.heightOf(measurable = measurable, width = PROBE_WIDTH, isMorphing = false)
+
+            // Assert
+            assertThat(first).isEqualTo(PROBED_HEIGHT)
+            assertThat(second).isEqualTo(GROWN_HEIGHT)
+            verify(exactly = 2) { measurable.minIntrinsicHeight(PROBE_WIDTH) }
+        }
+
+        @Test
+        fun `GIVEN a running morph WHEN the probe width changes THEN the content is re-probed`() {
+            // Arrange
+            val cache = ModalContentHeightCache()
+            every { measurable.minIntrinsicHeight(any()) } returnsMany listOf(PROBED_HEIGHT, GROWN_HEIGHT)
+
+            // Act
+            val first = cache.heightOf(measurable = measurable, width = PROBE_WIDTH, isMorphing = true)
+            val second = cache.heightOf(measurable = measurable, width = PROBE_WIDTH / 2, isMorphing = true)
+
+            // Assert
+            assertThat(first).isEqualTo(PROBED_HEIGHT)
+            assertThat(second).isEqualTo(GROWN_HEIGHT)
+            verify(exactly = 1) { measurable.minIntrinsicHeight(PROBE_WIDTH) }
+            verify(exactly = 1) { measurable.minIntrinsicHeight(PROBE_WIDTH / 2) }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class CombinedOpenProgress {
 
         @ParameterizedTest
@@ -160,5 +227,8 @@ internal class TangemModalMorphTest {
         const val EXPANDED_POSITION = 200f
         const val HALFWAY_DELTA = 400f
         const val TOLERANCE = 1e-4f
+        const val PROBE_WIDTH = 1000
+        const val PROBED_HEIGHT = 600
+        const val GROWN_HEIGHT = 800
     }
 }
