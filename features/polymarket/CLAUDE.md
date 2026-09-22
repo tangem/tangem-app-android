@@ -116,7 +116,11 @@ positions preview (`PolymarketPositionsPreviewLoader`, polled every 20 s), and
 - **Quote loop.** Amount entry is debounced 500 ms, then one loop runs every 3 s
   (`QUOTE_POLL_INTERVAL_MILLIS`) and decides on each turn whether to ask `GetPredictionOrderQuoteUseCase`
   for a quote or `GetPredictionPriceUseCase` for a price — a quote while the amount is quotable, a price
-  while it is empty or below the minimum. The quote is never cached. Two independent gates decide whether
+  while it is empty or below the minimum. The quote is never cached. The loop stops while the Summary step
+  is up (`PlacePredictionSummaryComponent` reports `onSummaryOpenChange` from its lifecycle): the summary shows
+  the figures known when it opened and signs that same quote, and the loop resumes on the way back to
+  Amount. `ValidatePredictionOrderUseCase` refuses a quote older than 60 s at signing, so a summary left
+  open longer than that fails with the generic place-error dialog. Two independent gates decide whether
   it is placeable: `quote.status.isPlaceable` (market state) and `isBelowMinAmount` (side-specific: BUY is
   price-weighted, SELL is the flat `minOrderSize`, lifted when the sale closes the whole position —
   `isFullClose`).
