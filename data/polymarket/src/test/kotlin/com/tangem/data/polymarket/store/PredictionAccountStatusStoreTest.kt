@@ -159,6 +159,92 @@ internal class PredictionAccountStatusStoreTest {
         assertThat(persisted.data.first()).isEmpty()
     }
 
+    @Test
+    fun `GIVEN a stored value WHEN update THEN the transform receives it and the result reaches both stores`() =
+        runTest {
+            // Arrange
+            val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+            val store = createStore(testScope = this, persistenceDataStore = persisted)
+            store.store(userWalletId = WALLET_A, value = ACTIVE)
+
+            // Act
+            store.update(userWalletId = WALLET_A) { current ->
+                (current as PredictionAccountStatusValue.Active).copy(balance = BigDecimal("99"))
+            }
+
+            // Assert
+            val expected = ACTIVE.copy(balance = BigDecimal("99"))
+            assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(expected)
+            assertThat(persisted.data.first()[WALLET_A.stringValue])
+                .isEqualTo(ACTIVE_DTO.copy(balance = BigDecimal("99")))
+        }
+
+    @Test
+    fun `GIVEN nothing stored WHEN update THEN the transform receives null`() = runTest {
+        // Arrange
+        val store = createStore(testScope = this)
+        var received: PredictionAccountStatusValue? = ACTIVE
+
+        // Act
+        store.update(userWalletId = WALLET_A) { current ->
+            received = current
+            ACTIVE
+        }
+
+        // Assert
+        assertThat(received).isNull()
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE)
+    }
+
+    @Test
+    fun `GIVEN a transform that returns null WHEN update THEN neither store is touched`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+        store.store(userWalletId = WALLET_A, value = ACTIVE)
+
+        // Act
+        store.update(userWalletId = WALLET_A) { null }
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ACTIVE)
+        assertThat(persisted.data.first()[WALLET_A.stringValue]).isEqualTo(ACTIVE_DTO)
+    }
+
+    @Test
+    fun `GIVEN a transient state returned WHEN update THEN it does not reach the disk`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+        store.store(userWalletId = WALLET_A, value = ACTIVE)
+
+        // Act
+        store.update(userWalletId = WALLET_A) { PredictionAccountStatusValue.Error.Unavailable }
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(PredictionAccountStatusValue.Error.Unavailable)
+        assertThat(persisted.data.first()[WALLET_A.stringValue]).isEqualTo(ACTIVE_DTO)
+    }
+
+    @Test
+    fun `GIVEN an update issued before the cache loads WHEN it lands THEN it survives the preload`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithPredictionStatusDTO>(
+            default = mapOf(WALLET_A.stringValue to ACTIVE_DTO),
+        )
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+
+        // Act
+        store.update(userWalletId = WALLET_A) { current ->
+            (current as PredictionAccountStatusValue.Active).copy(balance = BigDecimal("99"))
+        }
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A))
+            .isEqualTo(ACTIVE.copy(source = StatusSource.CACHE, balance = BigDecimal("99")))
+    }
+
     private fun createStore(
         testScope: TestScope,
         persistenceDataStore: MockStateDataStore<WalletIdWithPredictionStatusDTO> = MockStateDataStore(emptyMap()),
