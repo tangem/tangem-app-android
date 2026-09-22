@@ -62,6 +62,7 @@ internal class PolymarketEventConverterTest {
                 markets = listOf(
                     PolymarketMarket(
                         id = "market-id",
+                        conditionId = "0xcondition",
                         eventId = "event-id",
                         title = "Market question",
                         slug = "market-slug",
@@ -144,6 +145,35 @@ internal class PolymarketEventConverterTest {
 
             // Assert
             Truth.assertThat(actual.markets.first().isAcceptingOrders).isTrue()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ConvertConditionId {
+
+        @Test
+        fun `GIVEN the market carries a condition id WHEN convert THEN it is kept`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(conditionId = "0xabc")))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().conditionId).isEqualTo("0xabc")
+        }
+
+        @Test
+        fun `GIVEN the condition id is absent WHEN convert THEN the market has none`() {
+            // Arrange
+            val dto = createEventDto(markets = listOf(createMarketDto(conditionId = null)))
+
+            // Act
+            val actual = converter.convert(value = dto)
+
+            // Assert
+            Truth.assertThat(actual.markets.first().conditionId).isNull()
         }
     }
 
@@ -263,9 +293,11 @@ internal class PolymarketEventConverterTest {
     private fun createMarketDto(
         outcomes: List<PolymarketOutcomeDto> = emptyList(),
         isAcceptingOrders: Boolean? = true,
+        conditionId: String? = "0xcondition",
     ): PolymarketMarketDto =
         PolymarketMarketDto(
             id = "market-id",
+            conditionId = conditionId,
             eventId = "event-id",
             question = "Market question",
             slug = "market-slug",

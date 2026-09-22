@@ -1361,6 +1361,7 @@ internal class PolymarketMainModelTest {
         markets = listOf(
             PolymarketMarket(
                 id = "market-1",
+                conditionId = null,
                 eventId = id,
                 title = "Market question",
                 slug = "market-slug",
