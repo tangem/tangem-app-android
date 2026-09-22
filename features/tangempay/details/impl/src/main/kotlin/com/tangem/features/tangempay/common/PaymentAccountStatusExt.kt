@@ -87,7 +87,7 @@ internal fun List<PaymentNetworkStatus>.firstDepositAddress(): String? =
 
 internal val PaymentAccountStatusValue.canAddFunds: Boolean
     get() = when (this) {
-        is PaymentAccountStatusValue.Error.CardIssueFailed -> balance != null && networks.hasAvailableNetwork()
+        is PaymentAccountStatusValue.Error.CardIssueFailed -> networks.hasAvailableNetwork()
         is PaymentAccountStatusValue.Loaded -> networks.hasAvailableNetwork()
         is PaymentAccountStatusValue.Deactivated -> networks.hasAvailableNetwork()
         else -> false
