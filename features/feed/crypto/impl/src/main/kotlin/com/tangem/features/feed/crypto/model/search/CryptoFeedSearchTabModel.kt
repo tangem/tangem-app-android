@@ -15,13 +15,12 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feed.search.model.RecentFeedSearchItem
 import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
-import com.tangem.domain.feed.search.usecase.SaveRecentFeedSearchItemUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.domain.search.model.toEntries
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.feed.crypto.CryptoFeedSearchTabComponent
@@ -79,7 +78,6 @@ internal class CryptoFeedSearchTabModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val saveRecentFeedSearchItemUseCase: SaveRecentFeedSearchItemUseCase,
     private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase,
     private val router: Router,
 ) : Model() {
@@ -332,12 +330,9 @@ internal class CryptoFeedSearchTabModel @Inject constructor(
         analyticsEventHandler.send(CryptoSearchAnalyticsEvent.MarketItemClicked(token.symbol))
         val params = token.toSerializableParam()
 
-        // history is written for market results only: a portfolio asset is already on the user's
-        // wallet screen, so offering it again as a "recent" is noise
-        modelScope.launch {
-            saveRecentFeedSearchItemUseCase(RecentFeedSearchItem.MarketToken(params))
-            saveFeedSearchQueryUseCase(query.value)
-        }
+        // the query is saved for market results only: a portfolio asset is already on the user's
+        // wallet screen, so offering the query that found it again is noise
+        modelScope.launch { saveFeedSearchQueryUseCase(query.value) }
 
         router.push(
             route = FeedRoute.MarketsTokenDetails(

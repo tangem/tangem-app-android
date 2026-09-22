@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.CustomerOffers
 import com.tangem.domain.pay.model.Offer
 import com.tangem.domain.pay.model.Order
 import com.tangem.domain.pay.model.OrderStatus
@@ -50,7 +51,7 @@ internal class IssuePlasticCardUseCaseTest {
     @Test
     fun `GIVEN no plastic offer WHEN invoked THEN returns CardIssueOfferNotAvailable and creates no order`() = runTest {
         // Arrange
-        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(virtualOffer()).right()
+        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(virtualOffer()).right()
 
         // Act
         val result = useCase(
@@ -70,7 +71,7 @@ internal class IssuePlasticCardUseCaseTest {
         runTest {
             // Arrange
             coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns
-                listOf(offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN, specificationName = null)).right()
+                customerOffers(offer(type = Offer.Type.CARD_ISSUE_PLASTIC_RAIN, specificationName = null)).right()
 
             // Act
             val result = useCase(
@@ -151,7 +152,7 @@ internal class IssuePlasticCardUseCaseTest {
     fun `GIVEN an active plastic order WHEN invoked THEN raises CardIssueActiveOrderExists`() = runTest {
         // Arrange
         val existing = order(id = "existing", status = OrderStatus.PROCESSING)
-        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(plasticOffer()).right()
+        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(plasticOffer()).right()
         coEvery {
             orderRepository.findOrders(
                 USER_WALLET_ID,
@@ -193,7 +194,7 @@ internal class IssuePlasticCardUseCaseTest {
     @Test
     fun `GIVEN findOrders fails WHEN invoked THEN the typed error is propagated`() = runTest {
         // Arrange
-        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(plasticOffer()).right()
+        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(plasticOffer()).right()
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns
             VisaApiError.ServerUnavailable.left()
 
@@ -212,7 +213,7 @@ internal class IssuePlasticCardUseCaseTest {
     @Test
     fun `GIVEN a terminal plastic order WHEN invoked THEN creates a new order`() = runTest {
         // Arrange
-        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(plasticOffer()).right()
+        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(plasticOffer()).right()
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns
             listOf(order(id = "done", status = OrderStatus.COMPLETED)).right()
         val created = order(id = "created", status = OrderStatus.NEW)
@@ -288,7 +289,7 @@ internal class IssuePlasticCardUseCaseTest {
     }
 
     private fun givenNoActiveOrders() {
-        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns listOf(plasticOffer()).right()
+        coEvery { offersRepository.getOffers(USER_WALLET_ID) } returns customerOffers(plasticOffer()).right()
         coEvery { orderRepository.findOrders(USER_WALLET_ID, any(), any()) } returns emptyList<Order>().right()
     }
 
@@ -338,3 +339,6 @@ internal class IssuePlasticCardUseCaseTest {
         const val IDEMPOTENCY_KEY = "6f1c9e2a-0b3d-4c5e-8a7b-9d0e1f2a3b4c"
     }
 }
+
+private fun customerOffers(vararg offers: Offer) =
+    CustomerOffers(orderable = offers.toList(), artwork = emptyMap())

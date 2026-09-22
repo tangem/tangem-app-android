@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.cashback.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -40,6 +41,8 @@ internal class DefaultTangemPayCashbackComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+
+        BackHandler(onBack = router::pop)
         TangemPayCashbackScreen(state = state, modifier = modifier)
         bottomSheet.child?.instance?.BottomSheet()
     }

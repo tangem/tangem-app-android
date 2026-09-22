@@ -25,9 +25,10 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
-import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
+import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -88,7 +89,6 @@ class SetTokenListTransformerTest {
             clickIntents = mockk<WalletClickIntents>(relaxed = true),
             shouldShowMainPromo = false,
             isAccountsModeEnabled = false,
-            isAccountMultichainEnabled = false,
         )
     }
 
@@ -121,7 +121,7 @@ class SetTokenListTransformerTest {
     }
 
     private fun mainCryptoPortfolioStatus(tokenList: TokenList): AccountStatus.CryptoPortfolio =
-        AccountStatus.CryptoPortfolio(
+        AccountStatus.Personal(
             account = createMainAccount(userWalletId),
             tokenList = tokenList,
             priceChangeLce = Unit.lceError(),
@@ -148,8 +148,9 @@ class SetTokenListTransformerTest {
         nftState = WalletNFTItemUM.Hidden,
         type = WalletType.Hot,
         tangemPayMainUM = TangemPayMainUM.Empty,
-        virtualAccountMainUM = VirtualAccountMainUM.Empty,
+        moneyAccountMainUM = MoneyAccountMainUM.Empty,
         polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
+        collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
     )
 
     private fun createToken(): CryptoCurrency.Token {

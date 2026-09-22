@@ -2,6 +2,7 @@ package com.tangem.data.apptheme.di
 
 import com.tangem.data.apptheme.DefaultAppThemeModeRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import dagger.Module
 import dagger.Provides
@@ -15,7 +16,13 @@ internal object AppThemeModeDataModule {
 
     @Provides
     @Singleton
-    fun provideAppThemeModeRepository(appPreferencesStore: AppPreferencesStore): AppThemeModeRepository {
-        return DefaultAppThemeModeRepository(appPreferencesStore = appPreferencesStore)
+    fun provideAppThemeModeRepository(
+        appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
+    ): AppThemeModeRepository {
+        return DefaultAppThemeModeRepository(
+            appPreferencesStore = appPreferencesStore,
+            storePreferencesKeys = storePreferencesKeys,
+        )
     }
 }

@@ -222,8 +222,9 @@ internal class ActivateCampaignsModel @Inject constructor(
                     // Payment accounts are hidden in the chooser and don't count towards accounts mode,
                     // so there is no account label to show for them.
                     is Account.Payment,
-                    is Account.Virtual,
+                    is Account.Money,
                     is Account.Prediction,
+                    is Account.Collectibles,
                     -> null
                 }
             } else {

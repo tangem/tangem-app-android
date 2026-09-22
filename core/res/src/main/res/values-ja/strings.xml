@@ -352,6 +352,7 @@
   <string name="common_explore">詳しく見る</string>
   <string name="common_explore_transaction_history">取引履歴を調べる</string>
   <string name="common_explorer">エクスプローラー</string>
+  <string name="common_featured">注目</string>
   <string name="common_fee_error">手数料を取得できませんでした</string>
   <string name="common_fee_selector_footer">ネットワーク手数料は、取引の処理と確認のためにユーザーが支払う料金です。手数料の額は、ネットワークの混雑さ、取引のサイズ、実行の優先度によって左右されます。 %s</string>
   <string name="common_fee_selector_option_fast">速い</string>
@@ -2331,7 +2332,6 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_bank_transfer_body">ACH/FedWire経由で銀行口座からUSDを受け取る</string>
   <string name="tangempay_topup_bank_transfer_title">銀行口座から</string>
-  <string name="tangempay_topup_receive_body">USDC Polygon をアカウントのアドレスに送信</string>
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
   <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>
   <string name="tangempay_topup_swap_body">ウォレットの暗号資産を使って、決済アカウントにチャージできます</string>

@@ -2,7 +2,8 @@ package com.tangem.data.visa.config
 
 import com.tangem.data.visa.BuildConfig
 import com.tangem.data.visa.utils.VisaConstants
-import com.tangem.datasource.asset.loader.AssetLoader
+import com.tangem.core.local.assets.AssetLoader
+import com.tangem.core.local.assets.load
 import com.tangem.lib.visa.VisaContractInfoProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.sync.Mutex

@@ -173,6 +173,7 @@ internal class ChooseTokenListItemConverterPaymentAccountTest {
             tokenFilter = tokenFilter,
             paymentAccountTokens = paymentAccountTokens,
             balanceFilter = BalanceFilter.All,
+            isJointAccountsShown = false,
         ),
     )
 

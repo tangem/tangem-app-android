@@ -301,7 +301,7 @@ internal class TokenSummaryModelTest {
     private fun holding(): SwapHolding {
         val wallet = MockUserWalletFactory.create().copy(walletId = WALLET_ID)
         val account = MockAccounts.createAccount(derivationIndex = 1, userWalletId = WALLET_ID)
-        val portfolio = mockk<AccountStatus.CryptoPortfolio> { every { this@mockk.account } returns account }
+        val portfolio = mockk<AccountStatus.Personal> { every { this@mockk.account } returns account }
 
         return SwapHolding(
             entry = TokenSelectorEntry(

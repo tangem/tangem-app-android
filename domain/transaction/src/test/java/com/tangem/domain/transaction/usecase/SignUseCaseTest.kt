@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.network.Network
@@ -135,6 +136,82 @@ internal class SignUseCaseTest {
 
         // Assert
         assertThat(result.leftOrNull()).isEqualTo(SignHashesError.SigningFailed(message = "Signing canceled"))
+    }
+
+    @Test
+    fun `GIVEN a derived key WHEN sign hashes with a public key THEN the key rides to the signer as is`() = runTest {
+        // Arrange
+        val coldWallet = MockUserWalletFactory.create()
+        val signer: TransactionSigner = mockk()
+        val derivedKey = Wallet.PublicKey(seedKey = publicKey, derivationType = null)
+
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
+        coEvery { signer.sign(eq(hashes), eq(derivedKey)) } returns CompletionResult.Success(signatures)
+
+        // Act
+        val result = useCase(hashes = hashes, publicKey = derivedKey, userWallet = coldWallet)
+
+        // Assert
+        assertThat(result.getOrNull()).isEqualTo(signatures)
+    }
+
+    @Test
+    fun `GIVEN the user dismisses the session WHEN sign hashes with a public key THEN Cancelled`() = runTest {
+        // Arrange
+        val coldWallet = MockUserWalletFactory.create()
+        val signer: TransactionSigner = mockk()
+
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
+        coEvery { signer.sign(any<List<ByteArray>>(), any()) } returns
+            CompletionResult.Failure(TangemSdkError.UserCancelled())
+
+        // Act
+        val result = useCase(
+            hashes = hashes,
+            publicKey = Wallet.PublicKey(seedKey = publicKey, derivationType = null),
+            userWallet = coldWallet,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(SignHashesError.Cancelled)
+    }
+
+    @Test
+    fun `GIVEN the signer fails WHEN sign hashes with a public key THEN SigningFailed`() = runTest {
+        // Arrange
+        val coldWallet = MockUserWalletFactory.create()
+        val signer: TransactionSigner = mockk()
+        val error: TangemError = mockk { every { message } returns "Card error" }
+
+        every { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) } returns signer
+        coEvery { signer.sign(any<List<ByteArray>>(), any()) } returns CompletionResult.Failure(error)
+
+        // Act
+        val result = useCase(
+            hashes = hashes,
+            publicKey = Wallet.PublicKey(seedKey = publicKey, derivationType = null),
+            userWallet = coldWallet,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(SignHashesError.SigningFailed(message = "Card error"))
+    }
+
+    @Test
+    fun `GIVEN empty hashes WHEN sign hashes with a public key THEN empty list without a session`() = runTest {
+        // Arrange
+        val coldWallet = MockUserWalletFactory.create()
+
+        // Act
+        val result = useCase(
+            hashes = emptyList(),
+            publicKey = Wallet.PublicKey(seedKey = publicKey, derivationType = null),
+            userWallet = coldWallet,
+        )
+
+        // Assert
+        assertThat(result.getOrNull()).isEmpty()
+        verify(exactly = 0) { cardSdkConfigRepository.getCommonSigner(any(), any(), any()) }
     }
 
     @Test

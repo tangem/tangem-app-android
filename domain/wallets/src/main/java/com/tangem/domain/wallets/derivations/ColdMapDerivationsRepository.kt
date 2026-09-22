@@ -21,6 +21,12 @@ interface ColdMapDerivationsRepository {
     @Throws
     suspend fun derivePublicKeysByNetworks(userWallet: UserWallet.Cold, networks: List<Network>): UserWallet.Cold
 
+    /** Finds the derivation paths missing for [currencies], without deriving them (no NFC) */
+    suspend fun findMissingDerivations(
+        userWallet: UserWallet.Cold,
+        currencies: List<CryptoCurrency>,
+    ): Map<ByteArrayKey, List<DerivationPath>>
+
     @Throws
     suspend fun derivePublicKeys(
         userWallet: UserWallet.Cold,
