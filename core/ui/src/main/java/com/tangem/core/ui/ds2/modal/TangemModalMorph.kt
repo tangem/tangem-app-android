@@ -118,6 +118,31 @@ internal class ModalMorphGeometry {
      * Plain value: written by [modalCardLayout] and consumed by [modalCardFill] in the same pass.
      */
     var contentBottomInset: Int = 0
+
+    /** Cache of the content's probed intrinsic height across morph frames. */
+    val contentHeightCache = ModalContentHeightCache()
+}
+
+/**
+ * Caches the content's intrinsic height across morph animation frames: while one of the morph
+ * springs is running, the extra layout passes are caused by the animated values — the content
+ * itself has not changed — so the last probed height is reused instead of traversing the content
+ * tree on every frame. The trade-off: content that resizes itself mid-morph keeps the previous
+ * height until the spring settles, and the settling pass re-probes it.
+ */
+@PublishedApi
+internal class ModalContentHeightCache {
+
+    private var probeWidth: Int = -1
+    private var height: Int = -1
+
+    fun heightOf(measurable: IntrinsicMeasurable, width: Int, isMorphing: Boolean): Int {
+        if (width != probeWidth || height < 0 || !isMorphing) {
+            probeWidth = width
+            height = measurable.minIntrinsicHeight(width)
+        }
+        return height
+    }
 }
 
 /** Spring the morph rides between its measured targets — the iOS detent-change feel. */
@@ -231,7 +256,10 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
         val maxHeight = (constraints.maxHeight - windowInsets.getTop(this)).coerceAtLeast(0)
 
         val probeWidth = (maxWidth - 2 * ModalInsetMedium.roundToPx()).coerceAtLeast(0)
-        val intrinsicHeight = measurable.minIntrinsicHeight(probeWidth).coerceAtMost(maxHeight)
+        val isMorphing = geometry.animatedFullness.isRunning || geometry.focusExpansion.isRunning
+        val intrinsicHeight = geometry.contentHeightCache
+            .heightOf(measurable = measurable, width = probeWidth, isMorphing = isMorphing)
+            .coerceAtMost(maxHeight)
 
         val target = modalMorphTarget(intrinsicHeight = intrinsicHeight, maxHeight = maxHeight)
         if (geometry.target != target) geometry.target = target
