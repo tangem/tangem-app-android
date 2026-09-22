@@ -20,7 +20,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.send.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
@@ -49,7 +48,6 @@ class GetCurrencyWarningsUseCaseTest {
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk(relaxed = true)
     private val dynamicAddressesRepository: DynamicAddressesRepository = mockk(relaxed = true)
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
-    private val sendFeatureToggles: SendFeatureToggles = mockk(relaxed = true)
     private val dispatchers: CoroutineDispatcherProvider = TestDispatchers(Dispatchers.Unconfined)
 
     private val userWalletId: UserWalletId = mockk(relaxed = true)
@@ -73,7 +71,6 @@ class GetCurrencyWarningsUseCaseTest {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         dynamicAddressesRepository = dynamicAddressesRepository,
         isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-        sendFeatureToggles = sendFeatureToggles,
     )
 
     @BeforeEach
@@ -98,7 +95,6 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currenciesRepository.isNetworkFeeZero(any(), any()) } returns false
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns false
         coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
-        every { sendFeatureToggles.isTronGaslessEnabled } returns false
     }
 
     @AfterEach
@@ -296,7 +292,6 @@ class GetCurrencyWarningsUseCaseTest {
         runTest {
             // Arrange
             givenGaslessSupportedTokenWithEmptyCoin()
-            every { sendFeatureToggles.isTronGaslessEnabled } returns true
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
@@ -306,26 +301,11 @@ class GetCurrencyWarningsUseCaseTest {
         }
 
     @Test
-    fun `GIVEN gasless supported token AND zero coin AND toggle disabled WHEN invoke THEN fee warning is present`() =
-        runTest {
-            // Arrange
-            givenGaslessSupportedTokenWithEmptyCoin()
-            every { sendFeatureToggles.isTronGaslessEnabled } returns false
-
-            // Act
-            val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
-
-            // Assert
-            assertThat(result.filterIsInstance<CryptoCurrencyWarning.BalanceNotEnoughForFee>()).hasSize(1)
-        }
-
-    @Test
     fun `GIVEN token unsupported by gasless AND zero coin WHEN invoke THEN fee warning is present`() =
         runTest {
             // Arrange
             givenTokenWithEmptyCoin()
             coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
-            every { sendFeatureToggles.isTronGaslessEnabled } returns true
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()

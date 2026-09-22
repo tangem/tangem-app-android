@@ -8,12 +8,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.runSuspendCatching
 
-/**
- * Tells whether the Tron gasless flow is available for the given [network]/[currency].
- *
- * Checks ONLY domain facts. The `TWI_1259_TRON_GASLESS_ENABLED` feature toggle is applied in the
- * feature layer (SendModel) — this use case must not depend on `features/send/api`.
- */
+/** Tells whether the Tron gasless flow is available for the given [network]/[currency]. */
 class IsTronGaslessSupportedUseCase(
     private val repository: TronGaslessTransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,

@@ -2,33 +2,28 @@ package com.tangem.features.send.subcomponents.destination.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import arrow.core.left
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.AddressBookOpenMode
-import com.tangem.common.ui.backup.BackupErrorFeatureToggles
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
-import com.tangem.domain.account.status.usecase.GetBackupProblematicWalletForAddressUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.addressbook.interactor.GetVerifiedContactsInteractor
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
 import com.tangem.domain.addressbook.usecase.SyncAddressBooksUseCase
-import com.tangem.domain.feedback.SendBackupProblemEmailUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -55,7 +50,6 @@ import com.tangem.features.send.subcomponents.destination.analytics.SendDestinat
 import com.tangem.features.send.subcomponents.destination.model.converters.JointAccountDestinationFactory
 import com.tangem.features.send.subcomponents.destination.model.transformers.*
 import com.tangem.features.send.subcomponents.destination.ui.state.DestinationWalletUM
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -66,7 +60,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
 @Stable
@@ -88,10 +81,7 @@ internal class SendDestinationModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    private val getBackupProblematicWalletForAddressUseCase: GetBackupProblematicWalletForAddressUseCase,
     private val sendDestinationAlertFactory: SendDestinationAlertFactory,
-    private val sendBackupProblemEmailUseCase: SendBackupProblemEmailUseCase,
-    private val backupErrorFeatureToggles: BackupErrorFeatureToggles,
     private val addressBookSendAnalytics: AddressBookSendAnalytics,
     private val syncAddressBooksUseCase: SyncAddressBooksUseCase,
     getJointAccountSupportedNetworksUseCase: GetJointAccountSupportedNetworksUseCase,
@@ -154,8 +144,6 @@ internal class SendDestinationModel @Inject constructor(
 
     private val validationJobHolder = JobHolder()
 
-    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
-    private val backupProblematicWalletCache = AtomicReference<Pair<String, UserWalletId?>?>(null)
 
     init {
         syncAddressBooks()
@@ -460,11 +448,7 @@ internal class SendDestinationModel @Inject constructor(
 
             notifyIfQrCodeUnrecognized(type = type, addressValidationResult = validationResult)
 
-            val addressValidationResult = rejectRecipientWithBackupError(
-                address = address,
-                type = type,
-                validationResult = validationResult,
-            )
+            val addressValidationResult = validationResult
 
             val memoValidationResult = validateWalletMemoUseCase(
                 userWalletId = userWalletId,
@@ -527,38 +511,6 @@ internal class SendDestinationModel @Inject constructor(
         if (addressValidationResult.leftOrNull() != AddressValidation.Error.InvalidAddress) return
 
         sendDestinationAlertFactory.showUnrecognizedQrCodeAlert()
-    }
-
-    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
-    private suspend fun rejectRecipientWithBackupError(
-        address: String,
-        type: EnterAddressSource?,
-        validationResult: AddressValidationResult,
-    ): AddressValidationResult {
-        if (backupErrorFeatureToggles.isTopUpWarningEnabled || validationResult.isLeft()) return validationResult
-
-        val problematicWalletId = resolveBackupProblematicWallet(address) ?: return validationResult
-
-        if (type != null) {
-            sendDestinationAlertFactory.showRecipientBackupErrorAlert(
-                onContactSupport = { contactBackupSupport(problematicWalletId) },
-            )
-        }
-
-        return AddressValidation.Error.RecipientWalletBackupError.left()
-    }
-
-    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
-    private suspend fun resolveBackupProblematicWallet(address: String): UserWalletId? {
-        backupProblematicWalletCache.get()?.let { if (it.first == address) return it.second }
-
-        return getBackupProblematicWalletForAddressUseCase(address)
-            .also { backupProblematicWalletCache.set(address to it) }
-    }
-
-    @RemoveWithToggle("TWI_1741_TOP_UP_WARNING_ENABLED")
-    private fun contactBackupSupport(userWalletId: UserWalletId) {
-        modelScope.launch { sendBackupProblemEmailUseCase(userWalletId) }
     }
 
     private fun recognizeContact(type: EnterAddressSource?, isValidAddress: Boolean, address: String) {
