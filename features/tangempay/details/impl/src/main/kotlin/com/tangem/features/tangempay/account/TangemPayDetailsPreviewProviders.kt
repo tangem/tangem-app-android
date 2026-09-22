@@ -136,7 +136,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                         ),
                     ),
                     iconEnd = TangemIconUM.Icon(
-                        iconRes = R.drawable.ic_alert_circle_24,
+                        imageVector = Icons.ic_error_20,
                         tintReference = { TangemTheme.colors3.icon.primary },
                     ),
                 ),
