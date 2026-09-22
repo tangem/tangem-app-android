@@ -1,6 +1,7 @@
 package com.tangem.features.jointaccount.main
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.TextReference
@@ -23,18 +24,18 @@ sealed interface JointAccountMainUM {
     data object Loading : JointAccountMainUM
 
     /**
-     * Not yet activated — waiting for members to join. Renders as a normal account row with a
-     * member-collection subtitle (e.g. "1 of 5 members") and a zero balance; no token list. The
-     * creator additionally sees an "Invite members to join" banner.
+     * Not yet activated — waiting for members to join or for the creator to activate. Renders as a normal
+     * account row with a progress subtitle (e.g. "1 of 5 members", "Waiting for activation") and a zero
+     * balance; no token list. The creator additionally sees the next-step [banner].
      *
-     * @property title         account name shown as the row title.
-     * @property subtitle      member-collection progress, e.g. "1 of 5 members".
-     * @property icon          account icon (creator-chosen crypto-portfolio icon + color).
-     * @property balance       total fiat balance (zero before activation).
-     * @property priceChange   price-change indicator under the balance; `null` hides it.
-     * @property canInvite     `true` only for the creator — renders the invite banner.
-     * @property onClick       tap on the row → members screen.
-     * @property onInviteClick tap on the invite banner → invite flow.
+     * @property title       account name shown as the row title.
+     * @property subtitle    member-collection progress, e.g. "1 of 5 members".
+     * @property icon        account icon (creator-chosen crypto-portfolio icon + color).
+     * @property balance     total fiat balance (zero before activation).
+     * @property priceChange price-change indicator under the balance; `null` hides it.
+     * @property banner      the creator's next step under the row — invite more members while slots are free,
+     * activate once the account is confirmed ready; `null` for a member and while there is nothing to do.
+     * @property onClick     tap on the row → members screen.
      */
     data class WaitingMembers(
         val title: TextReference,
@@ -42,10 +43,16 @@ sealed interface JointAccountMainUM {
         val icon: AccountIconUM,
         val balance: TextReference,
         val priceChange: TangemPriceChange.State?,
-        val canInvite: Boolean,
+        val banner: BannerUM?,
         val onClick: () -> Unit,
-        val onInviteClick: () -> Unit,
     ) : JointAccountMainUM
+
+    /** The call-to-action strip under a [WaitingMembers] row */
+    data class BannerUM(
+        val text: TextReference,
+        val icon: ImageVector,
+        val onClick: () -> Unit,
+    )
 
     /**
      * Blocked — the account stays visible with its balance, but operations are unavailable and a

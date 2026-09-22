@@ -11,6 +11,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
+import java.util.Locale
 
 private const val VISA_BATCH_START = "AE"
 private const val VISA_BATCH_START_2 = "FFFC"
@@ -22,11 +23,15 @@ object VisaUtilities {
     val visaDefaultDerivationPath
         get() = visaBlockchain.derivationPath(DerivationStyle.V3)
     val customDerivationPath = DerivationPath("m/44'/60'/999999'/0/0")
-    val virtualAccountDerivationPath = DerivationPath("m/44'/60'/999998'/0/0")
+    val moneyAccountDerivationPath = DerivationPath("m/44'/60'/999998'/0/0")
     val curve = EllipticCurve.Secp256k1
 
     fun signWithNonceMessage(nonce: String): String {
         return "Tangem Pay wants to sign in with your account. Nonce: $nonce"
+    }
+
+    fun moneyAccountDepositAddressMessage(depositAddress: String): String {
+        return "Banking account deposit address ${depositAddress.lowercase(Locale.US)}"
     }
 
     fun isVisaCard(card: CardDTO): Boolean {

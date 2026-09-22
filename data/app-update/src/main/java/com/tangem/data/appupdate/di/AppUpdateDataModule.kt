@@ -3,6 +3,7 @@ package com.tangem.data.appupdate.di
 import com.tangem.data.appupdate.DefaultAppUpdateRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.appupdate.repository.AppUpdateRepository
 import com.tangem.domain.appupdate.usecase.GetAppUpdateStateUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,10 +23,12 @@ internal object AppUpdateDataModule {
     fun provideAppUpdateRepository(
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
+        storePreferencesKeys: StorePreferencesKeys,
         dispatchers: CoroutineDispatcherProvider,
     ): AppUpdateRepository = DefaultAppUpdateRepository(
         tangemTechApi = tangemTechApi,
         appPreferencesStore = appPreferencesStore,
+        storePreferencesKeys = storePreferencesKeys,
         dispatchers = dispatchers,
     )
 

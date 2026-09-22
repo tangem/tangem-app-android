@@ -22,9 +22,24 @@ data class PredictionOrderQuote(
     val total: BigDecimal,
     val builderCode: String,
     val minOrderSize: BigDecimal,
+    val minOrderAmount: BigDecimal?,
     val tickSize: BigDecimal,
     val isLive: Boolean,
-)
+) {
+
+    /** @return the floor for the amount the user types — collateral on a buy, shares on a sell. */
+    val minAmount: BigDecimal
+        get() = when (side) {
+            PredictionOrderSide.BUY -> maxOf(minOrderSize * worstCasePrice, minOrderAmount ?: BigDecimal.ZERO)
+            PredictionOrderSide.SELL -> minOrderSize
+        }
+
+    /** @param isFullClose the sale covers the whole remaining position, which lifts [minOrderSize]. */
+    fun isPlaceable(isFullClose: Boolean): Boolean = when (side) {
+        PredictionOrderSide.BUY -> status.isPlaceable
+        PredictionOrderSide.SELL -> status.isPlaceableForSell(isFullClose = isFullClose)
+    }
+}
 
 data class PredictionOrderFees(
     val market: BigDecimal,

@@ -7,12 +7,12 @@ import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuild
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
 import com.tangem.data.transaction.convertes.GaslessTxDataToGaslessRequestConverter
-import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
@@ -51,7 +51,7 @@ class DefaultGaslessTransactionRepository(
                 return@withContext storedTokens
             }
 
-            val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrow()
+            val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrowGaslessError()
             if (supportedTokensData.isSuccess) {
                 val networkBlockchain = network.toBlockchain()
                 val supportedTokens = supportedTokensData.result.tokens
@@ -78,7 +78,7 @@ class DefaultGaslessTransactionRepository(
                 }
                 return@withContext supportedTokens
             } else {
-                error("Gasless service returned unsuccessful response")
+                throw unsuccessfulResponseError()
             }
         }
     }
@@ -90,12 +90,12 @@ class DefaultGaslessTransactionRepository(
                 if (feeReceiver != null) {
                     return@withContext feeReceiver
                 }
-                val response = gaslessTxServiceApi.getFeeRecipient().getOrThrow()
+                val response = gaslessTxServiceApi.getFeeRecipient().getOrThrowGaslessError()
                 if (response.isSuccess) {
                     feeReceiverAddress = response.result.address
                     response.result.address
                 } else {
-                    error("Gasless service returned unsuccessful response")
+                    throw unsuccessfulResponseError()
                 }
             }
         }
@@ -121,10 +121,10 @@ class DefaultGaslessTransactionRepository(
             gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest)
         } else {
             gaslessTxServiceApi.signGaslessTransaction(transactionRequest)
-        }.getOrThrow()
+        }.getOrThrowGaslessError()
 
         if (!response.isSuccess) {
-            error("Gasless service returned unsuccessful response")
+            throw unsuccessfulResponseError()
         }
 
         // Convert DTO to domain model
@@ -147,14 +147,19 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrow()
+        val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrowGaslessError()
 
         if (!response.isSuccess) {
-            error("Gasless service returned unsuccessful response")
+            throw unsuccessfulResponseError()
         }
 
         signedTransactionResultConverter.convert(response.result)
     }
+
+    private fun unsuccessfulResponseError() = GaslessServiceException(
+        httpCode = null,
+        message = "Gasless service returned unsuccessful response",
+    )
 
     override fun getBaseGasForTransaction(): BigInteger {
         return BASE_GAS_FOR_TRANSACTION

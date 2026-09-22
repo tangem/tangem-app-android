@@ -11,6 +11,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
@@ -25,7 +26,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted @Suppress("UnusedPrivateProperty") private val params: Unit,
+    @Assisted private val params: CollectiblesEntryComponent.Params,
     private val onboardingComponentFactory: CollectiblesOnboardingComponent.Factory,
     private val storiesComponentFactory: CollectiblesStoriesComponent.Factory,
     private val mainComponentFactory: CollectiblesMainComponent.Factory,
@@ -42,7 +43,7 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
         key = "collectiblesStack",
         source = stackNavigation,
         serializer = null,
-        initialConfiguration = CollectiblesRoute.Onboarding,
+        initialConfiguration = resolveStartRoute(),
         handleBackButton = true,
         childFactory = { route, factoryContext ->
             createChild(
@@ -51,6 +52,11 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
             )
         },
     )
+
+    private fun resolveStartRoute(): CollectiblesRoute = when (params.startRoute) {
+        CollectiblesStartRoute.Onboarding -> CollectiblesRoute.Onboarding(params.userWalletId)
+        CollectiblesStartRoute.Main -> CollectiblesRoute.Main(params.userWalletId)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -67,9 +73,15 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
 
     private fun createChild(route: CollectiblesRoute, childContext: AppComponentContext): ComposableContentComponent {
         return when (route) {
-            CollectiblesRoute.Onboarding -> onboardingComponentFactory.create(context = childContext)
+            is CollectiblesRoute.Onboarding -> onboardingComponentFactory.create(
+                context = childContext,
+                params = CollectiblesOnboardingComponent.Params(userWalletId = route.userWalletId),
+            )
             CollectiblesRoute.Stories -> storiesComponentFactory.create(context = childContext)
-            CollectiblesRoute.Main -> mainComponentFactory.create(context = childContext)
+            is CollectiblesRoute.Main -> mainComponentFactory.create(
+                context = childContext,
+                params = CollectiblesMainComponent.Params(userWalletId = route.userWalletId),
+            )
         }
     }
 
@@ -79,6 +91,9 @@ internal class DefaultCollectiblesEntryComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : CollectiblesEntryComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultCollectiblesEntryComponent
+        override fun create(
+            context: AppComponentContext,
+            params: CollectiblesEntryComponent.Params,
+        ): DefaultCollectiblesEntryComponent
     }
 }

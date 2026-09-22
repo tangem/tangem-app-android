@@ -5,21 +5,36 @@ import androidx.datastore.dataStoreFile
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.data.jointaccount.address.DefaultJointAccountSafeAddressResolver
+import com.tangem.data.jointaccount.address.DefaultJointOwnerAddressResolver
+import com.tangem.data.jointaccount.blockaid.DefaultJointOperationBlockaidGate
 import com.tangem.data.jointaccount.DefaultJointAccountSupportedNetworksRepository
 import com.tangem.data.jointaccount.cleaner.JointAccountUserWalletDataCleaner
 import com.tangem.data.jointaccount.converter.JointAccountDMConverter
+import com.tangem.data.jointaccount.derivation.DefaultJointOwnerKeysRepository
 import com.tangem.data.jointaccount.fetcher.DefaultSingleJointAccountListFetcher
 import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProducer
+import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
+import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
 import com.tangem.data.jointaccount.repository.DefaultJointAccountRepository
 import com.tangem.data.jointaccount.store.DefaultJointAccountInvitesStore
 import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.jointaccount.address.JointAccountSafeAddressResolver
+import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
+import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
+import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
+import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
+import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
+import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.sdk.storage.AndroidSecureStorageV2
@@ -44,6 +59,14 @@ internal interface JointAccountDataModule {
 
     @Binds
     @Singleton
+    fun bindJointTransferPayloadCodec(codec: DefaultJointTransferPayloadCodec): JointTransferPayloadCodec
+
+    @Binds
+    @Singleton
+    fun bindSafeAddressCalculator(calculator: DefaultSafeAddressCalculator): SafeAddressCalculator
+
+    @Binds
+    @Singleton
     fun bindSingleJointAccountListProducerFactory(
         factory: DefaultSingleJointAccountListProducer.Factory,
     ): SingleJointAccountListProducer.Factory
@@ -58,9 +81,31 @@ internal interface JointAccountDataModule {
 
     @Binds
     @Singleton
+    fun bindJointAccountSafeAddressResolver(
+        resolver: DefaultJointAccountSafeAddressResolver,
+    ): JointAccountSafeAddressResolver
+
+    @Binds
+    @Singleton
     fun bindJointAccountSupportedNetworksRepository(
         repository: DefaultJointAccountSupportedNetworksRepository,
     ): JointAccountSupportedNetworksRepository
+
+    @Binds
+    @Singleton
+    fun bindJointOperationSigner(signer: DefaultJointOperationSigner): JointOperationSigner
+
+    @Binds
+    @Singleton
+    fun bindJointOwnerAddressResolver(resolver: DefaultJointOwnerAddressResolver): JointOwnerAddressResolver
+
+    @Binds
+    @Singleton
+    fun bindJointOwnerKeysRepository(repository: DefaultJointOwnerKeysRepository): JointOwnerKeysRepository
+
+    @Binds
+    @Singleton
+    fun bindJointOperationBlockaidGate(gate: DefaultJointOperationBlockaidGate): JointOperationBlockaidGate
 
     companion object {
 
@@ -124,6 +169,15 @@ internal interface JointAccountDataModule {
                 factory = factory,
                 keyCreator = { params -> "joint_account_list_${params.userWalletId.stringValue}" },
             ) {}
+        }
+
+        @Provides
+        @Singleton
+        fun provideJointAccountPollingCoordinator(
+            fetcher: SingleJointAccountListFetcher,
+            appScope: AppCoroutineScope,
+        ): JointAccountPollingCoordinator {
+            return JointAccountPollingCoordinator(fetcher = fetcher, appScope = appScope)
         }
     }
 }

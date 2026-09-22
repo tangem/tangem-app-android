@@ -23,6 +23,7 @@ import com.tangem.core.ui.utils.toPx
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.common.ui.FeeBlockSuccess
+import com.tangem.features.send.common.ui.SignaturesBanner
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.send.ui.state.SendUM
@@ -80,7 +81,13 @@ private fun SuccessContent(
     ) {
         if (sendUM.confirmUM is ConfirmUM.Success) {
             TransactionDoneTitle(
-                title = resourceReference(R.string.sent_transaction_sent_title),
+                title = resourceReference(
+                    if (sendUM.confirmUM.signaturesUM != null) {
+                        R.string.common_in_progress
+                    } else {
+                        R.string.sent_transaction_sent_title
+                    },
+                ),
                 subtitle = resourceReference(
                     R.string.send_date_format,
                     wrappedList(
@@ -99,6 +106,9 @@ private fun SuccessContent(
         )
         destinationBlockComponent.Content(modifier = Modifier)
         FeeBlockSuccess(feeSelectorUM = sendUM.feeSelectorUM)
+        (sendUM.confirmUM as? ConfirmUM.Success)?.signaturesUM?.let { signaturesUM ->
+            SignaturesBanner(signaturesUM = signaturesUM)
+        }
         SpacerH(16.dp)
     }
 }

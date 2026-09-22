@@ -37,6 +37,7 @@ internal typealias WalletIdWithPredictionStatusDTO = Map<String, PredictionAccou
 internal class PredictionAccountStatusStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithPredictionStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithPredictionStatusDTO>,
+    private val dtoConverter: PredictionAccountStatusValueDTOConverter,
     scope: AppCoroutineScope,
 ) {
 
@@ -59,7 +60,7 @@ internal class PredictionAccountStatusStore(
                     .getOrDefault(emptyMap())
 
                 runtimeStore.store(
-                    cached.mapValues { (_, dto) -> PredictionAccountStatusValueDTOConverter.convertBack(dto) },
+                    cached.mapValues { (_, dto) -> dtoConverter.convertBack(dto) },
                 )
             } finally {
                 preloaded.complete(Unit)
@@ -120,7 +121,7 @@ internal class PredictionAccountStatusStore(
 
     /** A state the DTO cannot represent is one that must not outlive the session, so it leaves the disk copy alone. */
     private suspend fun storeInPersistence(userWalletId: UserWalletId, value: PredictionAccountStatusValue) {
-        val dto = PredictionAccountStatusValueDTOConverter.convert(value) ?: return
+        val dto = dtoConverter.convert(value) ?: return
 
         persistenceDataStore.updateData { stored ->
             stored + (userWalletId.stringValue to dto)

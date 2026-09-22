@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.cosign.CosignRequestRow
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
@@ -47,6 +48,14 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             )
         }
+        state.cosign?.let { cosign ->
+            CosignRequestRow(
+                state = cosign,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+            )
+        }
         TxHistoryDetailsStatusBanner(
             state = state.statusBanner,
             modifier = Modifier
@@ -64,6 +73,40 @@ private fun SingleAssetContent(state: TxHistoryDetailsUM.SingleAsset, modifier: 
                     top = if (state.statusBanner != null) 16.dp else 0.dp,
                     bottom = 16.dp,
                 ),
+        )
+        state.cosignAction?.let { cosignAction ->
+            CosignActionBlock(
+                state = cosignAction,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            )
+        }
+    }
+}
+
+/** Sign/Signed/Rejected CTA + its caption, mirroring the [TxHistoryDetailsUM.ProviderButtonUM] block layout. */
+@Composable
+private fun CosignActionBlock(state: TxHistoryDetailsUM.CosignActionUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        TangemButton(
+            modifier = Modifier.fillMaxWidth(),
+            variant = TangemButton.Variant.Primary,
+            text = state.buttonText,
+            isEnabled = state.isEnabled,
+            isLoading = state.isLoading,
+            iconEnd = state.iconEnd,
+            onClick = state.onClick,
+            size = TangemButton.Size.X12,
+        )
+        Text(
+            text = state.caption.resolveReference(),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
         )
     }
 }

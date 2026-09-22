@@ -53,6 +53,12 @@ internal interface InnerWalletRouter {
         source: AppRoute.ManageTokens.Source = AppRoute.ManageTokens.Source.ACCOUNT,
     )
 
+    /** Open the members screen of the wallet's joint account [cryptoAccountId] */
+    fun openJointAccountMembers(userWalletId: UserWalletId, cryptoAccountId: String)
+
+    /** Open [currency]'s token details and raise the joint operation [operationId] sheet on top */
+    fun openJointOperation(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String)
+
     /** Open add and manage tokens bottom sheet */
     fun openAddAndManageBottomSheet(userWalletId: UserWalletId)
 
@@ -122,4 +128,6 @@ internal interface InnerWalletRouter {
 
     /** Open Polymarket (prediction account) entry screen */
     fun openPolymarket(userWalletId: UserWalletId)
+
+    fun openCollectibles(userWalletId: UserWalletId)
 }

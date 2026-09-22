@@ -11,7 +11,6 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.tangem.common.R
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -20,8 +19,10 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.jointaccount.common.JointAccountDisplayNameComponent
+import com.tangem.features.jointaccount.impl.R
 import com.tangem.features.jointaccount.join.JointAccountJoinComponent
 import com.tangem.features.jointaccount.join.invitepreview.JointAccountInvitePreviewComponent
+import com.tangem.features.jointaccount.join.model.JoinResultAction
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
 import com.tangem.features.jointaccount.join.model.JointAccountJoinModel
 import com.tangem.features.jointaccount.join.navigation.JointAccountJoinRoute
@@ -110,12 +111,11 @@ internal class DefaultJointAccountJoinComponent @AssistedInject constructor(
         )
     }
 
-    // The suspend modifier is redundant until the join orchestrator lands, but the callback is suspending:
-    // the button's loading state ends when the action returns
-    @Suppress("RedundantSuspendModifier")
     private suspend fun onDisplayNameContinue(name: String) {
-        model.draftHolder.setDisplayName(name)
-        // TODO: start the join signing (NFC) session — the join orchestrator is a separate task
+        when (model.join(inviteId = params.inviteId, memberName = name)) {
+            JoinResultAction.CloseFlow -> router.pop()
+            JoinResultAction.None -> Unit
+        }
     }
 
     private fun onChildBack() {

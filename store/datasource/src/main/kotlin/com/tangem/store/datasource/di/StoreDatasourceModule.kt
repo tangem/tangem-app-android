@@ -5,15 +5,19 @@ import com.tangem.core.remote.RetrofitFactory
 import com.tangem.core.remote.Timeouts
 import com.tangem.core.remote.build
 import com.tangem.core.remote.config.ApiConfig
+import com.tangem.core.remote.config.TangemGatewayApiConfig
+import com.tangem.core.remote.header.CardAuthHeaderProvider
 import com.tangem.core.remote.header.TangemApiKeyHeaderProvider
 import com.tangem.core.remote.moshi.NetworkMoshiConfigurer
-import com.tangem.store.datasource.api.TangemTech
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.store.datasource.addressbook.AddressBookApi
 import com.tangem.store.datasource.blockaid.BlockAidApi
 import com.tangem.store.datasource.config.BlockAid
 import com.tangem.store.datasource.config.News
+import com.tangem.store.datasource.config.TangemTech
 import com.tangem.store.datasource.config.StoreEnvironmentConfig
 import com.tangem.store.datasource.config.SurveySparrow
+import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.markets.TangemTechMarketsApi
 import com.tangem.store.datasource.markets.addCoinIndicatorsEnumFallbackAdapters
 import com.tangem.store.datasource.news.NewsApi
@@ -33,6 +37,33 @@ import javax.inject.Singleton
 internal object StoreDatasourceModule {
 
     private const val TIMEOUT_60_SECONDS = 60L
+
+    @Provides
+    @IntoMap
+    @StringKey(TangemGatewayApiConfig.TANGEM_TECH_KEY)
+    fun provideTangemTechConfig(
+        apiKeyHeaderProvider: TangemApiKeyHeaderProvider,
+        cardAuthHeaderProvider: CardAuthHeaderProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return TangemTech(
+            apiKeyHeader = apiKeyHeaderProvider,
+            cardAuthHeader = cardAuthHeaderProvider,
+            appInfoProvider = appInfoProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemTechApi(factory: RetrofitFactory): TangemTechApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
 
     @Provides
     @IntoMap
@@ -102,7 +133,19 @@ internal object StoreDatasourceModule {
     fun provideAddressBookApi(factory: RetrofitFactory): AddressBookApi {
         return factory.build(
             RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
+                shouldApplyTimeoutAnnotations = false,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideJointAccountApi(factory: RetrofitFactory): JointAccountApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
             ),
@@ -114,7 +157,7 @@ internal object StoreDatasourceModule {
     fun provideTangemTechMarketsApi(factory: RetrofitFactory): TangemTechMarketsApi {
         return factory.build(
             RetrofitApiSpec(
-                apiConfigId = TangemTech.ID,
+                apiConfigId = TangemGatewayApiConfig.TANGEM_TECH_ID,
                 shouldApplyTimeoutAnnotations = false,
                 shouldUseSessionAuth = false,
                 timeouts = Timeouts(
