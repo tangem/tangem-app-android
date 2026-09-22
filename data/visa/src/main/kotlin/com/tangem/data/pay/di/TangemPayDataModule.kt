@@ -37,6 +37,7 @@ import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.pay.usecase.bankofframp.AwaitBankOfframpSignatureUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
+import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
@@ -567,21 +568,11 @@ internal interface TangemPayDataModule {
         @Singleton
         fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
 
-        // Mock until the order, polling and signature endpoints of the bank off-ramp BFF are agreed; the
-        // recipients and routes a withdrawal is built from already come from the backend.
-        @Provides
-        @Singleton
-        fun provideBankOfframpOrderRepository(): BankOfframpOrderRepository = MockBankOfframpOrderRepository()
-
-        // Geo endpoints are mocked while their country list is filled in; to go live, make the default repository
-        // the origin of the cache. Eligibility checks still reach the backend through the delegate.
         @Provides
         @Singleton
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
-        ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(
-            origin = MockTangemPayResidencyRepository(origin = repository),
-        )
+        ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)
 
         @Provides
         @Singleton
@@ -647,6 +638,13 @@ internal interface TangemPayDataModule {
             repository: BankOfframpOrderRepository,
         ): CancelBankOfframpOrderUseCase {
             return CancelBankOfframpOrderUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideFindActiveBankOfframpOrderUseCase(
+            repository: CustomerOrderRepository,
+        ): FindActiveBankOfframpOrderUseCase {
+            return FindActiveBankOfframpOrderUseCase(repository = repository)
         }
     }
 }
