@@ -98,6 +98,18 @@ function isSourceOnlyToken(token) {
   return top === 'palette' || top === 'dimension' || top === 'gradient';
 }
 
+/** codeSyntax.Android marker set by designers on tokens that must not reach Android code. */
+const ANDROID_IGNORE_MARKER = 'androidIgnores';
+
+function isAndroidIgnored(token) {
+  return token.$extensions?.['com.figma.codeSyntax']?.Android === ANDROID_IGNORE_MARKER;
+}
+
+/** Token belongs in the generated Kotlin: not a source-only set and not ignored for Android. */
+function isGeneratedToken(token) {
+  return !isSourceOnlyToken(token) && !isAndroidIgnored(token);
+}
+
 /**
  * Convert a resolved CSS color string to Compose Color(0xAARRGGBB).
  * Handles: #RRGGBB, #AARRGGBB, rgba(r, g, b, a), rgb(r, g, b)
@@ -436,7 +448,7 @@ StyleDictionary.registerFormat({
   name: 'kotlin/compose-palette',
   format: ({ dictionary }) => {
     const paletteTokens = dictionary.allTokens.filter(
-      t => t.$type === 'color' && t.path[0] === 'palette',
+      t => t.$type === 'color' && t.path[0] === 'palette' && !isAndroidIgnored(t),
     );
 
     const entries = paletteTokens.map(token => {
@@ -488,7 +500,7 @@ StyleDictionary.registerFormat({
   name: 'kotlin/compose-typography3',
   format: ({ dictionary }) => {
     const typoTokens = dictionary.allTokens.filter(
-      t => t.$type === 'typography' && !isSourceOnlyToken(t),
+      t => t.$type === 'typography' && isGeneratedToken(t),
     );
 
     // Group by category (path[1]: display, heading, body, subheading, caption)
@@ -599,7 +611,7 @@ StyleDictionary.registerFormat({
   name: 'kotlin/compose-colors3-class',
   format: ({ dictionary }) => {
     const colorTokens = dictionary.allTokens.filter(
-      t => t.$type === 'color' && !isSourceOnlyToken(t),
+      t => t.$type === 'color' && isGeneratedToken(t),
     );
 
     colors3StructureTree = buildClassStructureTree(colorTokens);
@@ -640,7 +652,7 @@ StyleDictionary.registerFormat({
     // Ensure tree is built (should already be set by class format in Light build)
     if (!colors3StructureTree) {
       const colorTokens = dictionary.allTokens.filter(
-        t => t.$type === 'color' && !isSourceOnlyToken(t),
+        t => t.$type === 'color' && isGeneratedToken(t),
       );
       colors3StructureTree = buildClassStructureTree(colorTokens);
       resolveClassTreeConflicts(colors3StructureTree);
@@ -648,7 +660,7 @@ StyleDictionary.registerFormat({
 
     // Build value map: jsonPath → Kotlin palette reference or Color literal
     const colorTokens = dictionary.allTokens.filter(
-      t => t.$type === 'color' && !isSourceOnlyToken(t),
+      t => t.$type === 'color' && isGeneratedToken(t),
     );
     const valueMap = new Map();
     for (const token of colorTokens) {
@@ -689,7 +701,7 @@ const composePlatformTransforms = [
 for (const [themeName, { sets }] of Object.entries(themeBuilds)) {
   console.log(`\nBuilding ${themeName} color tokens...`);
 
-  const colorFilter = token => token.$type === 'color' && !isSourceOnlyToken(token);
+  const colorFilter = token => token.$type === 'color' && isGeneratedToken(token);
 
   const files = [];
 
@@ -745,7 +757,7 @@ const paletteSd = new StyleDictionary({
         {
           destination: 'TangemColorPalette.kt',
           format: 'kotlin/compose-palette',
-          filter: token => token.$type === 'color' && token.path[0] === 'palette',
+          filter: token => token.$type === 'color' && token.path[0] === 'palette' && !isAndroidIgnored(token),
         },
       ],
     },
@@ -771,7 +783,7 @@ const sd = new StyleDictionary({
         {
           destination: 'TangemTypography3.kt',
           format: 'kotlin/compose-typography3',
-          filter: token => token.$type === 'typography' && !isSourceOnlyToken(token),
+          filter: token => token.$type === 'typography' && isGeneratedToken(token),
         },
       ],
     },

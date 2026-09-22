@@ -6,7 +6,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
@@ -32,7 +32,7 @@ internal class ForYouSelectedPortfolioConverter(
     override fun convert(value: Map<UserWalletId, AccountStatusList>): ForYouSelectedPortfolio {
         val allAccounts = value.values
             .flatMap { it.accountStatuses }
-            .filterCryptoPortfolio()
+            .filterIsInstance<AccountStatus.Personal>()
 
         val pickedAccounts = allAccounts.filter { it.accountId in selectedAccounts }
 

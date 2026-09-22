@@ -1,12 +1,14 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.domain.appsflyer.AppsFlyerDeeplink
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.contracts.ExperimentalContracts
@@ -14,11 +16,24 @@ import kotlin.contracts.contract
 
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
+    private val isDeferredDeepLinkHandled = AtomicBoolean(false)
+
     fun handle(params: Map<String?, Any?>) {
+        if (isDeferredDeepLinkHandled.get()) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: the deferred deep link is already handled by UDL")
+            return
+        }
+
+        if (!isFirstLaunch(params)) {
+            TangemLogger.i("Skipping AppsFlyer conversion data: cached install payload replayed on app open")
+            return
+        }
+
         handle(
             deepLinkValue = params[DEEP_LINK_VALUE] as? String,
             deepLinkSub1 = params[DEEP_LINK_SUB_1] as? String,
@@ -27,6 +42,8 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     fun handleDeeplink(deepLink: DeepLink) {
+        if (deepLink.isDeferred == true) isDeferredDeepLinkHandled.set(true)
+
         handle(
             deepLinkValue = deepLink.deepLinkValue,
             deepLinkSub1 = deepLink.getStringValue(DEEP_LINK_SUB_1),
@@ -42,12 +59,14 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         // Navigation below (and the stories-skip gate reading it) must stay bound to the known deeplink values.
         storeReferralParams(refcode = deepLinkSub1, campaign = deepLinkSub2)
 
-        when (val deeplink = AppsFlyerDeeplink.from(deepLinkValue)) {
-            AppsFlyerDeeplink.Referral, AppsFlyerDeeplink.TangemPayMobileOnboarding ->
-                storeNavigationDeeplink(deeplink.deepLinkValue)
+        when (val target = AppsFlyerDeeplinkTarget.from(deepLinkValue)) {
+            is AppsFlyerDeeplinkTarget.Known -> storeNavigationDeeplink(target.deeplink.deepLinkValue)
+            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> storeCampaignDeeplink(target.key)
             null -> TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
         }
     }
+
+    private fun isFirstLaunch(params: Map<String?, Any?>): Boolean = params[IS_FIRST_LAUNCH]?.toString() == "true"
 
     private fun storeReferralParams(refcode: String?, campaign: String?) {
         if (!isValidParam(refcode)) return
@@ -69,16 +88,25 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         return value != null && value.isNotBlank() && !value.equals("null", ignoreCase = true)
     }
 
+    private fun storeCampaignDeeplink(campaignKey: String) {
+        if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) {
+            TangemLogger.i("Custom cards co-brand is disabled, ignoring campaign deep link: $campaignKey")
+            return
+        }
+
+        storeNavigationDeeplink(campaignKey)
+    }
+
     private fun storeNavigationDeeplink(deepLinkValue: String) {
         coroutineScope.launch {
-            appsFlyerStore.storeNavigationDeeplink(deepLinkValue)
+            appsFlyerRepository.storeNavigationDeeplink(deepLinkValue)
             TangemLogger.i("AppsFlyer navigation deep link stored: $deepLinkValue")
         }
     }
 
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
-            appsFlyerStore.storeIfAbsent(
+            appsFlyerRepository.storeIfAbsent(
                 value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
             )
         }
@@ -86,6 +114,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
 
     private companion object {
 
+        const val IS_FIRST_LAUNCH = "is_first_launch"
         const val DEEP_LINK_VALUE = "deep_link_value"
         const val DEEP_LINK_SUB_1 = "deep_link_sub1"
         const val DEEP_LINK_SUB_2 = "deep_link_sub2"

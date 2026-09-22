@@ -15,6 +15,8 @@ data class TokenMarket(
     val yieldRate: BigDecimal?,
     val updateTimestamp: Long?,
     val networks: List<Network>?,
+    /** The token is blocked in the user's region: it must not be tradable there. */
+    val isRestrictedForCountry: Boolean,
     private val imageHost: String,
 ) {
 

@@ -99,7 +99,7 @@ internal class ExpressTxToTransactionItemUMConverter(
         return owner?.toAssetOwner()
     }
 
-    /** Maps a resolved counterparty owner to the subtitle tail; an external address adds no tail (`null`). */
+    /** Maps a resolved counterparty owner to the subtitle tail; a foreign address adds no tail (`null`). */
     private fun ResolvedOwner.toAssetOwner(): ContentSubtitle.AssetOwner? = when (this) {
         is ResolvedOwner.OwnAccount -> ContentSubtitle.AssetOwner.Account(
             name = account.accountName.toUM().value,
@@ -113,7 +113,7 @@ internal class ExpressTxToTransactionItemUMConverter(
             name = walletInfo.name,
             deviceIconUM = walletInfo.deviceIconUM,
         )
-        is ResolvedOwner.External -> null
+        is ResolvedOwner.Foreign -> null
     }
 
     private fun onrampContent(onramp: ExpressTx.Onramp): TransactionItemUM.Content {

@@ -3,6 +3,8 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 import android.app.Application
 import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -37,10 +39,14 @@ internal class OpenTelemetryMetricsHolderTest {
         application: Application = createApplication(),
     ): OpenTelemetryMetricsHolder {
         every { featureToggles.isMetricsEnabled } returns isToggleEnabled
+        val settingsRepository: SettingsRepository = mockk {
+            every { getUserCountryCodeSync() } returns UserCountry.Other(code = "de")
+        }
         return OpenTelemetryMetricsHolder(
             application = application,
             environmentConfig = EnvironmentConfig(otlpApiKey = apiKey),
             featureToggles = featureToggles,
+            settingsRepository = settingsRepository,
             dispatchers = dispatchers,
             appScope = appScope,
         )

@@ -79,7 +79,7 @@ private fun SwapSuccessScreenContent(
     ) {
         SpacerH(56.dp)
         TransactionDoneTitle(
-            title = if (state.isTransferMode) {
+            title = state.title ?: if (state.isTransferMode) {
                 resourceReference(R.string.transfer_in_progress_title)
             } else {
                 resourceReference(R.string.swap_in_progress)

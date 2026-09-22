@@ -5,42 +5,70 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.CurrencyNotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.message.TangemMessageButtonUM
+import com.tangem.core.ui.ds.message.TangemMessageUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.tokendetails.impl.R
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 internal sealed interface ExchangeStatusNotification {
 
-    sealed class CommonNotification(val config: NotificationConfig) : ExchangeStatusNotification
+    sealed class CommonNotification(val messageUM: TangemMessageUM) : ExchangeStatusNotification
 
     @Deprecated("Use one in ExpressNotificationsUM")
     data class NeedVerification(val onGoToProviderClick: () -> Unit) : CommonNotification(
-        config = NotificationConfig(
+        messageUM = TangemMessageUM(
+            id = "express_need_verification",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
             title = resourceReference(R.string.express_exchange_notification_verification_title),
             subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
-            iconResId = R.drawable.ic_alert_triangle_20,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_go_to_provider),
-                onClick = onGoToProviderClick,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.common_go_to_provider),
+                    type = TangemButtonType.Secondary,
+                    onClick = onGoToProviderClick,
+                ),
             ),
         ),
     )
 
     @Deprecated("Use one in ExpressNotificationsUM")
     data class Failed(val onGoToProviderClick: () -> Unit) : CommonNotification(
-        config = NotificationConfig(
+        messageUM = TangemMessageUM(
+            id = "express_failed",
+            variant = TangemMessageBanner.Variant.Error,
+            shouldShowGlowRing = true,
             title = resourceReference(R.string.express_exchange_notification_failed_title),
             subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
-            iconResId = R.drawable.ic_alert_circle_24,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_go_to_provider),
-                onClick = onGoToProviderClick,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_error_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.error },
+            ),
+            iconSize = 20.dp,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.common_go_to_provider),
+                    type = TangemButtonType.Secondary,
+                    onClick = onGoToProviderClick,
+                ),
             ),
         ),
     )
@@ -49,13 +77,23 @@ internal sealed interface ExchangeStatusNotification {
         private val onGoToProviderClick: () -> Unit,
         private val providerName: String,
     ) : CommonNotification(
-        config = NotificationConfig(
+        messageUM = TangemMessageUM(
+            id = "express_long_time_exchange",
+            variant = TangemMessageBanner.Variant.Default,
+            shouldShowGlowRing = true,
             title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
             subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),
-            iconResId = R.drawable.ic_alert_triangle_20,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.provider_name_support, wrappedList(providerName)),
-                onClick = onGoToProviderClick,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.provider_name_support, wrappedList(providerName)),
+                    type = TangemButtonType.Secondary,
+                    onClick = onGoToProviderClick,
+                ),
             ),
         ),
     )

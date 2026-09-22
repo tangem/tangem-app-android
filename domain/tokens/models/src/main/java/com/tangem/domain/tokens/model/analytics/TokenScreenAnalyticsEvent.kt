@@ -309,6 +309,7 @@ sealed class TokenScreenAnalyticsEvent(
                 -> UNAVAILABLE
                 is ScenarioUnavailabilityReason.YieldSupplyApprovalRequired -> APPROVAL_REQUIRED
                 ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
+                ScenarioUnavailabilityReason.JointAccount -> UNAVAILABLE
                 ScenarioUnavailabilityReason.TrustlineRequired -> TRUSTLINE_REQUIREMENT
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING

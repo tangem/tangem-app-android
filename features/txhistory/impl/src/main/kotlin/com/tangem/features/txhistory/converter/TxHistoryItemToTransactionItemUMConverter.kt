@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -15,9 +16,13 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.domain.addressbook.model.Contact
+import com.tangem.domain.addressbook.model.portfolioIcon
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
@@ -27,6 +32,7 @@ import com.tangem.features.txhistory.converter.TxHistoryStatusPillConverter.Inpu
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.counterpartyAddress
+import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.features.txhistory.model.resolveOwner
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -48,10 +54,12 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private val currency: CryptoCurrency,
     private val txHistoryUiActions: TxHistoryUiActions,
     private val lookupContext: TxHistoryLookupContext? = null,
+    private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TxInfo, TransactionItemUM> {
 
     private val titleConverter = TxHistoryTitleConverter()
     private val pillConverter = TxHistoryStatusPillConverter(currency, txHistoryUiActions)
+    private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: TxInfo): TransactionItemUM {
@@ -79,7 +87,9 @@ internal class TxHistoryItemToTransactionItemUMConverter(
             is TransactionType.YieldSupply.InitializeToken -> yieldInitializeTokenContent(value, uiStatus, type)
             is TransactionType.YieldSupply.ReactivateToken -> yieldReactivateTokenContent(value, uiStatus, type)
             is TransactionType.UnknownOperation -> unknownOperationContent(value, uiStatus)
-            is TransactionType.GaslessFee -> gaslessFeeContent(value, uiStatus)
+            is TransactionType.GaslessFee,
+            is TransactionType.NetworkFee,
+            -> feeContent(value, uiStatus)
             // endregion
         }
     }
@@ -133,30 +143,24 @@ internal class TxHistoryItemToTransactionItemUMConverter(
     private fun transferContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content {
         val counterpartyAddress = (tx.interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
         val direction = if (tx.isOutgoing) ContentSubtitle.Direction.TO else ContentSubtitle.Direction.FROM
-        val ownSubtitle = counterpartyAddress?.let { address ->
-            resolveOwnSubtitle(
-                lookupContext = lookupContext,
-                networkRawId = currency.network.id.rawId,
+        val counterparty = counterpartyAddress?.let { address ->
+            lookupContext?.resolveCounterparty(
                 address = address,
-                direction = direction,
+                networkRawId = currency.network.id.rawId,
+                isOutgoing = tx.isOutgoing,
             )
         }
 
-        val title = titleConverter.convert(tx, isOwnTransfer = ownSubtitle != null)
-
-        val subtitle = ownSubtitle ?: when {
-            counterpartyAddress != null -> ContentSubtitle.ExternalAddress(
-                direction = direction,
-                rawAddress = counterpartyAddress,
-                briefAddress = counterpartyAddress.toBriefAddressFormat(),
-            )
+        val subtitle = when {
+            counterparty != null -> counterparty.toSubtitle(direction)
+            counterpartyAddress != null -> externalAddressSubtitle(counterpartyAddress, direction)
             else -> tx.extractAddressSubtitle()
         }
 
         return buildContent(
             tx = tx,
             uiStatus = uiStatus,
-            title = title,
+            title = titleConverter.convert(tx, isOwnTransfer = counterparty.isOwnPortfolio()),
             icon = tx.directionalIcon(),
             subtitle = subtitle,
         )
@@ -248,14 +252,27 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         subtitle = tx.operationCounterpartySubtitle(),
     )
 
-    private fun gaslessFeeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
+    /** A row that is nothing but a network fee — the gasless fee leg, or a token transfer in the coin history. */
+    private fun feeContent(tx: TxInfo, uiStatus: TransactionItemUM.Content.Status): TransactionItemUM.Content =
         buildContent(
             tx = tx,
             uiStatus = uiStatus,
             title = titleConverter.convert(tx),
-            icon = tx.directionalIcon(),
-            subtitle = tx.extractAddressSubtitle(),
+            icon = TxIcon.Vector(Icons.ic_percent_20),
+            subtitle = tx.feeSubtitle(),
         )
+
+    /** What the fee was paid for; a gasless leg or an untracked token has nothing to name and says so instead. */
+    private fun TxInfo.feeSubtitle(): ContentSubtitle {
+        val networkFee = type as? TransactionType.NetworkFee
+        val symbol = networkFee?.amount?.currencySymbol?.ifBlank { null }
+            ?: return ContentSubtitle.Plain(resourceReference(R.string.transaction_history_fee_for_sending))
+
+        return ContentSubtitle.FeeFor(
+            symbol = symbol,
+            icon = networkFee.resolveToken(networkTokens)?.let(iconStateConverter::convert),
+        )
+    }
 
     private fun buildContent(
         tx: TxInfo,
@@ -281,44 +298,85 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 // region Content building helpers
 
 private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
+    // A network-fee transaction moved no coin of its own, so the row shows the fee instead of its own amount.
+    val value = if (type is TransactionType.NetworkFee) fee?.value ?: amount else amount
     val prefix = when {
         status is TxInfo.TransactionStatus.Failed -> ""
-        amount.isZero() -> ""
+        value.isZero() -> ""
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS else StringsSigns.PLUS
     }
-    return prefix + amount.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
+    return prefix + value.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim()
 }
 
 // endregion
 
 // region Subtitles
 
+/**
+ * The own-portfolio subtitle for [address], or `null` when it resolves to anything else — a saved contact or an
+ * external address. Used by the paths that only reclassify a row when the counterparty is the user's own.
+ */
 private fun resolveOwnSubtitle(
     lookupContext: TxHistoryLookupContext?,
     networkRawId: Network.RawID,
     address: String,
     direction: ContentSubtitle.Direction,
 ): ContentSubtitle? {
-    val ctx = lookupContext ?: return null
-    return when (val resolved = ctx.resolveOwner(address, networkRawId)) {
-        is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
-            direction = direction,
-            accountName = resolved.account.accountName.toUM().value,
-            iconResId = resolved.account.icon.value.getResId(),
-            iconBackgroundColor = resolved.account.icon.color.getUiColor(),
-        )
-        is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
-            direction = direction,
-            accountName = resolved.account.accountName.toUM().value,
-        )
-        is ResolvedOwner.OwnWallet -> ContentSubtitle.OwnWallet(
-            direction = direction,
-            walletName = resolved.walletInfo.name,
-            deviceIconUM = resolved.walletInfo.deviceIconUM,
-        )
-        // External counterparty: caller falls back to ContentSubtitle.ExternalAddress.
-        is ResolvedOwner.External -> null
+    val owner = lookupContext?.resolveOwner(address, networkRawId) ?: return null
+    return if (owner.isOwnPortfolio()) owner.toSubtitle(direction) else null
+}
+
+/** One of the user's own portfolios — a saved contact or an external address is somebody else's. */
+private fun ResolvedOwner?.isOwnPortfolio(): Boolean = when (this) {
+    is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount, is ResolvedOwner.OwnWallet -> true
+    is ResolvedOwner.Foreign, null -> false
+}
+
+private fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): ContentSubtitle = when (this) {
+    is ResolvedOwner.OwnAccount -> ContentSubtitle.OwnAccount(
+        direction = direction,
+        accountName = account.accountName.toUM().value,
+        iconResId = account.icon.value.getResId(),
+        iconBackgroundColor = account.icon.color.getUiColor(),
+    )
+    is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
+        direction = direction,
+        accountName = account.accountName.toUM().value,
+    )
+    is ResolvedOwner.OwnWallet -> ContentSubtitle.OwnWallet(
+        direction = direction,
+        walletName = walletInfo.name,
+        deviceIconUM = walletInfo.deviceIconUM,
+    )
+    is ResolvedOwner.SavedContact -> ContentSubtitle.Contact(
+        direction = direction,
+        contactName = contact.name.value,
+        avatar = contact.toContactAvatar(),
+    )
+    is ResolvedOwner.External -> externalAddressSubtitle(address, direction)
+}
+
+private fun externalAddressSubtitle(address: String, direction: ContentSubtitle.Direction) =
+    ContentSubtitle.ExternalAddress(
+        direction = direction,
+        rawAddress = address,
+        briefAddress = address.toBriefAddressFormat(),
+    )
+
+/**
+
+ * icon picked in the contact editor renders as its own drawable.
+ */
+private fun Contact.toContactAvatar(): ContentSubtitle.ContactAvatar {
+    val icon = portfolioIcon()
+    val color = icon.color.getUiColor()
+    val monogram = name.value.firstOrNull()
+
+    return if (icon.value == CryptoPortfolioIcon.Icon.Letter && monogram != null) {
+        ContentSubtitle.ContactAvatar.Monogram(char = monogram, color = color)
+    } else {
+        ContentSubtitle.ContactAvatar.Resource(resId = icon.value.getResId(), color = color)
     }
 }
 

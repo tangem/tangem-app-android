@@ -1,7 +1,7 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.data.networks.entity.NetworkStatusDM
 import com.tangem.domain.models.network.Network
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
@@ -49,6 +49,13 @@ class NetworkDerivationPathConverterTest {
                 ),
                 expected = Network.DerivationPath.None,
             ),
+            ConvertModel(
+                value = NetworkStatusDM.DerivationPath(
+                    value = "m/44'/60'/888888'/0/1",
+                    type = NetworkStatusDM.DerivationPath.Type.JOINT,
+                ),
+                expected = Network.DerivationPath.Joint("m/44'/60'/888888'/0/1"),
+            ),
         )
     }
 
@@ -86,6 +93,13 @@ class NetworkDerivationPathConverterTest {
                 expected = NetworkStatusDM.DerivationPath(
                     value = "",
                     type = NetworkStatusDM.DerivationPath.Type.NONE,
+                ),
+            ),
+            ConvertBackModel(
+                value = Network.DerivationPath.Joint("m/44'/60'/888888'/0/1"),
+                expected = NetworkStatusDM.DerivationPath(
+                    value = "m/44'/60'/888888'/0/1",
+                    type = NetworkStatusDM.DerivationPath.Type.JOINT,
                 ),
             ),
         )

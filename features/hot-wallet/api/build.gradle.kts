@@ -9,10 +9,13 @@ android {
 }
 
 dependencies {
+    api(deps.arrow.core)
     api(projects.common.routing)
 
     /* Project - Domain */
+    api(projects.domain.cloudBackup)
     api(projects.domain.models)
+    api(projects.domain.socialLogin)
     api(projects.domain.wallets)
 
     /* Project - Core */

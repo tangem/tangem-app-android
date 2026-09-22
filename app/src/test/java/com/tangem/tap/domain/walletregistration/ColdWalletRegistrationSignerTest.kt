@@ -3,10 +3,18 @@ package com.tangem.tap.domain.walletregistration
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.CryptoUtils.generatePublicKey
 import com.tangem.crypto.sign
+import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.operations.attestation.AttestWalletKeyResponse
+import io.mockk.clearMocks
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -18,7 +26,8 @@ internal class ColdWalletRegistrationSignerTest {
     }
 
     private val curve = EllipticCurve.Secp256k1
-    private val signer = ColdWalletRegistrationSigner()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val signer = ColdWalletRegistrationSigner(analyticsEventHandler)
 
     private val nonceBytes = "nonce-value".toByteArray()
     private val salt = ByteArray(SALT) { 7 }
@@ -28,6 +37,44 @@ internal class ColdWalletRegistrationSignerTest {
     private val walletPublicKey = generatePublicKey(walletPrivateKey, curve)
     private val cardPrivateKey = ByteArray(KEY) { 2 }
     private val cardPublicKey = generatePublicKey(cardPrivateKey, curve)
+
+    private val baseCard = MockScanResponseFactory.create(
+        cardConfig = GenericCardConfig(maxWalletCount = 1),
+        derivedKeys = emptyMap(),
+    ).card
+
+    @BeforeEach
+    fun setup() = clearMocks(analyticsEventHandler)
+
+    @Test
+    fun `firstSecpWalletPublicKey returns the first wallet key when it is secp256k1`() {
+        val card = cardWith(wallet(EllipticCurve.Secp256k1, walletPublicKey), wallet(EllipticCurve.Ed25519))
+
+        assertThat(signer.firstSecpWalletPublicKey(card)).isEqualTo(walletPublicKey)
+    }
+
+    @Test
+    fun `firstSecpWalletPublicKey reports an exception event and aborts when the first wallet is not secp256k1`() {
+        // Arrange — first wallet is Ed25519, not the expected secp256k1.
+        val card = cardWith(wallet(EllipticCurve.Ed25519), wallet(EllipticCurve.Secp256k1, walletPublicKey))
+
+        // Act
+        val error = runCatching { signer.firstSecpWalletPublicKey(card) }.exceptionOrNull()
+
+        // Assert — registration is aborted and the anomaly is reported.
+        assertThat(error).isInstanceOf(ColdWalletUnexpectedCurveException::class.java)
+        verify(exactly = 1) { analyticsEventHandler.send(any<BackendAuthAnalyticsEvent.UnexpectedWalletCurve>()) }
+    }
+
+    @Test
+    fun `firstSecpWalletPublicKey aborts without reporting when the card has no wallets`() {
+        val card = cardWith()
+
+        val error = runCatching { signer.firstSecpWalletPublicKey(card) }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(IllegalStateException::class.java)
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
+    }
 
     @Test
     fun `buildBundle maps card and wallet signatures to RSV and walletStatus to a single byte`() {
@@ -118,6 +165,12 @@ internal class ColdWalletRegistrationSignerTest {
         assertThat(bundle.walletStatusByte).isNull()
     }
 
+    private fun cardWith(vararg wallets: CardDTO.Wallet): CardDTO =
+        baseCard.copy(cardId = "CARD", wallets = wallets.toList())
+
+    private fun wallet(curve: EllipticCurve, publicKey: ByteArray? = ByteArray(PUBLIC_KEY) { 4 }): CardDTO.Wallet =
+        baseCard.wallets.first().copy(curve = curve, publicKey = publicKey)
+
     private fun response(
         walletSignature: ByteArray,
         cardSignature: ByteArray?,
@@ -138,5 +191,6 @@ internal class ColdWalletRegistrationSignerTest {
         const val SALT = 16
         const val RSV = 65
         const val EVM_V_OFFSET = 27
+        const val PUBLIC_KEY = 65
     }
 }

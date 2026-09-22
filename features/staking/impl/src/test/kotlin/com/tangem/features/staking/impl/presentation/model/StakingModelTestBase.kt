@@ -41,15 +41,14 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.helpers.GetEffectiveStakingFee
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.transformer.Transformer
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.BeforeEach
 
@@ -209,17 +208,6 @@ internal abstract class StakingModelTestBase {
             messageSender = messageSender,
             appRouter = appRouter,
             featureTogglesManager = featureTogglesManager,
-        )
-    }
-
-    private fun TestScope.createTestingCoroutineDispatcherProvider(): TestingCoroutineDispatcherProvider {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
-        return TestingCoroutineDispatcherProvider(
-            main = testDispatcher,
-            mainImmediate = testDispatcher,
-            io = testDispatcher,
-            default = testDispatcher,
-            single = testDispatcher,
         )
     }
 

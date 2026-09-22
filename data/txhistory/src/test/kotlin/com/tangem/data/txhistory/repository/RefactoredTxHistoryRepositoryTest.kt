@@ -4,16 +4,19 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.factory.ExpressTransactionAssetFactory
 import com.tangem.data.txhistory.repository.factory.ExpressTxByIdFactory
-import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
-import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.datasource.local.txhistory.db.dao.HistoryIndexDao
-import com.tangem.datasource.local.txhistory.db.entity.HistoryIndexEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressExchangeEntity
-import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.store.datasource.txhistory.TxHistoryItemsStore
+import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
+import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
+import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
+import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.CapturingSlot
 import io.mockk.clearMocks
@@ -30,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
 
@@ -60,7 +64,7 @@ internal class RefactoredTxHistoryRepositoryTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(walletManagersFacade, expressHistoryDao, historyIndexDao, expressTransactionAssetFactory)
-        coEvery { walletManagersFacade.getDefaultAddress(any(), any()) } returns ADDRESS
+        coEvery { walletManagersFacade.getAddresses(any(), any()) } returns setOf(defaultAddress())
         coEvery { walletManagersFacade.usedDynamicAddresses(any(), any()) } returns null
         coEvery { expressTransactionAssetFactory.create(any(), any(), any(), any()) } returns emptyMap()
         every { expressHistoryDao.getProvidersById() } returns flowOf(emptyMap())
@@ -81,7 +85,7 @@ internal class RefactoredTxHistoryRepositoryTest {
                 repository.getExpressHistory(USER_WALLET_ID, currency, iso("2026-08-12T12:00:00Z")).first()
 
                 // Assert
-                assertThat(bound.captured).isEqualTo("2026-08-11T12:00:00Z")
+                assertThat(bound.captured).isEqualTo("2026-08-11T12:00:00.000Z")
             }
 
         @Test
@@ -126,9 +130,34 @@ internal class RefactoredTxHistoryRepositoryTest {
                 repository.getIndexedExpressHistory(USER_WALLET_ID, currency, limit = 50).first()
 
                 // Assert
-                assertThat(bound.captured).isEqualTo("2026-08-12T12:00:00Z")
+                assertThat(bound.captured).isEqualTo("2026-08-12T12:00:00.000Z")
             }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun boundaryRow(model: BoundaryRowModel) = runTest {
+            // Arrange
+            val bound = stubQueries()
+            every {
+                historyIndexDao.observePage(any(), any<HistoryIndexDao.Cursor>(), any())
+            } returns flowOf(listOf(createIndexEntity(sortTimeMillis = iso(model.storedCreatedAt))))
+
+            // Act
+            repository.getIndexedExpressHistory(USER_WALLET_ID, currency, limit = 50).first()
+
+            // Assert — SQL keeps the row via `created_at >= bound`, compared lexicographically
+            assertThat(bound.captured).isAtMost(model.storedCreatedAt)
+        }
+
+        /** The `created_at` of the page's oldest row — the one the bound is taken from, so it must survive it. */
+        private fun provideTestModels() = listOf(
+            BoundaryRowModel(storedCreatedAt = "2026-08-12T12:00:00.789Z"),
+            BoundaryRowModel(storedCreatedAt = "2026-08-12T12:00:00.000Z"),
+            BoundaryRowModel(storedCreatedAt = "2026-08-12T12:00:00Z"),
+        )
     }
+
+    data class BoundaryRowModel(val storedCreatedAt: String)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -146,7 +175,7 @@ internal class RefactoredTxHistoryRepositoryTest {
                 repository.getExpressHistory(USER_WALLET_ID, currency, NO_LOWER_BOUND).first()
 
                 // Assert — the default address is not repeated even though it is reported as used
-                assertThat(addresses.captured).containsExactly(ADDRESS, DYNAMIC_ADDRESS).inOrder()
+                assertThat(addresses.captured).containsExactly(ADDRESS, DYNAMIC_ADDRESS)
             }
 
         @Test
@@ -163,14 +192,47 @@ internal class RefactoredTxHistoryRepositoryTest {
             repository.getIndexedExpressHistory(USER_WALLET_ID, currency, limit = 50).first()
 
             // Assert
-            assertThat(addresses.captured).containsExactly(ADDRESS, DYNAMIC_ADDRESS).inOrder()
+            assertThat(addresses.captured).containsExactly(ADDRESS, DYNAMIC_ADDRESS)
         }
 
         @Test
-        fun `GIVEN no default address WHEN getExpressHistory THEN only the dynamic ones are queried`() = runTest {
+        fun `GIVEN a legacy address WHEN getExpressHistory THEN every address type is queried`() = runTest {
             // Arrange
             val addresses = stubQueriesCapturingAddresses()
-            coEvery { walletManagersFacade.getDefaultAddress(any(), any()) } returns null
+            coEvery { walletManagersFacade.getAddresses(any(), any()) } returns
+                setOf(Address(value = LEGACY_ADDRESS, type = AddressType.Legacy), defaultAddress())
+
+            // Act
+            repository.getExpressHistory(USER_WALLET_ID, currency, NO_LOWER_BOUND).first()
+
+            // Assert — a payout to the wallet's own legacy address is its incoming leg
+            assertThat(addresses.captured).containsExactly(ADDRESS, LEGACY_ADDRESS)
+        }
+
+        @Test
+        fun `GIVEN a legacy address WHEN getIndexedExpressHistory THEN the index page spans every address type`() =
+            runTest {
+                // Arrange
+                stubQueries()
+                coEvery { walletManagersFacade.getAddresses(any(), any()) } returns
+                    setOf(Address(value = LEGACY_ADDRESS, type = AddressType.Legacy), defaultAddress())
+                val addresses = slot<List<String>>()
+                every {
+                    historyIndexDao.observePage(capture(addresses), any<HistoryIndexDao.Cursor>(), any())
+                } returns flowOf(emptyList())
+
+                // Act
+                repository.getIndexedExpressHistory(USER_WALLET_ID, currency, limit = 50).first()
+
+                // Assert
+                assertThat(addresses.captured).containsExactly(ADDRESS, LEGACY_ADDRESS)
+            }
+
+        @Test
+        fun `GIVEN no wallet addresses WHEN getExpressHistory THEN only the dynamic ones are queried`() = runTest {
+            // Arrange
+            val addresses = stubQueriesCapturingAddresses()
+            coEvery { walletManagersFacade.getAddresses(any(), any()) } returns emptySet()
             coEvery { walletManagersFacade.usedDynamicAddresses(any(), any()) } returns listOf(DYNAMIC_ADDRESS)
 
             // Act
@@ -342,14 +404,17 @@ internal class RefactoredTxHistoryRepositoryTest {
         sortTimeMillis = sortTimeMillis,
     )
 
+    private fun defaultAddress() = Address(value = ADDRESS, type = AddressType.Default)
+
     private fun iso(value: String): Long = DateTime.parse(value).millis
 
     private companion object {
         val USER_WALLET_ID = UserWalletId(stringValue = "01")
         const val ADDRESS = "addr"
+        const val LEGACY_ADDRESS = "addr-legacy"
         const val DYNAMIC_ADDRESS = "addr-dynamic"
         const val NO_LOWER_BOUND = 0L
-        const val EPOCH_ISO = "1970-01-01T00:00:00Z"
+        const val EPOCH_ISO = "1970-01-01T00:00:00.000Z"
         const val TX_ID = "tx-1"
         const val CREATED_AT = "2026-06-01T00:00:00Z"
     }
