@@ -276,7 +276,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         val status = currentStatus.value
         val balance = status.balanceOrNull()
         val depositAddress = status.networksOrNull().orEmpty().firstDepositAddress()
-        if (balance == null || depositAddress == null || !status.value.canAddFunds()) {
+        if (balance == null || depositAddress == null || !status.value.canAddFunds) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
             return
         }

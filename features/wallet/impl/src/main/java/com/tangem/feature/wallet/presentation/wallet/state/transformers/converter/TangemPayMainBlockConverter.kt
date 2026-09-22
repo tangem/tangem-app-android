@@ -19,7 +19,6 @@ import java.util.Currency
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
-    private val isAccountMultichainEnabled: Boolean,
 ) : Converter<AccountStatus.Payment, TangemPayMainUM> {
 
     /**
