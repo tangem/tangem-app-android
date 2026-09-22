@@ -49,6 +49,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 title = resourceReference(R.string.swapping_from_title),
                 chooserBlock = ChooserBlock.Market,
                 paymentAccountTokens = PaymentAccountTokens.AccountCurrency,
+                isHideZeroBalanceFilterEnabled = true,
                 isJointAccountsShown = true,
             )
 
