@@ -8,6 +8,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 /**
  * Represents the various states a payment account can have, encapsulating different information based on the state.
