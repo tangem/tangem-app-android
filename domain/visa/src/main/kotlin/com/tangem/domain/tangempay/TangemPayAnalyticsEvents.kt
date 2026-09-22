@@ -1,6 +1,7 @@
 package com.tangem.domain.tangempay
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class TangemPayAnalyticsEvents(
@@ -630,6 +631,53 @@ sealed class TangemPayAnalyticsEvents(
         class ButtonErrorStateShowed : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Cashback Button Error State Showed",
+        )
+    }
+
+    object Multichain {
+
+        private const val CATEGORY = "Visa Multichain"
+
+        class ChooseNetworkPopupShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Choose Network Popup Showed",
+        )
+
+        data class FastWayNetworkClicked(val blockchain: String, val chainId: Long) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Fast Way Network Clicked",
+            params = networkParams(blockchain = blockchain, chainId = chainId),
+        )
+
+        data class OtherWayNetworkClicked(val blockchain: String, val chainId: Long) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Other Way Network Clicked",
+            params = networkParams(blockchain = blockchain, chainId = chainId),
+        )
+
+        data class FastWayNetworkAddressPopupShowed(
+            val blockchain: String,
+            val chainId: Long,
+        ) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Fast Way Network Address Popup Showed",
+            params = networkParams(blockchain = blockchain, chainId = chainId),
+        )
+
+        data class AddressFetchErrorShowed(val blockchain: String, val chainId: Long) : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Address Fetch Error Showed",
+            params = networkParams(blockchain = blockchain, chainId = chainId),
+        )
+
+        class OtherWaySwapPopupShowed : TangemPayAnalyticsEvents(
+            categoryName = CATEGORY,
+            event = "Other Way 1:1 Swap Popup Showed",
+        )
+
+        private fun networkParams(blockchain: String, chainId: Long): Map<String, String> = mapOf(
+            AnalyticsParam.Key.BLOCKCHAIN to blockchain,
+            "Chain Id" to chainId.toString(),
         )
     }
 }
