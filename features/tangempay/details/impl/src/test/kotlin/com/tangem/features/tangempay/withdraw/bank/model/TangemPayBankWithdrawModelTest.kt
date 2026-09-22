@@ -7,15 +7,21 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.MarkBankAccountUsedUseCase
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
+import com.tangem.features.tangempay.withdraw.bank.USDC_POLYGON
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
@@ -23,6 +29,7 @@ import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFi
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormResult
 import com.tangem.features.tangempay.withdraw.bank.offrampDestination
+import com.tangem.features.tangempay.withdraw.bank.preview.model.toOrderRequest
 import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -54,6 +61,7 @@ internal class TangemPayBankWithdrawModelTest {
             getTangemPayRegionsUseCase,
         )
         coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
+        coEvery { getBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
         coEvery { getTangemPayCountriesUseCase() } returns emptyList<TangemPayCountry>().right()
         coEvery { getTangemPayRegionsUseCase(any()) } returns emptyList<TangemPayRegion>().right()
     }
@@ -123,12 +131,31 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
-    fun `GIVEN new personal entry WHEN model created THEN accounts not requested`() {
+    fun `GIVEN new personal entry WHEN model created THEN saved accounts loaded once`() {
+        // Arrange
+        val accounts = listOf(bankAccount(id = "acc-1"), bankAccount(id = "acc-2"))
+        coEvery { getBankAccountsUseCase(userWalletId) } returns accounts.right()
+
         // Act
         val model = createModel(BankWithdrawEntry.NewPersonal)
 
         // Assert
-        coVerify(exactly = 0) { getBankAccountsUseCase(any()) }
+        coVerify(exactly = 1) { getBankAccountsUseCase(userWalletId) }
+        assertThat(model.savedAccounts.value).containsExactlyElementsIn(accounts).inOrder()
+        assertThat(model.draft.value).isEqualTo(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN accounts fail WHEN model created THEN saved accounts stay empty`() {
+        // Arrange
+        coEvery { getBankAccountsUseCase(userWalletId) } returns BankOfframpError.Unknown(null).left()
+
+        // Act
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+
+        // Assert
+        assertThat(model.savedAccounts.value).isEmpty()
         assertThat(model.draft.value).isEqualTo(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
         model.onDestroy()
     }
@@ -166,7 +193,64 @@ internal class TangemPayBankWithdrawModelTest {
         // Assert
         assertThat(model.draft.value)
             .isEqualTo(BankWithdrawDraft(entry = BankWithdrawEntry.SeeAll, recipient = recipient))
-        coVerify(exactly = 0) { getBankAccountsUseCase(any()) }
+        coVerify(exactly = 0) { markBankAccountUsedUseCase(any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed new recipient WHEN saved recipient selected THEN draft recipient set and order uses account id`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = bankWithdrawSource(),
+                destination = offrampDestination(),
+            ),
+        )
+        model.onDetailsFilled(formResult(BankWithdrawFormField.AccountNumber to "4830019271"))
+        val suggested = bankAccount(id = "acc-5", accountNumber = "4830019271")
+
+        // Act
+        model.onSavedRecipientSelected(suggested)
+
+        // Assert
+        assertThat(model.draft.value.recipient).isEqualTo(suggested)
+        assertThat(model.draft.value.toOrderRequest()).isEqualTo(
+            BankOfframpOrderRequest(
+                amountInCents = 50_000L,
+                chainId = POLYGON_CHAIN_ID,
+                tokenContractAddress = USDC_POLYGON,
+                rail = BankRail.ACH,
+                recipient = BankOfframpRecipient.Saved(bankAccountId = "acc-5"),
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed new recipient WHEN saved recipient selected THEN new recipient draft reset`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onDetailsFilled(formResult(BankWithdrawFormField.AccountNumber to "4830019271"))
+
+        // Act
+        model.onSavedRecipientSelected(bankAccount(id = "acc-5", accountNumber = "4830019271"))
+
+        // Assert
+        assertThat(model.draft.value.newRecipient).isEqualTo(NewRecipientDraft.forEntry(BankWithdrawEntry.NewPersonal))
+    }
+
+    @Test
+    fun `GIVEN saved recipient selected WHEN reported THEN account marked used`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewBusiness)
+
+        // Act
+        model.onSavedRecipientSelected(bankAccount(id = "acc-5"))
+
+        // Assert
+        coVerify(exactly = 1) { markBankAccountUsedUseCase(userWalletId = userWalletId, bankAccountId = "acc-5") }
         model.onDestroy()
     }
 
