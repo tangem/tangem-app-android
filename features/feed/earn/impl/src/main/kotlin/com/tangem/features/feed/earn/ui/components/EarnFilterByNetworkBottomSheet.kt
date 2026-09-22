@@ -22,11 +22,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabNavigation
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -45,11 +45,8 @@ internal fun EarnFilterByNetworkBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         scrollableContent = false,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(R.string.earn_filter_networks),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                windowInsets = WindowInsets(0),
-                fadeEnabled = false,
                 onClose = config.onDismissRequest,
             )
         },
