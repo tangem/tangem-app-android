@@ -17,7 +17,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import javax.inject.Singleton
 
 @Module
 @InstallIn(ModelComponent::class)
