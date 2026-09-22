@@ -48,7 +48,7 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         .map { FeedTabUM(id = it.id.value, title = it.title, icon = it.icon) }
         .toImmutableList()
 
-    private val emptySearchTab: FeedTabComponent? = buildEmptySearchTab()
+    private val emptySearchPage: FeedEmptySearchComponent? = buildEmptySearchPage()
 
     private val pagesNavigation = PagesNavigation<FeedTabId>()
 
@@ -77,7 +77,7 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         if (state.query.isBlank()) {
             FeedSearchPlaceholder(
                 recentQueries = state.recentQueries,
-                marketList = emptySearchTab,
+                marketList = emptySearchPage,
                 bottomSheetState = bottomSheetState,
                 contentPadding = contentPadding,
                 modifier = modifier,
@@ -107,10 +107,10 @@ internal class DefaultFeedSearchComponent @AssistedInject constructor(
         }
     }
 
-    private fun buildEmptySearchTab(): FeedTabComponent? {
-        val childContext = child(key = "emptySearchTab")
+    private fun buildEmptySearchPage(): FeedEmptySearchComponent? {
+        val childContext = child(key = "emptySearchPage")
 
-        return contributors.firstNotNullOfOrNull { it.createEmptySearchTab(context = childContext) }
+        return contributors.firstNotNullOfOrNull { it.createEmptySearchPage(context = childContext) }
     }
 
     private fun createSearchTab(id: FeedTabId, componentContext: ComponentContext): FeedTabComponent {
