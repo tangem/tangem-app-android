@@ -103,7 +103,7 @@ class SafeTxGasBuilder(
          * far enough between the two readings is answered with `GAS_PRICE_TOO_LOW` / `GAS_PRICE_TOO_HIGH` and the
          * operation is rebuilt on a fresh reading.
          */
-        private val GAS_PRICE_MARGIN_NUMERATOR = BigInteger.TWO
+        private val GAS_PRICE_MARGIN_NUMERATOR = BigInteger.valueOf(2)
         private val GAS_PRICE_MARGIN_DENOMINATOR = BigInteger.ONE
 
         private const val EMPTY_CODE = "0x"
