@@ -383,7 +383,7 @@ internal class SendConfirmModel @Inject constructor(
         val confirmUM = uiState.value.confirmUM
 
         modelScope.launch {
-            val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
+            val isShowTapHelp = jointAccount == null && isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty) {
                 val signaturesUM = if (jointAccount != null) {
                     loadSignaturesUM(account = jointAccount) ?: return@launch
@@ -425,7 +425,9 @@ internal class SendConfirmModel @Inject constructor(
         )
     }
 
+    /** The fee of a Safe operation is a single figure, so there is nothing to tap and change */
     private fun subscribeOnTapHelpUpdates() {
+        if (jointAccount != null) return
         isSendTapHelpEnabledUseCase().getOrNull()
             ?.onEach { showTapHelp ->
                 _uiState.update { state ->
