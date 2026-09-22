@@ -21,6 +21,15 @@ internal data class PaymentNetworkRowData(
 )
 
 /**
+ * Whether this network belongs to the **Other ways** section of the Choose-network sheet: info-only networks
+ * with no contract, which cannot be received on directly. Everything else is a **Fast way** network.
+ *
+ * Single source of truth for the split — the sheet's sections and the analytics event fired on a row tap
+ * must not drift apart.
+ */
+internal fun PaymentNetworkStatus.isOtherWay(): Boolean = this is PaymentNetworkStatus.Disabled
+
+/**
  * The currencies carried by this network status. A [PaymentNetworkStatus.NotIssued] network carries none:
  * its contract does not exist yet, so there are no contract addresses to build currencies from.
  */
