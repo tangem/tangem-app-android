@@ -72,7 +72,7 @@ internal class TangemPayDetailsStateFactory(
         val isAddCardEnabled = isFresh && !hasIssuingCard
         val areActionButtonsEnabled = isFresh && hasUnfrozenCard
         val balance = status.balance
-        val hasWithdrawableBalance = balance?.hasWithdrawableAmount == true
+        val hasWithdrawableBalance = status.hasWithdrawableAmount
         val canAddFunds = status.canAddFunds
         val errorNotification = notificationFactory.createErrorConfig(status.error)
         val tiersNotification = notificationFactory.createTiersConfig(status.tariffPlan)
@@ -177,7 +177,7 @@ internal class TangemPayDetailsStateFactory(
 
     fun getDeactivatedState(status: PaymentAccountStatusValue.Deactivated): TangemPayDetailsUM {
         val balance = status.balance
-        val hasWithdrawableBalance: Boolean = balance?.hasWithdrawableAmount == true
+        val hasWithdrawableBalance = status.hasWithdrawableAmount
         val accountDeactivatedBanner = notificationFactory.createAccountDeactivatedBannerState()
         val fiatBalance = balance?.fiatBalance
         return TangemPayDetailsUM(
