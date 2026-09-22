@@ -46,7 +46,9 @@ internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject construc
         }
 
         scope.launch {
-            appRouter.push(AppRoute.JointAccountJoin(inviteId = inviteId))
+            val route = AppRoute.JointAccountJoin(inviteId = inviteId)
+            if (appRouter.stack.lastOrNull() == route) return@launch
+            appRouter.push(route)
         }
     }
 
