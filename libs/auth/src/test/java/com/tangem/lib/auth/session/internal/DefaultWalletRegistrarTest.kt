@@ -512,6 +512,20 @@ class DefaultWalletRegistrarTest {
     }
 
     @Test
+    fun `clearRegistrations drops every registration marker`() = runTest {
+        // Arrange
+        preferencesDataStore.edit {
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+
+        // Act
+        registrar.clearRegistrations()
+
+        // Assert
+        assertThat(registeredIds()).isEmpty()
+    }
+
+    @Test
     fun `requestNonce returns NoActiveSession and consumes no nonce when the store has no session`() = runTest {
         stubHappyPath()
         coEvery { store.get() } returns None

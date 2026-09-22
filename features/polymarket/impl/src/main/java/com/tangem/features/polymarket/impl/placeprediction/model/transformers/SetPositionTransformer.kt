@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
@@ -22,6 +23,7 @@ internal class SetPositionTransformer(private val position: PolymarketPosition.O
                 title = position.title,
                 imageUrl = position.iconUrl,
                 outcomeTitle = position.outcome,
+                outcomeAccent = position.outcomeAccent,
                 outcomePriceCents = prevState.market.outcomePriceCents ?: position.curPrice.toCents(),
                 entryPriceCents = position.avgPrice.toCents(),
                 resolutionDateMillis = position.endDate

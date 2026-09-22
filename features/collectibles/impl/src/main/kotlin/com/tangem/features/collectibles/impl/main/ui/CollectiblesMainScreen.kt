@@ -88,6 +88,7 @@ internal fun CollectiblesMainScreen(
             CollectiblesSearchFooter(
                 state = discoveryState.search,
                 focusRequester = focusRequester,
+                isShown = discoveryState.hasSearchableCatalogue,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .onSizeChanged { size -> footerHeight = size.height },

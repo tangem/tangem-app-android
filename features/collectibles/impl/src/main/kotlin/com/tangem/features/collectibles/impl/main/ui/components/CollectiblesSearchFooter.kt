@@ -27,9 +27,9 @@ import com.tangem.core.ui.ds2.search.TangemSearch
 internal fun CollectiblesSearchFooter(
     state: TangemSearch.State,
     focusRequester: FocusRequester,
+    isShown: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // Zero while the IME already covers the bottom edge, the navigation bar's own height otherwise.
     val navigationBarInset = WindowInsets.navigationBars
         .exclude(WindowInsets.ime)
         .asPaddingValues()
@@ -41,21 +41,24 @@ internal fun CollectiblesSearchFooter(
             .windowInsetsPadding(WindowInsets.ime),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        TangemFade(
-            position = TangemFade.Position.Bottom,
-            variant = TangemFade.Variant.Soft,
-            blur = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(110.dp + navigationBarInset),
-        )
-        TangemSearch(
-            state = state,
-            focusRequester = focusRequester,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp + navigationBarInset),
-        )
+        if (isShown) {
+            TangemFade(
+                position = TangemFade.Position.Bottom,
+                variant = TangemFade.Variant.Soft,
+                blur = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp + navigationBarInset),
+            )
+
+            TangemSearch(
+                state = state,
+                focusRequester = focusRequester,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp + navigationBarInset),
+            )
+        }
     }
 }
 

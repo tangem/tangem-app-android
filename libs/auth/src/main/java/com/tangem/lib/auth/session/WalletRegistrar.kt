@@ -68,4 +68,11 @@ interface WalletRegistrar {
      * session tokens returned by the server and drops the local registration marker.
      */
     suspend fun unregister(walletId: String): Either<WalletRegistrationError, Unit>
+
+    /**
+     * Drops ALL local registration markers (no network). Called when the device is re-registered: the
+     * old device record — and every wallet binding on it — is gone server-side, so the markers are
+     * stale and would otherwise make [isRegistered]/[prepare] skip wallets that must now re-register.
+     */
+    suspend fun clearRegistrations()
 }

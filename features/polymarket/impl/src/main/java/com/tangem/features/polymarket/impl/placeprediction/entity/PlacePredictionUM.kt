@@ -11,6 +11,7 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -132,6 +133,7 @@ internal data class MarketHeaderUM(
     val outcomeTitle: String,
     val outcomePriceCents: Int?,
     val resolutionDateMillis: Long?,
+    val outcomeAccent: PolymarketOutcomeAccent = PolymarketOutcomeAccent.Neutral,
     val isPriceUnavailable: Boolean = false,
     val entryPriceCents: Int? = null,
 )

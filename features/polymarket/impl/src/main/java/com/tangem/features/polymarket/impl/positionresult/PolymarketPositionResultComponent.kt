@@ -22,7 +22,11 @@ internal class PolymarketPositionResultComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        PolymarketPositionResultScreen(state = state, modifier = modifier)
+        PolymarketPositionResultScreen(
+            state = state,
+            onActionClick = model::onActionClick,
+            modifier = modifier,
+        )
     }
 
     data class Params(val userWalletId: UserWalletId, val position: PolymarketPosition.Open)

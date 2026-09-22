@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 
-/** UI-only state for a resolved position. Claim and dismiss actions will be added with the settlement flow. */
 @Immutable
 internal data class PolymarketPositionResultUM(
     val market: MarketHeaderUM,
@@ -14,9 +13,18 @@ internal data class PolymarketPositionResultUM(
     val invested: Metric?,
     val profit: Metric?,
     val footerNote: TextReference?,
+    val action: Action,
 ) {
 
     enum class Result { Won, Lost, Split }
+
+    @Immutable
+    sealed interface Action {
+
+        data class Claim(val isInProgress: Boolean) : Action
+
+        data object Dismiss : Action
+    }
 
     @Immutable
     data class Metric(val title: TextReference, val value: TextReference)

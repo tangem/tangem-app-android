@@ -12,6 +12,7 @@ internal class PolymarketPositionResultPreviewProvider :
 
 private fun resultCases(): Map<String, PolymarketPositionResultUM> = linkedMapOf(
     "Won" to PolymarketPositionResultStubData.won,
+    "Won, payout pending" to PolymarketPositionResultStubData.wonPayoutPending,
     "Lost" to PolymarketPositionResultStubData.lost,
     "Split with profit" to PolymarketPositionResultStubData.splitWithProfit,
     "Split without profit" to PolymarketPositionResultStubData.splitWithoutProfit,
